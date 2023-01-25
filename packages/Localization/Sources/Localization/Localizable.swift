@@ -6081,12 +6081,16 @@ public final class L10n {
   public static var inputAttachPopoverLocation: String  { return L10n.tr("Localizable", "InputAttach.Popover.Location") }
   /// Audio File
   public static var inputAttachPopoverMusic: String  { return L10n.tr("Localizable", "InputAttach.Popover.Music") }
+  /// Photo
+  public static var inputAttachPopoverPhoto: String  { return L10n.tr("Localizable", "InputAttach.Popover.Photo") }
   /// Photo Or Video
   public static var inputAttachPopoverPhotoOrVideo: String  { return L10n.tr("Localizable", "InputAttach.Popover.PhotoOrVideo") }
   /// Camera
   public static var inputAttachPopoverPicture: String  { return L10n.tr("Localizable", "InputAttach.Popover.Picture") }
   /// Poll
   public static var inputAttachPopoverPoll: String  { return L10n.tr("Localizable", "InputAttach.Popover.Poll") }
+  /// Video
+  public static var inputAttachPopoverVideo: String  { return L10n.tr("Localizable", "InputAttach.Popover.Video") }
   /// Day:
   public static var inputDataDateDayPlaceholder: String  { return L10n.tr("Localizable", "InputData.Date.Day.Placeholder") }
   /// Day

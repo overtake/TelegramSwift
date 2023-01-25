@@ -727,8 +727,12 @@ class ChatControllerView : View, ChatInputDelegate {
             value = .none
         }
         let translate: ChatPresentationInterfaceState.TranslateState?
-        if let value = interfaceState.translateState, value.canTranslate {
-            translate = value
+        if let translateState = interfaceState.translateState, translateState.canTranslate {
+            if case .search = value {
+                translate = nil
+            } else {
+                translate = translateState
+            }
         } else {
             translate = nil
         }
@@ -3906,7 +3910,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
         }
-        chatInteraction.attachPhotoOrVideo = { [weak self] in
+        chatInteraction.attachPhotoOrVideo = { [weak self] type in
             if let `self` = self, let window = self.window {
                 if let slowMode = self.chatInteraction.presentation.slowMode, let errorText = slowMode.errorText {
                     tooltip(for: self.genericView.inputView.attachView, text: errorText)
@@ -3914,7 +3918,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         self.chatInteraction.focusMessageId(nil, last, .CenterEmpty)
                     }
                 } else {
-                    filePanel(with: mediaExts, canChooseDirectories: true, for: window, completion:{ [weak self] result in
+                    var exts:[String] = mediaExts
+                    if let type = type {
+                        switch type {
+                        case .photo:
+                            exts = photoExts
+                        case .video:
+                            exts = videoExts
+                        }
+                    }
+                    filePanel(with: exts, canChooseDirectories: true, for: window, completion:{ [weak self] result in
                         if let result = result {
                             let previous = result.count
                             
