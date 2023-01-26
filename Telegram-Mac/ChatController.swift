@@ -5448,10 +5448,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if message.id.peerId.namespace == Namespaces.Peer.CloudChannel || message.id.peerId.namespace == Namespaces.Peer.CloudGroup {
                                 messageIdsWithReactions.append(message.id)
                             }
-                            if message.id.namespace == Namespaces.Message.Cloud, !message.text.isEmpty {
-                                messagesToTranslate.append(message)
+                            if message.id.namespace == Namespaces.Message.Cloud {
+                                if !message.text.isEmpty {
+                                    messagesToTranslate.append(message)
+                                }
                                 if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
-                                    if replyMessage.text.isEmpty {
+                                    if !replyMessage.text.isEmpty {
                                         messagesToTranslate.append(message)
                                     }
                                 }

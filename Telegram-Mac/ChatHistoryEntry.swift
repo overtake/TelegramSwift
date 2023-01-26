@@ -250,7 +250,18 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return nil
         }
     }
-    
+    func additionalData(_ messageId: MessageId) -> MessageEntryAdditionalData {
+        switch self {
+        case let .MessageEntry(_,_,_,_,_,_,data):
+            return data.additionData
+        case let .groupedPhotos(entries,_):
+            return entries.first(where: { $0.message?.id == messageId})?.additionalData ?? MessageEntryAdditionalData()
+        case let .DateEntry(_, _, theme):
+            return MessageEntryAdditionalData(chatTheme: theme)
+        default:
+            return MessageEntryAdditionalData()
+        }
+    }
     
     var additionalData: MessageEntryAdditionalData {
         switch self {

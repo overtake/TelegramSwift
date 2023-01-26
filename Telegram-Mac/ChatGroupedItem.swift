@@ -62,7 +62,7 @@ class ChatGroupedItem: ChatRowItem {
                 var text: String = message.text
                 var attributes: [MessageAttribute] = message.attributes
                 var isLoading: Bool = false
-                if let translate = entry.additionalData.translate {
+                if let translate = entry.additionalData(message.id).translate {
                     switch translate {
                     case .loading:
                         isLoading = true
