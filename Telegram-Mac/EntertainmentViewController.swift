@@ -976,7 +976,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
             self.section.select(e_index, true, notifyApper: true)
             
-        }, for: .Click)
+        }, for: .SingleClick)
         
         self.genericView.stickers.set(handler: { [weak self] _ in
             guard let `self` = self else {
@@ -986,7 +986,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 self.stickers.scrollup()
             }
             self.section.select(s_index, true, notifyApper: true)
-        }, for: .Click)
+        }, for: .SingleClick)
         
         self.genericView.gifs.set(handler: { [weak self] _ in
             guard let `self` = self else {
@@ -996,7 +996,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 self.gifs.scrollup()
             }
             self.section.select(g_index, true, notifyApper: true)
-        }, for: .Click)
+        }, for: .SingleClick)
         
 
         

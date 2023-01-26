@@ -103,6 +103,11 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     let openPremium:(()->Void)?
     let installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)?
     
+    override var identifier: String {
+        let ids: String = _items.reduce("", { $0 + "\($1.file.fileId.id)" })
+        return "emojies_\(ids)"
+    }
+    
     enum Mode {
         case panel
         case preview

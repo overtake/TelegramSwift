@@ -225,6 +225,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         input.textColor = presentation.search.textColor
         input.backgroundColor = .clear
         
+        search.backgroundColor = presentation.search.backgroundColor
+        
         placeholder.attributedString = .initialize(string: presentation.search.placeholder(), color: presentation.search.placeholderColor, font: .normal(.text))
         placeholder.backgroundColor = presentation.search.backgroundColor
         self.backgroundColor = presentation.search.backgroundColor
@@ -305,8 +307,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         animateContainer.backgroundColor = .clear
         
         placeholder.sizeToFit()
-        animateContainer.addSubview(placeholder)
         
+        animateContainer.addSubview(placeholder)
         animateContainer.addSubview(search)
         
         self.animateContainer.setFrameSize(NSMakeSize(NSWidth(placeholder.frame) + search.frame.width + inset / 2, max(21, search.frame.height)))
@@ -619,9 +621,27 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     public var isLeftOrientated: Bool = false
+    private var placeholderInset: CGFloat? = nil
     
     public var holderSize: NSSize {
         return NSMakeSize(leftInset + placeholder.frame.width + 20 + 5, frame.height)
+    }
+    public var searchSize: NSSize {
+        return NSMakeSize(leftInset + 25, frame.height)
+    }
+    
+    public func movePlaceholder(_ inset: CGFloat?, opacity: CGFloat, transition: ContainedViewLayoutTransition, moveForce: Bool = false) -> Void {
+        self.placeholderInset = inset
+        transition.updateAlpha(view: placeholder, alpha: opacity)
+        
+        if moveForce {
+            self.updateLayout(size: frame.size, transition: .immediate)
+        } else {
+            self.updateLayout(size: frame.size, transition: transition)
+        }
+    }
+    public func updateSearchHolderVisibility(visible: Bool, transition: ContainedViewLayoutTransition) {
+        transition.updateAlpha(view: search, alpha: visible ? 1 : 0)
     }
     
     public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
@@ -637,7 +657,13 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             }
         }
         
-        transition.updateFrame(view: placeholder, frame: placeholder.centerFrameY(addition: -1))
+        var placeholderFrame = placeholder.centerFrameY(addition: -1)
+        if let placeholderInset = placeholderInset {
+            placeholderFrame.origin.x = placeholderTextInset + placeholderInset
+        } else {
+            placeholderFrame.origin.x = placeholderTextInset
+        }
+        transition.updateFrame(view: placeholder, frame: placeholderFrame)
         transition.updateFrame(view: clear, frame: clear.centerFrameY(x: size.width - inset - clear.frame.width))
         transition.updateFrame(view: progressIndicator, frame: progressIndicator.centerFrameY(x: size.width - inset - progressIndicator.frame.width + 2))
         

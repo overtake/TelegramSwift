@@ -881,6 +881,69 @@ extension EmojiSearchCategories.Group : Identifiable, Comparable {
 }
 
 
+private final class BackCategoryControl : Control {
+    private var sticker: InlineStickerItemLayer
+    private let context: AccountContext
+    init(frame frameRect: NSRect, context: AccountContext) {
+        self.context = context
+        self.sticker = .init(account: context.account, file: LocalAnimatedSticker.emoji_category_search_to_arrow.file, size: NSMakeSize(18, 18), playPolicy: .onceEnd, getColors: { _ in
+            return [.init(keyPath: "", color: theme.colors.grayIcon.withMultipliedAlpha(0.8))]
+        }, ignorePreview: true)
+        super.init(frame: frameRect)
+        self.sticker.isPlayable = true
+        self.layer?.addSublayer(self.sticker)
+        
+        self.scaleOnClick = true
+        
+        updateLocalizationAndTheme(theme: theme)
+        
+        needsLayout = true
+    }
+    
+    func close() {
+        self.sticker.removeFromSuperlayer()
+        
+        self.sticker = .init(account: context.account, file: LocalAnimatedSticker.emoji_category_arrow_to_search.file, size: NSMakeSize(18, 18), playPolicy: .onceEnd, getColors: { _ in
+            return [.init(keyPath: "", color: theme.colors.grayIcon.withMultipliedAlpha(0.8))]
+        }, ignorePreview: true)
+
+        self.sticker.isPlayable = true
+        self.layer?.addSublayer(self.sticker)
+        
+        needsLayout = true
+
+    }
+    
+    override func layout() {
+        super.layout()
+        var rect = focus(NSMakeSize(18, 18))
+        rect.origin.x += 5
+        self.sticker.frame = rect
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = theme as! TelegramPresentationTheme
+    }
+    
+    func update(context: AccountContext, isVisible: Bool, animated: Bool, callback:@escaping()->Void) {
+                            
+        self.isHidden = !isVisible
+        
+        needsLayout = true
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
 private final class AnimatedEmojiesCategories : Control {
     
     private final class CategoryView : Control {
@@ -920,7 +983,7 @@ private final class AnimatedEmojiesCategories : Control {
                 if let player = self.player {
                     performSublayerRemoval(player, animated: animated)
                 }
-                let color = theme.colors.grayText.withAlphaComponent(0.8)
+                let color = theme.colors.grayIcon.withAlphaComponent(0.8)
                 let inline = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: category.id, file: self.player?.file, emoji: ""), size: NSMakeSize(23, 23), playPolicy: policy, getColors: { _ in
                     return [.init(keyPath: "", color: color)]
                 }, ignorePreview: true)
@@ -1002,67 +1065,9 @@ private final class AnimatedEmojiesCategories : Control {
     let scrollView = HorizontalScrollView()
     private let documentView = View()
     
-    private final class BackControl : Control {
-        private let gradient: SimpleGradientLayer = SimpleGradientLayer()
-        private let close = ImageButton()
-        required init(frame frameRect: NSRect) {
-            
-            super.init(frame: frameRect)
-            addSubview(close)
-            
-            
-            
-            close.autohighlight = false
-            close.scaleOnClick = true
-            
-            self.layer = gradient
-            
-            self.gradient.type = .axial
-            self.gradient.startPoint = CGPoint(x: 0, y: 0.5)
-            self.gradient.endPoint = CGPoint(x: 1.0, y: 0.5)
-            
-            updateLocalizationAndTheme(theme: theme)
-            
-            needsLayout = true
-        }
-        
-        override func layout() {
-            super.layout()
-            close.center()
-        }
-        
-        override func updateLocalizationAndTheme(theme: PresentationTheme) {
-            super.updateLocalizationAndTheme(theme: theme)
-            self.gradient.colors = [theme.search.backgroundColor.cgColor, theme.search.backgroundColor.cgColor, theme.search.backgroundColor.withAlphaComponent(0.1).cgColor]
-            let theme = theme as! TelegramPresentationTheme
-            
-            
-            close.set(image: theme.search.clearImage, for: .Normal)
-            close.sizeToFit()
-
-        }
-        
-        func update(context: AccountContext, isVisible: Bool, animated: Bool, callback:@escaping()->Void) {
-            close.removeAllHandlers()
-            
-//            self.change(opacity: isVisible ? 1 : 0, animated: animated)
-                        
-            self.isHidden = !isVisible
-            
-            close.set(handler: { _ in
-                callback()
-            }, for: .Click)
-            
-            needsLayout = true
-
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-    }
+    private let topGradient = ShadowView()
+    private let bottomGradient = ShadowView()
     
-    private let back = BackControl(frame: NSMakeRect(0, 0, 30, 30))
     
     private let backgroundView = View()
     
@@ -1071,10 +1076,9 @@ private final class AnimatedEmojiesCategories : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        addSubview(backgroundView)
+       // addSubview(backgroundView)
         addSubview(scrollView)
         
-        addSubview(back)
         
         scrollView.background = .clear
         scrollView.documentView = documentView
@@ -1083,18 +1087,35 @@ private final class AnimatedEmojiesCategories : Control {
         NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.clipView, queue: OperationQueue.main, using: { [weak self] notification  in
             self?.updateScroll()
         })
+        
+        self.addSubview(topGradient)
+        self.addSubview(bottomGradient)
 
+        updateLocalizationAndTheme(theme: theme)
+
+        self.layer?.cornerRadius = frame.height / 2
+        updateScroll()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         backgroundView.backgroundColor = theme.search.backgroundColor
+        bottomGradient.shadowBackground = theme.search.backgroundColor.withAlphaComponent(1)
+        bottomGradient.direction = .horizontal(true)
+        topGradient.shadowBackground = theme.search.backgroundColor.withAlphaComponent(1)
+        topGradient.direction = .horizontal(false)
+
     }
     
     
     private var previousOffset: NSPoint = .zero
     private var previousRange: [Int] = []
     func updateScroll() {
+        
+        self.topGradient.isHidden = self.scrollView.documentOffset.x == 0
+        self.bottomGradient.isHidden = self.scrollView.documentOffset.x == self.scrollView.documentSize.width - self.scrollView.frame.width
+
+        
         let range = visibleRange(self.scrollView.documentOffset)
         if previousRange != range, !previousRange.isEmpty {
             let new = range.filter({
@@ -1127,10 +1148,7 @@ private final class AnimatedEmojiesCategories : Control {
     func update(categories: [EmojiSearchCategories.Group], context: AccountContext, selected: EmojiSearchCategories.Group?, animated: Bool) {
         
         
-        self.back.update(context: context, isVisible: selected != nil, animated: animated, callback: { [weak self] in
-            self?.select?(nil)
-        })
-        
+       
         let selectedUpdated = self.selected != selected
         self.selected = selected
         
@@ -1145,7 +1163,7 @@ private final class AnimatedEmojiesCategories : Control {
         
         
         for (idx, item, _) in indicesAndItems {
-            let subview = CategoryView(frame: NSMakeRect(back.frame.width + CGFloat(idx) * 30, 0, 30, 30), context: context, category: item, isSelected: selected == item)
+            let subview = CategoryView(frame: NSMakeRect(CGFloat(idx) * 30, 0, 30, 30), context: context, category: item, isSelected: selected == item)
             subview.set(handler: { [weak self] _ in
                 self?.select?(item)
             }, for: .Click)
@@ -1191,22 +1209,26 @@ private final class AnimatedEmojiesCategories : Control {
         guard validLayout != size else {
             return
         }
-        var rect = NSMakeRect(back.frame.width, 0, 30, 30)
-        var documentSize: NSSize = NSMakeSize(back.frame.width, 30)
+        var rect = NSMakeRect(0, 0, 30, 30)
+        var documentSize: NSSize = NSMakeSize(0, 30)
         for subview in documentView.subviews {
             transition.updateFrame(view: subview, frame: rect)
             rect = rect.offsetBy(dx: rect.width, dy: 0)
             documentSize = NSMakeSize(rect.width + documentSize.width, rect.height)
         }
         
-        transition.updateFrame(view: back, frame: back.centerFrameY(x: 0))
+//        transition.updateFrame(view: back, frame: back.centerFrameY(x: 0))
         
         let scrollRect = NSMakeRect(0, 0, size.width, size.height)
         transition.updateFrame(view: scrollView.contentView, frame: scrollRect)
         transition.updateFrame(view: scrollView, frame: scrollRect)
         transition.updateFrame(view: documentView, frame: documentSize.bounds)
         
-        transition.updateFrame(view: backgroundView, frame: NSMakeRect(back.frame.width, 0, size.width - back.frame.width, rect.height))
+        transition.updateFrame(view: backgroundView, frame: NSMakeRect(0, 0, size.width, rect.height))
+        
+        transition.updateFrame(view: self.topGradient, frame: NSMakeRect(0, 0, 10, size.height))
+        transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(size.width - 10, 0, 10, size.height))
+
         
         validLayout = size
     }
@@ -1232,7 +1254,10 @@ final class AnimatedEmojiesView : Control {
     fileprivate let searchContainer = View()
     private let searchBorder = View()
     
+    
+    
     fileprivate var categories: AnimatedEmojiesCategories?
+    fileprivate var closeCategories: BackCategoryControl?
     
     private var mode: EmojiesController.Mode = .emoji
     private var state: State?
@@ -1400,16 +1425,22 @@ final class AnimatedEmojiesView : Control {
 
                 if accept {
                     
-                    let minX = searchView.frame.minX + searchView.holderSize.width
+                    let minX = searchView.frame.minX + searchView.searchSize.width
                     
                     if rect.origin.x < minX {
                         accept = false
                     } else if rect.origin.x > searchContainer.frame.width - categoryRect.width - searchView.frame.minX {
                         accept = false
                     }
-                    rect.size.width = min(searchView.frame.width - searchView.holderSize.width, max(categoryRect.width, rect.width))
+                    rect.size.width = min(searchView.frame.width - searchView.searchSize.width, max(categoryRect.width, rect.width))
                     rect.origin.x = max(minX, searchContainer.frame.width - rect.width - searchView.frame.minX)
                     transition.updateFrame(view: view, frame: rect)
+                    
+                    let maxX = (searchView.frame.minX + searchView.holderSize.width)
+                    
+                    let sInset = maxX - rect.origin.x
+                    let sOpacity: CGFloat = 1 - sInset / minX
+                    searchView.movePlaceholder(-sInset, opacity: sOpacity, transition: transition)
                 }
                 view.updateScroll()
                 
@@ -1417,20 +1448,27 @@ final class AnimatedEmojiesView : Control {
             } else {
                 if let _ = state?.selectedEmojiCategory {
                     transition.updateFrame(view: view, frame: revealedCategoryRect)
+                    searchView.movePlaceholder(-((searchView.frame.minX + searchView.holderSize.width) - revealedCategoryRect.minX), opacity: 0, transition: transition)
                 } else {
                     transition.updateFrame(view: view, frame: categoryRect)
+                    searchView.movePlaceholder(nil, opacity: 1, transition: transition)
+                    view.scrollView.clipView.scroll(to: .zero, animated: transition.isAnimated)
                 }
                 view.updateLayout(size: view.frame.size, transition: transition)
             }
+        } else {
+            searchView.movePlaceholder(nil, opacity: 1, transition: transition)
         }
         return false
     }
     
     var categoryRect: NSRect {
-        return NSMakeRect(searchContainer.frame.width - (135 + searchView.frame.minX), searchView.frame.minY, 135, 30)
+        let width = searchView.frame.width - searchView.holderSize.width
+        return NSMakeRect(searchContainer.frame.width - (width + searchView.frame.minX), searchView.frame.minY, width, 30)
     }
     var revealedCategoryRect: NSRect {
-        return searchView.frame
+        let width = searchView.frame.width - searchView.searchSize.width
+        return NSMakeRect(searchContainer.frame.width - (width + searchView.frame.minX), searchView.frame.minY, width, 30)
     }
     
     func updateSelectionState(animated: Bool) {
@@ -1441,15 +1479,43 @@ final class AnimatedEmojiesView : Control {
         } else {
             transition = .immediate
         }
+        let currentClose: BackCategoryControl
+
+        if state?.selectedEmojiCategory != nil, let context = context {
+            if let view = self.closeCategories {
+                currentClose = view
+            } else {
+                currentClose = .init(frame: NSMakeRect(searchView.frame.minX, searchView.frame.minY, 30, 30), context: context)
+                self.closeCategories = currentClose
+                searchContainer.addSubview(currentClose)
+                
+                currentClose.set(handler: { [weak self] _ in
+                    self?.arguments?.selectEmojiCategory(nil)
+                }, for: .Click)
+            }
+            self.searchView.updateSearchHolderVisibility(visible: false, transition: .immediate)
+        } else {
+            if let view = self.closeCategories {
+                view.close()
+                delay(0.4, closure: { [weak self, weak view] in
+                    view?.removeFromSuperview()
+                    if self?.closeCategories == nil {
+                        self?.searchView.updateSearchHolderVisibility(visible: true, transition: .immediate)
+                    }
+                })
+                self.closeCategories = nil
+            }
+        }
         
         if searchState == nil || searchState?.state == .None, let groups = self.state?.searchCategories?.groups, let context = context {
             let current: AnimatedEmojiesCategories
+            
+            
+            
             if let view = self.categories {
                 current = view
             } else {
                 current = AnimatedEmojiesCategories(frame: categoryRect)
-                current.backgroundColor = theme.search.backgroundColor
-                current.layer?.cornerRadius = current.frame.height / 2
                 self.categories = current
                 searchContainer.addSubview(current)
                 
@@ -1476,11 +1542,18 @@ final class AnimatedEmojiesView : Control {
                     current?.scrollView.scrollWheel(with: event)
                 }
             }
+            
         } else if let view = self.categories {
             performSubviewRemoval(view, animated: animated)
+            if animated {
+                view.layer?.animatePosition(from: view.frame.origin, to: categoryRect.origin, duration: 0.2, removeOnCompletion: false)
+                view.layer?.animateBounds(from: view.frame.size.bounds, to: categoryRect.size.bounds, duration: 0.2, removeOnCompletion: false)
+            }
             self.categories = nil
             self.searchView.externalScroll = nil
+            
         }
+//        self.moveCategories(nil)
         
         var animated = transition.isAnimated
         var item = packsView.selectedItem()
@@ -2188,6 +2261,18 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     }
     
     override func scrollup(force: Bool = false) {
+        
+        var cancelled: Bool = false
+        self.updateState? { current in
+            var current = current
+            if current.selectedEmojiCategory != nil {
+                cancelled = true
+                current.selectedEmojiCategory = nil
+            }
+            return current
+        }
+        self.updateSearchState(.init(state: .None, request: nil))
+        
         genericView.tableView.scroll(to: .up(true))
     }
     
