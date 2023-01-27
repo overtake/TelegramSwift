@@ -214,6 +214,8 @@ final class ChatLiveTranslateContext {
                 isHidden = cachedData.flags.contains(.translationHidden)
             } else if let cachedData = cachedData as? CachedGroupData {
                 isHidden = cachedData.flags.contains(.translationHidden)
+            } else if let cachedData = cachedData as? CachedUserData {
+                isHidden = cachedData.flags.contains(.translationHidden)
             } else {
                 isHidden = true
             }
@@ -404,7 +406,7 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
             } else {
                 return .single(nil)
                 |> then(
-                    context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId: peerId, threadId: nil), index: .upperBound, anchorIndex: .upperBound, count: 16, fixedCombinedReadStates: nil)
+                    context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId: peerId, threadId: nil), index: .upperBound, anchorIndex: .upperBound, count: 32, fixedCombinedReadStates: nil)
                     |> filter { messageHistoryView -> Bool in
                         return messageHistoryView.0.entries.count > 1
                     }
