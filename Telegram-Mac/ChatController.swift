@@ -6926,7 +6926,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.adMessages = nil
         }
         
-        if chatLocation.peerId.namespace != Namespaces.Peer.SecretChat , mode == .history {
+        if chatLocation.peerId.namespace != Namespaces.Peer.SecretChat, chatLocation.peerId != context.peerId, mode == .history {
             self.liveTranslate = .init(peerId: chatLocation.peerId, context: context)
         } else {
             self.liveTranslate = nil

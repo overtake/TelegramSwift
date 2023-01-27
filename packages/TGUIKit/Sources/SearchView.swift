@@ -231,12 +231,14 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         input.textColor = searchTheme?.textColor ?? presentation.search.textColor
         input.backgroundColor = .clear
         
-        search.backgroundColor = searchTheme?.backgroundColor ?? presentation.search.backgroundColor
         search.autohighlight = false
         search.scaleOnClick = true
         
+        clear.autohighlight = false
+        clear.scaleOnClick = true
+
+        
         placeholder.attributedString = .initialize(string: presentation.search.placeholder(), color: searchTheme?.placeholderColor ?? presentation.search.placeholderColor, font: .normal(.text))
-        placeholder.backgroundColor = searchTheme?.backgroundColor ?? presentation.search.backgroundColor
         self.backgroundColor = searchTheme?.backgroundColor ?? presentation.search.backgroundColor
         placeholder.sizeToFit()
         search.frame = NSMakeRect(0, 0, 20, 20)
