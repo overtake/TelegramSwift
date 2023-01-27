@@ -94,7 +94,7 @@ class ChatGroupedItem: ChatRowItem {
                 }
                 
                 var hasEntities: Bool = false
-                for attr in message.attributes {
+                for attr in attributes {
                     if attr is TextEntitiesMessageAttribute {
                         hasEntities = true
                         break
@@ -110,7 +110,7 @@ class ChatGroupedItem: ChatRowItem {
                 }
                 
                 var spoilers:[TextViewLayout.Spoiler] = []
-                for attr in message.attributes {
+                for attr in attributes {
                     if let attr = attr as? TextEntitiesMessageAttribute {
                         for entity in attr.entities {
                             switch entity.type {
@@ -137,7 +137,7 @@ class ChatGroupedItem: ChatRowItem {
                 default:
                     break
                 }
-                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
 
                 
                 caption.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: caption.range, options: .init(), using: { value, range, stop in

@@ -407,18 +407,7 @@ class ChatMediaItem: ChatRowItem {
                 types.insert(.Commands)
             }
             
-            var hasEntities: Bool = false
-            for attr in message.attributes {
-                if attr is TextEntitiesMessageAttribute {
-                    hasEntities = true
-                    break
-                }
-            }
-            var mediaDuration: Double? = nil
-            if let file = message.anyMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
-                mediaDuration = Double(duration)
-            }
-            
+           
             var text: String = message.text
             var attributes: [MessageAttribute] = message.attributes
             var isLoading: Bool = false
@@ -434,13 +423,26 @@ class ChatMediaItem: ChatRowItem {
                 }
             }
             
+            var hasEntities: Bool = false
+            for attr in attributes {
+                if attr is TextEntitiesMessageAttribute {
+                    hasEntities = true
+                    break
+                }
+            }
+            var mediaDuration: Double? = nil
+            if let file = message.anyMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
+                mediaDuration = Double(duration)
+            }
+            
+            
             caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
                 self?.parameters?.set_timeCodeInitializer(timecode)
                 self?.parameters?.showMedia(message)
             }, openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
             
             var spoilers:[TextViewLayout.Spoiler] = []
-            for attr in message.attributes {
+            for attr in attributes {
                 if let attr = attr as? TextEntitiesMessageAttribute {
                     for entity in attr.entities {
                         switch entity.type {
@@ -465,7 +467,7 @@ class ChatMediaItem: ChatRowItem {
             }
             if !(self is ChatVideoMessageItem) {
                 
-                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
                 
                 caption.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: caption.range, options: .init(), using: { value, range, stop in
                     if let text = value as? TGInputTextTag {

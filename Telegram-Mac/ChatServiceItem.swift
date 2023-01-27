@@ -872,7 +872,7 @@ class ChatServiceItem: ChatRowItem {
                 let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in
                     return LocalFileReferenceMediaResource(localFilePath: path.path, randomId: arc4random64())
                     } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                        return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, fileId: nil, backgroundColors: nil, mapResourceToAvatarSizes: { resource, representations in
+                        return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, markup: nil, mapResourceToAvatarSizes: { resource, representations in
                             return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                         })
                     } |> deliverOnMainQueue
