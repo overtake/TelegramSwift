@@ -8,7 +8,7 @@
 
 import Cocoa
 import SwiftSignalKit
-
+import ColorPalette
 
 
 public class SearchTextField: NSTextView {
@@ -217,39 +217,45 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         }
     }
     
+    public var searchTheme: SearchTheme? = nil {
+        didSet {
+            updateLocalizationAndTheme(theme: presentation)
+        }
+    }
+    
     override open func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
         inputContainer.background = .clear
         inputContainer.backgroundColor = .clear
-        input.textColor = presentation.search.textColor
+        input.textColor = searchTheme?.textColor ?? presentation.search.textColor
         input.backgroundColor = .clear
         
-        search.backgroundColor = presentation.search.backgroundColor
+        search.backgroundColor = searchTheme?.backgroundColor ?? presentation.search.backgroundColor
         search.autohighlight = false
         search.scaleOnClick = true
         
-        placeholder.attributedString = .initialize(string: presentation.search.placeholder(), color: presentation.search.placeholderColor, font: .normal(.text))
-        placeholder.backgroundColor = presentation.search.backgroundColor
-        self.backgroundColor = presentation.search.backgroundColor
+        placeholder.attributedString = .initialize(string: presentation.search.placeholder(), color: searchTheme?.placeholderColor ?? presentation.search.placeholderColor, font: .normal(.text))
+        placeholder.backgroundColor = searchTheme?.backgroundColor ?? presentation.search.backgroundColor
+        self.backgroundColor = searchTheme?.backgroundColor ?? presentation.search.backgroundColor
         placeholder.sizeToFit()
         search.frame = NSMakeRect(0, 0, 20, 20)
         
         if let custom = customSearchControl {
             search.set(image: custom.icon, for: .Normal)
         } else {
-            search.set(image: presentation.search.searchImage, for: .Normal)
+            search.set(image: searchTheme?.searchImage ?? presentation.search.searchImage, for: .Normal)
         }
         
         animateContainer.setFrameSize(NSMakeSize(placeholder.frame.width + placeholderTextInset, max(21, search.frame.height)))
         
-        clear.set(image: presentation.search.clearImage, for: .Normal)
+        clear.set(image: searchTheme?.clearImage ?? presentation.search.clearImage, for: .Normal)
        _ =  clear.sizeToFit()
         
         placeholder.centerY(x: placeholderTextInset, addition: -1)
         search.centerY(addition: -1)
-        input.insertionPointColor = presentation.search.textColor
-        progressIndicator.progressColor = presentation.colors.text
+        input.insertionPointColor = searchTheme?.textColor ?? presentation.search.textColor
+        progressIndicator.progressColor = searchTheme?.textColor ?? presentation.colors.text
         needsLayout = true
 
     }

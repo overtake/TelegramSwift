@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import InAppSettings
 import Postbox
+import ColorPalette
 
 //private final class WarpView: View {
 //    private final class WarpPartView: View {
@@ -1373,6 +1374,8 @@ final class AnimatedEmojiesView : Control {
         self.backgroundColor = mode == .reactions ? .clear : theme.colors.background
         self.searchContainer.backgroundColor = mode == .reactions ? .clear : theme.colors.background
         self.searchBorder.backgroundColor = mode == .reactions ? .clear : theme.colors.border
+        
+        
         self.searchView.updateLocalizationAndTheme(theme: theme)
     }
     

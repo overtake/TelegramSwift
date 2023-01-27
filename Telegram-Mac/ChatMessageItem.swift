@@ -309,6 +309,21 @@ class ChatMessageItem: ChatRowItem {
 
             var openSpecificTimecodeFromReply:((Double?)->Void)? = nil
             
+             
+             var text: String = message.text
+             var attributes: [MessageAttribute] = message.attributes
+             if let translate = entry.additionalData.translate {
+                 switch translate {
+                 case .loading:
+                     self.isTranslateLoading = true
+                 case let .complete(toLang: toLang):
+                     if let attribute = message.translationAttribute(toLang: toLang) {
+                         text = attribute.text
+                         attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
+                     }
+                 }
+             }
+             
             let messageAttr:NSMutableAttributedString
             if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.anyMedia is TelegramMediaUnsupported) {
                 let attr = NSMutableAttributedString()
@@ -354,19 +369,7 @@ class ChatMessageItem: ChatRowItem {
                     chatInteraction?.openInfo(peerId, toChat, postId, initialAction ?? .source(message.id))
                 }
                 
-                var text: String = message.text
-                var attributes: [MessageAttribute] = message.attributes
-                if let translate = entry.additionalData.translate {
-                    switch translate {
-                    case .loading:
-                        self.isTranslateLoading = true
-                    case let .complete(toLang: toLang):
-                        if let attribute = message.translationAttribute(toLang: toLang) {
-                            text = attribute.text
-                            attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
-                        }
-                    }
-                }
+                
                 
                 messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
@@ -461,7 +464,7 @@ class ChatMessageItem: ChatRowItem {
            
            
              var spoilers:[TextViewLayout.Spoiler] = []
-             for attr in message.attributes {
+             for attr in attributes {
                  if let attr = attr as? TextEntitiesMessageAttribute {
                      for entity in attr.entities {
                          switch entity.type {
@@ -480,7 +483,7 @@ class ChatMessageItem: ChatRowItem {
                      }
                  }
              }
-             InlineStickerItem.apply(to: copy, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+             InlineStickerItem.apply(to: copy, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
 
              copy.fixUndefinedEmojies()
 
