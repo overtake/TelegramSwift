@@ -859,7 +859,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if #available(macOS 11.0, *) {
             self.tableView.style = .fullWidth
         }
-        
+        self.automaticallyAdjustsContentInsets = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
 
         clipView.autoresizingMask = []

@@ -644,13 +644,13 @@ final class EntertainmentView : View {
         
         let buttons:[NSView] = [self.emoji, self.stickers, self.gifs].filter { !$0.isHidden }
         
-        self.sectionTabs.setFrameSize(NSMakeSize(buttons.reduce(0, { $0 + $1.frame.width }) + CGFloat(buttons.count - 1), 40))
+        self.sectionTabs.setFrameSize(NSMakeSize(buttons.reduce(0, { $0 + $1.frame.width }) + CGFloat(buttons.count - 1) * 4, 40))
         self.sectionTabs.center()
         
         var x: CGFloat = 0
         for button in buttons {
             button.centerY(x: x)
-            x += button.frame.width
+            x += button.frame.width + 4
         }
         self.premiumView?.frame = bounds
     }

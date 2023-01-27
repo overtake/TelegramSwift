@@ -958,3 +958,8 @@ public func contextMenuOnScreen()->Bool {
     }
     return false
 }
+public extension Window {
+    var isContextMenu: Bool {
+        return self.weakView != nil
+    }
+}

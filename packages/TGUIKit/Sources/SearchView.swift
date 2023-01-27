@@ -226,6 +226,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         input.backgroundColor = .clear
         
         search.backgroundColor = presentation.search.backgroundColor
+        search.autohighlight = false
+        search.scaleOnClick = true
         
         placeholder.attributedString = .initialize(string: presentation.search.placeholder(), color: presentation.search.placeholderColor, font: .normal(.text))
         placeholder.backgroundColor = presentation.search.backgroundColor
