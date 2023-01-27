@@ -212,6 +212,8 @@ final class ChatLiveTranslateContext {
             var isHidden: Bool
             if let cachedData = cachedData as? CachedChannelData {
                 isHidden = cachedData.flags.contains(.translationHidden)
+            } else if let cachedData = cachedData as? CachedGroupData {
+                isHidden = cachedData.flags.contains(.translationHidden)
             } else {
                 isHidden = true
             }

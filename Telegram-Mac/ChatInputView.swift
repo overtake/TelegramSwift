@@ -151,7 +151,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         textView.delegate = self
         
-        self.updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), animated: false, initial: true)
 
         
         updateAdditions(interaction.presentation, false)
@@ -160,6 +159,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         ready.set(accessory.nodeReady.get() |> map {_ in return true} |> take(1) )
         
         updateLayout(size: frame.size, transition: .immediate)
+        
+        self.updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), animated: false, initial: true)
+
     }
     
     private var textPlaceholder: String {
@@ -848,10 +850,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     
     deinit {
-        chatInteraction.remove(observer: self)
         self.accessoryDispose.dispose()
-        rtfAttachmentsDisposable.dispose()
-        slowModeUntilDisposable.dispose()
+        self.rtfAttachmentsDisposable.dispose()
+        self.slowModeUntilDisposable.dispose()
+        self.chatInteraction.remove(observer: self)
     }
     
     func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
