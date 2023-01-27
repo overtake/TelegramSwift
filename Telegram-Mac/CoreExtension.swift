@@ -556,6 +556,12 @@ public extension Message {
         }
         return nil
     }
+    var image: TelegramMediaImage? {
+        if let image = self.anyMedia as? TelegramMediaImage {
+            return image
+        }
+        return nil
+    }
     
     var textEntities: TextEntitiesMessageAttribute? {
         for attr in attributes {

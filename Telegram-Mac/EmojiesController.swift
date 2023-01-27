@@ -1427,7 +1427,20 @@ final class AnimatedEmojiesView : Control {
         } else {
             transition = .immediate
         }
-        self.updateLayout(self.frame.size, transition: transition)
+        
+        var size = self.frame.size
+        if size.height.isNaN {
+            size.height = 300
+        } else if size.width.isNaN {
+            size.width = 350
+        }
+        if size != self.frame.size {
+            transition.updateFrame(view: self, frame: size.bounds)
+            #if DEBUG
+            fatalError()
+            #endif
+        }
+        self.updateLayout(size, transition: transition)
         
         self.arguments = arguments
         self.context = context

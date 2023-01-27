@@ -2592,16 +2592,17 @@ class ChatRowItem: TableRowItem {
         if isBigEmoji {
             return rightSize.height
         }
-        if let message = message, let entities = message.textEntities {
-            for entity in entities.entities {
-                if case .CustomEmoji = entity.type {
-                    let range = NSMakeRange(0, message.text.length)
-                    if range == NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound) {
-                        return rightSize.height
-                    }
-                }
-            }
-        }
+        // if uncomment, check media with single emoji caption before!
+//        if let message = message, let entities = message.textEntities {
+//            for entity in entities.entities {
+//                if case .CustomEmoji = entity.type {
+//                    let range = NSMakeRange(0, message.text.length)
+//                    if range == NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound) {
+//                        return rightSize.height
+//                    }
+//                }
+//            }
+//        }
         
         if let lastLine = lastLineContentWidth {
             if lastLine.single && !isBubbleFullFilled {
