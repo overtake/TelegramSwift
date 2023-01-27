@@ -102,11 +102,11 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     
     let openPremium:(()->Void)?
     let installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)?
-    
-    override var identifier: String {
-        let ids: String = _items.reduce("", { $0 + "\($1.file.fileId.id)" })
-        return "emojies_\(ids)"
-    }
+//
+//    override var identifier: String {
+//        let ids: String = _items.reduce("", { $0 + "\($1.file.fileId.id)" })
+//        return "emojies_\(ids)"
+//    }
     
     enum Mode {
         case panel
@@ -883,12 +883,18 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
                     view = current
                 } else {
-                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    if let layer = self.inlineStickerItemViews[id] {
+                        performSublayerRemoval(layer, animated: animated, scale: true)
+                    }
                     
                     view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size)
                     self.inlineStickerItemViews[id] = view
                     view.superview = contentView
                     contentView.layer?.addSublayer(view)
+                    if animated {
+                        view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
+                        view.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                 }
                 
                 if #available(macOS 10.15, *) {
