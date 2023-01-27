@@ -608,11 +608,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
             if !animatedEmoji.isEmpty {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae_stick"), equatable: InputDataEquatable(search), comparable: nil, item: { initialSize, stableId in
-                    return EStickItem(initialSize, stableId: stableId, segmentName: strings().emojiSearchAnimatedEmoji)
-                }))
-                index += 1
-                
+                if arguments.mode == .emoji {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae_stick"), equatable: InputDataEquatable(search), comparable: nil, item: { initialSize, stableId in
+                        return EStickItem(initialSize, stableId: stableId, segmentName: strings().emojiSearchAnimatedEmoji)
+                    }))
+                    index += 1
+                }
                                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae"), equatable: InputDataEquatable(Tuple(items: animatedEmoji, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
                     return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: animatedEmoji, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
@@ -1106,12 +1107,18 @@ private final class AnimatedEmojiesCategories : Control {
         updateScroll()
     }
     
+    var searchTheme: SearchTheme? {
+        didSet {
+            updateLocalizationAndTheme(theme: theme)
+        }
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        backgroundView.backgroundColor = theme.search.backgroundColor
-        bottomGradient.shadowBackground = theme.search.backgroundColor.withAlphaComponent(1)
+        backgroundView.backgroundColor = searchTheme?.backgroundColor ?? theme.search.backgroundColor
+        bottomGradient.shadowBackground = searchTheme?.backgroundColor ?? theme.search.backgroundColor
         bottomGradient.direction = .horizontal(true)
-        topGradient.shadowBackground = theme.search.backgroundColor.withAlphaComponent(1)
+        topGradient.shadowBackground = searchTheme?.backgroundColor ?? theme.search.backgroundColor
         topGradient.direction = .horizontal(false)
 
     }
@@ -1261,6 +1268,7 @@ final class AnimatedEmojiesView : Control {
     
     let searchView = SearchView(frame: .zero)
     fileprivate let searchContainer = View()
+    private let visualEffect = NSVisualEffectView()
     private let searchInside = View()
     
     private let searchBorder = View()
@@ -1290,6 +1298,17 @@ final class AnimatedEmojiesView : Control {
         searchView.layer?.cornerRadius = 15
 
         searchInside.addSubview(searchView)
+        
+        visualEffect.wantsLayer = true
+        
+        visualEffect.state = .active
+        visualEffect.blendingMode = .behindWindow
+        visualEffect.autoresizingMask = []
+        
+        if #available(macOS 11.0, *) {
+            searchContainer.addSubview(visualEffect)
+        }
+        
         searchContainer.addSubview(searchBorder)
         searchContainer.addSubview(searchInside)
         addSubview(searchContainer)
@@ -1331,22 +1350,25 @@ final class AnimatedEmojiesView : Control {
         transition.updateFrame(view: borderView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, .borderSize))
 
         
-        let searchDest = inSearch ? 0 : min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46)
+        let dest = min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46)
+        
+        let searchDest = inSearch ? 0 : dest
                 
         
         transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, tabs.frame.maxY, size.width, 46 - min(searchDest, 46)))
 
         
-        var searchInsideRect: CGRect = CGRect(origin: CGPoint(x: 0, y: searchContainer.frame.height - 46), size: NSMakeSize(size.width, 46))
+        let searchInsideRect: CGRect = CGRect(origin: CGPoint(x: 0, y: searchContainer.frame.height - 46), size: NSMakeSize(size.width, 46))
         transition.updateFrame(view: searchInside, frame: searchInsideRect)
-        
+        transition.updateFrame(view: visualEffect, frame: searchInsideRect)
+
         
         
         transition.updateFrame(view: searchView, frame: searchInside.focus(NSMakeSize(size.width - 16, 30)))
         transition.updateFrame(view: searchBorder, frame: NSMakeRect(0, searchContainer.frame.height - .borderSize, size.width, .borderSize))
         
+        
         transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height - initial))
-
 
         let alpha: CGFloat = inSearch && tableView.documentOffset.y > 0 ? 1 : 0
         transition.updateAlpha(view: searchBorder, alpha: alpha)
@@ -1372,9 +1394,19 @@ final class AnimatedEmojiesView : Control {
         self.borderView.backgroundColor = mode == .reactions ? theme.colors.grayIcon.withAlphaComponent(0.1) : theme.colors.border
         self.tabs.backgroundColor = mode != .reactions ? theme.colors.background : .clear
         self.backgroundColor = mode == .reactions ? .clear : theme.colors.background
-        self.searchContainer.backgroundColor = mode == .reactions ? .clear : theme.colors.background
+        self.searchContainer.background = mode == .reactions ? .clear : theme.colors.background
         self.searchBorder.backgroundColor = mode == .reactions ? .clear : theme.colors.border
-        
+        visualEffect.material = theme.colors.isDark ? .dark : .light
+        searchInside.backgroundColor = mode == .reactions ? theme.colors.background.withAlphaComponent(0.7) : theme.colors.background
+        if mode == .reactions {
+            let background = theme.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1)
+            let searchTheme = SearchTheme(background, theme.search.searchImage, theme.search.clearImage, theme.search.placeholder, theme.search.textColor, theme.search.placeholderColor)
+            self.searchView.searchTheme = searchTheme
+            self.categories?.searchTheme = searchTheme
+        } else {
+            self.searchView.searchTheme = nil
+            self.categories?.searchTheme = nil
+        }
         
         self.searchView.updateLocalizationAndTheme(theme: theme)
     }
@@ -1452,7 +1484,6 @@ final class AnimatedEmojiesView : Control {
 
 //        searchContainer.isHidden = mode == .reactions
         tableView.scrollerInsets = .init(left: 0, right: 0, top: 46, bottom: 50)
-
         
         updateSelectionState(animated: packs.animated)
         updateLocalizationAndTheme(theme: theme)
@@ -1632,7 +1663,7 @@ final class AnimatedEmojiesView : Control {
             selectionView.layer?.animateCornerRadius()
         }
         transition.updateFrame(view: selectionView, frame: rect)
-        
+        updateLocalizationAndTheme(theme: theme)
     }
     
     
@@ -1972,7 +2003,9 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let search = self.searchValue.get() |> distinctUntilChanged(isEqual: { prev, new in
             return prev.request == new.request
-        }) |> mapToSignal { state -> Signal<[String]?, NoError> in
+        }) |> mapToThrottled { value in
+            return .single(value) |> delay(0.1, queue: .mainQueue())
+        } |> mapToSignal { state -> Signal<[String]?, NoError> in
             if state.request.isEmpty {
                 return .single(nil)
             } else {
@@ -2349,7 +2382,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     }
     
     override var supportSwipes: Bool {
-        if let categories = genericView.categories, categories._mouseInside() || genericView.searchContainer.mouseInside() {
+        if let categories = genericView.categories, categories._mouseInside() || genericView.searchContainer._mouseInside() {
             return false
         }
         return !genericView.packsView._mouseInside()
