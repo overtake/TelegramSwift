@@ -141,12 +141,13 @@ final class ReactionsWindowController : NSObject {
 
     
     private var keyDisposable: Disposable?
-    
+    private var panelKeyDisposable: Disposable?
+
     private func makeView(_ content: NSView, _ initialView: NSView, _ initialRect: NSRect, animated: Bool) -> (Window, V) {
         
         let v = V(content)
         
-        let panel = Window(contentRect: NSMakeRect(initialRect.minX - 21, initialRect.maxY - 320 + (initialRect.height + 20) - 32, 390, 340), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+        let panel = Window(contentRect: NSMakeRect(initialRect.minX - 21, initialRect.maxY - 320 + (initialRect.height + 20) - 32 + 36, 390, 340), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
         panel.level = .popUpMenu
@@ -166,7 +167,7 @@ final class ReactionsWindowController : NSObject {
         v.frame = v.frame.offsetBy(dx: 20, dy: 20)
         contentView.addSubview(v)
         
-        initialView.frame = NSMakeRect(v.frame.minX + 1, v.frame.maxY - initialView.frame.height - 48, initialView.frame.width, initialView.frame.height)
+        initialView.frame = NSMakeRect(v.frame.minX + 1, v.frame.maxY - initialView.frame.height - (48 + 36), initialView.frame.width, initialView.frame.height)
 //        initialView.background = .red
 //        initialView.layer?.opacity = 0.5
         initialView.removeFromSuperview()
@@ -278,6 +279,7 @@ final class ReactionsWindowController : NSObject {
         panel.order(.below, relativeTo: initialWindow.windowNumber)
         
         self.panel = panel
+        let context = self.context
                 
 
         panel.set(handler: { [weak self] _ in
@@ -336,10 +338,18 @@ final class ReactionsWindowController : NSObject {
         var skippedFirst: Bool = false
         
         self.keyDisposable = context.window.keyWindowUpdater.start(next: { [weak self] value in
-            if !value && skippedFirst {
+            if !value && skippedFirst, self?.panel?._canBecomeKey == false {
                 self?.close()
             }
             skippedFirst = true
+        })
+        
+        self.panelKeyDisposable = panel.keyWindowUpdater.start(next: { [weak self] value in
+            if self?.panel?.canBecomeKey == true, !value {
+                DispatchQueue.main.async {
+                    self?.close(animated: context.window.isKeyWindow == true)
+                }
+            }
         })
         
         view.initFake(initialView.frame, to: view.frame)
@@ -360,6 +370,11 @@ final class ReactionsWindowController : NSObject {
             CATransaction.commit()
         })
         
+    }
+    
+    deinit {
+        panelKeyDisposable?.dispose()
+        keyDisposable?.dispose()
     }
     
     private func close(animated: Bool = false) {

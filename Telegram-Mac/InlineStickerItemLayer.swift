@@ -406,7 +406,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         
         self.infoDisposable = signal.start(next: { [weak self] file in
             self?.file = file
-            self?.updateSize(size: size, sync: emoji.file != nil || self?.synchronyous == true)
+            self?.updateSize(size: size, sync: self?.synchronyous == true)
         })
     }
     
