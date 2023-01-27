@@ -1458,7 +1458,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             storedPeer = .complete()
         }
         
-        if let query = query, let peerId = peerId {
+        if let query = query, let peerId = peerId, messageId == nil {
             let link = inApp(for: query as NSString, context: context, peerId: peerId, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
             switch link {
             case let .followResolvedName(_, _, postId, _, _, _):

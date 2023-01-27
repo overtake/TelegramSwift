@@ -6922,12 +6922,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         if chatLocation.peerId.namespace == Namespaces.Peer.CloudChannel, mode == .history {
             self.adMessages = .init(context: context, height: sizeValue.get() |> map { $0 .height}, peerId: chatLocation.peerId)
-            self.liveTranslate = .init(peerId: chatLocation.peerId, context: context)
         } else {
             self.adMessages = nil
         }
         
-        
+        if chatLocation.peerId.namespace == Namespaces.Peer.CloudChannel || chatLocation.peerId.namespace == Namespaces.Peer.CloudGroup, mode == .history {
+            self.liveTranslate = .init(peerId: chatLocation.peerId, context: context)
+        } else {
+            self.liveTranslate = nil
+        }
        
         var takeTableItem:((MessageId)->ChatRowItem?)? = nil
         
