@@ -1616,7 +1616,7 @@ final class AnimatedEmojiesView : Control {
             current.scrollView.applyExternalScroll = { [weak self] event in
                 return self?.moveCategories(event) ?? false
             }
-            
+            current.updateScroll()
             
             
             self.searchView.externalScroll = { [weak current] event in
@@ -1635,6 +1635,7 @@ final class AnimatedEmojiesView : Control {
             self.searchView.externalScroll = nil
             
         }
+        
 //        self.moveCategories(nil)
         
         var animated = transition.isAnimated

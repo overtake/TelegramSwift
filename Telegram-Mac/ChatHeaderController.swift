@@ -2610,10 +2610,12 @@ private final class ChatRestartTopic : Control, ChatHeaderProtocol {
 
 
 private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
-    private let chatInteraction:ChatInteraction
-    private let textView = TitleButton()
     
-    private let action = ImageButton()
+    private var container: View = View()
+    private let chatInteraction:ChatInteraction
+    
+    private var textView = TitleButton()
+    private var action = ImageButton()
     
     private var _state: ChatHeaderState?
     
@@ -2638,13 +2640,16 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
             self?.textView.alphaValue = 1
         }, for: .Hover)
         
-        textView.userInteractionEnabled = false
-        textView.autohighlight = false
-        textView.disableActions()
-        textView.animates = false
+       
         
-        addSubview(textView)
-        addSubview(action)
+        
+        self.container = View()
+        
+        container.addSubview(textView)
+        self.addSubview(action)
+        
+        addSubview(container)
+        
         self.style = ControlStyle(backgroundColor: theme.colors.background)
 
         self.border = [.Bottom]
@@ -2720,7 +2725,33 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
     }
 
     func update(with state: ChatHeaderState, animated: Bool) {
+        let updated = state.translate?.translate != _state?.translate?.translate
         _state = state
+        
+        if updated || !animated {
+            let container = View(frame: bounds)
+            let textView = TitleButton()
+            textView.userInteractionEnabled = false
+            textView.autohighlight = false
+            textView.isEventLess = true
+            textView.disableActions()
+            textView.animates = false
+            container.addSubview(textView)
+            
+            let removeTo = state.translate?.translate == true ? NSMakePoint(0, frame.height) : NSMakePoint(0, -frame.height)
+            let appearFrom = state.translate?.translate == true ? NSMakePoint(0, -frame.height) : NSMakePoint(0, frame.height)
+            
+            performSubviewPosRemoval(self.container, pos: removeTo, animated: animated)
+            self.container = container
+            
+            if animated {
+                container.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                container.layer?.animatePosition(from: appearFrom, to: .zero)
+            }
+            self.textView = textView
+            addSubview(container, positioned: .below, relativeTo: action)
+        }
+        
         textView.set(font: .normal(.text), for: .Normal)
         textView.set(color: theme.colors.accent, for: .Normal)
         textView.set(image: theme.icons.chat_translate, for: .Normal)
@@ -2755,6 +2786,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
     
     override func layout() {
         super.layout()
+        container.frame = bounds
 //        textView.resize(frame.width - 40)
         textView.center()
         action.centerY(x: frame.width - action.frame.width - 14)
