@@ -77,6 +77,48 @@ public struct ChatTranslationState: Codable {
 }
 
 
+
+func translateMessageIds(context: AccountContext, messageIds: [EngineMessage.Id], toLang: String) -> Signal<Void, NoError> {
+    return context.account.postbox.transaction { transaction -> Signal<Void, NoError> in
+        var messageIdsToTranslate: [EngineMessage.Id] = []
+        var messageIdsSet = Set<EngineMessage.Id>()
+        for messageId in messageIds {
+            if let message = transaction.getMessage(messageId) {
+                if let replyAttribute = message.attributes.first(where: { $0 is ReplyMessageAttribute }) as? ReplyMessageAttribute, let replyMessage = message.associatedMessages[replyAttribute.messageId] {
+                    if !replyMessage.text.isEmpty {
+                        if let translation = replyMessage.attributes.first(where: { $0 is TranslationMessageAttribute }) as? TranslationMessageAttribute, translation.toLang == toLang {
+                        } else {
+                            if !messageIdsSet.contains(replyMessage.id) {
+                                messageIdsToTranslate.append(replyMessage.id)
+                                messageIdsSet.insert(replyMessage.id)
+                            }
+                        }
+                    }
+                }
+                if !message.text.isEmpty && message.author?.id != context.account.peerId {
+                    if let translation = message.attributes.first(where: { $0 is TranslationMessageAttribute }) as? TranslationMessageAttribute, translation.toLang == toLang {
+                    } else {
+                        if !messageIdsSet.contains(messageId) {
+                            messageIdsToTranslate.append(messageId)
+                            messageIdsSet.insert(messageId)
+                        }
+                    }
+                }
+            } else {
+                if !messageIdsSet.contains(messageId) {
+                    messageIdsToTranslate.append(messageId)
+                    messageIdsSet.insert(messageId)
+                }
+            }
+        }
+        return context.engine.messages.translateMessages(messageIds: messageIdsToTranslate, toLang: toLang)
+        |> `catch` { _ -> Signal<Void, NoError> in
+            return .complete()
+        }
+    } |> switchToLatest
+}
+
+
 private func cachedChatTranslationState(engine: TelegramEngine, peerId: EnginePeer.Id) -> Signal<ChatTranslationState?, NoError> {
     let key = ValueBoxKey(length: 8)
     key.setInt64(0, value: peerId.id._internalGetInt64Value())
@@ -117,27 +159,6 @@ public func updateChatTranslationStateInteractively(engine: TelegramEngine, peer
 
 
 
-
-
-
-private func translateTexts(context: AccountContext, from: String?, to: String, blocks: [String]) -> Signal<[(detect: String?, result: String)?], NoError> {
-    var signals:[Signal<(detect: String?, result: String)?, NoError>] = []
-    for block in blocks {
-        signals.append(context.engine.messages.translate(text: block, toLang: to) |> mapToSignal { value in
-            if let value = value {
-                return .single((detect: nil, result: value))
-            } else {
-                return Translate.translateText(text: block, from: from, to: to)
-                |> map(Optional.init)
-                |> `catch` { _ in return .single(nil) }
-            }
-        })
-    }
-
-    
-    return combineLatest(signals)
-}
-
 final class ChatLiveTranslateContext {
     
     struct State : Equatable {
@@ -173,7 +194,7 @@ final class ChatLiveTranslateContext {
         static var `default`: State {
             return .init(canTranslate: false, translate: false, from: "", to: "", result: [:])
         }
-        fileprivate var queued:[MessageId] = []
+        fileprivate var queued:[Message] = []
     }
     
     private let peerId: PeerId
@@ -259,7 +280,13 @@ final class ChatLiveTranslateContext {
         actionsDisposable.add(state.start(next: { [weak self] state in
             prepareQueue.justDispatch {
                 if !state.queued.isEmpty {
-                    let messages = state.queued.filter { state.result[.Key(id: $0, toLang: state.to)] == nil }
+                    var textCount: Int = 0
+                    var count: Int = 0
+                    let messages = state.queued.reversed().filter { state.result[.Key(id: $0.id, toLang: state.to)] == nil }.prefix(while: { msg in
+                        textCount += msg.text.count
+                        count += 1
+                        return textCount < 25000 && count < 20
+                    }).map { $0.id }
                     if !messages.isEmpty {
                         self?.activateTranslation(for: messages, state: state)
                     }
@@ -269,7 +296,6 @@ final class ChatLiveTranslateContext {
         }))
     }
     private func activateTranslation(for msgIds: [MessageId], state: State) -> Void {
-        
         let signal = context.engine.messages.translateMessages(messageIds: msgIds, toLang: state.to)
         actionsDisposable.add(signal.start(next: { [weak self] results in
             self?.updateState { current in
@@ -311,22 +337,22 @@ final class ChatLiveTranslateContext {
                 return
             }
             let toLang = self.stateValue.with { $0.to }
-            let ids = message.filter { $0.translationAttribute(toLang: toLang) == nil }.map { $0.id }
-            let translated = message.filter { $0.translationAttribute(toLang: toLang) != nil }.map { $0.id }
+            let msgs = message.filter { $0.translationAttribute(toLang: toLang) == nil }.map { $0 }
+            let translated = message.filter { $0.translationAttribute(toLang: toLang) != nil }.map { $0 }
             
             if !translated.isEmpty {
                 self.updateState { current in
                     var current = current
                     if current.translate {
-                        for id in translated {
-                            current.result[.Key(id: id, toLang: toLang)] = .complete(toLang: toLang)
+                        for msg in translated {
+                            current.result[.Key(id: msg.id, toLang: toLang)] = .complete(toLang: toLang)
                         }
                     }
                     return current
                 }
                 
             }
-            
+            let ids = msgs.map ({ $0.id })
             if self.holder != ids {
                 self.holder = ids
                 let signal = Signal<Void, NoError>.complete() |> delay(0.01, queue: prepareQueue)
@@ -339,9 +365,9 @@ final class ChatLiveTranslateContext {
                     self.updateState { current in
                         var current = current
                         if current.translate {
-                            for id in ids {
-                                if current.result[.Key(id: id, toLang: current.to)] == nil {
-                                    current.queued.append(id)
+                            for msg in msgs {
+                                if current.result[.Key(id: msg.id, toLang: current.to)] == nil {
+                                    current.queued.append(msg)
                                 }
                             }
                         }
@@ -433,9 +459,6 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
                             }
                         }
                         
-                        if let _ = fromLangs["ru"] {
-                            fromLangs["bg"] = nil
-                        }
                         
                         var mostFrequent: (String, Int)?
                         for (lang, count) in fromLangs {
