@@ -1346,6 +1346,8 @@ final class AnimatedEmojiesView : Control {
         transition.updateFrame(view: packsView, frame: tabs.focus(NSMakeSize(size.width, 36)))
         transition.updateFrame(view: borderView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, .borderSize))
         transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height - initial))
+        
+        transition.updateAlpha(view: borderView, alpha: inSearch ? 0 : 1)
 
         
         let dest = min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46)
@@ -1506,7 +1508,11 @@ final class AnimatedEmojiesView : Control {
                     
                     let sInset = maxX - rect.origin.x
                     let sOpacity: CGFloat = 1 - sInset / minX
-                    searchView.movePlaceholder(-sInset, opacity: sOpacity, transition: transition)
+                    if minCategoryWidth != categoryRect.width {
+                        searchView.movePlaceholder(-sInset, opacity: sOpacity, transition: transition)
+                    } else {
+                        searchView.movePlaceholder(nil, opacity: 1, transition: transition)
+                    }
                 }
                 view.updateScroll()
                 
@@ -1514,7 +1520,11 @@ final class AnimatedEmojiesView : Control {
             } else {
                 if let _ = state?.selectedEmojiCategory {
                     transition.updateFrame(view: view, frame: revealedCategoryRect)
-                    searchView.movePlaceholder(-((searchView.frame.minX + searchView.holderSize.width) - revealedCategoryRect.minX), opacity: 0, transition: transition)
+                    if minCategoryWidth != categoryRect.width {
+                        searchView.movePlaceholder(-((searchView.frame.minX + searchView.holderSize.width) - revealedCategoryRect.minX), opacity: 0, transition: transition)
+                    } else {
+                        searchView.movePlaceholder(nil, opacity: 1, transition: transition)
+                    }
                 } else {
                     transition.updateFrame(view: view, frame: categoryRect)
                     searchView.movePlaceholder(nil, opacity: 1, transition: transition)
@@ -1527,13 +1537,15 @@ final class AnimatedEmojiesView : Control {
         }
         return false
     }
-    
+    var minCategoryWidth: CGFloat {
+        return CGFloat(state?.searchCategories?.groups.count ?? 0) * 30
+    }
     var categoryRect: NSRect {
-        let width = searchView.frame.width - searchView.holderSize.width
+        let width = min(searchView.frame.width - searchView.holderSize.width, minCategoryWidth)
         return NSMakeRect(searchContainer.frame.width - (width + searchView.frame.minX), searchView.frame.minY, width, 30)
     }
     var revealedCategoryRect: NSRect {
-        let width = searchView.frame.width - searchView.searchSize.width
+        let width = min(searchView.frame.width - searchView.searchSize.width, minCategoryWidth)
         return NSMakeRect(searchContainer.frame.width - (width + searchView.frame.minX), searchView.frame.minY, width, 30)
     }
     
@@ -2129,6 +2141,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             searchCategories = context.engine.stickers.emojiSearchCategories(kind: .emoji)
         } else if mode == .status {
             searchCategories = context.engine.stickers.emojiSearchCategories(kind: .status)
+        } else if mode == .selectAvatar {
+            searchCategories = context.engine.stickers.emojiSearchCategories(kind: .avatar)
         } else {
             searchCategories = .single(nil)
         }

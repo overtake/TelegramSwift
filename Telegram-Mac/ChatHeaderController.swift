@@ -166,7 +166,7 @@ struct ChatHeaderState : Identifiable, Equatable {
     var thirdHeight:CGFloat {
         var height: CGFloat = 0
         if let _ = translate {
-            height += 44
+            height += 36
         }
         return height
     }

@@ -1073,7 +1073,7 @@ class NStickersView : View {
     override func layout() {
         super.layout()
 
-      //  self.updateLayout(size: self.frame.size, transition: .immediate)
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     
