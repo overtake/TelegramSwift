@@ -816,7 +816,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
 
     public convenience init() {
-        self.init(frame: NSZeroRect)
+        self.init(frame: NSMakeRect(0, 0, 1, 1))
     }
     
     public var border:BorderType? {
@@ -861,7 +861,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.tableView.style = .fullWidth
         }
         self.automaticallyAdjustsContentInsets = false
-        tableView.translatesAutoresizingMaskIntoConstraints = false
+       // tableView.translatesAutoresizingMaskIntoConstraints = false
 
         clipView.autoresizingMask = []
         clipView.autoresizesSubviews = false
