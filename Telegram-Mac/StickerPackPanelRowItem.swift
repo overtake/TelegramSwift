@@ -448,7 +448,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     }
     
 
-    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [(TelegramMediaFile, NSPoint)]) {
+    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [(TelegramMediaFile, NSPoint)], animated: Bool) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var index: Int = 0
 
@@ -462,11 +462,17 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
                 view = current
             } else {
-                self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                if let layer = self.inlineStickerItemViews[id] {
+                    performSublayerRemoval(layer, animated: animated, scale: true)
+                }
                 view = InlineStickerItemLayer(account: context.account, file: item.0, size: rect.size)
                 self.inlineStickerItemViews[id] = view
                 view.superview = contentView
                 contentView.layer?.addSublayer(view)
+                if animated {
+                    view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
+                    view.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
             }
             index += 1
 
@@ -478,7 +484,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         for (key, itemLayer) in self.inlineStickerItemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
-                itemLayer.removeFromSuperlayer()
+                performSublayerRemoval(itemLayer, animated: animated, scale: true)
             }
         }
         for key in removeKeys {
@@ -561,7 +567,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         
         self.layout()
         
-        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.files)
+        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.files, animated: animated)
         
     }
     

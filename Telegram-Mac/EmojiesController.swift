@@ -1257,8 +1257,8 @@ final class AnimatedEmojiesCategories : Control {
 }
 
 final class AnimatedEmojiesView : Control {
-    let tableView = TableView()
-    let packsView = HorizontalTableView(frame: NSZeroRect)
+    let tableView = TableView(frame: NSMakeRect(0, 0, 350, 350))
+    let packsView = HorizontalTableView(frame: NSMakeRect(0, 0, 350, 46))
     private let borderView = View()
     private let tabs = View()
     private let selectionView: View = View(frame: NSMakeRect(0, 0, 36, 36))
@@ -1324,7 +1324,7 @@ final class AnimatedEmojiesView : Control {
         }))
         
        
-        self.layout()
+        self.updateLayout(frame.size, transition: .immediate)
     }
  
     override func layout() {
@@ -1345,6 +1345,7 @@ final class AnimatedEmojiesView : Control {
         transition.updateFrame(view: tabs, frame: NSMakeRect(0, initial, size.width, 46))
         transition.updateFrame(view: packsView, frame: tabs.focus(NSMakeSize(size.width, 36)))
         transition.updateFrame(view: borderView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, .borderSize))
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height - initial))
 
         
         let dest = min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46)
@@ -1371,7 +1372,6 @@ final class AnimatedEmojiesView : Control {
             categories.updateLayout(size: categories.frame.size, transition: transition)
         }
         
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height - initial))
 
        
         

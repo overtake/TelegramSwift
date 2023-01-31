@@ -1066,7 +1066,7 @@ class NStickersView : View {
         transition.updateFrame(view: emptySearchContainer, frame: size.bounds)
         
         
-        self.updateSelectionState(animated: false)
+        self.updateSelectionState(animated: transition.isAnimated)
 
     }
     

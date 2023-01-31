@@ -439,6 +439,8 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         default:
             has2fa = false
         }
+    } else {
+        has2fa = false
     }
     
     if !has2fa {
