@@ -78,6 +78,8 @@ final class Avatar_EmojiListView : View {
             
         }, openFeatured: { _ in
             
+        }, selectEmojiCategory: { _ in
+            
         }, mode: .common)
         
         let item = StickerPackPanelRowItem(frame.size, context: context, arguments: arguments, files: list.map { $0.file }, packInfo: .emojiRelated, collectionId: .pack(ItemCollectionId(namespace: 0, id: 0)), canSend: true, playOnHover: true)
