@@ -2744,6 +2744,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         for (index, item) in animatedItems {
             replace(item: item, at: index, animated: true)
         }
+        
+        if tableView.frame.height.isNaN || tableView.frame.width.isNaN {
+            self.tableView.setFrameSize(NSMakeSize(frame.width, documentSize.height))
+        }
+        
         self.endTableUpdates()
         
         if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {
@@ -3218,6 +3223,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let oldWidth = frame.width
         let oldHeight = frame.height
         super.setFrameSize(newSize)
+        if tableView.frame.height.isNaN || tableView.frame.width.isNaN {
+            self.tableView.setFrameSize(newSize)
+        }
        
         if newSize.width > 0 || newSize.height > 0 {
             if oldWidth != frame.width, newSize.width > 0 && newSize.height > 0 {
