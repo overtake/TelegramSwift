@@ -690,7 +690,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
 
         if let storage = input.textStorage {
             let size = storage.size()
-            inputSize = NSMakeSize(size.width + 10, size.height)
+            inputSize = NSMakeSize(max(size.width + 10, inputRect.width), size.height)
         }
         transition.updateFrame(view: inputContainer, frame: inputRect)
         transition.updateFrame(view: input, frame: CGRect(origin: inputPoint, size: inputSize))

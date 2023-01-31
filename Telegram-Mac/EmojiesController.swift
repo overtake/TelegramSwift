@@ -892,7 +892,7 @@ extension EmojiSearchCategories.Group : Identifiable, Comparable {
 }
 
 
-private final class BackCategoryControl : Control {
+final class BackCategoryControl : Control {
     private var sticker: InlineStickerItemLayer
     private let context: AccountContext
     init(frame frameRect: NSRect, context: AccountContext) {
@@ -955,7 +955,7 @@ private final class BackCategoryControl : Control {
 }
 
 
-private final class AnimatedEmojiesCategories : Control {
+final class AnimatedEmojiesCategories : Control {
     
     private final class CategoryView : Control {
                 
@@ -968,9 +968,6 @@ private final class AnimatedEmojiesCategories : Control {
         private var selectionView : SimpleLayer?
         
         required init(frame frameRect: NSRect, context: AccountContext, category: EmojiSearchCategories.Group, isSelected: Bool) {
-            
-            
-            let size: NSSize = NSMakeSize(frameRect.width, 30)
             
             self.category = category
             self.context = context
@@ -1366,10 +1363,6 @@ final class AnimatedEmojiesView : Control {
         
         transition.updateFrame(view: searchView, frame: searchInside.focus(NSMakeSize(size.width - 16, 30)))
         transition.updateFrame(view: searchBorder, frame: NSMakeRect(0, searchContainer.frame.height - .borderSize, size.width, .borderSize))
-        
-        
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height - initial))
-
         let alpha: CGFloat = inSearch && tableView.documentOffset.y > 0 ? 1 : 0
         transition.updateAlpha(view: searchBorder, alpha: alpha)
         
@@ -1377,6 +1370,10 @@ final class AnimatedEmojiesView : Control {
             transition.updateFrame(view: categories, frame: categories.centerFrameY(x: searchInside.frame.width - categories.frame.width - searchView.frame.minX))
             categories.updateLayout(size: categories.frame.size, transition: transition)
         }
+        
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height - initial))
+
+       
         
         self.updateSelectionState(animated: transition.isAnimated)
         

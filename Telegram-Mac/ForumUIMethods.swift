@@ -103,6 +103,9 @@ struct ForumUI {
             } else {
                 controller.scrollup()
             }
+            if let initialAction = initialAction {
+                controller.chatInteraction.invokeInitialAction(animated: true,action: initialAction)
+            }
             return controller.ready.get()
         }
         

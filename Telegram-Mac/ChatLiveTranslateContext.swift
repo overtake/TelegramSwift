@@ -246,7 +246,7 @@ final class ChatLiveTranslateContext {
                 isHidden = true
             }
             
-            if !isHidden {
+            if !isHidden && translationState?.fromLang != translationState?.toLang  {
                 return (translationState, appearance)
             } else {
                 return (nil, appearance)
