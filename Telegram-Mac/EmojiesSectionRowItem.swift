@@ -944,7 +944,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         for (key, itemLayer) in self.inlineStickerItemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
-                itemLayer.removeFromSuperlayer()
+                performSublayerRemoval(itemLayer, animated: animated, scale: true)
             }
         }
         for key in removeKeys {

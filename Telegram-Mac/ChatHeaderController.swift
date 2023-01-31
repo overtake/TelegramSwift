@@ -2626,7 +2626,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         
         self.set(handler: { [weak self] control in
             self?.chatInteraction.toggleTranslate()
-        }, for: .SingleClick)
+        }, for: .Click)
         
         self.set(handler: { [weak self] _ in
             self?.textView.alphaValue = 0.8
@@ -2714,6 +2714,10 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
             self?.chatInteraction.hideTranslation()
         }, itemImage: MenuAnimation.menu_clear_history.value))
         
+        
+        items.append(ContextSeparatorItem())
+
+        //items.append(ContextMenuItem("Read about transl"))
         menu.items = items
         
         return menu

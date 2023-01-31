@@ -800,6 +800,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView = TGFlipableTableView(frame: frameRect.size.bounds)
         self.tableView.wantsLayer = true
         self.tableView.autoresizesSubviews = false
+        self.tableView.autoresizingMask = []
         super.init(frame: frameRect)
         self.autoresizingMask = []
         updateAfterInitialize(isFlipped:true, drawBorder: false)
