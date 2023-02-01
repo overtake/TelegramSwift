@@ -1276,7 +1276,7 @@ final class AnimatedEmojiesView : Control {
     fileprivate var closeCategories: BackCategoryControl?
     
     private var mode: EmojiesController.Mode = .emoji
-    private var state: State?
+    fileprivate var state: State?
     private var context: AccountContext?
     private var arguments: Arguments?
     
@@ -1976,6 +1976,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             } else {
                 searchState = .init(state: .None, request: nil)
             }
+            self?.genericView.state = stateValue.with { $0 }
             self?.updateSearchState(searchState)
         })
         
