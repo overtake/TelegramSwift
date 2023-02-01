@@ -217,7 +217,13 @@ open class TableRowItem: NSObject {
         var height = self.height
         if height.isInfinite || height.isNaN {
             height = 1
-            fatalError("row is fucked up == \(self), className: \(self.className)")
+            let alert: NSAlert = NSAlert()
+            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: "Cancel")
+            alert.messageText = "Send this info to @vihor"
+            alert.informativeText = "row height calculation is failed for \(self), className: \(self.className)"
+            alert.alertStyle = .critical
+            alert.runModal()
         }
         return ceil(_isAutohidden ? 1.0 : height)
     }
