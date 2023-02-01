@@ -214,7 +214,11 @@ open class TableRowItem: NSObject {
     }
     
     internal var heightValue: CGFloat {
-        let height = self.height
+        var height = self.height
+        if height.isInfinite || height.isNaN {
+            height = 1
+            fatalError("row is fucked up == \(self), className: \(self.className)")
+        }
         return ceil(_isAutohidden ? 1.0 : height)
     }
 }

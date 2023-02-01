@@ -800,7 +800,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView = TGFlipableTableView(frame: frameRect.size.bounds)
         self.tableView.wantsLayer = true
         self.tableView.autoresizesSubviews = false
-        self.tableView.autoresizingMask = []
         super.init(frame: frameRect)
         self.autoresizingMask = []
         updateAfterInitialize(isFlipped:true, drawBorder: false)
@@ -816,7 +815,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
 
     public convenience init() {
-        self.init(frame: NSMakeRect(0, 0, 1, 1))
+        self.init(frame: NSZeroRect)
     }
     
     public var border:BorderType? {
@@ -861,7 +860,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.tableView.style = .fullWidth
         }
         self.automaticallyAdjustsContentInsets = false
-       // tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.translatesAutoresizingMaskIntoConstraints = false
 
         clipView.autoresizingMask = []
         clipView.autoresizesSubviews = false
@@ -2744,11 +2743,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         for (index, item) in animatedItems {
             replace(item: item, at: index, animated: true)
         }
-        
-        if tableView.frame.height.isNaN || tableView.frame.width.isNaN {
-            self.tableView.setFrameSize(NSMakeSize(frame.width, documentSize.height))
-        }
-        
         self.endTableUpdates()
         
         if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {
@@ -3223,9 +3217,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let oldWidth = frame.width
         let oldHeight = frame.height
         super.setFrameSize(newSize)
-        if tableView.frame.height.isNaN || tableView.frame.width.isNaN {
-            self.tableView.setFrameSize(newSize)
-        }
        
         if newSize.width > 0 || newSize.height > 0 {
             if oldWidth != frame.width, newSize.width > 0 && newSize.height > 0 {
