@@ -805,7 +805,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
         rightView.layer?.cornerRadius = self.rightView.layer!.cornerRadius
         var rect = self.rightView.convert(self.rightView.bounds, to: contentNode)
         
-        if contentNode.visibleRect.minY < rect.midY && contentNode.visibleRect.minY + contentNode.visibleRect.height > rect.midY {
+        if contentNode.effectiveVisibleRect.minY < rect.midY && contentNode.effectiveVisibleRect.minY + contentNode.effectiveVisibleRect.height > rect.midY {
             rect.origin.y = contentNode.frame.height - rect.maxY
             rightView.frame = rect
             view.addSubview(rightView)

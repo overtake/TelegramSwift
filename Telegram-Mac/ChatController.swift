@@ -5454,7 +5454,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                                 if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
                                     if !replyMessage.text.isEmpty {
-                                        messagesToTranslate.append(message)
+                                        messagesToTranslate.append(replyMessage)
                                     }
                                 }
                             }
