@@ -721,7 +721,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     
     func layout(_ animated:Bool) {
         if let superview = superview, let relativeView = genericView.relativeView {
-            var height = min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 3))
+            var height = min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 2))
             if genericView.firstItem is ContextClueRowItem {
                 height = min(height, 120)
             }

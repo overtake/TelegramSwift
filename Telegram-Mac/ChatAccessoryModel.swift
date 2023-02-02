@@ -105,8 +105,8 @@ class ChatAccessoryView : Button {
             current.isSelectable = false
             addSubview(current)
             self.textView = current
-            self.updateLayout(self.frame.size, transition: .immediate)
             if animated, previous {
+                self.updateLayout(self.frame.size, transition: .immediate)
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
         }

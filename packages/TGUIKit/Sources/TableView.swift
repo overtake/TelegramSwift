@@ -186,7 +186,7 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
     public let searchState: TableSearchViewState?
     public let isPartOfTransition: Bool
     public let isOnMainQueue: Bool
-    public init(deleted:[Int], inserted:[(Int,TableRowItem)], updated:[(Int,TableRowItem)], animated:Bool = false, state:TableScrollState = .none(nil), grouping:Bool = true, animateVisibleOnly: Bool = true, searchState: TableSearchViewState? = nil, isPartOfTransition: Bool = false) {
+    public init(deleted:[Int], inserted:[(Int,TableRowItem)], updated:[(Int,TableRowItem)], animated:Bool = false, state:TableScrollState = .none(nil), grouping:Bool = true, animateVisibleOnly: Bool = false, searchState: TableSearchViewState? = nil, isPartOfTransition: Bool = false) {
         self.animated = animated
         self.state = state
         self.grouping = grouping
