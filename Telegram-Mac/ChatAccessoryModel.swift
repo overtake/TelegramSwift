@@ -13,7 +13,7 @@ import SwiftSignalKit
 class ChatAccessoryView : Button {
     var imageView: TransformImageView?
     let headerView = TextView()
-    let textView = TextView()
+    var textView: TextView?
     
     private var shimmerEffect: ShimmerView?
     private var shimmerMask: SimpleLayer?
@@ -35,9 +35,7 @@ class ChatAccessoryView : Button {
         headerView.isSelectable = false
         addSubview(headerView)
                 
-        textView.userInteractionEnabled = false
-        textView.isSelectable = false
-        addSubview(textView)
+       
         self.layer?.addSublayer(borderLayer)
     }
     
@@ -67,14 +65,15 @@ class ChatAccessoryView : Button {
         let headerRect = CGRect(origin: NSMakePoint(x, (model.isSideAccessory ? 5 : 0) + model.topOffset), size: headerView.frame.size)
         transition.updateFrame(view: headerView, frame: headerRect)
         
-        let textRect = CGRect(origin: NSMakePoint(x, headerRect.height + model.yInset + (model.isSideAccessory ? 5 : 0) + model.topOffset), size: textView.frame.size)
-        
-        transition.updateFrame(view: textView, frame: textRect)
-                
-        if let view = shimmerEffect {
-            let rect = CGRect(origin: textRect.origin, size: view.frame.size)
-            transition.updateFrame(view: view, frame: rect.offsetBy(dx: -5, dy: -1))
+        if let textView = textView {
+            let textRect = CGRect(origin: NSMakePoint(x, headerRect.height + model.yInset + (model.isSideAccessory ? 5 : 0) + model.topOffset), size: textView.frame.size)
+            transition.updateFrame(view: textView, frame: textRect)
+            if let view = shimmerEffect {
+                let rect = CGRect(origin: textRect.origin, size: view.frame.size)
+                transition.updateFrame(view: view, frame: rect.offsetBy(dx: -5, dy: -1))
+            }
         }
+                
     }
     
     func updateModel(_ model: ChatAccessoryModel, animated: Bool) {
@@ -91,10 +90,29 @@ class ChatAccessoryView : Button {
         }
                 
         headerView.update(model.header)
-        textView.update(model.message)
+        
+        let isEqual = self.textView?.textLayout?.attributedString.string == model.message?.attributedString.string
+        if isEqual, let view = self.textView {
+            view.update(model.message)
+        } else {
+            if let view = self.textView {
+                performSubviewRemoval(view, animated: animated)
+            }
+            let previous = self.textView != nil
+            let current: TextView = TextView()
+            current.update(model.message)
+            current.userInteractionEnabled = false
+            current.isSelectable = false
+            addSubview(current)
+            self.textView = current
+            self.updateLayout(self.frame.size, transition: .immediate)
+            if animated, previous {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+        }
      
-        if let message = model.message {
-            updateInlineStickers(context: model.context, view: self.textView, textLayout: message)
+        if let message = model.message, let view = self.textView {
+            updateInlineStickers(context: model.context, view: view, textLayout: message)
         }
         
         if let blockImage = model.shimm.1 {
@@ -305,7 +323,7 @@ class ChatAccessoryModel: NSObject {
             if let view = view {
                 view.imageView?.removeFromSuperview()
                 view.imageView = nil
-                view.updateModel(self, animated: false)
+                view.updateModel(self, animated: true)
             }
         }
     }
