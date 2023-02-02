@@ -673,6 +673,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return tableView
     }
     
+    
     weak public var delegate:TableViewDelegate?
     private var trackingArea:NSTrackingArea?
     private var listhash:[AnyHashable:TableRowItem] = [AnyHashable:TableRowItem]();
@@ -2267,7 +2268,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func visibleRows(_ insetHeight:CGFloat = 0) -> NSRange {
-        let range = self.tableView.rows(in: self.tableView.visibleRect.insetBy(dx: 0, dy: -insetHeight))
+        var rect = self.tableView.visibleRect.insetBy(dx: 0, dy: -insetHeight)
+        if insetHeight == 0, contentInsets.top > 0 {
+            rect.size.height -= contentInsets.top
+        }
+        let range = self.tableView.rows(in: rect)
         return range
     }
     

@@ -1949,6 +1949,22 @@ public extension NSView {
         addConstraint(widthConstraint(relation: relation,
                                       size: size))
     }
+    var effectiveVisibleRect: NSRect {
+        var visibleRect = self.visibleRect
+        if let tableView = self.enclosingScrollView as? TableView {
+            if tableView.contentInsets.top > 0 {
+                let rect = self.convert(self.bounds, to: tableView.documentView)
+                let visible = NSMakeRect(0, tableView.documentOffset.y, tableView.frame.width, tableView.frame.height)
+                if rect.minY < visible.minY {
+                    visibleRect = CGRect(origin: CGPoint(x: 0, y: 0), size: NSMakeSize(rect.width, rect.minY - visible.minY + rect.height))
+                } else {
+                    let height = visible.maxY - rect.minY - tableView.contentInsets.top
+                    visibleRect = CGRect(origin: CGPoint(x: 0, y: rect.height - height), size: NSMakeSize(rect.width, height))
+                }
+            }
+        }
+        return visibleRect
+    }
     
 }
 

@@ -301,7 +301,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func addAccesoryOnCopiedView(view: NSView) {
         if let videoAccessory = videoAccessory?.copy() as? NSView {
-            if visibleRect.minY < videoAccessory.frame.midY && visibleRect.minY + visibleRect.height > videoAccessory.frame.midY {
+            if effectiveVisibleRect.minY < videoAccessory.frame.midY && effectiveVisibleRect.minY + effectiveVisibleRect.height > videoAccessory.frame.midY {
                 videoAccessory.frame.origin.y = frame.height - videoAccessory.frame.maxY
                 view.addSubview(videoAccessory)
             }
@@ -311,7 +311,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             let pView = RadialProgressView(theme: progressView.theme, twist: true)
             pView.state = progressView.state
             pView.frame = progressView.frame
-            if visibleRect.minY < progressView.frame.midY && visibleRect.minY + visibleRect.height > progressView.frame.midY {
+            if effectiveVisibleRect.minY < progressView.frame.midY && effectiveVisibleRect.minY + effectiveVisibleRect.height > progressView.frame.midY {
                 pView.frame.origin.y = frame.height - progressView.frame.maxY
                 view.addSubview(pView)
             }

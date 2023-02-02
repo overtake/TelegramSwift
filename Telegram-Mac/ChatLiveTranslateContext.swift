@@ -285,7 +285,7 @@ final class ChatLiveTranslateContext {
                     let messages = state.queued.reversed().filter { state.result[.Key(id: $0.id, toLang: state.to)] == nil }.prefix(while: { msg in
                         textCount += msg.text.count
                         count += 1
-                        return textCount < 25000 && count < 20
+                        return textCount < 25000 && count < 21
                     }).map { $0.id }
                     if !messages.isEmpty {
                         self?.activateTranslation(for: messages, state: state)
