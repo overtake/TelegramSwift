@@ -239,7 +239,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             height += nameLayout.layoutSize.height + (unlockText != nil ? 15 : 5)
         }
         
-        let perline: CGFloat = floor(width / itemSize.width)
+        let perline: CGFloat = floor(max(300, width - 20) / itemSize.width)
 
         
         height += self.itemSize.height * CGFloat(ceil(CGFloat(items.count) / perline))
