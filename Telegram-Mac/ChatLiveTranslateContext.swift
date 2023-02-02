@@ -286,7 +286,7 @@ final class ChatLiveTranslateContext {
                         textCount += msg.text.count
                         count += 1
                         return textCount < 25000 && count < 21
-                    }).map { $0.id }
+                    }).map { $0.id }.uniqueElements.sorted(by: >)
                     if !messages.isEmpty {
                         self?.activateTranslation(for: messages, state: state)
                     }
