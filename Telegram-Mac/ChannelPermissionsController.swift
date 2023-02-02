@@ -456,10 +456,28 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
         var items: [TuplePermission] = []
         let list = allGroupPermissionList(peer: group)
         for (i, rights) in list.enumerated() {
+            var enabled: Bool? = true
+            if group.addressName != nil && publicGroupRestrictedPermissions.contains(rights.0) {
+                enabled = nil
+            }
+            var isSelected = !effectiveRightsFlags.contains(rights.0)
+            var subItems: [TuplePermission.Sub] = []
+            if rights.0 == .banSendMedia {
+                isSelected = banSendMediaSubList().allSatisfy({ !effectiveRightsFlags.contains($0.0) })
+                if state.revealed[.banSendMedia] == true {
+                    for (subRight, _) in banSendMediaSubList() {
+                        subItems.append(.init(title: stringForGroupPermission(right: subRight, channel: nil), flags: subRight, isSelected: !effectiveRightsFlags.contains(subRight)))
+                    }
+                }
+            }
             let string: NSMutableAttributedString = NSMutableAttributedString()
-            _ = string.append(string: stringForGroupPermission(right: rights.0, channel: nil), color: theme.colors.text, font: .normal(.title))
-
-            items.append(.init(string: string, flags: rights.0, selected: !effectiveRightsFlags.contains(rights.0), enabled: true, viewType: bestGeneralViewType(list, for: i), reveable: false, subItems: []))
+            string.append(string: stringForGroupPermission(right: rights.0, channel: nil), color: theme.colors.text, font: .normal(.title))
+            
+            if rights.0 == .banSendMedia {
+                let count = banSendMediaSubList().filter({ !effectiveRightsFlags.contains($0.0) }).count
+                string.append(string: " \(count)/\(banSendMediaSubList().count)", color: theme.colors.text, font: .bold(.small))
+            }
+            items.append(.init(string: string, flags: rights.0, selected: isSelected, enabled: enabled, viewType: bestGeneralViewType(list, for: i), reveable: rights.0 == .banSendMedia, subItems: subItems))
         }
         index = insertPermissions(items)
 
