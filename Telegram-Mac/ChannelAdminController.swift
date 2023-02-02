@@ -608,6 +608,8 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 }
             }
         }
+    } else if let group = peerViewMainPeer(channelView) as? TelegramGroup {
+        canDismiss = group.groupAccess.isCreator
     }
     
     if canDismiss {

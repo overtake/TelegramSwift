@@ -305,6 +305,14 @@ final class ChatLiveTranslateContext {
                 }
                 return current
             }
+        }, error: { [weak self] error in
+            self?.updateState { current in
+                var current = current
+                for id in msgIds {
+                    current.result.removeValue(forKey: .Key(id: id, toLang: current.to))
+                }
+                return current
+            }
         }))
         
         self.updateState { current in
