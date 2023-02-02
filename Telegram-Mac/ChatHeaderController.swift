@@ -2759,7 +2759,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         textView.set(image: theme.icons.chat_translate, for: .Normal)
         
         action.set(image: theme.icons.chatActions, for: .Normal)
-        action.sizeToFit(NSZeroSize, NSMakeSize(40, 40), thatFit: true)
+        action.sizeToFit(NSZeroSize, NSMakeSize(36, 36), thatFit: true)
         action.autohighlight = false
         action.scaleOnClick = true
         
@@ -2772,7 +2772,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
                     let toString = _NSLocalizedString("Translate.Language.\(language.language)")
                     textView.set(text: strings().chatTranslateTo(toString), for: .Normal)
                 }
-                textView.sizeToFit()
+                textView.sizeToFit(NSMakeSize(0, 4))
             }
         }
         updateLocalizationAndTheme(theme: theme)
