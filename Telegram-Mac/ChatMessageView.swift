@@ -36,7 +36,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         return webpageContent?.previewMediaIfPossible() ?? false
     }
     
-    private let text:TextView = TextView()
+    private var text:TextView?
 
     private(set) var webpageContent:WPContentView?
     private var actionButton: TitleButton?
@@ -53,7 +53,6 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         
         super.init(frame: frameRect)
        // self.layerContentsRedrawPolicy = .never
-        self.addSubview(text)
     }
     
     
@@ -66,8 +65,9 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         guard let item = self.item as? ChatMessageItem else {
             return .zero
         }
+        let maxY = text?.frame.maxY ?? 0
         if let webpageLayout = item.webpageLayout {
-            return CGRect(origin: NSMakePoint(0, text.frame.maxY + item.defaultContentInnerInset), size: webpageLayout.size)
+            return CGRect(origin: NSMakePoint(0, maxY + item.defaultContentInnerInset), size: webpageLayout.size)
         }
         return .zero
     }
@@ -93,7 +93,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     }
 
     override func canStartTextSelecting(_ event: NSEvent) -> Bool {
-        if let superTextView = text.superview {
+        if let superTextView = text?.superview {
             if let webpageContent = webpageContent {
                 return !NSPointInRect(superTextView.convert(event.locationInWindow, from: nil), webpageContent.frame)
             }
@@ -103,7 +103,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     }
     
     override var selectableTextViews: [TextView] {
-        var views:[TextView] = [text]
+        var views:[TextView] = [text].compactMap { $0 }
         if let webpage = webpageContent {
             views += webpage.selectableTextViews
         }
@@ -124,12 +124,30 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
 
 
     override func set(item:TableRowItem, animated:Bool = false) {
+        let previous = self.item as? ChatMessageItem
         super.set(item: item, animated: animated)
 
         if let item = item as? ChatMessageItem {
-            self.text.update(item.textLayout, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate)
             
-            updateInlineStickers(context: item.context, view: self.text, textLayout: item.textLayout)
+            let isEqual = previous?.textLayout.attributedString.string == item.textLayout.attributedString.string
+            if isEqual, let view = self.text {
+                view.update(item.textLayout)
+            } else {
+                if let view = self.text {
+                    performSubviewRemoval(view, animated: animated)
+                }
+                let current: TextView = TextView()
+                current.update(item.textLayout)
+                self.text = current
+                addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            if let view = self.text {
+                updateInlineStickers(context: item.context, view: view, textLayout: item.textLayout)
+            }
             
             if let webpageLayout = item.webpageLayout {
                 let updated = webpageContent == nil || !webpageContent!.isKind(of: webpageLayout.viewClass())
@@ -244,11 +262,15 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     override func clickInContent(point: NSPoint) -> Bool {
         guard let item = item as? ChatMessageItem else {return true}
         
-        let point = text.convert(point, from: self)
-        let layout = item.textLayout
-        
-        let index = layout.findIndex(location: point)
-        return index >= 0 && point.x < layout.lines[index].frame.maxX
+        if let text = self.text {
+            let point = text.convert(point, from: self)
+            let layout = item.textLayout
+            
+            let index = layout.findIndex(location: point)
+            return index >= 0 && point.x < layout.lines[index].frame.maxX
+        } else {
+            return false
+        }
     }
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {

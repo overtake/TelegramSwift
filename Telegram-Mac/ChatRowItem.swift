@@ -86,6 +86,11 @@ class ChatRowItem: TableRowItem {
             self.isLoading = isLoading
             self.block = block
         }
+        
+        func isSame(to other: RowCaption) -> Bool {
+            return self.id == other.id && self.layout.attributedString.string == other.layout.attributedString.string
+        }
+        
         func withUpdatedOffset(_ offset: CGFloat) -> RowCaption {
             return RowCaption(id: self.id, offset: .init(x: 0, y: offset), layout: self.layout, isLoading: self.isLoading, block: block)
         }

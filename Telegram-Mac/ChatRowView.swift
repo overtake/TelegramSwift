@@ -21,11 +21,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         let id: UInt32
         let shim: Bool
         let view: TextView
+        
+        func isSame(to other: ChatRowItem.RowCaption) -> Bool {
+            return self.id == other.id && self.view.textLayout?.attributedString.string == other.layout.attributedString.string
+        }
     }
     struct CaptionShimmerView {
         let id: UInt32
         let view: ShimmerView
         let mask: SimpleLayer
+        
     }
    
     
@@ -933,14 +938,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         var removeIndexes:[Int] = []
         var removeShimmer:[Int] = []
         for (i, view) in captionViews.enumerated() {
-            if !item.captionLayouts.contains(where: { $0.id == view.id }) {
+            if !item.captionLayouts.contains(where: { view.isSame(to: $0) }) {
                 let captionView = view.view
                 performSubviewRemoval(captionView, animated: animated)
                 removeIndexes.append(i)
             }
         }
         for (i, view) in captionShimmerViews.enumerated() {
-            let layout = item.captionLayouts.first(where: { $0.id == view.id })
+            let layout = item.captionLayouts.first(where: { view.id == $0.id })
             if layout == nil || !layout!.isLoading {
                 let shimmerView = view.view
                 performSubviewRemoval(shimmerView, animated: animated)
@@ -956,14 +961,17 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         
         for (i, layout) in item.captionLayouts.enumerated() {
-            var view = captionViews.first(where: { $0.id == layout.id })
+            var view = captionViews.first(where: { $0.isSame(to: layout) })
             if view == nil {
                 view = CaptionView(id: layout.id, shim: layout.isLoading, view: TextView())
                 rowView.addSubview(view!.view, positioned: .below, relativeTo: rightView)
                 view?.view.frame = captionFrame(item, caption: layout)
                 captionViews.append(view!)
+                if animated {
+                    view?.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
             }
-            if let index = captionViews.firstIndex(where: { $0.id == layout.id }), index != i {
+            if let index = captionViews.firstIndex(where: { $0.isSame(to: layout) }), index != i {
                 captionViews.move(at: index, to: i)
             }
             if let blockImage = layout.block.1 {
@@ -1002,14 +1010,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 
             }
             
-            let transition: ContainedViewLayoutTransition
-            if animated {
-                transition = .animated(duration: 0.2, curve: .easeInOut)
-            } else {
-                transition = .immediate
-            }
-            
-            view?.view.update(layout.layout, transition: transition)
+            view?.view.update(layout.layout)
             
 
             if let view = view {
