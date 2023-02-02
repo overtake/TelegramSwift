@@ -5449,11 +5449,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 messageIdsWithReactions.append(message.id)
                             }
                             if message.id.namespace == Namespaces.Message.Cloud {
-                                if !message.text.isEmpty {
+                                if !message.text.isEmpty, !message.text.containsOnlyEmoji {
                                     messagesToTranslate.append(message)
                                 }
                                 if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
-                                    if !replyMessage.text.isEmpty {
+                                    if !replyMessage.text.isEmpty, !replyMessage.text.containsOnlyEmoji {
                                         messagesToTranslate.append(replyMessage)
                                     }
                                 }
@@ -5496,7 +5496,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     strongSelf.updateMaxVisibleReadIncomingMessageIndex(MessageIndex(message))
                 }
                 
-                if let pinned = strongSelf.chatInteraction.presentation.pinnedMessageId, let message = pinned.message, !message.text.isEmpty {
+                if let pinned = strongSelf.chatInteraction.presentation.pinnedMessageId, let message = pinned.message, !message.text.isEmpty, !message.text.containsOnlyEmoji {
                     messagesToTranslate.append(message)
                 }
                 

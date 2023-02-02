@@ -1902,9 +1902,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil, transition: ContainedViewLayoutTransition = .immediate) -> Void {
         self.textLayout = layout
-        
-        let transition = ContainedViewLayoutTransition.immediate
-        
+                
         self.updateInks(layout)
         
         
