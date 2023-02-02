@@ -2715,8 +2715,6 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         }, itemImage: MenuAnimation.menu_clear_history.value))
         
         
-        items.append(ContextSeparatorItem())
-
         //items.append(ContextMenuItem("Read about transl"))
         menu.items = items
         

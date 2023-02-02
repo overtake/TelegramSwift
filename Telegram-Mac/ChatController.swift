@@ -5501,7 +5501,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 
                 if !messagesToTranslate.isEmpty {
-                    strongSelf.liveTranslate?.translate(messagesToTranslate)
+                    strongSelf.liveTranslate?.translate(messagesToTranslate.sorted(by: { $0.id < $1.id}))
                 }
                 
                 if !allVisibleAnchorMessageIds.isEmpty {
