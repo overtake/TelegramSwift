@@ -335,7 +335,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         super.layout()
         
         if let item = item as? ContextMediaRowItem  {
-          //  if item.result.isFilled(for: frame.width) {
+            if item.result.isFilled(for: frame.width) {
                 let drawn = subviews.reduce(0, { (acc, view) -> CGFloat in
                     return acc + view.frame.width
                 })
@@ -347,15 +347,14 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         inset += (dif + subview.frame.width)
                     }
                 }
-         //   }
-            /*else if !subviews.isEmpty {
+            } else if !subviews.isEmpty {
                 var x:CGFloat = 0
                 let itemWidth = ceil((frame.width - CGFloat(subviews.count - 1)) / CGFloat(subviews.count))
                 for subview in subviews {
                     subview.frame = NSMakeRect(x, 0, itemWidth, subview.frame.height)
                     x += itemWidth + 1
                 }
-            } */
+            }
         }
     }
     
