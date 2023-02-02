@@ -394,9 +394,6 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.timeout(sectionId, index, strings().groupPermissionDuration, currentTimeoutString, .singleItem))
-        index += 1
-        
         if let initialParticipant = initialParticipant, case let .member(member) = initialParticipant, let banInfo = member.banInfo, let initialBannedBy = initialBannedBy {
             entries.append(.timeout(sectionId, index, strings().groupPermissionDuration, currentTimeoutString, .firstItem))
             index += 1

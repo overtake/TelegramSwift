@@ -1897,7 +1897,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
 
                 if hasAccess {
-                    let permissionList = allGroupPermissionList(peer: group)
+                    let permissionList = internal_allPossibleGroupPermissionList
                     var activePermissionCount: Int?
                     if let defaultBannedRights = group.defaultBannedRights {
                         var count = 0
@@ -1917,7 +1917,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         actionBlock.append(.requests(section: GroupInfoSection.type.rawValue, count: joinRequestsCount, viewType: .singleItem))
                     }
 
-                    actionBlock.append(.permissions(section: GroupInfoSection.type.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(permissionList.count)" }) ?? "", viewType: .innerItem))
+                    actionBlock.append(.permissions(section: GroupInfoSection.type.rawValue, count: activePermissionCount.flatMap({ "\($0 - 2)/\(permissionList.count - 2)" }) ?? "", viewType: .innerItem))
                     actionBlock.append(.administrators(section: GroupInfoSection.type.rawValue, count: "", viewType: .lastItem))
                     
                     if access.isCreator, let cachedData = view.cachedData as? CachedGroupData {
