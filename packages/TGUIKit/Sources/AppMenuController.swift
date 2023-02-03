@@ -630,7 +630,7 @@ final class AppMenuController : NSObject  {
             }
             if let menu = menu {
                 for value in menu.contextItems {
-                    if value.id != item.id {
+                    if value.id != item.id, self?.findSubmenu(value.id) != nil {
                         self?.cancelSubmenu(value)
                     }
                 }

@@ -21,7 +21,7 @@ enum InputContextEntry : Comparable, Identifiable {
     case message(Int64, Message, String)
     case peer(Peer, Int, Int64)
     case contextResult(ChatContextResultCollection,ChatContextResult,Int64)
-    case contextMediaResult(ChatContextResultCollection?, InputMediaContextRow, Int64)
+    case contextMediaResult(Int64, ChatContextResultCollection?, InputMediaContextRow, Int64)
     case command(PeerCommand, Int64, Int64)
     case sticker(InputMediaStickersRow, Int64)
     case showPeers(Int, Int64)
@@ -39,7 +39,7 @@ enum InputContextEntry : Comparable, Identifiable {
             return stableId
         case let .contextResult(_,_,index):
             return index
-        case let .contextMediaResult(_,_,index):
+        case let .contextMediaResult(_,_,_,stableId):
             return index
         case let .command( _, _, stableId):
             return stableId
@@ -66,7 +66,7 @@ enum InputContextEntry : Comparable, Identifiable {
             return Int64(index)
         case let .contextResult(_, _, index):
             return index //result.maybeId | ((Int64(index) << 40))
-        case let .contextMediaResult(_, _, index):
+        case let .contextMediaResult(index, _, _, _):
             return index //result.maybeId | ((Int64(index) << 40))
         case let .command(_, index, _):
             return index //result.maybeId | ((Int64(index) << 40))
@@ -110,8 +110,8 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
             return  lhsResult == rhsResult
         }
         return false
-    case let .contextMediaResult(_, lhsResult,_):
-        if case let .contextMediaResult(_, rhsResult, _) = rhs {
+    case let .contextMediaResult(_, _, lhsResult,_):
+        if case let .contextMediaResult(_, _, rhsResult, _) = rhs {
             return  lhsResult == rhsResult
         }
         return false
@@ -181,8 +181,8 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: titleStyle, statusStyle: statusStyle, status: status, borderType: [], drawCustomSeparator: true, inset: NSEdgeInsets(left:20))
         case let .contextResult(results,result,index):
             return ContextListRowItem(initialSize, results, result, index, context, chatInteraction)
-        case let .contextMediaResult(results,result,index):
-            return ContextMediaRowItem(initialSize, result, index, context, ContextMediaArguments(sendResult: { _, result, view in
+        case let .contextMediaResult(_, results, result, stableId):
+            return ContextMediaRowItem(initialSize, result, stableId, context, ContextMediaArguments(sendResult: { _, result, view in
                 if let results = results {
                     if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                         showSlowModeTimeoutTooltip(slowMode, for: view)
@@ -848,11 +848,13 @@ class InputContextHelper: NSObject {
                 controller.make(with: transition, animated:animated, selectIndex: selectIndex, result: result)
 
                 if let view = view {
+                    if !controller.markAsNeedShown {
+                        controller.view.setFrameOrigin(0, relativeView.frame.minY)
+                        controller.view.layer?.opacity = 0
+                    }
                     controller.markAsNeedShown = true
                     controller.viewWillAppear(animated)
                     view.addSubview(controller.view, positioned: .below, relativeTo: relativeView)
-                    controller.view.layer?.opacity = 0
-                    controller.view.setFrameOrigin(0, relativeView.frame.minY)
                     
                     controller.viewDidAppear(animated)
                     controller.genericView.isHidden = false
@@ -929,13 +931,7 @@ class InputContextHelper: NSObject {
                             
                             for i in 0 ..< mediaRows.count {
                                 if !mediaRows[i].results.isEmpty {
-                                    let random = Int64(arc4random64())
-                                    let stableId = random | ((Int64(entries.count) << 40))
-                                    let separatorStableId = Int64(random + 1) | ((Int64(entries.count) << 40))
-                                    entries.append(.contextMediaResult(result, mediaRows[i], stableId))
-                                    if i != mediaRows.count - 1 {
-                                        entries.append(.separator("", separatorStableId, arc4random64(), 1))
-                                    }
+                                    entries.append(.contextMediaResult(Int64(i), result, mediaRows[i], Int64(mediaRows[i].hashValue)))
                                 }
                             }
                             
