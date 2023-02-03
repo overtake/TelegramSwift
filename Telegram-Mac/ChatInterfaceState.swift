@@ -1157,7 +1157,9 @@ struct ChatInterfaceState: Codable, Equatable {
             try container.encodeNil(forKey: "r.i")
         }
 
-        try container.encode(EngineMessage.Id.encodeArrayToData(forwardMessageIds), forKey: "fm")
+        try container.encode(EngineMessage.Id.encodeArrayToData(self.forwardMessageIds), forKey: "fm")
+        try container.encode(self.hideCaptions, forKey: "f.hc")
+        try container.encode(self.hideSendersName, forKey: "f.sn")
 
 
         if self.messageActionsState.isEmpty {
@@ -1180,6 +1182,12 @@ struct ChatInterfaceState: Codable, Equatable {
         } else {
             try container.encodeNil(forKey: "hss")
         }
+
+//        if let forwardOptionsState = self.forwardOptionsState {
+//            try container.encode(forwardOptionsState, forKey: "fo")
+//        } else {
+//            try container.encodeNil(forKey: "fo")
+//        }
 
         if let dismissedForceReplyId = self.dismissedForceReplyId {
             try container.encode(dismissedForceReplyId.peerId.toInt64(), forKey: "d.f.p")
@@ -1208,19 +1216,12 @@ struct ChatInterfaceState: Codable, Equatable {
     func withUpdatedSynchronizeableInputState(_ state: SynchronizeableChatInputState?) -> ChatInterfaceState {
         var result = self
         if let state = state {
-            if !state.entities.isEmpty {
-                var bp = 0
-                bp += 1
-            } else {
-                var bp = 0
-                bp += 1
-            }
             let selectRange = state.textSelection ?? state.text.length ..< state.text.length
             result = result.withUpdatedInputState(ChatTextInputState(inputText: state.text, selectionRange: selectRange, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: state.entities))))
                 .withUpdatedReplyMessageId(state.replyToMessageId)
                 .withUpdatedTimestamp(timestamp)
         } else {
-            return ChatInterfaceState().withUpdatedHistoryScrollState(self.historyScrollState)
+            result = result.withUpdatedHistoryScrollState(self.historyScrollState)
         }
         return result
     }
@@ -1291,6 +1292,16 @@ struct ChatInterfaceState: Codable, Equatable {
         } else {
             self.forwardMessageIds = []
         }
+        if let hideCaptions = try container.decodeIfPresent(Bool.self, forKey: "f.hc") {
+            self.hideCaptions = hideCaptions
+        } else {
+            self.hideCaptions = false
+        }
+        if let hideSendersName = try container.decodeIfPresent(Bool.self, forKey: "f.sn") {
+            self.hideSendersName = hideSendersName
+        } else {
+            self.hideSendersName = false
+        }
 
         if let messageActionsState = try container.decodeIfPresent(ChatInterfaceMessageActionsState.self, forKey: "as") {
             self.messageActionsState = messageActionsState
@@ -1323,9 +1334,7 @@ struct ChatInterfaceState: Codable, Equatable {
         self.editState = nil
         self.replyMessage = nil
         self.forwardMessages = []
-        self.hideSendersName = false
         self.themeEditing = false
-        self.hideCaptions = false
         self.revealedSpoilers = Set()
     }
 
