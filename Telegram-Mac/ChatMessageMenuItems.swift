@@ -654,7 +654,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 
                 if !data.folders.isEmpty {
                     items.append(ContextSeparatorItem())
-                    let folders = ContextMenuItem(strings().chatContextFolders)
+                    let folders = ContextMenuItem(strings().chatContextFolders, itemImage: MenuAnimation.menu_folder.value)
+                    
                     let folderSubmenu = ContextMenu()
                     for folder in data.folders {
                         let item = ContextMenuItem(folder.0.title, itemImage: FolderIcon(folder.0).emoticon.drawable.value)
@@ -672,7 +673,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 
                 let more = ContextMenuItem(strings().chatContextForwardMore, handler: { [unowned chatInteraction] in
                     chatInteraction.forwardMessages([message])
-                })
+                }, itemImage: MenuAnimation.menu_more.value)
                 items.append(more)
             }
             for item in items {

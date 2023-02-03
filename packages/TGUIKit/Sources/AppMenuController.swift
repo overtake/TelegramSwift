@@ -74,7 +74,11 @@ private extension Window {
     }
 }
 
-final class MenuView: View, TableViewDelegate {
+final class MenuView: Control, TableViewDelegate {
+    
+    override func cursorUpdate(with event: NSEvent) {
+        NSCursor.arrow.set()
+    }
     
     struct Entry : Identifiable, Comparable, Equatable {
         static func < (lhs: MenuView.Entry, rhs: MenuView.Entry) -> Bool {
@@ -302,6 +306,7 @@ final class MenuView: View, TableViewDelegate {
     var submenuId: Int64?
     weak var parentView: Window?
     weak var childView: Window?
+    var dismissed: Bool = false
 }
 
 final class AppMenuController : NSObject  {
@@ -630,12 +635,9 @@ final class AppMenuController : NSObject  {
             }
             if let menu = menu {
                 for value in menu.contextItems {
-                    if value.id != item.id, let sub = self?.findSubmenu(value.id) {
-                        if let superchild = sub.view.childView?.weakView?.submenuId {
-                            self?.cancelSubmenu(superchild, true)
-                        } else {
-                            self?.cancelSubmenu(value.id)
-                        }
+                    if value.id != item.id {
+                        self?.cancelSubmenu(value.id, true)
+
                     }
                 }
             }
@@ -720,6 +722,8 @@ final class AppMenuController : NSObject  {
         submenu.view.parentView?.view.childView = nil
         submenu.view.parentView = nil
         
+        submenu.view.dismissed = true
+        
         submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
             if let submenu = submenu {
                 submenu.orderOut(nil)
@@ -740,8 +744,12 @@ final class AppMenuController : NSObject  {
             let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(itemId))
             let insideItem = tableItem?.view?.mouseInside() ?? false
             
-            if let submenu = submenu, submenu.view.childView == nil || force, (!submenu.view.mouseInside() && !insideItem) {
-                self.cancelSubmenuNow(submenu)
+            if let submenu = submenu, (!submenu.view.mouseInside() && !insideItem) {
+                if let child = submenu.view.childView {
+                    self.cancelSubmenuNow(child)
+                } else {
+                    self.cancelSubmenuNow(submenu)
+                }
             }
         })
         
@@ -759,6 +767,9 @@ final class AppMenuController : NSObject  {
             }
         }
         if parentView.view.childView != nil {
+            return
+        }
+        if parentView.view.dismissed {
             return
         }
         
