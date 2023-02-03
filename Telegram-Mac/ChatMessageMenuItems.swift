@@ -654,7 +654,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 
                 if !data.folders.isEmpty {
                     items.append(ContextSeparatorItem())
-                    let folders = ContextMenuItem("Folders")
+                    let folders = ContextMenuItem(strings().chatContextFolders)
                     let folderSubmenu = ContextMenu()
                     for folder in data.folders {
                         let item = ContextMenuItem(folder.0.title, itemImage: FolderIcon(folder.0).emoticon.drawable.value)

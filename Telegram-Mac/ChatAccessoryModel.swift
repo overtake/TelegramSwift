@@ -323,10 +323,12 @@ class ChatAccessoryModel: NSObject {
             if let view = view {
                 view.imageView?.removeFromSuperview()
                 view.imageView = nil
-                view.updateModel(self, animated: false)
+                view.updateModel(self, animated: self.animates)
             }
         }
     }
+    
+    var animates: Bool = false
     
     open var size:NSSize = NSZeroSize
     let drawLine: Bool
