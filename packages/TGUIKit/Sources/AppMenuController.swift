@@ -630,13 +630,17 @@ final class AppMenuController : NSObject  {
             }
             if let menu = menu {
                 for value in menu.contextItems {
-                    if value.id != item.id, self?.findSubmenu(value.id) != nil {
-                        self?.cancelSubmenu(value)
+                    if value.id != item.id, let sub = self?.findSubmenu(value.id) {
+                        if let superchild = sub.view.childView?.weakView?.submenuId {
+                            self?.cancelSubmenu(superchild, true)
+                        } else {
+                            self?.cancelSubmenu(value.id)
+                        }
                     }
                 }
             }
         }, cancelSubmenu: { [weak self] item in
-            self?.cancelSubmenu(item)
+            self?.cancelSubmenu(item.id)
         }, hover: { item in
             item.hover?()
         })
@@ -721,18 +725,22 @@ final class AppMenuController : NSObject  {
                 submenu.orderOut(nil)
             }
         })
+        
+        if let childView = submenu.view.childView {
+            cancelSubmenuNow(childView)
+        }
     }
     
-    private func cancelSubmenu(_ item: ContextMenuItem) {
+    private func cancelSubmenu(_ itemId: Int64, _ force: Bool = false) {
         delay(0.1, closure: { [weak self] in
             guard let `self` = self else {
                 return
             }
-            let submenu = self.findSubmenu(item.id)
-            let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(item.id))
+            let submenu = self.findSubmenu(itemId)
+            let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(itemId))
             let insideItem = tableItem?.view?.mouseInside() ?? false
             
-            if let submenu = submenu, submenu.view.childView == nil, (!submenu.view.mouseInside() && !insideItem) {
+            if let submenu = submenu, submenu.view.childView == nil || force, (!submenu.view.mouseInside() && !insideItem) {
                 self.cancelSubmenuNow(submenu)
             }
         })

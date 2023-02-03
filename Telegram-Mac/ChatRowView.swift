@@ -490,6 +490,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 item?.openReplyMessage()
             }, for: .Click)
             
+            reply.animates = animated
             reply.view = replyView
         } else {
             if let view = replyView {

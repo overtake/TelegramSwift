@@ -2171,6 +2171,8 @@ public final class L10n {
   public static var chatContextEnableNotifications: String  { return L10n.tr("Localizable", "Chat.Context.EnableNotifications") }
   /// Channels Info
   public static var chatContextFeedInfo: String  { return L10n.tr("Localizable", "Chat.Context.FeedInfo") }
+  /// Folders
+  public static var chatContextFolders: String  { return L10n.tr("Localizable", "Chat.Context.Folders") }
   /// Hide Ad
   public static var chatContextHideAd: String  { return L10n.tr("Localizable", "Chat.Context.HideAd") }
   /// Info

@@ -195,6 +195,9 @@ public final class ContextMenu : NSMenu, NSMenuDelegate {
     public func menuDidClose(_ menu: NSMenu) {
         onClose()
     }
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
     
 }
 
