@@ -14,6 +14,8 @@ import Postbox
 import SwiftSignalKit
 import ObjcUtils
 import Translate
+import InAppSettings
+
 final class ChatMenuItemsData {
     let chatInteraction: ChatInteraction
     let message: Message
@@ -44,7 +46,8 @@ final class ChatMenuItemsData {
     let notifications: NotificationSoundList?
     let cachedData: CachedPeerData?
     let groupped:[Message]?
-    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?, notifications: NotificationSoundList?, cachedData: CachedPeerData?, savedStickersCount: Int, savedGifsCount: Int, groupped: [Message]?) {
+    let folders: [(ChatListFilter, [Peer])]
+    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?, notifications: NotificationSoundList?, cachedData: CachedPeerData?, savedStickersCount: Int, savedGifsCount: Int, groupped: [Message]?, folders: [(ChatListFilter, [Peer])]) {
         self.chatInteraction = chatInteraction
         self.message = message
         self.accountPeer = accountPeer
@@ -74,6 +77,7 @@ final class ChatMenuItemsData {
         self.savedStickersCount = savedStickersCount
         self.savedGifsCount = savedGifsCount
         self.groupped = groupped
+        self.folders = folders
     }
 }
 func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry?, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
@@ -108,18 +112,30 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
             break
         }
     }
-
-    let _dialogs: Signal<[Peer], NoError> = account.postbox.tailChatListView(groupId: .root, count: 25, summaryComponents: .init())
-        |> map { view in
-            return view.0.entries.compactMap { entry in
-                switch entry {
-                case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
-                    return renderedPeer.peer
-                default:
-                    return nil
+    
+    let request:(ChatListFilterPredicate?)->Signal<[Peer], NoError> = { predicate in
+        return account.postbox.tailChatListView(groupId: .root, filterPredicate: predicate, count: 25, summaryComponents: .init())
+            |> take(1) |> map { view in
+                return view.0.entries.compactMap { entry in
+                    switch entry {
+                    case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
+                        return renderedPeer.peer
+                    default:
+                        return nil
+                    }
                 }
             }
-        }
+    }
+
+    let _dialogs: Signal<[Peer], NoError> = request(nil)
+    
+    let _folders: Signal<[(ChatListFilter, [Peer])], NoError> = chatListFilterPreferences(engine: context.engine) |> mapToSignal { value in
+        return combineLatest(value.list.filter { !$0.isAllChats }.map { item in
+            return request(chatListFilterPredicate(for: item)) |> map {
+                (item, $0)
+            }
+        })
+    }
     
     
     let _recentUsedPeers: Signal<[Peer], NoError> = context.recentlyUserPeerIds |> mapToSignal { ids in
@@ -184,12 +200,13 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     
     let cachedData = getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> take(1)
     
-    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue, context.engine.peers.notificationSoundList(), cachedData, _savedStickersCount, _savedGifsCount, _groupped)
+    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue, context.engine.peers.notificationSoundList(), cachedData, _savedStickersCount, _savedGifsCount, _groupped, _folders)
     |> take(1)
     
     
-    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions, notifications, cachedData, savedStickersCount, savedGifsCount, groupped in
-        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions, notifications: notifications, cachedData: cachedData, savedStickersCount: savedStickersCount, savedGifsCount: savedGifsCount, groupped: groupped)
+    
+    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions, notifications, cachedData, savedStickersCount, savedGifsCount, groupped, folders in
+        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions, notifications: notifications, cachedData: cachedData, savedStickersCount: savedStickersCount, savedGifsCount: savedGifsCount, groupped: groupped, folders: folders)
     }
 }
 
@@ -634,7 +651,25 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }
             }
             if !items.isEmpty {
-                items.append(ContextSeparatorItem())
+                
+                if !data.folders.isEmpty {
+                    items.append(ContextSeparatorItem())
+                    let folders = ContextMenuItem("Folders")
+                    let folderSubmenu = ContextMenu()
+                    for folder in data.folders {
+                        let item = ContextMenuItem(folder.0.title, itemImage: FolderIcon(folder.0).emoticon.drawable.value)
+                        let submenu = ContextMenu()
+                        
+                        for peer in folder.1 {
+                            submenu.addItem(makeItem(peer))
+                        }
+                        item.submenu = submenu
+                        folderSubmenu.addItem(item)
+                    }
+                    folders.submenu = folderSubmenu
+                    items.append(folders)
+                }
+                
                 let more = ContextMenuItem(strings().chatContextForwardMore, handler: { [unowned chatInteraction] in
                     chatInteraction.forwardMessages([message])
                 })

@@ -282,12 +282,21 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     } else {
                         view = TransformImageView()
                     }
-                    view.setSignal(chatWebpageSnippetPhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: data), scale: backingScaleFactor, small:false))
+                    let imageSize = item.result.sizes[i]
+                    let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: data.representationForDisplayAtSize(.init(imageSize))?.dimensions.size ?? imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
+                    
+                    view.setSignal(signal: cachedMedia(media: data, arguments: arguments, scale: backingScaleFactor), clearInstantly: true)
+
+                    if !view.isFullyLoaded {
+                        view.setSignal(chatWebpageSnippetPhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: data), scale: backingScaleFactor, small:false), clearInstantly: true, cacheImage: { result in
+                            cacheMedia(result, media: data, arguments: arguments, scale: System.backingScale)
+                        })
+                    }
+                    
+                    
                     _ = chatMessagePhotoInteractiveFetched(account: item.context.account, imageReference: ImageMediaReference.standalone(media: data)).start()
                     
-                    let imageSize = item.result.sizes[i]
-                    view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
-                    view.setFrameSize(NSMakeSize(imageSize.width, item.height))
+                    view.set(arguments: arguments)
                     view.setFrameSize(imageSize)
                     view.center()
                     container = view
@@ -298,7 +307,8 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 addSubview(container)
                 inset += item.result.sizes[i].width
             }
-            
+            assert(self.subviews.count == item.result.entries.count)
+//            NSLog("entries: \(item.result.entries.count), rowIndex: \(item.index)")
             needsLayout = true
         }
     }
@@ -335,26 +345,28 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         super.layout()
         
         if let item = item as? ContextMediaRowItem  {
-            if item.result.isFilled(for: frame.width) {
+            //if item.result.isFilled(for: frame.width) {
                 let drawn = subviews.reduce(0, { (acc, view) -> CGFloat in
                     return acc + view.frame.width
                 })
                 if drawn < frame.width {
-                    dif = (frame.width - drawn) / CGFloat(subviews.count + 1)
+                    dif = 2
                     var inset:CGFloat = dif
                     for subview in subviews {
                         subview.setFrameOrigin(inset, 0)
-                        inset += (dif + subview.frame.width)
+                        subview.frame = CGRect(origin: CGPoint(x: inset, y: 0), size: subview.frame.size).insetBy(dx: 1, dy: 1)
+                        inset += subview.frame.width + dif
                     }
                 }
-            } else if !subviews.isEmpty {
-                var x:CGFloat = 0
-                let itemWidth = ceil((frame.width - CGFloat(subviews.count - 1)) / CGFloat(subviews.count))
-                for subview in subviews {
-                    subview.frame = NSMakeRect(x, 0, itemWidth, subview.frame.height)
-                    x += itemWidth + 1
-                }
-            }
+       //     }
+//            else if !subviews.isEmpty {
+//                var x:CGFloat = 0
+//                let itemWidth = ceil((frame.width - CGFloat(subviews.count - 1)) / CGFloat(subviews.count))
+//                for subview in subviews {
+//                    subview.frame = NSMakeRect(x, 0, itemWidth, subview.frame.height)
+//                    x += itemWidth + 1
+//                }
+//            }
         }
     }
     
