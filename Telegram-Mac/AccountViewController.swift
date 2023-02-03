@@ -431,7 +431,7 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     }
     
     
-    var has2fa = has2fa && SetupPasswordConfiguration.with(appConfiguration: context.appConfiguration).setup2Fa
+    var has2fa = has2fa
     if let twoStepConfiguration = twoStepConfiguration {
         switch twoStepConfiguration {
         case .set:
@@ -440,7 +440,10 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
             has2fa = false
         }
     } else {
-        has2fa = false
+        has2fa = true
+    }
+    if !SetupPasswordConfiguration.with(appConfiguration: context.appConfiguration).setup2Fa {
+        has2fa = true
     }
     
     if !has2fa {
