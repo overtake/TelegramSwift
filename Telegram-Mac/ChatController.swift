@@ -2850,7 +2850,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return .complete()
                                 }
                                 
-                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, replyId: takeReplyId(), hideNames: hideNames, hideCaptions: hideCaptions, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId)
+                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, replyId: threadId, hideNames: hideNames, hideCaptions: hideCaptions, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId)
                             }
                             
                             invokeSignal = invokeSignal |> then(fwd |> ignoreValues)

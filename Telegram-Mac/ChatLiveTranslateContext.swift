@@ -355,6 +355,11 @@ final class ChatLiveTranslateContext {
                         for msg in translated {
                             current.result[.Key(id: msg.id, toLang: toLang)] = .complete(toLang: toLang)
                         }
+                        for msg in msgs {
+                            if !translated.contains(msg), case .complete(toLang: toLang) = current.result[.Key(id: msg.id, toLang: toLang)] {
+                                current.result.removeValue(forKey: .Key(id: msg.id, toLang: toLang))
+                            }
+                        }
                     }
                     return current
                 }
