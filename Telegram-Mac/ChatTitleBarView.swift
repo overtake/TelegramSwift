@@ -649,8 +649,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         
         
-        let input = self.inputActivities
-        self.inputActivities = input
+//        let input = self.inputActivities
+//        self.inputActivities = input
 
     }
     

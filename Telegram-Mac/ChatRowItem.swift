@@ -2296,7 +2296,7 @@ class ChatRowItem: TableRowItem {
         if !(self is ChatGroupedItem) {
             for layout in captionLayouts {
                 if layout.layout.layoutSize == .zero {
-                    layout.layout.measure(width: maxContentWidth)
+                    layout.layout.measure(width: maxContentWidth, saveRTL: true)
                     if layout.isLoading {
                         layout.block = layout.layout.generateBlock(backgroundColor: .blackTransparent)
                     }
@@ -3141,20 +3141,20 @@ class ChatRowItem: TableRowItem {
                 case .files:
                     if let caption = captionLayouts.first(where: { $0.id == self.lastMessage?.stableId})?.layout {
                         if let line = caption.lines.last {
-                            return LastLineData(width: line.frame.width, single: caption.lines.count == 1)
+                            return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1)
                         }
                     }
                 case .photoOrVideo:
                     if let caption = captionLayouts.first?.layout {
                         if let line = caption.lines.last {
-                            return LastLineData(width: line.frame.width, single: caption.lines.count == 1 && !isBubbleFullFilled)
+                            return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1 && !isBubbleFullFilled)
                         }
                     }
                 }
             } else {
                 if let caption = captionLayouts.first?.layout {
                     if let line = caption.lines.last {
-                        return LastLineData(width: line.frame.width, single: caption.lines.count == 1 && !isBubbleFullFilled)
+                        return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1 && !isBubbleFullFilled)
                     }
                 }
             }
@@ -3164,13 +3164,13 @@ class ChatRowItem: TableRowItem {
                 case .files:
                     if let caption = captionLayouts.first(where: { $0.id == self.lastMessage?.stableId})?.layout {
                         if let line = caption.lines.last {
-                            return LastLineData(width: line.frame.width, single: caption.lines.count == 1)
+                            return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1)
                         }
                     }
                 case .photoOrVideo:
                     if let caption = captionLayouts.first?.layout {
                         if let line = caption.lines.last {
-                            return LastLineData(width: line.frame.width, single: caption.lines.count == 1)
+                            return LastLineData(width: line.isRTL ? blockWidth : line.frame.width, single: caption.lines.count == 1)
                         }
                     }
                 }
@@ -3179,6 +3179,9 @@ class ChatRowItem: TableRowItem {
         
         if let item = self as? ChatMessageItem {
             if item.actionButtonText != nil {
+                return nil
+            }
+            if item.textLayout.lastLineIsRtl {
                 return nil
             }
             

@@ -314,6 +314,18 @@ public extension TableScrollState {
             return self
         }
     }
+    func offset(_ inset: CGFloat) -> TableScrollState {
+        switch self {
+        case let .top(stableId, innerId, animated, focus, v):
+            return .top(id: stableId, innerId: innerId, animated: animated, focus: focus, inset: v + inset)
+        case let .bottom(stableId, innerId, animated, focus, v):
+            return .bottom(id: stableId, innerId: innerId, animated: animated, focus: focus, inset: v + inset)
+        case let .center(stableId, innerId, animated, focus, v):
+            return .center(id: stableId, innerId: innerId, animated: animated, focus: focus, inset: v + inset)
+        default:
+            return self
+        }
+    }
     
     var animated: Bool {
         switch self {
@@ -3185,7 +3197,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             addScroll(listener: scrollListener)
             
-            let bounds = NSMakeRect(0, rowRect.minY, clipView.bounds.width, clipView.bounds.height)
+            let bounds = NSMakeRect(0, rowRect.minY + contentInsets.top, clipView.bounds.width, clipView.bounds.height)
             
             if animate {
                 clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in

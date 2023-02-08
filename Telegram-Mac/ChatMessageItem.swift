@@ -694,7 +694,10 @@ class ChatMessageItem: ChatRowItem {
         if actionButtonText != nil  {
             return true
         }
-         if let webpageLayout = webpageLayout {
+        if textLayout.lastLineIsRtl {
+            return true
+        }
+        if let webpageLayout = webpageLayout {
              if let webpageLayout = webpageLayout as? WPArticleLayout {
                  if webpageLayout.hasInstantPage {
                      return true
