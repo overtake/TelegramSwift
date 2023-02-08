@@ -572,6 +572,15 @@ public extension Message {
         return nil
     }
     
+    var autoclearTimeout: AutoclearTimeoutMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? AutoclearTimeoutMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var isAnonymousMessage: Bool {
         if let author = self.author as? TelegramChannel, sourceReference == nil, self.id.peerId == author.id {
             return true

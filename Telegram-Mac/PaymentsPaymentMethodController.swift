@@ -11,7 +11,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import Stripe
-
+import TelegramCore
 
 
 private final class Arguments {
@@ -52,6 +52,8 @@ private struct State : Equatable {
     var card: Card
     var holderName: String?
     var billingAddress: BillingAddress
+    
+    var mainPeer: PeerEquatable?
     
     var stripe: STPCardParams {
         let params = STPCardParams()
@@ -505,6 +507,14 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
         }
     }
     
+    actionsDisposable.add(getPeerView(peerId: context.peerId, postbox: context.account.postbox).start(next: { peer in
+        updateState { current in
+            var current = current
+            current.mainPeer = .init(peer)
+            return current
+        }
+    }))
+    
     controller.updateDatas = { [weak controller] data in
                 
         updateState { current in
@@ -527,7 +537,7 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
             let maxCardNumberLength = STPCardValidator.maxLength(for: brand)
             let maxCVCLength = STPCardValidator.maxCVCLength(for: brand)
 
-            
+            let isRussia = (current.mainPeer?.peer as? TelegramUser)?.phone?.hasPrefix("7") == true
             
             var cardError: InputDataValueError? = nil
             
@@ -542,12 +552,20 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
             }
                   
             if current.card.date.length == 5 && cardError == nil {
-                let yearState = STPCardValidator.validationState(forExpirationYear: String(current.card.date.suffix(2)), inMonth: current.card.date.prefix(2))
+                let year = String(current.card.date.suffix(2))
+                let month = String(current.card.date.prefix(2))
+                var yearState = STPCardValidator.validationState(forExpirationYear: year, inMonth: month)
+                var monthState = STPCardValidator.validationState(forExpirationMonth: month)
+                if isRussia, let year = Int32(year), let month = Int32(month) {
+                    if year >= 22 && month >= 1 {
+                        yearState = .valid
+                        monthState = .valid
+                    }
+                }
                 switch yearState {
                 case .invalid:
                     cardError = .init(description: strings().yourCardsExpirationYearIsInvalid, target: .data)
                 default:
-                    let monthState = STPCardValidator.validationState(forExpirationMonth: current.card.date.prefix(2))
                     switch monthState {
                     case .invalid:
                         cardError = .init(description: strings().yourCardsExpirationMonthIsInvalid, target: .data)

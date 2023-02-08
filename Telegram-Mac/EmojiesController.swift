@@ -478,11 +478,18 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
         index += 1
     }
     
+    let color: NSColor?
+    switch arguments.mode {
+    case .emoji:
+        color = theme.colors.text
+    default:
+        color = nil
+    }
     
     for section in state.sections {
         let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji })
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack(section.info.id.id), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, context: arguments.context, info: section.info, topItem: section.items.first)
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first)
         }))
         index += 1
     }

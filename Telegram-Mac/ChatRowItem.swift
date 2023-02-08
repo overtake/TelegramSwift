@@ -743,7 +743,7 @@ class ChatRowItem: TableRowItem {
 
     override func copyAndUpdate(animated: Bool) {
         DispatchQueue.main.async {
-            if let table = self.table {
+            if let table = self.table, self.index != -1 {
                 let item = ChatRowItem.item(table.frame.size, from: self.entry, interaction: self.chatInteraction, downloadSettings: self.downloadSettings, theme: self.presentation)
                 _ = item.makeSize(table.frame.width, oldWidth: 0)
                 let transaction = TableUpdateTransition(deleted: [], inserted: [], updated: [(self.index, item)], animated: animated)
@@ -2144,6 +2144,9 @@ class ChatRowItem: TableRowItem {
             if message.media.count == 0 || message.anyMedia is TelegramMediaWebpage {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
+                if message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.autoclearTimeout != nil {
+                    return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
+                }
                 if let action = message.media[0] as? TelegramMediaAction {
                    switch action.action {
                    case .phoneCall:

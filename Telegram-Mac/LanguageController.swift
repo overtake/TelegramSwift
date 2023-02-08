@@ -259,10 +259,10 @@ func LanguageController(_ context: AccountContext) -> InputDataController {
         }).start())
     }, premiumAlert: {
         showModalText(for: context.window, text: strings().languageTranslateMessagesChannelPremium, callback: { _ in
-            showModal(with: PremiumBoardingController(context: context, source: .translations), for: context.window)
+            showModal(with: PremiumBoardingController(context: context, source: .translations, openFeatures: true), for: context.window)
         })
     }, openPremium: {
-        showModal(with: PremiumBoardingController(context: context, source: .translations), for: context.window)
+        showModal(with: PremiumBoardingController(context: context, source: .translations, openFeatures: true), for: context.window)
     }, doNotTranslate: { code in
         actionsDisposable.add(updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings in
             var current = settings.doNotTranslate

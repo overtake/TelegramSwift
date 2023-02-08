@@ -536,14 +536,15 @@ class MediaVideoCell : MediaCell {
             default:
                 progressStatus = status
             }
-            switch progressStatus {
-            case let .Fetching(_, progress), let .Paused(progress):
-                self.progressView.state = .Fetching(progress: progress, force: false)
-            case .Remote:
-                self.progressView.state = .Remote
-            case .Local:
-                self.progressView.state = .Play
-            }
+           self.progressView.state = .Play
+//            switch progressStatus {
+//            case let .Fetching(_, progress), let .Paused(progress):
+//                self.progressView.state = .Fetching(progress: progress, force: false)
+//            case .Remote:
+//                self.progressView.state = .Remote
+//            case .Local:
+//                self.progressView.state = .Play
+//            }
         }))
         partDisposable.set(nil)
     }

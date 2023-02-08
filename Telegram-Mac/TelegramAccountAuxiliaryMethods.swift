@@ -28,4 +28,6 @@ public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(fetchResour
     return .single(nil)
 }, prepareSecretThumbnailData: { resource in
     return nil
+}, backgroundUpload: { _, _, _ in
+    return .single(nil)
 })

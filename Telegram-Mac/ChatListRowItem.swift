@@ -902,7 +902,7 @@ class ChatListRowItem: TableRowItem {
                     break
                 }
             } else {
-                messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium)
+                messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, renderedPeer: renderedPeer, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium)
                 if !textLeftCutout.isZero {
                     textCutout = TextViewCutout(topLeft: CGSize(width: textLeftCutout, height: 14))
                 }

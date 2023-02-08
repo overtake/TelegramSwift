@@ -1275,10 +1275,10 @@ class WallpaperPreviewController: ModalViewController {
             return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper)
         }
         
-        _ = showModalProgress(signal: signal, for: context.window).start(next: { wallpaper in
+        _ = signal.start(next: { wallpaper in
             _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
                 return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper().withSavedAssociatedTheme().withUpdatedBubbled(true)
-            }) |> deliverOnMainQueue).start(completed: {
+            }) |> delay(0.4, queue: .mainQueue()) |> deliverOnMainQueue).start(completed: {
                 var stats:[Signal<Void, NoError>] = []
                 switch self.source {
                 case let .gallery(wallpaper):

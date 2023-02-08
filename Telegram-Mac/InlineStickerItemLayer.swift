@@ -375,7 +375,7 @@ final class InlineStickerItemLayer : SimpleLayer {
     let size: NSSize
     let synchronyous: Bool
     
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.text, ignorePreview: Bool = false, synchronyous: Bool = false) {
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
@@ -410,7 +410,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         })
     }
     
-    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.text, ignorePreview: Bool = false, synchronyous: Bool = false) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.accent, ignorePreview: Bool = false, synchronyous: Bool = false) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy

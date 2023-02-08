@@ -191,6 +191,7 @@ final class ChatInteraction : InterfaceObserver  {
     var hideTranslation:()->Void = { }
     var doNotTranslate:(String)->Void = { _ in }
     var translateTo:(String)->Void = { _ in }
+    var enableTranslatePaywall:()->Void = { }
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }
     var setupChatThemes:()->Void = { }

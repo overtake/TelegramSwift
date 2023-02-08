@@ -2666,8 +2666,19 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         guard let translate = self._state?.translate else {
             return nil
         }
+        
         let menu = ContextMenu()
         var items: [ContextMenuItem] = []
+
+        if translate.paywall {
+            items.append(ContextMenuItem(strings().chatTranslateMenuHide, handler: { [weak self] in
+                self?.chatInteraction.hideTranslation()
+            }, itemImage: MenuAnimation.menu_clear_history.value))
+            
+            menu.items = items
+            return menu
+        }
+        
         
         let other = ContextMenuItem(strings().chatTranslateMenuTo, itemImage: MenuAnimation.menu_translate.value)
         
@@ -2791,7 +2802,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         container.frame = bounds
 //        textView.resize(frame.width - 40)
         textView.center()
-        action.centerY(x: frame.width - action.frame.width - 14)
+        action.centerY(x: frame.width - action.frame.width - 17)
     }
     
     

@@ -886,8 +886,10 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     if let layer = self.inlineStickerItemViews[id] {
                         performSublayerRemoval(layer, animated: animated, scale: true)
                     }
+                    let mode = (self.item as? EmojiesSectionRowItem)?.mode
+                    let isPanel = mode == .panel || mode == .preview
                     
-                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size, textColor: isPanel ? theme.colors.text : theme.colors.accent)
                     self.inlineStickerItemViews[id] = view
                     view.superview = contentView
                     contentView.layer?.addSublayer(view)

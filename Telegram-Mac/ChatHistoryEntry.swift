@@ -747,8 +747,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 if rhs.isAnonymousMessage {
                     accept = false
                 }
-                if lhs.threadId != rhs.threadId {
-                    accept = false
+                if let peer = lhs.peers[lhs.id.peerId], peer.isForum {
+                    if lhs.threadId != rhs.threadId {
+                        accept = false
+                    }
                 }
                 return accept
             }

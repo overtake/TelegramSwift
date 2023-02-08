@@ -399,7 +399,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             return
         }
         
-        let value = SearchState(state: state, request: trimmed, responder: self.input == window?.firstResponder)
+        let value = SearchState(state: state, request: trimmed.trimmed, responder: self.input == window?.firstResponder)
         searchInteractions?.textModified(value)
         _searchValue.set(value)
         
@@ -532,7 +532,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             search.isEventLess = state != .Focus
             search.userInteractionEnabled = state == .Focus
             
-            let text = input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r"))
+            let text = input.string.trimmingCharacters(in: CharacterSet(charactersIn: "\n\r")).trimmed
             let value = SearchState(state: state, request: state == .None ? nil : text, responder: self.input == window?.firstResponder)
             searchInteractions?.stateModified(value, animated)
 

@@ -134,11 +134,11 @@ final class HelloView: View, PremiumDecorationProtocol {
         self.activePositions.insert(positionIndex)
         
         let duration: Double = Double.random(in: 1.75...2.25)
-        view.animateKeyframes(values: [0.0, 1.0, 0.0] as [NSNumber], duration: duration, keyPath: "opacity", removeOnCompletion: false, completion: { [weak view] _ in
-            self.activePhrases.remove(index)
-            self.activePositions.remove(positionIndex)
+        view.animateKeyframes(values: [0.0, 1.0, 0.0] as [NSNumber], duration: duration, keyPath: "opacity", removeOnCompletion: false, completion: { [weak view, weak self] _ in
+            self?.activePhrases.remove(index)
+            self?.activePositions.remove(positionIndex)
             view?.removeFromSuperlayer()
-            self.spawnNextPhrase()
+            self?.spawnNextPhrase()
         })
         view.animateScale(from: CGFloat.random(in: 0.4 ..< 0.6), to: CGFloat.random(in: 0.9 ..< 1.2), duration: duration, removeOnCompletion: false)
         
@@ -162,6 +162,11 @@ final class HelloView: View, PremiumDecorationProtocol {
     }
     func startAnimation() {
         
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
 }
 

@@ -3051,6 +3051,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.translateTo = { [weak self] toLang in
             self?.liveTranslate?.translate(toLang: toLang)
         }
+        chatInteraction.enableTranslatePaywall = { [weak self] in
+            self?.liveTranslate?.enablePaywall()
+        }
         
         chatInteraction.forwardMessages = { [weak self] messages in
             guard let strongSelf = self else {
@@ -3836,11 +3839,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.toggleTranslate = { [weak self] in
-            self?.liveTranslate?.toggleTranslate()
+            if !context.isPremium {
+                showModal(with: PremiumBoardingController(context: context, source: .translations, openFeatures: true), for: context.window)
+            } else {
+                self?.liveTranslate?.toggleTranslate()
+            }
         }
         chatInteraction.hideTranslation = { [weak self] in
-            self?.liveTranslate?.hideTranslation()
-            showModalText(for: context.window, text: strings().chatTranslateMenuHideTooltip)
+            if !context.isPremium {
+                self?.liveTranslate?.disablePaywall()
+                showModalText(for: context.window, text: strings().chatTranslateMenuHidePaywallTooltip)
+            } else {
+                self?.liveTranslate?.hideTranslation()
+                showModalText(for: context.window, text: strings().chatTranslateMenuHideTooltip)
+            }
         }
         chatInteraction.doNotTranslate = { code in
             _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings in
@@ -5572,7 +5584,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return current
                 }
                 self?.chatInteraction.update({ current in
-                    return current.withUpdatedTranslateState(.init(canTranslate: state.canTranslate, translate: state.translate, from: state.from, to: state.to, result: state.result))
+                    return current.withUpdatedTranslateState(.init(canTranslate: state.canTranslate, translate: state.translate, from: state.from, to: state.to, paywall: state.paywall, result: state.result))
                 })
                 self?.genericView.tableView.notifyScrollHandlers()
             }))

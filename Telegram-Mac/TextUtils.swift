@@ -165,7 +165,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false) -> NSAttributedString {
     
     
     if let draft = draft, !draft.text.isEmpty {
@@ -185,7 +185,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
     }
         
     if let renderedPeer = renderedPeer {
-        if let peer = renderedPeer.peers[renderedPeer.peerId] as? TelegramSecretChat {
+        if let peer = renderedPeer.peers[renderedPeer.peerId]?._asPeer() as? TelegramSecretChat {
             let subAttr = NSMutableAttributedString()
             switch peer.embeddedState {
             case .terminated:
@@ -194,7 +194,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             _ = subAttr.append(string: strings().chatListSecretChatExKeys, color: theme.chatList.grayTextColor, font: .normal(.text))
             case .active:
                 if message == nil {
-                    let title:String = renderedPeer.chatMainPeer?.displayTitle ?? strings().peerDeletedUser
+                    let title:String = renderedPeer.chatMainPeer?._asPeer().displayTitle ?? strings().peerDeletedUser
                     switch peer.role {
                     case .creator:
                         _ = subAttr.append(string: strings().chatListSecretChatJoined(title), color: theme.chatList.grayTextColor, font: .normal(.text))

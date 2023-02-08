@@ -460,6 +460,7 @@ struct ChatPresentationInterfaceState: Equatable {
         var translate: Bool
         var from: String?
         var to: String
+        var paywall: Bool
         var result:[ChatLiveTranslateContext.State.Key : ChatLiveTranslateContext.State.Result]
     }
     
