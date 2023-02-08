@@ -1603,7 +1603,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 }
                 
                 if !user.isBot {
-                    if !view.peerIsContact {
+                    if !view.peerIsContact, user.id != arguments.context.peerId {
                         infoBlock.append(.addContact(sectionId: sectionId, viewType: .singleItem))
                     }
                 }
@@ -1611,7 +1611,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.encryptionKey(sectionId: sectionId, viewType: .singleItem))
                 }
                 if !user.isBot {
-                    if !view.peerIsContact {
+                    if !view.peerIsContact, user.id != arguments.context.peerId {
                         if let cachedData = view.cachedData as? CachedUserData {
                             var addBlock = true
                             switch source {

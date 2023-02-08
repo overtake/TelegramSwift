@@ -253,4 +253,9 @@ final class PremiumBoardingFeaturesController : TelegramGenericViewController<Pr
 
         
     }
+    
+    deinit {
+        var bp = 0
+        bp += 1
+    }
 }

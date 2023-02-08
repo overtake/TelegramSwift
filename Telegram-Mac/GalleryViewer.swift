@@ -1380,7 +1380,7 @@ class GalleryViewer: NSResponder {
                 }, completion:{ [weak strongSelf] in
                     //strongSelf?.backgroundView.alphaValue = 1.0
                     strongSelf?.controls.animateIn()
-                    strongSelf?.backgroundView._change(opacity: 1, animated: false)
+                    strongSelf?.backgroundView._change(opacity: 1, animated: true)
                 }, addAccesoryOnCopiedView: { stableId, view in
                     if let stableId = stableId {
                         //self?.delegate?.addAccesoryOnCopiedView(for: stableId, view: view)
@@ -1399,7 +1399,7 @@ class GalleryViewer: NSResponder {
         didSetReady = false
         NotificationCenter.default.removeObserver(self)
         if animated {
-            backgroundView._change(opacity: 0, animated: false)
+            backgroundView._change(opacity: 0, animated: true)
             controls.animateOut()
             self.pager.animateOut(to: { [weak self] stableId in
                 if let firstStableId = self?.firstStableId, let innerIndex = stableId.base as? Int {

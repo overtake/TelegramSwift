@@ -3597,6 +3597,8 @@ public final class L10n {
   public static var chatTranslateMenuTo: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.To") }
   /// Translation bar is now hidden for this channel. You can enable it in profile.
   public static var chatTranslateMenuHideTooltip: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide.Tooltip") }
+  /// You can always enable it in Language Settings.
+  public static var chatTranslateMenuHidePaywallTooltip: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.HidePaywall.Tooltip") }
   /// %d
   public static func chatUndoManagerChannelDeletedCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_countable", p1)

@@ -386,6 +386,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 if language == nil || !toLang.contains(language!), !muteTranslate {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                         showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.language.baseLanguageCode, text: text), for: context.window)
+                        data.chatInteraction.enableTranslatePaywall()
                     }, itemImage: MenuAnimation.menu_translate.value))
                 }
                 if !data.message.isCopyProtected() {
@@ -448,6 +449,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         if language == nil || !toLang.contains(language!), !muteTranslate {
                             thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                                 showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.language.baseLanguageCode, text: text), for: context.window)
+                                data.chatInteraction.enableTranslatePaywall()
                             }, itemImage: MenuAnimation.menu_translate.value))
                         }
                         thirdBlock.append(ContextMenuItem(strings().chatCopySelectedText, handler: { [weak textLayout] in
@@ -485,6 +487,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 if language == nil || !toLang.contains(language!) {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                         showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.language.baseLanguageCode, text: text), for: context.window)
+                        data.chatInteraction.enableTranslatePaywall()
                     }, itemImage: MenuAnimation.menu_translate.value))
                 }
             }
@@ -911,6 +914,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 data.chatInteraction.deleteMessages([data.message.id])
             }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
         }
+        
+        #if BETA || DEBUG
+        if let mediaId = message.media.first?.id {
+            fifthBlock.append(ContextSeparatorItem())
+            fifthBlock.append(ContextMenuItem("Copy Media Id (dev)", handler: {
+                copyToClipboard("\(mediaId.id)")
+                showModalText(for: context.window, text: "Copied")
+            }, itemMode: .normal, itemImage: MenuAnimation.menu_copy.value))
+            
+        }
+        #endif
         
 //#if BETA || ALPHA || DEBUG
 //        if #available(macOS 10.15, *) {

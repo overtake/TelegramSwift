@@ -118,7 +118,7 @@ final class PremiumStatusControl : Control {
             let getColors:(TelegramMediaFile?)->[LottieColor] = { file in
                 var colors: [LottieColor] = []
                 if let file = file {
-                    if isDefaultStatusesPackId(file.emojiReference) {
+                    if isDefaultStatusesPackId(file.emojiReference) || file.paintToText {
                         if isSelected {
                             colors.append(.init(keyPath: "", color: theme.colors.underSelectedColor))
                         } else {

@@ -34,12 +34,14 @@ class StickerPackRowItem: TableRowItem {
     let packIndex: Int
     let isPremium: Bool
     let installed: Bool?
+    let color: NSColor?
     
-    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?) {
+    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, color: NSColor? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?) {
         self.context = context
         self.packIndex = packIndex
         self._stableId = stableId
         self.info = info
+        self.color = color
         self.topItem = topItem
         self.isPremium = isPremium
         self.installed = installed
@@ -334,7 +336,7 @@ private final class StickerPackRowView : HorizontalRowView {
                 self.inlineSticker?.removeFromSuperlayer()
                 self.inlineSticker = nil
                 if let file = file {
-                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26))
+                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26), textColor: item.color ?? theme.colors.accent)
                     self.container.layer?.addSublayer(current!)
                     self.inlineSticker = current
                 } else {

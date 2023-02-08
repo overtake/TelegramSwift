@@ -14,65 +14,54 @@ import Translate
 import InAppSettings
 
 
-public struct ChatTranslationState: Codable {
+struct ChatTranslationState: Codable {
     enum CodingKeys: String, CodingKey {
         case baseLang
         case fromLang
         case toLang
         case isEnabled
+        case paywall
     }
     
-    public let baseLang: String
-    public let fromLang: String
-    public let toLang: String?
-    public let isEnabled: Bool
+    var baseLang: String
+    var fromLang: String
+    var toLang: String?
+    var isEnabled: Bool
+    var paywall: Bool
     
-    public init(
+    init(
         baseLang: String,
         fromLang: String,
         toLang: String?,
-        isEnabled: Bool
+        isEnabled: Bool,
+        paywall: Bool
     ) {
         self.baseLang = baseLang
         self.fromLang = fromLang
         self.toLang = toLang
         self.isEnabled = isEnabled
+        self.paywall = paywall
     }
     
-    public init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         self.baseLang = try container.decode(String.self, forKey: .baseLang)
         self.fromLang = try container.decode(String.self, forKey: .fromLang)
         self.toLang = try container.decodeIfPresent(String.self, forKey: .toLang)
         self.isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
+        self.paywall = try container.decodeIfPresent(Bool.self, forKey: .paywall) ?? false
+
     }
     
-    public func encode(to encoder: Encoder) throws {
+    func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
         try container.encode(self.baseLang, forKey: .baseLang)
         try container.encode(self.fromLang, forKey: .fromLang)
         try container.encodeIfPresent(self.toLang, forKey: .toLang)
         try container.encode(self.isEnabled, forKey: .isEnabled)
-    }
-
-    public func withToLang(_ toLang: String?) -> ChatTranslationState {
-        return ChatTranslationState(
-            baseLang: self.baseLang,
-            fromLang: self.fromLang,
-            toLang: toLang,
-            isEnabled: self.isEnabled
-        )
-    }
-    
-    public func withIsEnabled(_ isEnabled: Bool) -> ChatTranslationState {
-        return ChatTranslationState(
-            baseLang: self.baseLang,
-            fromLang: self.fromLang,
-            toLang: self.toLang,
-            isEnabled: isEnabled
-        )
+        try container.encode(self.paywall, forKey: .paywall)
     }
 }
 
@@ -140,7 +129,7 @@ private func updateChatTranslationState(engine: TelegramEngine, peerId: EnginePe
     }
 }
 
-public func updateChatTranslationStateInteractively(engine: TelegramEngine, peerId: EnginePeer.Id, _ f: @escaping (ChatTranslationState) -> ChatTranslationState) -> Signal<Never, NoError> {
+func updateChatTranslationStateInteractively(engine: TelegramEngine, peerId: EnginePeer.Id, _ f: @escaping (ChatTranslationState) -> ChatTranslationState) -> Signal<Never, NoError> {
     let key = ValueBoxKey(length: 8)
     key.setInt64(0, value: peerId.id._internalGetInt64Value())
     
@@ -180,6 +169,7 @@ final class ChatLiveTranslateContext {
         var translate: Bool
         var from: String
         var to: String
+        var paywall: Bool
         
         struct Key: Hashable {
             let id: MessageId
@@ -192,7 +182,7 @@ final class ChatLiveTranslateContext {
         var result:[Key : Result]
         
         static var `default`: State {
-            return .init(canTranslate: false, translate: false, from: "", to: "", result: [:])
+            return .init(canTranslate: false, translate: false, from: "", to: "", paywall: false, result: [:])
         }
         fileprivate var queued:[Message] = []
     }
@@ -246,6 +236,17 @@ final class ChatLiveTranslateContext {
                 isHidden = true
             }
             
+            var translationState = translationState
+            if let paywall = settings.translatePaywall {
+                translationState?.paywall = paywall < Int32(Date().timeIntervalSince1970)
+            } else {
+                translationState?.paywall = false
+            }
+            
+            if let state = translationState, state.paywall {
+                isHidden = false
+            }
+            
             if !isHidden && translationState?.fromLang != translationState?.toLang  {
                 return (translationState, appearance)
             } else {
@@ -271,6 +272,7 @@ final class ChatLiveTranslateContext {
                 } else {
                     current.translate = false
                 }
+                current.paywall = state?.paywall ?? false
                 if !current.canTranslate || !current.translate || toUpdated {
                     current.result = [:]
                 }
@@ -328,7 +330,7 @@ final class ChatLiveTranslateContext {
     func toggleTranslate() {
         _ = updateChatTranslationStateInteractively(engine: context.engine, peerId: peerId, { current in
             var current = current
-            current = current.withIsEnabled(!current.isEnabled)
+            current.isEnabled = !current.isEnabled
             return current
         }).start()
     }
@@ -395,7 +397,7 @@ final class ChatLiveTranslateContext {
         _ = context.engine.messages.togglePeerMessagesTranslationHidden(peerId: self.peerId, hidden: true).start()
         _ = updateChatTranslationStateInteractively(engine: context.engine, peerId: peerId, { current in
             var current = current
-            current = current.withIsEnabled(false)
+            current.isEnabled = false
             return current
         }).start()
     }
@@ -403,7 +405,7 @@ final class ChatLiveTranslateContext {
         _ = context.engine.messages.togglePeerMessagesTranslationHidden(peerId: self.peerId, hidden: false).start()
         _ = updateChatTranslationStateInteractively(engine: context.engine, peerId: peerId, { current in
             var current = current
-            current = current.withIsEnabled(true)
+            current.isEnabled = true
             return current
         }).start()
     }
@@ -411,8 +413,19 @@ final class ChatLiveTranslateContext {
     func translate(toLang: String) -> Void {
         _ = updateChatTranslationStateInteractively(engine: context.engine, peerId: peerId, { current in
             var current = current
-            current = current.withToLang(toLang)
+            current.toLang = toLang
             return current
+        }).start()
+    }
+    
+    func enablePaywall() -> Void {
+        _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+            $0.withUpdatedTranslatePaywall($0.translatePaywall ?? Int32(Date().timeIntervalSince1970 - 5.0))
+        }).start()
+    }
+    func disablePaywall() -> Void {
+        _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+            $0.withUpdatedTranslatePaywall(Int32(Date().timeIntervalSince1970) + .secondsInWeek)
         }).start()
     }
 }
@@ -484,7 +497,7 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
                             }
                         }
                         let fromLang = mostFrequent?.0 ?? ""
-                        let state = ChatTranslationState(baseLang: baseLang, fromLang: fromLang, toLang: nil, isEnabled: false)
+                        let state = ChatTranslationState(baseLang: baseLang, fromLang: fromLang, toLang: nil, isEnabled: false, paywall: false)
                         let _ = updateChatTranslationState(engine: context.engine, peerId: peerId, state: state).start()
                         if !dontTranslateLanguages.contains(fromLang) {
                             return state

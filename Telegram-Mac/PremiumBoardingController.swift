@@ -759,9 +759,11 @@ final class PremiumBoardingController : ModalViewController {
 
     private let context: AccountContext
     private let source: PremiumLogEventsSource
-    init(context: AccountContext, source: PremiumLogEventsSource = .settings) {
+    private let openFeatures: Bool
+    init(context: AccountContext, source: PremiumLogEventsSource = .settings, openFeatures: Bool = false) {
         self.context = context
         self.source = source
+        self.openFeatures = openFeatures
         super.init(frame: NSMakeRect(0, 0, 380, 300))
     }
     
@@ -786,6 +788,17 @@ final class PremiumBoardingController : ModalViewController {
     override func viewClass() -> AnyClass {
         return PremiumBoardingView.self
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if self.openFeatures {
+            if let value = PremiumValue(rawValue: self.source.value) {
+                arguments?.openFeature(value)
+            }
+        }
+    }
+    
+    private var arguments: Arguments?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -859,6 +872,10 @@ final class PremiumBoardingController : ModalViewController {
             }
         })
         
+        self.arguments = arguments
+        
+        
+        
         let peer: Signal<(Peer?, PremiumEmojiStatusInfo?), NoError>
         switch source {
         case let .profile(peerId):
@@ -878,7 +895,7 @@ final class PremiumBoardingController : ModalViewController {
                                         }
                                     } |> filter {
                                         return $0.1 != nil
-                                    }
+                                    } |> take(1)
                                 } else {
                                     return .single((peer, .init(status: status, file: file, info: nil, items: [])))
                                 }

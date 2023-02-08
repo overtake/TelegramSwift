@@ -813,12 +813,12 @@
         }
         
         commonGroupsTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
+            if view.peerId.namespace == Namespaces.Peer.CloudUser || view.peerId.namespace == Namespaces.Peer.SecretChat {
+                return (exist: false, loaded: false)
+            }
             if let cachedData = view.cachedData as? CachedUserData {
                 return (exist: cachedData.commonGroupCount > 0, loaded: true)
             } else {
-                if view.peerId.namespace == Namespaces.Peer.CloudUser || view.peerId.namespace == Namespaces.Peer.SecretChat {
-                    return (exist: false, loaded: false)
-                }
                 return (exist: false, loaded: true)
             }
         } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
@@ -867,7 +867,7 @@
                 }
                 
             }
-            return (tabs: tabs.filter { $0.exists }.map { $0.tag }, selected: selectedValue, hasLoaded: tabs.reduce(true, { $0 && $1.hasLoaded }))
+            return (tabs: tabs.filter { $0.exists }.map { $0.tag }, selected: selectedValue, hasLoaded: tabs.first?.hasLoaded ?? false)
         }
         
         tabsSignal.set(tabSignal)
