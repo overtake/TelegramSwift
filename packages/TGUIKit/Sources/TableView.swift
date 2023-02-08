@@ -3071,6 +3071,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var focus: TableScrollFocus = .init(focus: false)
         var relativeInset: CGFloat = 0
         var innerId: AnyHashable? = nil
+        var addition: CGFloat = 0
         switch state {
         case let .center(stableId, _innerId, _animate, _focus, _inset):
             item = findItem(stableId)
@@ -3090,6 +3091,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             relativeInset = _inset
             focus = _focus
             innerId = _innerId
+            addition = contentInsets.top
         case let .down(_animate):
             animate = _animate
             if !tableView.isFlipped {
@@ -3197,7 +3199,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             addScroll(listener: scrollListener)
             
-            let bounds = NSMakeRect(0, rowRect.minY + contentInsets.top, clipView.bounds.width, clipView.bounds.height)
+            let bounds = NSMakeRect(0, rowRect.minY + addition, clipView.bounds.width, clipView.bounds.height)
             
             if animate {
                 clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
