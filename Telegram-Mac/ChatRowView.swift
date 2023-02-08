@@ -1847,10 +1847,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     deinit {
+        contentView.removeAllSubviews()
         if let item = self.item as? ChatRowItem {
             item.chatInteraction.remove(observer: self)
         }
-        contentView.removeAllSubviews()
     }
     
     override func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {

@@ -246,7 +246,7 @@ public final class TextViewLine {
     public let frame: NSRect
     public let range: NSRange
     public var penFlush: CGFloat
-    let isRTL: Bool
+    public let isRTL: Bool
     let isBlocked: Bool
     let strikethrough:[TextViewStrikethrough]
     fileprivate let embeddedItems:[TextViewEmbeddedItem]
@@ -400,6 +400,9 @@ public final class TextViewLayout : Equatable {
     public var numberOfLines: Int {
         return lines.count
     }
+    public var lastLineIsRtl: Bool {
+        return lines.last?.isRTL ?? false
+    }
     public var firstLineWidth: CGFloat {
         return lines[0].frame.width
     }
@@ -413,7 +416,7 @@ public final class TextViewLayout : Equatable {
         return lines[lines.count - 1].frame.height
     }
     
-    func calculateLayout(isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil) -> Void {
+    func calculateLayout(isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil, saveRTL: Bool = false) -> Void {
         self.isBigEmoji = isBigEmoji
         isPerfectSized = true
         
@@ -689,7 +692,15 @@ public final class TextViewLayout : Equatable {
                         isRTL = true
                     }
                 }
-                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs, embeddedItems: embeddedItems))
+                var penFlush = self.penFlush
+                if penFlush == 0 {
+                    if isRTL {
+                        penFlush = 1
+                    }
+                } else if isRTL, penFlush == 1 {
+                    penFlush = 0
+                }
+                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs, embeddedItems: embeddedItems))
                 
                 break
             } else {
@@ -743,8 +754,15 @@ public final class TextViewLayout : Equatable {
                             isRTL = true
                         }
                     }
-
-                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs, embeddedItems: embeddedItems))
+                    var penFlush = self.penFlush
+                    if penFlush == 0 {
+                        if isRTL {
+                            penFlush = 1
+                        }
+                    } else if isRTL, penFlush == 1 {
+                        penFlush = 0
+                    }
+                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs, embeddedItems: embeddedItems))
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
@@ -813,7 +831,9 @@ public final class TextViewLayout : Equatable {
         
         //self.monospacedStrokeImage = generateRectsImage(color: presentation.colors.border, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
 
-        
+        if saveRTL {
+            layoutSize.width = max(layoutSize.width, constrainedWidth)
+        }
         self.layoutSize = layoutSize
     }
     
@@ -944,7 +964,7 @@ public final class TextViewLayout : Equatable {
         selectedRange.range = NSMakeRange(location, length)
     }
     
-    public func measure(width: CGFloat = 0, isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil) -> Void {
+    public func measure(width: CGFloat = 0, isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil, saveRTL: Bool = false) -> Void {
         
         if width != 0 {
             constrainedWidth = width
@@ -952,7 +972,7 @@ public final class TextViewLayout : Equatable {
         
         toolTipRects.removeAll()
         
-        calculateLayout(isBigEmoji: isBigEmoji, lineSpacing: lineSpacing)
+        calculateLayout(isBigEmoji: isBigEmoji, lineSpacing: lineSpacing, saveRTL: saveRTL)
 
         strokeRects.removeAll()
         
@@ -1060,9 +1080,12 @@ public final class TextViewLayout : Equatable {
             var i = startSelectLineIndex
             while isReversed ? i >= currentSelectLineIndex : i <= currentSelectLineIndex {
                 let line = lines[i].line
+                
+                let penOffset = CGFloat( CTLineGetPenOffsetForFlush(lines[i].line, lines[i].penFlush, Double(layoutSize.width)))
+                
                 let lineRange = CTLineGetStringRange(line)
-                var startIndex: CFIndex = CTLineGetStringIndexForPosition(line, startPoint)
-                var endIndex: CFIndex = CTLineGetStringIndexForPosition(line, currentPoint)
+                var startIndex: CFIndex = CTLineGetStringIndexForPosition(line, startPoint.offsetBy(dx: -penOffset, dy: 0))
+                var endIndex: CFIndex = CTLineGetStringIndexForPosition(line, currentPoint.offsetBy(dx: -penOffset, dy: 0))
                 if dif > 0 {
                     if i != currentSelectLineIndex {
                         endIndex = (lineRange.length + lineRange.location)
@@ -1624,6 +1647,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         
                         
                         let line = lines[i].line
+                        
+                        let penOffset = CGFloat( CTLineGetPenOffsetForFlush(lines[i].line, lines[i].penFlush, Double(frame.width)))
+                        
                         var rect:NSRect = lines[i].frame
                         let lineRange = lines[i].range
                         
@@ -1670,11 +1696,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             
                             let blockValue:CGFloat = layout.mayBlocked ? CGFloat((layout.attributedString.attribute(.preformattedPre, at: beginLineIndex, effectiveRange: nil) as? NSNumber)?.floatValue ?? 0) : 0
                             
-                            
+
                             
                             rect.size.width = width - blockValue / 2
                             
-                            rect.origin.x = startOffset + blockValue
+                            rect.origin.x = penOffset + startOffset + blockValue
                             rect.origin.y = rect.minY - rect.height + blockValue / 2
                             rect.size.height += ceil(descent - leading)
                             let color:NSColor = window?.isKeyWindow == true || !range.1 ? range.0.color : NSColor.lightGray
@@ -1714,10 +1740,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             for i in 0 ..< layout.lines.count {
                 let line = layout.lines[i]
                 
-                var penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, line.penFlush, Double(frame.width))) + line.frame.minX
+                var penOffset = CGFloat( CTLineGetPenOffsetForFlush(line.line, line.penFlush, Double(frame.width)))
                 if layout.penFlush == 0.5, line.penFlush != 0.5 {
-                    penOffset = startPosition.x
-                } else if layout.penFlush == 0.0 {
                     penOffset = startPosition.x
                 }
                 var additionY: CGFloat = 0
