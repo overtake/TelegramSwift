@@ -1638,9 +1638,9 @@ func chatMessagePhotoInteractiveFetched(account: Account, imageReference: ImageM
     }
 }
 
-func chatMessagePhotoCancelInteractiveFetch(account: Account, photo: TelegramMediaImage) {
-    if let largestRepresentation = largestRepresentationForPhoto(photo) {
-        return account.postbox.mediaBox.cancelInteractiveResourceFetch(largestRepresentation.resource)
+func chatMessagePhotoCancelInteractiveFetch(account: Account, photo: TelegramMediaImage, toRepresentationSize: NSSize = NSMakeSize(1280, 1280)) {
+    if let large = photo.representationForDisplayAtSize(.init(toRepresentationSize)) {
+        return account.postbox.mediaBox.cancelInteractiveResourceFetch(large.resource)
     }
 }
 
