@@ -966,7 +966,7 @@ public final class TextViewLayout : Equatable {
     public func fitToLines(_ count: Int) {
         if lines.count > count {
             let lines = lines.prefix(count)
-            self.layoutSize = NSMakeSize(self.layoutSize.width, lines[lines.count - 1].frame.maxY + 3)
+            self.layoutSize = NSMakeSize(self.layoutSize.width, lines[lines.count - 1].frame.maxY + 5)
         }
     }
     public func measure(width: CGFloat = 0, isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil, saveRTL: Bool = false) -> Void {
