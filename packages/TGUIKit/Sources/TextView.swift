@@ -963,7 +963,12 @@ public final class TextViewLayout : Equatable {
         let length = max(min(range.length, attributedString.length - location), 0)
         selectedRange.range = NSMakeRange(location, length)
     }
-    
+    public func fitToLines(_ count: Int) {
+        if lines.count > count {
+            let lines = lines.prefix(count)
+            self.layoutSize = NSMakeSize(self.layoutSize.width, lines[lines.count - 1].frame.maxY + 3)
+        }
+    }
     public func measure(width: CGFloat = 0, isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil, saveRTL: Bool = false) -> Void {
         
         if width != 0 {

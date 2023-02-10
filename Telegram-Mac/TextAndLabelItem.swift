@@ -81,7 +81,7 @@ class TextAndLabelItem: GeneralRowItem {
             self._copyToClipboard = nil
         }
         
-        textLayout = TextViewLayout(attr, maximumNumberOfLines: 3, alwaysStaticItems: !detectLinks)
+        textLayout = TextViewLayout(attr, maximumNumberOfLines: 0, alwaysStaticItems: !detectLinks)
         textLayout.interactions = linkInteractions
         textLayout.selectWholeText = !detectLinks
         if selectFullWord {
@@ -182,11 +182,13 @@ class TextAndLabelItem: GeneralRowItem {
         textLayout.measure(width: textWidth)
         
         if hasMore != nil {
-            hasMore = !textLayout.isPerfectSized
+            hasMore = textLayout.numberOfLines > 3
         }
         if hasMore == true {
             textLayout.cutout = TextViewCutout(bottomRight: NSMakeSize(moreLayout.layoutSize.width + 10, 0))
             textLayout.measure(width: textWidth)
+            
+            textLayout.fitToLines(3)
         }
         
         labelLayout = TextNode.layoutText(maybeNode: nil,  label, nil, 1, .end, NSMakeSize(textWidth, .greatestFiniteMagnitude), nil, false, .left)

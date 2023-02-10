@@ -322,14 +322,15 @@ private struct State : Equatable {
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?
+    var products: [InAppPurchaseManager.Product] = []
     var isPremium: Bool
     var peer: PeerEquatable?
     var premiumConfiguration: PremiumPromoConfiguration
     var stickers: [TelegramMediaFile]
     var canMakePayment: Bool
     var status: PremiumEmojiStatusInfo?
-    var periods: [PremiumPeriod] = [.init(period: .month, price: 0, currency: "usd"), .init(period: .year, price: 100000, currency: "usd")]
-    var period: PremiumPeriod = .init(period: .month, price: 0, currency: "usd")
+    var period: PremiumPeriod?
+    var periods: [PremiumPeriod] = []
 }
 
 
@@ -353,19 +354,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     
-//    if !state.periods.isEmpty, !state.isPremium {
-//        let period = state.period
-//        let periods = state.periods
-//        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_periods"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-//            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, periods: periods, selectedPeriod: period, viewType: .singleItem, callback: { period in
-//                arguments.togglePeriod(period)
-//            })
-//        }))
-//        index += 1
-//
-//        entries.append(.sectionId(sectionId, type: .customModern(15)))
-//        sectionId += 1
-//    }
+    
+    if !state.periods.isEmpty, !state.isPremium {
+        let period = state.period ?? state.periods[0]
+                
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_periods"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, periods: state.periods, selectedPeriod: period, viewType: .singleItem, callback: { period in
+                arguments.togglePeriod(period)
+            })
+        }))
+        index += 1
+
+        entries.append(.sectionId(sectionId, type: .customModern(15)))
+        sectionId += 1
+    }
     
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
@@ -442,19 +444,15 @@ private final class PremiumBoardingView : View {
         }
         
         func update(animated: Bool, state: State) -> NSSize {
-            let price: String
-            let product = state.premiumConfiguration.premiumProductOptions.first(where: { $0.months == 1
-           })
-            if let product = state.premiumProduct {
-                price = product.price
-            } else if let product = product {
-                price = formatCurrencyAmount(product.amount, currency: product.currency)
-            } else {
-                price = ""
+            
+            let option = state.period
+            guard let option = state.period else {
+                return .zero
             }
+
             let text: String
             if state.canMakePayment {
-                text = strings().premiumBoardingSubscribe(price)
+                text = option.buyString
             } else {
                 text = strings().premiumBoardingPaymentNotAvailalbe
             }
@@ -850,20 +848,11 @@ final class PremiumBoardingController : ModalViewController {
             guard let strongSelf = self else {
                 return
             }
-            switch value {
-            case .double_limits:
-                strongSelf.genericView.append(PremiumBoardingDoubleController(context, back: { [weak strongSelf] in
-                    _ = strongSelf?.escapeKeyAction()
-                }, makeAcceptView: { [weak strongSelf] in 
-                    return strongSelf?.genericView.makeAcceptView()
-                }), animated: true)
-            default:
-                strongSelf.genericView.append(PremiumBoardingFeaturesController(context, value: value, stickers: stateValue.with { $0.stickers }, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
-                    _ = strongSelf?.escapeKeyAction()
-                }, makeAcceptView: { [weak strongSelf] in
-                    return strongSelf?.genericView.makeAcceptView()
-                }), animated: true)
-            }
+            strongSelf.genericView.append(PremiumBoardingFeaturesController(context, value: value, stickers: stateValue.with { $0.stickers }, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
+                _ = strongSelf?.escapeKeyAction()
+            }, makeAcceptView: { [weak strongSelf] in
+                return strongSelf?.genericView.makeAcceptView()
+            }), animated: true)
         }, togglePeriod: { period in
             updateState { current in
                 var current = current
@@ -949,7 +938,7 @@ final class PremiumBoardingController : ModalViewController {
         |> deliverOnMainQueue
         
         let products: Signal<[InAppPurchaseManager.Product], NoError>
-        #if APP_STORE
+        #if APP_STORE || DEBUG
         products = inAppPurchaseManager.availableProducts |> map {
             $0.filter { $0.isSubscription }
         }
@@ -969,9 +958,19 @@ final class PremiumBoardingController : ModalViewController {
                 updateState { current in
                     var current = current
                     current.premiumProduct = products.first
+                    current.products = products
                     current.isPremium = isPremium
                     current.premiumConfiguration = promoConfiguration
                     current.stickers = stickers
+                    current.periods = promoConfiguration.premiumProductOptions.compactMap { period in
+                        if let value = PremiumPeriod.Period(rawValue: period.months) {
+                            return .init(period: value, options: promoConfiguration.premiumProductOptions, storeProducts: products, storeProduct: products.first(where: { $0.id == period.storeProductId }), option: period)
+                        }
+                        return nil
+                    }
+                    if current.period == nil {
+                        current.period = current.periods.first
+                    }
                     if let peer = peerAndStatus.0 {
                         current.peer = .init(peer)
                         current.status = peerAndStatus.1
@@ -1037,8 +1036,8 @@ final class PremiumBoardingController : ModalViewController {
                 }, error: { error in
                     showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
                 })
-            } else if let username = context.premiumBuyConfig.botUsername {
-                let inApp = inApp(for: "https://t.me/\(username)?start=\(source.value)".nsstring, context: context, openInfo: arguments.openInfo)
+            } else if let url = stateValue.with ({ $0.period?.option.botUrl }) {
+                let inApp = inApp(for: url.nsstring, context: context, openInfo: arguments.openInfo)
                 execute(inapp: inApp)
                 close()
             }
@@ -1047,7 +1046,7 @@ final class PremiumBoardingController : ModalViewController {
         
         let buyAppStore = {
             
-            let premiumProduct = stateValue.with { $0.premiumProduct }
+            let premiumProduct = stateValue.with { $0.period?.storeProduct }
 
             guard let premiumProduct = premiumProduct else {
                 buyNonStore()
@@ -1130,7 +1129,7 @@ final class PremiumBoardingController : ModalViewController {
             
             addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_accept.value)
             
-            #if APP_STORE 
+            #if APP_STORE || DEBUG
             buyAppStore()
             #else
             buyNonStore()

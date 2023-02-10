@@ -1372,7 +1372,7 @@ struct ChatInterfaceState: Codable, Equatable {
     }
 
     func withUpdatedForwardMessageIds(_ forwardMessageIds: [MessageId]) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages, hideSendersName: self.hideSendersName, themeEditing: self.themeEditing, hideCaptions: self.hideCaptions, revealedSpoilers: self.revealedSpoilers)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages, hideSendersName: forwardMessageIds.isEmpty ? false : self.hideSendersName, themeEditing: self.themeEditing, hideCaptions: forwardMessageIds.isEmpty ? false : self.hideCaptions, revealedSpoilers: self.revealedSpoilers)
     }
 
     func withUpdatedForwardMessages(_ forwardMessages: [Message]) -> ChatInterfaceState {

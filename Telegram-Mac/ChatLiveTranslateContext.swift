@@ -473,14 +473,31 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
                                 continue
                             }
                             if message.text.count > 10 {
-                                let text = String(message.text.prefix(100))
+                                var text = String(message.text.prefix(256))
+                                if var entities = message.textEntitiesAttribute?.entities.filter({ $0.type == .Pre || $0.type == .Code }) {
+                                    entities = entities.sorted(by: { $0.range.lowerBound > $1.range.lowerBound })
+                                    var ranges: [Range<String.Index>] = []
+                                    for entity in entities {
+                                        if entity.range.lowerBound > text.count || entity.range.upperBound > text.count {
+                                            continue
+                                        }
+                                        ranges.append(text.index(text.startIndex, offsetBy: entity.range.lowerBound) ..< text.index(text.startIndex, offsetBy: entity.range.upperBound))
+                                    }
+                                    for range in ranges {
+                                        text.removeSubrange(range)
+                                    }
+                                }
+                                if text.count < 10 {
+                                    continue
+                                }
+
                                 let fromLang = Translate.detectLanguage(for: text)
                                 if let fromLang = fromLang {
-                                    fromLangs[fromLang] = (fromLangs[fromLang] ?? 0) + 1
+                                    fromLangs[fromLang] = (fromLangs[fromLang] ?? 0) + message.text.count
+                                    count += 1
                                 }
-                                count += 1
                             }
-                            if count >= 10 {
+                            if count >= 16 {
                                 break
                             }
                         }

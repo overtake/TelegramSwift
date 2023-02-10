@@ -8567,6 +8567,18 @@ public final class L10n {
   public static var premiumBoardingStickersInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Info") }
   /// Premium Stickers
   public static var premiumBoardingStickersTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Title") }
+  /// Subscribe for %@ / monthly
+  public static func premiumBoardingSubscribeMonth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Subscribe.Month", p1)
+  }
+  /// Subscribe for %@ / six month
+  public static func premiumBoardingSubscribeSixMonth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Subscribe.SixMonth", p1)
+  }
+  /// Subscribe for %@ / year
+  public static func premiumBoardingSubscribeYear(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Subscribe.Year", p1)
+  }
   /// Real-time translation of channels and chats into other languages.
   public static var premiumBoardingTranslateInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Translate.Info") }
   /// Real-Time Translation
@@ -8695,6 +8707,16 @@ public final class L10n {
   }
   /// You already have Telegram Premium.
   public static var premiumOffsetAlreadyHave: String  { return L10n.tr("Localizable", "Premium.Offset.AlreadyHave") }
+  /// Annual
+  public static var premiumPeriodAnnual: String  { return L10n.tr("Localizable", "Premium.Period.Annual") }
+  /// Monthly
+  public static var premiumPeriodMonthly: String  { return L10n.tr("Localizable", "Premium.Period.Monthly") }
+  /// %@/month
+  public static func premiumPeriodPrice(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Period.Price", p1)
+  }
+  /// Six Month
+  public static var premiumPeriodSixMonth: String  { return L10n.tr("Localizable", "Premium.Period.SixMonth") }
   /// In-app purchases are not allowed on this device.
   public static var premiumPurchaseErrorCantMakePayments: String  { return L10n.tr("Localizable", "Premium.Purchase.ErrorCantMakePayments") }
   /// Please check your internet connection and try again.

@@ -8,25 +8,81 @@
 
 import Foundation
 import TGUIKit
+import TelegramCore
+import InAppPurchaseManager
+import CurrencyFormat
 
 struct PremiumPeriod : Equatable {
-    enum Period {
-        case month
-        case sixMonth
-        case year
+    enum Period : Int32 {
+        case month = 1
+        case sixMonth = 6
+        case year = 12
     }
     var period: Period
-    var price: Int64
-    var currency: String
+    var options: [PremiumPromoConfiguration.PremiumProductOption]
+    var storeProducts: [InAppPurchaseManager.Product]
+    var storeProduct: InAppPurchaseManager.Product?
+    var option: PremiumPromoConfiguration.PremiumProductOption
+    
+    static func ==(lhs: PremiumPeriod, rhs: PremiumPeriod) -> Bool {
+        return lhs.period == rhs.period
+    }
     
     var titleString: String {
-        return "text"
+        switch period {
+        case .month:
+            return strings().premiumPeriodMonthly
+        case .year:
+            return strings().premiumPeriodAnnual
+        case .sixMonth:
+            return strings().premiumPeriodSixMonth
+        }
     }
     var priceString: String {
-        return "test"
+        return strings().premiumPeriodPrice(amountString)
+    }
+    var buyString: String {
+        switch period {
+        case .month:
+            return strings().premiumBoardingSubscribeMonth(fullAmount)
+        case .sixMonth:
+            return strings().premiumBoardingSubscribeSixMonth(fullAmount)
+        case .year:
+            return strings().premiumBoardingSubscribeYear(fullAmount)
+        }
+    }
+    var fullAmount: String {
+        let price: String
+        if let storeProduct = storeProduct {
+            price = formatCurrencyAmount(storeProduct.priceCurrencyAndAmount.amount, currency: storeProduct.priceCurrencyAndAmount.currency)
+        } else {
+            price = formatCurrencyAmount(option.amount, currency: option.currency)
+        }
+        return price
+    }
+    var amountString: String {
+        let price: String
+        if let storeProduct = storeProduct {
+            price = formatCurrencyAmount(storeProduct.priceCurrencyAndAmount.amount / Int64(self.option.months), currency: storeProduct.priceCurrencyAndAmount.currency)
+        } else {
+            price = formatCurrencyAmount(option.amount / Int64(self.option.months), currency: option.currency)
+        }
+        return price
     }
     var discountString: Int {
-        return 20
+        
+        let amount = storeProduct?.priceCurrencyAndAmount.amount ?? option.amount
+        
+        let optionMonthly:Int64 = Int64((CGFloat(amount) / CGFloat(option.months)))
+        
+        let highestOptionMonthly:Int64 = options.map { option in
+            let store = self.storeProducts.first(where: { $0.id == option.storeProductId })
+            return Int64((CGFloat(store?.priceCurrencyAndAmount.amount ?? option.amount) / CGFloat(option.months)))
+        }.max()!
+        
+        
+        let discountPercent = Int(floor((Float(highestOptionMonthly) - Float(optionMonthly)) / Float(highestOptionMonthly) * 100))
+        return discountPercent
     }
     
 }
@@ -129,7 +185,7 @@ private final class PremiumSelectPeriodRowView: GeneralContainableRowView {
             let commonPriceLayout = TextViewLayout(.initialize(string: option.priceString, color: theme.colors.grayText, font: .normal(.title)))
             commonPriceLayout.measure(width: .greatestFiniteMagnitude)
 
-            let discountLayout = TextViewLayout(.initialize(string: "-\(option.discountString)%", color: theme.colors.underSelectedColor, font: .medium(.small)))
+            let discountLayout = TextViewLayout(.initialize(string: "-\(option.discountString)%", color: theme.colors.underSelectedColor, font: .medium(.small)), alignment: .center)
             discountLayout.measure(width: .greatestFiniteMagnitude)
 
 
