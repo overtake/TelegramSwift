@@ -316,7 +316,9 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         
         if (item.action == @selector(submenuAction:)) {
             [item.submenu.itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull subItem, NSUInteger idx, BOOL * _Nonnull stop) {
-                if (subItem.action == @selector(_shareServiceSelected:) || subItem.action == @selector(orderFrontFontPanel:)  || subItem.action == @selector(orderFrontSubstitutionsPanel:) || subItem.action == @selector(orderFrontSubstitutionsPanel:) || subItem.action == @selector(startSpeaking:) || subItem.action == @selector(changeLayoutOrientation:) ) {
+                
+                if (subItem
+                    .action == @selector(_shareServiceSelected:) || subItem.action == @selector(orderFrontFontPanel:)  || subItem.action == @selector(orderFrontSubstitutionsPanel:) || subItem.action == @selector(orderFrontSubstitutionsPanel:) || subItem.action == @selector(startSpeaking:) || subItem.action == @selector(changeLayoutOrientation:) ) {
                     [removeItems addObject:item];
                     *stop = YES;
                 } else if (subItem.action == @selector(capitalizeWord:)) {
@@ -875,6 +877,10 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     return [self.superview menuForEvent:event];
 }
 
+- (NSView *)hitTest:(NSPoint)point {
+    return nil;
+}
+
 -(void)mouseDown:(NSEvent *)event {
     [super mouseDown:event];
 }
@@ -979,6 +985,8 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         [_placeholder setSelectable:NO];
         [_placeholder setEditable:NO];
         [_placeholder setEnabled:NO];
+        [_placeholder setContinuous:NO];
+        
         [_placeholder setLineBreakMode:NSLineBreakByTruncatingTail];
         [_placeholder setMaximumNumberOfLines:0];
         

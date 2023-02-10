@@ -848,7 +848,11 @@ final class ForwardMessagesObject : ShareObject {
                             let comment = peer.canSendMessage() ? comment : nil
                             
                             if let controller = navigation.controller as? ChatController, controller.chatInteraction.chatLocation == .peer(peerId) {
-                                controller.chatInteraction.update({$0.withoutSelectionState().updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(comment ?? $0.inputState)})})
+                                controller.chatInteraction.update({ current in
+                                    current.withoutSelectionState().updatedInterfaceState {
+                                        $0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(comment ?? current.effectiveInput)
+                                    }
+                                })
                             } else {
                                 
                                 let initialAction: ChatInitialAction = .forward(messageIds: messageIds, text: comment, behavior: .automatic)

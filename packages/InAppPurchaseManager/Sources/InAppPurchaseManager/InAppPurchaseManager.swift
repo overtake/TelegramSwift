@@ -8,9 +8,8 @@ import CurrencyFormat
 
 private let productIdentifiers = [
     "org.telegram.telegramPremium.monthly",
-    "org.telegram.telegramPremium.twelveMonths",
-    "org.telegram.telegramPremium.sixMonths",
-    "org.telegram.telegramPremium.threeMonths"
+    "org.telegram.telegramPremium.annual",
+    "org.telegram.telegramPremium.semiannual"
 ]
 
 

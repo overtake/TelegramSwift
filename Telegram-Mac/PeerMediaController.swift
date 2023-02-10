@@ -813,7 +813,7 @@
         }
         
         commonGroupsTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
-            if view.peerId.namespace == Namespaces.Peer.CloudUser || view.peerId.namespace == Namespaces.Peer.SecretChat {
+            if view.peerId.namespace == Namespaces.Peer.SecretChat {
                 return (exist: false, loaded: false)
             }
             if let cachedData = view.cachedData as? CachedUserData {

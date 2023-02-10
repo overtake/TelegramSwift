@@ -79,6 +79,10 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         updoadPhotoCap.backgroundColor = NSColor.black.withAlphaComponent(0.4)
         updoadPhotoCap.setFrameSize(avatar.frame.size)
         updoadPhotoCap.layer?.cornerRadius = updoadPhotoCap.frame.width / 2
+        if #available(macOS 10.15, *) {
+            updoadPhotoCap.layer?.cornerCurve = .circular
+        }
+        
         updoadPhotoCap.set(image: ControlStyle(highlightColor: .white).highlight(image: theme.icons.chatAttachCamera), for: .Normal)
         updoadPhotoCap.set(image: ControlStyle(highlightColor: theme.colors.accentIcon).highlight(image: theme.icons.chatAttachCamera), for: .Highlight)
         

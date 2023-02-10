@@ -128,7 +128,7 @@ private final class PremiumGiftRowView: GeneralContainableRowView {
             let commonPriceLayout = TextViewLayout(.initialize(string: option.priceString, color: theme.colors.grayText, font: .normal(.title)))
             commonPriceLayout.measure(width: .greatestFiniteMagnitude)
             
-            let discountLayout = TextViewLayout(.initialize(string: "-\(option.discountString)%", color: theme.colors.underSelectedColor, font: .medium(.small)))
+            let discountLayout = TextViewLayout(.initialize(string: "-\(option.discountString)%", color: theme.colors.underSelectedColor, font: .medium(.small)), alignment: .center)
             discountLayout.measure(width: .greatestFiniteMagnitude)
 
             

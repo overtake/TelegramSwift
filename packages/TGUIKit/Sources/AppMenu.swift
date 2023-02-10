@@ -96,6 +96,8 @@ public final class AppMenu {
     public func show(event: NSEvent, view: NSView) {
         
         
+        NSCursor.arrow.set()
+        
         if System.legacyMenu || self.menu.isLegacy {
             NSMenu.popUpContextMenu(self.menu, with: event, for: view)
         } else {

@@ -807,6 +807,8 @@ public class Modal: NSObject {
         // if let view
         if let controller = controller {
             disposable.set((controller.ready.get() |> take(1)).start(next: { [weak self, weak controller] ready in
+                NSCursor.arrow.set()
+                
                 if let strongSelf = self, let controller = controller {
                     let view = strongSelf.topView
                     if controller.contentBelowBackground {

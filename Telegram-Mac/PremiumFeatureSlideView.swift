@@ -84,6 +84,9 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     
+    var appear: (()->Void)? = nil
+    var disappear: (()->Void)? = nil
+
     func setup(context: AccountContext, type: PremiumValue, decoration: BackgroundDecoration, getView: @escaping(PremiumFeatureSlideView)->(NSView & PremiumSlideView)) {
         
         self.getView = getView
@@ -121,6 +124,7 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         view.frame = bounds
         self.content.addSubview(view)
         
+        appear?()
         
         switch bgDecoration {
         case .none:
@@ -184,6 +188,7 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
     }
     
     func willDisappear() {
+        disappear?()
         self.decorationView?.setVisible(false)
         self.view?.willDisappear()
     }
