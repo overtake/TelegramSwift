@@ -237,8 +237,8 @@ final class ChatLiveTranslateContext {
             }
             
             var translationState = translationState
-            if let paywall = settings.translatePaywall {
-                translationState?.paywall = paywall < Int32(Date().timeIntervalSince1970)
+            if let paywall = settings.paywall {
+                translationState?.paywall = paywall.show
             } else {
                 translationState?.paywall = false
             }
@@ -420,12 +420,12 @@ final class ChatLiveTranslateContext {
     
     func enablePaywall() -> Void {
         _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, {
-            $0.withUpdatedTranslatePaywall($0.translatePaywall ?? Int32(Date().timeIntervalSince1970 - 5.0))
+            $0.withUpdatedPaywall($0.paywall?.increase() ?? .initialize())
         }).start()
     }
     func disablePaywall() -> Void {
         _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, {
-            $0.withUpdatedTranslatePaywall(Int32(Date().timeIntervalSince1970) + .secondsInWeek)
+            $0.withUpdatedPaywall($0.paywall?.flush())
         }).start()
     }
 }
