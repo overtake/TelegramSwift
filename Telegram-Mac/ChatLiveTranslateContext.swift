@@ -237,7 +237,7 @@ final class ChatLiveTranslateContext {
             }
             
             var translationState = translationState
-            if let paywall = settings.paywall {
+            if let paywall = settings.paywall, isHidden {
                 translationState?.paywall = paywall.show
             } else {
                 translationState?.paywall = false

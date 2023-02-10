@@ -648,9 +648,14 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 dict["thread.message.namespace"] = threadId.namespace
                                 dict["thread.peer.id"] = threadId.peerId.id._internalGetInt64Value()
                                 dict["thread.peer.namespace"] = threadId.peerId.namespace._internalGetInt32Value()
-                                if let threadData = source.threadData, let data = CodableEntry(threadData)?.data {
-                                    dict["thread_data"] = data
-                                }
+                            } else if message.threadId == 1 {
+                                dict["thread.message.id"] = 1
+                                dict["thread.message.namespace"] = message.id.namespace
+                                dict["thread.peer.id"] = message.id.peerId.id._internalGetInt64Value()
+                                dict["thread.peer.namespace"] = message.id.peerId.namespace._internalGetInt32Value()
+                            }
+                            if let threadData = source.threadData, let data = CodableEntry(threadData)?.data {
+                                dict["thread_data"] = data
                             }
                             
                             dict["reply.message.id"] =  message.id.id
