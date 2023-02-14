@@ -687,6 +687,13 @@ final class AccountContext {
         window.makeKeyAndOrderFront(nil)
     }
     
+    func isLite(_ key: BaseApplicationSettings.LiteMode.Key = .any) -> Bool {
+        #if !SHARE
+        return sharedContext.isLite(key)
+        #endif
+        return false
+    }
+    
     private func updateTheme(_ update: ApplyThemeUpdate) {
         switch update {
         case let .cloud(cloudTheme):

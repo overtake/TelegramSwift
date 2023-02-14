@@ -154,6 +154,11 @@ open class Control: View {
     public var controlState:ControlState = .Normal {
         didSet {
             stateDidUpdate(controlState)
+            for value in stateHandlers {
+                if value.state == .Other {
+                    value.handler(self)
+                }
+            }
             if oldValue != controlState {
                 
                 for value in stateHandlers {
@@ -167,7 +172,6 @@ open class Control: View {
                 }
             }
             apply(state: isSelected ? .Highlight : controlState)
-
         }
     }
     

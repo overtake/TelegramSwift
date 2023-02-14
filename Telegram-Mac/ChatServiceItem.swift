@@ -830,13 +830,20 @@ class ChatServiceItem: ChatRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         text.measure(width: width - 40)
         if isBubbled {
-            if presentation.shouldBlurService {
+            if shouldBlurService {
                 text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor.withAlphaComponent(1))
             } else {
                 text.generateAutoBlock(backgroundColor: presentation.chatServiceItemColor)
             }
         }
         return true
+    }
+    
+    override var shouldBlurService: Bool {
+        if context.isLite(.blur) {
+            return false
+        }
+        return presentation.shouldBlurService
     }
     
     override func viewClass() -> AnyClass {
@@ -1004,7 +1011,7 @@ class ChatServiceRowView: TableRowView {
                 self?.setFile(file, context: context)
             }))
             
-            if item.presentation.shouldBlurService {
+            if item.shouldBlurService {
                 let current: VisualEffect
                 if let view = self.visualEffect {
                     current = view
@@ -1084,7 +1091,7 @@ class ChatServiceRowView: TableRowView {
             
             let size = NSMakeSize(100, 100)
             
-            if item.presentation.shouldBlurService {
+            if item.shouldBlurService {
                 let current: VisualEffect
                 if let view = self.visualEffect {
                     current = view
@@ -1187,8 +1194,8 @@ class ChatServiceRowView: TableRowView {
             textView.update(data.text)
             
             viewButton.set(font: .normal(.text), for: .Normal)
-            viewButton.set(color: item.presentation.shouldBlurService ? .white : theme.colors.underSelectedColor, for: .Normal)
-            viewButton.set(background: item.presentation.shouldBlurService ? item.presentation.chatServiceItemColor.withAlphaComponent(0.5) : item.presentation.colors.accent, for: .Normal)
+            viewButton.set(color: item.shouldBlurService ? .white : theme.colors.underSelectedColor, for: .Normal)
+            viewButton.set(background: item.shouldBlurService ? item.presentation.chatServiceItemColor.withAlphaComponent(0.5) : item.presentation.colors.accent, for: .Normal)
             viewButton.set(text: strings().chatServiceSuggestView, for: .Normal)
             viewButton.sizeToFit(NSMakeSize(20, 12))
             
@@ -1352,7 +1359,7 @@ class ChatServiceRowView: TableRowView {
         
         
         
-        if item.presentation.shouldBlurService {
+        if item.shouldBlurService {
             textView.blurBackground = item.presentation.blurServiceColor
             textView.backgroundColor = .clear
         } else {
@@ -1506,13 +1513,19 @@ class ChatServiceRowView: TableRowView {
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
             }
         }
         self.updatePlayerIfNeeded()
         self.suggestView?.updateAnimatableContent()
     }
     
+    override var isEmojiLite: Bool {
+        if let item = item as? ChatServiceItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
+    }
     
     func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
         var validIds: [InlineStickerItemLayer.Key] = []

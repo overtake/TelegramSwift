@@ -24,7 +24,7 @@ final class GCChatListIndicator : View {
     init(color: NSColor) {
         self.color = color
         super.init(frame: NSMakeRect(0, 0, 10, 20))
-        self.layer = CAShapeLayer()
+        self.layer = SimpleShapeLayer()
     }
 
     required init?(coder: NSCoder) {
@@ -46,9 +46,11 @@ final class GCChatListIndicator : View {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
 
-        if window == nil {
+        if window == nil || isLite(.animations) {
             stopAnimation()
             keyDispose.set(nil)
+            progressStage = 8
+            innerProgress = 0.5
         } else {
             startAnimation()
             if let window = window as? Window {
@@ -86,9 +88,8 @@ final class GCChatListIndicator : View {
                 }
                 innerProgress = 0
             }
-            if visibleRect != .zero {
-                (self.layer as? CAShapeLayer)?.path = genPath()
-            }
+            let layer = (self.layer as? CAShapeLayer)
+            layer?.path = genPath()
         }
     }
     

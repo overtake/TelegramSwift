@@ -233,7 +233,16 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     var peerView:PeerView? {
         didSet {
             let context = chatInteraction.context
-            updateStatus(presentation: chatInteraction.presentation)
+            if let oldValue = oldValue, let newValue = peerView  {
+                let peerEqual = PeerEquatable(peerViewMainPeer(oldValue)) == PeerEquatable(peerViewMainPeer(newValue))
+                let cachedEqual = CachedDataEquatable(oldValue.cachedData) == CachedDataEquatable(newValue.cachedData)
+
+                if !peerEqual || !cachedEqual {
+                    updateStatus(presentation: chatInteraction.presentation)
+                }
+            } else {
+                updateStatus(presentation: chatInteraction.presentation)
+            }
             
             if oldValue == nil {
                 let answersCount: Signal<Int32?, NoError>

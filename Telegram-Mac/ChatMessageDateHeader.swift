@@ -107,6 +107,13 @@ class ChatDateStickItem : TableStickItem {
         super.init(initialSize)
     }
     
+    var shouldBlurService: Bool {
+        if isLite(.blur) {
+            return false
+        }
+        return presentation.shouldBlurService
+    }
+    
     override var canBeAnchor: Bool {
         return false
     }
@@ -250,7 +257,7 @@ class ChatDateStickView : TableStickView {
                     return true
                 })
             }
-            if presentation.shouldBlurService {
+            if item.shouldBlurService {
                 textView.blurBackground = presentation.blurServiceColor
                 textView.backgroundColor = .clear
             } else {

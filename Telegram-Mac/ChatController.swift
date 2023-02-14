@@ -865,7 +865,7 @@ class ChatControllerView : View, ChatInputDelegate {
         let theme = (theme as! TelegramPresentationTheme)
         
         let chatTheme = self.chatTheme ?? theme
-        if chatTheme.shouldBlurService {
+        if chatTheme.shouldBlurService, !isLite(.blur) {
             progressView?.blurBackground = chatTheme.blurServiceColor
             progressView?.backgroundColor = .clear
         } else {
@@ -2673,8 +2673,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             })
             self?.chatInteraction.saveState(scrollState: self?.immediateScrollState())
-            if self?.genericView.doBackgroundAction() != true {
-                self?.navigationController?.doBackgroundAction()
+            if !context.isLite(.dynamic_background) {
+                if self?.genericView.doBackgroundAction() != true {
+                    self?.navigationController?.doBackgroundAction()
+                }
             }
         }
         

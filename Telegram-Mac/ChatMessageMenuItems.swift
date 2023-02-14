@@ -500,6 +500,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         if let link = link {
                             copyToClipboard(link)
                         }
+                        showSuccess(window: context.window)
                     })
                 }, itemImage: MenuAnimation.menu_copy_link.value))
             }

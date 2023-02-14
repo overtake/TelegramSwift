@@ -265,7 +265,7 @@ class PeerListContainerView : Control {
             
             
             var interactiveStatus: Reactions.InteractiveStatus? = nil
-            if visibleRect != .zero, window != nil, let interactive = context.reactions.interactiveStatus {
+            if visibleRect != .zero, window != nil, let interactive = context.reactions.interactiveStatus, !context.isLite(.emoji_effects) {
                 interactiveStatus = interactive
             }
             if let view = self.button, interactiveStatus != nil, interactiveStatus?.fileId != nil {
@@ -278,6 +278,7 @@ class PeerListContainerView : Control {
                 self.button = control
                 addSubview(control)
                 control.center()
+                
             } else {
                 self.button?.removeFromSuperview()
                 self.button = nil

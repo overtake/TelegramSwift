@@ -42,7 +42,7 @@ public final class Reactions {
     public init(_ engine: TelegramEngine) {
         self.engine = engine
         
-        state.set((engine.stickers.availableReactions() |> then(.complete() |> suspendAwareDelay(5.0, queue: .concurrentDefaultQueue()))) |> restart)
+        state.set((engine.stickers.availableReactions() |> then(.complete() |> suspendAwareDelay(1 * 60 * 60, queue: .concurrentDefaultQueue()))) |> restart)
         
         disposable.set(self.stateValue.start(next: { [weak self] state in
             self?.available = state

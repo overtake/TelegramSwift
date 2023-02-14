@@ -313,7 +313,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
         if let control = channelCommentsBubbleSmallControl {
             control.set(background: item.presentation.chatServiceItemColor, for: .Normal)
-            if item.presentation.shouldBlurService {
+            if item.shouldBlurService {
                 control.set(background: .clear, for: .Normal)
                 control.blurBackground = item.presentation.blurServiceColor
             } else {
@@ -1033,7 +1033,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
             }
         }
         for view in captionShimmerViews {
@@ -1042,6 +1042,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         topicLinkView?.updateAnimatableContent()
     }
     
+    override var isEmojiLite: Bool {
+        if let item = item as? ChatRowItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
+    }
     
     func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
         
@@ -1232,7 +1238,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.channelCommentsBubbleSmallControl = current
                 rowView.addSubview(current)
             }
-            if item.presentation.shouldBlurService {
+            if item.shouldBlurService {
                 current.set(background: .clear, for: .Normal)
                 current.blurBackground = item.presentation.blurServiceColor
             } else {
@@ -1296,7 +1302,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             guard let control = shareView else {return}
             control.autohighlight = false
             
-            if item.presentation.shouldBlurService  {
+            if item.canBlur  {
                 
                 control.set(image: item.hasSource ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
                 
@@ -1445,6 +1451,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
+    
+    
     override func focusAnimation(_ innerId: AnyHashable?) {
         
         if animatedView == nil {
@@ -1519,6 +1527,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         super.rightMouseDown(with: event)
     }
     
+  
     
     private func renderLayoutType(_ item: ChatRowItem, animated: Bool) {
         if item.isBubbled, item.hasBubble {
@@ -1910,7 +1919,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         control.disableActions()
         
         
-        if item.presentation.shouldBlurService {
+        if item.canBlur {
             control.set(image: item.presentation.chat.chat_reply_swipe_bubble(theme: item.presentation), for: .Normal)
             control.autohighlight = false
             _ = control.sizeToFit()

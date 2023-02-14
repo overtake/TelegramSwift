@@ -339,6 +339,10 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         }, for: .Up)
         
         contentView.set(handler: { [weak self] _ in
+            self?.updateAnimatableContent()
+        }, for: .Other)
+        
+        contentView.set(handler: { [weak self] _ in
             let item = self?.item as? StickerPackPanelRowItem
             let table = item?.table
             let window = self?.window as? Window
@@ -420,9 +424,20 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     override func updateAnimatableContent() -> Void {
         for (_, value) in self.inlineStickerItemViews {
             if let superview = value.superview {
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && self.window != nil && self.window!.isKeyWindow
+                var playable: Bool =  NSIntersectsRect(value.frame, superview.visibleRect) && self.window != nil && self.window!.isKeyWindow
+                if isEmojiLite {
+                    playable = playable && itemUnderMouse?.0 === value
+                }
+                value.isPlayable = playable
             }
         }
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? StickerPackPanelRowItem {
+            return item.context.isLite(.stickers)
+        }
+        return super.isEmojiLite
     }
 
     required init?(coder: NSCoder) {
@@ -476,7 +491,6 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             }
             index += 1
 
-            view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && window != nil && window!.isKeyWindow
             view.frame = rect
         }
 
@@ -490,6 +504,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         for key in removeKeys {
             self.inlineStickerItemViews.removeValue(forKey: key)
         }
+        self.updateAnimatableContent()
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {

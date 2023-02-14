@@ -413,8 +413,10 @@ private final class TopicNameAndTextView : View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    private var isLite: Bool = false
     
     func update(context: AccountContext, item: ChatListTopicNameAndTextLayout, highlighted: Bool, animated: Bool) {
+        self.isLite = context.isLite(.emoji)
         self.validLayout = item
         mainView.update(highlighted ? item.selectedMain : item.mainText)
         
@@ -513,10 +515,11 @@ private final class TopicNameAndTextView : View {
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isLite
             }
         }
     }
+    
     
     override func layout() {
         super.layout()
@@ -1249,9 +1252,15 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     }
     
     
+    override var isEmojiLite: Bool {
+        if let item = item as? ChatListRowItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
+    }
     
     override func updateAnimatableContent() -> Void {
-        
+        let isLite = self.isEmojiLite
         let checkValue:(InlineStickerItemLayer)->Void = { value in
             if let superview = value.superview {
                 var isKeyWindow: Bool = false
@@ -1262,7 +1271,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = superview.visibleRect != .zero && isKeyWindow
+                value.isPlayable = superview.visibleRect != .zero && isKeyWindow && !isLite
             }
         }
         

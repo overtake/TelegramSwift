@@ -33,7 +33,7 @@ final class ChatInputAnimatedEmojiAttach: View {
         
         let mediaRect = self.focus(media.frame.size)
         
-        self.media.isPlayable = true
+        self.media.isPlayable = !isLite(.emoji)
         self.media.frame = mediaRect
         self.layer?.addSublayer(media)
         

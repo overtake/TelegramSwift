@@ -592,6 +592,19 @@ class ChatRightView: View, ViewDisplayDelegate {
         updateLayout(size: self.frame.size, transition: .immediate)
     }
     
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        self.item?.runTimerIfNeeded()
+    }
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        self.item?.cancelTimer()
+    }
+    
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        self.item?.runTimerIfNeeded()
+    }
     
     
     override func mouseUp(with event: NSEvent) {

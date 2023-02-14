@@ -245,14 +245,17 @@ private final class MultiTargetContextCache {
 }
 
 final class InlineStickerView: View {
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false)) {
+    private let isPlayable: Bool
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true) {
         let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, getColors: getColors, shimmerColor: shimmerColor)
+        self.isPlayable = isPlayable
         super.init(frame: size.bounds)
         self.layer = layer
         layer.superview = self
     }
-    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false)) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true) {
         let layer = InlineStickerItemLayer(account: account, file: file, size: size, getColors: getColors, shimmerColor: shimmerColor)
+        self.isPlayable = isPlayable
         super.init(frame: size.bounds)
         self.layer = layer
         layer.superview = self
@@ -260,17 +263,15 @@ final class InlineStickerView: View {
     
     
     @objc func updateAnimatableContent() -> Void {
-        if let superview = animateLayer.superview {
-            var isKeyWindow: Bool = false
-            if let window = window {
-                if !window.canBecomeKey {
-                    isKeyWindow = true
-                } else {
-                    isKeyWindow = window.isKeyWindow
-                }
+        var isKeyWindow: Bool = false
+        if let window = window {
+            if !window.canBecomeKey {
+                isKeyWindow = true
+            } else {
+                isKeyWindow = window.isKeyWindow
             }
-            animateLayer.isPlayable = isKeyWindow
         }
+        animateLayer.isPlayable = isKeyWindow && isPlayable
     }
     
     

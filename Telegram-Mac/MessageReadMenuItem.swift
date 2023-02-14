@@ -810,7 +810,8 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
                 case let .builtin(file):
                     layer = .init(account: item.context.account, file: file, size: reactionSize)
                 }
-                self.imageView.updateLayer(layer, animated: animated)
+                let isLite = item.context.isLite(.emoji)
+                self.imageView.updateLayer(layer, isLite: isLite, animated: animated)
             }
             
         }

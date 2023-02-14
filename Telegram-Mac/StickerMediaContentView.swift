@@ -209,6 +209,7 @@ class StickerMediaContentView: ChatMediaContentView {
     
     override func update(with media: Media, size: NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
+        
         let prev = self.media as? TelegramMediaFile
         let prevParent = self.parent
         
@@ -259,6 +260,8 @@ class StickerMediaContentView: ChatMediaContentView {
                 }
             }
         }
+    
+        
         
         needsLayout = true
     }

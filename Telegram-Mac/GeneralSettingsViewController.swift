@@ -17,6 +17,7 @@ import Postbox
 private enum GeneralSettingsEntry : Comparable, Identifiable {
     case section(sectionId:Int)
     case header(sectionId: Int, uniqueId:Int, text:String)
+    case liteMode(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case sidebar(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case inAppSounds(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case shortcuts(sectionId: Int, viewType: GeneralViewType)
@@ -39,42 +40,44 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         switch self {
         case let .header(_, uniqueId, _):
             return uniqueId
-        case .sidebar:
+        case .liteMode:
             return 1
-        case .emojiReplacements:
+        case .sidebar:
             return 2
-        case .predictEmoji:
+        case .emojiReplacements:
             return 3
-        case .bigEmoji:
-            return 4
-        case .showCallsTab:
+        case .predictEmoji:
             return 5
-        case .statusBar:
+        case .bigEmoji:
             return 6
-        case .inAppSounds:
+        case .showCallsTab:
             return 7
-        case .shortcuts:
+        case .statusBar:
             return 8
-        case .enableRFTCopy:
+        case .inAppSounds:
             return 9
-        case .acceptSecretChats:
+        case .shortcuts:
+            return 10
+        case .enableRFTCopy:
             return 11
-        case .forceTouchReply:
+        case .acceptSecretChats:
             return 12
-        case .forceTouchEdit:
+        case .forceTouchReply:
             return 13
-        case .forceTouchForward:
+        case .forceTouchEdit:
             return 14
-        case .forceTouchPreviewMedia:
+        case .forceTouchForward:
             return 15
-        case .forceTouchReact:
+        case .forceTouchPreviewMedia:
             return 16
-        case .enterBehavior:
+        case .forceTouchReact:
             return 17
-        case .cmdEnterBehavior:
+        case .enterBehavior:
             return 18
-        case .callSettings:
+        case .cmdEnterBehavior:
             return 19
+        case .callSettings:
+            return 20
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -83,6 +86,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     var sortIndex:Int {
         switch self {
         case let .header(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .liteMode(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .showCallsTab(sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -131,6 +136,10 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case let .header(sectionId: _, uniqueId: _, text: text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: .textTopItem)
+        case let .liteMode(_, enabled: enabled, viewType):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsLiteMode, type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleLiteMode(!enabled)
+            })
         case let .showCallsTab(sectionId: _, enabled: enabled, viewType):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsShowCallsTab, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCallsTab(!enabled)
@@ -229,7 +238,8 @@ private final class GeneralSettingsArguments {
     let toggleWorkMode:(Bool)->Void
     let openShortcuts: ()->Void
     let callSettings: ()->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void) {
+    let toggleLiteMode: (Bool)->Void
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, toggleLiteMode: @escaping(Bool)->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -248,6 +258,7 @@ private final class GeneralSettingsArguments {
         self.toggleWorkMode = toggleWorkMode
         self.openShortcuts = openShortcuts
         self.callSettings = callSettings
+        self.toggleLiteMode = toggleLiteMode
     }
    
 }
@@ -261,9 +272,15 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsEmojiAndStickers))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsEnergySaving))
     headerUnique -= 1
     
+    entries.append(.liteMode(sectionId: sectionId, enabled: baseSettings.liteMode.enabled, viewType: .singleItem))
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+
+
     entries.append(.sidebar(sectionId: sectionId, enabled: FastSettings.sidebarEnabled, viewType: .firstItem))
     entries.append(.emojiReplacements(sectionId: sectionId, enabled: FastSettings.isPossibleReplaceEmojies, viewType: .innerItem))
     if !baseSettings.predictEmoji {
@@ -407,6 +424,19 @@ class GeneralSettingsViewController: TableViewController {
             context.bindings.rootNavigation().push(ShortcutListController(context: context))
         }, callSettings: {
             context.bindings.rootNavigation().push(CallSettingsController(sharedContext: context.sharedContext))
+        }, toggleLiteMode: { value in
+            _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings in
+                return settings.updateLiteMode { current in
+                    var current = current
+                    current.enabled = value
+                    return current
+                }
+            }).start(completed: {
+                delay(0.1, closure: {
+                    telegramUpdateTheme(theme.new(), animated: false)
+                })
+            })
+            
         })
         
         let initialSize = atomicSize

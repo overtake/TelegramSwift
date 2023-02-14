@@ -985,7 +985,7 @@ final class AnimatedEmojiesCategories : Control {
             scaleOnClick = true
             
            
-            self.apply(key: "select", policy: .toEnd(from: 0))
+            self.apply(key: "select", policy: .toEnd(from: isLite ? .max : 0))
 
             
             self.isSelected = isSelected
@@ -1030,9 +1030,13 @@ final class AnimatedEmojiesCategories : Control {
             }
         }
         
+        var isLite: Bool {
+            return self.context.isLite(.emoji)
+        }
+        
         func playAppearAnimation() {
             
-            guard self.visibleRect != .zero else {
+            guard self.visibleRect != .zero || isLite else {
                 return
             }
             //self.apply(key: "appear", policy: .toEnd(from: 1))

@@ -102,6 +102,9 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         if playOnHover == true {
             accept = true
         }
+        if context?.isLite(.stickers) == true {
+            accept = accept && mouseInside()
+        }
         
         if NSIsEmptyRect(self.visibleRect) || self.window == nil {
             accept = false
@@ -141,6 +144,20 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         self.playerView.updateVisible()
         
     }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    
     
     func setColors(_ colors: [LottieColor]) {
         self.playerView.setColors(colors)

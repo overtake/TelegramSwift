@@ -339,9 +339,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     
     @objc func updatePlayerIfNeeded() {
-        let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
         
-                
+        var accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
+        
+        if isLite(.gif) {
+            accept = accept && mouseInside()
+        }
+                        
         if let autoplayView = autoplayVideoView {
             if accept {
                 autoplayView.mediaPlayer.play()
@@ -350,6 +354,19 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayVideoView?.playTimer?.invalidate()
             }
         }
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        self.updatePlayerIfNeeded()
     }
     
     
@@ -835,7 +852,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                 } else {
                                     strongSelf.autoplayVideoView?.view.setVideoLayerGravity(.resize)
                                 }
-                                strongSelf.updatePlayerIfNeeded()
                             }
                             if let autoplay = strongSelf.autoplayVideoView {
                                 let dimensions = (file.dimensions?.size ?? size)
@@ -863,7 +879,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         }
                        
                         
-                        
+                        strongSelf.updatePlayerIfNeeded()
+
                         if let file = media as? TelegramMediaFile, strongSelf.autoplayVideoView == nil  {
                             strongSelf.updateVideoAccessory(parent == nil ? .Local : authentic, file: file, animated: !first)
                             first = false
