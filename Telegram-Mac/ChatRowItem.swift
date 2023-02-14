@@ -141,6 +141,7 @@ class ChatRowItem: TableRowItem {
     private(set) var editedLabel:TextViewLayout?
    
     private(set) var fullDate:String?
+    private(set) var originalFullDate:String?
     private(set) var forwardHid: String?
     private(set) var nameHide: String?
 
@@ -384,7 +385,16 @@ class ChatRowItem: TableRowItem {
         return false
     }
     
+    var canBlur: Bool {
+        if context.isLite(.blur) {
+            return false
+        }
+        return true
+    }
     var shouldBlurService: Bool {
+        if !canBlur {
+            return false
+        }
         if presentation.shouldBlurService, isStateOverlayLayout {
             return true
         } else if isStateOverlayLayout {
@@ -2079,7 +2089,17 @@ class ChatRowItem: TableRowItem {
                 }
             }
 
-            if let attr = message.autoremoveAttribute, let begin = attr.countdownBeginTime {
+            if message.adAttribute == nil {
+                self.fullDate = fullDate
+                self.originalFullDate = fullDate
+            }
+        }
+    }
+    
+    func runTimerIfNeeded() {
+        let context = self.chatInteraction.context
+        if let attr = message?.autoremoveAttribute, let begin = attr.countdownBeginTime, let fullDate = originalFullDate {
+            if self.updateCountDownTimer == nil {
                 self.updateCountDownTimer = SwiftSignalKit.Timer(timeout: 1.0, repeat: true, completion: { [weak self] in
                     let left = Int(begin + attr.timeout - context.timestamp)
                     if left >= 0 {
@@ -2091,13 +2111,13 @@ class ChatRowItem: TableRowItem {
                     }
                 }, queue: .mainQueue())
                 self.updateCountDownTimer?.start()
-            } else {
-                updateCountDownTimer = nil
             }
-            if message.adAttribute == nil {
-                self.fullDate = fullDate
-            }
+        } else {
+            updateCountDownTimer = nil
         }
+    }
+    func cancelTimer() {
+        self.updateCountDownTimer = nil
     }
     
     init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {

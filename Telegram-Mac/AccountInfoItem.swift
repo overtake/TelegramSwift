@@ -195,8 +195,8 @@ private class AccountInfoView : GeneralContainableRowView {
     }
     
     deinit {
-        removeNotificationListeners()
         playStatusDisposable.dispose()
+        removeNotificationListeners()
     }
 
 
@@ -276,11 +276,11 @@ private class AccountInfoView : GeneralContainableRowView {
         if let item = item as? AccountInfoItem {
             
             var interactiveStatus: Reactions.InteractiveStatus? = nil
-            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus {
+            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus, !item.context.isLite(.emoji_effects) {
                 interactiveStatus = interactive
             }
             if let view = self.statusControl, interactiveStatus != nil, interactiveStatus?.fileId != nil {
-                performSubviewRemoval(view, animated: true, duration: 0.3)
+                performSubviewRemoval(view, animated: animated, duration: 0.3)
                 self.statusControl = nil
             }
             
@@ -290,7 +290,7 @@ private class AccountInfoView : GeneralContainableRowView {
                 self.statusControl = control
                 self.container.addSubview(control)
             } else if let view = self.statusControl {
-                performSubviewRemoval(view, animated: true)
+                performSubviewRemoval(view, animated: animated)
                 self.statusControl = nil
             }
             if let interactive = interactiveStatus {

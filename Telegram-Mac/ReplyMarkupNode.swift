@@ -52,10 +52,12 @@ class ReplyMarkupNode: Node {
     
     private let interactions:ReplyMarkupInteractions
     private let isInput: Bool
+    private let theme: TelegramPresentationTheme
     init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ theme: TelegramPresentationTheme, _ view:View? = nil, _ isInput: Bool = false, paid: Bool = false) {
         self.flags = flags
         self.isInput = isInput
         self.interactions = interactions
+        self.theme = theme
         var layoutRows:[[ReplyMarkupButtonLayout]] = Array(repeating: [], count: rows.count)
         for i in 0 ..< rows.count {
             for button in rows[i].buttons {
@@ -64,6 +66,10 @@ class ReplyMarkupNode: Node {
         }
         self.markup = layoutRows
         super.init(view)
+    }
+    
+    var shouldBlurService: Bool {
+        return !isLite(.blur) && theme.shouldBlurService
     }
     
     func redraw() {
@@ -107,8 +113,8 @@ class ReplyMarkupNode: Node {
                 btnView.layer?.cornerRadius = .cornerRadius
                 btnView.isSelectable = false
                 btnView.disableBackgroundDrawing = true
-
-                if !self.isInput && button.presentation.shouldBlurService {
+                
+                if !self.isInput && shouldBlurService {
                     btnView.blurBackground = button.presentation.blurServiceColor
                     btnView.backgroundColor = .clear
                 } else {
@@ -151,7 +157,7 @@ class ReplyMarkupNode: Node {
                 rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
                 let btnView:TextView? = view?.subviews[i] as? TextView
                 
-                if !self.isInput && button.presentation.shouldBlurService {
+                if !self.isInput && self.shouldBlurService {
                     btnView?.blurBackground = button.presentation.blurServiceColor
                     btnView?.backgroundColor = .clear
                 } else {

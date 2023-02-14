@@ -92,6 +92,11 @@ private final class StorageUsageHeaderItemView: GeneralRowView {
         
         progressView.isHidden = item.progress == 0
         
+        var progress = min(1, max(0, item.progress))
+        
+        if progress.isNaN || progress.isFinite {
+            progress = 1
+        }
         textView.update(item.textLayout)
         progressView.style = ControlStyle(foregroundColor: theme.colors.accent.withAlphaComponent(0.8), backgroundColor: theme.colors.accent.withAlphaComponent(0.2), highlightColor: .clear)
         progressView.setFrameSize(NSMakeSize(min(textView.frame.width - 40, 260), 4))

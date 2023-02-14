@@ -129,10 +129,8 @@ open class TableRowItem: NSObject {
         }
     }
     public func noteHeightOfRow(animated: Bool = false) {
-        DispatchQueue.main.async {
-            if self.index != -1, let table = self.table {
-                table.noteHeightOfRow(self.index, animated)
-            }
+        if self.index != -1, let table = self.table {
+            table.noteHeightOfRow(self.index, animated)
         }
     }
     

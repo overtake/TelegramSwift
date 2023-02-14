@@ -301,8 +301,15 @@ private final class StickerPackRowView : HorizontalRowView {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
         }
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? StickerPackRowItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
     }
 
     

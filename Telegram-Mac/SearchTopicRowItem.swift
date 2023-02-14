@@ -160,6 +160,7 @@ private class SearchTopicRowView : TableRowView {
     }
     
     override func updateAnimatableContent() -> Void {
+        let isLite: Bool = self.isEmojiLite
         let checkValue:(InlineStickerItemLayer)->Void = { value in
             if let superview = value.superview {
                 var isKeyWindow: Bool = false
@@ -170,11 +171,18 @@ private class SearchTopicRowView : TableRowView {
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = superview.visibleRect != .zero && isKeyWindow
+                value.isPlayable = superview.visibleRect != .zero && isKeyWindow && !isLite
             }
         }
         if let value = inlineTopicPhotoLayer {
             checkValue(value)
         }
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? SearchTopicRowItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
     }
 }

@@ -1744,6 +1744,7 @@ class TelegramPresentationTheme : PresentationTheme {
         return controllerBackgroundMode.hasWallpaper
     }
     var shouldBlurService: Bool {
+        
         if #available(macOS 10.14, *) {
             return hasWallpaper
         } else {
@@ -1818,6 +1819,10 @@ class TelegramPresentationTheme : PresentationTheme {
     func withUpdatedChatMode(_ bubbled: Bool) -> TelegramPresentationTheme {
         return TelegramPresentationTheme(colors: colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: generateIcons(from: colors, bubbled: bubbled), bubbled: bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper)
     }
+    func new() -> TelegramPresentationTheme {
+        return TelegramPresentationTheme(colors: self.colors, cloudTheme: self.cloudTheme, search: self.search, chatList: self.chatList, tabBar: self.tabBar, icons: self.icons, bubbled: self.bubbled, fontSize: self.fontSize, wallpaper: self.wallpaper)
+    }
+
     
     func withUpdatedBackgroundSize(_ size: NSSize) -> TelegramPresentationTheme {
         self.backgroundSize = size

@@ -921,7 +921,7 @@ class ChatListRowItem: TableRowItem {
         _ = makeSize(initialSize.width, oldWidth: 0)
         
         
-        if let peer = peer, peer.isPremium, peer.id != context.peerId, peer.hasVideo {
+        if let peer = peer, peer.isPremium, peer.id != context.peerId, peer.hasVideo, !isLite(.animations) {
             self.photos = syncPeerPhotos(peerId: peer.id).map { $0.value }
             let signal = peerPhotos(context: context, peerId: peer.id, force: false) |> deliverOnMainQueue
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in

@@ -16,9 +16,11 @@ import MapKit
 
 
 final class ReplyMarkupInteractions {
+    let context: AccountContext
     let proccess:(ReplyMarkupButton, @escaping(Bool)->Void) -> Void
     
-    init(proccess:@escaping (ReplyMarkupButton, @escaping(Bool)->Void)->Void) {
+    init(context: AccountContext, proccess:@escaping (ReplyMarkupButton, @escaping(Bool)->Void)->Void) {
+        self.context = context
         self.proccess = proccess
     }
     
@@ -667,7 +669,7 @@ final class ChatInteraction : InterfaceObserver  {
             let context = self.context
             let peerId = self.peerId
             
-            return ReplyMarkupInteractions(proccess: { [weak self] (button, progress) in
+            return ReplyMarkupInteractions(context: context, proccess: { [weak self] (button, progress) in
                 if let strongSelf = self {
                     switch button.action {
                     case let .url(url):
@@ -777,7 +779,7 @@ final class ChatInteraction : InterfaceObserver  {
                 }
             })
         }
-        return ReplyMarkupInteractions(proccess: {_,_  in})
+        return ReplyMarkupInteractions(context: context, proccess: {_,_  in})
     }
     
     

@@ -29,10 +29,12 @@ final class PremiumStatusControl : Control {
     
     private let disposable = MetaDisposable()
     
-    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = false) {
+    private var lite: Bool = false
+    
+    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = false, isLite: Bool) {
         
         
-        
+        self.lite = isLite
         
         if let size = PremiumStatusControl.controlSize(peer, isBig) {
             setFrameSize(size)
@@ -195,7 +197,7 @@ final class PremiumStatusControl : Control {
         
         self.disposable.set(updatedPeer.start(next: { [weak self] updated in
             if !updated.isEqual(peer) {
-                self?.set(updated, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice)
+                self?.set(updated, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice, isLite: isLite)
             }
         }))
     }
@@ -212,7 +214,7 @@ final class PremiumStatusControl : Control {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            layer.isPlayable = NSIntersectsRect(layer.frame, superview.visibleRect) && isKeyWindow
+            layer.isPlayable = NSIntersectsRect(layer.frame, superview.visibleRect) && isKeyWindow && !lite
         }
     }
     
@@ -229,8 +231,8 @@ final class PremiumStatusControl : Control {
     }
     
     deinit {
-        NotificationCenter.default.removeObserver(self)
         self.disposable.dispose()
+        NotificationCenter.default.removeObserver(self)
     }
     
     private func updateListeners() {
@@ -252,7 +254,8 @@ final class PremiumStatusControl : Control {
         if peer.isVerified || peer.isScam || peer.isFake || peer.isPremium {
             current = cached ?? PremiumStatusControl(frame: .zero)
         }
-        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice)
+                
+        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice, isLite: isLite(.emoji))
         return current
     }
     

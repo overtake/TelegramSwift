@@ -38,6 +38,13 @@ class ChatEmptyPeerItem: TableRowItem {
         return initialSize.height
     }
     
+    var shouldBlurService: Bool {
+        if isLite(.blur) {
+            return false
+        }
+        return presentation.shouldBlurService
+    }
+    
     private let peerViewDisposable = MetaDisposable()
     let presentation: TelegramPresentationTheme
     init(_ initialSize: NSSize, chatInteraction:ChatInteraction, theme: TelegramPresentationTheme) {
@@ -178,15 +185,14 @@ class ChatEmptyPeerView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        guard let theme = (item as? ChatEmptyPeerItem)?.presentation else {
+        guard let item = item as? ChatEmptyPeerItem else {
             return
         }
         
-        
-        if theme.shouldBlurService {
-            visualEffect.bgColor = theme.blurServiceColor
+        if item.shouldBlurService {
+            visualEffect.bgColor = item.presentation.blurServiceColor
         } else {
-            visualEffect.background = theme.chatServiceItemColor
+            visualEffect.background = item.presentation.chatServiceItemColor
             visualEffect.bgColor = backdorColor
         }
     }

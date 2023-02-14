@@ -623,6 +623,7 @@ protocol ReactionViewImpl : class {
 
 class AnimationLayerContainer : View {
     fileprivate var imageLayer: InlineStickerItemLayer?
+    private var isLite: Bool = false
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         isEventLess = true
@@ -631,10 +632,11 @@ class AnimationLayerContainer : View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func updateLayer(_ imageLayer: InlineStickerItemLayer, animated: Bool) {
+    func updateLayer(_ imageLayer: InlineStickerItemLayer, isLite: Bool, animated: Bool) {
         if let layer = self.imageLayer {
             performSublayerRemoval(layer, animated: animated)
         }
+        self.isLite = isLite
         imageLayer.superview = superview
         self.layer?.addSublayer(imageLayer)
         if animated && self.imageLayer != nil {
@@ -655,6 +657,7 @@ class AnimationLayerContainer : View {
     
     
     @objc func updateAnimatableContent() -> Void {
+        let isLite = self.isLite
         if let value = self.imageLayer, let superview = value.superview {
             DispatchQueue.main.async {
                 var isKeyWindow: Bool = false
@@ -665,7 +668,7 @@ class AnimationLayerContainer : View {
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = !superview.visibleRect.isEmpty && isKeyWindow
+                value.isPlayable = !superview.visibleRect.isEmpty && isKeyWindow && isLite
             }
         }
     }
@@ -757,6 +760,9 @@ final class ChatReactionsView : View {
             let size = NSMakeSize(imageView.frame.width * 2, imageView.frame.height * 2)
             
             guard let reaction = reaction, let file = reaction.source.effect else {
+                return
+            }
+            if reaction.context.isLite(.emoji_effects) {
                 return
             }
 
@@ -936,8 +942,10 @@ final class ChatReactionsView : View {
                 updateLayout(size: reaction.rect.size, transition: .immediate)
                 first = false
             }
+            let isLite = reaction.context.isLite(.emoji)
+
             if layerUpdated {
-                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), animated: animated)
+                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), isLite: isLite, animated: animated)
             }
         }
         
@@ -1031,8 +1039,10 @@ final class ChatReactionsView : View {
             let updated = self.reaction?.source != reaction.source
             self.reaction = reaction
             
+            let isLite = reaction.context.isLite(.emoji)
+            
             if updated {
-                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), animated: animated)
+                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), isLite: isLite, animated: animated)
             }
             
             if let text = reaction.text {
@@ -1067,6 +1077,9 @@ final class ChatReactionsView : View {
             let size = NSMakeSize(imageView.frame.width * 2, imageView.frame.height * 2)
 
             guard let reaction = reaction, let file = reaction.source.effect else {
+                return
+            }
+            if reaction.context.isLite(.emoji_effects) {
                 return
             }
 

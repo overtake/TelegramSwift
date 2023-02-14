@@ -30,7 +30,7 @@ final class ChatAvatarView : Control {
     
     func setPeer(context: AccountContext, peer: Peer, message: Message? = nil, size: NSSize? = nil, force: Bool = false, disableForum: Bool = false) {
         self.avatar.setPeer(account: context.account, peer: peer, message: message, size: size, disableForum: disableForum)
-        if peer.isPremium || force, peer.hasVideo {
+        if peer.isPremium || force, peer.hasVideo, !isLite(.animations) {
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             disposable.set(signal.start(next: { [weak self] photos in
                 self?.updatePhotos(photos.map { $0.value }, context: context, peer: peer)

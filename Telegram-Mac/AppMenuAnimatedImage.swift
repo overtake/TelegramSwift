@@ -89,11 +89,14 @@ final class AppMenuAnimatedImage : LottiePlayerView, AppMenuItemImageDrawable {
     func updateState(_ controlState: ControlState) {
         switch controlState {
         case .Hover:
-            if self.animation?.playPolicy == .framesCount(1), self.currentState != .playing {
-                self.set(self.animation?.withUpdatedPolicy(.once), reset: false)
-            } else {
-                self.playAgain()
+            if !isLite(.menu_animations) {
+                if self.animation?.playPolicy == .framesCount(1), self.currentState != .playing {
+                    self.set(self.animation?.withUpdatedPolicy(.once), reset: false)
+                } else {
+                    self.playAgain()
+                }
             }
+            
         default:
             break
         }
@@ -173,10 +176,12 @@ final class AppMenuAnimatedRemoteImage : LottiePlayerView, AppMenuItemImageDrawa
     func updateState(_ controlState: ControlState) {
         switch controlState {
         case .Hover:
-            if self.animation?.playPolicy == .framesCount(1) {
-                self.set(self.animation?.withUpdatedPolicy(.once), reset: false)
-            } else {
-                self.playAgain()
+            if !isLite(.menu_animations) {
+                if self.animation?.playPolicy == .framesCount(1) {
+                    self.set(self.animation?.withUpdatedPolicy(.once), reset: false)
+                } else {
+                    self.playAgain()
+                }
             }
         default:
             break

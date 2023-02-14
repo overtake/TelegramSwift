@@ -100,7 +100,10 @@ class GIFContainerView: Control {
     
     var accept: Bool {
         let wAccept = window != nil && (window!.isKeyWindow || self.ignoreWindowKey)  && !NSIsEmptyRect(visibleRect)
-        let accept:Bool = wAccept
+        var accept:Bool = wAccept
+        if let context = self.context, context.isLite(.gif) {
+            accept = accept && mouseInside()
+        }
         return accept
     }
     
@@ -124,6 +127,19 @@ class GIFContainerView: Control {
             self.player.ticking = accept
         }
         
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        self.updatePlayerIfNeeded()
     }
     
     

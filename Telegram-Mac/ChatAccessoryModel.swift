@@ -195,15 +195,17 @@ class ChatAccessoryView : Button {
     @objc func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
             if let superview = value.superview {
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow && !isLite
             }
         }
     }
     
+    private var isLite: Bool = false
     
     func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var index: Int = textView.hashValue
+        self.isLite = context.isLite(.emoji)
         
         let textColor: NSColor
         if textLayout.attributedString.length > 0 {
@@ -234,7 +236,6 @@ class ChatAccessoryView : Button {
                 }
                 index += 1
                 
-                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && window != nil && window!.isKeyWindow
                 view.frame = rect
             }
         }
@@ -249,6 +250,7 @@ class ChatAccessoryView : Button {
         for key in removeKeys {
             self.inlineStickerItemViews.removeValue(forKey: key)
         }
+        updateAnimatableContent()
     }
 
     deinit {

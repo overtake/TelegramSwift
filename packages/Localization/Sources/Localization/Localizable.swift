@@ -5685,6 +5685,8 @@ public final class L10n {
   public static var generalSettingsEmojiReplacements: String  { return L10n.tr("Localizable", "GeneralSettings.EmojiReplacements") }
   /// Sidebar
   public static var generalSettingsEnableSidebar: String  { return L10n.tr("Localizable", "GeneralSettings.EnableSidebar") }
+  /// ENERY SAVING
+  public static var generalSettingsEnergySaving: String  { return L10n.tr("Localizable", "GeneralSettings.EnergySaving") }
   /// FORCE TOUCH ACTION
   public static var generalSettingsForceTouchHeader: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouchHeader") }
   /// GENERAL SETTINGS
@@ -5697,6 +5699,8 @@ public final class L10n {
   public static var generalSettingsInstantViewHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InstantViewHeader") }
   /// INTERFACE
   public static var generalSettingsInterfaceHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InterfaceHeader") }
+  /// Lite Mode
+  public static var generalSettingsLiteMode: String  { return L10n.tr("Localizable", "GeneralSettings.LiteMode") }
   /// Handle media keys for in-app player
   public static var generalSettingsMediaKeysForInAppPlayer: String  { return L10n.tr("Localizable", "GeneralSettings.MediaKeysForInAppPlayer") }
   /// Reopen Last Chat On Launch
@@ -8567,7 +8571,7 @@ public final class L10n {
   public static var premiumBoardingStickersInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Info") }
   /// Premium Stickers
   public static var premiumBoardingStickersTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Title") }
-  /// Subscribe for %@ / monthly
+  /// Subscribe for %@ / month
   public static func premiumBoardingSubscribeMonth(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.Subscribe.Month", p1)
   }

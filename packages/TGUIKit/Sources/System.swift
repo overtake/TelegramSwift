@@ -39,7 +39,13 @@ public struct System {
         
     }
     
-    
+    public static var batterylevel: Float {
+        
+        let device = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPMPowerSource"))
+        let batteryLevel: AnyObject? = IORegistryEntryCreateCFProperty(device, "Current Capacity" as CFString, kCFAllocatorDefault, 0).takeRetainedValue()
+        IOObjectRelease(device)
+        return batteryLevel as! Float
+    }
     
     public static var isRetina:Bool {
         get {
@@ -165,3 +171,4 @@ public func delay(_ delay:Double, onQueue queue: DispatchQueue, closure:@escapin
 public func delaySignal(_ value:Double) -> Signal<NoValue, NoError> {
     return .complete() |> delay(value, queue: .mainQueue())
 }
+

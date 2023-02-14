@@ -172,13 +172,17 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             let size: NSSize = reaction.isSelected ? NSMakeSize(25, 24) : NSMakeSize(frameRect.width, 30)
             let rect = CGRect(origin: .zero, size: size)
             
+            let isLite = context.isLite(.emoji)
+            
             self.player = LottiePlayerView(frame: rect)
-            self.imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size, shimmerColor: .init(circle: true))
+            self.imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size, isPlayable: !isLite)
             self.reaction = reaction
             self.context = context
            
             super.init(frame: frameRect)
-            addSubview(imageView)
+            if !isLite {
+                addSubview(imageView)
+            }
             addSubview(player)
             self.imageView.isHidden = false
             self.player.isHidden = false
@@ -253,6 +257,10 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             
         }
         
+        var isLite: Bool {
+            return context.isLite(.emoji)
+        }
+        
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
             let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, runOnQueue: .mainQueue(), metalSupport: false)
             player.set(animation, reset: true, saveContext: true, animated: false)
@@ -280,9 +288,10 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         private var previous: ControlState = .Normal
         override func stateDidUpdate(_ state: ControlState) {
             super.stateDidUpdate(state)
+            let isLite = context.isLite(.emoji)
             switch state {
             case .Hover:
-                if self.player.currentState != .playing{
+                if self.player.currentState != .playing, !isLite {
                     if self.player.animation?.playPolicy == .framesCount(1) {
                         self.player.set(self.player.animation?.withUpdatedPolicy(.once), reset: false)
                     } else {
@@ -306,10 +315,10 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         }
         
         func playAppearAnimation() {
-            
-            guard self.visibleRect != .zero else {
+            guard self.visibleRect != .zero && !self.isLite else {
                 return
             }
+            
             
             if let appearAnimation = reaction.appearAnimation {
                 let signal = context.account.postbox.mediaBox.resourceData(appearAnimation.resource, attemptSynchronously: true)

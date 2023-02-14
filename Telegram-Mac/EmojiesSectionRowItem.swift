@@ -826,7 +826,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
             }
         }
     }
@@ -937,7 +937,6 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && isKeyWindow
                 view.frame = rect
             }
         }
@@ -974,7 +973,14 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         for key in removeSelectionKeys {
             self.selectedLayers.removeValue(forKey: key)
         }
-        
+        self.updateAnimatableContent()
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? EmojiesSectionRowItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
     }
     
     required init?(coder: NSCoder) {

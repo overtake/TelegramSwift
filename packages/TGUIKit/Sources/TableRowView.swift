@@ -468,7 +468,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    
+    open var isEmojiLite: Bool {
+        return false
+    }
     
     open override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
