@@ -6,13 +6,20 @@ import Postbox
 import TelegramCore
 import CurrencyFormat
 
+
+
 private let productIdentifiers = [
-    "org.telegram.telegramPremium.monthly",
     "org.telegram.telegramPremium.annual",
-    "org.telegram.telegramPremium.semiannual"
+    "org.telegram.telegramPremium.semiannual",
+    "org.telegram.telegramPremium.monthly",
+    "org.telegram.telegramPremium.twelveMonths",
+    "org.telegram.telegramPremium.sixMonths",
+    "org.telegram.telegramPremium.threeMonths"
 ]
 
-
+private func isSubscriptionProductId(_ id: String) -> Bool {
+    return id.hasSuffix(".monthly") || id.hasSuffix(".annual") || id.hasSuffix(".semiannual")
+}
 
 
 private extension NSDecimalNumber {

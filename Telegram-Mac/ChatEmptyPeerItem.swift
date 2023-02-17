@@ -171,11 +171,11 @@ class ChatEmptyPeerItem: TableRowItem {
 class ChatEmptyPeerView : TableRowView {
     let textView:TextView = TextView()
     private var imageView: TransformImageView? = nil
-    private let visualEffect = VisualEffect(frame: .zero)
+    private var visualEffect: VisualEffect?
+    private var bgView: View?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(visualEffect)
-        visualEffect.addSubview(textView)
+        self.addSubview(textView)
 
         textView.isSelectable = false
         textView.userInteractionEnabled = true
@@ -185,16 +185,9 @@ class ChatEmptyPeerView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        guard let item = item as? ChatEmptyPeerItem else {
-            return
-        }
         
-        if item.shouldBlurService {
-            visualEffect.bgColor = item.presentation.blurServiceColor
-        } else {
-            visualEffect.background = item.presentation.chatServiceItemColor
-            visualEffect.bgColor = backdorColor
-        }
+        
+      
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -210,12 +203,54 @@ class ChatEmptyPeerView : TableRowView {
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item)
+        
+        guard let item = item as? ChatEmptyPeerItem else {
+            return
+        }
+        
+        if item.shouldBlurService && !isLite(.blur) {
+            let current: VisualEffect
+            if let view = self.visualEffect {
+                current = view
+            } else {
+                current = VisualEffect(frame: .zero)
+                self.visualEffect = current
+                addSubview(current, positioned: .below, relativeTo: nil)
+            }
+            current.bgColor = item.presentation.blurServiceColor
+        } else if let view = self.visualEffect {
+            performSubviewRemoval(view, animated: animated)
+            self.visualEffect = nil
+        }
+        
+        if item.shouldBlurService && !isLite(.blur) {
+            if let view = self.bgView {
+                performSubviewRemoval(view, animated: animated)
+                self.bgView = nil
+            }
+        } else  {
+            let current: View
+            if let view = self.bgView {
+                current = view
+            } else {
+                current = View(frame: .zero)
+                self.bgView = current
+                addSubview(current, positioned: .below, relativeTo: nil)
+            }
+            current.backgroundColor = item.presentation.chatServiceItemColor
+        }
+
+        
         needsLayout = true
     }
     
     override func layout() {
         super.layout()
-        if let item = item as? ChatEmptyPeerItem {
+        let bgView = self.visualEffect ?? self.bgView
+
+        if let item = item as? ChatEmptyPeerItem, let bgView = bgView {
+            
+            
             item.textViewLayout.measure(width: min(frame.width - 80, 400))
             
             if item.textViewLayout.lineSpacing != nil {
@@ -236,7 +271,7 @@ class ChatEmptyPeerView : TableRowView {
                     current = view
                 } else {
                     current = TransformImageView()
-                    visualEffect.addSubview(current)
+                    bgView.addSubview(current)
                     self.imageView = current
                 }
                 
@@ -260,12 +295,12 @@ class ChatEmptyPeerView : TableRowView {
             let singleLine = item.textViewLayout.lines.count == 1
             
             if let imageView = imageView {
-                visualEffect.setFrameSize(NSMakeSize(textView.frame.width + 20, imageView.frame.height + textView.frame.height + 20))
+                bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, imageView.frame.height + textView.frame.height + 20))
             } else {
-                visualEffect.setFrameSize(NSMakeSize(textView.frame.width + 20, textView.frame.height + 20))
+                bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, textView.frame.height + 20))
             }
             
-            visualEffect.center()
+            bgView.center()
             
             if let imageView = imageView {
                 imageView.centerX(y: 0)
@@ -275,9 +310,9 @@ class ChatEmptyPeerView : TableRowView {
             }
             
             if imageView == nil {
-                visualEffect.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 8
+                bgView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 8
             } else {
-                visualEffect.layer?.cornerRadius = 8
+                bgView.layer?.cornerRadius = 8
             }
         }
     }

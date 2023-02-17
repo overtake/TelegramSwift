@@ -2067,7 +2067,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {
-        if let item = item as? ChatRowItem, visibleRect != .zero {
+        if let item = item as? ChatRowItem, visibleRect != .zero, !isLite(.animations) {
             if item.isBubbled, appearAnimated {
                 if item.isIncoming {
                     self.rowView.layer?.animateScaleSpringFrom(anchor: NSMakePoint(bubbleView.frame.minX, rowView.frame.height / 2), from: 0.1, to: 1, duration: 0.35, bounce: false)

@@ -33,7 +33,7 @@ final class ReactionsWindowController : NSObject {
             self.contentView = content
             self.visualView = NSVisualEffectView(frame: content.bounds)
             super.init(frame: content.bounds)
-            if #available(macOS 11.0, *) {
+            if #available(macOS 11.0, *), !isLite(.blur) {
                 container.addSubview(visualView)
                 backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
             } else {
@@ -46,15 +46,16 @@ final class ReactionsWindowController : NSObject {
             addSubview(container)
             
 
-            self.visualView.wantsLayer = true
-            self.visualView.state = .active
-            self.visualView.blendingMode = .behindWindow
-            self.visualView.autoresizingMask = []
+            if !isLite(.blur) {
+                self.visualView.wantsLayer = true
+                self.visualView.state = .active
+                self.visualView.blendingMode = .behindWindow
+                self.visualView.autoresizingMask = []
+                self.visualView.material = theme.colors.isDark ? .dark : .light
+            }
+            
             self.autoresizesSubviews = false
-            
-            self.visualView.material = theme.colors.isDark ? .dark : .light
-            
-            
+
             
             self.layer?.isOpaque = false
             self.layer?.shouldRasterize = true
@@ -185,11 +186,13 @@ final class ReactionsWindowController : NSObject {
         
         if let reactions = message.effectiveReactions {
             for reaction in reactions {
-                switch reaction.value {
-                case let .builtin(emoji):
-                    selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
-                case let .custom(fileId):
-                    selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                if reaction.isSelected {
+                    switch reaction.value {
+                    case let .builtin(emoji):
+                        selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
+                    case let .custom(fileId):
+                        selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    }
                 }
             }
         }
@@ -366,8 +369,8 @@ final class ReactionsWindowController : NSObject {
             self?.initialPlayers = initialView.collect()
             CATransaction.begin()
             view.appearAnimated(from: initialView.frame, to: view.frame)
-            initialView.removeFromSuperview()
             CATransaction.commit()
+            initialView.removeFromSuperview()
         })
         
     }

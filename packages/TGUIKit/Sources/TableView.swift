@@ -1845,6 +1845,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         item.table = self;
         item._index = at
         let animation = animation != .none ? item.animatable ? animation : .none : .none
+        
         NSAnimationContext.current.duration = animation != .none ? duration : 0.0
         NSAnimationContext.current.timingFunction = animation == .none ? nil : CAMediaTimingFunction(name: .easeOut)
         if(redraw) {
@@ -2712,9 +2713,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         switch state {
         case let .none(animation):
             if !oldEmpty {
-                animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed.map { $0.1 }, previousRange: visibleRange)
-                if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
-                    saveVisible(.lower)
+                let result = animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed.map { $0.1 }, previousRange: visibleRange)
+                if let result = result, result.isEmpty {
+                    if !transition.isEmpty, contentView.bounds.minY > 0 {
+                        saveVisible(.lower)
+                    }
                 }
             }
         case .bottom, .top, .center:
@@ -2762,15 +2765,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         self.endTableUpdates()
         
-        if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {
-            if let y = getScrollY(visible) {
-                let current = contentView.bounds
-                if current.minY != y {
-                    self.clipView.scroll(to: NSMakePoint(0, max(y, 0)))
-                    self.clipView.layer?.animateBoundsOriginYAdditive(from: current.minY - clipView.bounds.minY, to: 0, duration: 0.2)
-                }
-            }
-        }
+//        if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {
+//            if let y = getScrollY(visible) {
+//                let current = contentView.bounds
+//                if current.minY != y {
+//                    self.clipView.scroll(to: NSMakePoint(0, max(y, 0)))
+//                    self.clipView.layer?.animateBoundsOriginYAdditive(from: current.minY - clipView.bounds.minY, to: 0, duration: 0.2)
+//                }
+//            }
+//        }
 
         
         self.endUpdates()

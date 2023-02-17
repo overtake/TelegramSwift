@@ -1309,11 +1309,14 @@ final class AnimatedEmojiesView : Control {
         
         visualEffect.wantsLayer = true
         
-        visualEffect.state = .active
-        visualEffect.blendingMode = .behindWindow
-        visualEffect.autoresizingMask = []
+        if !isLite(.blur) {
+            visualEffect.state = .active
+            visualEffect.blendingMode = .behindWindow
+            visualEffect.autoresizingMask = []
+        }
         
-        if #available(macOS 11.0, *) {
+        
+        if #available(macOS 11.0, *), !isLite(.blur) {
             searchContainer.addSubview(visualEffect)
         }
         
@@ -2036,7 +2039,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
 
         let initialSize = self.atomicSize
         
-        let onMainQueue: Atomic<Bool> = Atomic(value: false)
+        let onMainQueue: Atomic<Bool> = Atomic(value: true)
         
         let inputArguments = InputDataArguments(select: { _, _ in
             
@@ -2052,10 +2055,10 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             
             
             
-            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: state.sections.animated, searchState: state.sections.searchState, initialSize: initialSize.modify{$0}, arguments: inputArguments, onMainQueue: onMain, animateEverything: true, grouping: false)
+            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize.modify{$0}, arguments: inputArguments, onMainQueue: false, animateEverything: true, grouping: false)
             
             
-            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: state.packs.animated, searchState: state.packs.searchState, initialSize: initialSize.modify{$0}, arguments: inputArguments, onMainQueue: onMain, animateEverything: true, grouping: false)
+            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize.modify{$0}, arguments: inputArguments, onMainQueue: false, animateEverything: true, grouping: false)
 
             return combineLatest(sectionsTransition, packsTransition) |> map { values in
                 return (sections: values.0, packs: values.1, state: state.state)

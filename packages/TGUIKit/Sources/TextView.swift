@@ -667,8 +667,15 @@ public final class TextViewLayout : Equatable {
                     attributedString.enumerateAttributes(in: NSMakeRange(brokenLineRange.location, brokenLineRange.length), options: []) { attributes, range, _ in
                         if let _ = attributes[.strikethroughStyle] {
                             let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
+                            
+                            
                             let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
-                            let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
+                            var upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, min(range.location + range.length, lineRange.location + lineRange.length), nil))
+                            
+                            if lowerX > 0 && upperX == 0 {
+                                upperX = lineWidth
+                            }
+                            
                             let x = lowerX < upperX ? lowerX : upperX
                             strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
                         } else if let embeddedItem = attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable {
@@ -965,8 +972,8 @@ public final class TextViewLayout : Equatable {
     }
     public func fitToLines(_ count: Int) {
         if lines.count > count {
-            let lines = lines.prefix(count)
-            self.layoutSize = NSMakeSize(self.layoutSize.width, lines[lines.count - 1].frame.maxY + 5)
+            let lines = Array(lines.prefix(count))
+            self.layoutSize = NSMakeSize(self.layoutSize.width, lines[lines.count - 1].frame.minY + 2)
         }
     }
     public func measure(width: CGFloat = 0, isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil, saveRTL: Bool = false) -> Void {

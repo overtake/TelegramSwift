@@ -458,6 +458,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
+    
     @objc private func _updateAnimatableContent() {
         DispatchQueue.main.async { [weak self] in
             self?.updateAnimatableContent()
@@ -491,6 +492,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         } else {
             center.removeObserver(self)
         }
+    }
+    
+    open override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        NSCursor.arrow.set()
     }
     
     private func removeNotificationListeners() {

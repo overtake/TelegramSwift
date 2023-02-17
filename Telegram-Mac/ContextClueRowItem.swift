@@ -152,10 +152,7 @@ private final class AnimatedClueRowView: HorizontalRowView {
     }
     
     override var isEmojiLite: Bool {
-        if let item = item as? ContextClueRowItem {
-            return item.context.isLite(.emoji)
-        }
-        return super.isEmojiLite
+        return isLite(.emoji)
     }
     
     

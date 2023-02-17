@@ -230,11 +230,15 @@ class GroupedLayout {
                 if forceCalc || photos.count >= 5 {
                     var croppedRatios:[CGFloat] = []
                     for photo in photos {
+                        let aspectRatio = photo.aspectRatio
+                        var croppedRatio = aspectRatio
                         if averageAspectRatio > 1.1 {
-                            croppedRatios.append(max(1.0, photo.aspectRatio))
+                            croppedRatio = max(1.0, aspectRatio)
                         } else {
-                            croppedRatios.append(min(1.0, photo.aspectRatio))
+                            croppedRatio = min(1.0, aspectRatio)
                         }
+                        croppedRatio = max(0.66667, min(1.7, croppedRatio))
+                        croppedRatios.append(croppedRatio)
                     }
                     
                     func multiHeight(_ ratios: [CGFloat]) -> CGFloat {

@@ -5685,7 +5685,7 @@ public final class L10n {
   public static var generalSettingsEmojiReplacements: String  { return L10n.tr("Localizable", "GeneralSettings.EmojiReplacements") }
   /// Sidebar
   public static var generalSettingsEnableSidebar: String  { return L10n.tr("Localizable", "GeneralSettings.EnableSidebar") }
-  /// ENERY SAVING
+  /// ENERGY SAVING
   public static var generalSettingsEnergySaving: String  { return L10n.tr("Localizable", "GeneralSettings.EnergySaving") }
   /// FORCE TOUCH ACTION
   public static var generalSettingsForceTouchHeader: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouchHeader") }
@@ -6369,6 +6369,52 @@ public final class L10n {
   public static var linkInvationConfirmOk: String  { return L10n.tr("Localizable", "LinkInvation.Confirm.Ok") }
   /// Are you sure you want to revoke this link? Once you do, no one will be able to join the group using it.
   public static var linkInvationGroupConfirmRevoke: String  { return L10n.tr("Localizable", "LinkInvation.Group.Confirm.Revoke") }
+  /// Disabled
+  public static var liteModeDisabled: String  { return L10n.tr("Localizable", "LiteMode.Disabled") }
+  /// Enable Lite Mode
+  public static var liteModeEnableAlert: String  { return L10n.tr("Localizable", "LiteMode.EnableAlert") }
+  /// Enabled
+  public static var liteModeEnabled: String  { return L10n.tr("Localizable", "LiteMode.Enabled") }
+  /// Enable lite mode to reduce overall power usage and improve perfomance.
+  public static var liteModeInfo: String  { return L10n.tr("Localizable", "LiteMode.Info") }
+  /// LOW POWER
+  public static var liteModeLowPower: String  { return L10n.tr("Localizable", "LiteMode.LowPower") }
+  /// Lite Mode
+  public static var liteModeTitle: String  { return L10n.tr("Localizable", "LiteMode.Title") }
+  /// Interface animations will be simplified.
+  public static var liteModeKeyAnimationsInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.animations.Info") }
+  /// Reduce Animations
+  public static var liteModeKeyAnimationsTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.animations.Title") }
+  /// Interfaces will use fewer blur effects.
+  public static var liteModeKeyBlurInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.blur.Info") }
+  /// Disable Blur
+  public static var liteModeKeyBlurTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.blur.Title") }
+  /// Custom emoji in messages will be static.
+  public static var liteModeKeyEmojiInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji.Info") }
+  /// Disable Emoji Animations
+  public static var liteModeKeyEmojiTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji.Title") }
+  /// Reactions and stickers will not use extra animated efects.
+  public static var liteModeKeyEmojiEffectsInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji_effects.Info") }
+  /// Disable Effects
+  public static var liteModeKeyEmojiEffectsTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji_effects.Title") }
+  /// GIFs and Videos will only play while you hover over them.
+  public static var liteModeKeyGifInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.gif.Info") }
+  /// Disable Autoplay
+  public static var liteModeKeyGifTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.gif.Title") }
+  /// Icons in context menus will be static.
+  public static var liteModeKeyMenuAnimationsInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.menu_animations.Info") }
+  /// Disable Menu Animations
+  public static var liteModeKeyMenuAnimationsTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.menu_animations.Title") }
+  /// Animated stickers will only play while you hover over them.
+  public static var liteModeKeyStickersInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.stickers.Info") }
+  /// Disable Stickers Autoplay
+  public static var liteModeKeyStickersTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.stickers.Title") }
+  /// Apply lite mode when battery level is less than %1$@%
+  public static func liteModeLowPowerInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "LiteMode.LowPower.Info", p1)
+  }
+  /// You can change trigger for lite depending on your battery level.
+  public static var liteModeLowPowerInfoFull: String  { return L10n.tr("Localizable", "LiteMode.LowPower.InfoFull") }
   /// Sorry, this language doesn't seem to exist.
   public static var localizationPreviewErrorGeneric: String  { return L10n.tr("Localizable", "Localization.Preview.Error.Generic") }
   /// Accurate to %@

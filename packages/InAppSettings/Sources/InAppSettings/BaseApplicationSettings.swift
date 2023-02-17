@@ -11,35 +11,70 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 
+public enum LiteModeKey : String {
+    case any
+    case emoji_effects
+    case emoji
+    case blur
+    case dynamic_background
+    case gif
+    case stickers
+    case animations
+    case menu_animations
+}
+
+public struct LiteMode : Codable, Equatable {
+    
+    
+    public static var allKeys: [LiteModeKey] {
+        return [.emoji, .emoji_effects, .blur, .gif, .stickers, .animations, .menu_animations]
+    }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: LiteMode.CodingKeys.self)
+        try container.encode(self.enabled, forKey: LiteMode.CodingKeys.enabled)
+        try container.encode(self.lowBatteryPercent, forKey: LiteMode.CodingKeys.lowBatteryPercent)
+        try container.encode(self.keys.map { $0.rawValue }, forKey: LiteMode.CodingKeys.keys)
+    }
+    
+    enum CodingKeys: CodingKey {
+        case enabled
+        case lowBatteryPercent
+        case keys
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container: KeyedDecodingContainer<LiteMode.CodingKeys> = try decoder.container(keyedBy: LiteMode.CodingKeys.self)
+        self.enabled = try container.decode(Bool.self, forKey: LiteMode.CodingKeys.enabled)
+        self.lowBatteryPercent = try container.decode(Int32.self, forKey: LiteMode.CodingKeys.lowBatteryPercent)
+        let keys = try container.decode([String].self, forKey: LiteMode.CodingKeys.keys)
+        self.keys = keys.compactMap {
+            .init(rawValue: $0)
+        }
+    }
+    
+    init(enabled: Bool, lowBatteryPercent: Int32, keys: [LiteModeKey]) {
+        self.enabled = enabled
+        self.lowBatteryPercent = lowBatteryPercent
+        self.keys = keys
+    }
+    
+    public var enabled: Bool
+    public var lowBatteryPercent: Int32
+    public var keys: [LiteModeKey]
+    
+    public static var standart: LiteMode {
+        return .init(enabled: false, lowBatteryPercent: 100, keys: LiteMode.allKeys)
+    }
+    
+    public func isEnabled(key: LiteModeKey) -> Bool {
+        return self.keys.contains(key)
+    }
+            
+}
+
 public class BaseApplicationSettings: Codable, Equatable {
     
-    public struct LiteMode : Codable, Equatable {
-        
-        public enum Key {
-            case any
-            case emoji_effects
-            case emoji
-            case blur
-            case dynamic_background
-            case gif
-            case stickers
-            case animations
-            case menu_animations
-        }
-        
-        public var enabled: Bool
-        public var lowBatteryOn: Bool
-        
-        
-        static var standart: LiteMode {
-            return .init(enabled: false, lowBatteryOn: true)
-        }
-        
-        public func isEnabled(key: Key) -> Bool {
-            return false
-        }
-                
-    }
+    
     
     public struct TranslatePaywall : Codable, Equatable {
         public var timestamp: Int32
@@ -109,7 +144,7 @@ public class BaseApplicationSettings: Codable, Equatable {
         self.translateChats = try container.decodeIfPresent(Int32.self, forKey: "tc") ?? 1 != 0
         self.doNotTranslate = try container.decodeIfPresent(Set<String>.self, forKey: "dnt2") ?? Set()
         self.paywall = try container.decodeIfPresent(TranslatePaywall.self, forKey: "tp7")
-        self.liteMode = try container.decodeIfPresent(LiteMode.self, forKey: "lm") ?? LiteMode.standart
+        self.liteMode = try container.decodeIfPresent(LiteMode.self, forKey: "lm4") ?? LiteMode.standart
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -125,7 +160,7 @@ public class BaseApplicationSettings: Codable, Equatable {
         try container.encode(Int32(self.statusBar ? 1 : 0), forKey: "sb")
         try container.encode(Int32(self.translateChats ? 1 : 0), forKey: "tc")
         try container.encode(self.doNotTranslate, forKey: "dnt2")
-        try container.encode(self.liteMode, forKey: "lm")
+        try container.encode(self.liteMode, forKey: "lm4")
         if let paywall = paywall {
             try container.encode(paywall, forKey: "tp7")
         }
