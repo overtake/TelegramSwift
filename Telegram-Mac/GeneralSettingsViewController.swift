@@ -137,8 +137,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .header(sectionId: _, uniqueId: _, text: text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: .textTopItem)
         case let .liteMode(_, enabled: enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsLiteMode, type: .switchable(enabled), viewType: viewType, action: {
-                arguments.toggleLiteMode(!enabled)
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsLiteMode, type: .nextContext(enabled ? strings().liteModeEnabled : strings().liteModeDisabled), viewType: viewType, action: {
+                arguments.openLiteMode()
             })
         case let .showCallsTab(sectionId: _, enabled: enabled, viewType):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsShowCallsTab, type: .switchable(enabled), viewType: viewType, action: {
@@ -238,8 +238,8 @@ private final class GeneralSettingsArguments {
     let toggleWorkMode:(Bool)->Void
     let openShortcuts: ()->Void
     let callSettings: ()->Void
-    let toggleLiteMode: (Bool)->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, toggleLiteMode: @escaping(Bool)->Void) {
+    let openLiteMode: ()->Void
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, openLiteMode: @escaping()->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -258,7 +258,7 @@ private final class GeneralSettingsArguments {
         self.toggleWorkMode = toggleWorkMode
         self.openShortcuts = openShortcuts
         self.callSettings = callSettings
-        self.toggleLiteMode = toggleLiteMode
+        self.openLiteMode = openLiteMode
     }
    
 }
@@ -362,7 +362,7 @@ class GeneralSettingsViewController: TableViewController {
     
     private let disposable = MetaDisposable()
     override var removeAfterDisapper:Bool {
-        return true
+        return false
     }
     
     override func viewDidLoad() {
@@ -424,18 +424,8 @@ class GeneralSettingsViewController: TableViewController {
             context.bindings.rootNavigation().push(ShortcutListController(context: context))
         }, callSettings: {
             context.bindings.rootNavigation().push(CallSettingsController(sharedContext: context.sharedContext))
-        }, toggleLiteMode: { value in
-            _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings in
-                return settings.updateLiteMode { current in
-                    var current = current
-                    current.enabled = value
-                    return current
-                }
-            }).start(completed: {
-                delay(0.1, closure: {
-                    telegramUpdateTheme(theme.new(), animated: false)
-                })
-            })
+        }, openLiteMode: {
+            context.bindings.rootNavigation().push(LiteModeController(context: context))
             
         })
         

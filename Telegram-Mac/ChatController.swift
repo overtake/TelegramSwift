@@ -611,7 +611,7 @@ class ChatControllerView : View, ChatInputDelegate {
                     progressView!.center()
                 }
                 let currentTheme = self.chatTheme ?? theme
-                if currentTheme.shouldBlurService {
+                if currentTheme.shouldBlurService, !isLite(.blur) {
                     progressView?.blurBackground = currentTheme.blurServiceColor
                     progressView?.backgroundColor = .clear
                 } else {
@@ -1228,7 +1228,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             })
             let grouping: Bool
             if case .none = state {
-                grouping = false
+                grouping = true
             } else {
                 grouping = true
             }
@@ -2673,7 +2673,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             })
             self?.chatInteraction.saveState(scrollState: self?.immediateScrollState())
-            if !context.isLite(.dynamic_background) {
+            if !context.isLite(.animations) {
                 if self?.genericView.doBackgroundAction() != true {
                     self?.navigationController?.doBackgroundAction()
                 }
@@ -3983,9 +3983,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.sendAppFile = { [weak self] file, silent, query, schedule, collectionId in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, media: file, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
+                let hasFwd = !strongSelf.chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty
                 func apply(_ controller: ChatController, atDate: Date?) {
                     let _ = (Sender.enqueue(media: file, context: context, peerId: peerId, replyId: takeReplyId(), silent: silent, atDate: atDate, query: query, collectionId: collectionId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
-                    controller.nextTransaction.set(handler: afterSentTransition)
+                    controller.nextTransaction.set(handler: {
+                        if hasFwd {
+                            DispatchQueue.main.async {
+                                self?.chatInteraction.sendMessage(false, nil)
+                            }
+                        } else {
+                            afterSentTransition()
+                        }
+                    })
                 }
                 
                 let shouldSchedule: Bool
@@ -6934,7 +6943,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.adMessages = nil
         }
         
-        if chatLocation.peerId.namespace != Namespaces.Peer.SecretChat, chatLocation.peerId != context.peerId, mode == .history {
+        if chatLocation.peerId.namespace != Namespaces.Peer.SecretChat, chatLocation.peerId != context.peerId, mode != .pinned, mode != .scheduled {
             self.liveTranslate = .init(peerId: chatLocation.peerId, context: context)
         } else {
             self.liveTranslate = nil

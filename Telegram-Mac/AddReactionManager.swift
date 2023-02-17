@@ -398,10 +398,12 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         
         backgroundView.layer?.mask = maskLayer
+        if !isLite(.blur) {
+            self.visualEffect.state = .active
+            self.visualEffect.wantsLayer = true
+            self.visualEffect.blendingMode = .behindWindow
+        }
         
-        self.visualEffect.state = .active
-        self.visualEffect.wantsLayer = true
-        self.visualEffect.blendingMode = .behindWindow
         
         
         showMore.isHidden = revealReactions == nil
@@ -426,16 +428,16 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         topGradient.shadowBackground = theme.colors.background.withAlphaComponent(1)
         topGradient.direction = .horizontal(false)
         
-       
-        visualEffect.material = theme.colors.isDark ? .dark : .mediumLight
-
+        if !isLite(.blur) {
+            visualEffect.material = theme.colors.isDark ? .dark : .mediumLight
+        }
         
-        if #available(macOS 11.0, *) {
+        if #available(macOS 11.0, *), !isLite(.blur) {
             backgroundColorView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
         } else {
             backgroundColorView.backgroundColor = theme.colors.background
         }
-        if #available(macOS 11.0, *) {
+        if #available(macOS 11.0, *), !isLite(.blur) {
             backgroundView.addSubview(visualEffect)
         }
         backgroundView.addSubview(backgroundColorView)

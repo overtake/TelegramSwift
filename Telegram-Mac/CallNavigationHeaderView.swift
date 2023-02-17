@@ -356,7 +356,7 @@ final class CurveLayer: CAShapeLayer {
                 return EmptyDisposable
                 
             }
-            |> runOn(resourcesQueue)
+            |> runOn(.concurrentBackgroundQueue())
             |> deliverOnMainQueue
             
             

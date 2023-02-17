@@ -75,14 +75,17 @@ class SharedAccountContext {
     }
     
    
-    func isLite(_ key: BaseApplicationSettings.LiteMode.Key = .any) -> Bool {
+    func isLite(_ key: LiteModeKey = .any) -> Bool {
         let mode = baseSettings.liteMode
-        if mode.enabled {
-            return true
+        if !mode.enabled {
+            return false
         }
-        if mode.lowBatteryOn, batteryLevel <= 20 {
-            return true
+        if mode.lowBatteryPercent != 100 {
+            if batteryLevel >= Double(mode.lowBatteryPercent) {
+                return false
+            }
         }
+        
         return mode.isEnabled(key: key)
     }
     #endif

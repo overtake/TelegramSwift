@@ -713,7 +713,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                                 self?.shimmer = current
                             }
                                                         
-                            let data = file.immediateThumbnailData
+                            let data = !isLite(.animations) ? file.immediateThumbnailData : nil
                             
                             let shimmerSize = aspectSize
                             

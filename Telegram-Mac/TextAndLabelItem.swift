@@ -185,9 +185,6 @@ class TextAndLabelItem: GeneralRowItem {
             hasMore = textLayout.numberOfLines > 3
         }
         if hasMore == true {
-            textLayout.cutout = TextViewCutout(bottomRight: NSMakeSize(moreLayout.layoutSize.width + 10, 0))
-            textLayout.measure(width: textWidth)
-            
             textLayout.fitToLines(3)
         }
         
@@ -201,6 +198,8 @@ class TextAndLabelRowView: GeneralRowView {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
     private var labelView:TextView = TextView()
     private let moreView: TextView = TextView()
+    private let shadowView = ShadowView()
+
     private let copyView: ImageButton = ImageButton()
     private let toggleVisibility = ImageButton()
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -264,7 +263,11 @@ class TextAndLabelRowView: GeneralRowView {
         self.addSubview(self.containerView)
         self.containerView.displayDelegate = self
         self.containerView.userInteractionEnabled = false
+        containerView.addSubview(shadowView)
         containerView.addSubview(moreView)
+        
+
+        
         labelView.set(handler: { [weak self] _ in
             if let item = self?.item as? TextAndLabelItem {
                 item.action()
@@ -320,9 +323,12 @@ class TextAndLabelRowView: GeneralRowView {
                 
                 copyView.centerY(x: containerView.frame.width - copyView.frame.width - innerInsets.right)
 
-                moreView.setFrameOrigin(NSMakePoint(containerView.frame.width - moreView.frame.width - innerInsets.right, containerView.frame.height - innerInsets.bottom - moreView.frame.height + 2))
+                moreView.setFrameOrigin(NSMakePoint(containerView.frame.width - moreView.frame.width - innerInsets.right, containerView.frame.height - innerInsets.bottom - moreView.frame.height + 3))
+                shadowView.frame = NSMakeRect(containerView.frame.width - 80 - innerInsets.right, self.containerView.frame.height - 20 - innerInsets.bottom + 3, 80, 20)
+
             }
             self.containerView.setCorners(item.viewType.corners)
+
 
         }
         
@@ -333,13 +339,20 @@ class TextAndLabelRowView: GeneralRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? TextAndLabelItem {
+            
+            shadowView.shadowBackground = theme.colors.background
+            shadowView.direction = .horizontal(true)
+
+            
            // labelView.userInteractionEnabled = item.isTextSelectable
             labelView.userInteractionEnabled = item.canCopy
             labelView.isSelectable = item.isTextSelectable
             labelView.update(item.textLayout)
             
+            shadowView.isHidden = item.hasMore != true
             moreView.isHidden = item.hasMore != true
             moreView.update(item.moreLayout)
+            moreView.set(background: theme.colors.background, for: .Normal)
             
             copyView.set(image: NSImage(named: "Icon_FastCopyLink")!.precomposed(item.accentColor), for: .Normal)
             copyView.sizeToFit()

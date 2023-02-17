@@ -3707,6 +3707,6 @@ public func showSuccess(window: Window) {
     _ = showModalSuccess(for: window, icon: theme.icons.successModalProgress, delay: 2.0).start()
 }
 
-func isLite(_ key: BaseApplicationSettings.LiteMode.Key = .any) -> Bool {
+func isLite(_ key: LiteModeKey = .any) -> Bool {
     return appDelegate?.sharedApplicationContextValue?.sharedContext.isLite(key) ?? false
 }

@@ -2014,7 +2014,7 @@ class LottiePlayerView : View {
             }
         } else {
             self.context = nil
-            self.stateValue.set(self._currentState.modify { _ in .stoped })
+            //self.stateValue.set(self._currentState.modify { _ in .stoped })
         }
     }
 }

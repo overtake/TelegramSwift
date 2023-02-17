@@ -687,7 +687,7 @@ final class AccountContext {
         window.makeKeyAndOrderFront(nil)
     }
     
-    func isLite(_ key: BaseApplicationSettings.LiteMode.Key = .any) -> Bool {
+    func isLite(_ key: LiteModeKey = .any) -> Bool {
         #if !SHARE
         return sharedContext.isLite(key)
         #endif
