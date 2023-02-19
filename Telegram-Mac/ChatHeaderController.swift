@@ -611,7 +611,8 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
         
         self.dismiss.set(image: pinnedMessage.totalCount <= 1 ? theme.icons.dismissPinned : theme.icons.chat_pinned_list, for: .Normal)
         
-        if pinnedMessage.messageId != self.pinnedMessage?.messageId {
+        if pinnedMessage.messageId != self.pinnedMessage?.messageId ||
+            pinnedMessage.message != self.pinnedMessage?.message {
             let oldContainer = self.container
             let newContainer = ChatAccessoryView()
             newContainer.userInteractionEnabled = false
