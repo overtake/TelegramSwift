@@ -236,8 +236,24 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             if let oldValue = oldValue, let newValue = peerView  {
                 let peerEqual = PeerEquatable(peerViewMainPeer(oldValue)) == PeerEquatable(peerViewMainPeer(newValue))
                 let cachedEqual = CachedDataEquatable(oldValue.cachedData) == CachedDataEquatable(newValue.cachedData)
+                var presenceEqual: Bool = true
+                if oldValue.peerPresences.count != newValue.peerPresences.count {
+                    presenceEqual = false
+                } else {
+                    for (key, lhsValue) in oldValue.peerPresences {
+                        let rhsValue = newValue.peerPresences[key]
+                        if let rhsValue = rhsValue, !lhsValue.isEqual(to: rhsValue) {
+                            presenceEqual = false
+                        } else if rhsValue == nil {
+                            presenceEqual = false
+                        }
+                        if !presenceEqual {
+                            break
+                        }
+                    }
+                }
 
-                if !peerEqual || !cachedEqual {
+                if !peerEqual || !cachedEqual || !presenceEqual {
                     updateStatus(presentation: chatInteraction.presentation)
                 }
             } else {

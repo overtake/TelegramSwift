@@ -260,7 +260,7 @@ final class ChatLiveTranslateContext {
                 var current = current
                 let to = state?.toLang ?? appearance.language.baseLanguageCode
                 let toUpdated = current.to != to
-                if let state = state {
+                if let state = state, state.fromLang != to, state.fromLang != "" {
                     current.from = state.fromLang
                     current.to = to
                     current.canTranslate = true

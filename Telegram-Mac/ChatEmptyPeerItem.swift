@@ -240,7 +240,8 @@ class ChatEmptyPeerView : TableRowView {
             current.backgroundColor = item.presentation.chatServiceItemColor
         }
 
-        
+        let bgView = self.visualEffect ?? self.bgView
+        bgView?.addSubview(textView)
         needsLayout = true
     }
     
@@ -271,10 +272,9 @@ class ChatEmptyPeerView : TableRowView {
                     current = view
                 } else {
                     current = TransformImageView()
-                    bgView.addSubview(current)
                     self.imageView = current
                 }
-                
+                bgView.addSubview(current)
                 let signal = chatMessagePhoto(account: item.chatInteraction.context.account, imageReference: .standalone(media: image), peer: item.chatInteraction.peer, scale: System.backingScale, autoFetchFullSize: true)
                 
                 current.setSignal(signal)
