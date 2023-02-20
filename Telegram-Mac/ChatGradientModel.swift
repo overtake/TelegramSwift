@@ -21,7 +21,6 @@ final class ChatMessageBubbleBackdrop: NSView {
     
     
     init() {
-        self.backgroundContent = NSView()
         
         super.init(frame: NSZeroRect)
         autoresizingMask = []

@@ -173,7 +173,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let someActionsDisposable = DisposableSet()
     private let clearReadNotifiesDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
-    private let updatesDisposable = MetaDisposable()
     private let updateFoldersDisposable = MetaDisposable()
     private let _ready:Promise<Bool> = Promise()
     var ready: Signal<Bool, NoError> {
@@ -252,10 +251,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         super.init()
         
 
-        
-        
-        updatesDisposable.set(managedAppConfigurationUpdates(accountManager: context.sharedContext.accountManager, network: context.account.network).start())
-        
+                
         context.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
             guard let `self` = self else {
                 return MajorNavigationController(ViewController.self, ViewController(), window)
@@ -869,7 +865,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
         appUpdateDisposable.dispose()
-        updatesDisposable.dispose()
         updateFoldersDisposable.dispose()
         foldersReadyDisposable.dispose()
         context.cleanup()
