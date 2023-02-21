@@ -148,7 +148,6 @@
 		2748D44927C624690057CF99 /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */; };
 		274B831826F0C0A700E6E474 /* EmojiScreenEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */; };
 		274B9E32272C2253009993C7 /* ChatCalendarModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */; };
-		274B9E34272C3D15009993C7 /* mac_devices.txt in Resources */ = {isa = PBXBuildFile; fileRef = 274B9E33272C3D15009993C7 /* mac_devices.txt */; };
 		274B9E40273008EB009993C7 /* sent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 274B9E3F273008EB009993C7 /* sent.mp3 */; };
 		274B9E4227300C79009993C7 /* ChatCalendarMonthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E4127300C79009993C7 /* ChatCalendarMonthRowItem.swift */; };
 		274B9E44273035DE009993C7 /* ChatCalendarHeaderRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */; };
@@ -1566,7 +1565,6 @@
 		274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInvitation.swift; sourceTree = "<group>"; };
 		274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiScreenEffect.swift; sourceTree = "<group>"; };
 		274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarModalController.swift; sourceTree = "<group>"; };
-		274B9E33272C3D15009993C7 /* mac_devices.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = mac_devices.txt; sourceTree = "<group>"; };
 		274B9E3F273008EB009993C7 /* sent.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = sent.mp3; sourceTree = "<group>"; };
 		274B9E4127300C79009993C7 /* ChatCalendarMonthRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarMonthRowItem.swift; sourceTree = "<group>"; };
 		274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarHeaderRowItem.swift; sourceTree = "<group>"; };
@@ -4809,7 +4807,6 @@
 				C27A6F721ECF610C00C65577 /* currencies.json */,
 				C2CFCAB81EBB4A1600843F6A /* voip */,
 				C23BC3671E9AA03E00D79F92 /* emoji11.txt */,
-				274B9E33272C3D15009993C7 /* mac_devices.txt */,
 				D0FFCEBD215A7CB700995AFE /* emoji14.txt */,
 				C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */,
 				C232EA3C1E1C06EF00C4D38C /* dsa_pub.pem */,
@@ -6222,7 +6219,6 @@
 				277E228628EB330900001689 /* menu_add_member.tgs in Resources */,
 				D07450ED233D61B800769D7F /* chiken_born.tgs in Resources */,
 				27916F2B287D77660046DB44 /* food.tgs in Resources */,
-				274B9E34272C3D15009993C7 /* mac_devices.txt in Resources */,
 				27CB1760276376DE00DD25E0 /* menu_change_colors.tgs in Resources */,
 				2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */,
 				D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */,
