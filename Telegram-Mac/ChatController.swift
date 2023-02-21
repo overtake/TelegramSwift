@@ -1207,23 +1207,31 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     var insertions:[(Int, TableRowItem)] = []
                     let updates:[(Int, TableRowItem)] = []
                     
-                    for i in 0 ..< entries.count {
-                        let item:TableRowItem
-                        if cancelled.with({ $0 }) {
-                            break
-                        }
-                        
-                        if firstInsertedRange.indexIn(i) {
-                            //item = firstInsertion[i - initialIndex].1
-                            //updates.append((i, item))
-                        } else {
-                            item = makeItem(entries[i])
-                            insertions.append((i, item))
-                        }
-                        
+                    let finish:()->Void = {
+                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .saveVisible(.upper)))
+                        subscriber.putCompletion()
                     }
-                    subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .saveVisible(.upper)))
-                    subscriber.putCompletion()
+                    
+                    var mustBreak = false
+                    for i in 0 ..< entries.count {
+                        messagesViewQueue.justDispatch {
+                            let item:TableRowItem
+                            if cancelled.with({ $0 }) || mustBreak {
+                                mustBreak = true
+                                return
+                            }
+                            if firstInsertedRange.indexIn(i) {
+                                //item = firstInsertion[i - initialIndex].1
+                                //updates.append((i, item))
+                            } else {
+                                item = makeItem(entries[i])
+                                insertions.append((i, item))
+                            }
+                            if i == entries.count - 1 {
+                                finish()
+                            }
+                        }
+                    }
                 }
             }
             
