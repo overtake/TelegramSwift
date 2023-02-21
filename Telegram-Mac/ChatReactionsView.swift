@@ -195,7 +195,14 @@ final class ChatReactionsLayout {
                     reactionSize.width += 3
                     reactionSize.height += 3
                 }
-                return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
+                let textColor = value.isSelected ? presentation.textSelectedColor : presentation.textColor
+                return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize, getColors: { file in
+                    var colors: [LottieColor] = []
+                    if file.paintToText {
+                        colors.append(.init(keyPath: "", color: textColor))
+                    }
+                    return colors
+                }, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             }
         }
         
@@ -762,7 +769,7 @@ final class ChatReactionsView : View {
             guard let reaction = reaction, let file = reaction.source.effect else {
                 return
             }
-            if reaction.context.isLite(.emoji_effects) {
+            if isLite(.emoji_effects) {
                 return
             }
 
@@ -942,10 +949,9 @@ final class ChatReactionsView : View {
                 updateLayout(size: reaction.rect.size, transition: .immediate)
                 first = false
             }
-            let isLite = reaction.context.isLite(.emoji)
 
             if layerUpdated {
-                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), isLite: isLite, animated: animated)
+                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), isLite: isLite(.emoji), animated: animated)
             }
         }
         
@@ -1038,11 +1044,9 @@ final class ChatReactionsView : View {
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
             let updated = self.reaction?.source != reaction.source
             self.reaction = reaction
-            
-            let isLite = reaction.context.isLite(.emoji)
-            
+                        
             if updated {
-                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), isLite: isLite, animated: animated)
+                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), isLite: isLite(.emoji), animated: animated)
             }
             
             if let text = reaction.text {
@@ -1079,7 +1083,7 @@ final class ChatReactionsView : View {
             guard let reaction = reaction, let file = reaction.source.effect else {
                 return
             }
-            if reaction.context.isLite(.emoji_effects) {
+            if isLite(.emoji_effects) {
                 return
             }
 

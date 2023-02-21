@@ -205,5 +205,5 @@ public func modifySkinEmoji(_ emoji:String, modifier: String?, postbox: Postbox)
 public func recentUsedEmoji(postbox: Postbox) -> Signal<RecentUsedEmoji, NoError> {
     return postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.recentEmoji]) |> map { preferences in
         return preferences.values[ApplicationSpecificPreferencesKeys.recentEmoji]?.get(RecentUsedEmoji.self) ?? RecentUsedEmoji.defaultSettings
-    }
+    } |> deliverOn(.concurrentDefaultQueue())
 }

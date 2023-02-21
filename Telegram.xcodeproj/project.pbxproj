@@ -402,6 +402,8 @@
 		27A9904E257A8047009044DB /* Pop.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904C257A8044009044DB /* Pop.wav */; };
 		27A9904F257A8047009044DB /* Purr.wav in Resources */ = {isa = PBXBuildFile; fileRef = 27A9904D257A8046009044DB /* Purr.wav */; };
 		27AAAD57299F5F9E00F70A9A /* LiteModeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAAD56299F5F9E00F70A9A /* LiteModeController.swift */; };
+		27AAAD5A29A4A11600F70A9A /* System in Frameworks */ = {isa = PBXBuildFile; productRef = 27AAAD5929A4A11600F70A9A /* System */; };
+		27AAAD5C29A4A2E600F70A9A /* System in Frameworks */ = {isa = PBXBuildFile; productRef = 27AAAD5B29A4A2E600F70A9A /* System */; };
 		27AAE00E28E2D89D004DA38D /* ForumTopicInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAE00D28E2D89D004DA38D /* ForumTopicInfoController.swift */; };
 		27AAE01128E2DBB1004DA38D /* ForumNameRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAE01028E2DBB1004DA38D /* ForumNameRowItem.swift */; };
 		27AAE01328E2E9BD004DA38D /* ForumTopicEmojiSelectRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27AAE01228E2E9BD004DA38D /* ForumTopicEmojiSelectRowItem.swift */; };
@@ -1801,6 +1803,7 @@
 		27A9904C257A8044009044DB /* Pop.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Pop.wav; sourceTree = "<group>"; };
 		27A9904D257A8046009044DB /* Purr.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Purr.wav; sourceTree = "<group>"; };
 		27AAAD56299F5F9E00F70A9A /* LiteModeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiteModeController.swift; sourceTree = "<group>"; };
+		27AAAD5829A49F2500F70A9A /* System */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = System; path = packages/System; sourceTree = "<group>"; };
 		27AAE00D28E2D89D004DA38D /* ForumTopicInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForumTopicInfoController.swift; sourceTree = "<group>"; };
 		27AAE01028E2DBB1004DA38D /* ForumNameRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForumNameRowItem.swift; sourceTree = "<group>"; };
 		27AAE01228E2E9BD004DA38D /* ForumTopicEmojiSelectRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForumTopicEmojiSelectRowItem.swift; sourceTree = "<group>"; };
@@ -2791,6 +2794,7 @@
 				2745FED7274F952D00546B05 /* ThemeSettings in Frameworks */,
 				27D43DCC279191FD006968A6 /* libjpeg.a in Frameworks */,
 				27D43DB927918F2C006968A6 /* Mozjpeg in Frameworks */,
+				27AAAD5C29A4A2E600F70A9A /* System in Frameworks */,
 				27EE444E297FD9950077AA0F /* CalendarUtils in Frameworks */,
 				27D43DCE27919229006968A6 /* libcrypto.a in Frameworks */,
 				2745FECB274F947000546B05 /* BuildConfig in Frameworks */,
@@ -2901,6 +2905,7 @@
 				27EBC7B227579A7200C6A820 /* Reactions in Frameworks */,
 				C21A48AE1F7CFBBE0095ADB1 /* OpenGL.framework in Frameworks */,
 				C2C9B92C1E80165D00380D79 /* IOKit.framework in Frameworks */,
+				27AAAD5A29A4A11600F70A9A /* System in Frameworks */,
 				C2FD33F01E697EC2008D13D4 /* QuickLook.framework in Frameworks */,
 				27D696F2274F844D008A723E /* Strings in Frameworks */,
 				2796FF01274242D200DA653C /* GZIP in Frameworks */,
@@ -3565,6 +3570,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				27AAAD5829A49F2500F70A9A /* System */,
 				27D6044C2958647000588C21 /* DarwinDirStat */,
 				2738A2D2289C416D00EC1010 /* CurrencyFormat */,
 				27D913082833A1B0007CF40F /* InAppPurchaseManager */,
@@ -5916,6 +5922,7 @@
 				277C209427A2F5940070B3BF /* ManagedFile */,
 				27EE444B297FD91B0077AA0F /* DateUtils */,
 				27EE444D297FD9950077AA0F /* CalendarUtils */,
+				27AAAD5B29A4A2E600F70A9A /* System */,
 			);
 			productName = TelegramShare;
 			productReference = C232EA911E1D07E700C4D38C /* TelegramShare.appex */;
@@ -6002,6 +6009,7 @@
 				27D9130628323A74007CF40F /* RangeSet */,
 				27D9130F28353E53007CF40F /* InAppPurchaseManager */,
 				2738A2D3289C41CE00EC1010 /* CurrencyFormat */,
+				27AAAD5929A4A11600F70A9A /* System */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -7991,6 +7999,14 @@
 		27A697A8273D3A5F00B33415 /* Localization */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Localization;
+		};
+		27AAAD5929A4A11600F70A9A /* System */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = System;
+		};
+		27AAAD5B29A4A2E600F70A9A /* System */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = System;
 		};
 		27B6D0482739388600C785C7 /* TelegramApi */ = {
 			isa = XCSwiftPackageProductDependency;

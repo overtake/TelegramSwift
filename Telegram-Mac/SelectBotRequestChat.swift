@@ -480,31 +480,32 @@ func selectSpecificPeer(context: AccountContext, peerType: ReplyMarkupButtonRequ
         
         
         _ = peers.start(next: { chatPeer, botPeer in
-            let text: String
-            switch peerType {
-            case let .group(group):
-                if let botRights = group.botAdminRights {
-                    let all: [TelegramChatAdminRightsFlags] = [.canChangeInfo, .canPostMessages, .canEditMessages, .canDeleteMessages, .canBanUsers, .canInviteUsers, .canPinMessages, .canAddAdmins, .canBeAnonymous, .canManageCalls, .canManageTopics]
-                     
-                     var texts: [String] = []
-                     for right in all {
-                         if botRights.rights.contains(right) {
-                             texts.append(stringForRight(right: right, isGroup: true, defaultBannedRights: nil))
-                         }
-                     }
-                    text = strings().chatServicePeerRequestConfirmPermission(chatPeer.displayTitle, botPeer.displayTitle, botPeer.displayTitle, chatPeer.displayTitle, texts.joined(separator: ", "))
-                } else {
-                    text = strings().chatServicePeerRequestConfirmPlain(chatPeer.displayTitle, botPeer.displayTitle)
-                }
-            default:
-                text = strings().chatServicePeerRequestConfirmPlain(chatPeer.displayTitle, botPeer.displayTitle)
-            }
-            confirm(for: context.window, information: text, okTitle: strings().chatServicePeerRequestConfirmOk, successHandler: { _ in
-                let signal = context.engine.peers.sendBotRequestedPeer(messageId: messageId, buttonId: buttonId, requestedPeerId: peerId)
-                _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
-                    showModalText(for: context.window, text: strings().unknownError)
-                })
+//            let text: String
+//            switch peerType {
+//            case let .group(group):
+//                if let botRights = group.botAdminRights {
+//                    let all: [TelegramChatAdminRightsFlags] = [.canChangeInfo, .canPostMessages, .canEditMessages, .canDeleteMessages, .canBanUsers, .canInviteUsers, .canPinMessages, .canAddAdmins, .canBeAnonymous, .canManageCalls, .canManageTopics]
+//
+//                     var texts: [String] = []
+//                     for right in all {
+//                         if botRights.rights.contains(right) {
+//                             texts.append(stringForRight(right: right, isGroup: true, defaultBannedRights: nil))
+//                         }
+//                     }
+//                    text = strings().chatServicePeerRequestConfirmPermission(chatPeer.displayTitle, botPeer.displayTitle, botPeer.displayTitle, chatPeer.displayTitle, texts.joined(separator: ", "))
+//                } else {
+//                    text = strings().chatServicePeerRequestConfirmPlain(chatPeer.displayTitle, botPeer.displayTitle)
+//                }
+//            default:
+//                text = strings().chatServicePeerRequestConfirmPlain(chatPeer.displayTitle, botPeer.displayTitle)
+//            }
+            let signal = context.engine.peers.sendBotRequestedPeer(messageId: messageId, buttonId: buttonId, requestedPeerId: peerId)
+            _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
+                showModalText(for: context.window, text: strings().unknownError)
             })
+
+//            confirm(for: context.window, information: text, okTitle: strings().chatServicePeerRequestConfirmOk, successHandler: { _ in
+//            })
             
         })
         

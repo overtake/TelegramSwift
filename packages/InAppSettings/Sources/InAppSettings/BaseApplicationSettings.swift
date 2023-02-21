@@ -27,7 +27,7 @@ public struct LiteMode : Codable, Equatable {
     
     
     public static var allKeys: [LiteModeKey] {
-        return [.emoji, .emoji_effects, .blur, .gif, .stickers, .animations, .menu_animations]
+        return [.emoji, .emoji_effects, .gif, .stickers, .menu_animations, .animations, .blur]
     }
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: LiteMode.CodingKeys.self)

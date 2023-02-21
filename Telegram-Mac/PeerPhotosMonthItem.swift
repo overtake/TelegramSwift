@@ -460,7 +460,7 @@ class MediaVideoCell : MediaCell {
     }
     
     func preloadStreamblePart() {
-        if let layoutItem = self.layoutItem {
+        if let layoutItem = self.layoutItem, !isLite(.any) {
             let context = layoutItem.context
             if context.autoplayMedia.preloadVideos {
                 if let media = layoutItem.message.anyMedia as? TelegramMediaFile {

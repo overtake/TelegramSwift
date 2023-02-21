@@ -1691,7 +1691,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     if view.superview != self {
                         view.frame = self.convert(view.frame, from: view.superview)
                         let item = self.item(at: range.location)
-                        view.set(item: self.item(at: range.location), animated: false)
+                        view.set(item: item, animated: false)
                         view.updateLayout(size: view.frame.size, transition: .immediate)
                         controller.resortView = view
                         self.addSubview(view)
