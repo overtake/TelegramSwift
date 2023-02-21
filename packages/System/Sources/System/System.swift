@@ -14,7 +14,11 @@ func deviceFromSystemProfiler() -> String? {
     let pipe = Pipe()
     process.standardOutput = pipe
     do {
-        try process.run()
+        if #available(macOS 10.13, *) {
+            try process.run()
+        } else {
+            process.launch()
+        }
     } catch {
         return nil
     }
