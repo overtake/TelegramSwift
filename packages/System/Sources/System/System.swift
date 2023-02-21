@@ -6,9 +6,9 @@ func deviceFromSystemProfiler() -> String? {
     // So we try reading "system_profiler" output.
     let process = Process()
     if #available(macOS 10.13, *) {
-        process.launchPath = "/usr/bin/log"
-    } else {
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
+    } else {
+        process.launchPath = "/usr/sbin/system_profiler"
     }
     process.arguments = ["-json", "SPHardwareDataType", "-detailLevel", "mini"]
     let pipe = Pipe()
