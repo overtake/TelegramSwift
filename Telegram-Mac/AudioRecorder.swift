@@ -488,77 +488,166 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
         
     }
     
+//    func processAndDisposeAudioBuffer(_ buffer: AudioBuffer) {
+//        assert(self.queue.isCurrent())
+//
+//        guard let data = convertor.convert(buffer: buffer) else {
+//            return
+//        }
+//
+//        defer {
+//            free(buffer.mData)
+//        }
+//
+//        let millisecondsPerPacket = 60
+//        let encoderPacketSizeInBytes = 16000 / 1000 * millisecondsPerPacket * 2
+//
+//        let currentEncoderPacket = malloc(encoderPacketSizeInBytes)!
+//        defer {
+//            free(currentEncoderPacket)
+//        }
+//
+//        var bufferOffset = 0
+//
+////        NSLog("byteSize: \(buffer.mDataByteSize), \(data.count), encder: \(encoderPacketSizeInBytes)")
+//
+//        while true {
+//            var currentEncoderPacketSize = 0
+//
+//            while currentEncoderPacketSize < encoderPacketSizeInBytes {
+//                if audioBuffer.count != 0 {
+//                    let takenBytes = min(self.audioBuffer.count, encoderPacketSizeInBytes - currentEncoderPacketSize)
+//                    if takenBytes != 0 {
+//                        self.audioBuffer.withUnsafeBytes { (bytes: UnsafePointer<Int8>) -> Void in
+//                            memcpy(currentEncoderPacket.advanced(by: currentEncoderPacketSize), bytes, takenBytes)
+//                        }
+//                        self.audioBuffer.replaceSubrange(0 ..< takenBytes, with: Data())
+//                        currentEncoderPacketSize += takenBytes
+//                    }
+//                } else if bufferOffset < data.count {
+//                    let takenBytes = min(data.count - bufferOffset, encoderPacketSizeInBytes - currentEncoderPacketSize)
+//                    if takenBytes != 0 {
+//                        self.audioBuffer.withUnsafeBytes { (bytes: UnsafePointer<Int8>) -> Void in
+//                            memcpy(currentEncoderPacket.advanced(by: currentEncoderPacketSize), data.withUnsafeBytes {
+//                                $0.advanced(by: bufferOffset)
+//                            }, takenBytes)
+//                        }
+//                        bufferOffset += takenBytes
+//                        currentEncoderPacketSize += takenBytes
+//                    }
+//                } else {
+//                    break
+//                }
+//            }
+//
+//            if currentEncoderPacketSize < encoderPacketSizeInBytes {
+//                self.audioBuffer.append(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), count: currentEncoderPacketSize)
+//                break
+//            } else {
+//
+//
+//                self.processWaveformPreview(samples: currentEncoderPacket.assumingMemoryBound(to: Int16.self), count: currentEncoderPacketSize / 2)
+//
+//                self.oggWriter.writeFrame(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), frameByteCount: UInt(currentEncoderPacketSize))
+//                liveUploading?.fileDidChangedSize(false)
+//                let timestamp = CACurrentMediaTime()
+//                if self.recordingStateUpdateTimestamp == nil || self.recordingStateUpdateTimestamp! < timestamp + 0.1 {
+//                    self.recordingStateUpdateTimestamp = timestamp
+//                    self.recordingState.set(.recording(duration: oggWriter.encodedDuration(), durationMediaTimestamp: timestamp))
+//                }
+//
+//            }
+//        }
+//    }
+    
     func processAndDisposeAudioBuffer(_ buffer: AudioBuffer) {
-        assert(self.queue.isCurrent())
-                
-        guard let data = convertor.convert(buffer: buffer) else {
-            return
-        }
-        
-        defer {
-            free(buffer.mData)
-        }
-        
-        let millisecondsPerPacket = 60
-        let encoderPacketSizeInBytes = 16000 / 1000 * millisecondsPerPacket * 2
-        
-        let currentEncoderPacket = malloc(encoderPacketSizeInBytes)!
-        defer {
-            free(currentEncoderPacket)
-        }
-        
-        var bufferOffset = 0
-        
-//        NSLog("byteSize: \(buffer.mDataByteSize), \(data.count), encder: \(encoderPacketSizeInBytes)")
-        
-        while true {
-            var currentEncoderPacketSize = 0
+            assert(self.queue.isCurrent())
             
-            while currentEncoderPacketSize < encoderPacketSizeInBytes {
-                if audioBuffer.count != 0 {
-                    let takenBytes = min(self.audioBuffer.count, encoderPacketSizeInBytes - currentEncoderPacketSize)
-                    if takenBytes != 0 {
-                        self.audioBuffer.withUnsafeBytes { (bytes: UnsafePointer<Int8>) -> Void in
-                            memcpy(currentEncoderPacket.advanced(by: currentEncoderPacketSize), bytes, takenBytes)
-                        }
-                        self.audioBuffer.replaceSubrange(0 ..< takenBytes, with: Data())
-                        currentEncoderPacketSize += takenBytes
+            var buffer = buffer
+            
+            if(sampleRate == 16000 || sampleRate == 24000) {
+                let ratio = UInt32(48000.0 / Float(sampleRate))
+                let initialBuffer=malloc(Int(buffer.mDataByteSize+(ratio - 1)));
+                memcpy(initialBuffer, buffer.mData, Int(buffer.mDataByteSize));
+                buffer.mData=realloc(buffer.mData, Int(buffer.mDataByteSize*ratio))
+                let values = initialBuffer!.assumingMemoryBound(to: Int16.self)
+                let resampled = buffer.mData!.assumingMemoryBound(to: Int16.self)
+                values[Int(buffer.mDataByteSize/2)]=values[Int(buffer.mDataByteSize/2)-1]
+                for i: Int in 0 ..< Int(buffer.mDataByteSize/2) {
+                    let intRatio = Int(ratio)
+                    if sampleRate == 16000 {
+                        resampled[i*intRatio]=values[i]
+                        resampled[i*intRatio+1]=values[i]/3+values[i+1]/3*2
+                        resampled[i*intRatio+2]=values[i]/3*2+values[i+1]/3
+                    } else {
+                        resampled[i*intRatio]=values[i]
+                        resampled[i*intRatio+1]=values[i]/2+values[i+1]/2
                     }
-                } else if bufferOffset < data.count {
-                    let takenBytes = min(data.count - bufferOffset, encoderPacketSizeInBytes - currentEncoderPacketSize)
-                    if takenBytes != 0 {
-                        self.audioBuffer.withUnsafeBytes { (bytes: UnsafePointer<Int8>) -> Void in
-                            memcpy(currentEncoderPacket.advanced(by: currentEncoderPacketSize), data.withUnsafeBytes {
-                                $0.advanced(by: bufferOffset)
-                            }, takenBytes)
-                        }
-                        bufferOffset += takenBytes
-                        currentEncoderPacketSize += takenBytes
-                    }
-                } else {
-                    break
                 }
+                free(initialBuffer)
+                buffer.mDataByteSize*=ratio
             }
-                        
-            if currentEncoderPacketSize < encoderPacketSizeInBytes {
-                self.audioBuffer.append(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), count: currentEncoderPacketSize)
-                break
-            } else {
+            
+            defer {
+                free(buffer.mData)
+            }
+            
+            let millisecondsPerPacket = 60
+            let encoderPacketSizeInBytes = 16000 / 1000 * millisecondsPerPacket * 2
+            
+            let currentEncoderPacket = malloc(encoderPacketSizeInBytes)!
+            defer {
+                free(currentEncoderPacket)
+            }
+            
+            var bufferOffset = 0
+            
+            while true {
+                var currentEncoderPacketSize = 0
                 
-                
-                self.processWaveformPreview(samples: currentEncoderPacket.assumingMemoryBound(to: Int16.self), count: currentEncoderPacketSize / 2)
-                
-                self.oggWriter.writeFrame(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), frameByteCount: UInt(currentEncoderPacketSize))
-                liveUploading?.fileDidChangedSize(false)
-                let timestamp = CACurrentMediaTime()
-                if self.recordingStateUpdateTimestamp == nil || self.recordingStateUpdateTimestamp! < timestamp + 0.1 {
-                    self.recordingStateUpdateTimestamp = timestamp
-                    self.recordingState.set(.recording(duration: oggWriter.encodedDuration(), durationMediaTimestamp: timestamp))
+                while currentEncoderPacketSize < encoderPacketSizeInBytes {
+                    if audioBuffer.count != 0 {
+                        let takenBytes = min(self.audioBuffer.count, encoderPacketSizeInBytes - currentEncoderPacketSize)
+                        if takenBytes != 0 {
+                            self.audioBuffer.withUnsafeBytes { (bytes: UnsafePointer<Int8>) -> Void in
+                                memcpy(currentEncoderPacket.advanced(by: currentEncoderPacketSize), bytes, takenBytes)
+                            }
+                            self.audioBuffer.replaceSubrange(0 ..< takenBytes, with: Data())
+                            currentEncoderPacketSize += takenBytes
+                        }
+                    } else if bufferOffset < Int(buffer.mDataByteSize) {
+                        let takenBytes = min(Int(buffer.mDataByteSize) - bufferOffset, encoderPacketSizeInBytes - currentEncoderPacketSize)
+                        if takenBytes != 0 {
+                            self.audioBuffer.withUnsafeBytes { (bytes: UnsafePointer<Int8>) -> Void in
+                                memcpy(currentEncoderPacket.advanced(by: currentEncoderPacketSize), buffer.mData?.advanced(by: bufferOffset), takenBytes)
+                            }
+                            bufferOffset += takenBytes
+                            currentEncoderPacketSize += takenBytes
+                        }
+                    } else {
+                        break
+                    }
                 }
                 
+                if currentEncoderPacketSize < encoderPacketSizeInBytes {
+                    self.audioBuffer.append(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), count: currentEncoderPacketSize)
+                    break
+                } else {
+                    
+                    self.processWaveformPreview(samples: currentEncoderPacket.assumingMemoryBound(to: Int16.self), count: currentEncoderPacketSize / 2)
+                    
+                    self.oggWriter.writeFrame(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), frameByteCount: UInt(currentEncoderPacketSize))
+                    liveUploading?.fileDidChangedSize(false)
+                    let timestamp = CACurrentMediaTime()
+                    if self.recordingStateUpdateTimestamp == nil || self.recordingStateUpdateTimestamp! < timestamp + 0.1 {
+                        self.recordingStateUpdateTimestamp = timestamp
+                        self.recordingState.set(.recording(duration: oggWriter.encodedDuration(), durationMediaTimestamp: timestamp))
+                    }
+                    
+                }
             }
         }
-    }
+
     
     func processWaveformPreview(samples: UnsafePointer<Int16>, count: Int) {
         for i in 0 ..< count {

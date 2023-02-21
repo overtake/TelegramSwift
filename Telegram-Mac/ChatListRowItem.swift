@@ -878,10 +878,8 @@ class ChatListRowItem: TableRowItem {
       
         if let _ = self.isOnline, let presence = peerPresence?._asPresence() {
             presenceManager = PeerPresenceStatusManager(update: { [weak self] in
-                DispatchQueue.main.async {
-                    self?.isOnline = false
-                    self?.noteHeightOfRow(animated: true)
-                }
+                self?.isOnline = false
+                self?.redraw(animated: true)
             })
             presenceManager?.reset(presence: presence, timeDifference: Int32(context.timeDifference))
         }

@@ -1188,12 +1188,17 @@ func canPinMessage(_ message:Message, for peer:Peer, account:Account) -> Bool {
     return false
 }
 
-func canReportMessage(_ message: Message, _ account: Account) -> Bool {
+func canReportMessage(_ message: Message, _ context: AccountContext) -> Bool {
     if message.isScheduledMessage || message.flags.contains(.Failed) || message.flags.contains(.Sending) {
         return false
     }
-    if let peer = coreMessageMainPeer(message), message.author?.id != account.peerId {
-        return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer(account.peerId)?.isBot == true)
+    if let peer = message.peers[message.id.peerId], peer.isUser {
+        if context.timestamp - message.timestamp < 12 * 60 * 60 {
+            return true
+        }
+    }
+    if let peer = coreMessageMainPeer(message), message.author?.id != context.peerId {
+        return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer(context.peerId)?.isBot == true)
     } else {
         return false
     }

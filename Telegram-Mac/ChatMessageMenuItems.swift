@@ -590,11 +590,12 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
         if canForwardMessage(data.message, chatInteraction: data.chatInteraction), !isService {
             let forwardItem = ContextMenuItem(strings().messageContextForward, handler: {
-                data.chatInteraction.forwardMessages([data.message])
+                data.chatInteraction.forwardMessages(data.groupped ?? [data.message])
             }, itemImage: MenuAnimation.menu_forward.value)
             let forwardMenu = ContextMenu()
             
-            let forwardObject = ForwardMessagesObject(context, messages: [message], album: true)
+            
+            let forwardObject = ForwardMessagesObject(context, messages: [data.message], album: true)
             
             let recent = data.recentUsedPeers.filter {
                 $0.id != context.peerId && $0.canSendMessage(media: message.media.first) && !$0.isDeleted
@@ -862,7 +863,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
 //        fourthBlock.append(MessageReadMenuItem(context: context, chatInteraction: data.chatInteraction, message: message))
 //        #endif
         
-        if canReportMessage(data.message, account), data.chatMode != .pinned {
+        if canReportMessage(data.message, context), data.chatMode != .pinned {
             
             let report = ContextMenuItem(strings().messageContextReport, itemImage: MenuAnimation.menu_report.value)
             

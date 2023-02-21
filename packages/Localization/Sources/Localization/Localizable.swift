@@ -5677,6 +5677,8 @@ public final class L10n {
   public static var generalSettingsCopyRTF: String  { return L10n.tr("Localizable", "GeneralSettings.CopyRTF") }
   /// Dark Mode
   public static var generalSettingsDarkMode: String  { return L10n.tr("Localizable", "GeneralSettings.DarkMode") }
+  /// EMOJI
+  public static var generalSettingsEmoji: String  { return L10n.tr("Localizable", "GeneralSettings.Emoji") }
   /// EMOJI & STICKERS
   public static var generalSettingsEmojiAndStickers: String  { return L10n.tr("Localizable", "GeneralSettings.EmojiAndStickers") }
   /// Suggest Emoji
@@ -5699,7 +5701,7 @@ public final class L10n {
   public static var generalSettingsInstantViewHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InstantViewHeader") }
   /// INTERFACE
   public static var generalSettingsInterfaceHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InterfaceHeader") }
-  /// Lite Mode
+  /// Power Saving
   public static var generalSettingsLiteMode: String  { return L10n.tr("Localizable", "GeneralSettings.LiteMode") }
   /// Handle media keys for in-app player
   public static var generalSettingsMediaKeysForInAppPlayer: String  { return L10n.tr("Localizable", "GeneralSettings.MediaKeysForInAppPlayer") }
@@ -5743,6 +5745,14 @@ public final class L10n {
   public static var generalSettingsForceTouchReply: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouch.Reply") }
   /// Scroll With Spacebar
   public static var generalSettingsInstantViewScrollBySpace: String  { return L10n.tr("Localizable", "GeneralSettings.InstantView.ScrollBySpace") }
+  /// Check Grammar With Spelling
+  public static var generalSettingsSpellingCheckGrammarSpelling: String  { return L10n.tr("Localizable", "GeneralSettings.Spelling.CheckGrammarSpelling") }
+  /// Correct Spelling Automatically
+  public static var generalSettingsSpellingCheckSpellingAutomatically: String  { return L10n.tr("Localizable", "GeneralSettings.Spelling.CheckSpellingAutomatically") }
+  /// Check Spelling While Typing
+  public static var generalSettingsSpellingCheckWhileTyping: String  { return L10n.tr("Localizable", "GeneralSettings.Spelling.CheckWhileTyping") }
+  /// SPELLING AND GRAMMAR
+  public static var generalSettingsSpellingTitle: String  { return L10n.tr("Localizable", "GeneralSettings.Spelling.Title") }
   /// More Info
   public static var genericErrorMoreInfo: String  { return L10n.tr("Localizable", "Generic.ErrorMoreInfo") }
   /// REACTIONS
@@ -6369,51 +6379,53 @@ public final class L10n {
   public static var linkInvationConfirmOk: String  { return L10n.tr("Localizable", "LinkInvation.Confirm.Ok") }
   /// Are you sure you want to revoke this link? Once you do, no one will be able to join the group using it.
   public static var linkInvationGroupConfirmRevoke: String  { return L10n.tr("Localizable", "LinkInvation.Group.Confirm.Revoke") }
+  /// Disable Power Saving Mode
+  public static var liteModeDisableAlert: String  { return L10n.tr("Localizable", "LiteMode.DisableAlert") }
   /// Disabled
   public static var liteModeDisabled: String  { return L10n.tr("Localizable", "LiteMode.Disabled") }
-  /// Enable Lite Mode
-  public static var liteModeEnableAlert: String  { return L10n.tr("Localizable", "LiteMode.EnableAlert") }
   /// Enabled
   public static var liteModeEnabled: String  { return L10n.tr("Localizable", "LiteMode.Enabled") }
-  /// Enable lite mode to reduce overall power usage and improve perfomance.
+  /// Power Saving Mode
+  public static var liteModeEnableText: String  { return L10n.tr("Localizable", "LiteMode.EnableText") }
+  /// Reduce all power-intensive animations and improve perfomance.
   public static var liteModeInfo: String  { return L10n.tr("Localizable", "LiteMode.Info") }
   /// LOW POWER
   public static var liteModeLowPower: String  { return L10n.tr("Localizable", "LiteMode.LowPower") }
-  /// Lite Mode
+  /// Power Saving
   public static var liteModeTitle: String  { return L10n.tr("Localizable", "LiteMode.Title") }
-  /// Interface animations will be simplified.
+  /// Various effects and animations that make Telegram look amazing.
   public static var liteModeKeyAnimationsInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.animations.Info") }
-  /// Reduce Animations
+  /// Animations
   public static var liteModeKeyAnimationsTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.animations.Title") }
-  /// Interfaces will use fewer blur effects.
+  /// Blur effects across application.
   public static var liteModeKeyBlurInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.blur.Info") }
-  /// Disable Blur
+  /// Blur
   public static var liteModeKeyBlurTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.blur.Title") }
-  /// Custom emoji in messages will be static.
+  /// Animate and loop custom emojies.
   public static var liteModeKeyEmojiInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji.Info") }
-  /// Disable Emoji Animations
+  /// Emoji Animations
   public static var liteModeKeyEmojiTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji.Title") }
   /// Reactions and stickers will not use extra animated efects.
   public static var liteModeKeyEmojiEffectsInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji_effects.Info") }
-  /// Disable Effects
+  /// Emoji Effects
   public static var liteModeKeyEmojiEffectsTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji_effects.Title") }
-  /// GIFs and Videos will only play while you hover over them.
+  /// Loop and automatically play GIFs and Videos
   public static var liteModeKeyGifInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.gif.Info") }
-  /// Disable Autoplay
+  /// GIFs and Videos
   public static var liteModeKeyGifTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.gif.Title") }
-  /// Icons in context menus will be static.
+  /// Animate icons in context menu.
   public static var liteModeKeyMenuAnimationsInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.menu_animations.Info") }
-  /// Disable Menu Animations
+  /// Menu Animations
   public static var liteModeKeyMenuAnimationsTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.menu_animations.Title") }
-  /// Animated stickers will only play while you hover over them.
+  /// Animate and loop stickers.
   public static var liteModeKeyStickersInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.stickers.Info") }
-  /// Disable Stickers Autoplay
+  /// Stickers
   public static var liteModeKeyStickersTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.stickers.Title") }
-  /// Apply lite mode when battery level is less than %1$@%
+  /// Switch Power Saving mode on when your battery is below %1$@%
   public static func liteModeLowPowerInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "LiteMode.LowPower.Info", p1)
   }
-  /// You can change trigger for lite depending on your battery level.
+  /// Power saving mode can be turned on automatically based on battery level.
   public static var liteModeLowPowerInfoFull: String  { return L10n.tr("Localizable", "LiteMode.LowPower.InfoFull") }
   /// Sorry, this language doesn't seem to exist.
   public static var localizationPreviewErrorGeneric: String  { return L10n.tr("Localizable", "Localization.Preview.Error.Generic") }

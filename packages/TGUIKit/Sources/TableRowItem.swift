@@ -73,8 +73,6 @@ open class TableRowItem: NSObject {
     open var index:Int {
         if let _index = _index {
             return _index
-        } else if let table = table, let index = table.index(of:self) {
-            return index
         } else {
             return -1
         }

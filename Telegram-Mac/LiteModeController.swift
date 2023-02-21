@@ -19,6 +19,26 @@ private extension LiteModeKey {
     var info: String? {
         return _NSLocalizedString("LiteMode.Key.\(self.rawValue).Info")
     }
+    var icon: CGImage? {
+        switch self {
+        case .animations:
+            return NSImage(named: "Icon_LiteMode_Effects")?.precomposed(flipVertical: true)
+        case .menu_animations:
+            return NSImage(named: "Icon_LiteMode_Menu")?.precomposed(flipVertical: true)
+        case .stickers:
+            return NSImage(named: "Icon_LiteMode_Stickers")?.precomposed(flipVertical: true)
+        case .gif:
+            return NSImage(named: "Icon_LiteMode_Gifs")?.precomposed(flipVertical: true)
+        case .blur:
+            return NSImage(named: "Icon_LiteMode_Blur")?.precomposed(flipVertical: true)
+        case .emoji_effects:
+            return NSImage(named: "Icon_LiteMode_Emoji_Effects")?.precomposed(flipVertical: true)
+        case .emoji:
+            return NSImage(named: "Icon_LiteMode_Emoji")?.precomposed(flipVertical: true)
+        default:
+            return nil
+        }
+    }
 }
 
 private final class Arguments {
@@ -56,7 +76,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error:  nil, identifier: _id_enabled, data: .init(name: strings().liteModeEnabled, color: theme.colors.text, type: .switchable(state.liteMode.enabled), viewType: .singleItem, action: arguments.toggleEnabled)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error:  nil, identifier: _id_enabled, data: .init(name: strings().liteModeEnableText, color: theme.colors.text, type: .switchable(state.liteMode.enabled), viewType: .singleItem, action: arguments.toggleEnabled)))
     index += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().liteModeInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
@@ -68,9 +88,33 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().liteModeLowPower), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    index += 1
+
+    
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_low_power, equatable: InputDataEquatable(state.liteMode), comparable: nil, item: { initialSize, stableId in
+        let sizes:[Int32] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+        return SelectSizeRowItem(initialSize, stableId: stableId, current: state.liteMode.lowBatteryPercent, sizes: sizes, hasMarkers: false, viewType: .singleItem, selectAction: { index in
+            arguments.toggleLowPower(sizes[index])
+        })
+    }))
+    index += 1
+    
+    let lowPowerText: String
+    if state.liteMode.lowBatteryPercent == 100 {
+        lowPowerText = strings().liteModeLowPowerInfoFull
+    } else {
+        lowPowerText = strings().liteModeLowPowerInfo("\(state.liteMode.lowBatteryPercent)")
+    }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(lowPowerText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
     let list = LiteMode.allKeys
     for (i, key) in list.enumerated() {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error:  nil, identifier: _id_enabled_key(key), data: .init(name: key.title, color: theme.colors.text, type: .switchable(state.liteMode.isEnabled(key: key)), viewType: bestGeneralViewType(list, for: i), enabled: state.liteMode.enabled, description: key.info, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error:  nil, identifier: _id_enabled_key(key), data: .init(name: key.title, color: theme.colors.text, icon: key.icon, type: .switchable(state.liteMode.enabled ? false : state.liteMode.isEnabled(key: key)), viewType: bestGeneralViewType(list, for: i), enabled: !state.liteMode.enabled, description: key.info, action: {
             arguments.toggleKey(key)
         }, disabledAction: arguments.alertEnable)))
         index += 1
@@ -79,31 +123,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    if state.liteMode.enabled {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().liteModeLowPower), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-        index += 1
-
-        
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_low_power, equatable: InputDataEquatable(state.liteMode), comparable: nil, item: { initialSize, stableId in
-            let sizes:[Int32] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: state.liteMode.lowBatteryPercent, sizes: sizes, hasMarkers: false, viewType: .singleItem, selectAction: { index in
-                arguments.toggleLowPower(sizes[index])
-            })
-        }))
-        index += 1
-        
-        let lowPowerText: String
-        if state.liteMode.lowBatteryPercent == 100 {
-            lowPowerText = strings().liteModeLowPowerInfoFull
-        } else {
-            lowPowerText = strings().liteModeLowPowerInfo("\(state.liteMode.lowBatteryPercent)")
-        }
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(lowPowerText), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
-        
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-    }
+   
         
     return entries
 }
@@ -159,7 +179,7 @@ func LiteModeController(context: AccountContext) -> InputDataController {
             }
         }).start(completed: afterCompletion)
     }, alertEnable: {
-        showModalText(for: context.window, text: strings().liteModeEnableAlert)
+        showModalText(for: context.window, text: strings().liteModeDisableAlert)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

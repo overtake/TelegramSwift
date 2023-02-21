@@ -18,6 +18,9 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case section(sectionId:Int)
     case header(sectionId: Int, uniqueId:Int, text:String)
     case liteMode(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case checkSpellingWhileTyping(sectionId:Int, enabled: Bool, key: String, viewType: GeneralViewType)
+    case checkGrammarWithSpelling(sectionId:Int, enabled: Bool, key: String, viewType: GeneralViewType)
+    case correctSpellingAutomatically(sectionId:Int, enabled: Bool, key: String, viewType: GeneralViewType)
     case sidebar(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case inAppSounds(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case shortcuts(sectionId: Int, viewType: GeneralViewType)
@@ -42,42 +45,48 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return uniqueId
         case .liteMode:
             return 1
-        case .sidebar:
+        case .checkSpellingWhileTyping:
             return 2
-        case .emojiReplacements:
+        case .checkGrammarWithSpelling:
             return 3
-        case .predictEmoji:
+        case .correctSpellingAutomatically:
+            return 4
+        case .sidebar:
             return 5
-        case .bigEmoji:
+        case .emojiReplacements:
             return 6
-        case .showCallsTab:
+        case .predictEmoji:
             return 7
-        case .statusBar:
+        case .bigEmoji:
             return 8
-        case .inAppSounds:
+        case .showCallsTab:
             return 9
-        case .shortcuts:
+        case .statusBar:
             return 10
-        case .enableRFTCopy:
+        case .inAppSounds:
             return 11
-        case .acceptSecretChats:
+        case .shortcuts:
             return 12
-        case .forceTouchReply:
+        case .enableRFTCopy:
             return 13
-        case .forceTouchEdit:
+        case .acceptSecretChats:
             return 14
-        case .forceTouchForward:
+        case .forceTouchReply:
             return 15
-        case .forceTouchPreviewMedia:
+        case .forceTouchEdit:
             return 16
-        case .forceTouchReact:
+        case .forceTouchForward:
             return 17
-        case .enterBehavior:
+        case .forceTouchPreviewMedia:
             return 18
-        case .cmdEnterBehavior:
+        case .forceTouchReact:
             return 19
-        case .callSettings:
+        case .enterBehavior:
             return 20
+        case .cmdEnterBehavior:
+            return 21
+        case .callSettings:
+            return 22
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -88,6 +97,12 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .header(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .liteMode(sectionId, _, _):
+            return (sectionId * 1000) + stableId
+        case let .checkSpellingWhileTyping(sectionId, _, _, _):
+            return (sectionId * 1000) + stableId
+        case let .checkGrammarWithSpelling(sectionId, _, _, _):
+            return (sectionId * 1000) + stableId
+        case let .correctSpellingAutomatically(sectionId, _, _, _):
             return (sectionId * 1000) + stableId
         case let .showCallsTab(sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -139,6 +154,18 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .liteMode(_, enabled: enabled, viewType):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsLiteMode, type: .nextContext(enabled ? strings().liteModeEnabled : strings().liteModeDisabled), viewType: viewType, action: {
                 arguments.openLiteMode()
+            })
+        case let .checkSpellingWhileTyping(_, enabled, key, viewType):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsSpellingCheckWhileTyping, type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleSpellingKey(key)
+            })
+        case let .checkGrammarWithSpelling(_, enabled, key, viewType):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsSpellingCheckGrammarSpelling, type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleSpellingKey(key)
+            })
+        case let .correctSpellingAutomatically(_, enabled, key, viewType):
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsSpellingCheckSpellingAutomatically, type: .switchable(enabled), viewType: viewType, action: {
+                arguments.toggleSpellingKey(key)
             })
         case let .showCallsTab(sectionId: _, enabled: enabled, viewType):
             return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsShowCallsTab, type: .switchable(enabled), viewType: viewType, action: {
@@ -239,7 +266,8 @@ private final class GeneralSettingsArguments {
     let openShortcuts: ()->Void
     let callSettings: ()->Void
     let openLiteMode: ()->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, openLiteMode: @escaping()->Void) {
+    let toggleSpellingKey:(String)->Void
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void, openLiteMode: @escaping()->Void, toggleSpellingKey:@escaping(String)->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -259,6 +287,7 @@ private final class GeneralSettingsArguments {
         self.openShortcuts = openShortcuts
         self.callSettings = callSettings
         self.openLiteMode = openLiteMode
+        self.toggleSpellingKey = toggleSpellingKey
     }
    
 }
@@ -279,8 +308,25 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
+    
+    
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsSpellingTitle))
+    headerUnique -= 1
+    
+    let key1 = "ContinuousSpellCheckingEnabled" + "TGGrowingTextView"
+    let key2 = "GrammarCheckingEnabled" + "TGGrowingTextView"
+    let key3 = "AutomaticSpellingCorrectionEnabled" + "TGGrowingTextView"
+    
+    entries.append(.checkSpellingWhileTyping(sectionId: sectionId, enabled: UserDefaults.standard.bool(forKey: key1), key: key1, viewType: .firstItem))
+    entries.append(.checkGrammarWithSpelling(sectionId: sectionId, enabled: UserDefaults.standard.bool(forKey: key2), key: key2, viewType: .innerItem))
+    entries.append(.correctSpellingAutomatically(sectionId: sectionId, enabled: UserDefaults.standard.bool(forKey: key3), key: key3, viewType: .lastItem))
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
 
 
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsEmoji))
+    headerUnique -= 1
     entries.append(.sidebar(sectionId: sectionId, enabled: FastSettings.sidebarEnabled, viewType: .firstItem))
     entries.append(.emojiReplacements(sectionId: sectionId, enabled: FastSettings.isPossibleReplaceEmojies, viewType: .innerItem))
     if !baseSettings.predictEmoji {
@@ -426,7 +472,8 @@ class GeneralSettingsViewController: TableViewController {
             context.bindings.rootNavigation().push(CallSettingsController(sharedContext: context.sharedContext))
         }, openLiteMode: {
             context.bindings.rootNavigation().push(LiteModeController(context: context))
-            
+        }, toggleSpellingKey: { key in
+            UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: key), forKey: key)
         })
         
         let initialSize = atomicSize

@@ -1034,7 +1034,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     
     override func preloadStreamblePart() {
-        if let context = context {
+        if let context = context, !isLite(.any) {
             if let media = media as? TelegramMediaFile, let parent = parent {
                 let reference = FileMediaReference.message(message: MessageReference(parent), media: media)
                 
