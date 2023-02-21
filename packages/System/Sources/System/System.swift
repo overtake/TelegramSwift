@@ -5,7 +5,11 @@ func deviceFromSystemProfiler() -> String? {
     // Starting with MacBook M2 the hw.model returns simply Mac[digits],[digits].
     // So we try reading "system_profiler" output.
     let process = Process()
-    process.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
+    if #available(macOS 10.13, *) {
+        process.launchPath = "/usr/bin/log"
+    } else {
+        process.executableURL = URL(fileURLWithPath: "/usr/sbin/system_profiler")
+    }
     process.arguments = ["-json", "SPHardwareDataType", "-detailLevel", "mini"]
     let pipe = Pipe()
     process.standardOutput = pipe

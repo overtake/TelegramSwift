@@ -231,6 +231,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     let tableView:TableView
     
+    
     private var textInputSuggestionsView: InputSwapSuggestionsPanel?
     
     
@@ -860,6 +861,7 @@ class ChatControllerView : View, ChatInputDelegate {
     }
 
     
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
@@ -883,11 +885,14 @@ class ChatControllerView : View, ChatInputDelegate {
 
 
 
-fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHistoryView, timeDifference: TimeInterval, initialSize:NSSize, interaction:ChatInteraction, animated:Bool, scrollPosition:ChatHistoryViewScrollPosition?, reason:ChatHistoryViewUpdateType, animationInterface:TableAnimationInterface?, side: TableSavingSide?) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHistoryView, timeDifference: TimeInterval, initialSize:NSSize, interaction:ChatInteraction, animated:Bool, scrollPosition:ChatHistoryViewScrollPosition?, reason:ChatHistoryViewUpdateType, animationInterface:TableAnimationInterface?, side: TableSavingSide?, messagesViewQueue: Queue) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
     
 //        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: [], updated: [], animated: animated, state: .none(nil), grouping: true))
 //        subscriber.putCompletion()
+        
+        var initialSize = initialSize
+        initialSize.height -= 50
         
         var scrollToItem:TableScrollState? = nil
         var animated = animated
@@ -1491,6 +1496,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private let emojiEffects: EmojiScreenEffect
 //    private var reactionManager:AddReactionManager?
+    
+    private let queue: Queue = .init(name: "messagesViewQueue_\(arc4random64())")
+
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
     private let peerDisposable:MetaDisposable = MetaDisposable()
@@ -2103,12 +2111,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let maxReadIndex:ValuePromise<MessageIndex?> = ValuePromise()
         var didSetReadIndex: Bool = false
+        let queue = self.queue
+        
         
         let chatLocationContextHolder = self.chatLocationContextHolder
         
         var wasUsedLocation = false
 
-        let historyViewUpdate1 = location.get() |> deliverOn(messagesViewQueue)
+        let historyViewUpdate1 = location.get() |> deliverOn(queue)
             |> mapToSignal { inputLocation -> Signal<(ChatHistoryViewUpdate, TableSavingSide?, ChatHistoryLocationInput), NoError> in
                 
                 let location = inputLocation.content
@@ -2329,7 +2339,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             $1 ?? $0
         }
        
-        let historyViewTransition = combineLatest(queue: messagesViewQueue,
+        let historyViewTransition = combineLatest(queue: queue,
                                                   historyViewUpdate,
                                                   appearanceSignal,
                                                   maxReadIndex.get(),
@@ -2457,9 +2467,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
 
-            return prepareEntries(from: previousView.swap(proccesedView), to: proccesedView, timeDifference: timeDifference, initialSize: atomicSize.modify({$0}), interaction: chatInteraction, animated: false, scrollPosition:scrollPosition, reason: updateType, animationInterface: animationInterface, side: update.1) |> map { transition in
+            return prepareEntries(from: previousView.swap(proccesedView), to: proccesedView, timeDifference: timeDifference, initialSize: atomicSize.with { $0 }, interaction: chatInteraction, animated: false, scrollPosition:scrollPosition, reason: updateType, animationInterface: animationInterface, side: update.1, messagesViewQueue: queue) |> map { transition in
                 return (transition, view, initialData, isLoading, proccesedView)
-            } |> runOn(prepareOnMainQueue ? Queue.mainQueue(): messagesViewQueue)
+            } |> runOn(prepareOnMainQueue ? Queue.mainQueue(): queue)
             
         } |> deliverOnMainQueue
         
