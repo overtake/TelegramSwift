@@ -978,9 +978,9 @@ open class Window: NSWindow {
         occlusionStateValue.set(self.occlusionState)
     }
     
-//    open override func updateConstraintsIfNeeded() {
-//
-//    }
+    open override func updateConstraintsIfNeeded() {
+        
+    }
     
     
 
