@@ -506,12 +506,12 @@ extension Peer {
                     name += lastName
                 }
                 
-                return name.replacingOccurrences(of: "􀇻", with: "")
+                return name
             }
         case let group as TelegramGroup:
-            return group.title.replacingOccurrences(of: "􀇻", with: "")
+            return group.title
         case let channel as TelegramChannel:
-            return channel.title.replacingOccurrences(of: "􀇻", with: "")
+            return channel.title
         case let filter as TelegramFilterCategory:
             return filter.displayTitle ?? ""
         default:

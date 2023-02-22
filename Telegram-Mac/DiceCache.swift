@@ -107,10 +107,31 @@ class DiceCache {
     private let loadDataDisposable = MetaDisposable()
     private let emojiesSoundDisposable = MetaDisposable()
     
+    var animatedEmojies:Signal<[String: StickerPackItem], NoError> {
+        return _animatedEmojies.get()
+    }
+    private let _animatedEmojies:Promise<[String : StickerPackItem]> = .init()
+    
     init(postbox: Postbox, engine: TelegramEngine) {
         self.postbox = postbox
         self.engine = engine
         
+        
+        self._animatedEmojies.set(engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
+                                  |> map { result -> [String: StickerPackItem] in
+                                      switch result {
+                                      case let .result(_, items, _):
+                                          var animatedEmojiStickers: [String: StickerPackItem] = [:]
+                                          for case let item in items {
+                                              if let emoji = item.getStringRepresentationsOfIndexKeys().first {
+                                                  animatedEmojiStickers[emoji] = item
+                                              }
+                                          }
+                                          return animatedEmojiStickers
+                                      default:
+                                          return [:]
+                                      }
+                              })
         
         let availablePacks = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
             return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? .defaultValue

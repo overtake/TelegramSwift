@@ -1505,7 +1505,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let emojiEffects: EmojiScreenEffect
 //    private var reactionManager:AddReactionManager?
     
-    private let queue: Queue = .init(name: "messagesViewQueue_\(arc4random64())")
+    private let queue: Queue = .init(name: "messagesViewQueue", qos: .background)
 
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
@@ -1725,7 +1725,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     private var requestCount: Int {
-        return 90
+        return 50
     }
     
     func readyHistory() {
@@ -1947,10 +1947,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.updateFloatingPhotos(genericView.scroll, animated: false)
     }
     
+    private let checker = Atomic<Bool>(value: false)
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
+        if checker.swap(true) == true {
+            var bp = 0
+            bp += 1
+        }
         
         sizeValue.set(frame.size)
         self.chatInteraction.add(observer: self)
@@ -2125,12 +2130,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let chatLocationContextHolder = self.chatLocationContextHolder
         
         var wasUsedLocation = false
+//        NSLog("chat_init_1")
 
         let historyViewUpdate1 = location.get() |> deliverOn(queue)
             |> mapToSignal { inputLocation -> Signal<(ChatHistoryViewUpdate, TableSavingSide?, ChatHistoryLocationInput), NoError> in
                 
                 let location = inputLocation.content
-                
+//                NSLog("chat_init_2")
+
                 var additionalData: [AdditionalMessageHistoryViewData] = []
                 additionalData.append(.cachedPeerData(peerId))
                 additionalData.append(.peerNotificationSettings(peerId))
@@ -2185,21 +2192,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
 
         
-        let animatedEmojiStickers = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
-            |> map { result -> [String: StickerPackItem] in
-                switch result {
-                case let .result(_, items, _):
-                    var animatedEmojiStickers: [String: StickerPackItem] = [:]
-                    for case let item in items {
-                        if let emoji = item.getStringRepresentationsOfIndexKeys().first {
-                            animatedEmojiStickers[emoji] = item
-                        }
-                    }
-                    return animatedEmojiStickers
-                default:
-                    return [:]
-                }
-        }
+        let animatedEmojiStickers: Signal<[String: StickerPackItem], NoError> = context.diceCache.animatedEmojies
         
         let reactions = context.reactions.stateValue
 
@@ -2362,6 +2355,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   stateValue.get()
     ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions, uiState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
+//            NSLog("chat_init_3")
             let pollAnswersLoading = uiState.pollAnswers
             let threadLoading = uiState.threadLoading
 
@@ -4707,10 +4701,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {
                 return .single(nil)
             }
-            let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = preloadedChatHistoryViewForLocation(.Initial(count: 90), context: self.context, chatLocation: self.chatLocation, chatLocationContextHolder: self.chatLocationContextHolder, tagMask: MessageTags.pinned, additionalData: [])
+            
+            let replyHistoryFirst: Signal<ChatHistoryViewUpdate, NoError> = preloadedChatHistoryViewForLocation(.Initial(count: 6), context: self.context, chatLocation: self.chatLocation, chatLocationContextHolder: self.chatLocationContextHolder, tagMask: MessageTags.pinned, additionalData: [])
+
+            let ready = self.ready.get() |> filter { $0 } |> take(1)
+            
+            let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = preloadedChatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: self.chatLocation, chatLocationContextHolder: self.chatLocationContextHolder, tagMask: MessageTags.pinned, additionalData: [])
             
             return combineLatest(queue: prepareQueue,
-                replyHistory,
+                                          replyHistoryFirst
+                                  |> then(ready |> mapToSignal { _ in
+                return  replyHistory
+            }),
                 self.topVisibleMessageRange.get(), self.dismissedPinnedIds.get()
                 )
                 |> map { update, topVisibleMessageRange, dismissed -> ChatPinnedMessage? in
@@ -4722,9 +4724,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         for i in 0 ..< view.entries.count {
                             let entry = view.entries[i]
                             var matches = false
-                            if message == nil {
-                                matches = !dismissed.ids.contains(entry.message.id)
-                            } else if let topVisibleMessageRange = topVisibleMessageRange {
+                            if let topVisibleMessageRange = topVisibleMessageRange {
                                 if entry.message.id <= topVisibleMessageRange.lowerBound {
                                     matches = !dismissed.ids.contains(entry.message.id)
                                 }
@@ -4736,6 +4736,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     effectiveMatches = true
                                 }
                                 matches = effectiveMatches
+                            }
+                            if i == view.entries.count - 1, message == nil {
+                                matches = true
                             }
                             if matches {
                                 message = ChatPinnedMessage(messageId: entry.message.id, message: entry.message, others: view.entries.map { $0.message.id }, isLatest: i == view.entries.count - 1, index: view.entries.count - 1 - i, totalCount: view.entries.count)
@@ -5612,6 +5615,32 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self?.genericView.tableView.notifyScrollHandlers()
             }))
         }
+        
+        let count = 50
+        let location:ChatHistoryLocation
+        
+        switch mode {
+        case let .thread(data, _):
+            switch data.initialAnchor {
+            case .automatic:
+                if let messageId = messageId {
+                    location = .InitialSearch(location: .id(messageId), count: count)
+                } else {
+                    location = .Initial(count: count)
+                }
+            case let .lowerBoundMessage(index):
+                location = .Scroll(index: .message(index), anchorIndex: .message(index), sourceIndex: .message(index), scrollPosition: .up(false), count: count, animated: false)
+            }
+        default:
+            if let messageId = messageId {
+                location = .InitialSearch(location: .id(messageId), count: count)
+            } else {
+                location = .Initial(count: count)
+            }
+        }
+        let id = self.takeNextHistoryLocationId()
+        self.setLocation(.init(content: location, id: id))
+
     }
 
     override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
@@ -6999,40 +7028,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             context.account.viewTracker.updateReactionsForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
         }
         
-        
-        let initialLocation = peerView.get()
-        |> take(1)
-        |> deliverOnMainQueue
-        
-        _ = initialLocation.start(next: { [weak self] view in
-            if let strongSelf = self {
-                let count = 90
-                let location:ChatHistoryLocation
-                
-                switch mode {
-                case let .thread(data, _):
-                    switch data.initialAnchor {
-                    case .automatic:
-                        if let messageId = messageId {
-                            location = .InitialSearch(location: .id(messageId), count: count)
-                        } else {
-                            location = .Initial(count: count)
-                        }
-                    case let .lowerBoundMessage(index):
-                        location = .Scroll(index: .message(index), anchorIndex: .message(index), sourceIndex: .message(index), scrollPosition: .up(false), count: count, animated: false)
-                    }
-                default:
-                    if let messageId = messageId {
-                        location = .InitialSearch(location: .id(messageId), count: count)
-                    } else {
-                        location = .Initial(count: count)
-                    }
-                }
-                let id = strongSelf.takeNextHistoryLocationId()
-                strongSelf.setLocation(.init(content: location, id: id))
-            }
-        })
-            
         chatInteraction.contextHolder = { [weak self] in
             return self?.chatLocationContextHolder ?? Atomic(value: nil)
         }
@@ -7052,6 +7047,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             })
             return found
         }
+                
     }
     
     func notify(with value: Any, oldValue: Any, animated:Bool) {
