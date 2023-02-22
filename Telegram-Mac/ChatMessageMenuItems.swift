@@ -211,7 +211,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
 }
 
 
-func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
+func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction, useGroupIfNeeded: Bool = true) -> Signal<[ContextMenuItem], NoError> {
     
     if chatInteraction.isLogInteraction {
         let context = chatInteraction.context
@@ -589,13 +589,14 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         if canForwardMessage(data.message, chatInteraction: data.chatInteraction), !isService {
+            let msgs = useGroupIfNeeded ? (data.groupped ?? [data.message]) : [data.message]
             let forwardItem = ContextMenuItem(strings().messageContextForward, handler: {
-                data.chatInteraction.forwardMessages(data.groupped ?? [data.message])
+                data.chatInteraction.forwardMessages(msgs)
             }, itemImage: MenuAnimation.menu_forward.value)
             let forwardMenu = ContextMenu()
             
             
-            let forwardObject = ForwardMessagesObject(context, messages: [data.message], album: true)
+            let forwardObject = ForwardMessagesObject(context, messages: [data.message], album: useGroupIfNeeded)
             
             let recent = data.recentUsedPeers.filter {
                 $0.id != context.peerId && $0.canSendMessage(media: message.media.first) && !$0.isDeleted

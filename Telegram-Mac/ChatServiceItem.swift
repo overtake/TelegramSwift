@@ -789,7 +789,7 @@ class ChatServiceItem: ChatRowItem {
                 }
             }
             _ = attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
-        } else if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
+        } else if message.id.peerId.namespace == Namespaces.Peer.CloudUser, message.autoremoveAttribute != nil || message.autoclearTimeout != nil {
             let isPhoto: Bool = message.anyMedia is TelegramMediaImage
             if authorId == context.peerId {
                 _ = attributedString.append(string: isPhoto ? strings().serviceMessageDesturctingPhotoYou(authorName) : strings().serviceMessageDesturctingVideoYou(authorName), color: grayTextColor, font: .normal(theme.fontSize))
