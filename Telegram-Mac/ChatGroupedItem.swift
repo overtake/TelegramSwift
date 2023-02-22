@@ -468,13 +468,13 @@ class ChatGroupedItem: ChatRowItem {
             }
         }
         
-        _message = _message ?? self.message
+        let msg = _message ?? self.message
         
-        let caption = self.captionLayouts.first(where: { $0.id == _message?.stableId })?.layout
+        let caption = self.captionLayouts.first(where: { $0.id == msg?.stableId })?.layout
 
 
-        if let message = _message {
-            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction)
+        if let message = msg {
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil)
         }
         return super.menuItems(in: location)
     }
