@@ -288,7 +288,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         let timebase:CMTimebase? = context?.audioPlayer?.currentSong?.stableId == parent?.chatStableId ? context?.audioPlayer?.timebase : nil
         
         var accept = acceptVisibility
-        if isLite(.gif) {
+        if isLite(.video) {
             accept = accept && mouseInside()
         }
         

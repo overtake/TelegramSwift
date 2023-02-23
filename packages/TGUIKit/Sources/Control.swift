@@ -224,11 +224,14 @@ open class Control: View {
         
         trackingArea = nil
         
-        if let _ = window {
+        if let _ = window, visibleRect != .zero {
             let options:NSTrackingArea.Options = [.cursorUpdate, .mouseEnteredAndExited, .mouseMoved, .activeInActiveApp, .assumeInside, .inVisibleRect]
             self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
             
             self.addTrackingArea(self.trackingArea!)
+        } else {
+            var bp = 0
+            bp += 1
         }
         
     }

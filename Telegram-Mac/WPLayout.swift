@@ -191,7 +191,7 @@ class WPLayout: Equatable {
             textLayout?.interactions = interactions
             
         }
-        attributedText.fixUndefinedEmojies()
+//        attributedText.fixUndefinedEmojies()
         
     }
     

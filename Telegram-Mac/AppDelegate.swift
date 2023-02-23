@@ -444,16 +444,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     private func launchApp(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
-        
+        FontCacheKey.initializeCache()
         
         self.appEncryption = appEncryption
         
         let rootPath = containerUrl!
         let window = self.window!
         System.updateScaleFactor(window.backingScaleFactor)
-        
-        NSLog("\(deviceModelPretty())")
-        
+                
         window.minSize = NSMakeSize(380, 500)
         
         let networkDisposable = MetaDisposable()

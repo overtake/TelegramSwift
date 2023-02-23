@@ -2281,7 +2281,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func visibleRows(_ insetHeight:CGFloat = 0) -> NSRange {
-        var rect = self.tableView.visibleRect.insetBy(dx: 0, dy: -insetHeight)
+        //self.tableView.visibleRect
+        var rect = NSMakeRect(0, documentOffset.y, self.tableView.visibleRect.width, self.tableView.visibleRect.height).insetBy(dx: 0, dy: -insetHeight)
         if insetHeight == 0, contentInsets.top > 0 {
             rect.size.height -= contentInsets.top
         }

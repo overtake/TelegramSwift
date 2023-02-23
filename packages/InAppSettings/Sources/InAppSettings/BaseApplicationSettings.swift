@@ -18,6 +18,7 @@ public enum LiteModeKey : String {
     case blur
     case dynamic_background
     case gif
+    case video
     case stickers
     case animations
     case menu_animations
@@ -27,7 +28,7 @@ public struct LiteMode : Codable, Equatable {
     
     
     public static var allKeys: [LiteModeKey] {
-        return [.emoji, .emoji_effects, .gif, .stickers, .menu_animations, .animations, .blur]
+        return [.video, .gif, .stickers, .emoji, .emoji_effects, .animations, .blur, .menu_animations]
     }
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: LiteMode.CodingKeys.self)

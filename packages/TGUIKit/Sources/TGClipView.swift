@@ -287,30 +287,48 @@ public class TGClipView: NSClipView,CALayerDelegate {
         return success
     }
     
+    var documentOffset: NSPoint {
+        return self.point ?? self.bounds.origin
+    }
+        
+    private(set) var point: NSPoint?
     
     public func scroll(to point: NSPoint, animated:Bool, completion: @escaping (Bool) -> Void = {_ in})  {
         
-        self.scrollCompletion?(false)
-        self.shouldAnimateOriginChange = animated
-        self.scrollCompletion = completion
         if animated {
-            self.layer?.removeAllAnimations()
-            beginScroll()
-        }
-        if animated && abs(bounds.minY - point.y) > frame.height {
-            let y:CGFloat
-            if bounds.minY < point.y {
-                y = point.y - floor(frame.height / 2)
-            } else {
-                y = point.y + floor(frame.height / 2)
-            }
-            super.scroll(to: NSMakePoint(point.x,y))
-            DispatchQueue.main.async(execute: { [weak self] in
-                self?.scroll(to: point)
+            self.point = point
+            NSAnimationContext.runAnimationGroup({ ctx in
+                self.animator().setBoundsOrigin(point)
+            }, completionHandler: {
+                self.point = nil
             })
         } else {
-            self.scroll(to: point)
+            self.setBoundsOrigin(point)
+            self.point = nil
         }
+        
+//        self.scrollCompletion?(false)
+//        self.shouldAnimateOriginChange = animated
+//        self.scrollCompletion = completion
+        
+//        if animated {
+//            self.layer?.removeAllAnimations()
+//            beginScroll()
+//        }
+//        if animated && abs(bounds.minY - point.y) > frame.height {
+//            let y:CGFloat
+//            if bounds.minY < point.y {
+//                y = point.y - floor(frame.height / 2)
+//            } else {
+//                y = point.y + floor(frame.height / 2)
+//            }
+//            super.scroll(to: NSMakePoint(point.x,y))
+//            DispatchQueue.main.async(execute: { [weak self] in
+//                self?.scroll(to: point)
+//            })
+//        } else {
+//            self.scroll(to: point)
+//        }
         
     }
     

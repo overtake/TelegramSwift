@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_video.png",
+      "filename" : "ic_gifs.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_video@2x.png",
+      "filename" : "ic_gifs@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

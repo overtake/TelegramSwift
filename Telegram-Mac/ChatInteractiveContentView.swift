@@ -342,7 +342,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         var accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
         
-        if isLite(.gif) {
+        if (isGif && isLite(.gif)) || (!isGif && isLite(.video)) {
             accept = accept && mouseInside()
         }
                         
@@ -353,6 +353,14 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayView.mediaPlayer.pause()
                 autoplayVideoView?.playTimer?.invalidate()
             }
+        }
+    }
+    
+    var isGif: Bool {
+        if let media = self.media as? TelegramMediaFile {
+            return media.isVideo && media.isAnimated
+        } else {
+            return false
         }
     }
     

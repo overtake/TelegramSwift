@@ -485,7 +485,7 @@ class ChatMessageItem: ChatRowItem {
              }
              InlineStickerItem.apply(to: copy, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
 
-             copy.fixUndefinedEmojies()
+//             copy.fixUndefinedEmojies()
 
              
              if let text = message.restrictedText(context.contentSettings) {

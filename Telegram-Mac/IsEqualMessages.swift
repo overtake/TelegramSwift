@@ -13,6 +13,14 @@ import Postbox
 
 func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
     
+    if lhsMessage.id != rhsMessage.id {
+        return false
+    }
+    if lhsMessage.stableVersion != rhsMessage.stableVersion {
+        return false
+    }
+    
+    return true
     
     if MessageIndex(id: lhsMessage.id, timestamp: lhsMessage.timestamp) != MessageIndex(id: rhsMessage.id, timestamp: rhsMessage.timestamp) || lhsMessage.stableVersion != rhsMessage.stableVersion {
         return false

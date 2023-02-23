@@ -81,7 +81,7 @@ open class ScrollView: NSScrollView{
     }
     
     public var documentOffset:NSPoint {
-        return NSMakePoint(NSMinX(self.contentView.bounds), NSMinY(self.contentView.bounds))
+        return clipView.documentOffset
     }
     
     open override func knowsPageRange(_ range: NSRangePointer) -> Bool {
