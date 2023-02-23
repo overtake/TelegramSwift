@@ -301,6 +301,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 self.animator().setBoundsOrigin(point)
             }, completionHandler: {
                 self.point = nil
+                self.setBoundsOrigin(point)
             })
         } else {
             self.setBoundsOrigin(point)

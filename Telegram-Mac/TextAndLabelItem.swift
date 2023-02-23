@@ -98,7 +98,7 @@ class TextAndLabelItem: GeneralRowItem {
                 showFull?()
             }))
         }))
-        self.moreLayout = TextViewLayout(moreAttr)
+        self.moreLayout = TextViewLayout(moreAttr, alignment: .right)
         self.moreLayout.interactions = globalLinkExecutor
         
         
@@ -324,7 +324,7 @@ class TextAndLabelRowView: GeneralRowView {
                 copyView.centerY(x: containerView.frame.width - copyView.frame.width - innerInsets.right)
 
                 moreView.setFrameOrigin(NSMakePoint(containerView.frame.width - moreView.frame.width - innerInsets.right, containerView.frame.height - innerInsets.bottom - moreView.frame.height + 3))
-                shadowView.frame = NSMakeRect(containerView.frame.width - 80 - innerInsets.right, self.containerView.frame.height - 20 - innerInsets.bottom + 3, 80, 20)
+                shadowView.frame = NSMakeRect(containerView.frame.width - 100 - innerInsets.right, self.containerView.frame.height - 20 - innerInsets.bottom + 3, 120, 20)
 
             }
             self.containerView.setCorners(item.viewType.corners)
@@ -352,7 +352,8 @@ class TextAndLabelRowView: GeneralRowView {
             shadowView.isHidden = item.hasMore != true
             moreView.isHidden = item.hasMore != true
             moreView.update(item.moreLayout)
-            moreView.set(background: theme.colors.background, for: .Normal)
+            moreView.setFrameSize(NSMakeSize(item.moreLayout.layoutSize.width + 10, item.moreLayout.layoutSize.height))
+            moreView.background = theme.colors.background
             
             copyView.set(image: NSImage(named: "Icon_FastCopyLink")!.precomposed(item.accentColor), for: .Normal)
             copyView.sizeToFit()
