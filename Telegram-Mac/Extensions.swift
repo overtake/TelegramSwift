@@ -37,57 +37,64 @@ func makeNewDateFormatter() -> DateFormatter {
 
 extension NSMutableAttributedString {
     func detectLinks(type:ParsingType, onlyInApp: Bool = false, context:AccountContext? = nil, color:NSColor = theme.colors.link, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings)->Void)? = nil, dotInMention: Bool = false) -> Void {
-        let things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentions: type.contains(.Mentions), highlightTags: type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)
+        var things = ObjcUtils.textCheckingResults(forText: self.string, highlightMentions: type.contains(.Mentions), highlightTags: type.contains(.Hashtags), highlightCommands: type.contains(.Commands), dotInMention: dotInMention)?.compactMap {
+            return ($0 as? NSValue)?.rangeValue
+        } ?? []
+        
+
+        var copy: [NSRange] = []
+        for thing in things {
+            let contains = copy.contains(where: {
+                $0.intersection(thing) != nil
+            })
+            if !contains {
+                copy.append(thing)
+            }
+        }
         
         self.beginEditing()
-        
-        if let things = things {
-            for value in things {
-                
-                let range = (value as! NSValue).rangeValue
-                
-                var addLinkAttrs: Bool = false
-                
-                if range.location != NSNotFound {
-                    let sublink = (self.string as NSString).substring(with: range)
-                    if let context = context {
-                        let link = inApp(for: sublink as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy)
-                        if onlyInApp {
-                            switch link {
-                            case let .external(link, _):
-                                let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telegra.ph", "telesco.pe"]
-                                if let url = URL(string: link) {
-                                    if let host = url.host, allowed.contains(host) {
-                                        self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
-                                        addLinkAttrs = true
-                                    } else if allowed.contains(link) {
-                                        self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
-                                        addLinkAttrs = true
-                                    }
-                                } else {
-                                    continue
+        for range in copy {
+            var addLinkAttrs: Bool = false
+            
+            if range.location != NSNotFound {
+                let sublink = (self.string as NSString).substring(with: range)
+                if let context = context {
+                    let link = inApp(for: sublink as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy)
+                    if onlyInApp {
+                        switch link {
+                        case let .external(link, _):
+                            let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telegra.ph", "telesco.pe"]
+                            if let url = URL(string: link) {
+                                if let host = url.host, allowed.contains(host) {
+                                    self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                                    addLinkAttrs = true
+                                } else if allowed.contains(link) {
+                                    self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                                    addLinkAttrs = true
                                 }
-                            default:
-                                self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
-                                addLinkAttrs = true
+                            } else {
+                                continue
                             }
-                        } else {
+                        default:
                             self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
                             addLinkAttrs = true
                         }
                     } else {
-                        if !onlyInApp {
-                            self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
-                            addLinkAttrs = true
-                        }
+                        self.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                        addLinkAttrs = true
                     }
-                    if addLinkAttrs {
-                        self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
-                        self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
+                } else {
+                    if !onlyInApp {
+                        self.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: sublink, false), range: range)
+                        addLinkAttrs = true
                     }
                 }
-                
+                if addLinkAttrs {
+                    self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
+                    self.addAttribute(.cursor, value: NSCursor.pointingHand, range: range)
+                }
             }
+            
         }
         self.endEditing()
         
@@ -148,8 +155,8 @@ public extension String {
 //        str = str.replacingOccurrences(of: "⚰", with: "⚰️")
 //        str = str.replacingOccurrences(of: "⚡", with: "⚡️")
 //        str = str.replacingOccurrences(of: "⛄", with: "⛄️")
-//        
-//            
+//
+//
 
         return str
     }

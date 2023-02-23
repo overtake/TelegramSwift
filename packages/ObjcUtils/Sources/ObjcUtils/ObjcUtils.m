@@ -165,7 +165,7 @@
                  @try {
                      NSTextCheckingType type = [match resultType];
                      NSString *scheme = [[[match URL] scheme] lowercaseString];
-                     if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"ftp"] || [scheme isEqualToString:@"tg"] || [scheme isEqualToString:@"ton"] || scheme == nil))
+                     if ((type == NSTextCheckingTypeLink || type == NSTextCheckingTypePhoneNumber) && ([scheme isEqualToString:@"http"] || [scheme isEqualToString:@"https"] || [scheme isEqualToString:@"ftp"] || [scheme isEqualToString:@"tg"] || [scheme isEqualToString:@"ton"] || [scheme isEqualToString:@"mailto"] || scheme == nil))
                      {
                          [results addObject:[NSValue valueWithRange:match.range]];
                      }
