@@ -28,9 +28,8 @@ extension Message {
     }
 }
 
+private let formatter = DateFormatter()
 func makeNewDateFormatter() -> DateFormatter {
-    let formatter = DateFormatter()
-   // formatter.locale = appAppearance.locale
     return formatter
 }
 
@@ -2615,6 +2614,28 @@ struct DateSelectorUtil {
         formatter.timeZone = NSTimeZone.local
         return formatter
     }()
+    
+    static let mediaMediumDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeZone = NSTimeZone.local
+        return formatter
+    }()
+    
+    static let mediaDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeZone = NSTimeZone.local
+        formatter.dateFormat = "MMMM yyyy";
+        return formatter
+    }()
+    
+    static let mediaFileDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeZone = NSTimeZone.local
+        formatter.dateFormat = "MMM d, yyyy, h a"
+        return formatter
+    }()
+    
     static let chatImportedFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .short

@@ -2339,13 +2339,13 @@ extension SecureIdRequestedFormFieldValue {
     }
 }
 
-var dateFormatter: DateFormatter {
+let dateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateFormat = "dd.MM.yyyy"
    // formatter.timeZone = TimeZone(secondsFromGMT: 0)
     formatter.locale = Locale(identifier: "en_US_POSIX")
     return formatter
-}
+}()
 
 extension SecureIdRequestedFormFieldValue  {
     var valueKey: SecureIdValueKey {

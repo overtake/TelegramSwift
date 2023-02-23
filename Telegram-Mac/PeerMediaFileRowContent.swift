@@ -37,8 +37,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         
         nameLayout = TextViewLayout(.initialize(string: file.fileName ?? "Unknown", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
         
-        let dateFormatter = makeNewDateFormatter()
-        dateFormatter.dateFormat = "MMM d, yyyy, h a"
+        let dateFormatter = DateSelectorUtil.mediaFileDate
         
         let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: Double(TimeInterval(message.timestamp) - interface.context.timeDifference)))
         

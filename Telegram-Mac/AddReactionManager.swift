@@ -262,7 +262,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         }
         
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
-            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, runOnQueue: .mainQueue(), metalSupport: false)
+            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, runOnQueue: lottieStateQueue, metalSupport: false)
             player.set(animation, reset: true, saveContext: true, animated: false)
             self.currentKey = key
         }

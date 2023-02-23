@@ -23,8 +23,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         let message = object.message!
         self.file = message.media[0] as! TelegramMediaFile
         self.music = music
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
+        let formatter = DateSelectorUtil.mediaMediumDate
         
         let date = Date(timeIntervalSince1970: TimeInterval(object.message!.timestamp) - interface.context.timeDifference)
         

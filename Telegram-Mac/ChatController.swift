@@ -678,10 +678,7 @@ class ChatControllerView : View, ChatInputDelegate {
                     text = strings().chatInviteRequestAdminGroup(mainPeer.displayTitle, requestChatTitle)
                 }
                 
-                let formatter = DateFormatter()
-                formatter.dateStyle = .medium
-                formatter.timeStyle = .medium
-                formatter.timeZone = NSTimeZone.local
+                let formatter = DateSelectorUtil.chatFullDateFormatter
                 
                 let alertText = strings().chatInviteRequestInfo(requestChatTitle, formatter.string(from: Date(timeIntervalSince1970: TimeInterval(date))))
                 value = .requestChat(text, alertText)
