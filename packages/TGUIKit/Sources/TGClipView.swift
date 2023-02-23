@@ -295,17 +295,23 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     public func scroll(to point: NSPoint, animated:Bool, completion: @escaping (Bool) -> Void = {_ in})  {
         
+        self.scrollCompletion = completion
+
         if animated {
             self.point = point
             NSAnimationContext.runAnimationGroup({ ctx in
+                ctx.duration = 0.2
+                ctx.timingFunction = .init(name: .easeOut)
                 self.animator().setBoundsOrigin(point)
             }, completionHandler: {
                 self.point = nil
+                self.scrollCompletion?(point == self.bounds.origin)
                 self.setBoundsOrigin(point)
             })
         } else {
             self.setBoundsOrigin(point)
             self.point = nil
+            self.scrollCompletion?(false)
         }
         
 //        self.scrollCompletion?(false)
