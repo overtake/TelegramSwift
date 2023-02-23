@@ -1941,10 +1941,7 @@ class ChatRowItem: TableRowItem {
                 var time:TimeInterval = TimeInterval(message.timestamp)
                 time -= context.timeDifference
                 
-                let dateFormatter = DateFormatter()
-                dateFormatter.timeStyle = .short
-                dateFormatter.dateStyle = .none
-                dateFormatter.timeZone = NSTimeZone.local
+                let dateFormatter = DateSelectorUtil.chatDateFormatter
                 let attr: NSAttributedString = .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
                 self.date?.measure(width: .greatestFiniteMagnitude)
@@ -1978,10 +1975,7 @@ class ChatRowItem: TableRowItem {
         
         if let message = message {
             
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .medium
-            formatter.timeZone = NSTimeZone.local
+            let formatter = DateSelectorUtil.chatFullDateFormatter
             //
             var fullDate: String = message.timestamp == scheduleWhenOnlineTimestamp ? "" : formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - context.timeDifference))
             
@@ -2008,18 +2002,11 @@ class ChatRowItem: TableRowItem {
                 
                 
                 if let attribute = editedAttribute {
-                    let formatterEdited = DateFormatter()
-                    formatterEdited.dateStyle = .medium
-                    formatterEdited.timeStyle = .medium
-                    formatterEdited.timeZone = NSTimeZone.local
+                    let formatterEdited = DateSelectorUtil.chatFullDateFormatter
                     fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(attribute.date)))))"
                 }
             } else if message.isImported, let forwardInfo = message.forwardInfo  {
-                let formatter = DateFormatter()
-                formatter.dateStyle = .short
-                formatter.timeStyle = .short
-                formatter.timeZone = NSTimeZone.local
-                formatter.doesRelativeDateFormatting = true
+                let formatter = DateSelectorUtil.chatImportedFormatter
                 let text: String
                 if forwardInfo.date == message.timestamp {
                     text = strings().chatMessageImportedShort
@@ -2031,10 +2018,7 @@ class ChatRowItem: TableRowItem {
                 editedLabel?.measure(width: .greatestFiniteMagnitude)
                 fullDate = strings().chatMessageImportedText + "\n\n" + fullDate
             } else if let forwardInfo = message.forwardInfo {
-                let formatterEdited = DateFormatter()
-                formatterEdited.dateStyle = .medium
-                formatterEdited.timeStyle = .medium
-                formatterEdited.timeZone = NSTimeZone.local
+                let formatterEdited = DateSelectorUtil.chatFullDateFormatter
                 fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date)))))"
             }
             

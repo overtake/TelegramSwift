@@ -274,7 +274,7 @@ class ReplyModel: ChatAccessoryModel {
             attr.addAttribute(.foregroundColor, value: message.media.isEmpty || message.anyMedia is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, range: attr.range)
             attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
             
-            attr.fixUndefinedEmojies()
+//            attr.fixUndefinedEmojies()
             self.message = .init(attr, maximumNumberOfLines: 1)
         } else {
             self.header = nil

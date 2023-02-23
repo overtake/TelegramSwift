@@ -29,6 +29,8 @@ private extension LiteModeKey {
             return NSImage(named: "Icon_LiteMode_Stickers")?.precomposed(flipVertical: true)
         case .gif:
             return NSImage(named: "Icon_LiteMode_Gifs")?.precomposed(flipVertical: true)
+        case .video:
+            return NSImage(named: "Icon_LiteMode_Videos")?.precomposed(flipVertical: true)
         case .blur:
             return NSImage(named: "Icon_LiteMode_Blur")?.precomposed(flipVertical: true)
         case .emoji_effects:

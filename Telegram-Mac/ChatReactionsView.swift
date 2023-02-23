@@ -209,7 +209,7 @@ final class ChatReactionsLayout {
 
         
         let value: MessageReaction
-        let text: DynamicCounterTextView.Value?
+        let text: TextViewLayout?
         let presentation: Theme
         let index: Int
         let minimumSize: NSSize
@@ -267,7 +267,8 @@ final class ChatReactionsLayout {
                     self.text = nil
                 } else {
                     if recentPeers.isEmpty {
-                        self.text = DynamicCounterTextView.make(for: Int(value.count).prettyNumber, count: "\(value.count)", font: .normal(.text), textColor: value.isSelected ? presentation.textSelectedColor : presentation.textColor, width: .greatestFiniteMagnitude)
+                        self.text = .init(.initialize(string: Int(value.count).prettyNumber, color: value.isSelected ? presentation.textSelectedColor : presentation.textColor, font: .normal(.text)))
+                        self.text?.measure(width: .greatestFiniteMagnitude)
                     } else {
                         self.text = nil
                     }
@@ -276,7 +277,7 @@ final class ChatReactionsLayout {
                     width += presentation.reactionSize.width
                     if let text = text {
                         width += presentation.insetInner
-                        width += text.size.width
+                        width += text.layoutSize.width
                         width += presentation.insetOuter
                     } else if !recentPeers.isEmpty {
                         width += presentation.insetInner
@@ -301,9 +302,11 @@ final class ChatReactionsLayout {
                 var width: CGFloat = presentation.reactionSize.width
                 let height = presentation.reactionSize.height
                 if value.count > 1 {
-                    let text = DynamicCounterTextView.make(for: "\(value.count)", count: "\(value.count)", font: .italic(.short), textColor: presentation.textColor, width: .greatestFiniteMagnitude)
+                    
+                    let text: TextViewLayout = .init(.initialize(string: "\(value.count)", color: presentation.textColor, font: .italic(.short)))
+                    text.measure(width: .greatestFiniteMagnitude)
                     self.text = text
-                    width += text.size.width + 2
+                    width += text.layoutSize.width + 2
                 } else {
                     self.text = nil
                     width += 2
@@ -715,7 +718,7 @@ final class ChatReactionsView : View {
     final class ReactionView: Control, ReactionViewImpl {
         fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
         fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
-        private var textView: DynamicCounterTextView?
+        private var textView: TextView?
         private let avatarsContainer = View(frame: NSMakeRect(0, 0, 24 * 3, 24))
         private var avatars:[AvatarContentView] = []
         private var peers:[ChatReactionsLayout.Reaction.Avatar] = []
@@ -839,16 +842,17 @@ final class ChatReactionsView : View {
             let presentation = reaction.presentation
             
             if let text = reaction.text {
-                let current: DynamicCounterTextView
+                let current: TextView
                 if let view = self.textView {
                     current = view
                 } else {
-                    current = DynamicCounterTextView(frame: CGRect(origin: NSMakePoint(presentation.insetOuter + presentation.reactionSize.width + presentation.insetInner, (frame.height - text.size.height) / 2), size: text.size))
+                    current = TextView(frame: CGRect(origin: NSMakePoint(presentation.insetOuter + presentation.reactionSize.width + presentation.insetInner, (frame.height - text.layoutSize.height) / 2), size: text.layoutSize))
                     current.userInteractionEnabled = false
+                    current.isSelectable = false
                     self.textView = current
                     addSubview(current)
                 }
-                current.update(text, animated: animated)
+                current.update(text)
             } else {
                 if let view = self.textView {
                     performSubviewRemoval(view, animated: animated)
@@ -1000,8 +1004,8 @@ final class ChatReactionsView : View {
             
             
             if let textView = textView, let text = reaction.text {
-                let center = focus(text.size)
-                transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: text.size))
+                let center = focus(text.layoutSize)
+                transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: text.layoutSize))
             }
             
             let center = focus(presentation.avatarSize)
@@ -1019,7 +1023,7 @@ final class ChatReactionsView : View {
         
         fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
         fileprivate let imageView = AnimationLayerContainer(frame: .zero)
-        private var textView: DynamicCounterTextView?
+        private var textView: TextView?
         private var first = true
         private var effetView: LottiePlayerView?
         private let effectDisposable = MetaDisposable()
@@ -1050,19 +1054,21 @@ final class ChatReactionsView : View {
             }
             
             if let text = reaction.text {
-                let current: DynamicCounterTextView
+                let current: TextView
                 if let view = self.textView {
                     current = view
                 } else {
-                    current = DynamicCounterTextView()
+                    current = TextView()
+                    current.userInteractionEnabled = false
+                    current.isSelectable = false
                     self.textView = current
                     addSubview(current)
                     
-                    var text_r = focus(text.size)
+                    var text_r = focus(text.layoutSize)
                     text_r.origin.x = 2
                     current.frame = text_r
                 }
-                current.update(text, animated: animated)
+                current.update(text)
                 
             } else {
                 if let view = self.textView {
@@ -1154,7 +1160,7 @@ final class ChatReactionsView : View {
                 return
             }
             if let textView = textView, let text = reaction.text {
-                var text_r = focus(text.size)
+                var text_r = focus(text.layoutSize)
                 text_r.origin.x = 2
                 var img_r = focus(reaction.presentation.reactionSize)
                 img_r.origin.x = text_r.maxX

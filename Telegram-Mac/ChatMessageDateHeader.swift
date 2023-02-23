@@ -23,6 +23,7 @@ private let timezoneOffset: Int32 = {
     return Int32(timeinfoNow.tm_gmtoff)
 }()
 
+private let formatter = DateFormatter()
 private let granularity: Int32 = 60 * 60 * 24
 
 
@@ -76,7 +77,7 @@ class ChatDateStickItem : TableStickItem {
             }
             
         } else {
-            let dateFormatter = makeNewDateFormatter()
+            let dateFormatter = formatter
             
             dateFormatter.calendar = Calendar.autoupdatingCurrent
             //dateFormatter.timeZone = NSTimeZone.local

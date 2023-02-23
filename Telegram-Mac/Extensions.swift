@@ -92,24 +92,24 @@ extension NSMutableAttributedString {
         self.endEditing()
         
     }
-    func fixUndefinedEmojies() {
-        
-        func changeSymbol(_ from:String, to: String) -> Bool {
-            let range = string.nsstring.range(of: from)
-            if range.location != NSNotFound {
-                self.replaceCharacters(in: range, with: to)
-                return true
-            }
-            return false
-        }
-
-        let symbols:[(from: String, to: String)] = [(from: "✌", to: "✌️"), (from: "☺", to: "☺️"), (from: "☝", to: "☝️"), (from: "1⃣", to: "1️⃣"), (from: "2⃣", to: "2️⃣"), (from: "3⃣", to: "3️⃣"), (from: "4⃣", to: "4️⃣"), (from: "5⃣", to: "5️⃣"), (from: "6⃣", to: "6️⃣"), (from: "7⃣", to: "7️⃣"), (from: "8⃣", to: "8️⃣"), (from: "9⃣", to: "9️⃣"), (from: "0⃣", to: "0️⃣"), (from: "❤", to: "❤️"), (from: "☁", to: "☁️"), (from: "ℹ", to: "ℹ️"), (from: "✍", to: "✍️"), (from: "♥", to: "❤️"), (from: "⁉", to: "⁉️"), (from: "❣", to: "❣️"), (from: "⬅", to: "⬅️"), (from: "◻", to: "◻️"), (from: "➡", to: "➡️"), (from: "◼", to: "◼️")]
-        for symbol in symbols {
-            while changeSymbol(symbol.from, to: symbol.to) {
-                
-            }
-        }
-    }
+//    func fixUndefinedEmojies() {
+//        
+//        func changeSymbol(_ from:String, to: String) -> Bool {
+//            let range = string.nsstring.range(of: from)
+//            if range.location != NSNotFound {
+//                self.replaceCharacters(in: range, with: to)
+//                return true
+//            }
+//            return false
+//        }
+//
+//        let symbols:[(from: String, to: String)] = [(from: "✌", to: "✌️"), (from: "☺", to: "☺️"), (from: "☝", to: "☝️"), (from: "1⃣", to: "1️⃣"), (from: "2⃣", to: "2️⃣"), (from: "3⃣", to: "3️⃣"), (from: "4⃣", to: "4️⃣"), (from: "5⃣", to: "5️⃣"), (from: "6⃣", to: "6️⃣"), (from: "7⃣", to: "7️⃣"), (from: "8⃣", to: "8️⃣"), (from: "9⃣", to: "9️⃣"), (from: "0⃣", to: "0️⃣"), (from: "❤", to: "❤️"), (from: "☁", to: "☁️"), (from: "ℹ", to: "ℹ️"), (from: "✍", to: "✍️"), (from: "♥", to: "❤️"), (from: "⁉", to: "⁉️"), (from: "❣", to: "❣️"), (from: "⬅", to: "⬅️"), (from: "◻", to: "◻️"), (from: "➡", to: "➡️"), (from: "◼", to: "◼️")]
+//        for symbol in symbols {
+//            while changeSymbol(symbol.from, to: symbol.to) {
+//                
+//            }
+//        }
+//    }
     
    // while
   //  7️⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣⃣
@@ -121,35 +121,35 @@ extension NSMutableAttributedString {
 public extension String {
     var fixed:String {
         var str:String = self
-        str = str.replacingOccurrences(of: "✌", with: "✌️")
-        str = str.replacingOccurrences(of: "☺", with: "☺️")
-        str = str.replacingOccurrences(of: "☝", with: "☝️")
-        str = str.replacingOccurrences(of: "1⃣", with: "1️⃣")
-        str = str.replacingOccurrences(of: "2⃣", with: "2️⃣")
-        str = str.replacingOccurrences(of: "3⃣", with: "3️⃣")
-        str = str.replacingOccurrences(of: "4⃣", with: "4️⃣")
-        str = str.replacingOccurrences(of: "5⃣", with: "5️⃣")
-        str = str.replacingOccurrences(of: "6⃣", with: "6️⃣")
-        str = str.replacingOccurrences(of: "7⃣", with: "7️⃣")
-        str = str.replacingOccurrences(of: "8⃣", with: "8️⃣")
-        str = str.replacingOccurrences(of: "9⃣", with: "9️⃣")
-        str = str.replacingOccurrences(of: "0⃣", with: "0️⃣")
-        str = str.replacingOccurrences(of: "#⃣", with: "#️⃣")
-        str = str.replacingOccurrences(of: "❤", with: "❤️")
-        str = str.replacingOccurrences(of: "♥", with: "❤️")
-        str = str.replacingOccurrences(of: "☁", with: "☁️")
-        str = str.replacingOccurrences(of: "✍", with: "✍️")
-        str = str.replacingOccurrences(of: "⁉", with: "⁉️")
-        str = str.replacingOccurrences(of: "❣", with: "❣️")
-        str = str.replacingOccurrences(of: "⬅", with: "⬅️")
-        str = str.replacingOccurrences(of: "◻", with: "◻️")
-        str = str.replacingOccurrences(of: "◼", with: "◼️")
-        str = str.replacingOccurrences(of: "➡", with: "➡️")
-        str = str.replacingOccurrences(of: "⚰", with: "⚰️")
-        str = str.replacingOccurrences(of: "⚡", with: "⚡️")
-        str = str.replacingOccurrences(of: "⛄", with: "⛄️")
-        
-            
+//        str = str.replacingOccurrences(of: "✌", with: "✌️")
+//        str = str.replacingOccurrences(of: "☺", with: "☺️")
+//        str = str.replacingOccurrences(of: "☝", with: "☝️")
+//        str = str.replacingOccurrences(of: "1⃣", with: "1️⃣")
+//        str = str.replacingOccurrences(of: "2⃣", with: "2️⃣")
+//        str = str.replacingOccurrences(of: "3⃣", with: "3️⃣")
+//        str = str.replacingOccurrences(of: "4⃣", with: "4️⃣")
+//        str = str.replacingOccurrences(of: "5⃣", with: "5️⃣")
+//        str = str.replacingOccurrences(of: "6⃣", with: "6️⃣")
+//        str = str.replacingOccurrences(of: "7⃣", with: "7️⃣")
+//        str = str.replacingOccurrences(of: "8⃣", with: "8️⃣")
+//        str = str.replacingOccurrences(of: "9⃣", with: "9️⃣")
+//        str = str.replacingOccurrences(of: "0⃣", with: "0️⃣")
+//        str = str.replacingOccurrences(of: "#⃣", with: "#️⃣")
+//        str = str.replacingOccurrences(of: "❤", with: "❤️")
+//        str = str.replacingOccurrences(of: "♥", with: "❤️")
+//        str = str.replacingOccurrences(of: "☁", with: "☁️")
+//        str = str.replacingOccurrences(of: "✍", with: "✍️")
+//        str = str.replacingOccurrences(of: "⁉", with: "⁉️")
+//        str = str.replacingOccurrences(of: "❣", with: "❣️")
+//        str = str.replacingOccurrences(of: "⬅", with: "⬅️")
+//        str = str.replacingOccurrences(of: "◻", with: "◻️")
+//        str = str.replacingOccurrences(of: "◼", with: "◼️")
+//        str = str.replacingOccurrences(of: "➡", with: "➡️")
+//        str = str.replacingOccurrences(of: "⚰", with: "⚰️")
+//        str = str.replacingOccurrences(of: "⚡", with: "⚡️")
+//        str = str.replacingOccurrences(of: "⛄", with: "⛄️")
+//        
+//            
 
         return str
     }
@@ -2585,15 +2585,39 @@ struct DateSelectorUtil {
         return intervals
     }
 
-    static var dayFormatter: DateFormatter {
+    static let dayFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: appAppearance.language.languageCode)
         //dateFormatter.timeZone = TimeZone(abbreviation: "UTC")!
         dateFormatter.dateFormat = "MMM d, yyyy"
         return dateFormatter
-    }
+    }()
+    
+    static let chatDateFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.timeStyle = .short
+        dateFormatter.dateStyle = .none
+        dateFormatter.timeZone = NSTimeZone.local
+        return dateFormatter
+    }()
+    
+    static let chatFullDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        formatter.timeZone = NSTimeZone.local
+        return formatter
+    }()
+    static let chatImportedFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        formatter.timeZone = NSTimeZone.local
+        formatter.doesRelativeDateFormatting = true
+        return formatter
+    }()
 
-    static var dayFormatterRelative: DateFormatter {
+    static let dayFormatterRelative: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: appAppearance.language.languageCode)
        // dateFormatter.timeZone = TimeZone(abbreviation: "UTC")!
@@ -2601,7 +2625,7 @@ struct DateSelectorUtil {
         dateFormatter.dateStyle = .short
         dateFormatter.doesRelativeDateFormatting = true
         return dateFormatter
-    }
+    }()
 
     static func formatDay(_ date: Date) -> String {
         if CalendarUtils.isSameDate(date, date: Date(), checkDay: true) {
@@ -2611,11 +2635,14 @@ struct DateSelectorUtil {
         }
     }
 
-    static func formatTime(_ date: Date) -> String {
+    static let timerFormatter: DateFormatter = {
         let timeFormatter = DateFormatter()
         timeFormatter.timeStyle = .medium
-       // timeFormatter.timeZone = TimeZone(abbreviation: "UTC")!
-        return timeFormatter.string(from: date)
+        return timeFormatter
+    }()
+    
+    static func formatTime(_ date: Date) -> String {
+        return timerFormatter.string(from: date)
     }
 }
 

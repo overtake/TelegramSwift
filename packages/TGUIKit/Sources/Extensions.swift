@@ -99,20 +99,21 @@ public extension NSAttributedString {
         return string
     }
     var trimNewLinesToSpace: NSAttributedString {
-        
-        let string:NSMutableAttributedString = self.mutableCopy() as! NSMutableAttributedString
-        
-       
-        var range = string.string.nsstring.range(of: "\n")
-        while !string.string.isEmpty, range.location != NSNotFound {
-            string.replaceCharacters(in: range, with: " ")
-            range = string.string.nsstring.range(of: "\n")
-        }
-     
-        
-        return string
+        return replaceNewlinesWithSpaces(in: self)
     }
     
+    func replaceNewlinesWithSpaces(in attributedString: NSAttributedString) -> NSAttributedString {
+        // Create a mutable copy of the input attributed string
+        let mutableAttributedString = NSMutableAttributedString(attributedString: attributedString)
+        
+        // Replace all occurrences of newline characters with space characters
+        let range = NSRange(location: 0, length: mutableAttributedString.length)
+        let newlineRegex = try! NSRegularExpression(pattern: "\\n")
+        newlineRegex.replaceMatches(in: mutableAttributedString.mutableString, options: [], range: range, withTemplate: " ")
+        
+        // Return the modified attributed string
+        return mutableAttributedString
+    }
     
     var range:NSRange {
         return NSMakeRange(0, self.length)
@@ -337,6 +338,7 @@ public extension NSMutableAttributedString {
 
         var range:NSRange
         
+        
         self.append(NSAttributedString(string: string!))
         let nlength:Int = self.length - slength
         range = NSMakeRange(self.length - nlength, nlength)
@@ -346,9 +348,9 @@ public extension NSMutableAttributedString {
         }
         
         if let f = font {
-            if coreText {
-                 self.setCTFont(font: f, range: range)
-            }
+//            if coreText {
+//                 self.setCTFont(font: f, range: range)
+//            }
             self.setFont(font: f, range: range)
         }
         

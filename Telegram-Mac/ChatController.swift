@@ -912,17 +912,6 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                 if scrollToItem == nil {
                     scrollToItem = .none(animationInterface)
                 }
-                
-                if scrollToItem == nil {
-//                    var index = 0
-//                    for entry in toView.filteredEntries.reversed() {
-//                        if entry.appearance.entry.index < unreadIndex {
-//                            scrollToItem = .top(id: entry.stableId, animated: false, focus: .init(focus: false), inset: 0)
-//                            break
-//                        }
-//                        index += 1
-//                    }
-                }
             case let .positionRestoration(scrollIndex, relativeOffset):
                 
                 let timestamp = Int32(min(TimeInterval(scrollIndex.timestamp) - timeDifference, TimeInterval(Int32.max)))
@@ -1239,12 +1228,9 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             let (removed,inserted,updated) = proccessEntries(fromView?.filteredEntries, right: toView.filteredEntries, { entry -> TableRowItem in
                return makeItem(entry)
             })
-            let grouping: Bool
-            if case .none = state {
-                grouping = true
-            } else {
-                grouping = true
-            }
+
+            let grouping: Bool = true
+            
             var scrollState = state
             if removed.isEmpty, !inserted.isEmpty {
                 var addAdded: Bool = true
@@ -1261,9 +1247,6 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
             subscriber.putNext(TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, state: scrollState, grouping: grouping, animateVisibleOnly: false))
             subscriber.putCompletion()
         }
-        
-
-
         return ActionDisposable {
             _ = cancelled.swap(true)
         }
@@ -1683,6 +1666,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override func scrollup(force: Bool = false) -> Void {
         chatInteraction.update({ $0.withUpdatedTempPinnedMaxId(nil) })
+        
+        self.messageIndexDisposable.set(nil)
+        
         if let reply = historyState.reply() {
             
             chatInteraction.focusMessageId(nil, reply, .CenterEmpty)
@@ -2130,13 +2116,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let chatLocationContextHolder = self.chatLocationContextHolder
         
         var wasUsedLocation = false
-//        NSLog("chat_init_1")
 
         let historyViewUpdate1 = location.get() |> deliverOn(queue)
             |> mapToSignal { inputLocation -> Signal<(ChatHistoryViewUpdate, TableSavingSide?, ChatHistoryLocationInput), NoError> in
                 
                 let location = inputLocation.content
-//                NSLog("chat_init_2")
 
                 var additionalData: [AdditionalMessageHistoryViewData] = []
                 additionalData.append(.cachedPeerData(peerId))
@@ -2355,7 +2339,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   stateValue.get()
     ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions, uiState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
-//            NSLog("chat_init_3")
             let pollAnswersLoading = uiState.pollAnswers
             let threadLoading = uiState.threadLoading
 
@@ -2414,6 +2397,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             default:
                 break
             }
+            
             let animationInterface: TableAnimationInterface = TableAnimationInterface(nextTransaction.isExutable && view?.laterId == nil, true, animatedRows)
             let timeDifference = context.timeDifference
             let bigEmojiEnabled = context.sharedContext.baseSettings.bigEmoji
@@ -2439,7 +2423,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 } else {
                     let msgEntries = view.entries
                     let topMessages: [Message]?
-                    var addTopThreadInset: CGFloat? = nil
                     switch chatLocation {
                     case let .thread(data):
                         if mode.isThreadMode {
@@ -2447,7 +2430,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 topMessages = initialData.cachedDataMessages?[data.messageId]
                             } else {
                                 topMessages = nil
-                                addTopThreadInset = 44
                             }
                         } else {
                             topMessages = nil
@@ -2461,7 +2443,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         ads = (fixed: adMessages.fixed, opportunistic: adMessages.opportunistic)
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -3730,9 +3712,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let requestCount = strongSelf.requestCount
                                 let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated)
                                 let id = strongSelf.takeNextHistoryLocationId()
-                                delay(0.15, closure: { [weak strongSelf] in
-                                    strongSelf?.setLocation(.init(content: content, id: id))
-                                })
+                                strongSelf.setLocation(.init(content: content, id: id))
                             }
                         }))
                         //  }
@@ -5487,11 +5467,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 messageIdsWithReactions.append(message.id)
                             }
                             if message.id.namespace == Namespaces.Message.Cloud {
-                                if !message.text.isEmpty, !message.text.containsOnlyEmoji {
+                                if !message.text.isEmpty {
                                     messagesToTranslate.append(message)
                                 }
                                 if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
-                                    if !replyMessage.text.isEmpty, !replyMessage.text.containsOnlyEmoji {
+                                    if !replyMessage.text.isEmpty {
                                         messagesToTranslate.append(replyMessage)
                                     }
                                 }
@@ -5534,7 +5514,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     strongSelf.updateMaxVisibleReadIncomingMessageIndex(MessageIndex(message))
                 }
                 
-                if let pinned = strongSelf.chatInteraction.presentation.pinnedMessageId, let message = pinned.message, !message.text.isEmpty, !message.text.containsOnlyEmoji {
+                if let pinned = strongSelf.chatInteraction.presentation.pinnedMessageId, let message = pinned.message, !message.text.isEmpty {
                     messagesToTranslate.append(message)
                 }
                 
@@ -5971,7 +5951,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         self.didSetReady = true
-        
+                
     }
     
     
