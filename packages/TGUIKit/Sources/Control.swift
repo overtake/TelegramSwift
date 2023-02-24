@@ -229,10 +229,7 @@ open class Control: View {
             self.trackingArea = NSTrackingArea(rect: self.bounds, options: options, owner: self, userInfo: nil)
             
             self.addTrackingArea(self.trackingArea!)
-        } else {
-            var bp = 0
-            bp += 1
-        }
+        } 
         
     }
     
