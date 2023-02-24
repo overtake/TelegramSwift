@@ -408,6 +408,9 @@ private final class TopicNameAndTextView : View {
         mainView.onlyTextIsInteractive = true
         mainView.scaleOnClick = true
         
+        self.layer?.masksToBounds = false
+        mainView.layer?.masksToBounds = false
+        
     }
     
     required init?(coder: NSCoder) {

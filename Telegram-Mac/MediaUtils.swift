@@ -2762,7 +2762,7 @@ func chatMessageImageFile(account: Account, fileReference: FileMediaReference, p
                 options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
                 options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCache as String)
                 options.setValue(false as NSNumber, forKey: kCGImageSourceShouldCacheImmediately as String)
-                options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
+              //  options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailWithTransform as String)
 
                 if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options) {
                     if let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
