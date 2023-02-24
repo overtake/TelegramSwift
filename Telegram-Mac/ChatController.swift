@@ -616,7 +616,7 @@ class ChatControllerView : View, ChatInputDelegate {
                     progressView?.blurBackground = currentTheme.blurServiceColor
                     progressView?.backgroundColor = .clear
                 } else {
-                    progressView?.backgroundColor = currentTheme.colors.background.withAlphaComponent(0.7)
+                    progressView?.backgroundColor = currentTheme.chatServiceItemColor
                     progressView?.blurBackground = nil
                 }
                 progressView?.progressColor = currentTheme.chatServiceItemTextColor
