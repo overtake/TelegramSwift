@@ -985,7 +985,7 @@ final class AnimatedEmojiesCategories : Control {
             scaleOnClick = true
             
            
-            self.apply(key: "select", policy: .toEnd(from: isLite ? .max : 0))
+            self.apply(key: "select", policy: .toEnd(from: 0))
 
             
             self.isSelected = isSelected
