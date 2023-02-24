@@ -96,6 +96,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         super.addSubview(rowView)
         
         
+        contentView.layer?.masksToBounds = false
         
         rowView.addSubview(bubbleView)
         rowView.addSubview(contentView)

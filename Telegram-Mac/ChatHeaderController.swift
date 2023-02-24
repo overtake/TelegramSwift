@@ -822,7 +822,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
     private let unarchiveButton = TitleButton()
     private let dismiss:ImageButton = ImageButton()
 
-    private var statusLayer: InlineStickerView?
+    private var statusLayer: InlineStickerItemLayer?
     
     private let buttonsContainer = View()
     
@@ -925,17 +925,16 @@ class ChatReportView : Control, ChatHeaderProtocol {
                 layout.interactions = globalLinkExecutor
                 current.update(layout)
                 
-                self.statusLayer?.removeFromSuperview()
+                self.statusLayer?.removeFromSuperlayer()
                 self.statusLayer = nil
                 
                 for embedded in layout.embeddedItems {
                     let rect = embedded.rect.insetBy(dx: -1.5, dy: -1.5)
-                    let view = InlineStickerView(account: chatInteraction.context.account, inlinePacksContext: chatInteraction.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: rect.size)
+                    let view = InlineStickerItemLayer(account: chatInteraction.context.account, inlinePacksContext: chatInteraction.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: rect.size)
                     view.frame = rect
-                    current.addEmbeddedView(view)
+                    current.addEmbeddedLayer(view)
                     self.statusLayer = view
-                    view.updateAnimatableContent()
-                    view.animateLayer.isPlayable = true
+                    view.isPlayable = true
                 }
             } else if let view = self.textView {
                 performSubviewRemoval(view, animated: animated)
@@ -949,11 +948,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        self.statusLayer?.updateAnimatableContent()
-    }
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        self.statusLayer?.updateAnimatableContent()
+        self.statusLayer?.isPlayable = window != nil
     }
 
     override func draw(_ layer: CALayer, in ctx: CGContext) {

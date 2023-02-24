@@ -1143,7 +1143,7 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
             }
             genericView.tokenView.removeTokens(uniqueIds: idsToRemove, animated: animated)
             
-            self.nextEnabled(!value.selected.isEmpty)
+            self.nextEnabled(!value.selected.isEmpty || isNewGroup)
             
             
             

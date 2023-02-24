@@ -145,7 +145,7 @@ public class BaseApplicationSettings: Codable, Equatable {
         self.translateChats = try container.decodeIfPresent(Int32.self, forKey: "tc") ?? 1 != 0
         self.doNotTranslate = try container.decodeIfPresent(Set<String>.self, forKey: "dnt2") ?? Set()
         self.paywall = try container.decodeIfPresent(TranslatePaywall.self, forKey: "tp7")
-        self.liteMode = try container.decodeIfPresent(LiteMode.self, forKey: "lm4") ?? LiteMode.standart
+        self.liteMode = try container.decodeIfPresent(LiteMode.self, forKey: "lm5") ?? LiteMode.standart
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -161,7 +161,7 @@ public class BaseApplicationSettings: Codable, Equatable {
         try container.encode(Int32(self.statusBar ? 1 : 0), forKey: "sb")
         try container.encode(Int32(self.translateChats ? 1 : 0), forKey: "tc")
         try container.encode(self.doNotTranslate, forKey: "dnt2")
-        try container.encode(self.liteMode, forKey: "lm4")
+        try container.encode(self.liteMode, forKey: "lm5")
         if let paywall = paywall {
             try container.encode(paywall, forKey: "tp7")
         }

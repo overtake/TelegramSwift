@@ -449,7 +449,17 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
         }
         self.contentsGravity = .center
+        self.masksToBounds = false
 //        self.isOpaque = true
+    }
+    
+    override var masksToBounds: Bool {
+        set {
+
+        }
+        get {
+            return false
+        }
     }
     
     required init?(coder: NSCoder) {

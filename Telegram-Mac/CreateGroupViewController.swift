@@ -640,13 +640,6 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
             showModalText(for: context.window, text: strings().createChannelUsernameError)
         } else if state.requires.contains(.username), state.addressNameValidationStatus != .availability(.available) {
             genericView.item(stableId: InputDataEntryId.input(_id_username))?.view?.shakeView()
-        } else if result.peerIds.isEmpty, state.requires.isEmpty {
-            genericView.item(stableId: InputDataEntryId.general(_id_add))?.view?.shakeView()
-            updateState { current in
-                var current = current
-                current.errors[_id_add] = .init(description: strings().createGroupAddMemberError, target: .data)
-                return current
-            }
         } else {
             onComplete.set(.single(result))
         }
