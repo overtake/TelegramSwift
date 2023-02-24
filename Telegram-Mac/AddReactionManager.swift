@@ -156,7 +156,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private final class ReactionView : Control {
                 
         let player: LottiePlayerView
-        private let imageView: InlineStickerView
+        private var imageView: InlineStickerView?
         private let disposable = MetaDisposable()
         private let appearDisposable = MetaDisposable()
         let reaction: ContextReaction
@@ -175,16 +175,17 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             let isLite = context.isLite(.emoji)
             
             self.player = LottiePlayerView(frame: rect)
-            self.imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size, isPlayable: false)
             self.reaction = reaction
             self.context = context
            
             super.init(frame: frameRect)
             if !isLite {
+                let imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size, isPlayable: false)
+                self.imageView = imageView
                 addSubview(imageView)
             }
             addSubview(player)
-            self.imageView.isHidden = false
+            self.imageView?.isHidden = false
             self.player.isHidden = false
 
            
@@ -199,11 +200,11 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 switch state {
                 case .playing:
                     delay(0.016, closure: {
-                        self?.imageView.removeFromSuperview()
+                        self?.imageView?.removeFromSuperview()
                     })
                 case .stoped:
                     delay(0.016, closure: {
-                        self?.imageView.removeFromSuperview()
+                        self?.imageView?.removeFromSuperview()
                     })
                 default:
                     break
@@ -223,7 +224,10 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
                     self?.selectAnimationData = data
                     if isLite {
-                        self?.apply(data, key: "select", policy: .framesCount(1))
+                        let apply:()->Void = {
+                            self?.apply(data, key: "select", policy: .framesCount(1))
+                        }
+                        apply()
                     }
                 }
             }))
@@ -253,7 +257,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 
                 if case .custom = reaction.value {
                     self.player.layer?.cornerRadius = 4
-                    self.imageView.layer?.cornerRadius = 4
+                    self.imageView?.layer?.cornerRadius = 4
                 }
             }
             
@@ -264,7 +268,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         }
         
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
-            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, runOnQueue: lottieStateQueue, metalSupport: false)
+            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, runOnQueue: Queue(), metalSupport: false)
             player.set(animation, reset: true, saveContext: true, animated: false)
             self.currentKey = key
         }
@@ -282,7 +286,9 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
             transition.updateFrame(view: player, frame: self.focus(player.frame.size))
-            transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
+            if let imageView = imageView {
+                transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
+            }
             if let selectionView = self.selectionView {
                 selectionView.center()
             }
@@ -329,7 +335,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 }
                 |> deliverOnMainQueue
                 
-                self.imageView.removeFromSuperview()
+                self.imageView?.removeFromSuperview()
                             
                 appearDisposable.set(signal.start(next: { [weak self] resourceData in
                     if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
@@ -337,7 +343,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                     }
                 }))
             } else {
-                imageView.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.35, bounce: true)
+                imageView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.35, bounce: true)
             }
             
         }
@@ -484,11 +490,20 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         
         for reaction in list {
-            let itemSize = size.bounds
-            let reaction = ReactionView(frame: NSMakeRect(x, 3, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
-            
-            documentView.addSubview(reaction)
-            x += size.width + 4
+            let add:(ContextReaction)->Void = { reaction in
+                let itemSize = size.bounds
+                let reaction = ReactionView(frame: NSMakeRect(x, 3, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
+                
+                self.documentView.addSubview(reaction)
+                x += size.width + 4
+            }
+            if size.width < x {
+                add(reaction)
+            } else {
+                DispatchQueue.main.async {
+                    add(reaction)
+                }
+            }
         }
         
         
