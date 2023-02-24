@@ -450,7 +450,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         }
         self.contentsGravity = .center
         self.masksToBounds = false
-//        self.isOpaque = true
+        self.isOpaque = true
     }
     
     override var masksToBounds: Bool {

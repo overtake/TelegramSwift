@@ -270,7 +270,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if item.hasBubble {
             return item.presentation.chat.backgroundColor(item.isIncoming, item.renderType == .bubble)
         } else {
-            return backdorColor//backdorColor
+            return .clear//backdorColor
         }
     }
 

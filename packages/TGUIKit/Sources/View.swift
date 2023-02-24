@@ -256,7 +256,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
        // self.layer?.delegate = self
-      //  self.layer?.isOpaque = false
+        self.layer?.isOpaque = true
        // self.autoresizesSubviews = false
        // self.layerContentsRedrawPolicy = .onSetNeedsDisplay
        // self.layer?.drawsAsynchronously = System.drawAsync
@@ -275,7 +275,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
      //   self.layer?.delegate = self
-      //  self.layer?.isOpaque = false
+        self.layer?.isOpaque = true
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
       //  self.layer?.drawsAsynchronously = System.drawAsync
         if #available(macOS 10.15, *) {
