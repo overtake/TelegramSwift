@@ -185,7 +185,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         if layer?.animation(forKey: "bounds") != nil {
             return true
         }
-        return false
+        return self.point != nil
     }
     
     func endScroll() -> Void {
@@ -306,7 +306,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
             }, completionHandler: {
                 self.point = nil
                 self.scrollCompletion?(point == self.bounds.origin)
-                self.setBoundsOrigin(point)
             })
         } else {
             self.setBoundsOrigin(point)

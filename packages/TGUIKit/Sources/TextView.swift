@@ -2195,6 +2195,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     
     private func updateBackgroundBlur() {
+        
+        self.layer?.masksToBounds = blurBackground != nil
+        
         if let blurBackground = blurBackground {
 
             if self.visualEffect == nil {

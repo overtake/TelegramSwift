@@ -678,7 +678,7 @@ class AnimationLayerContainer : View {
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = !superview.visibleRect.isEmpty && isKeyWindow && isLite
+                value.isPlayable = !superview.visibleRect.isEmpty && isKeyWindow && !isLite
             }
         }
     }
