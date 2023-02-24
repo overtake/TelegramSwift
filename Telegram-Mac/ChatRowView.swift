@@ -1920,7 +1920,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         control.disableActions()
         
         
-        if item.canBlur {
+        if item.isBubbled {
             control.set(image: item.presentation.chat.chat_reply_swipe_bubble(theme: item.presentation), for: .Normal)
             control.autohighlight = false
             _ = control.sizeToFit()
