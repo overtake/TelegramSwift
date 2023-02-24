@@ -304,6 +304,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 ctx.timingFunction = .init(name: .easeOut)
                 self.animator().setBoundsOrigin(point)
             }, completionHandler: {
+                if point != self.bounds.origin {
+                    self.setBoundsOrigin(point)
+                }
                 self.point = nil
                 self.scrollCompletion?(point == self.bounds.origin)
             })
