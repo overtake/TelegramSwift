@@ -2023,7 +2023,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             NSAnimationContext.current.timingFunction = animation == .none ? nil : CAMediaTimingFunction(name: .easeOut)
 
             if(redraw) {
-                self.tableView.removeRows(at: IndexSet(integer:at), withAnimation: animation != .none ? .effectFade : .none)
+                self.tableView.removeRows(at: IndexSet(integer:at), withAnimation: animation)
             }
         }
     }
@@ -2587,7 +2587,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 
 
         for (idx, item) in transition.inserted {
-            let effect:NSTableView.AnimationOptions = (visibleRange.indexIn(idx) || !transition.animateVisibleOnly) && transition.animated ? .effectFade : .none
+            let effect:NSTableView.AnimationOptions
+            if case let .none(interface) = transition.state, interface != nil {
+                effect = (visibleRange.indexIn(idx) || !transition.animateVisibleOnly) ? .effectFade : .none
+            } else {
+                effect = transition.animated && (visibleRange.indexIn(idx) || !transition.animateVisibleOnly) ? .effectFade : .none
+            }
             _ = self.insert(item: item, at:idx, redraw: true, animation: effect)
 
             if item.animatable {

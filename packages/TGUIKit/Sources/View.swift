@@ -285,9 +285,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
 
     }
     
-//    open override var wantsDefaultClipping: Bool {
-//        return false
-//    }
+    
+    open override var wantsDefaultClipping: Bool {
+        return false
+    }
     
     open override var translatesAutoresizingMaskIntoConstraints: Bool {
         get {

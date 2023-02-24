@@ -175,7 +175,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             let isLite = context.isLite(.emoji)
             
             self.player = LottiePlayerView(frame: rect)
-            self.imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size, isPlayable: !isLite)
+            self.imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size, isPlayable: false)
             self.reaction = reaction
             self.context = context
            
@@ -222,7 +222,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             disposable.set(signal.start(next: { [weak self] resourceData in
                 if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
                     self?.selectAnimationData = data
-                    self?.apply(data, key: "select", policy: .framesCount(1))
+                   // self?.apply(data, key: "select", policy: .framesCount(1))
                 }
             }))
             set(handler: { control in

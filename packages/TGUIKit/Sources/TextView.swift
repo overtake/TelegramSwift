@@ -1481,16 +1481,6 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
 
     }
     
-    private class InkContainer : View {
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            isEventLess = true
-        }
-        
-        required public init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-    }
     private class EmbeddedContainer : View {
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
@@ -1503,8 +1493,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     }
     
     private var inkViews: [InvisibleInkDustView] = []
-    private let inkContainer = InkContainer(frame: .zero)
-    private let embeddedContainer = InkContainer(frame: .zero)
+    private let embeddedContainer = SimpleLayer()
 
     private var clearExceptRevealed: Bool = false
     private var inAnimation: Bool = false {
@@ -1567,8 +1556,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private func initialize() {
         layer?.disableActions()
         self.style = ControlStyle(backgroundColor: .clear)
-        addSubview(embeddedContainer)
-        addSubview(inkContainer)
+        self.layer?.addSublayer(embeddedContainer)
+        self.layer?.masksToBounds = false
     }
 
     public required init(frame frameRect: NSRect) {
@@ -1761,8 +1750,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     additionY -= 4
                 }
                                 
-                ctx.textPosition = CGPoint(x: penOffset + line.frame.minX, y: startPosition.y + line.frame.minY + additionY)
                 
+                let textPosition = CGPoint(x: penOffset + line.frame.minX, y: startPosition.y + line.frame.minY + additionY)
                 
                 let glyphRuns = CTLineGetGlyphRuns(line.line) as NSArray
                 if glyphRuns.count != 0 {
@@ -1774,6 +1763,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         let under = line.embeddedItems.contains(where: { value in
                             return value.range == NSMakeRange(range.location, range.length)
                         })
+                        if glyphCount >= 2 {
+                            ctx.textPosition = textPosition.offsetBy(dx: 0, dy: 0)
+                        } else {
+                            ctx.textPosition = textPosition
+                        }
                         
                         if !under {
                             CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))
@@ -2203,7 +2197,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
 
             if self.visualEffect == nil {
                 self.visualEffect = VisualEffect(frame: self.bounds)
-                addSubview(self.visualEffect!, positioned: .below, relativeTo: self.embeddedContainer)
+                addSubview(self.visualEffect!, positioned: .below, relativeTo: nil)
                 if self.textView == nil {
                     self.textView = View(frame: self.bounds)
                     addSubview(self.textView!)
@@ -2252,12 +2246,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         }
     }
     
-    public func addEmbeddedView(_ view: NSView) {
-        embeddedContainer.addSubview(view)
-    }
-    
+
     public func addEmbeddedLayer(_ layer: CALayer) {
-        embeddedContainer.layer?.addSublayer(layer)
+        embeddedContainer.addSublayer(layer)
     }
     
     public override func layout() {
@@ -2265,7 +2256,6 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         self.visualEffect?.frame = bounds
         self.textView?.frame = bounds
         self.embeddedContainer.frame = bounds
-        self.inkContainer.frame = bounds
         self.updateInks(self.textLayout)
     }
     
@@ -2351,18 +2341,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     public func checkEmbeddedUnderSpoiler() {
         if let layout = self.textLayout {
             let rects = layout.spoilerRects()
-            for subview in embeddedContainer.subviews {
-                var isHidden = false
-                loop: for rect in rects {
-                    if NSIntersectsRect(NSMakeRect(subview.frame.midX, subview.frame.midY, 1, 1), rect) {
-                        isHidden = true
-                        break loop
-                    }
-                }
-                subview.isHidden = isHidden
-    //            if subview
-            }
-            let sublayers = embeddedContainer.layer?.sublayers ?? []
+            let sublayers = embeddedContainer.sublayers ?? []
             for subview in sublayers {
                 var isHidden = false
                 loop: for rect in rects {

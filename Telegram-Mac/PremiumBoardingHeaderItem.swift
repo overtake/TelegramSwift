@@ -136,7 +136,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
     private var statusView: InlineStickerView?
     private let titleView = TextView()
     private let infoView = TextView()
-    private var packInlineView: InlineStickerView?
+    private var packInlineView: InlineStickerItemLayer?
     private var timer: SwiftSignalKit.Timer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -184,13 +184,13 @@ private final class PremiumBoardingHeaderView : TableRowView {
         if let status = item.status, let embedded = item.titleLayout.embeddedItems.first {
             let file = status.items.first?.file ?? status.file
             let rect = embedded.rect.insetBy(dx: -1.5, dy: -1.5)
-            let view = InlineStickerView(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: file.fileId.id, file: file, emoji: ""), size: rect.size)
+            let view = InlineStickerItemLayer(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: file.fileId.id, file: file, emoji: ""), size: rect.size)
             view.frame = rect
-            titleView.addEmbeddedView(view)
+            titleView.addEmbeddedLayer(view)
             self.packInlineView = view
-            view.animateLayer.isPlayable = true
+            view.isPlayable = true
         } else if let view = packInlineView {
-            performSubviewRemoval(view, animated: animated)
+            performSublayerRemoval(view, animated: animated)
             self.packInlineView = nil
         }
         
