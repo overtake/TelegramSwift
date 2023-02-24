@@ -813,6 +813,32 @@ func initialize() -> [String] {
     array.append("select_peer_create_group")
     array.append("chat_translate")
     
+    array.append("msg_emoji_activities")
+    array.append("msg_emoji_angry")
+    array.append("msg_emoji_away")
+    array.append("msg_emoji_bath")
+    array.append("msg_emoji_busy")
+    array.append("msg_emoji_dislike")
+    array.append("msg_emoji_food")
+    array.append("msg_emoji_haha")
+    array.append("msg_emoji_happy")
+    array.append("msg_emoji_heart")
+    array.append("msg_emoji_hi2")
+    array.append("msg_emoji_home")
+    array.append("msg_emoji_like")
+    array.append("msg_emoji_neutral")
+    array.append("msg_emoji_omg")
+    array.append("msg_emoji_party")
+    array.append("msg_emoji_recent")
+    array.append("msg_emoji_sad")
+    array.append("msg_emoji_sleep")
+    array.append("msg_emoji_study")
+    array.append("msg_emoji_tongue")
+    array.append("msg_emoji_vacation")
+    array.append("msg_emoji_what")
+    array.append("msg_emoji_work")
+
+    
 
     return array
 }

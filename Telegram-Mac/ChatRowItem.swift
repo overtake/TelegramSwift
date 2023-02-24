@@ -1994,7 +1994,7 @@ class ChatRowItem: TableRowItem {
             }
             
             if editedAttribute != nil || message.id.namespace == Namespaces.Message.Cloud {
-                if isEditMarkVisible || isUnsent {
+                if isEditMarkVisible || isUnsent, message.id.peerId != context.peerId {
                     let attr: NSAttributedString = .initialize(string: strings().chatMessageEdited, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                     editedLabel = TextViewLayout(attr, maximumNumberOfLines: 1)
                     editedLabel?.measure(width: .greatestFiniteMagnitude)

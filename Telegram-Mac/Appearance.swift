@@ -2570,8 +2570,31 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 account_settings_set_password: { NSImage(named: "Icon_Settings_AddPassword")!.precomposed(palette.accent, flipVertical: true) },
                                                 select_peer_create_channel: { NSImage(named: "Icon_CreateChannel")!.precomposed(palette.accent, flipVertical: true) },
                                                 select_peer_create_group: { NSImage(named: "Icon_CreateGroup")!.precomposed(palette.accent, flipVertical: true) },
-                                                chat_translate: { NSImage(named: "Icon_Chat_Translate")!.precomposed(palette.accent) }
-
+                                                chat_translate: { NSImage(named: "Icon_Chat_Translate")!.precomposed(palette.accent) },
+                                                msg_emoji_activities: { NSImage(named: "msg_emoji_activities")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_angry: { NSImage(named: "msg_emoji_angry")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_away: { NSImage(named: "msg_emoji_away")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_bath: { NSImage(named: "msg_emoji_bath")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_busy: { NSImage(named: "msg_emoji_busy")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_dislike: { NSImage(named: "msg_emoji_dislike")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_food: { NSImage(named: "msg_emoji_food")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_haha: { NSImage(named: "msg_emoji_haha")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_happy: { NSImage(named: "msg_emoji_happy")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_heart: { NSImage(named: "msg_emoji_heart")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_hi2: { NSImage(named: "msg_emoji_hi2")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_home: { NSImage(named: "msg_emoji_home")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_like: { NSImage(named: "msg_emoji_like")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_neutral: { NSImage(named: "msg_emoji_neutral")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_omg: { NSImage(named: "msg_emoji_omg")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_party: { NSImage(named: "msg_emoji_party")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_recent: { NSImage(named: "msg_emoji_recent")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_sad: { NSImage(named: "msg_emoji_sad")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_sleep: { NSImage(named: "msg_emoji_sleep")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_study: { NSImage(named: "msg_emoji_study")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_tongue: { NSImage(named: "msg_emoji_tongue")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_vacation: { NSImage(named: "msg_emoji_vacation")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_what: { NSImage(named: "msg_emoji_what")!.precomposed(palette.grayIcon) },
+                                                msg_emoji_work: { NSImage(named: "msg_emoji_work")!.precomposed(palette.grayIcon) }
     )
 
 }

@@ -9118,6 +9118,318 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var msg_emoji_activities: CGImage {
+      if let image = cached.with({ $0["msg_emoji_activities"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_activities()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_activities"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_angry: CGImage {
+      if let image = cached.with({ $0["msg_emoji_angry"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_angry()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_angry"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_away: CGImage {
+      if let image = cached.with({ $0["msg_emoji_away"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_away()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_away"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_bath: CGImage {
+      if let image = cached.with({ $0["msg_emoji_bath"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_bath()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_bath"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_busy: CGImage {
+      if let image = cached.with({ $0["msg_emoji_busy"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_busy()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_busy"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_dislike: CGImage {
+      if let image = cached.with({ $0["msg_emoji_dislike"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_dislike()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_dislike"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_food: CGImage {
+      if let image = cached.with({ $0["msg_emoji_food"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_food()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_food"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_haha: CGImage {
+      if let image = cached.with({ $0["msg_emoji_haha"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_haha()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_haha"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_happy: CGImage {
+      if let image = cached.with({ $0["msg_emoji_happy"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_happy()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_happy"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_heart: CGImage {
+      if let image = cached.with({ $0["msg_emoji_heart"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_heart()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_heart"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_hi2: CGImage {
+      if let image = cached.with({ $0["msg_emoji_hi2"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_hi2()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_hi2"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_home: CGImage {
+      if let image = cached.with({ $0["msg_emoji_home"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_home()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_home"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_like: CGImage {
+      if let image = cached.with({ $0["msg_emoji_like"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_like()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_like"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_neutral: CGImage {
+      if let image = cached.with({ $0["msg_emoji_neutral"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_neutral()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_neutral"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_omg: CGImage {
+      if let image = cached.with({ $0["msg_emoji_omg"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_omg()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_omg"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_party: CGImage {
+      if let image = cached.with({ $0["msg_emoji_party"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_party()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_party"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_recent: CGImage {
+      if let image = cached.with({ $0["msg_emoji_recent"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_recent()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_recent"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_sad: CGImage {
+      if let image = cached.with({ $0["msg_emoji_sad"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_sad()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_sad"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_sleep: CGImage {
+      if let image = cached.with({ $0["msg_emoji_sleep"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_sleep()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_sleep"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_study: CGImage {
+      if let image = cached.with({ $0["msg_emoji_study"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_study()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_study"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_tongue: CGImage {
+      if let image = cached.with({ $0["msg_emoji_tongue"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_tongue()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_tongue"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_vacation: CGImage {
+      if let image = cached.with({ $0["msg_emoji_vacation"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_vacation()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_vacation"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_what: CGImage {
+      if let image = cached.with({ $0["msg_emoji_what"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_what()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_what"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var msg_emoji_work: CGImage {
+      if let image = cached.with({ $0["msg_emoji_work"] }) {
+          return image
+      } else {
+          let image = _msg_emoji_work()
+          _ = cached.modify { current in 
+              var current = current
+              current["msg_emoji_work"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9820,6 +10132,30 @@ public final class TelegramIconsTheme {
   private let _select_peer_create_channel: ()->CGImage
   private let _select_peer_create_group: ()->CGImage
   private let _chat_translate: ()->CGImage
+  private let _msg_emoji_activities: ()->CGImage
+  private let _msg_emoji_angry: ()->CGImage
+  private let _msg_emoji_away: ()->CGImage
+  private let _msg_emoji_bath: ()->CGImage
+  private let _msg_emoji_busy: ()->CGImage
+  private let _msg_emoji_dislike: ()->CGImage
+  private let _msg_emoji_food: ()->CGImage
+  private let _msg_emoji_haha: ()->CGImage
+  private let _msg_emoji_happy: ()->CGImage
+  private let _msg_emoji_heart: ()->CGImage
+  private let _msg_emoji_hi2: ()->CGImage
+  private let _msg_emoji_home: ()->CGImage
+  private let _msg_emoji_like: ()->CGImage
+  private let _msg_emoji_neutral: ()->CGImage
+  private let _msg_emoji_omg: ()->CGImage
+  private let _msg_emoji_party: ()->CGImage
+  private let _msg_emoji_recent: ()->CGImage
+  private let _msg_emoji_sad: ()->CGImage
+  private let _msg_emoji_sleep: ()->CGImage
+  private let _msg_emoji_study: ()->CGImage
+  private let _msg_emoji_tongue: ()->CGImage
+  private let _msg_emoji_vacation: ()->CGImage
+  private let _msg_emoji_what: ()->CGImage
+  private let _msg_emoji_work: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10522,7 +10858,31 @@ public final class TelegramIconsTheme {
       account_settings_set_password: @escaping()->CGImage,
       select_peer_create_channel: @escaping()->CGImage,
       select_peer_create_group: @escaping()->CGImage,
-      chat_translate: @escaping()->CGImage
+      chat_translate: @escaping()->CGImage,
+      msg_emoji_activities: @escaping()->CGImage,
+      msg_emoji_angry: @escaping()->CGImage,
+      msg_emoji_away: @escaping()->CGImage,
+      msg_emoji_bath: @escaping()->CGImage,
+      msg_emoji_busy: @escaping()->CGImage,
+      msg_emoji_dislike: @escaping()->CGImage,
+      msg_emoji_food: @escaping()->CGImage,
+      msg_emoji_haha: @escaping()->CGImage,
+      msg_emoji_happy: @escaping()->CGImage,
+      msg_emoji_heart: @escaping()->CGImage,
+      msg_emoji_hi2: @escaping()->CGImage,
+      msg_emoji_home: @escaping()->CGImage,
+      msg_emoji_like: @escaping()->CGImage,
+      msg_emoji_neutral: @escaping()->CGImage,
+      msg_emoji_omg: @escaping()->CGImage,
+      msg_emoji_party: @escaping()->CGImage,
+      msg_emoji_recent: @escaping()->CGImage,
+      msg_emoji_sad: @escaping()->CGImage,
+      msg_emoji_sleep: @escaping()->CGImage,
+      msg_emoji_study: @escaping()->CGImage,
+      msg_emoji_tongue: @escaping()->CGImage,
+      msg_emoji_vacation: @escaping()->CGImage,
+      msg_emoji_what: @escaping()->CGImage,
+      msg_emoji_work: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11225,5 +11585,29 @@ public final class TelegramIconsTheme {
       self._select_peer_create_channel = select_peer_create_channel
       self._select_peer_create_group = select_peer_create_group
       self._chat_translate = chat_translate
+      self._msg_emoji_activities = msg_emoji_activities
+      self._msg_emoji_angry = msg_emoji_angry
+      self._msg_emoji_away = msg_emoji_away
+      self._msg_emoji_bath = msg_emoji_bath
+      self._msg_emoji_busy = msg_emoji_busy
+      self._msg_emoji_dislike = msg_emoji_dislike
+      self._msg_emoji_food = msg_emoji_food
+      self._msg_emoji_haha = msg_emoji_haha
+      self._msg_emoji_happy = msg_emoji_happy
+      self._msg_emoji_heart = msg_emoji_heart
+      self._msg_emoji_hi2 = msg_emoji_hi2
+      self._msg_emoji_home = msg_emoji_home
+      self._msg_emoji_like = msg_emoji_like
+      self._msg_emoji_neutral = msg_emoji_neutral
+      self._msg_emoji_omg = msg_emoji_omg
+      self._msg_emoji_party = msg_emoji_party
+      self._msg_emoji_recent = msg_emoji_recent
+      self._msg_emoji_sad = msg_emoji_sad
+      self._msg_emoji_sleep = msg_emoji_sleep
+      self._msg_emoji_study = msg_emoji_study
+      self._msg_emoji_tongue = msg_emoji_tongue
+      self._msg_emoji_vacation = msg_emoji_vacation
+      self._msg_emoji_what = msg_emoji_what
+      self._msg_emoji_work = msg_emoji_work
   }
 }

@@ -259,9 +259,13 @@ class ChatFileContentView: ChatMediaContentView {
             thumbView.setSignal(signal: cachedMedia(messageId: stableId, arguments: arguments, scale: backingScaleFactor), clearInstantly: !semanticMedia)
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
-            thumbView.setSignal(chatMessageImageFile(account: context.account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: false), clearInstantly: false, animate: true, synchronousLoad: false, cacheImage: { result in
-                cacheMedia(result, messageId: stableId, arguments: arguments, scale: System.backingScale)
-            })
+            
+            if !thumbView.isFullyLoaded {
+                thumbView.setSignal(chatMessageImageFile(account: context.account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: false), clearInstantly: false, animate: true, synchronousLoad: false, cacheImage: { result in
+                    cacheMedia(result, messageId: stableId, arguments: arguments, scale: System.backingScale)
+                })
+            }
+            
             
             
             thumbView.set(arguments: arguments)

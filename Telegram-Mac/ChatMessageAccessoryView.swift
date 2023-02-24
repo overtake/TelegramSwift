@@ -182,7 +182,7 @@ class ChatMessageAccessoryView: Control {
             layer.add(cornerAnimation, forKey: "cornerRadius")
         }
         
-        if theme.shouldBlurService {
+        if theme.shouldBlurService, !isLite(.blur) {
             let current: VisualEffect
             if let view = self.visualEffect {
                 current = view

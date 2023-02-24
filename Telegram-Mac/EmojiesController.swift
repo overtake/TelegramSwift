@@ -128,6 +128,54 @@ import ColorPalette
 //    }
 //}
 
+private extension EmojiSearchCategories.Group {
+    var icon: CGImage? {
+        switch self.title.lowercased() {
+        case "love":
+            return theme.icons.msg_emoji_heart
+        case "approval":
+            return theme.icons.msg_emoji_like
+        case "disapproval":
+            return theme.icons.msg_emoji_dislike
+        case "cheers":
+            return theme.icons.msg_emoji_party
+        case "laughter":
+            return theme.icons.msg_emoji_haha
+        case "astonishment":
+            return theme.icons.msg_emoji_omg
+        case "sadness":
+            return theme.icons.msg_emoji_sad
+        case "anger":
+            return theme.icons.msg_emoji_angry
+        case "neutral":
+            return theme.icons.msg_emoji_neutral
+        case "doubt":
+            return theme.icons.msg_emoji_what
+        case "silly":
+            return theme.icons.msg_emoji_tongue
+        case "hi":
+            return theme.icons.msg_emoji_hi2
+        case "dnd":
+            return theme.icons.msg_emoji_busy
+        case "work / on call":
+            return theme.icons.msg_emoji_work
+        case "eat":
+            return theme.icons.msg_emoji_food
+        case "away / bath":
+            return theme.icons.msg_emoji_bath
+        case "sleep":
+            return theme.icons.msg_emoji_sleep
+        case "travel & vacation":
+            return theme.icons.msg_emoji_vacation
+        case "activities":
+            return theme.icons.msg_emoji_activities
+        case "home":
+            return theme.icons.msg_emoji_home
+        default:
+            return nil
+        }
+    }
+}
 
 private extension RecentReactionItem.Content {
     var reaction: MessageReaction.Reaction {
@@ -967,6 +1015,7 @@ final class AnimatedEmojiesCategories : Control {
     private final class CategoryView : Control {
                 
         private var player: InlineStickerItemLayer?
+        private var imageView: ImageView?
         let category: EmojiSearchCategories.Group
         let context: AccountContext
         private var currentKey: String?
@@ -984,8 +1033,17 @@ final class AnimatedEmojiesCategories : Control {
 
             scaleOnClick = true
             
-           
-            self.apply(key: "select", policy: .toEnd(from: 0))
+            let lite = self.isLite
+            if lite, let image = category.icon {
+                let imageView = ImageView()
+                imageView.image = image
+                imageView.sizeToFit()
+                addSubview(imageView)
+                self.imageView = imageView
+            } else {
+                self.apply(key: "select", policy: .toEnd(from: lite ? .max : 0))
+            }
+            
 
             
             self.isSelected = isSelected
@@ -1024,6 +1082,9 @@ final class AnimatedEmojiesCategories : Control {
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
             if let player = player {
                 transition.updateFrame(layer: player, frame: self.focus(player.frame.size))
+            }
+            if let imageView = self.imageView {
+                transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
             }
             if let selectionView = self.selectionView {
                 transition.updateFrame(layer: selectionView, frame: self.focus(selectionView.frame.size))

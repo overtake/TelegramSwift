@@ -334,8 +334,8 @@ class ChatListController : PeersListController {
         })
         if changedFolder {
             self.removeRevealStateIfNeeded(nil)
+            self.genericView.tableView.scroll(to: .up(true))
         }
-        self.genericView.tableView.scroll(to: .up(true))
 
         self.genericView.searchView.change(state: .None,  true)
         setCenterTitle(self.defaultBarTitle)
