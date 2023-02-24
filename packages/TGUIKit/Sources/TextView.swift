@@ -2006,8 +2006,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             let index = layout.findIndex(location: point)
             if point.x > layout.lines[index].frame.maxX {
                 superview?.mouseDown(with: event)
+            } else {
+                _mouseDown(with: event)
             }
-        } else {
+        } else if !userInteractionEnabled {
             _mouseDown(with: event)
         }
     }
