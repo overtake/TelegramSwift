@@ -222,7 +222,9 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             disposable.set(signal.start(next: { [weak self] resourceData in
                 if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
                     self?.selectAnimationData = data
-                   // self?.apply(data, key: "select", policy: .framesCount(1))
+                    if isLite {
+                        self?.apply(data, key: "select", policy: .framesCount(1))
+                    }
                 }
             }))
             set(handler: { control in
