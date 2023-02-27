@@ -696,7 +696,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 } |> mapToSignal { peers in
                     return combineLatest(peers.map { context.account.postbox.peerView(id: $0.peerId) |> take(1) }) |> map { ($0, peers) }
                 } |> mapToSignal { peerViews, peers in
-                    return context.account.postbox.unreadMessageCountsView(items: peers.map {.peer(id: $0.peerId, handleThreads: false)}) |> take(1) |> map { values in
+                    
+                    let items: [UnreadMessageCountsItem] = peers.map { peer in
+                        return .peer(id: peer.peerId, handleThreads: peer.peer?.isForum == true)
+                    }
+                    
+                    return context.account.postbox.unreadMessageCountsView(items: items) |> take(1) |> map { values in
                         var unread:[PeerId: UnreadSearchBadge] = [:]
                         for peerView in peerViews {
                             let isMuted = peerView.isMuted

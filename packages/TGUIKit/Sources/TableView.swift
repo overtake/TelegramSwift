@@ -2417,7 +2417,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if let item = item as? TableStickItem, item.singletonItem {
                 view = TableRowView(frame: NSMakeRect(0, 0, frame.width, item.heightValue))
             } else {
-                view = makeView(at: item.index)
+                if item.index != -1 {
+                    view = makeView(for: item)
+                }
             }
             view?.identifier = NSUserInterfaceItemIdentifier(rawValue: identifier)
         }
@@ -2429,6 +2431,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private func makeView(at index: Int) -> TableRowView {
         let item = self.item(at: index)
+        let vz = item.viewClass() as! TableRowView.Type
+        let view = vz.init(frame:NSMakeRect(0, 0, frame.width, item.heightValue))
+        return view
+    }
+    private func makeView(for item: TableRowItem) -> TableRowView {
         let vz = item.viewClass() as! TableRowView.Type
         let view = vz.init(frame:NSMakeRect(0, 0, frame.width, item.heightValue))
         return view
