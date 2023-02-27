@@ -102,8 +102,13 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         if playOnHover == true {
             accept = true
         }
-        if context?.isLite(.stickers) == true {
-            accept = accept && mouseInside()
+        if isLite(.stickers) == true {
+            if !mouseInside(), self.playerView.currentState == .playing {
+                accept = true
+            } else {
+                accept = accept && mouseInside()
+            }
+            
         }
         
         if NSIsEmptyRect(self.visibleRect) || self.window == nil {
@@ -136,7 +141,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 guard let `self` = self else {
                     return
                 }
-                self.playerView.set(accept ? self.sticker : nil)
+                self.playerView.set(accept ? self.sticker : nil, reset: true)
                 self.previousAccept = accept
             }))
         }
@@ -321,8 +326,12 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 return nil
             } |> deliverOnMainQueue).start(next: { [weak self] data in
                 if let data = data, let `self` = self {
+                    
                     var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? .loop : .loop)
                     
+                    if isLite(.stickers) {
+                        playPolicy = .toStart(from: 0)
+                    }
                     if self.playOnHover == true {
                         playPolicy = .framesCount(0)
                     }
@@ -439,9 +448,18 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                         self.playerView.removeFromSuperview()
                         self.addSubview(self.thumbView)
                     }
+                case .finished:
+                    if isLite(.stickers) {
+                        DispatchQueue.main.async { [weak self] in
+                            self?.previousAccept = false
+                            self?.updatePlayerIfNeeded()
+                        }
+                    }
+                    
                 default:
                     break
                 }
+                
             }))
         }
         
