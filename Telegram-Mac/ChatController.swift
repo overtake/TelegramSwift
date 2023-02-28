@@ -2870,15 +2870,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         } else {
                              apply(strongSelf, atDate: nil)
                         }
-                    case .history, .thread:
+                    case .history, .thread, .pinned:
                         delay(0.1, closure: {
                             if atDate != nil {
                                 strongSelf.openScheduledChat()
                             }
                         })
                         apply(strongSelf, atDate: atDate)
-                    case .pinned:
-                        break
                     }
                     
                 } else {
