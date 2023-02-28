@@ -2417,9 +2417,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if let item = item as? TableStickItem, item.singletonItem {
                 view = TableRowView(frame: NSMakeRect(0, 0, frame.width, item.heightValue))
             } else {
-                if item.index != -1 {
-                    view = makeView(for: item)
-                }
+                view = makeView(for: item)
             }
             view?.identifier = NSUserInterfaceItemIdentifier(rawValue: identifier)
         }
