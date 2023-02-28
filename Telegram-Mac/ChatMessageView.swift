@@ -67,7 +67,8 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         }
         let maxY = text?.frame.maxY ?? 0
         if let webpageLayout = item.webpageLayout {
-            return CGRect(origin: NSMakePoint(0, maxY + item.defaultContentInnerInset), size: webpageLayout.size)
+            var size = webpageLayout.size
+            return CGRect(origin: NSMakePoint(0, maxY + item.defaultContentInnerInset), size: size)
         }
         return .zero
     }

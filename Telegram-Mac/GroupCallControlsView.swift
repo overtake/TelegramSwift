@@ -284,10 +284,14 @@ final class GroupCallControlsView : View {
                         if completed {
                             view?.layer?.transform = fr
                             view?.layer?.removeAnimation(forKey: "transform")
+                        } else {
+                            var bp = 0
+                            bp += 1
                         }
                     })
                 } else {
                     view.layer?.transform = fr
+                    view.layer?.removeAnimation(forKey: "transform")
                 }
             }
         }

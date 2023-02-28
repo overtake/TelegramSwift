@@ -716,6 +716,8 @@ class ChatMessageItem: ChatRowItem {
      
         webpageLayout?.measure(width: min(width, 380))
         
+        
+        
         let textBlockWidth: CGFloat = isBubbled ? max((webpageLayout?.size.width ?? width), min(240, width)) : width
         
         textLayout.measure(width: textBlockWidth, isBigEmoji: containsBigEmoji)
@@ -723,6 +725,10 @@ class ChatMessageItem: ChatRowItem {
             self.block = textLayout.generateBlock(backgroundColor: .blackTransparent)
         } else {
             self.block = (.zero, nil)
+        }
+        
+        if actionButtonText != nil, let wp = webpageLayout {
+            wp.layout(with: NSMakeSize(max(200, wp.size.width, textLayout.layoutSize.width), wp.size.height))
         }
         
         var contentSize = NSMakeSize(max(webpageLayout?.contentRect.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
