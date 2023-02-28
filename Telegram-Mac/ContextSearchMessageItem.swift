@@ -11,7 +11,7 @@ import TelegramCore
 import DateUtils
 import TGUIKit
 import Postbox
-
+import Strings
 
 class ContextSearchMessageItem: GeneralRowItem {
     
@@ -90,17 +90,27 @@ class ContextSearchMessageItem: GeneralRowItem {
         }
         _ = messageTitle.append(string: text, color: theme.colors.text, font: .normal(.text))
         
-        let r = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
-        if r.location != NSNotFound, r.location > 50 {
-            messageTitle.replaceCharacters(in: NSMakeRange(0, r.location - 30), with: "...")
+        let string = text
+        let subranges = findSubstringRanges(in: string.lowercased(), query: searchText.lowercased()).0
+//
+        
+//        let r = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
+        if let subrange = subranges.first {
+            let r = NSRange.init(string: string, range: subrange)
+            if r.location != NSNotFound, r.location > 50 {
+                messageTitle.replaceCharacters(in: NSMakeRange(0, r.location - 30), with: "...")
+            }
         }
+        
 
         
         self.messageLayout = TextViewLayout(messageTitle.trimNewLinesToSpace, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
-        let selectRange = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
-        if selectRange.location != NSNotFound {
-            self.messageLayout.additionalSelections = [TextSelectedRange(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
-        }
+//        let selectRange = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
+        
+        
+//        if selectRange.location != NSNotFound {
+//            self.messageLayout.additionalSelections = [TextSelectedRange(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
+//        }
         
         
         let selectedAttrText = messageTitle.mutableCopy() as! NSMutableAttributedString
@@ -276,6 +286,7 @@ private class ContextSearchMessageView : GeneralRowView {
         messageText.userInteractionEnabled = false
         messageText.isSelectable = false
         
+        
     }
     
     override func layout() {
@@ -303,6 +314,8 @@ private class ContextSearchMessageView : GeneralRowView {
         
         photo.setState(account: item.context.account, state: item.photo)
         messageText.update(item.ctxMessageLayout)
+        
+        self.toolTip = item.ctxMessageLayout.attributedString.string.prefixWithDots(300)
     }
     
 }

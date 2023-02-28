@@ -724,4 +724,10 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
             return current
         }
     }
+    
+    override func scrollup(force: Bool = false) {
+        super.scrollup(force: force)
+        self.makeSearchCommand?(.close)
+        self.genericView.tableView.scroll(to: .up(true))
+    }
 }

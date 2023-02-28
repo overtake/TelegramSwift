@@ -845,7 +845,11 @@ public final class TextViewLayout : Equatable {
     }
     
     public func generateBlock(backgroundColor: NSColor) -> (CGPoint, CGImage?) {
-        var rects = self.lines.map({$0.frame})
+        
+        let lines = self.lines.filter { self.attributedString.attributedSubstring(from: $0.range).string != "\n" }
+        var rects = lines.map({ $0.frame })
+        
+        
         if !rects.isEmpty {
             let sortedIndices = (0 ..< rects.count).sorted(by: { rects[$0].width > rects[$1].width })
             for i in 0 ..< sortedIndices.count {
@@ -863,8 +867,18 @@ public final class TextViewLayout : Equatable {
                 let height = rects[i].size.height + 5
                 rects[i] = rects[i].insetBy(dx: 0, dy: floor((rects[i].height - height) / 2.0))
                 rects[i].size.height = height
-                rects[i].size.width += 10
-                rects[i].origin.x -= 5
+                
+                if lines[i].penFlush == 1.0 {
+                    rects[i].origin.x = layoutSize.width - rects[i].width - 5
+                    rects[i].size.width += 10
+                } else if lines[i].penFlush == 0.5 {
+                    rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
+                    rects[i].size.width += 20
+                } else {
+                    rects[i].size.width += 10
+                    rects[i].origin.x -= 5
+                }
+                
             }
             
             var image = generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: lines.count == 1 ? rects[0].height / 2 : 10, innerRadius: .cornerRadius)
@@ -878,7 +892,7 @@ public final class TextViewLayout : Equatable {
     
     public func generateAutoBlock(backgroundColor: NSColor, minusHeight: CGFloat = 0, yInset: CGFloat = 0) {
         
-        var rects = self.lines.map({$0.frame})
+        var rects = self.lines.map({ $0.frame })
         
         if !rects.isEmpty {
             let sortedIndices = (0 ..< rects.count).sorted(by: { rects[$0].width > rects[$1].width })
@@ -1657,7 +1671,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         var beginLineIndex:CFIndex = 0
                         var endLineIndex:CFIndex = 0
                         
-                        if (lineRange.location + lineRange.length >= lessRange.location) && lessRange.length > 0 {
+                        
+                        if let _ = lineRange.intersection(lessRange) {
                             beginLineIndex = lessRange.location
                             let max = lineRange.length + lineRange.location
                             let maxSelect = max - beginLineIndex

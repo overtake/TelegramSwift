@@ -348,7 +348,8 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
             if peer.groupAccess.canMakeVoiceChat {
-                items.append(ActionItem(text: strings().peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, animation: .menu_call, action: {
+                let isLiveStream = peer.isChannel || peer.flags.contains(.isGigagroup)
+                items.append(ActionItem(text: isLiveStream ? strings().peerInfoActionLiveStream : strings().peerInfoActionVoiceChat, image: theme.icons.profile_voice_chat, animation: .menu_video_chat, action: {
                     arguments.makeVoiceChat(cachedData.activeCall, callJoinPeerId: cachedData.callJoinPeerId)
                 }))
             }

@@ -524,7 +524,7 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         actionsDisposable.add(addressNameAssignment.start(next: { peers in
             updateState { current in
                 var current = current
-                if peers?.isEmpty == false {
+                if peers?.isEmpty == false, current.requires.contains(.username) {
                     current.publicChannelsToRevoke = peers?.compactMap {
                         .init($0)
                     }
@@ -636,7 +636,7 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         let result = CreateGroupResult(title: state.text, picture: state.picture, peerIds: state.peerIds, autoremoveTimeout: state.autoremoveTimeout, username: state.editingPublicLinkText, isForum: state.requires.contains(.forum))
         if result.title.isEmpty {
             genericView.item(stableId: InputDataEntryId.custom(_id_info))?.view?.shakeView()
-        } else if state.publicChannelsToRevoke != nil {
+        } else if state.publicChannelsToRevoke != nil, state.requires.contains(.username) {
             showModalText(for: context.window, text: strings().createChannelUsernameError)
         } else if state.requires.contains(.username), state.addressNameValidationStatus != .availability(.available) {
             genericView.item(stableId: InputDataEntryId.input(_id_username))?.view?.shakeView()
