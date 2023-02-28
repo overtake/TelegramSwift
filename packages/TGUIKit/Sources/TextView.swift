@@ -23,10 +23,18 @@ public enum LinkType {
     case code
 }
 
-public func isValidEmail(_ checkString:String) -> Bool {
-    let emailRegex = ".+@([A-Za-z0-9-]+\\.)+[A-Za-z]{2}[A-Za-z]*"
-    let emailTest = NSPredicate(format: "SELF MATCHES %@", emailRegex)
-    return emailTest.evaluate(with: checkString)
+public func isValidEmail(_ email: String) -> Bool {
+    // Create a regular expression pattern to match an email address
+    let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+    
+    // Create a regular expression object from the pattern
+    guard let regex = try? NSRegularExpression(pattern: emailRegex) else {
+        return false
+    }
+    
+    // Check if the email string matches the pattern
+    let range = NSRange(location: 0, length: email.utf16.count)
+    return regex.firstMatch(in: email, options: [], range: range) != nil
 }
 
 private enum CornerType {

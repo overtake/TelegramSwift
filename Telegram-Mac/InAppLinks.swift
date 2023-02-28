@@ -327,8 +327,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         }
         url = String(reversedUrl.reversed())
-        if isValidEmail(url) && !url.hasPrefix("mailto:") {
-            url = "mailto:" + url
+        if isValidEmail(url) {
+            if !url.hasPrefix("mailto:") {
+                url = "mailto:" + url
+            }
         } else if !url.hasPrefix("http") && !url.hasPrefix("ftp") {
             if let range = url.range(of: "://") {
                 if url.length > 10, range.lowerBound > url.index(url.startIndex, offsetBy: 10) {
