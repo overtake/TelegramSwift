@@ -276,7 +276,7 @@ private final class InviteLinkTokenView : Control {
                         text = strings().inviteLinkCanJoinCountable(Int(usageLimit))
                     }
                 } else {
-                    text = strings().inviteLinkJoinedNewZero
+                    text = strings().inviteLinkJoinedNewCountable(0)
                 }
                 if link.requestApproval, let requestedCount = link.requestedCount {
                     var textCount = strings().inviteLinkRequestedCountable(Int(requestedCount))
