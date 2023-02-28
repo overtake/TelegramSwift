@@ -102,7 +102,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         if playOnHover == true {
             accept = true
         }
-        if isLite(.stickers) == true {
+        if isLite(.stickers) == true, parent != nil {
             if !mouseInside(), self.playerView.currentState == .playing {
                 accept = true
             } else {
@@ -329,7 +329,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                     
                     var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? .loop : .loop)
                     
-                    if isLite(.stickers) {
+                    if isLite(.stickers), parent != nil {
                         playPolicy = .toStart(from: 0)
                     }
                     if self.playOnHover == true {
@@ -449,7 +449,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                         self.addSubview(self.thumbView)
                     }
                 case .finished:
-                    if isLite(.stickers) {
+                    if isLite(.stickers), parent != nil {
                         DispatchQueue.main.async { [weak self] in
                             self?.previousAccept = false
                             self?.updatePlayerIfNeeded()
