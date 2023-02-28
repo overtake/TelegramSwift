@@ -276,7 +276,8 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
     }
     
     override func set(item: TableRowItem, animated: Bool) {
-        
+        let previous = self.item as? PeerMediaFileRowItem
+
         super.set(item: item,animated:animated)
         textView.backgroundColor = backdorColor
         if let item = item as? PeerMediaWebpageRowItem {
@@ -321,16 +322,30 @@ class PeerMediaWebpageRowView : PeerMediaRowView {
             if let icon = item.icon {
                 updateIconImageSignal = chatWebpageSnippetPhoto(account: item.interface.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: icon), scale: backingScaleFactor, small:true)
             } else {
-                updateIconImageSignal = .single(ImageDataTransformation())
+                updateIconImageSignal = .complete()
+            }
+            
+            
+            if let icon = item.icon, let arguments = item.iconArguments {
+                imageView.setSignal(signal: cachedMedia(media: icon, arguments: arguments, scale: System.backingScale), clearInstantly: previous?.message.id != item.message.id)
+            } else {
+                imageView.clear()
+            }
+            
+            if !imageView.isFullyLoaded {
+                if !imageView.hasImage {
+                    imageView.layer?.contents = item.thumb
+                }
+                imageView.setSignal(updateIconImageSignal, clearInstantly: false, animate: true, cacheImage: { result in
+                    if let icon = item.icon, let arguments = item.iconArguments {
+                        cacheMedia(result, media: icon, arguments: arguments, scale: System.backingScale, positionFlags: nil)
+                    }
+                })
             }
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
-                imageView.setSignal( updateIconImageSignal)
             }
-            
-            if item.icon == nil {
-                imageView.layer?.contents = item.thumb
-            }
+
             
             needsLayout = true
         }

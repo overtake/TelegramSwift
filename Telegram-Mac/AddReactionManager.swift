@@ -129,6 +129,14 @@ enum ContextReaction : Equatable {
             return .complete()
         }
     }
+    var selectedAnimation: TelegramMediaFile? {
+        switch self {
+        case let .builtin(_, _, selectAnimation, _, _):
+            return selectAnimation
+        case let .custom(_, _, file, _ ):
+            return file
+        }
+    }
     var appearAnimation: TelegramMediaFile? {
         switch self {
         case let .builtin(_, _, _, appearAnimation, _):
@@ -180,7 +188,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
            
             super.init(frame: frameRect)
             if !isLite {
-                let imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size, isPlayable: false)
+                let imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.selectedAnimation, emoji: ""), size: size, isPlayable: false)
                 self.imageView = imageView
                 addSubview(imageView)
             }

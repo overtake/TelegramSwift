@@ -256,8 +256,8 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
     var index:Int32 = 0
     
     if let accountPeer = accountPeer {
-        let searchPeers = searchView.peers.map({$0.value}).sorted(by: <)
-        let peers = view.peers.map { $0._asPeer() }.sorted(by: <)
+        let searchPeers = searchView.peers.map { $0.value }.filter { !$0.isDeleted }.sorted(by: <)
+        let peers = view.peers.map { $0._asPeer() }.filter { !$0.isDeleted }.sorted(by: <)
         
         var isset:[PeerId:PeerId] = [:]
         for peer in searchPeers {
@@ -285,9 +285,6 @@ private func entriesForView(_ view: EngineContactList, accountPeer: Peer?, searc
                 
                 entries.append(.peer(SelectPeerValue(peer: peer, presence: view.presences[peer.id]?._asPresence(), subscribers: nil), index, !excludeIds.contains(peer.id)))
                 index += 1
-                if index == 230 {
-                    break
-                }
             }
         }
 
@@ -925,11 +922,11 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
                         if settings.contains(.excludeBots) {
                             values.0 = values.0.filter {!$0.isBot}
                         }
-                        values.0 = values.0.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}.filter { !$0.isDeleted }
-                        values.1 = values.1.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}.filter { !$0.isDeleted }
+                        values.0 = values.0.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}
+                        values.1 = values.1.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}
                         
-                        let local = values.0
-                        let global = values.1
+                        let local = values.0.filter { !$0.isDeleted }
+                        let global = values.1.filter { !$0.isDeleted }
                         
                         return account.postbox.transaction { transaction -> [PeerId : PeerPresence] in
                             var presences: [PeerId : PeerPresence] = [:]
@@ -1329,8 +1326,8 @@ fileprivate class SelectPeersView : View, TokenizedProtocol {
     
     fileprivate override func layout() {
         super.layout()
-        tableView.frame = NSMakeRect(0, 50, frame.width  , frame.height - 50)
-        tokenView.frame = NSMakeRect(10, 10, frame.width - 20, 50)
+        tokenView.frame = NSMakeRect(10, 10, frame.width - 20, tokenView.frame.height)
+        tableView.frame = NSMakeRect(0, tokenView.frame.height + 20, frame.width, frame.height - (tokenView.frame.height + 20))
     }
     
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool) {

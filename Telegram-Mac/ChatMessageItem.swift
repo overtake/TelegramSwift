@@ -14,6 +14,7 @@ import Postbox
 import SwiftSignalKit
 import InAppSettings
 import TGModernGrowingTextView
+import Strings
 
 /*
  static func == (lhs: ChatTextCustomEmojiAttribute, rhs: ChatTextCustomEmojiAttribute) -> Bool {
@@ -513,27 +514,12 @@ class ChatMessageItem: ChatRowItem {
             textLayout.mayBlocked = entry.renderType != .bubble
             
             if let highlightFoundText = entry.additionalData.highlightFoundText {
-                if highlightFoundText.isMessage {
-                    let range = copy.string.lowercased().nsstring.range(of: highlightFoundText.query.lowercased())
-                    if range.location != NSNotFound {
-                        textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
-                    }
-                } else {
-                    var additionalSelections:[TextSelectedRange] = []
-                    let string = copy.string.lowercased().nsstring
-                    var searchRange = NSMakeRange(0, string.length)
-                    var foundRange:NSRange = NSMakeRange(NSNotFound, 0)
-                    while (searchRange.location < string.length) {
-                        searchRange.length = string.length - searchRange.location
-                        foundRange = string.range(of: highlightFoundText.query.lowercased(), options: [], range: searchRange) 
-                        if (foundRange.location != NSNotFound) {
-                            additionalSelections.append(TextSelectedRange(range: foundRange, color: theme.colors.grayIcon.withAlphaComponent(0.5), def: false))
-                            searchRange.location = foundRange.location+foundRange.length;
-                        } else {
-                            break
-                        }
-                    }
-                    textLayout.additionalSelections = additionalSelections
+                let string = copy.string.lowercased()
+                let subranges = findSubstringRanges(in: string, query: highlightFoundText.query.lowercased())
+                
+                for subrange in subranges.0 {
+                    let range = NSRange(string: string, range: subrange)
+                    textLayout.additionalSelections.append(TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false))
                 }
                 
             }

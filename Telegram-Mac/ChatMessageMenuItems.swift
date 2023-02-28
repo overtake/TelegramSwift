@@ -506,7 +506,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }
         }
         
-        if canEditMessage(data.message, chatInteraction: data.chatInteraction, context: context), data.chatMode != .pinned, !isService {
+        if canEditMessage(data.message, chatInteraction: data.chatInteraction, context: context), !isService {
             let edit = ContextMenuItem(strings().messageContextEdit, handler: {
                 data.chatInteraction.beginEditingMessage(data.message)
             }, itemImage: MenuAnimation.menu_edit.value, keyEquivalent: .cmde)

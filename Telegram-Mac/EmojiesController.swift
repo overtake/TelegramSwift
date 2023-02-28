@@ -2421,17 +2421,15 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     
     override func scrollup(force: Bool = false) {
         
-        var cancelled: Bool = false
         self.updateState? { current in
             var current = current
             if current.selectedEmojiCategory != nil {
-                cancelled = true
                 current.selectedEmojiCategory = nil
             }
             return current
         }
-        self.updateSearchState(.init(state: .None, request: nil))
-        
+        self.makeSearchCommand?(.close)
+
         genericView.tableView.scroll(to: .up(true))
     }
     

@@ -49,15 +49,15 @@ private enum NetworkItem : Int32 {
     var string: String {
         switch self {
         case .messages:
-            return "Messages"
+            return strings().networkUsageTitleGeneric
         case .photos:
-            return "Photos"
+            return strings().networkUsageTitleImages
         case .videos:
-            return "Videos"
+            return strings().networkUsageTitleVideos
         case .audio:
-            return "Audio"
+            return strings().networkUsageTitleAudio
         case .files:
-            return "Files"
+            return strings().networkUsageTitleFiles
         }
     }
     var color: NSColor {

@@ -5687,7 +5687,7 @@ public final class L10n {
   public static var generalSettingsEmojiReplacements: String  { return L10n.tr("Localizable", "GeneralSettings.EmojiReplacements") }
   /// Sidebar
   public static var generalSettingsEnableSidebar: String  { return L10n.tr("Localizable", "GeneralSettings.EnableSidebar") }
-  /// ENERGY SAVING
+  /// POWER SAVING
   public static var generalSettingsEnergySaving: String  { return L10n.tr("Localizable", "GeneralSettings.EnergySaving") }
   /// FORCE TOUCH ACTION
   public static var generalSettingsForceTouchHeader: String  { return L10n.tr("Localizable", "GeneralSettings.ForceTouchHeader") }
@@ -5701,7 +5701,7 @@ public final class L10n {
   public static var generalSettingsInstantViewHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InstantViewHeader") }
   /// INTERFACE
   public static var generalSettingsInterfaceHeader: String  { return L10n.tr("Localizable", "GeneralSettings.InterfaceHeader") }
-  /// Power Saving
+  /// Power Saving Mode
   public static var generalSettingsLiteMode: String  { return L10n.tr("Localizable", "GeneralSettings.LiteMode") }
   /// Handle media keys for in-app player
   public static var generalSettingsMediaKeysForInAppPlayer: String  { return L10n.tr("Localizable", "GeneralSettings.MediaKeysForInAppPlayer") }
@@ -6393,34 +6393,38 @@ public final class L10n {
   public static var liteModeLowPower: String  { return L10n.tr("Localizable", "LiteMode.LowPower") }
   /// Power Saving
   public static var liteModeTitle: String  { return L10n.tr("Localizable", "LiteMode.Title") }
-  /// Various effects and animations that make Telegram look amazing.
+  /// Other animations that make Telegram look amazing.
   public static var liteModeKeyAnimationsInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.animations.Info") }
-  /// Animations
+  /// Interface Animations
   public static var liteModeKeyAnimationsTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.animations.Title") }
-  /// Blur effects across application.
+  /// Blur transparent interface elements.
   public static var liteModeKeyBlurInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.blur.Info") }
-  /// Blur
+  /// Blur Effects
   public static var liteModeKeyBlurTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.blur.Title") }
-  /// Animate and loop custom emojies.
+  /// Loop animated emoji in messages, reactions and statuses.
   public static var liteModeKeyEmojiInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji.Info") }
   /// Emoji Animations
   public static var liteModeKeyEmojiTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji.Title") }
-  /// Reactions and stickers will not use extra animated efects.
+  /// Show animated effects for reactions and premium stickers.
   public static var liteModeKeyEmojiEffectsInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji_effects.Info") }
   /// Emoji Effects
   public static var liteModeKeyEmojiEffectsTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.emoji_effects.Title") }
-  /// Loop and automatically play GIFs and Videos
+  /// Autoplay and loop GIFs in chats and in the keyboard.
   public static var liteModeKeyGifInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.gif.Info") }
-  /// GIFs and Videos
+  /// Autoplay GIFs
   public static var liteModeKeyGifTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.gif.Title") }
-  /// Animate icons in context menu.
+  /// Animate icons in context menus.
   public static var liteModeKeyMenuAnimationsInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.menu_animations.Info") }
   /// Menu Animations
   public static var liteModeKeyMenuAnimationsTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.menu_animations.Title") }
-  /// Animate and loop stickers.
+  /// Loop animated stickers, in chats and in the keyboard.
   public static var liteModeKeyStickersInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.stickers.Info") }
-  /// Stickers
+  /// Sticker Animations
   public static var liteModeKeyStickersTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.stickers.Title") }
+  /// Autoplay and loop videos and video messages in chats.
+  public static var liteModeKeyVideoInfo: String  { return L10n.tr("Localizable", "LiteMode.Key.video.Info") }
+  /// Autoplay Videos
+  public static var liteModeKeyVideoTitle: String  { return L10n.tr("Localizable", "LiteMode.Key.video.Title") }
   /// Switch Power Saving mode on when your battery is below %1$@%
   public static func liteModeLowPowerInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "LiteMode.LowPower.Info", p1)
@@ -7049,6 +7053,16 @@ public final class L10n {
   public static var networkUsageResetConfirmOk: String  { return L10n.tr("Localizable", "NetworkUsage.ResetConfirm.Ok") }
   /// Click on each section for detailed view.
   public static var networkUsageSectionInfo: String  { return L10n.tr("Localizable", "NetworkUsage.Section.Info") }
+  /// Audio
+  public static var networkUsageTitleAudio: String  { return L10n.tr("Localizable", "NetworkUsage.Title.Audio") }
+  /// Files
+  public static var networkUsageTitleFiles: String  { return L10n.tr("Localizable", "NetworkUsage.Title.Files") }
+  /// Messages
+  public static var networkUsageTitleGeneric: String  { return L10n.tr("Localizable", "NetworkUsage.Title.Generic") }
+  /// Photos
+  public static var networkUsageTitleImages: String  { return L10n.tr("Localizable", "NetworkUsage.Title.Images") }
+  /// Videos
+  public static var networkUsageTitleVideos: String  { return L10n.tr("Localizable", "NetworkUsage.Title.Videos") }
   /// phone number
   public static var newContactPhone: String  { return L10n.tr("Localizable", "NewContact.Phone") }
   /// New Contact
