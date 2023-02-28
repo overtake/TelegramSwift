@@ -81,18 +81,18 @@ class ExportedInvitationRowItem: GeneralRowItem {
                     usageColor = theme.colors.grayText
                 }
             } else {
-                usageText = strings().inviteLinkJoinedNewZero
+                usageText = strings().inviteLinkJoinedNewCountable(0)
                 usageColor = theme.colors.grayText
             }
         } else if let publicAddress = publicAddress {
             text = "t.me/\(publicAddress)"
             color = theme.colors.text
-            usageText = strings().inviteLinkJoinedNewZero
+            usageText = strings().inviteLinkJoinedNewCountable(0)
             usageColor = theme.colors.grayText
         } else {
             text = strings().channelVisibilityLoading
             color = theme.colors.grayText
-            usageText = strings().inviteLinkJoinedNewZero
+            usageText = strings().inviteLinkJoinedNewCountable(0)
             usageColor = theme.colors.grayText
         }
         

@@ -163,7 +163,7 @@ public func translate(key: String, _ args: [CVarArg]) -> String {
     if let format = format {
         let ranges = extractArgumentRanges(format)
         var formatted = format
-        while ranges.count != args.count {
+        while ranges.count != args.count, !args.isEmpty {
             args.removeFirst()
         }
         let argIndexes = ranges.sorted(by: { lhs, rhs -> Bool in
