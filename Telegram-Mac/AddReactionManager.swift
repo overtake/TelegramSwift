@@ -505,7 +505,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 self.documentView.addSubview(reaction)
                 x += size.width + 4
             }
-            if size.width < x {
+            if x < frame.width {
                 add(reaction)
             } else {
                 DispatchQueue.main.async {
