@@ -3165,7 +3165,7 @@ extension MessageHistoryAnchorIndex {
 
 extension ChatContextResultCollection {
     func withAdditionalCollection(_ collection: ChatContextResultCollection) -> ChatContextResultCollection {
-        return ChatContextResultCollection(botId: collection.botId, peerId: collection.peerId, query: collection.query, geoPoint: collection.geoPoint, queryId: collection.queryId, nextOffset: collection.nextOffset, presentation: collection.presentation, switchPeer: collection.switchPeer, results: self.results + collection.results, cacheTimeout: collection.cacheTimeout)
+        return ChatContextResultCollection(botId: collection.botId, peerId: collection.peerId, query: collection.query, geoPoint: collection.geoPoint, queryId: collection.queryId, nextOffset: collection.nextOffset, presentation: collection.presentation, switchPeer: collection.switchPeer, webView: collection.webView, results: self.results + collection.results, cacheTimeout: collection.cacheTimeout)
     }
 }
 

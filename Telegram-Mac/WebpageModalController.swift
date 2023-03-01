@@ -625,7 +625,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             switch requestData {
             case .simple(let url, let bot, _):
-                let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
+                let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, inline: false, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
                                 
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
                     self?.url = url

@@ -18,12 +18,12 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
     
     enum State {
         case loading
-        case stats(read: [Peer]?, reactions: EngineMessageReactionListContext.State?, customFiles: [TelegramMediaFile]?)
+        case stats(read: [Peer]?, readTimestamps: [PeerId: Int32], reactions: EngineMessageReactionListContext.State?, customFiles: [TelegramMediaFile]?)
         var isEmpty: Bool {
             switch self {
             case .loading:
                 return false
-            case let .stats(read, reactions, _):
+            case let .stats(read, _ , reactions, _):
                 var readIsEmpty = true
                 var reactionsIsEmpty = true
                 if let read = read {
@@ -44,7 +44,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             switch self {
             case .loading:
                 return []
-            case let .stats(_, _, files):
+            case let .stats(_, _, _, files):
                 return files?.compactMap { $0.emojiReference } ?? []
             }
         }
@@ -53,7 +53,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             switch self {
             case .loading:
                 return []
-            case let .stats(read, reactions, _):
+            case let .stats(read, _, reactions, _):
                 var photos:[Peer] = []
                 if let reactions = reactions {
                     photos = Array(reactions.items.map { $0.peer._asPeer() }.prefix(3))
@@ -78,12 +78,12 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             }
         }
         
-        var peers:[(Peer, MessageReaction.Reaction?)] {
+        var peers:[(Peer, MessageReaction.Reaction?, Int32?)] {
             switch self {
-            case let .stats(read, reactions, _):
+            case let .stats(read, readTimestamps, reactions, _):
                 let readPeers = read ?? []
-                let reactionPeers = reactions?.items.map { ($0.peer._asPeer(), $0.reaction) } ?? []
-                let read:[(Peer, MessageReaction.Reaction?)] = readPeers.map { ($0, nil) }.filter({ value in
+                let reactionPeers = reactions?.items.map { ($0.peer._asPeer(), $0.reaction, readTimestamps[$0.peer.id]) } ?? []
+                let read:[(Peer, MessageReaction.Reaction?, Int32?)] = readPeers.map { ($0, nil, readTimestamps[$0.id]) }.filter({ value in
                     return !reactionPeers.contains(where: {
                         $0.0.id == value.0.id
                     })
@@ -97,7 +97,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         
         func text(_ message: Message) -> String {
             switch self {
-            case let .stats(read, reactions, _):
+            case let .stats(read, _, reactions, _):
                 if let reactions = reactions, !reactions.items.isEmpty {
                     if let read = read, read.count > reactions.totalCount {
                         return strings().chatContextReacted("\(reactions.totalCount)", "\(read.count)")
@@ -156,7 +156,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
     init(interaction: AppMenuBasicItem.Interaction, chatInteraction: ChatInteraction, item: ContextMenuItem, presentation: AppMenu.Presentation, context: AccountContext, message: Message, availableReactions: AvailableReactions?) {
         self.message = message
         self.context = context
-        self.reactions = context.engine.messages.messageReactionList(message: .init(self.message), reaction: nil)
+        
+        
+        self.reactions = context.engine.messages.messageReactionList(message: .init(self.message), readStats: nil, reaction: nil)
         self.chatInteraction = chatInteraction
         self.availableReactions = availableReactions
         super.init(.zero, item: item, interaction: interaction, presentation: presentation)
@@ -186,7 +188,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                 if reactions == nil && readStats == nil {
                     return .loading
                 } else {
-                    return .stats(read: readStats?.peers.map { $0._asPeer() }, reactions: reactions, customFiles: customFiles)
+                    return .stats(read: readStats?.peers.map { $0._asPeer() }, readTimestamps: readStats?.readTimestamps ?? [:], reactions: reactions, customFiles: customFiles)
                 }
             }
 
@@ -203,7 +205,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         let message = self.message
         let context = self.context
         let availableReactions = self.availableReactions
-        let makeItem:(_ peer: (Peer, MessageReaction.Reaction?)) -> ContextMenuItem = { [weak chatInteraction] peer in
+        let makeItem:(_ peer: (Peer, MessageReaction.Reaction?, Int32?)) -> ContextMenuItem = { [weak chatInteraction] peer in
             let title = peer.0.displayTitle.prefixWithDots(25)
             
             let reaction: ReactionPeerMenu.Source?
@@ -230,7 +232,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             
             let item = ReactionPeerMenu(title: title, handler: {
                 chatInteraction?.openInfo(peer.0.id, false, nil, nil)
-            }, peer: peer.0, context: context, reaction: reaction)
+            }, peer: peer.0, context: context, reaction: reaction, readTimestamp: peer.2)
             let signal:Signal<(CGImage?, Bool), NoError>
             signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
             _ = signal.start(next: { [weak item] image, _ in
@@ -279,7 +281,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             menu.loadMore = { [weak self] in
                 if let state = self?.state {
                     switch state {
-                    case let .stats(_, reactions, _):
+                    case let .stats(_, _, reactions, _):
                         if let reactions = reactions, reactions.canLoadMore {
                             self?.reactions.loadMore()
                         }
@@ -420,7 +422,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
     }
 
 
-    private var contentView: AvatarContentView?
+    private var avatars: AvatarContentView?
     private var loadingView: View?
 
     private var isLoading: Bool = false
@@ -444,7 +446,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
                 self.loadingView = nil
             }
         }
-        let contentView: AvatarContentView?
+        let avatars: AvatarContentView?
         
         let photos = item.state.photos(item.message)
         
@@ -453,23 +455,23 @@ private final class MessageReadMenuItemView : AppMenuRowView {
             self.photos = updated
             self.isLoading = item.state.isLoading(item.message)
             if self.isLoading {
-                contentView = .init(context: item.context, message: item.message, peers: nil, size: NSMakeSize(18, 18))
+                avatars = .init(context: item.context, message: item.message, peers: nil, size: NSMakeSize(18, 18))
             } else {
                 if !item.state.isEmpty {
-                    contentView = .init(context: item.context, message: item.message, peers: item.state.photos(item.message), size: NSMakeSize(18, 18))
+                    avatars = .init(context: item.context, message: item.message, peers: item.state.photos(item.message), size: NSMakeSize(18, 18))
                 } else {
-                    contentView = nil
+                    avatars = nil
                 }
             }
-            if let contentView = self.contentView {
-                performSubviewRemoval(contentView, animated: animated)
+            if let avatars = self.avatars {
+                performSubviewRemoval(avatars, animated: animated)
             }
-            self.contentView = contentView
-            if let contentView = contentView {
-                addSubview(contentView)
-                contentView.centerY(x: self.rightX - contentView.frame.width - 2)
+            self.avatars = avatars
+            if let avatars = avatars {
+                addSubview(avatars)
+                avatars.centerY(x: self.rightX - contentView.frame.width - 2)
                 if animated {
-                    contentView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    avatars.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
         }
@@ -482,15 +484,15 @@ private final class MessageReadMenuItemView : AppMenuRowView {
         guard let item = self.item as? MessageReadMenuRowItem else {
             return
         }
-        if let contentView = contentView {
+        if let avatars = avatars {
             if item.item.submenu != nil {
-                contentView.centerY(x: self.rightX - contentView.frame.width - 4)
+                avatars.centerY(x: self.rightX - avatars.frame.width - 4)
             } else {
-                contentView.centerY(x: self.rightX - contentView.frame.width)
+                avatars.centerY(x: self.rightX - avatars.frame.width)
             }
         }
         if let loadingView = loadingView {
-            let contentSize = contentView?.frame.width ?? 0
+            let contentSize = avatars?.frame.width ?? 0
             loadingView.setFrameSize(NSMakeSize(self.rightX - self.textX - 10 - contentSize, loadingView.frame.height))
             loadingView.centerY(x: self.textX)
         }
@@ -633,14 +635,15 @@ final class ReactionPeerMenu : ContextMenuItem {
     private let reaction: Source?
     private let peer: Peer
     private let destination: Destination
-    
+    private let readTimestamp: Int32?
     private let disposable = MetaDisposable()
     
-    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?, message: Message? = nil, destination: Destination = .common) {
+    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?, readTimestamp: Int32? = nil, message: Message? = nil, destination: Destination = .common) {
         self.reaction = reaction
         self.peer = peer
         self.context = context
         self.destination = destination
+        self.readTimestamp = readTimestamp
         
         super.init(title, handler: handler)
         
@@ -699,7 +702,7 @@ final class ReactionPeerMenu : ContextMenuItem {
     }
     
     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
-        return ReactionPeerMenuItem(item: self, peer: peer, interaction: interaction, presentation: presentation, context: context, reaction: self.reaction)
+        return ReactionPeerMenuItem(item: self, peer: peer, interaction: interaction, presentation: presentation, context: context, reaction: self.reaction, readTimestamp: self.readTimestamp)
     }
     
     required init(coder decoder: NSCoder) {
@@ -713,10 +716,12 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
     fileprivate let context: AccountContext
     fileprivate let reaction: ReactionPeerMenu.Source?
     fileprivate let peer: Peer
-    init(item: ContextMenuItem, peer: Peer, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: ReactionPeerMenu.Source?) {
+    fileprivate let readTimestamp: Int32?
+    init(item: ContextMenuItem, peer: Peer, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: ReactionPeerMenu.Source?, readTimestamp: Int32?) {
         self.context = context
         self.reaction = reaction
         self.peer = peer
+        self.readTimestamp = readTimestamp
         super.init(.zero, item: item, interaction: interaction, presentation: presentation)
         if item.image == nil {
             let image = generateImage(NSMakeSize(imageSize, imageSize), rotatedContext: { size, ctx in
@@ -750,6 +755,7 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
+        
     }
     
     required init?(coder: NSCoder) {
@@ -771,6 +777,18 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
         imageView.centerY(x: self.rightX - imageView.frame.width)
 
     }
+    
+    override func updateState(_ state: ControlState) {
+        super.updateState(state)
+        NSLog("\(state)")
+        
+        if state == .Hover || (mouseInside() && state == .Other) {
+            contentView.change(pos: NSMakePoint(0, -contentView.frame.height), animated: true)
+        } else {
+            contentView.change(pos: NSMakePoint(0, 0), animated: true)
+        }
+    }
+    
     
     override func set(item: TableRowItem, animated: Bool = false) {
         let previous = self.item as? ReactionPeerMenuItem

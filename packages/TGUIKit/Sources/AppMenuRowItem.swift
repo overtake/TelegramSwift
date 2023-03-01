@@ -302,10 +302,13 @@ open class AppMenuRowView: AppMenuBasicItemView {
     private var drawable: AppMenuItemImageDrawable? = nil
     private var more: ImageView? = nil
     
+    public let contentView = View()
+    
     private let hoverDisposable = MetaDisposable()
     
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        super.addSubview(contentView)
         self.addSubview(textView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
@@ -390,6 +393,11 @@ open class AppMenuRowView: AppMenuBasicItemView {
             item.interaction?.action(item.item)
         }, for: .RightDown)
     }
+    
+    open override func addSubview(_ view: NSView) {
+        contentView.addSubview(view)
+    }
+    
     private var previous: ControlState = .Normal
     open func updateState(_ state: ControlState) {
       
@@ -472,6 +480,8 @@ open class AppMenuRowView: AppMenuBasicItemView {
     open override func layout() {
         super.layout()
         
+        contentView.setFrameSize(containerView.frame.size)
+        
         guard let item = item as? AppMenuRowItem else {
             return
         }
@@ -525,7 +535,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
         
         if let drawable = drawable {
             if drawable.superview != containerView {
-                containerView.addSubview(drawable)
+                contentView.addSubview(drawable)
             }
         } else if let current = self.drawable {
             self.drawable = nil
@@ -561,7 +571,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
                     current.setFrameSize(item.moreSize)
                 }
                 current.contentGravity = .center
-                containerView.addSubview(current)
+                contentView.addSubview(current)
                 self.more = current
             }
             current.image = item.item.state == .on ? item.presentation.selected : item.presentation.more
