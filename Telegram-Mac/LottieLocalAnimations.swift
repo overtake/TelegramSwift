@@ -191,8 +191,6 @@ enum LocalAnimatedSticker : String {
     case menu_camera
     case menu_translate
     case menu_gear
-
-    
     case menu_folder_all_chats
     case menu_folder_animal
     case menu_folder_book
@@ -223,18 +221,14 @@ enum LocalAnimatedSticker : String {
     case menu_drugs
     case menu_reload
     case menu_webapp_placeholder
-    
     case menu_autodelete_1d
     case menu_autodelete_1h
     case menu_autodelete_1m
     case menu_autodelete_1w
     case menu_autodelete_never
     case menu_autodelete_customize
-
-    
     case menu_speaker_muted
     case menu_speaker
-    
     case menu_sharescreen_slash
     case menu_sharescreen
     case menu_note_download
@@ -291,6 +285,10 @@ enum LocalAnimatedSticker : String {
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
+    }
+    
+    func menuIcon(_ color: NSColor) -> CGImage? {
+        return NSImage(named: self.rawValue)?.precomposed(color)
     }
     
     

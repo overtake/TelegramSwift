@@ -1332,7 +1332,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
     
     let external = value
     let urlString = external as String
-    let url = value.lowercased.nsstring
+    let url = value
     
     
     if let url = URL(string: url as String), url.scheme == "file" {
