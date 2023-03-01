@@ -496,9 +496,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 case let .numericalPassword(value), let .plaintextPassword(value):
                     if !value.isEmpty {
                         appEncryption.change(value)
-                        accountManager.transaction {
+                        _ = accountManager.transaction {
                             $0.setAccessChallengeData(.plaintextPassword(value: ""))
-                        }
+                        }.start()
                     }
                 default:
                     break
@@ -531,10 +531,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 
                 _ = signal.start(next: { updatedTheme in
                     if let theme = updatedTheme {
-                        self.enumerateApplicationContexts({ context in
-                            telegramUpdateTheme(theme, window: context.context.window, animated: true)
-                            context.applyNewTheme()
-                        })
+                        if self.contextValue == nil {
+                            telegramUpdateTheme(theme, window: window, animated: true)
+                        } else {
+                            self.enumerateApplicationContexts({ context in
+                                telegramUpdateTheme(theme, window: context.context.window, animated: true)
+                                context.applyNewTheme()
+                            })
+                        }
                     }
                 })
                 
