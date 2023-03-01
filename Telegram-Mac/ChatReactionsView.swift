@@ -347,7 +347,7 @@ final class ChatReactionsLayout {
                 if let reactions = reactions {
                     current = reactions
                 } else {
-                    current = context.engine.messages.messageReactionList(message: .init(self.message), reaction: self.value.value)
+                    current = context.engine.messages.messageReactionList(message: .init(self.message), readStats: nil, reaction: self.value.value)
                     self.reactions = current
                 }
                 let signal = current.state |> deliverOnMainQueue

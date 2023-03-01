@@ -747,7 +747,7 @@ final class ChatInteraction : InterfaceObserver  {
                         if let bot = bot {
                             let botId = bot.id
                             if simple {
-                                let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: hashUrl, themeParams: generateWebAppThemeParams(theme))
+                                let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: hashUrl, inline: false, themeParams: generateWebAppThemeParams(theme))
                                 _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
                                     showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot, buttonText: button.title), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
                                 })
