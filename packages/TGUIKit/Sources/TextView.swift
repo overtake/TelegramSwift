@@ -446,7 +446,7 @@ public final class TextViewLayout : Equatable {
         let fontAscent = CTFontGetAscent(font)
         let fontDescent = CTFontGetDescent(font)
        
-        let fontLineHeight = floor(fontAscent + (isBigEmoji ? fontDescent / 2 : fontDescent)) + (lineSpacing ?? 0)
+        let fontLineHeight = floor(fontAscent + fontDescent)
         
         var monospacedRects:[NSRect] = []
         
@@ -536,7 +536,7 @@ public final class TextViewLayout : Equatable {
 
             var isPreformattedLine: CGFloat? = nil
             
-            fontLineSpacing = lineSpacing ?? (isBigEmoji ? 0 : floor(fontLineHeight * 0.12))
+            fontLineSpacing = lineSpacing ?? floor(fontLineHeight * 0.12)
             
             if isBigEmoji {
                 lineOriginY += 2
@@ -732,7 +732,7 @@ public final class TextViewLayout : Equatable {
                     
                   
                     let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
-                    let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY - (isBigEmoji ? fontDescent / 3 : 0), width: lineWidth, height: lineHeight)
+                    let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
                     layoutSize.height += lineHeight
                     layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                     
@@ -822,23 +822,23 @@ public final class TextViewLayout : Equatable {
                 embeddedItems.append(EmbeddedItem(range: embeddedItem.range, rect: embeddedItem.frame.offsetBy(dx: line.frame.minX, dy: line.frame.minY).offsetBy(dx: penOffset, dy: 0), value: embeddedItem.item))
             }
         }
-        if lines.count == 1 {
-            let line = lines[0]
-            if !line.embeddedItems.isEmpty {
-                layoutSize.height += isBigEmoji ? 8 : 2
-            }
-//            if isBigEmoji {
-//                layoutSize.width += 5
+//        if lines.count == 1 {
+//            let line = lines[0]
+//            if !line.embeddedItems.isEmpty {
+//           //     layoutSize.height += isBigEmoji ? 8 : 2
 //            }
-        } else {
-            if isBigEmoji, let line = lines.last {
-                if !line.embeddedItems.isEmpty {
-                    layoutSize.height += 4
-                }
-            } else if let line = lines.last, !line.embeddedItems.isEmpty {
-                layoutSize.height += 1
-            }
-        }
+////            if isBigEmoji {
+////                layoutSize.width += 5
+////            }
+//        } else {
+//            if isBigEmoji, let line = lines.last {
+//                if !line.embeddedItems.isEmpty {
+//                    layoutSize.height += 4
+//                }
+//            } else if let line = lines.last, !line.embeddedItems.isEmpty {
+//                layoutSize.height += 1
+//            }
+//        }
         
 
 
@@ -849,6 +849,7 @@ public final class TextViewLayout : Equatable {
         if saveRTL {
             layoutSize.width = max(layoutSize.width, constrainedWidth)
         }
+        
         self.layoutSize = layoutSize
     }
     
@@ -1520,13 +1521,14 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private var clearExceptRevealed: Bool = false
     private var inAnimation: Bool = false {
         didSet {
-            needsDisplay = true
+            setNeedsDisplayLayer()
         }
     }
     
     private var visualEffect: VisualEffect? = nil
 
     private var textView: View? = nil
+    private let drawLayer: SimpleLayer = SimpleLayer()
     private var blockMask: SimpleLayer?
     
     var hasBackground: Bool {
@@ -1580,6 +1582,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         self.style = ControlStyle(backgroundColor: .clear)
         self.layer?.addSublayer(embeddedContainer)
         self.layer?.masksToBounds = false
+        self.layer?.addSublayer(drawLayer)
+        self.drawLayer.delegate = self
     }
 
     public required init(frame frameRect: NSRect) {
@@ -1596,15 +1600,20 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         }
     }
 
+
+    public override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+    }
+    
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         //backgroundColor = .random
         super.draw(layer, in: ctx)
 
-        if hasBackground, layer != textView?.layer {
-            return
-        }
-        
-        if let layout = textLayout {
+//        if hasBackground, layer != textView?.layer {
+//            return
+//        }
+
+        if let layout = textLayout, drawLayer == layer {
             
             
             ctx.setAllowsFontSubpixelPositioning(true)
@@ -1725,7 +1734,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             rect.size.width = width - blockValue / 2
                             
                             rect.origin.x = penOffset + startOffset + blockValue
-                            rect.origin.y = rect.minY - rect.height + blockValue / 2
+                            rect.origin.y = rect.minY - rect.height + blockValue / 2 + rect.height * 0.12
                             rect.size.height += ceil(descent - leading)
                             let color:NSColor = window?.isKeyWindow == true || !range.1 ? range.0.color : NSColor.lightGray
                             
@@ -1871,7 +1880,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 }
             } else {
                 layout.selectedRange.range = NSMakeRange(NSNotFound, 0)
-                needsDisplay = true
+                setNeedsDisplayLayer()
                 super.rightMouseDown(with: event)
             }
         } else {
@@ -1994,8 +2003,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     }
     
     public override func setNeedsDisplayLayer() {
-        super.setNeedsDisplayLayer()
-        self.textView?.layer?.setNeedsDisplay()
+       // super.setNeedsDisplayLayer()
+        self.drawLayer.setNeedsDisplay()
+       // self.drawLayer.displayIfNeeded()
+    }
+    
+    public override func setNeedsDisplay() {
+        self.drawLayer.setNeedsDisplay()
     }
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
@@ -2050,11 +2064,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     
     @objc open func windowDidBecomeKey() {
-        needsDisplay = true
+        setNeedsDisplayLayer()
     }
     
     @objc open func windowDidResignKey() {
-        needsDisplay = true
+        setNeedsDisplayLayer()
     }
     
     private var locationInWindow:NSPoint? = nil
@@ -2139,7 +2153,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             let point = self.convert(event.locationInWindow, from: nil)
             if let _ = layout.spoiler(at: point) {
                 layout.revealSpoiler()
-                needsDisplay = true
+                setNeedsDisplayLayer()
                 self.updateInks(layout, animated: true)
                 return
             }
@@ -2175,7 +2189,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             } else {
                 super.mouseUp(with: event)
             }
-            setNeedsDisplay()
+            setNeedsDisplayLayer()
         } else {
             super.mouseUp(with: event)
         }
@@ -2220,19 +2234,14 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private func updateBackgroundBlur() {
         
         self.layer?.masksToBounds = blurBackground != nil
-        
         if let blurBackground = blurBackground {
 
             if self.visualEffect == nil {
                 self.visualEffect = VisualEffect(frame: self.bounds)
                 addSubview(self.visualEffect!, positioned: .below, relativeTo: nil)
-                if self.textView == nil {
-                    self.textView = View(frame: self.bounds)
-                    addSubview(self.textView!)
-                }
+                self.visualEffect?.layer?.addSublayer(drawLayer)
             }
             self.visualEffect?.bgColor = blurBackground
-            self.textView?.displayDelegate = self
             
             
             if let textlayout = self.textLayout, let blockImage = textlayout.blockImage.1 {
@@ -2254,8 +2263,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 self.layer?.mask = nil
             }
         }  else {
-            self.textView?.removeFromSuperview()
-            self.textView = nil
+            self.layer?.addSublayer(drawLayer)
             self.visualEffect?.removeFromSuperview()
             self.visualEffect = nil
             
@@ -2270,7 +2278,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     public override var needsDisplay: Bool {
         didSet {
-            textView?.needsDisplay = needsDisplay
+            setNeedsDisplayLayer()
         }
     }
     
@@ -2284,6 +2292,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         self.visualEffect?.frame = bounds
         self.textView?.frame = bounds
         self.embeddedContainer.frame = bounds
+        self.drawLayer.frame = bounds
+        self.drawLayer.bounds = bounds.insetBy(dx: 0, dy: -3)
         self.updateInks(self.textLayout)
     }
     

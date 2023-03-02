@@ -704,8 +704,9 @@ final class InlineStickerItemLayer : SimpleLayer {
                     }
                 }
                
+                let ignore: Bool = file.mimeType.hasPrefix("bundle") || file.resource is LocalBundleResource
                 
-                if self.preview == nil, self.playerState != .playing, !file.mimeType.hasPrefix("bundle") {
+                if self.preview == nil, self.playerState != .playing, !ignore {
                     
                     let dataSignal = account.postbox.mediaBox.resourceData(mediaResource.resource)
                     |> map { $0.complete }

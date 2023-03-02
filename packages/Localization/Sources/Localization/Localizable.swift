@@ -1657,6 +1657,8 @@ public final class L10n {
   }
   /// No shares
   public static var channelStatsSharesCountZero: String  { return L10n.tr("Localizable", "ChannelStats.SharesCount_zero") }
+  /// No shares
+  public static var channelStatsSharesCountZeroValueHolder: String  { return L10n.tr("Localizable", "ChannelStats.SharesCount_ZeroValueHolder") }
   /// Channel Statistics
   public static var channelStatsTitle: String  { return L10n.tr("Localizable", "ChannelStats.Title") }
   /// %d
@@ -1683,8 +1685,12 @@ public final class L10n {
   public static func channelStatsViewsCountTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChannelStats.ViewsCount_two", p1)
   }
+  /// %d views
+  public static func channelStatsViewsCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelStats.ViewsCount_zero", p1)
+  }
   /// No views
-  public static var channelStatsViewsCountZero: String  { return L10n.tr("Localizable", "ChannelStats.ViewsCount_zero") }
+  public static var channelStatsViewsCountZeroValueHolder: String  { return L10n.tr("Localizable", "ChannelStats.ViewsCount_ZeroValueHolder") }
   /// FOLLOWERS
   public static var channelStatsGraphFollowers: String  { return L10n.tr("Localizable", "ChannelStats.Graph.Followers") }
   /// GROWTH
@@ -1879,8 +1885,12 @@ public final class L10n {
   public static func chatAccessoryForwardTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Accessory.Forward_two", p1)
   }
+  /// Forward %d Messages
+  public static func chatAccessoryForwardZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Forward_zero", p1)
+  }
   /// Forward Messages
-  public static var chatAccessoryForwardZero: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward_zero") }
+  public static var chatAccessoryForwardZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward_ZeroValueHolder") }
   /// %d
   public static func chatAccessoryHiddenCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Accessory.Hidden_countable", p1)
@@ -1903,8 +1913,12 @@ public final class L10n {
   public static func chatAccessoryHiddenTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Accessory.Hidden_two", p1)
   }
+  /// Forward %d Messages (sender's names hidden)
+  public static func chatAccessoryHiddenZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Accessory.Hidden_zero", p1)
+  }
   /// Forward Messages (sender's names hidden)
-  public static var chatAccessoryHiddenZero: String  { return L10n.tr("Localizable", "Chat.Accessory.Hidden_zero") }
+  public static var chatAccessoryHiddenZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.Accessory.Hidden_ZeroValueHolder") }
   /// From
   public static var chatAccessoryForwardFrom: String  { return L10n.tr("Localizable", "Chat.Accessory.Forward.From") }
   /// You
@@ -2415,8 +2429,12 @@ public final class L10n {
   public static func chatGroupCallMembersTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.GroupCall.Members_two", p1)
   }
+  /// %d participants
+  public static func chatGroupCallMembersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall.Members_zero", p1)
+  }
   /// Click to join
-  public static var chatGroupCallMembersZero: String  { return L10n.tr("Localizable", "Chat.GroupCall.Members_zero") }
+  public static var chatGroupCallMembersZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.GroupCall.Members_ZeroValueHolder") }
   /// %d
   public static func chatGroupCallSpeakersCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.GroupCall.Speakers_countable", p1)
@@ -2441,8 +2459,12 @@ public final class L10n {
   public static func chatGroupCallSpeakersTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.GroupCall.Speakers_two", p1)
   }
+  /// %d participants speaking
+  public static func chatGroupCallSpeakersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.GroupCall.Speakers_zero", p1)
+  }
   /// no one speaking
-  public static var chatGroupCallSpeakersZero: String  { return L10n.tr("Localizable", "Chat.GroupCall.Speakers_zero") }
+  public static var chatGroupCallSpeakersZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.GroupCall.Speakers_ZeroValueHolder") }
   /// Voice Chat
   public static var chatGroupCallTitle: String  { return L10n.tr("Localizable", "Chat.GroupCall.Title") }
   /// Live Stream
@@ -2823,6 +2845,8 @@ public final class L10n {
   }
   /// SOCKS5 Configuration
   public static var chatMessageSocks5Config: String  { return L10n.tr("Localizable", "Chat.Message.Socks5.Config") }
+  /// Advertiser
+  public static var chatMessageSponsoredAdvertiser: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored.Advertiser") }
   /// https://telegram.org
   public static var chatMessageSponsoredLink: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored.Link") }
   /// What are sponsored messages?
@@ -3483,8 +3507,12 @@ public final class L10n {
   public static func chatTitleCommentsTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Comments_two", p1)
   }
+  /// %d Comments
+  public static func chatTitleCommentsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Comments_zero", p1)
+  }
   /// Comments
-  public static var chatTitleCommentsZero: String  { return L10n.tr("Localizable", "Chat.Title.Comments_zero") }
+  public static var chatTitleCommentsZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.Title.Comments_ZeroValueHolder") }
   /// Discussion
   public static var chatTitleDiscussion: String  { return L10n.tr("Localizable", "Chat.Title.Discussion") }
   /// %d
@@ -3541,8 +3569,12 @@ public final class L10n {
   public static func chatTitleRepliesTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Replies_two", p1)
   }
+  /// %d Replies
+  public static func chatTitleRepliesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Replies_zero", p1)
+  }
   /// Replies
-  public static var chatTitleRepliesZero: String  { return L10n.tr("Localizable", "Chat.Title.Replies_zero") }
+  public static var chatTitleRepliesZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.Title.Replies_ZeroValueHolder") }
   /// Scheduled Messages
   public static var chatTitleScheduledMessages: String  { return L10n.tr("Localizable", "Chat.Title.ScheduledMessages") }
   /// Your cloud storage
@@ -3559,7 +3591,7 @@ public final class L10n {
   public static func chatTitleTopicMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Topic_many", p1)
   }
-  /// %d Message
+  /// %d Messages
   public static func chatTitleTopicOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Topic_one", p1)
   }
@@ -3567,8 +3599,12 @@ public final class L10n {
   public static func chatTitleTopicOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Topic_other", p1)
   }
+  /// %d Message
+  public static func chatTitleTopicZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Topic_zero", p1)
+  }
   /// Messages
-  public static var chatTitleTopicZero: String  { return L10n.tr("Localizable", "Chat.Title.Topic_zero") }
+  public static var chatTitleTopicZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.Title.Topic_ZeroValueHolder") }
   /// %d Messages
   public static func chatTitleTopicsTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Topics_two", p1)
@@ -3793,8 +3829,12 @@ public final class L10n {
   public static func chatVoiceChatJoinLinkParticipantsTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_two", p1)
   }
+  /// %d participants
+  public static func chatVoiceChatJoinLinkParticipantsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_zero", p1)
+  }
   /// no one joined yet
-  public static var chatVoiceChatJoinLinkParticipantsZero: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_zero") }
+  public static var chatVoiceChatJoinLinkParticipantsZeroValueHolder: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Participants_ZeroValueHolder") }
   /// Are you sure you want to join voice chat?
   public static var chatVoiceChatJoinLinkText: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.Text") }
   /// Voice Chat
@@ -5391,8 +5431,12 @@ public final class L10n {
   public static func exportedInvitationPeopleJoinedTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ExportedInvitation.PeopleJoined_two", p1)
   }
+  /// %d PEOPLE JOINED
+  public static func exportedInvitationPeopleJoinedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ExportedInvitation.PeopleJoined_zero", p1)
+  }
   /// 
-  public static var exportedInvitationPeopleJoinedZero: String  { return L10n.tr("Localizable", "ExportedInvitation.PeopleJoined_zero") }
+  public static var exportedInvitationPeopleJoinedZeroValueHolder: String  { return L10n.tr("Localizable", "ExportedInvitation.PeopleJoined_ZeroValueHolder") }
   /// %d
   public static func exportedInvitationPeopleRequestedCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_countable", p1)
@@ -5417,8 +5461,12 @@ public final class L10n {
   public static func exportedInvitationPeopleRequestedTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_two", p1)
   }
+  /// %d REQUESTED TO JOIN
+  public static func exportedInvitationPeopleRequestedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_zero", p1)
+  }
   /// 
-  public static var exportedInvitationPeopleRequestedZero: String  { return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_zero") }
+  public static var exportedInvitationPeopleRequestedZeroValueHolder: String  { return L10n.tr("Localizable", "ExportedInvitation.PeopleRequested_ZeroValueHolder") }
   /// Invite Link
   public static var exportedInvitationTitle: String  { return L10n.tr("Localizable", "ExportedInvitation.Title") }
   /// Copy
@@ -6137,6 +6185,10 @@ public final class L10n {
   public static var installedStickersCustomEmoji: String  { return L10n.tr("Localizable", "InstalledStickers.CustomEmoji") }
   /// Artists are welcome to add their own sticker sets using our @stickers bot.\n\nTap on a sticker to view and add the whole set.
   public static var installedStickersDescrpiption: String  { return L10n.tr("Localizable", "InstalledStickers.Descrpiption") }
+  /// Dynamic Pack Order
+  public static var installedStickersDynamicPackOrder: String  { return L10n.tr("Localizable", "InstalledStickers.DynamicPackOrder") }
+  /// Recently used sticker packs will be displayed above the older ones.
+  public static var installedStickersDynamicPackOrderInfo: String  { return L10n.tr("Localizable", "InstalledStickers.DynamicPackOrderInfo") }
   /// Loop Animated Stickers
   public static var installedStickersLoopAnimated: String  { return L10n.tr("Localizable", "InstalledStickers.LoopAnimated") }
   /// STICKER SETS
@@ -6239,8 +6291,12 @@ public final class L10n {
   public static func inviteLinkJoinedNewTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "InviteLink.JoinedNew_two", p1)
   }
+  /// %d joined
+  public static func inviteLinkJoinedNewZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.JoinedNew_zero", p1)
+  }
   /// no one joined yet
-  public static var inviteLinkJoinedNewZero: String  { return L10n.tr("Localizable", "InviteLink.JoinedNew_zero") }
+  public static var inviteLinkJoinedNewZeroValueHolder: String  { return L10n.tr("Localizable", "InviteLink.JoinedNew_ZeroValueHolder") }
   /// no one joined
   public static var inviteLinkJoinedRevoked: String  { return L10n.tr("Localizable", "InviteLink.JoinedRevoked") }
   /// %d
@@ -6295,8 +6351,12 @@ public final class L10n {
   public static func inviteLinkRequestedTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "InviteLink.Requested_two", p1)
   }
+  /// %d requested
+  public static func inviteLinkRequestedZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.Requested_zero", p1)
+  }
   /// no one requested yet
-  public static var inviteLinkRequestedZero: String  { return L10n.tr("Localizable", "InviteLink.Requested_zero") }
+  public static var inviteLinkRequestedZeroValueHolder: String  { return L10n.tr("Localizable", "InviteLink.Requested_ZeroValueHolder") }
   /// Share Link
   public static var inviteLinkShareLink: String  { return L10n.tr("Localizable", "InviteLink.ShareLink") }
   /// Link created and copied to clipboard.
@@ -11033,7 +11093,7 @@ public final class L10n {
   public static func storageUsageKeepMediaExceptionsFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_few", p1)
   }
-  /// %d Exception
+  /// %d Exceptions
   public static func storageUsageKeepMediaExceptionsMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_many", p1)
   }
@@ -11049,8 +11109,12 @@ public final class L10n {
   public static func storageUsageKeepMediaExceptionsTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_two", p1)
   }
+  /// %d Exceptions
+  public static func storageUsageKeepMediaExceptionsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_zero", p1)
+  }
   /// Add Exception
-  public static var storageUsageKeepMediaExceptionsZero: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_zero") }
+  public static var storageUsageKeepMediaExceptionsZeroValueHolder: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_ZeroValueHolder") }
   /// Group Chats
   public static var storageUsageKeepMediaGroups: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Groups") }
   /// AUTO-REMOVE CACHED MEDIA
@@ -12603,8 +12667,12 @@ public final class L10n {
   public static func voiceChatStatusMembersTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "VoiceChat.Status.Members_two", p1)
   }
+  /// %d participants
+  public static func voiceChatStatusMembersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Status.Members_zero", p1)
+  }
   /// no participants
-  public static var voiceChatStatusMembersZero: String  { return L10n.tr("Localizable", "VoiceChat.Status.Members_zero") }
+  public static var voiceChatStatusMembersZeroValueHolder: String  { return L10n.tr("Localizable", "VoiceChat.Status.Members_ZeroValueHolder") }
   /// muted
   public static var voiceChatStatusMuted: String  { return L10n.tr("Localizable", "VoiceChat.Status.Muted") }
   /// muted for you
@@ -12639,8 +12707,12 @@ public final class L10n {
   public static func voiceChatStatusViewersTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "VoiceChat.Status.Viewers_two", p1)
   }
+  /// %d viewers
+  public static func voiceChatStatusViewersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Status.Viewers_zero", p1)
+  }
   /// no viewers
-  public static var voiceChatStatusViewersZero: String  { return L10n.tr("Localizable", "VoiceChat.Status.Viewers_zero") }
+  public static var voiceChatStatusViewersZeroValueHolder: String  { return L10n.tr("Localizable", "VoiceChat.Status.Viewers_ZeroValueHolder") }
   /// wants to speak
   public static var voiceChatStatusWantsSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Status.WantsSpeak") }
   /// This is you

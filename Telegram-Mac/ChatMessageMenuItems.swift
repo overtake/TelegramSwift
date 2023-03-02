@@ -233,7 +233,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
     }
     
     return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction) |> map { data in
-
+        
         let peer = data.message.peers[data.message.id.peerId]
         let isNotFailed = !message.flags.contains(.Failed) && !message.flags.contains(.Unsent) && !data.message.flags.contains(.Sending)
         let protected = data.message.containsSecretMedia || data.message.isCopyProtected()
@@ -253,9 +253,34 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var fourthBlock:[ContextMenuItem] = []
         var fifthBlock:[ContextMenuItem] = []
         var sixBlock:[ContextMenuItem] = []
-
         
-        if data.message.adAttribute != nil {
+        
+        if let adAttribute = data.message.adAttribute {
+            
+            if adAttribute.sponsorInfo != nil || adAttribute.additionalInfo != nil {
+                
+                
+                let submenu = ContextMenu()
+                let subItem = ContextMenuItem(strings().chatMessageSponsoredAdvertiser, itemImage: MenuAnimation.menu_channel.value)
+                
+                if let text = adAttribute.sponsorInfo {
+                    submenu.addItem(ContextMenuItem(text, removeTail: false))
+                }
+                if let text = adAttribute.additionalInfo {
+                    if !submenu.items.isEmpty {
+                        submenu.addItem(ContextSeparatorItem())
+                    }
+                    submenu.addItem(ContextMenuItem(text, removeTail: false))
+                }
+                
+                subItem.submenu = submenu
+                
+                items.append(subItem)
+                
+                items.append(ContextSeparatorItem())
+
+            }
+            
             items.append(ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
                 let link = "https://promote.telegram.org"
                 confirm(for: context.window, information: strings().chatMessageAdText(link), cancelTitle: "", thridTitle: strings().chatMessageAdReadMore, successHandler: { result in
@@ -267,11 +292,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         break
                     }
                 })
-            }))
+            }, itemImage: MenuAnimation.menu_report.value))
             if !context.premiumIsBlocked {
                 items.append(ContextMenuItem.init(strings().chatContextHideAd, handler: {
                     showModal(with: PremiumBoardingController(context: context), for: context.window)
-                }))
+                }, itemImage: MenuAnimation.menu_restrict.value))
             }
             return items
         }

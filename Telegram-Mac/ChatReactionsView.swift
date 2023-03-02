@@ -188,7 +188,7 @@ final class ChatReactionsLayout {
         func getInlineLayer(_ mode: ChatReactionsLayout.Mode) -> InlineStickerItemLayer {
             switch source {
             case let .builtin(reaction):
-                return .init(account: context.account, file: reaction.staticIcon, size: presentation.reactionSize, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
+                return .init(account: context.account, file: reaction.centerAnimation ?? reaction.selectAnimation, size: NSMakeSize(presentation.reactionSize.width * 2, presentation.reactionSize.height * 2), playPolicy: .framesCount(1), shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             case let .custom(fileId, file, _):
                 var reactionSize: NSSize = presentation.reactionSize
                 if mode == .full {
@@ -366,7 +366,7 @@ final class ChatReactionsLayout {
             let source: ReactionPeerMenu.Source
             switch self.source {
             case let .builtin(reaction):
-                source = .builtin(reaction.staticIcon)
+                source = .builtin(reaction.centerAnimation ?? reaction.selectAnimation)
             case let .custom(fileId, file, _):
                 source = .custom(fileId, file)
             }

@@ -749,13 +749,80 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
     }
 }
 
+
+private func stringForRelativeTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
+    var t: time_t = time_t(relativeTimestamp)
+    var timeinfo: tm = tm()
+    localtime_r(&t, &timeinfo)
+    
+    var now: time_t = time_t(timestamp)
+    var timeinfoNow: tm = tm()
+    localtime_r(&now, &timeinfoNow)
+    
+    let dayDifference = timeinfo.tm_yday - timeinfoNow.tm_yday
+    
+    let hours = timeinfo.tm_hour
+    let minutes = timeinfo.tm_min
+    
+    if dayDifference == 0 {
+        return strings().timeTodayAt(stringForShortTimestamp(hours: hours, minutes: minutes))
+    } else {
+        return DateSelectorUtil.mediaMediumDate.string(from: Date.init(timeIntervalSince1970: TimeInterval(relativeTimestamp)))
+    }
+}
+
+private final class ReadTimestampView : View {
+    private let textView = TextView()
+    private var readLayer: InlineStickerItemLayer?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        textView.isEventLess = true
+        addSubview(textView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(timestamp: Int32, relativeTo: Int32, maxSize: NSSize, context: AccountContext, presentation: AppMenu.Presentation) -> NSSize {
+        let string = stringForRelativeTimestamp(relativeTimestamp: timestamp, relativeTo: relativeTo)
+        let textLayout = TextViewLayout(.initialize(string: string, color: presentation.textColor, font: .normal(.text)), maximumNumberOfLines: 1)
+        textLayout.measure(width: maxSize.width - 20)
+        self.textView.update(textLayout)
+        
+        let readSize = NSMakeSize(16, 16)
+        readLayer = .init(account: context.account, file: MenuAnimation.menu_seen.file, size: readSize, playPolicy: .onceEnd, getColors: { file in
+            var colors:[LottieColor] = []
+            colors.append(.init(keyPath: "", color: presentation.textColor))
+            return colors
+        }, ignorePreview: true)
+        readLayer?.isPlayable = true
+        readLayer?.frame = CGRect(origin: CGPoint.init(x: 2, y: (maxSize.height - readSize.height) / 2), size: readSize)
+        self.layer?.addSublayer(readLayer!)
+        return NSMakeSize(self.textView.frame.width + 20, maxSize.height)
+
+    }
+    
+    override func layout() {
+        super.layout()
+        self.textView.centerY(x: 20)
+    }
+}
+
 private final class ReactionPeerMenuItemView : AppMenuRowView {
     private let imageView = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
     private var statusControl: PremiumStatusControl?
+    private let delayDisposable = MetaDisposable()
+    private var timestamp: ReadTimestampView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
-        
+    }
+    
+    deinit {
+        delayDisposable.dispose()
     }
     
     required init?(coder: NSCoder) {
@@ -776,20 +843,68 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
         
         imageView.centerY(x: self.rightX - imageView.frame.width)
 
+        if let timestamp = timestamp {
+            timestamp.centerY(x: self.textX)
+        }
     }
     
     override func updateState(_ state: ControlState) {
         super.updateState(state)
-        NSLog("\(state)")
         
-        if state == .Hover || (mouseInside() && state == .Other) {
-            contentView.change(pos: NSMakePoint(0, -contentView.frame.height), animated: true)
+        
+        var state = containerView.controlState
+
+        
+        if currentState != state {
+            if state == .Hover {
+                delayDisposable.set(delaySignal(0.05).start(completed: { [weak self] in
+                    self?.applyState(state)
+                }))
+            } else {
+                delayDisposable.set(nil)
+                self.applyState(state)
+            }
+        }
+        
+        self.currentState = state
+    }
+    private var currentState: ControlState?
+    func applyState(_ state: ControlState) {
+        guard let item = self.item as? ReactionPeerMenuItem else {
+            return
+        }
+        if state == .Hover, let timestamp = item.readTimestamp {
+            contentView.change(pos: NSMakePoint(0, -contentView.frame.height), animated: true, duration: 0.35, timingFunction: .spring)
+            contentView.change(opacity: 0, animated: true)
+
+            let current: ReadTimestampView
+            if let view = self.timestamp {
+                current = view
+            } else {
+                current = ReadTimestampView(frame: .zero)
+                self.timestamp = current
+                self.containerView.addSubview(current)
+                
+                let size = current.update(timestamp: timestamp, relativeTo: item.context.timestamp, maxSize: NSMakeSize(item.textMaxWidth, contentView.frame.height), context: item.context, presentation: item.presentation)
+                current.frame = CGRect(origin: CGPoint(x: self.textX, y: focus(size).minY), size: size)
+                
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                
+                current.layer?.animatePosition(from: NSMakePoint(current.frame.minX, current.frame.height), to: current.frame.origin)
+            }
+            
+            
         } else {
-            contentView.change(pos: NSMakePoint(0, 0), animated: true)
+            contentView.change(pos: NSMakePoint(0, 0), animated: true, duration: 0.35, timingFunction: .spring)
+            contentView.change(opacity: 1, animated: true)
+            
+            if let view = self.timestamp {
+                performSubviewRemoval(view, animated: true)
+                self.timestamp = nil
+                view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(view.frame.minX, view.frame.height),duration: 0.35, timingFunction: .spring, removeOnCompletion: false)
+            }
         }
     }
-    
-    
     override func set(item: TableRowItem, animated: Bool = false) {
         let previous = self.item as? ReactionPeerMenuItem
         super.set(item: item, animated: animated)
@@ -812,7 +927,6 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
             self.statusControl = nil
         }
         
-                
         self.imageView.isHidden = item.reaction == nil
         
         let reactionSize = NSMakeSize(16, 16)

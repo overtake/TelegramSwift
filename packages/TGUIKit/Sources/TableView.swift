@@ -2564,18 +2564,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let visibleItems = self.visibleItems()
         let visibleRange = self.visibleRows()
-        if transition.grouping && !transition.isEmpty {
-            self.tableView.beginUpdates()
-        }
-        
         
         for (_, item) in list.enumerated() {
             item._index = nil
         }
+        
 
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[(Int, TableRowItem)] = []
         
+        
+        if transition.grouping && !transition.isEmpty {
+            self.tableView.beginUpdates()
+        }
         
         for rdx in transition.deleted.reversed() {
             let effect:NSTableView.AnimationOptions
@@ -2589,8 +2590,20 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             self.remove(at: rdx, redraw: true, animation:effect)
         }
+        
+        for (i, item) in list.enumerated() {
+            item._index = i
+        }
+        
+        if transition.grouping && !transition.isEmpty {
+            self.tableView.endUpdates()
+        }
                 
 
+        if transition.grouping && !transition.isEmpty {
+            self.tableView.beginUpdates()
+        }
+        
         for (idx, item) in transition.inserted {
             let effect:NSTableView.AnimationOptions
             if case let .none(interface) = transition.state, interface != nil {
