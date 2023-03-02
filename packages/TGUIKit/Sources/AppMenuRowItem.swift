@@ -279,6 +279,11 @@ open class AppMenuRowItem : AppMenuBasicItem {
         }
     }
     
+    public var textMaxWidth: CGFloat {
+        let width = item.overrideWidth ?? width
+        return width - leftInset * 2 - innerInset * 2
+    }
+    
     open override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         let width = item.overrideWidth ?? width
@@ -409,6 +414,10 @@ open class AppMenuRowView: AppMenuBasicItemView {
     open override func mouseUp(with event: NSEvent) {
         var bp = 0
         bp += 1
+    }
+    open override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        NSCursor.arrow.set()
     }
     
     open override func updateMouse() {
@@ -550,6 +559,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
             } else {
                 current = ImageView()
                 current.setFrameSize(item.imageSize, item.imageSize)
+                current.isEventLess = true
                 containerView.addSubview(current)
                 self.imageView = current
             }
@@ -588,6 +598,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
                 current = TextView()
                 current.userInteractionEnabled = false
                 current.isSelectable = false
+                current.isEventLess = true
                 self.addSubview(current)
                 self.keyEquivalent = current
             }

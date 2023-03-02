@@ -185,7 +185,7 @@ func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, timeDiff
 }
 
 
-func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
+func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32, medium: Bool = false) -> String {
     var t: time_t = time_t(relativeTimestamp)
     var timeinfo: tm = tm()
     localtime_r(&t, &timeinfo)
@@ -202,7 +202,11 @@ func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo tim
     if dayDifference == 0 {
         return strings().timeTodayAt(stringForShortTimestamp(hours: hours, minutes: minutes))
     } else {
-        return stringForFullDate(timestamp: relativeTimestamp)
+        if medium {
+            return stringForMediumDate(timestamp: relativeTimestamp)
+        } else {
+            return stringForFullDate(timestamp: relativeTimestamp)
+        }
     }
 }
 

@@ -165,6 +165,7 @@ class Sender: NSObject {
     public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, disablePreview:Bool = false, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil) ->Signal<[MessageId?],NoError> {
         
         var inset:Int = 0
+        let dynamicEmojiOrder = context.stickerSettings.dynamicPackOrder
         
         var input:ChatTextInputState = input
         
@@ -221,7 +222,7 @@ class Sender: NSObject {
                 attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
             }
             if !subState.inputText.isEmpty || mediaReference != nil {
-                return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: subState.upCollections)
+                return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upCollections : [])
             } else {
                 return nil
             }
@@ -548,6 +549,7 @@ class Sender: NSObject {
     
     public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false) ->Signal<[MessageId?],NoError> {
         
+        let dynamicEmojiOrder: Bool = context.stickerSettings.dynamicPackOrder
         
         let parsingUrlType: ParsingType
         if peerId.namespace != Namespaces.Peer.SecretChat {
@@ -577,7 +579,7 @@ class Sender: NSObject {
         let localGroupingKey = isCollage ? arc4random64() : nil
         
         var upCollections:[ItemCollectionId] = []
-        if let collectionId = collectionId {
+        if let collectionId = collectionId, dynamicEmojiOrder {
             upCollections.append(collectionId)
         }
         
@@ -593,7 +595,7 @@ class Sender: NSObject {
             } else {
                 text = ""
             }
-            messages.append(EnqueueMessage.message(text: text, attributes: attributes, inlineStickers: inlineMdeia, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: localGroupingKey, correlationId: nil, bubbleUpEmojiOrStickersets: upCollections))
+            messages.append(EnqueueMessage.message(text: text, attributes: attributes, inlineStickers: inlineMdeia, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: localGroupingKey, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? upCollections : []))
         }
         
         if let input = additionText {
@@ -619,7 +621,7 @@ class Sender: NSObject {
                     attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
                 }
                 
-                return EnqueueMessage.message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: nil, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: subState.upCollections)
+                return EnqueueMessage.message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: nil, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upCollections : [])
             }
             messages.insert(contentsOf: mapped, at: 0)
         }

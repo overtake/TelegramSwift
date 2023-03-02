@@ -338,6 +338,12 @@ final class AccountContext {
         return _contentSettings.with { $0 }
     }
     
+    private let _stickerSettings: Atomic<StickerSettings> = Atomic(value: StickerSettings.defaultSettings)
+    
+    var stickerSettings: StickerSettings {
+        return _stickerSettings.with { $0 }
+    }
+    
     
     public var closeFolderFirst: Bool = false
     
@@ -555,6 +561,11 @@ final class AccountContext {
         let contentSettings = _contentSettings
         prefDisposable.add(getContentSettings(postbox: account.postbox).start(next: { settings in
             _ = contentSettings.swap(settings)
+        }))
+        
+        let st = _stickerSettings
+        prefDisposable.add(InAppSettings.stickerSettings(postbox: account.postbox).start(next: { settings in
+            _ = st.swap(settings)
         }))
         
         

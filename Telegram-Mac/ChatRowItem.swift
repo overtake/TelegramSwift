@@ -246,9 +246,9 @@ class ChatRowItem: TableRowItem {
     
     private(set) var rightFrames: ChatRightView.Frames?
     private var rightHeight: CGFloat {
-        var height:CGFloat = isBubbled && !isFailed ? 15 : 16
+        var height:CGFloat = 16
         if isStateOverlayLayout {
-            height = 17
+            height = 16
         }
         return height
     }
