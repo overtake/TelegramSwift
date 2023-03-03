@@ -1932,14 +1932,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 return
             }
         }
-        NSAnimationContext.current.duration = animated ? duration : 0.0
-        NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        self.tableView.beginUpdates()
-        self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
-        self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : .effectFade)
-        self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  .effectFade)
-        self.tableView.endUpdates()
-
     }
     
     fileprivate func reloadHeightItems() {

@@ -344,6 +344,7 @@
 		2796FF1027424BA800DA653C /* DateUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 2796FF0F27424BA800DA653C /* DateUtils */; };
 		279A1E0D25E90D13007D48E7 /* PaymentWebInteractionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */; };
 		279A1E2825E945A2007D48E7 /* PaymentsReceiptController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */; };
+		279BD40629B1D79000A8B640 /* ContextInlineWebViewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */; };
 		279E8ECB274259EE000E1BD5 /* TGVideoCameraMovie in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECA274259EE000E1BD5 /* TGVideoCameraMovie */; };
 		279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECD27425CBD000E1BD5 /* InAppVideoServices */; };
 		279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD29F273C1234004F08A1 /* BuildConfig */; };
@@ -1774,6 +1775,7 @@
 		2796FF0E27424A7C00DA653C /* DateUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DateUtils; path = packages/DateUtils; sourceTree = "<group>"; };
 		279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentWebInteractionController.swift; sourceTree = "<group>"; };
 		279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsReceiptController.swift; sourceTree = "<group>"; };
+		279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextInlineWebViewRowItem.swift; sourceTree = "<group>"; };
 		279E8EC9274259B7000E1BD5 /* TGVideoCameraMovie */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TGVideoCameraMovie; path = packages/TGVideoCameraMovie; sourceTree = "<group>"; };
 		279E8ECC27425BAE000E1BD5 /* InAppVideoServices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppVideoServices; path = packages/InAppVideoServices; sourceTree = "<group>"; };
 		279FD29C273C106C004F08A1 /* minizip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = minizip; path = submodules/minizip; sourceTree = "<group>"; };
@@ -5044,6 +5046,7 @@
 				C2E6F3CE1F9F85260023653D /* ContextHashtagRowItem.swift */,
 				9F0AE6862191D29D00A8B53A /* ContextSearchMessageItem.swift */,
 				A7F2831A239A496400742C20 /* ContextShowPeersHolder.swift */,
+				279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */,
 			);
 			name = context;
 			sourceTree = "<group>";
@@ -7237,6 +7240,7 @@
 				D00EECD7252CD2EF001EB99F /* MicrophonePreviewRowItem.swift in Sources */,
 				C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
+				279BD40629B1D79000A8B640 /* ContextInlineWebViewRowItem.swift in Sources */,
 				27949114260A41EB0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */,
 				27F4F18E284A32EA00A3B4D4 /* PremiumBoardingDoubleController.swift in Sources */,
 				270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */,

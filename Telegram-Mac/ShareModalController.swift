@@ -541,6 +541,71 @@ class ShareObject {
     }
 }
 
+class SharefilterCallbackObject : ShareObject {
+    private let callback:(PeerId, MessageId?)->Signal<Never, NoError>
+    private let limits: [String]
+    init(_ context: AccountContext, limits: [String], callback:@escaping(PeerId, MessageId?)->Signal<Never, NoError>) {
+        self.callback = callback
+        self.limits = limits
+        super.init(context)
+    }
+    
+    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        if let peerId = peerIds.first {
+            return callback(peerId, threadId) |> castError(String.self)
+        } else {
+            return .complete()
+        }
+    }
+    
+    override func statusString(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> String? {
+        if peer.id == context.peerId {
+            return nil
+        } else {
+            return super.statusString(peer, presence: presence, autoDeletion: autoDeletion)
+        }
+    }
+    
+    override func possibilityPerformTo(_ peer: Peer) -> Bool {
+        if !canSendMessagesToPeer(peer) {
+            return false
+        }
+        if peer.isBot {
+            if !limits.contains("bots") {
+                return false
+            }
+        }
+        if peer.isUser {
+            if !limits.contains("users") {
+                return false
+            }
+        }
+        if peer.isChannel {
+            if !limits.contains("channels") {
+                return false
+            }
+        }
+        if peer.isGroup || peer.isSupergroup || peer.isGigagroup {
+            if !limits.contains("groups") {
+                return false
+            }
+        }
+        return true
+    }
+    
+    
+    override var multipleSelection: Bool {
+        return false
+    }
+    override var hasCaptionView: Bool {
+        return false
+    }
+    override var blockCaptionView: Bool {
+        return true
+    }
+}
+
+
 class ShareLinkObject : ShareObject {
     let link:String
     init(_ context: AccountContext, link:String) {

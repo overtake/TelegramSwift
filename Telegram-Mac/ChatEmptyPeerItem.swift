@@ -207,38 +207,16 @@ class ChatEmptyPeerView : TableRowView {
         guard let item = item as? ChatEmptyPeerItem else {
             return
         }
-        
-        if item.shouldBlurService && !isLite(.blur) {
-            let current: VisualEffect
-            if let view = self.visualEffect {
-                current = view
-            } else {
-                current = VisualEffect(frame: .zero)
-                self.visualEffect = current
-                addSubview(current, positioned: .below, relativeTo: nil)
-            }
-            current.bgColor = item.presentation.blurServiceColor
-        } else if let view = self.visualEffect {
-            performSubviewRemoval(view, animated: animated)
-            self.visualEffect = nil
+                
+        let current: View
+        if let view = self.bgView {
+            current = view
+        } else {
+            current = View(frame: .zero)
+            self.bgView = current
+            addSubview(current, positioned: .below, relativeTo: nil)
         }
-        
-        if item.shouldBlurService && !isLite(.blur) {
-            if let view = self.bgView {
-                performSubviewRemoval(view, animated: animated)
-                self.bgView = nil
-            }
-        } else  {
-            let current: View
-            if let view = self.bgView {
-                current = view
-            } else {
-                current = View(frame: .zero)
-                self.bgView = current
-                addSubview(current, positioned: .below, relativeTo: nil)
-            }
-            current.backgroundColor = item.presentation.chatServiceItemColor
-        }
+        current.backgroundColor = item.presentation.colors.background
 
         let bgView = self.visualEffect ?? self.bgView
         bgView?.addSubview(textView)

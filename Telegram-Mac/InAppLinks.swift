@@ -115,6 +115,9 @@ enum ChatInitialAction : Equatable {
     case selectToReport(reason: ReportReasonValue)
     case joinVoiceChat(_ joinHash: String?)
     case attachBot(_ bot: String, _ payload: String?, _ choose:[String]?)
+    case makeWebview(appname: String, command: String?)
+    case openWebview(botPeer: PeerEquatable, botApp: BotApp, url: String)
+
     case openMedia(_ timemark: Int32?)
     var selectionNeeded: Bool {
         switch self {
@@ -684,6 +687,64 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                 } else {
                                     invoke(peer)
                                 }
+                            case let .makeWebview(appname, command):
+                                
+                                let botApp = context.engine.messages.getBotApp(botId: peer.id, shortName: appname)
+                                
+                                let openWebview:(ChatInitialAction)->Void = { action in
+                                    let chat = context.bindings.rootNavigation().first {
+                                        $0 is ChatController
+                                    } as? ChatController
+                                    
+                                    chat?.chatInteraction.invokeInitialAction(action: action)
+                                }
+                                
+                                
+                                let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, String?), RequestAppWebViewError> = { botApp, allowWrite in
+                                    return context.engine.messages.requestAppWebView(peerId: peer.id, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), allowWrite: allowWrite) |> map {
+                                        return (botApp, $0)
+                                    }
+                                }
+
+                                var signal: Signal<(BotApp, String?), RequestAppWebViewError> = botApp
+                                |> mapError { _ in
+                                    .generic
+                                } |> mapToSignal { botApp in
+                                    if botApp.flags.contains(.notActivated) {
+                                        return .single((botApp, nil))
+                                    } else {
+                                        return makeRequestAppWebView(botApp, false)
+                                    }
+                                }
+                                signal = showModalProgress(signal: signal, for: context.window)
+                                _ = signal.start(next: { botApp, url in
+                                    if let url = url {
+                                        openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
+                                    } else {
+                                        modernConfirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), thridTitle: botApp.flags.contains(.requiresWriteAccess) ? strings().webAppFirstOpenAllowWrite : nil, successHandler: { result in
+                                            
+                                            FastSettings.markWebAppAsConfirmed(peer.id)
+                                            
+                                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, result == .thrid), for: context.window)
+                                            
+                                            _ = signal.start(next: { botApp, url in
+                                                if let url = url {
+                                                    openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
+                                                }
+                                            }, error: { error in
+                                                switch error {
+                                                case .generic:
+                                                    invokeCallback(peer, messageId, nil)
+                                                }
+                                            })
+                                        })
+                                    }
+                                }, error: { error in
+                                    switch error {
+                                    case .generic:
+                                        invokeCallback(peer, messageId, nil)
+                                    }
+                                })
                             default:
                                 invokeCallback(peer, messageId, action)
                             }
@@ -1287,6 +1348,9 @@ private let keyURLBgColor = "bg_color";
 private let keyURLHash = "hash";
 private let keyURLCode = "code";
 
+private let keyURLAppname = "appname";
+private let keyURLStartapp = "startapp";
+
 
 private let keyURLHost = "server";
 private let keyURLPort = "port";
@@ -1629,6 +1693,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 if Int(timemark) < Int32.max {
                                     action = .openMedia(Int32(timemark))
                                 }
+                            } else if userAndPost.count == 2, post == nil {
+                                action = .makeWebview(appname: userAndPost[1], command: params[keyURLStartapp])
                             }
                             
                             if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {
@@ -1693,6 +1759,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             case keyURLAttach:
                                 let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
                                 action = .attachBot(value, vars[keyURLStartattach], choose)
+                                break loop
+                            case keyURLAppname:
+                                action = .makeWebview(appname: value, command: vars[keyURLStartapp])
                                 break loop
                             default:
                                 break

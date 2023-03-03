@@ -14,6 +14,25 @@ import SwiftSignalKit
 import Postbox
 import WebKit
 
+//
+//private class SelectChatRequired : SelectPeersBehavior {
+//    private let peerType: ReplyMarkupButtonRequestPeerType
+//    private let context: AccountContext
+//
+//    init(peerType: [String], context: AccountContext) {
+//        self.peerType = peerType
+//        self.context = context
+//        super.init(settings: [.remote, .], limit: 1)
+//    }
+//
+//    override func filterPeer(_ peer: Peer) -> Bool {
+//
+//    }
+//}
+
+
+
+
 private let durgerKingBotIds: [Int64] = [5104055776, 2200339955]
 
 
@@ -420,12 +439,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     enum RequestData {
-        case simple(url: String, bot: Peer, buttonText: String)
+        case simple(url: String, bot: Peer, buttonText: String, isInline: Bool)
         case normal(url: String?, peerId: PeerId, threadId: Int64?, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, hasSettings: Bool, complete:(()->Void)?)
         
         var bot: Peer {
             switch self {
-            case let .simple(_, bot, _):
+            case let .simple(_, bot, _, _):
                 return bot
             case let .normal(_, _, _, bot, _, _, _, _, _, _):
                 return bot
@@ -433,10 +452,18 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         var buttonText: String {
             switch self {
-            case let .simple(_, _, buttonText):
+            case let .simple(_, _, buttonText, _):
                 return buttonText
             case let .normal(_, _, _, _, _, buttonText, _, _, _, _):
                 return buttonText
+            }
+        }
+        var isInline: Bool {
+            switch self {
+            case let .simple(_, _, _, isInline):
+                return isInline
+            case .normal:
+                return false
             }
         }
         var hasSettings: Bool {
@@ -624,8 +651,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             
             switch requestData {
-            case .simple(let url, let bot, _):
-                let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, inline: false, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
+            case let .simple( url, bot, _, inline):
+                let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, inline: inline, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
                                 
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
                     self?.url = url
@@ -771,7 +798,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
         if let requestData = self.requestData {
             switch requestData {
-            case .simple(_, let bot, _):
+            case .simple(_, let bot, _, _):
                 request(bot)
             case .normal(_, _, _, let bot, _, _, _, _, _, _):
                 request(bot)
@@ -912,6 +939,45 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             delay(0.1, closure: { [weak self] in
                 self?.webAppReady()
             })
+        case "web_app_switch_inline_query":
+            if let interaction = chatInteraction, let data = self.requestData {
+                if data.isInline == true, let json, let query = json["query"] as? String {
+                    self.close()
+                    let address = (data.bot.addressName ?? "")
+                    let inputQuery = "@\(address)" + " " + query
+
+                    if let chatTypes = json["chat_types"] as? [String], !chatTypes.isEmpty {
+                        var settings: SelectPeerSettings = SelectPeerSettings()
+                        if chatTypes.contains("users") {
+                            settings.insert(.remote)
+                            settings.insert(.contacts)
+                        }
+                        if chatTypes.contains("groups") {
+                            settings.insert(.groups)
+                        }
+                        if chatTypes.contains("channels") {
+                            settings.insert(.channels)
+                        }
+                        if chatTypes.contains("bots") {
+                            settings.insert(.bots)
+                        }
+                        
+                        
+                        let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { peerId, threadId in
+                            let action: ChatInitialAction = .inputText(text: inputQuery, behavior: .automatic)
+                            if let threadId = threadId {
+                                _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: peerId, context: context, animated: true, addition: true, initialAction: action).start()
+                            } else {
+                                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: action))
+                            }
+                            return .complete()
+                        }))
+                        showModal(with: controller, for: context.window)
+                    } else {
+                        interaction.updateInput(with: inputQuery)
+                    }
+                }
+            }
         case "web_app_setup_main_button":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let isVisible = json["is_visible"] as? Bool {

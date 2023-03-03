@@ -226,6 +226,8 @@ class ChatMessageItem: ChatRowItem {
                         } else {
                             return strings().chatMessageJoinVoiceChatAsListener
                         }
+                    case .makeWebview:
+                        return strings().chatMessageOpenApp
                     default:
                         break inner
                     }
@@ -727,9 +729,9 @@ class ChatMessageItem: ChatRowItem {
             self.block = (.zero, nil)
         }
         
-        if actionButtonText != nil, let wp = webpageLayout {
-            wp.layout(with: NSMakeSize(max(200, wp.size.width, textLayout.layoutSize.width), wp.size.height))
-        }
+//        if actionButtonText != nil, let wp = webpageLayout {
+//            wp.layout(with: NSMakeSize(max(200, min(wp.size.width, 320), textLayout.layoutSize.width), wp.size.height))
+//        }
         
         var contentSize = NSMakeSize(max(webpageLayout?.contentRect.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
         
