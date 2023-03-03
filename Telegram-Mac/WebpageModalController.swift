@@ -941,28 +941,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             })
         case "web_app_switch_inline_query":
             if let interaction = chatInteraction, let data = self.requestData {
-                if data.isInline == true, let json, let query = json["query"] as? String {
+                if data.isInline == true, let json = json, let query = json["query"] as? String {
                     self.close()
                     let address = (data.bot.addressName ?? "")
                     let inputQuery = "@\(address)" + " " + query
 
                     if let chatTypes = json["chat_types"] as? [String], !chatTypes.isEmpty {
-                        var settings: SelectPeerSettings = SelectPeerSettings()
-                        if chatTypes.contains("users") {
-                            settings.insert(.remote)
-                            settings.insert(.contacts)
-                        }
-                        if chatTypes.contains("groups") {
-                            settings.insert(.groups)
-                        }
-                        if chatTypes.contains("channels") {
-                            settings.insert(.channels)
-                        }
-                        if chatTypes.contains("bots") {
-                            settings.insert(.bots)
-                        }
-                        
-                        
                         let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { peerId, threadId in
                             let action: ChatInitialAction = .inputText(text: inputQuery, behavior: .automatic)
                             if let threadId = threadId {
