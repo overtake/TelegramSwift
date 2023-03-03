@@ -248,8 +248,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         }
         
         let hasReactions = state.peers.contains(where: { $0.1 != nil })
-        
-        if items.count > 1 || hasReactions {
+        let hasRead = state.peers.contains(where: { $0.2 != nil })
+
+        if items.count > 1 || hasReactions || hasRead {
             
             let references:[StickerPackReference] = state.emojiReferences.uniqueElements
             
