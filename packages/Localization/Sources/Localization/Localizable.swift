@@ -4347,6 +4347,8 @@ public final class L10n {
   public static var chatListSwipingUnpin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unpin") }
   /// Unread
   public static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
+  /// Open App
+  public static var chatMessageOpenApp: String  { return L10n.tr("Localizable", "ChatMessage.OpenApp") }
   /// views
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
   /// channel created
@@ -12885,6 +12887,8 @@ public final class L10n {
   public static func webAppAttachRemoveSuccess(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.AttachRemove.Success", p1)
   }
+  /// Allow Write
+  public static var webAppFirstOpenAllowWrite: String  { return L10n.tr("Localizable", "WebApp.FirstOpen.AllowWrite") }
   /// %@ would like to open its web app to proceed.\n\nIt will be able to access your IP adress and basic device info.
   public static func webAppFirstOpenInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.FirstOpen.Info", p1)

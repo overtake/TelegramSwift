@@ -264,13 +264,19 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 let subItem = ContextMenuItem(strings().chatMessageSponsoredAdvertiser, itemImage: MenuAnimation.menu_channel.value)
                 
                 if let text = adAttribute.sponsorInfo {
-                    submenu.addItem(ContextMenuItem(text, removeTail: false))
+                    submenu.addItem(ContextMenuItem(text, handler: {
+                        copyToClipboard(text)
+                        showModalText(for: context.window, text: strings().contextAlertCopied)
+                    }, removeTail: false))
                 }
                 if let text = adAttribute.additionalInfo {
                     if !submenu.items.isEmpty {
                         submenu.addItem(ContextSeparatorItem())
                     }
-                    submenu.addItem(ContextMenuItem(text, removeTail: false))
+                    submenu.addItem(ContextMenuItem(text, handler: {
+                        copyToClipboard(text)
+                        showModalText(for: context.window, text: strings().contextAlertCopied)
+                    }, removeTail: false))
                 }
                 
                 subItem.submenu = submenu

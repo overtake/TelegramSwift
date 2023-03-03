@@ -35,7 +35,7 @@ fileprivate final class Arguments {
     }
 }
 
-struct CreateGroupResult {
+struct CreateGroupStateResult {
     let title:String
     let picture: String?
     let peerIds:[PeerId]
@@ -324,7 +324,7 @@ private func entries(_ view: MultiplePeersView, state: State, arguments: Argumen
 }
 
 
-class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerId], TableView> {
+class CreateGroupViewController: ComposeViewController<CreateGroupStateResult, [PeerId], TableView> {
     
     private let disposable:MetaDisposable = MetaDisposable()
     private let actionsDisposable = DisposableSet()
@@ -633,7 +633,7 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
     
     override func executeNext() -> Void {
         let state = stateValue.with { $0 }
-        let result = CreateGroupResult(title: state.text, picture: state.picture, peerIds: state.peerIds, autoremoveTimeout: state.autoremoveTimeout, username: state.editingPublicLinkText, isForum: state.requires.contains(.forum))
+        let result = CreateGroupStateResult(title: state.text, picture: state.picture, peerIds: state.peerIds, autoremoveTimeout: state.autoremoveTimeout, username: state.editingPublicLinkText, isForum: state.requires.contains(.forum))
         if result.title.isEmpty {
             genericView.item(stableId: InputDataEntryId.custom(_id_info))?.view?.shakeView()
         } else if state.publicChannelsToRevoke != nil, state.requires.contains(.username) {

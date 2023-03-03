@@ -7107,7 +7107,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
             if value.inputQueryResult != oldValue.inputQueryResult || value.state != oldValue.state {
-                genericView.inputContextHelper.context(with: value.inputQueryResult, for: genericView, relativeView: genericView.inputView, animated: animated)
+                genericView.inputContextHelper.context(with: value.inputQueryResult, for: genericView, relativeView: genericView.inputView, animated: true)
             }
             if value.interfaceState.inputState != oldValue.interfaceState.inputState {
                 if didSetReady {

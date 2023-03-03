@@ -173,7 +173,9 @@ private final class NotificationArguments {
     let toggleBadge: (Bool)->Void
     let toggleRequestUserAttention: ()->Void
     let toggleInAppSounds:(Bool)->Void
-    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping() -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
+    let toggleChats:()->Void
+    let toggleIncomingCalls:()->Void
+    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping() -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void, toggleChats: @escaping()->Void, toggleIncomingCalls:@escaping()->Void) {
         self.resetAllNotifications = resetAllNotifications
         self.toggleMessagesPreview = toggleMessagesPreview
         self.toggleNotifications = toggleNotifications
@@ -188,6 +190,8 @@ private final class NotificationArguments {
         self.toggleBadge = toggleBadge
         self.toggleRequestUserAttention = toggleRequestUserAttention
         self.toggleInAppSounds = toggleInAppSounds
+        self.toggleChats = toggleChats
+        self.toggleIncomingCalls = toggleIncomingCalls
     }
 }
 
@@ -211,7 +215,17 @@ private let _id_turnon_notifications_title = InputDataIdentifier("_id_turnon_not
 
 private let _id_message_effect = InputDataIdentifier("_id_message_effect")
 
-private func notificationEntries(settings:InAppNotificationSettings, soundList: NotificationSoundList?, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], unAuthStatus: UNUserNotifications.AuthorizationStatus, arguments: NotificationArguments) -> [InputDataEntry] {
+
+private let _id_accept_calls = InputDataIdentifier("_id_accept_calls")
+private let _id_accept_secret_chats = InputDataIdentifier("_id_accept_secret_chats")
+
+private struct State : Equatable {
+    var acceptSecretChats: Bool = true
+    var acceptCalls: Bool = true
+    var session: RecentAccountSession?
+}
+
+private func notificationEntries(state: State, settings:InAppNotificationSettings, soundList: NotificationSoundList?, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], unAuthStatus: UNUserNotifications.AuthorizationStatus, arguments: NotificationArguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     
@@ -291,6 +305,25 @@ private func notificationEntries(settings:InAppNotificationSettings, soundList: 
     sectionId += 1
     
     
+    if let _ = state.session {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().sessionPreviewAcceptHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_accept_secret_chats, data: InputDataGeneralData(name: strings().sessionPreviewAcceptSecret, color: theme.colors.text, type: .switchable(state.acceptSecretChats), viewType: .firstItem, enabled: true, action: {
+            arguments.toggleChats()
+        })))
+        index += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_accept_calls, data: InputDataGeneralData(name: strings().sessionPreviewAcceptCalls, color: theme.colors.text, type: .switchable(state.acceptCalls), viewType: .lastItem, enabled: true, action: {
+            arguments.toggleIncomingCalls()
+        })))
+        index += 1
+
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    }
+   
     
     entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSettingsSoundEffects), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
@@ -367,6 +400,16 @@ private func notificationEntries(settings:InAppNotificationSettings, soundList: 
 }
 
 func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag: NotificationsAndSoundsEntryTag? = nil) -> ViewController {
+    
+    
+    let initialState = State()
+    
+    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let stateValue = Atomic(value: initialState)
+    let updateState: ((State) -> State) -> Void = { f in
+        statePromise.set(stateValue.modify (f))
+    }
+    
     let arguments = NotificationArguments(resetAllNotifications: {
         confirm(for: context.window, header: strings().notificationSettingsConfirmReset, information: strings().chatConfirmActionUndonable, successHandler: { _ in
             _ = resetPeerNotificationSettings(network: context.account.network).start()
@@ -425,12 +468,33 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         }).start()
     }, toggleInAppSounds: { value in
         FastSettings.toggleInAppSouds(value)
+    }, toggleChats: {
+        let session: RecentAccountSession? = stateValue.with { $0.session }
+        updateState { current in
+            var current = current
+            current.acceptSecretChats = !current.acceptSecretChats
+            return current
+        }
+        if let session = session {
+            _ = context.activeSessionsContext.updateSessionAcceptsSecretChats(session, accepts: stateValue.with { $0.acceptSecretChats }).start()
+        }
+    }, toggleIncomingCalls: {
+        let session: RecentAccountSession? = stateValue.with { $0.session }
+        updateState { current in
+            var current = current
+            current.acceptCalls = !current.acceptCalls
+            return current
+        }
+        if let session = session {
+            _ = context.activeSessionsContext.updateSessionAcceptsIncomingCalls(session, accepts: stateValue.with { $0.acceptCalls }).start()
+        }
     })
     
+    let actionsDisposable = DisposableSet()
     
     
-    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }, UNUserNotifications.recurrentAuthorizationStatus(context), context.engine.peers.notificationSoundList()) |> map { inAppSettings, globalSettings, accounts, unAuthStatus, soundList -> [InputDataEntry] in
-        return notificationEntries(settings: inAppSettings, soundList: soundList, globalSettings: globalSettings, accounts: accounts, unAuthStatus: unAuthStatus, arguments: arguments)
+    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }, UNUserNotifications.recurrentAuthorizationStatus(context), context.engine.peers.notificationSoundList(), statePromise.get()) |> map { inAppSettings, globalSettings, accounts, unAuthStatus, soundList, state -> [InputDataEntry] in
+        return notificationEntries(state: state, settings: inAppSettings, soundList: soundList, globalSettings: globalSettings, accounts: accounts, unAuthStatus: unAuthStatus, arguments: arguments)
     }
 
     
@@ -443,6 +507,22 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
             controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
         }
     }
+    
+    controller.onDeinit = {
+        actionsDisposable.dispose()
+    }
+    
+    let sessionsSignal: Signal<ActiveSessionsContextState, NoError> = context.activeSessionsContext.state
+    
+    actionsDisposable.add(sessionsSignal.start(next: { state in
+        updateState { current in
+            var current = current
+            current.session = state.sessions.first(where: { $0.isCurrent })
+            current.acceptCalls = current.session?.flags.contains(.acceptsIncomingCalls) ?? false
+            current.acceptSecretChats = current.session?.flags.contains(.acceptsSecretChats) ?? false
+            return current
+        }
+    }))
     
     return controller
 }
