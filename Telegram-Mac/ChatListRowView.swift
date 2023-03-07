@@ -1548,7 +1548,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      let equal = videoRepresentation?.resource.id == video.resource.id
                      
                      if !equal {
-                         
+                                                  
                          self.photoVideoView?.removeFromSuperview()
                          self.photoVideoView = nil
                          

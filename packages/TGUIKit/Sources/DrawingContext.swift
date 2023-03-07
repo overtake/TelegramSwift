@@ -242,7 +242,8 @@ public class DrawingContext {
     }
     
     public init(size: CGSize, scale: CGFloat, clear: Bool = false) {
-        self.size = NSMakeSize(max(size.width, 1), max(size.height, 1))
+        let size = NSMakeSize(max(size.width, 1), max(size.height, 1))
+        self.size = size
         
         let actualScale: CGFloat
         if scale.isZero {
