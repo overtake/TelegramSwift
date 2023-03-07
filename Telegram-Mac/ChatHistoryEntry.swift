@@ -820,8 +820,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         var highlightFoundText: HighlightFoundText? = nil
         
         
-        if let searchState = searchState, !message.text.isEmpty {
-            highlightFoundText = HighlightFoundText(query: searchState.query, isMessage: searchState.containsMessage(message))
+        if let searchState = searchState, !message.text.isEmpty, searchState.containsMessage(message) {
+            highlightFoundText = HighlightFoundText(query: searchState.query, isMessage: true)
         }
         
         let pollData = pollAnswersLoading[message.id] ?? ChatPollStateData()

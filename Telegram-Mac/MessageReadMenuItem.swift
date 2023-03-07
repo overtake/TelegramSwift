@@ -82,7 +82,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             switch self {
             case let .stats(read, readTimestamps, reactions, _):
                 let readPeers = read ?? []
-                let reactionPeers = reactions?.items.map { ($0.peer._asPeer(), $0.reaction, readTimestamps[$0.peer.id]) } ?? []
+                let reactionPeers = reactions?.items.map { ($0.peer._asPeer(), $0.reaction, $0.timestamp ?? readTimestamps[$0.peer.id]) } ?? []
                 let read:[(Peer, MessageReaction.Reaction?, Int32?)] = readPeers.map { ($0, nil, readTimestamps[$0.id]) }.filter({ value in
                     return !reactionPeers.contains(where: {
                         $0.0.id == value.0.id
@@ -802,14 +802,14 @@ private final class ReadTimestampView : View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func update(timestamp: Int32, relativeTo: Int32, maxSize: NSSize, context: AccountContext, presentation: AppMenu.Presentation) -> NSSize {
+    func update(timestamp: Int32, relativeTo: Int32, maxSize: NSSize, context: AccountContext, presentation: AppMenu.Presentation, isReaction: Bool) -> NSSize {
         let string = stringForRelativeTimestamp(relativeTimestamp: timestamp, relativeTo: relativeTo)
         let textLayout = TextViewLayout(.initialize(string: string, color: presentation.textColor, font: .normal(.text)), maximumNumberOfLines: 1)
         textLayout.measure(width: maxSize.width - 20)
         self.textView.update(textLayout)
         
         let readSize = NSMakeSize(16, 16)
-        readLayer = .init(account: context.account, file: MenuAnimation.menu_seen.file, size: readSize, playPolicy: .onceEnd, getColors: { file in
+        readLayer = .init(account: context.account, file: isReaction ? MenuAnimation.menu_reactions.file : MenuAnimation.menu_seen.file, size: readSize, playPolicy: .onceEnd, getColors: { file in
             var colors:[LottieColor] = []
             colors.append(.init(keyPath: "", color: presentation.textColor))
             return colors
@@ -901,7 +901,7 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
                 self.timestamp = current
                 self.containerView.addSubview(current)
                 
-                let size = current.update(timestamp: timestamp, relativeTo: item.context.timestamp, maxSize: NSMakeSize(item.textMaxWidth, contentView.frame.height), context: item.context, presentation: item.presentation)
+                let size = current.update(timestamp: timestamp, relativeTo: item.context.timestamp, maxSize: NSMakeSize(item.textMaxWidth, contentView.frame.height), context: item.context, presentation: item.presentation, isReaction: item.reaction != nil)
                 current.frame = CGRect(origin: CGPoint(x: self.textX, y: focus(size).minY), size: size)
                 
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -929,15 +929,10 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
             return
         }
         
-        if item.peer.id != item.context.peerId {
-            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
-            if let control = control {
-                self.statusControl = control
-                self.addSubview(control)
-            } else if let view = self.statusControl {
-                performSubviewRemoval(view, animated: animated)
-                self.statusControl = nil
-            }
+        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+        if let control = control {
+            self.statusControl = control
+            self.addSubview(control)
         } else if let view = self.statusControl {
             performSubviewRemoval(view, animated: animated)
             self.statusControl = nil

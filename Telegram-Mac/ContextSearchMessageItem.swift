@@ -94,14 +94,6 @@ class ContextSearchMessageItem: GeneralRowItem {
         let subranges = findSubstringRanges(in: string.lowercased(), query: searchText.lowercased()).0
 //
         
-//        let r = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
-        if let subrange = subranges.first {
-            let r = NSRange.init(string: string, range: subrange)
-            if r.location != NSNotFound, r.location > 50 {
-                messageTitle.replaceCharacters(in: NSMakeRange(0, r.location - 30), with: "...")
-            }
-        }
-        
 
         
         self.messageLayout = TextViewLayout(messageTitle.trimNewLinesToSpace, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)

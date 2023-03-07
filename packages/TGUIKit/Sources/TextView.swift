@@ -784,7 +784,7 @@ public final class TextViewLayout : Equatable {
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
-                        layoutSize.height += fontLineSpacing
+                       // layoutSize.height += fontLineSpacing
                     }
                     break
                 }
@@ -1583,9 +1583,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private func initialize() {
         layer?.disableActions()
         self.style = ControlStyle(backgroundColor: .clear)
+        self.layer?.addSublayer(drawLayer)
         self.layer?.addSublayer(embeddedContainer)
         self.layer?.masksToBounds = false
-        self.layer?.addSublayer(drawLayer)
         self.drawLayer.delegate = self
     }
 
@@ -2242,7 +2242,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             if self.visualEffect == nil {
                 self.visualEffect = VisualEffect(frame: self.bounds)
                 addSubview(self.visualEffect!, positioned: .below, relativeTo: nil)
-                self.visualEffect?.layer?.addSublayer(drawLayer)
+                self.visualEffect?.layer?.insertSublayer(drawLayer, at: 0)
             }
             self.visualEffect?.bgColor = blurBackground
             
@@ -2266,7 +2266,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 self.layer?.mask = nil
             }
         }  else {
-            self.layer?.addSublayer(drawLayer)
+            self.layer?.insertSublayer(drawLayer, at: 0)
             self.visualEffect?.removeFromSuperview()
             self.visualEffect = nil
             

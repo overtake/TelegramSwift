@@ -1425,8 +1425,8 @@ final class AnimatedEmojiesView : Control {
         transition.updateAlpha(view: borderView, alpha: inSearch ? 0 : 1)
 
         
-        let dest = min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46)
-        
+        let dest = max(0, min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46))
+
         let searchDest = inSearch ? 0 : dest
                 
         

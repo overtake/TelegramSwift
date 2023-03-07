@@ -366,7 +366,7 @@ final class ChatReactionsLayout {
             let source: ReactionPeerMenu.Source
             switch self.source {
             case let .builtin(reaction):
-                source = .builtin(reaction.centerAnimation ?? reaction.selectAnimation)
+                source = .builtin(reaction.staticIcon)
             case let .custom(fileId, file, _):
                 source = .custom(fileId, file)
             }

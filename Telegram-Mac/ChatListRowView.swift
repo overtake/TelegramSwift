@@ -479,7 +479,7 @@ private final class TopicNameAndTextView : View {
                             view = current
                         } else {
                             self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: .playCount(2), textColor: theme.colors.grayText)
+                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: .framesCount(1), textColor: theme.colors.grayText)
                             self.inlineStickerItemViews[id] = view
                             view.superview = textView
                             textView.addEmbeddedLayer(view)
@@ -1668,9 +1668,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                              self.inlineTopicPhotoLayer = nil
                          }
                          if let fileId = data.info.icon {
-                             current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
+                             current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .framesCount(1))
                          } else {
-                             current = .init(account: item.context.account, file: forumIconFile, size: size, playPolicy: .playCount(2))
+                             current = .init(account: item.context.account, file: forumIconFile, size: size, playPolicy: .framesCount(1))
                          }
                          self.inlineTopicPhotoLayer = current
                      }
