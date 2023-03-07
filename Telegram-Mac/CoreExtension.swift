@@ -3660,8 +3660,9 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
 extension NSAttributedString {
     static func makeAnimated(_ file: TelegramMediaFile, text: String, info: ItemCollectionId? = nil, fromRect: NSRect? = nil) -> NSAttributedString {
         let attach = NSMutableAttributedString()
-        _ = attach.append(string: text)
-        attach.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: text, info: info, from: fromRect ?? .zero), range: NSMakeRange(0, text.length))
+        let fixed = text.replacingOccurrences(of: "⚙", with: "⚙️")
+        _ = attach.append(string: fixed, font: .normal(theme.fontSize))
+        attach.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: fixed, info: info, from: fromRect ?? .zero), range: NSMakeRange(0, text.length))
         return attach
     }
     static func makeEmojiHolder(_ emoji: String, fromRect: NSRect?) -> NSAttributedString {
