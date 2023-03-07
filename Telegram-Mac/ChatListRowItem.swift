@@ -926,7 +926,9 @@ class ChatListRowItem: TableRowItem {
                 let photos = photos.map { $0.value }
                 if self?.photos != photos {
                     self?.photos = photos
-                    self?.noteHeightOfRow(animated: true)
+                    DispatchQueue.main.async {
+                        self?.noteHeightOfRow(animated: true)
+                    }
                 }
             }))
         }

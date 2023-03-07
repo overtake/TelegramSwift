@@ -411,6 +411,9 @@ public final class TextViewLayout : Equatable {
     public var lastLineIsRtl: Bool {
         return lines.last?.isRTL ?? false
     }
+    public var isWholeRTL: Bool {
+        return lines.allSatisfy({ $0.isRTL })
+    }
     public var firstLineWidth: CGFloat {
         return lines[0].frame.width
     }

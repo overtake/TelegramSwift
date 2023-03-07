@@ -25,7 +25,8 @@ private final class DeveloperArguments {
     let toggleAnimatedInputEmoji:()->Void
     let toggleNativeGraphicContext:()->Void
     let toggleDebugWebApp:()->Void
-    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void, toggleMenu:@escaping(Bool)->Void, toggleDebugWebApp:@escaping()->Void, toggleAnimatedInputEmoji: @escaping()->Void, toggleNativeGraphicContext:@escaping()->Void) {
+    let toggleNetwork:()->Void
+    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void, toggleMenu:@escaping(Bool)->Void, toggleDebugWebApp:@escaping()->Void, toggleAnimatedInputEmoji: @escaping()->Void, toggleNativeGraphicContext:@escaping()->Void, toggleNetwork:@escaping()->Void) {
         self.importColors = importColors
         self.exportColors = exportColors
         self.toggleLogs = toggleLogs
@@ -35,6 +36,7 @@ private final class DeveloperArguments {
         self.toggleDebugWebApp = toggleDebugWebApp
         self.toggleAnimatedInputEmoji = toggleAnimatedInputEmoji
         self.toggleNativeGraphicContext = toggleNativeGraphicContext
+        self.toggleNetwork = toggleNetwork
     }
 }
 
@@ -50,6 +52,7 @@ private enum DeveloperEntryId : Hashable {
     case nativeGraphicContext
     case crash
     case debugWebApp
+    case network
     case section(Int32)
     var hashValue: Int {
         switch self {
@@ -75,6 +78,8 @@ private enum DeveloperEntryId : Hashable {
             return 9
         case .crash:
             return 10
+        case .network:
+            return 11
         case .section(let section):
             return 11 + Int(section)
         }
@@ -94,6 +99,7 @@ private enum DeveloperEntry : TableItemListNodeEntry {
     case nativeGraphicContext(sectionId: Int32, enabled: Bool)
     case crash(sectionId: Int32)
     case debugWebApp(sectionId: Int32)
+    case network(sectionId: Int32, enabled: Bool)
     case section(Int32)
     
     var stableId:DeveloperEntryId {
@@ -120,6 +126,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             return .crash
         case .debugWebApp:
             return .debugWebApp
+        case .network:
+            return .network
         case .section(let section):
             return .section(section)
         }
@@ -148,6 +156,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
         case let .crash(sectionId):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case let .debugWebApp(sectionId):
+            return (sectionId * 1000) + Int32(stableId.hashValue)
+        case let .network(sectionId, _):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -199,6 +209,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             })
         case .debugWebApp:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Debug Web App", type: .switchable(FastSettings.debugWebApp), action: arguments.toggleDebugWebApp)
+        case let .network(_, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Experimental Network", type: .switchable(enabled), action: arguments.toggleNetwork)
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -206,7 +218,7 @@ private enum DeveloperEntry : TableItemListNodeEntry {
     
 }
 
-private func developerEntries(loginSettings: LoggingSettings) -> [DeveloperEntry] {
+private func developerEntries(loginSettings: LoggingSettings, networkSettings: NetworkSettings) -> [DeveloperEntry] {
     var entries:[DeveloperEntry] = []
     
     var sectionId:Int32 = 1
@@ -226,6 +238,7 @@ private func developerEntries(loginSettings: LoggingSettings) -> [DeveloperEntry
     entries.append(.animateInputEmoji(sectionId: sectionId, enabled: FastSettings.animateInputEmoji))
     entries.append(.nativeGraphicContext(sectionId: sectionId, enabled: FastSettings.useNativeGraphicContext))
     entries.append(.debugWebApp(sectionId: sectionId))
+    entries.append(.network(sectionId: sectionId, enabled: networkSettings.useNetworkFramework))
     entries.append(.crash(sectionId: sectionId))
 
     entries.append(.section(sectionId))
@@ -303,12 +316,25 @@ class DeveloperViewController: TableViewController {
         }, toggleNativeGraphicContext: {
             FastSettings.toggleNativeGraphicContext()
             appDelegate?.updateGraphicContext()
+        }, toggleNetwork: {
+            _ = updateNetworkSettingsInteractively(postbox: context.account.postbox, network: context.account.network, { current in
+                var current = current
+                current.useNetworkFramework = !current.useNetworkFramework
+                return current
+            }).start()
         })
         
-        let signal = combineLatest(queue: prepareQueue, context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.loggingSettings]), appearanceSignal, themeSettingsView(accountManager: context.sharedContext.accountManager))
+        let network = context.account.postbox.preferencesView(keys: [PreferencesKeys.networkSettings]) |> map {
+            return $0.values[PreferencesKeys.networkSettings]?.get(NetworkSettings.self) ?? .defaultSettings
+        }
         
-        genericView.merge(with: signal |> map { preferences, appearance, theme in
-            let entries = developerEntries(loginSettings: preferences.entries[SharedDataKeys.loggingSettings]?.get(LoggingSettings.self) ?? LoggingSettings.defaultSettings).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let signal = combineLatest(queue: prepareQueue, context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.loggingSettings]), appearanceSignal, themeSettingsView(accountManager: context.sharedContext.accountManager), network)
+        
+        
+            
+        
+        genericView.merge(with: signal |> map { preferences, appearance, theme, network in
+            let entries = developerEntries(loginSettings: preferences.entries[SharedDataKeys.loggingSettings]?.get(LoggingSettings.self) ?? LoggingSettings.defaultSettings, networkSettings: network).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
         } |> deliverOnMainQueue)
         

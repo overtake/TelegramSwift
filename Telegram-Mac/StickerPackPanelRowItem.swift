@@ -133,6 +133,8 @@ class StickerPackPanelRowItem: TableRowItem {
     override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
+        let width = max(width, 350)
+        
         var filesAndPoints:[(TelegramMediaFile, NSPoint)] = []
 
         

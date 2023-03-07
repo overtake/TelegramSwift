@@ -734,11 +734,26 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
         }
     }
     
+    override var textSize: CGFloat {
+        if let readTimestamp = self.readTimestamp {
+            let string = stringForRelativeTimestamp(relativeTimestamp: readTimestamp, relativeTo: context.timestamp)
+            let attr: NSAttributedString = .initialize(string: string, color: presentation.textColor, font: .normal(.text))
+            let size = attr.sizeFittingWidth(.greatestFiniteMagnitude)
+            return max(size.width, super.textSize)
+        } else {
+            return super.textSize
+        }
+    }
+    
     override var effectiveSize: NSSize {
         var size = super.effectiveSize
+        
+        
+        
         if let _ = reaction {
             size.width += 16 + 2 + self.innerInset
         }
+        
         if let s = PremiumStatusControl.controlSize(peer, false) {
             size.width += s.width + 2
         }

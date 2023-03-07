@@ -1003,7 +1003,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         let firstTransition = Queue.mainQueue().isCurrent()
         let cancelled = Atomic(value: false)
         
-        let prevIsLoading = fromView?.originalView == nil || fromView?.originalView?.isLoading == true || fromView?.originalView?.entries == []
+        let prevIsLoading = fromView?.originalView == nil || fromView?.originalView?.isLoading == true 
         
         if firstTransition, let state = scrollToItem, prevIsLoading {
                         
