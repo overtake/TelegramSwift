@@ -1471,19 +1471,19 @@ class ChatListRowItem: TableRowItem {
                     
                     
                     
-                    if let sounds = soundsData.1 {
-                        for sound in sounds.sounds {
-                            let tone: PeerMessageSound = .cloud(fileId: sound.file.fileId.id)
-                            soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .cloud(fileId: sound.file.fileId.id), default: nil, list: sounds.sounds), handler: {
-                                updateSound(tone)
-                            }, hover: {
-                                playSound(tone)
-                            }, state: selectedSound == .cloud(fileId: sound.file.fileId.id) ? .on : nil))
-                        }
-                        if !sounds.sounds.isEmpty {
-                            soundList.addItem(ContextSeparatorItem())
-                        }
-                    }
+//                    if let sounds = soundsData.1 {
+//                        for sound in sounds.sounds {
+//                            let tone: PeerMessageSound = .cloud(fileId: sound.file.fileId.id)
+//                            soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .cloud(fileId: sound.file.fileId.id), default: nil, list: sounds.sounds), handler: {
+//                                updateSound(tone)
+//                            }, hover: {
+//                                playSound(tone)
+//                            }, state: selectedSound == .cloud(fileId: sound.file.fileId.id) ? .on : nil))
+//                        }
+//                        if !sounds.sounds.isEmpty {
+//                            soundList.addItem(ContextSeparatorItem())
+//                        }
+//                    }
                     
                  
                     for i in 0 ..< 12 {
@@ -1514,13 +1514,23 @@ class ChatListRowItem: TableRowItem {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: 60 * 60 * 1).start()
                         }, itemImage: MenuAnimation.menu_mute_for_1_hour.value))
                         
+                        
                         submenu.addItem(ContextMenuItem(strings().chatListMute3Days, handler: {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: 60 * 60 * 24 * 3).start()
                         }, itemImage: MenuAnimation.menu_mute_for_2_days.value))
                         
+                        submenu.addItem(ContextSeparatorItem())
+                        
+                        submenu.addItem(ContextMenuItem(strings().chatListMuteUntil, handler: {
+                            showModal(with: DateSelectorModalController(context: context, mode: .date(title: strings().chatListMuteUntilTitle, doneTitle: strings().chatListMuteUntilOK), selectedAt: { date in
+                                _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: Int32(date.timeIntervalSince1970 - Date().timeIntervalSince1970)).start()
+                            }), for: context.window)
+                        }, itemImage: MenuAnimation.menu_schedule_message.value))
+                        
                         submenu.addItem(ContextMenuItem(strings().chatListMuteForever, handler: {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: Int32.max).start()
                         }, itemImage: MenuAnimation.menu_mute.value))
+
                         
                         submenu.addItem(ContextSeparatorItem())
                         submenu.addItem(sound)

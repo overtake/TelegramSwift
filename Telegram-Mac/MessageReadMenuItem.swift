@@ -142,6 +142,11 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         }
     }
     
+    override var textMaxWidth: CGFloat {
+        let value = super.textMaxWidth
+        return value - 60
+    }
+    
     fileprivate let message: Message
     fileprivate let context: AccountContext
     private let disposable = MetaDisposable()
@@ -514,7 +519,7 @@ final class MessageReadMenuItem : ContextMenuItem {
         self.message = message
         self.availableReactions = availableReactions
         self.chatInteraction = chatInteraction
-        super.init("", handler: nil, itemImage: message.hasReactions ? MenuAnimation.menu_reactions.value : MenuAnimation.menu_seen.value)
+        super.init("", handler: nil, itemImage: message.hasReactions ? MenuAnimation.menu_reactions.value : MenuAnimation.menu_seen.value, removeTail: true)
     }
     
     required init(coder decoder: NSCoder) {

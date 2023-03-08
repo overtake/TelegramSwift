@@ -4213,6 +4213,12 @@ public final class L10n {
   public static var chatListMute8Hours: String  { return L10n.tr("Localizable", "ChatList.Mute.8Hours") }
   /// Forever
   public static var chatListMuteForever: String  { return L10n.tr("Localizable", "ChatList.Mute.Forever") }
+  /// Mute Until...
+  public static var chatListMuteUntil: String  { return L10n.tr("Localizable", "ChatList.Mute.Until") }
+  /// Mute
+  public static var chatListMuteUntilOK: String  { return L10n.tr("Localizable", "ChatList.Mute.Until.OK") }
+  /// Mute Until
+  public static var chatListMuteUntilTitle: String  { return L10n.tr("Localizable", "ChatList.Mute.Until.Title") }
   /// Are you sure you want to read all chats?
   public static var chatListPopoverConfirm: String  { return L10n.tr("Localizable", "ChatList.Popover.Confirm") }
   /// Read All

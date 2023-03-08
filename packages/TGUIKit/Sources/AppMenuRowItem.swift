@@ -159,7 +159,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
             return (NSAttributedString.Key.link.rawValue, contents)
         }))
         
-        self.text = TextViewLayout(attr)
+        self.text = TextViewLayout(attr, maximumNumberOfLines: 1)
         
         if item.keyEquivalent.isEmpty {
             keyEquivalentText = nil
@@ -191,7 +191,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
             return (NSAttributedString.Key.link.rawValue, contents)
         }))
         
-        self.text = TextViewLayout(attr)
+        self.text = TextViewLayout(attr, maximumNumberOfLines: 1)
         
         _ = makeSize(self.width)
         
@@ -279,7 +279,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
         }
     }
     
-    public var textMaxWidth: CGFloat {
+    open var textMaxWidth: CGFloat {
         let width = item.overrideWidth ?? width
         return width - leftInset * 2 - innerInset * 2
     }
@@ -287,7 +287,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
     open override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         let width = item.overrideWidth ?? width
-        self.text.measure(width: width - leftInset * 2 - innerInset * 2)
+        self.text.measure(width: textMaxWidth)
         self.keyEquivalentText?.measure(width: .greatestFiniteMagnitude)
         return true
     }
