@@ -1514,6 +1514,9 @@ class ChatListRowItem: TableRowItem {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: 60 * 60 * 1).start()
                         }, itemImage: MenuAnimation.menu_mute_for_1_hour.value))
                         
+                        submenu.addItem(ContextMenuItem(strings().chatListMute8Hours, handler: {
+                            _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: 60 * 60 * 8).start()
+                        }, itemImage: MenuAnimation.menu_mute_for_1_hour.value))
                         
                         submenu.addItem(ContextMenuItem(strings().chatListMute3Days, handler: {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: 60 * 60 * 24 * 3).start()

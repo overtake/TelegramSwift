@@ -2243,6 +2243,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 self.visualEffect = VisualEffect(frame: self.bounds)
                 addSubview(self.visualEffect!, positioned: .below, relativeTo: nil)
                 self.visualEffect?.layer?.addSublayer(drawLayer)
+                self.visualEffect?.layer?.addSublayer(embeddedContainer)
             }
             self.visualEffect?.bgColor = blurBackground
             
@@ -2267,6 +2268,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             }
         }  else {
             self.layer?.insertSublayer(drawLayer, at: 0)
+            self.layer?.insertSublayer(embeddedContainer, at: 1)
             self.visualEffect?.removeFromSuperview()
             self.visualEffect = nil
             
