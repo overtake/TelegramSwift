@@ -98,7 +98,7 @@ private extension SentAuthorizationCodeType {
         switch self {
         case let .call(length):
             return length
-        case let .email(_, length, _, _, _):
+        case let .email(_, length, _, _, _, _):
             return length
         case let .otherSession(length):
             return length
