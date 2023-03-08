@@ -318,6 +318,10 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
                     switch soundSettings {
                     case .enabled:
                         let name = soundName.nsstring.lastPathComponent.nsstring.deletingPathExtension
+//                        let container = containerUrl + "/Library/Sounds/"
+//                        let soundPath = container + name
+//                        try? FileManager.default.createDirectory(atPath: container, withIntermediateDirectories: true)
+//                        try? FileManager.default.copyItem(atPath: soundName, toPath: soundPath)
                         content.sound = .init(named: .init(name))
                       //  appDelegate?.playSound(soundName)
                     default:

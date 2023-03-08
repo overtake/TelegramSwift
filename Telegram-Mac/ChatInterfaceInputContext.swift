@@ -280,11 +280,7 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
                 return .none
             }
         } else if possibleTypes == [.emoji] {
-            if query.trimmingCharacters(in: CharacterSet.letters).isEmpty {
-                return .emoji(query, firstWord: false)
-            } else {
-                return .none
-            }
+            return .emoji(query, firstWord: !query.trimmingCharacters(in: CharacterSet.letters).isEmpty)
         } else if possibleTypes == [.emojiFast] {
             return .emoji(query, firstWord: true)
         }

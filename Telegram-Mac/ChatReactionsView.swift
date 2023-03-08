@@ -371,11 +371,11 @@ final class ChatReactionsLayout {
                 source = .custom(fileId, file)
             }
             weak var weakSelf = self
-            let makeItem:(_ peer: Peer) -> ContextMenuItem = { peer in
+            let makeItem:(_ peer: Peer, _ readTimestamp: Int32?) -> ContextMenuItem = { peer, readTimestamp in
                 let title = peer.displayTitle.prefixWithDots(25)
                 let item = ReactionPeerMenu(title: title, handler: {
                     weakSelf?.openInfo(peer.id)
-                }, peer: peer, context: context, reaction: source)
+                }, peer: peer, context: context, reaction: source, readTimestamp: readTimestamp)
                 
                 let signal:Signal<(CGImage?, Bool), NoError>
                 signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
@@ -393,7 +393,7 @@ final class ChatReactionsLayout {
             }
             
             var items = state.items.map {
-                return makeItem($0.peer._asPeer())
+                return makeItem($0.peer._asPeer(), $0.timestamp)
             }
             
             switch source {

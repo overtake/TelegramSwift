@@ -3149,7 +3149,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let bottomInset = self.bottomInset != 0 ? (self.bottomInset) : 0
         let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
 
-        let documentHeight = self is HorizontalTableView ? documentSize.width : documentSize.height
+        let documentHeight = documentSize.height
         
         if documentHeight <= height {
             return

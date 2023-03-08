@@ -1439,7 +1439,7 @@ class ChatListRowItem: TableRowItem {
                         }
                         
                         if effectiveTone != .default && effectiveTone != .none {
-                            let path = fileNameForNotificationSound(postbox: context.account.postbox, sound: effectiveTone, defaultSound: nil, list: soundsData.1)
+                            let path = fileNameForNotificationSound(postbox: context.account.postbox, sound: effectiveTone, defaultSound: nil, list: soundsData.1?.sounds)
                             
                             _ = path.start(next: { resource in
                                 if let resource = resource {
@@ -1474,7 +1474,7 @@ class ChatListRowItem: TableRowItem {
                     if let sounds = soundsData.1 {
                         for sound in sounds.sounds {
                             let tone: PeerMessageSound = .cloud(fileId: sound.file.fileId.id)
-                            soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .cloud(fileId: sound.file.fileId.id), default: nil, list: sounds), handler: {
+                            soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .cloud(fileId: sound.file.fileId.id), default: nil, list: sounds.sounds), handler: {
                                 updateSound(tone)
                             }, hover: {
                                 playSound(tone)
@@ -1488,7 +1488,7 @@ class ChatListRowItem: TableRowItem {
                  
                     for i in 0 ..< 12 {
                         let sound: PeerMessageSound = .bundledModern(id: Int32(i))
-                        soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: sound, default: nil, list: soundsData.1), handler: {
+                        soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: sound, default: nil, list: soundsData.1?.sounds), handler: {
                             updateSound(sound)
                         }, hover: {
                             playSound(sound)
@@ -1497,7 +1497,7 @@ class ChatListRowItem: TableRowItem {
                     soundList.addItem(ContextSeparatorItem())
                     for i in 0 ..< 8 {
                         let sound: PeerMessageSound = .bundledClassic(id: Int32(i))
-                        soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: sound, default: nil, list: soundsData.1), handler: {
+                        soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: sound, default: nil, list: soundsData.1?.sounds), handler: {
                             updateSound(sound)
                         }, hover: {
                             playSound(sound)

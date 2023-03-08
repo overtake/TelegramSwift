@@ -1074,9 +1074,12 @@ struct ChatPresentationInterfaceState: Equatable {
             return false
         }
         
-        if lhs.inputContext != rhs.inputContext {
-            return false
+        if lhs.effectiveInput != rhs.effectiveInput {
+            if lhs.inputContext != rhs.inputContext {
+                return false
+            }
         }
+        
         if lhs.canInvokeBasicActions != rhs.canInvokeBasicActions {
             return false
         }

@@ -27,7 +27,7 @@ private final class Arguments {
 
 private struct State : Equatable {
     var tone: PeerMessageSound = .default
-    var list: NotificationSoundList? = nil
+    var list: [NotificationSoundList.NotificationSound]? = nil
 }
 
 private func _id_sound(_ sound: PeerMessageSound) -> InputDataIdentifier {
@@ -58,24 +58,24 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     let settings = NotificationSoundSettings.extract(from: arguments.context.appConfiguration)
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSoundTonesTitle.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-    
+//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSoundTonesTitle.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+//    index += 1
+//
 //    var hasUploaded: Bool = false
 //    var canAdd: Bool = true
 //    var contains: Bool? = nil
 //    if let list = state.list {
-//        hasUploaded = !list.sounds.isEmpty
-//        canAdd = list.sounds.count < settings.maxSavedCount
+//        hasUploaded = !list.isEmpty
+//        canAdd = list.count < settings.maxSavedCount
 //        if case .cloud = state.tone {
-//            contains = list.sounds.contains(where: { .cloud(fileId: $0.file.fileId.id) == state.tone })
+//            contains = list.contains(where: { .cloud(fileId: $0.file.fileId.id) == state.tone })
 //        }
-//        for (i, sound) in list.sounds.enumerated() {
-//            var viewType: GeneralViewType = bestGeneralViewType(list.sounds, for: i)
-//            if canAdd && i == list.sounds.count - 1 {
+//        for (i, sound) in list.enumerated() {
+//            var viewType: GeneralViewType = bestGeneralViewType(list, for: i)
+//            if canAdd && i == list.count - 1 {
 //                viewType = .innerItem
 //            }
-//            if list.sounds.count == 1, canAdd {
+//            if list.count == 1, canAdd {
 //                viewType = .firstItem
 //            }
 //            let id = sound.file.fileId.id
@@ -95,7 +95,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 //        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_upload, data: .init(name: strings().notificationSoundTonesUpload, color: theme.colors.accent, icon: theme.icons.notification_sound_add, type: .none, viewType: hasUploaded ? .lastItem : .singleItem, action: arguments.upload)))
 //        index += 1
 //    }
-    
+//
 //    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSoundTonesInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
 //    index += 1
 //
@@ -172,7 +172,7 @@ func NotificationSoundController(context: AccountContext) -> InputDataController
     }
 
     let arguments = Arguments(context: context, selectSound: selectTone, upload: {
-        filePanel(with: ["mp3", "ogg"], allowMultiple: false, for: context.window, completion: { files in
+        filePanel(with: ["m4a"], allowMultiple: false, for: context.window, completion: { files in
             if let files = files {
                 let settings = NotificationSoundSettings.extract(from: context.appConfiguration)
                 var signals:[Signal<NotificationSoundList.NotificationSound, UploadNotificationSoundError>] = []
@@ -212,7 +212,9 @@ func NotificationSoundController(context: AccountContext) -> InputDataController
         updateState { current in
             var current = current
             current.tone = value.tone
-            current.list = list
+            current.list = list?.sounds.filter { value in
+                return true//value.file.mimeType.contains("m4a")
+            }
             return current
         }
     }))

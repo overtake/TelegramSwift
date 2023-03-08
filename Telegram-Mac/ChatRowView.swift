@@ -1303,7 +1303,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             guard let control = shareView else {return}
             control.autohighlight = false
             
-            if item.canBlur  {
+            if item.isBubbled  {
                 
                 control.set(image: item.hasSource ? item.presentation.chat.chat_goto_message_bubble(theme: item.presentation) : item.presentation.chat.chat_share_bubble(theme: item.presentation), for: .Normal)
                 
