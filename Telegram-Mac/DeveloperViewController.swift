@@ -238,7 +238,7 @@ private func developerEntries(loginSettings: LoggingSettings, networkSettings: N
     entries.append(.animateInputEmoji(sectionId: sectionId, enabled: FastSettings.animateInputEmoji))
     entries.append(.nativeGraphicContext(sectionId: sectionId, enabled: FastSettings.useNativeGraphicContext))
     entries.append(.debugWebApp(sectionId: sectionId))
-    entries.append(.network(sectionId: sectionId, enabled: networkSettings.useNetworkFramework))
+    entries.append(.network(sectionId: sectionId, enabled: networkSettings.useNetworkFramework ?? false))
     entries.append(.crash(sectionId: sectionId))
 
     entries.append(.section(sectionId))
@@ -319,7 +319,11 @@ class DeveloperViewController: TableViewController {
         }, toggleNetwork: {
             _ = updateNetworkSettingsInteractively(postbox: context.account.postbox, network: context.account.network, { current in
                 var current = current
-                current.useNetworkFramework = !current.useNetworkFramework
+                if let value = current.useNetworkFramework {
+                    current.useNetworkFramework = !value
+                } else {
+                    current.useNetworkFramework = true
+                }
                 return current
             }).start()
         })

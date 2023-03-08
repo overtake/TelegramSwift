@@ -314,16 +314,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.view.splitView.delegate = self;
         self.view.splitView.update(false)
         
-        
-        
-        #if DEBUG || BETA
-        _ = updateNetworkSettingsInteractively(postbox: context.account.postbox, network: context.account.network, { current in
-            var current = current
-            current.useNetworkFramework = true
-            return current
-        }).start()
-        #endif
-        
+
         let accountId = context.account.id
         self.loggedOutDisposable.set(context.account.loggedOut.start(next: { value in
             if value {
@@ -525,14 +516,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            if #available(macOS 10.14, *) {
-                UNUserNotificationCenter.current().getNotificationSettings(completionHandler: { settings in
-                    NSLog("\(settings.alertSetting)")
-                })
-                
-            }
-          
-            
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
