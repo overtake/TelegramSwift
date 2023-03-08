@@ -2242,7 +2242,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             if self.visualEffect == nil {
                 self.visualEffect = VisualEffect(frame: self.bounds)
                 addSubview(self.visualEffect!, positioned: .below, relativeTo: nil)
-                self.visualEffect?.layer?.insertSublayer(drawLayer, at: 0)
+                self.visualEffect?.layer?.addSublayer(drawLayer)
             }
             self.visualEffect?.bgColor = blurBackground
             

@@ -60,7 +60,7 @@ private func soundName(sound: PeerMessageSound) -> String {
     }
 }
 
-public func localizedPeerNotificationSoundString(sound: PeerMessageSound, default: PeerMessageSound? = nil, list: NotificationSoundList? = nil) -> String {
+public func localizedPeerNotificationSoundString(sound: PeerMessageSound, default: PeerMessageSound? = nil, list: [NotificationSoundList.NotificationSound]? = nil) -> String {
     switch sound {
     case .`default`:
         if let defaultSound = `default` {
@@ -76,7 +76,7 @@ public func localizedPeerNotificationSoundString(sound: PeerMessageSound, defaul
             return strings().peerInfoNotificationsDefault
         }
     case let .cloud(fileId):
-        if let list = list, let sound = list.sounds.first(where: { $0.file.fileId.id == fileId }) {
+        if let list = list, let sound = list.first(where: { $0.file.fileId.id == fileId }) {
             if sound.file.fileName == nil || sound.file.fileName!.isEmpty, sound.file.isVoice {
                 return strings().notificationSoundToneVoice
             }
@@ -89,7 +89,7 @@ public func localizedPeerNotificationSoundString(sound: PeerMessageSound, defaul
     }
 }
 
-func fileNameForNotificationSound(postbox: Postbox, sound: PeerMessageSound, defaultSound: PeerMessageSound?, list: NotificationSoundList? = nil) -> Signal<TelegramMediaResource?, NoError> {
+func fileNameForNotificationSound(postbox: Postbox, sound: PeerMessageSound, defaultSound: PeerMessageSound?, list: [NotificationSoundList.NotificationSound]? = nil) -> Signal<TelegramMediaResource?, NoError> {
     switch sound {
     case .none:
         return .single(nil)
@@ -109,7 +109,7 @@ func fileNameForNotificationSound(postbox: Postbox, sound: PeerMessageSound, def
         return .single(SoundEffectPlay.resource(name: "\(id + 2)", type: "m4a"))
     case let .cloud(fileId):
         if let list = list {
-            if let file = list.sounds.first(where: { $0.file.fileId.id == fileId})?.file {
+            if let file = list.first(where: { $0.file.fileId.id == fileId})?.file {
                 _ = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: .standalone(resource: file.resource), ranges: nil, statsCategory: .audio, reportResultStatus: true).start()
                 return postbox.mediaBox.resourceData(id: file.resource.id) |> filter { $0.complete } |> take(1) |> map { _ in
                     return file.resource
@@ -285,7 +285,7 @@ private func notificationEntries(state: State, settings:InAppNotificationSetting
     index += 1
     
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: strings().notificationSettingsNotificationTone, color: theme.colors.text, type: .nextContext(localizedPeerNotificationSoundString(sound: settings.tone, list: soundList)), viewType: .innerItem, action: arguments.notificationTone)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: strings().notificationSettingsNotificationTone, color: theme.colors.text, type: .nextContext(localizedPeerNotificationSoundString(sound: settings.tone, list: soundList?.sounds)), viewType: .innerItem, action: arguments.notificationTone)))
     index += 1
 
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_bounce, data: InputDataGeneralData(name: strings().notificationSettingsBounceDockIcon, color: theme.colors.text, type: .switchable(settings.requestUserAttention), viewType: .innerItem, action: {

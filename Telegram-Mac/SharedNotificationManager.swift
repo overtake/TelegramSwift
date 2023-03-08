@@ -25,7 +25,7 @@ func getNotificationMessageId(userInfo:[AnyHashable: Any], for prefix: String) -
 func getNotificationToneFile(account: Account, sound: PeerMessageSound) -> Signal<String?, NoError> {
     let engine = TelegramEngine(account: account)
     return engine.peers.notificationSoundList() |> take(1) |> mapToSignal { list in
-        return fileNameForNotificationSound(postbox: account.postbox, sound: sound, defaultSound: nil, list: list) |> map { resource in
+        return fileNameForNotificationSound(postbox: account.postbox, sound: sound, defaultSound: nil, list: list?.sounds) |> map { resource in
             if let resource = resource {
                 return resourcePath(account.postbox, resource)
             } else {

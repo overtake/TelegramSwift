@@ -544,7 +544,7 @@ final class MessageReadMenuItem : ContextMenuItem {
             }
         }
         
-        if message.flags.contains(.Incoming) {
+        if message.flags.contains(.Incoming) && message.author?.id != chatInteraction.context.peerId {
             return false
         }
         for media in message.media {

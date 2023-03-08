@@ -280,6 +280,8 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
                 } else {
                     window.sendKeyEvent(.Return, modifierFlags: [])
                 }
+            } else if !byClick {
+                tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
             }
         }
     }

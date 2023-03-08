@@ -1171,7 +1171,7 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     }
     
     
-    if message.flags.contains(.Incoming) {
+    if message.flags.contains(.Incoming) && message.author?.id != context.peerId {
         return false
     }
     
