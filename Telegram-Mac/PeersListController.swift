@@ -874,6 +874,11 @@ class PeerListContainerView : Control {
         compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
         compose.layer?.cornerRadius = .cornerRadius
         compose.sizeToFit()
+        
+        searchView.searchTheme = .init(theme.search.backgroundColor, theme.search.searchImage, theme.search.clearImage, {
+            return strings().chatListSearchPlaceholder
+        }, theme.search.textColor, theme.search.placeholderColor)
+        
         super.updateLocalizationAndTheme(theme: theme)
     }
     
