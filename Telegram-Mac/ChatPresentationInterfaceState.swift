@@ -516,6 +516,17 @@ struct ChatPresentationInterfaceState: Equatable {
         return inputContextQueryForChatPresentationIntefaceState(self, includeContext: true)
     }
     
+    var effectiveInputContext: ChatPresentationInputQuery {
+        let current = inputContextQueryForChatPresentationIntefaceState(self, includeContext: true)
+        if case .contextRequest = current {
+            let without = inputContextQueryForChatPresentationIntefaceState(self, includeContext: false)
+            
+            return without
+        } else {
+            return current
+        }
+    }
+    
     var isKeyboardActive:Bool {
         guard let reply = keyboardButtonsMessage?.replyMarkup else {
             return false

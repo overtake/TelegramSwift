@@ -19,7 +19,8 @@ func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentation
     switch chatPresentationInterfaceState.state {
     case .normal, .editing:
         if inputQuery != .none {
-            if inputQuery == currentQuery {
+            
+            if inputQuery == currentQuery, chatPresentationInterfaceState.inputContext == chatPresentationInterfaceState.effectiveInputContext {
                 return nil
             } else {
                 return makeInlineResult(inputQuery, chatPresentationInterfaceState: chatPresentationInterfaceState, currentQuery: currentQuery, context: context)
@@ -325,7 +326,6 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     return botResult |> then(maybeDelayedContextResults)
                 } else {
                     let inputQuery = inputContextQueryForChatPresentationIntefaceState(chatPresentationInterfaceState, includeContext: false)
-                    let location = chatPresentationInterfaceState.chatLocation
                     
                     let result = makeInlineResult(inputQuery, chatPresentationInterfaceState: chatPresentationInterfaceState, currentQuery: nil, context: context)?.1
                     
