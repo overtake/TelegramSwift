@@ -356,10 +356,10 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
-                if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
+                if case .stickers = strongSelf.chatInteraction.presentation.effectiveInputContext {
                     strongSelf.selectPreviousSticker()
                     return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
-                } else if case .emoji = strongSelf.chatInteraction.presentation.inputContext {
+                } else if case .emoji = strongSelf.chatInteraction.presentation.effectiveInputContext {
                      return strongSelf.selectPrevEmojiClue()
                 }
             }
@@ -384,10 +384,10 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
-                if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
+                if case .stickers = strongSelf.chatInteraction.presentation.effectiveInputContext {
                     strongSelf.selectNextSticker()
                     return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
-                } else if case .emoji = strongSelf.chatInteraction.presentation.inputContext {
+                } else if case .emoji = strongSelf.chatInteraction.presentation.effectiveInputContext {
                     return strongSelf.selectNextEmojiClue()
                 }
             }
@@ -586,8 +586,12 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let selectedIndex = selectedItem.selectedIndex {
                 var index = selectedIndex
                 index -= 1
-                let count = selectedItem.clues.count + selectedItem.animated.count
-                selectedItem.selectedIndex = max(min(index, count - 1), 0)
+                if index == -1 {
+                    selectedItem.selectedIndex = nil
+                } else {
+                    let count = selectedItem.clues.count + selectedItem.animated.count
+                    selectedItem.selectedIndex = max(min(index, count - 1), 0)
+                }
                 selectedItem.redraw(animated: true)
             }
             return selectedItem.selectedIndex != nil ? .invoked : .rejected

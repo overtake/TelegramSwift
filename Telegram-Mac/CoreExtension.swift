@@ -916,7 +916,7 @@ func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Boo
             }
             return channel.hasPermission(.deleteAllMessages)
         }
-        return channel.hasPermission(.deleteAllMessages) || !message.flags.contains(.Incoming)
+        return channel.hasPermission(.deleteAllMessages) || !message.effectivelyIncoming(account.peerId)
     } else if message.peers[message.id.peerId] is TelegramSecretChat {
         return true
     } else {
@@ -1171,7 +1171,8 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     }
     
     
-    if message.flags.contains(.Incoming) && message.author?.id != context.peerId {
+    
+    if message.effectivelyIncoming(context.peerId) {
         return false
     }
     

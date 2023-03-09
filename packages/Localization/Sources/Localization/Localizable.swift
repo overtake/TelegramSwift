@@ -6151,6 +6151,8 @@ public final class L10n {
   public static var inlineModalActionTitle: String  { return L10n.tr("Localizable", "InlineModalAction.Title") }
   /// File
   public static var inputAttachPopoverFile: String  { return L10n.tr("Localizable", "InputAttach.Popover.File") }
+  /// Gift Premium
+  public static var inputAttachPopoverGift: String  { return L10n.tr("Localizable", "InputAttach.Popover.Gift") }
   /// Location
   public static var inputAttachPopoverLocation: String  { return L10n.tr("Localizable", "InputAttach.Popover.Location") }
   /// Audio File
