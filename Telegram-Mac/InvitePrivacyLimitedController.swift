@@ -257,7 +257,7 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
 
 
 func showInvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, ids:[PeerId]) {
-    let peers = context.account.postbox.transaction { transaction in
+    let peers:Signal<[Peer], NoError> = context.account.postbox.transaction { transaction in
         var peers: [Peer?] = []
         for id in ids {
             peers.append(transaction.getPeer(id))
