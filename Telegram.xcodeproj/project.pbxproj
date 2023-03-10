@@ -346,6 +346,8 @@
 		279A1E2825E945A2007D48E7 /* PaymentsReceiptController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */; };
 		279BD40629B1D79000A8B640 /* ContextInlineWebViewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */; };
 		279BD40C29B71FA200A8B640 /* Network.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 279BD40B29B71FA200A8B640 /* Network.framework */; };
+		279BD40E29BB283700A8B640 /* menu_atsign.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 279BD40D29BB283700A8B640 /* menu_atsign.tgs */; };
+		279BD41029BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279BD40F29BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift */; };
 		279E8ECB274259EE000E1BD5 /* TGVideoCameraMovie in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECA274259EE000E1BD5 /* TGVideoCameraMovie */; };
 		279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */ = {isa = PBXBuildFile; productRef = 279E8ECD27425CBD000E1BD5 /* InAppVideoServices */; };
 		279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD29F273C1234004F08A1 /* BuildConfig */; };
@@ -1778,6 +1780,8 @@
 		279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsReceiptController.swift; sourceTree = "<group>"; };
 		279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextInlineWebViewRowItem.swift; sourceTree = "<group>"; };
 		279BD40B29B71FA200A8B640 /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
+		279BD40D29BB283700A8B640 /* menu_atsign.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_atsign.tgs; sourceTree = "<group>"; };
+		279BD40F29BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvitePrivacyLimitedController.swift; sourceTree = "<group>"; };
 		279E8EC9274259B7000E1BD5 /* TGVideoCameraMovie */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TGVideoCameraMovie; path = packages/TGVideoCameraMovie; sourceTree = "<group>"; };
 		279E8ECC27425BAE000E1BD5 /* InAppVideoServices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppVideoServices; path = packages/InAppVideoServices; sourceTree = "<group>"; };
 		279FD29C273C106C004F08A1 /* minizip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = minizip; path = submodules/minizip; sourceTree = "<group>"; };
@@ -3371,6 +3375,7 @@
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
 				2747FD3A2927BFBE0045B95C /* menu_hide.tgs */,
 				276279D5298D32EF0096F904 /* menu_more.tgs */,
+				279BD40D29BB283700A8B640 /* menu_atsign.tgs */,
 				2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */,
 				27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */,
 				2747FD392927BFBD0045B95C /* menu_show.tgs */,
@@ -3482,6 +3487,7 @@
 		27D006DD25AF3AD100EE3EB1 /* invitelinks */ = {
 			isa = PBXGroup;
 			children = (
+				279BD40F29BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift */,
 				C2B1B11D1E5F151D00895E0D /* ChannelVisibilityController.swift */,
 				27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */,
 				27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */,
@@ -6127,6 +6133,7 @@
 				27672EAF26F8D62800297DB4 /* 1.m4a in Resources */,
 				2733673F276247220027441E /* menu_violence.tgs in Resources */,
 				27916F2C287D77660046DB44 /* smiles.tgs in Resources */,
+				279BD40E29BB283700A8B640 /* menu_atsign.tgs in Resources */,
 				27672EB026F8D62A00297DB4 /* 2.m4a in Resources */,
 				2733671527620B650027441E /* menu_edit.tgs in Resources */,
 				27803C0627A3E944007B0FA9 /* menu_folder_plane.tgs in Resources */,
@@ -7116,6 +7123,7 @@
 				277DFE6F27848AAB00F78396 /* ContextPeerMenuItem.swift in Sources */,
 				C2DF47E41DE84A67003AA6C0 /* ChatVoiceRowItem.swift in Sources */,
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
+				279BD41029BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift in Sources */,
 				D05F392322FB45450040F341 /* DateSelectorModalController.swift in Sources */,
 				D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */,
 				C209C38D1F276D4C009231FE /* ChatSearchView.swift in Sources */,

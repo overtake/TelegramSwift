@@ -2333,6 +2333,12 @@ public final class L10n {
   public static func chatContextMessageContainsEmojiZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_zero", p1)
   }
+  /// Mention
+  public static var chatContextPeerMention: String  { return L10n.tr("Localizable", "Chat.Context.Peer.Mention") }
+  /// Open Profile
+  public static var chatContextPeerOpenInfo: String  { return L10n.tr("Localizable", "Chat.Context.Peer.OpenInfo") }
+  /// Send Message
+  public static var chatContextPeerSendMessage: String  { return L10n.tr("Localizable", "Chat.Context.Peer.SendMessage") }
   /// Hide pinned message
   public static var chatContextPinnedHide: String  { return L10n.tr("Localizable", "Chat.Context.Pinned.Hide") }
   /// Set As Quick
@@ -4067,6 +4073,8 @@ public final class L10n {
   public static var chatListFilterNewTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.NewTitle") }
   /// Non-Contacts
   public static var chatListFilterNonContacts: String  { return L10n.tr("Localizable", "ChatList.Filter.NonContacts") }
+  /// Read All
+  public static var chatListFilterReadAll: String  { return L10n.tr("Localizable", "ChatList.Filter.ReadAll") }
   /// Read
   public static var chatListFilterReadChats: String  { return L10n.tr("Localizable", "ChatList.Filter.ReadChats") }
   /// Remove From Folder
@@ -4231,7 +4239,7 @@ public final class L10n {
   public static var chatListRevealActionHide: String  { return L10n.tr("Localizable", "ChatList.RevealAction.Hide") }
   /// Pin
   public static var chatListRevealActionPin: String  { return L10n.tr("Localizable", "ChatList.RevealAction.Pin") }
-  /// Search (⌘ + k)
+  /// Search (⌘K)
   public static var chatListSearchPlaceholder: String  { return L10n.tr("Localizable", "ChatList.Search.Placeholder") }
   /// %@ created a secret chat.
   public static func chatListSecretChatCreated(_ p1: String) -> String {
@@ -6223,6 +6231,44 @@ public final class L10n {
   }
   /// Sorry, the target user is a member of too many groups and channels. Please ask them to leave some first.
   public static var inviteChannelsTooMuch: String  { return L10n.tr("Localizable", "Invite.ChannelsTooMuch") }
+  /// Send Invite Link
+  public static var inviteFailedOK: String  { return L10n.tr("Localizable", "InviteFailed.OK") }
+  /// Skip
+  public static var inviteFailedSkip: String  { return L10n.tr("Localizable", "InviteFailed.Skip") }
+  /// Invite Via Link
+  public static var inviteFailedTitle: String  { return L10n.tr("Localizable", "InviteFailed.Title") }
+  /// %d
+  public static func inviteFailedTextMultipleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Multiple_countable", p1)
+  }
+  /// %d users restricts adding them to groups. You can send them an invite link as message instead.
+  public static func inviteFailedTextMultipleFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Multiple_few", p1)
+  }
+  /// %d users restricts adding them to groups. You can send them an invite link as message instead.
+  public static func inviteFailedTextMultipleMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Multiple_many", p1)
+  }
+  /// %d users restricts adding them to groups. You can send them an invite link as message instead.
+  public static func inviteFailedTextMultipleOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Multiple_one", p1)
+  }
+  /// %d users restricts adding them to groups. You can send them an invite link as message instead.
+  public static func inviteFailedTextMultipleOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Multiple_other", p1)
+  }
+  /// %d users restricts adding them to groups. You can send them an invite link as message instead.
+  public static func inviteFailedTextMultipleTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Multiple_two", p1)
+  }
+  /// %d users restricts adding them to groups. You can send them an invite link as message instead.
+  public static func inviteFailedTextMultipleZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Multiple_zero", p1)
+  }
+  /// %@ restricts adding them to groups. You can send them an invite link as message instead.
+  public static func inviteFailedTextSingle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Single", p1)
+  }
   /// %d
   public static func inviteLinkCanJoinCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "InviteLink.CanJoin_countable", p1)

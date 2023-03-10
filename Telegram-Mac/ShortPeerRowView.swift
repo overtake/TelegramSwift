@@ -431,7 +431,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             
             if let view = deleteControl {
                 performSubviewRemoval(view, animated: animated)
-                self.selectControl = nil
+                self.deleteControl = nil
             }
             
             if let view = selectControl {
@@ -460,7 +460,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                    
             if let view = deleteControl {
                 performSubviewRemoval(view, animated: animated)
-                self.selectControl = nil
+                self.deleteControl = nil
             }
         case let .deletable(onRemove, deletable):
             if let view = selectControl {
@@ -699,6 +699,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             default:
                 interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
             }
+        case .deletable(_, true):
+            break
         default:
             if clickCount <= 1 {
                 if case .nextContext = item.type, let event = NSApp.currentEvent {

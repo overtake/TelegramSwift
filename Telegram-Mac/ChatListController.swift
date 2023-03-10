@@ -18,11 +18,11 @@ private final class Arguments {
     let context: AccountContext
     let setupFilter: (ChatListFilter)->Void
     let openFilterSettings: (ChatListFilter)->Void
-    let tabsMenuItems: (ChatListFilter)->[ContextMenuItem]
+    let tabsMenuItems: (ChatListFilter, Int?)->[ContextMenuItem]
     let createTopic: ()->Void
     let switchOffForum: ()->Void
     let getHideProgress:()->CGFloat?
-    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?) {
+    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?) {
         self.context = context
         self.setupFilter = setupFilter
         self.openFilterSettings = openFilterSettings
@@ -396,8 +396,8 @@ class ChatListController : PeersListController {
             } else {
                 context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
             }
-        }, tabsMenuItems: { filter in
-            return filterContextMenuItems(filter, context: context)
+        }, tabsMenuItems: { filter, unreadCount in
+            return filterContextMenuItems(filter, unreadCount: unreadCount, context: context)
         }, createTopic: {
             switch mode {
             case let .forum(peerId, _):
