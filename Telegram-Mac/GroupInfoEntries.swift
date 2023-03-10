@@ -13,6 +13,23 @@ import TelegramCore
 import SwiftSignalKit
 import TGUIKit
 
+extension AddGroupMemberError {
+    var channelError: AddChannelMemberError {
+        switch self {
+        case .generic:
+            return .generic
+        case .groupFull:
+            return .generic
+        case .privacy:
+            return .restricted
+        case .notMutualContact:
+            return .notMutualContact
+        case .tooManyChannels:
+            return .tooMuchJoined
+        }
+    }
+}
+
 enum TopicsLimitedReason : Equatable {
     case participants(Int)
     case discussion
@@ -613,8 +630,13 @@ final class GroupInfoArguments : PeerInfoArguments {
             return confirmSignal(for: context.window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count), okTitle: strings().peerInfoConfirmAdd)
         }
         
+        struct Result {
+            let success:[PeerId]
+            let failed:[(PeerId, AddChannelMemberError)]
+        }
         
-        let addMember = getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue |> mapToSignal{ cachedData -> Signal<[PeerId], NoError> in
+        
+        let addMember = getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue |> mapToSignal{ cachedData -> Signal<Result, NoError> in
             
             var excludePeerIds:[PeerId] = []
             if let cachedData = cachedData as? CachedChannelData {
@@ -633,11 +655,11 @@ final class GroupInfoArguments : PeerInfoArguments {
             
             return selectModalPeers(window: context.window, context: context, title: strings().peerInfoAddMember, settings: [.contacts, .remote], excludePeerIds:excludePeerIds, limit: peerId.namespace == Namespaces.Peer.CloudGroup ? 1 : 100, confirmation: confirmationImpl, linkInvation: linkInvation)
                 |> deliverOnMainQueue
-                |> mapToSignal { memberIds -> Signal<[PeerId], NoError> in
+                |> mapToSignal { memberIds -> Signal<Result, NoError> in
                     return context.account.postbox.multiplePeersView(memberIds + [peerId])
                         |> take(1)
                         |> deliverOnMainQueue
-                        |> mapToSignal { view -> Signal<[PeerId], NoError> in
+                        |> mapToSignal { view -> Signal<Result, NoError> in
                             updateState { state in
                                 var state = state
                                 for (memberId, peer) in view.peers {
@@ -664,74 +686,18 @@ final class GroupInfoArguments : PeerInfoArguments {
                                 if peer.isGroup, let memberId = memberIds.first {
                                     return context.engine.peers.addGroupMember(peerId: peerId, memberId: memberId)
                                         |> deliverOnMainQueue
-                                        |> map { _ in return [memberId] }
-                                        |> afterCompleted {
-                                            updateState { state in
-                                                var successfullyAddedParticipantIds = state.successfullyAddedParticipantIds
-                                                successfullyAddedParticipantIds.insert(memberId)
-                                                
-                                                return state.withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
-                                            }
-                                        } |> `catch` { error -> Signal<[PeerId], NoError> in
-                                            updateState { state in
-                                                var temporaryParticipants = state.temporaryParticipants
-                                                for i in 0 ..< temporaryParticipants.count {
-                                                    if temporaryParticipants[i].peer.id == memberId {
-                                                        temporaryParticipants.remove(at: i)
-                                                        break
-                                                    }
-                                                }
-                                                var successfullyAddedParticipantIds = state.successfullyAddedParticipantIds
-                                                successfullyAddedParticipantIds.remove(memberId)
-                                                
-                                                return state.withUpdatedTemporaryParticipants(temporaryParticipants).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
-                                            }
-                                            return .complete()
+                                        |> map { _ in return .init(success: [memberId], failed: []) }
+                                        |> `catch` { error -> Signal<Result, NoError> in
+                                            return .single(.init(success: [], failed: [(memberId, error.channelError)]))
                                     }
                                     
                                 } else if peer.isSupergroup {
-                                    return context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: memberIds) |> deliverOnMainQueue |> `catch` { error in
-                                        let text: String
-                                        switch error {
-                                        case .notMutualContact:
-                                            text = strings().groupInfoAddUserLeftError
-                                        case .limitExceeded:
-                                            text = strings().channelErrorAddTooMuch
-                                        case .botDoesntSupportGroups:
-                                            text = strings().channelBotDoesntSupportGroups
-                                        case .tooMuchBots:
-                                            text = strings().channelTooMuchBots
-                                        case .tooMuchJoined:
-                                            text = strings().inviteChannelsTooMuch
-                                        case .generic:
-                                            text = strings().unknownError
-                                        case .kicked:
-                                            text = strings().channelAddUserKickedError
-                                        case let .bot(memberId):
-                                            let _ = (context.account.postbox.transaction { transaction in
-                                                return transaction.getPeer(peerId)
-                                                }
-                                                |> deliverOnMainQueue).start(next: { peer in
-                                                    guard let peer = peer as? TelegramChannel else {
-                                                        alert(for: context.window, info: strings().unknownError)
-                                                        return
-                                                    }
-                                                    if peer.hasPermission(.addAdmins) {
-                                                        confirm(for: context.window, information: strings().channelAddBotErrorHaveRights, okTitle: strings().channelAddBotAsAdmin, successHandler: { _ in
-                                                            showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
-                                                        })
-                                                    } else {
-                                                        alert(for: context.window, info: strings().channelAddBotErrorHaveRights)
-                                                    }
-                                                })
-                                            return .complete()
-                                        case .restricted:
-                                            text = strings().groupErrorAddBlocked
+                                    return context.peerChannelMemberCategoriesContextsManager.addMembersAllowPartial(peerId: peerId, memberIds: memberIds) |> map { failed in
+                                        let success = memberIds.filter { memberId in
+                                            return !failed.contains(where: { $0.0 == memberId })
                                         }
-                                        alert(for: context.window, info: text)
-                                        
-                                        return .complete()
-                                    }
+                                        return .init(success: success, failed: failed)
+                                    } |> deliverOnMainQueue
                                 }
                             }
                             
@@ -740,9 +706,129 @@ final class GroupInfoArguments : PeerInfoArguments {
             }
         }
         
-        addMemberDisposable.set(addMember.start())
+        addMemberDisposable.set(addMember.start(next: { result in
+            updateState { state in
+                var successfullyAddedParticipantIds = state.successfullyAddedParticipantIds
+
+                for memberId in result.success {
+                    successfullyAddedParticipantIds.insert(memberId)
+                }
+                return state.withUpdatedTemporaryParticipants([]).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
+            }
+            
+            let failed = result.failed.filter {
+                switch $0.1 {
+                case .notMutualContact, .limitExceeded, .tooMuchJoined, .generic, .kicked, .restricted:
+                    return true
+                default:
+                    return false
+                }
+            }
+            let botFailed = result.failed.filter {
+                switch $0.1 {
+                case .bot:
+                    return true
+                default:
+                    return false
+                }
+            }
+            if !failed.isEmpty {
+                showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: failed.map { $0.0 })
+            } else if let first = botFailed.first {
+                if case let .bot(memberId) = first.1 {
+                    let _ = (context.account.postbox.transaction { transaction in
+                        return transaction.getPeer(peerId)
+                        }
+                        |> deliverOnMainQueue).start(next: { peer in
+                            guard let peer = peer as? TelegramChannel else {
+                                alert(for: context.window, info: strings().unknownError)
+                                return
+                            }
+                            if peer.hasPermission(.addAdmins) {
+                                confirm(for: context.window, information: strings().channelAddBotErrorHaveRights, okTitle: strings().channelAddBotAsAdmin, successHandler: { _ in
+                                    showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
+                                })
+                            } else {
+                                alert(for: context.window, info: strings().channelAddBotErrorHaveRights)
+                            }
+                        })
+                }
+            }
+            
+            /*
+             let text: String
+             switch error {
+             case .notMutualContact:
+                 text = strings().groupInfoAddUserLeftError
+             case .limitExceeded:
+                 text = strings().channelErrorAddTooMuch
+             case .botDoesntSupportGroups:
+                 text = strings().channelBotDoesntSupportGroups
+             case .tooMuchBots:
+                 text = strings().channelTooMuchBots
+             case .tooMuchJoined:
+                 text = strings().inviteChannelsTooMuch
+             case .generic:
+                 text = strings().unknownError
+             case .kicked:
+                 text = strings().channelAddUserKickedError
+             case let .bot(memberId):
+                 let _ = (context.account.postbox.transaction { transaction in
+                     return transaction.getPeer(peerId)
+                     }
+                     |> deliverOnMainQueue).start(next: { peer in
+                         guard let peer = peer as? TelegramChannel else {
+                             alert(for: context.window, info: strings().unknownError)
+                             return
+                         }
+                         if peer.hasPermission(.addAdmins) {
+                             confirm(for: context.window, information: strings().channelAddBotErrorHaveRights, okTitle: strings().channelAddBotAsAdmin, successHandler: { _ in
+                                 showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
+                             })
+                         } else {
+                             alert(for: context.window, info: strings().channelAddBotErrorHaveRights)
+                         }
+                     })
+                 return
+             case .restricted:
+                 text = strings().groupErrorAddBlocked
+             }
+             */
+          
+            //alert(for: context.window, info: text)
+            
+        }))
         
     }
+    
+    /*
+     failed group code
+     updateState { state in
+         var temporaryParticipants = state.temporaryParticipants
+         for i in 0 ..< temporaryParticipants.count {
+             if temporaryParticipants[i].peer.id == memberId {
+                 temporaryParticipants.remove(at: i)
+                 break
+             }
+         }
+         var successfullyAddedParticipantIds = state.successfullyAddedParticipantIds
+         successfullyAddedParticipantIds.remove(memberId)
+         
+         return state.withUpdatedTemporaryParticipants(temporaryParticipants).withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
+     }
+     
+     failed code supergroup
+     
+     
+     after completed group code
+     updateState { state in
+         var successfullyAddedParticipantIds = state.successfullyAddedParticipantIds
+         successfullyAddedParticipantIds.insert(memberId)
+         
+         return state.withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
+     }
+     
+     */
     
     func restrict(_ participant: ChannelParticipant) -> Void {
         
