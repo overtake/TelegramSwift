@@ -162,7 +162,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, peers:[Peer]) -> InputDataModalController {
     
-    let peers: [PeerEquatable] = [context.myPeer].compactMap { $0 }.map { .init($0) }
+    let peers: [PeerEquatable] = peers.compactMap { $0 }.map { .init($0) }
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
@@ -220,7 +220,7 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
                     _ = combineLatest(combine).start()
                     
                     delay(0.2, closure: {
-                        showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 0.3)
+                        _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 0.3).start()
                     })
                 }
                 
@@ -256,6 +256,17 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
 
 
 
-func showInvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, peers:[Peer]) {
-    showModal(with: InvitePrivacyLimitedController(context: context, peerId: peerId, peers: peers), for: context.window)
+func showInvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, ids:[PeerId]) {
+    let peers = context.account.postbox.transaction { transaction in
+        var peers: [Peer?] = []
+        for id in ids {
+            peers.append(transaction.getPeer(id))
+        }
+        return peers.compactMap { $0 }
+    } |> deliverOnMainQueue
+    
+    _ = peers.start(next: { peers in
+        showModal(with: InvitePrivacyLimitedController(context: context, peerId: peerId, peers: peers), for: context.window)
+    })
+    
 }

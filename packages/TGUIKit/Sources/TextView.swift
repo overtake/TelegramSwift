@@ -414,6 +414,18 @@ public final class TextViewLayout : Equatable {
     public var isWholeRTL: Bool {
         return lines.allSatisfy({ $0.isRTL })
     }
+    public func isFirstRTL(count: Int) -> Bool {
+        for i in 0 ..< count {
+            if i < lines.count {
+                if !lines[i].isRTL {
+                    return false
+                }
+            } else {
+                break
+            }
+        }
+        return true
+    }
     public var firstLineWidth: CGFloat {
         return lines[0].frame.width
     }
@@ -1780,6 +1792,14 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 if layout.penFlush == 0.5, line.penFlush != 0.5 {
                     penOffset = startPosition.x
                 }
+                if line.penFlush == 1.0 {
+                    if let size = layout.cutout?.topRight {
+                        if line.frame.maxY <= size.height {
+                            penOffset -= size.width
+                        }
+                    }
+                }
+                
                 var additionY: CGFloat = 0
                 if layout.isBigEmoji {
                     additionY -= 4
