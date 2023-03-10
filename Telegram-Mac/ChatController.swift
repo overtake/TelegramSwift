@@ -1485,7 +1485,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let emojiEffects: EmojiScreenEffect
 //    private var reactionManager:AddReactionManager?
     
-    private let queue: Queue = .init(name: "messagesViewQueue", qos: .background)
+    private let queue: Queue = messagesViewQueue//.init(name: "messagesViewQueue", qos: .userInteractive)
 
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
@@ -3707,7 +3707,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let requestCount = strongSelf.requestCount
                                 let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated)
                                 let id = strongSelf.takeNextHistoryLocationId()
-                                strongSelf.setLocation(.init(content: content, id: id))
+                                delay(0.1, closure: { [weak strongSelf] in
+                                    strongSelf?.setLocation(.init(content: content, id: id))
+                                })
                             }
                         }))
                         //  }
@@ -6958,7 +6960,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else {
             isAdChat = false
         }
-        
+                
         if chatLocation.peerId.namespace == Namespaces.Peer.CloudChannel, mode == .history {
             self.adMessages = .init(context: context, height: sizeValue.get() |> map { $0 .height}, peerId: chatLocation.peerId)
         } else {

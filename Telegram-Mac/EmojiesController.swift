@@ -2088,7 +2088,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let combined = statePromise.get()
         
-        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnResourceQueue |> map { state in
+        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnPrepareQueue |> map { state in
             let sections = InputDataSignalValue(entries: entries(state, arguments: arguments))
             let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments))
             return (sections: sections, packs: packs, state: state)

@@ -51,6 +51,14 @@ public struct Translate {
     }
     
     public static func find(_ code: String) -> Value? {
+        var code = code
+        if code == "pt-br" {
+            code = "pt"
+        }
+        if code == "nb" {
+            code = "no"
+        }
+
         return self.codes.first(where: {
             return $0.code.contains(code)
         })

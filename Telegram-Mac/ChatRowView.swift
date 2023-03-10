@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
 
@@ -861,9 +861,41 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     static func makePhotoView(_ item: ChatRowItem) -> NSView {
         let avatar = ChatAvatarView(frame: NSMakeSize(36, 36).bounds)
         avatar.setFrameSize(36,36)
+        let chatInteraction = item.chatInteraction
+        
         if let peer = item.peer {
             avatar.setPeer(context: item.context, peer: peer, message: item.message)
+            avatar.contextMenu = { [weak chatInteraction] in
+                
+                let menu = ContextMenu()
+                
+                menu.addItem(ContextMenuItem(strings().chatContextPeerOpenInfo, handler: {
+                    chatInteraction?.openInfo(peer.id, false, nil, nil)
+                }, itemImage: MenuAnimation.menu_open_profile.value))
+                
+                menu.addItem(ContextMenuItem(strings().chatContextPeerSendMessage, handler: {
+                    chatInteraction?.openInfo(peer.id, true, nil, nil)
+                }, itemImage: MenuAnimation.menu_read.value))
+
+                menu.addItem(ContextMenuItem(strings().chatContextPeerMention, handler: {
+                    var attr: NSMutableAttributedString = NSMutableAttributedString()
+                    
+                    if let addressName = peer.addressName {
+                        attr.append(string: "@\(addressName) ", font: .normal(theme.fontSize))
+                    } else {
+                        attr.append(string: peer.compactDisplayTitle + " ", font: .normal(theme.fontSize))
+                        let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: peer.id.toInt64()), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
+                        attr.addAttribute(.init(rawValue: TGCustomLinkAttributeName), value: tag, range: attr.range)
+                    }
+                    _ = chatInteraction?.appendText(attr)
+                }, itemImage: MenuAnimation.menu_atsign.value))
+
+                
+                return menu
+            }
         }
+        
+       
         return avatar
     }
     

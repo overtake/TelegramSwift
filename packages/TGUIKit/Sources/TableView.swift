@@ -3154,7 +3154,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         let documentHeight = documentSize.height
         
-        if documentHeight <= height {
+        if documentHeight < height {
+            completion(false)
             return
         }
         
