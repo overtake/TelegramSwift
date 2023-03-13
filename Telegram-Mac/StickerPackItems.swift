@@ -35,8 +35,8 @@ class StickerPackRowItem: TableRowItem {
     let isPremium: Bool
     let installed: Bool?
     let color: NSColor?
-    
-    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, color: NSColor? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?) {
+    let isTopic: Bool
+    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, color: NSColor? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?, isTopic: Bool = false) {
         self.context = context
         self.packIndex = packIndex
         self._stableId = stableId
@@ -45,6 +45,7 @@ class StickerPackRowItem: TableRowItem {
         self.topItem = topItem
         self.isPremium = isPremium
         self.installed = installed
+        self.isTopic = isTopic
         super.init(initialSize)
     }
     
@@ -307,6 +308,9 @@ private final class StickerPackRowView : HorizontalRowView {
     
     override var isEmojiLite: Bool {
         if let item = item as? StickerPackRowItem {
+            if item.isTopic {
+                return true
+            }
             return item.context.isLite(.emoji)
         }
         return super.isEmojiLite

@@ -349,7 +349,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
             
             if let peers = peers {
                 let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
-                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(6), genCap: true, synchronousLoad: false)
+                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false)
                 })
                 
                 
@@ -975,7 +975,7 @@ final class MessageContainsPacksMenuItem : ContextMenuItem {
     init(title: String, handler:@escaping()->Void, packs: [StickerPackReference], context: AccountContext) {
         self.packs = packs
         self.context = context
-        super.init(title, handler: handler, itemImage: MenuAnimation.menu_smile.value)
+        super.init(title, handler: handler, itemImage: MenuAnimation.menu_smile.value, removeTail: false)
     }
     
     override var cuttail: Int? {

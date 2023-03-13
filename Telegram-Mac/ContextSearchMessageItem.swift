@@ -201,7 +201,7 @@ private class ContextSearchMessageView : GeneralRowView {
     
     private var titleText:TextNode = TextNode()
     private var messageText:TextView = TextView()
-    private var photo:AvatarControl = AvatarControl(font: .avatar(22))
+    private var photo:AvatarControl = AvatarControl(font: .avatar(14))
 
     
     

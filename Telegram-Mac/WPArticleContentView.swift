@@ -497,9 +497,6 @@ class WPArticleContentView: WPContentView {
                 downloadIndicator?.center()
                 
                 var origin:NSPoint = NSMakePoint(layout.contentRect.width - imageView.frame.width - 10, 0)
-                if layout.textLayout?.isFirstRTL(count: 5) == true {
-                    origin.x = 10
-                }
                 if layout.textLayout?.cutout == nil {
                     var y:CGFloat = 0
                     if let textLayout = layout.textLayout {

@@ -262,6 +262,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                     
                     peerText += (folder ? ": " : "\r")
                     _ = attributedText.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
+                    _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
                 } else if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, applyUserName {
                     var peerText: String = (author.id == account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                     

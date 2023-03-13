@@ -159,7 +159,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
             return (NSAttributedString.Key.link.rawValue, contents)
         }))
         
-        self.text = TextViewLayout(attr, maximumNumberOfLines: 1)
+        self.text = TextViewLayout(attr, maximumNumberOfLines: item.removeTail ? 1 : .max)
         
         if item.keyEquivalent.isEmpty {
             keyEquivalentText = nil
@@ -191,7 +191,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
             return (NSAttributedString.Key.link.rawValue, contents)
         }))
         
-        self.text = TextViewLayout(attr, maximumNumberOfLines: 1)
+        self.text = TextViewLayout(attr, maximumNumberOfLines: item.removeTail ? 1 : .max)
         
         _ = makeSize(self.width)
         
