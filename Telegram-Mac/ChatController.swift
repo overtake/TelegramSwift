@@ -6195,6 +6195,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
                    self?.changeState()
                 }, itemImage: MenuAnimation.menu_edit.value))
+                let threadId = chatInteraction.mode.threadId64
+                if let threadId = threadId, let threadData = chatInteraction.presentation.threadInfo, let peer = chatInteraction.peer {
+                    if threadData.isOwnedByMe || peer.isAdmin {
+                        items.append(ContextMenuItem(!threadData.isClosed ? strings().chatListContextPause : strings().chatListContextStart, handler: {
+                            _ = context.engine.peers.setForumChannelTopicClosed(id: peerId, threadId: threadId, isClosed: !threadData.isClosed).start()
+                        }, itemImage: !threadData.isClosed ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
+                        
+                        items.append(ContextSeparatorItem())
+                        items.append(ContextMenuItem(strings().chatListContextDelete, handler: {
+                            _ = removeChatInteractively(context: context, peerId: peerId, threadId: threadId, userId: nil).start()
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    }
+                }
+               
+                
             }
             for item in items {
                 menu.addItem(item)

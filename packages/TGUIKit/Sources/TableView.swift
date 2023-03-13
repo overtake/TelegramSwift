@@ -3173,7 +3173,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             case .top:
                // break
                 if !tableView.isFlipped {
-                    rowRect.origin.y -= (height - rowRect.height) - bottomInset
+                    rowRect.origin.y -= (height - rowRect.height) - bottomInset - contentInsets.top
                 }
             case .center:
                 if !tableView.isFlipped {

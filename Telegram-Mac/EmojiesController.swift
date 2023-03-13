@@ -537,7 +537,7 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
     for section in state.sections {
         let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji })
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack(section.info.id.id), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first)
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first, isTopic: arguments.mode == .forumTopic)
         }))
         index += 1
     }
@@ -1865,6 +1865,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 return .reactions
             case .status:
                 return .statuses
+            case .forumTopic:
+                return .topic
             default:
                 return .panel
             }

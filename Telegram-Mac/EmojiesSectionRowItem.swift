@@ -113,6 +113,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         case preview
         case reactions
         case statuses
+        case topic
     }
     let mode: Mode
     
@@ -144,7 +145,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         if let _ = info {
             switch mode {
-            case .panel, .reactions, .statuses:
+            case .panel, .reactions, .statuses, .topic:
                 if isPremium && !context.isPremium {
                     if installed {
                         self.unlockText = (strings().emojiPackRestore, true, true)
@@ -379,7 +380,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     func invokeLockAction() {
         if let info = info {
             switch mode {
-            case .panel, .reactions, .statuses:
+            case .panel, .reactions, .statuses, .topic:
                 if isPremium && !context.isPremium {
                     self.openPremium?()
                 } else if !installed {
@@ -978,8 +979,12 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     
     override var isEmojiLite: Bool {
         if let item = item as? EmojiesSectionRowItem {
+            if item.mode == .topic {
+                return true
+            }
             return item.context.isLite(.emoji)
         }
+        
         return super.isEmojiLite
     }
     

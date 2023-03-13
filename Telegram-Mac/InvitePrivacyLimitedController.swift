@@ -14,14 +14,23 @@ import Postbox
 
 private final class InviteViaLinkHeaderItem : GeneralRowItem {
     let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, peers: [Peer], stableId: AnyHashable, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, peers: [Peer], cantInvite: Bool, stableId: AnyHashable, viewType: GeneralViewType) {
         
         let text: String
-        if peers.count == 1 {
-            text = strings().inviteFailedTextSingle(peers[0].compactDisplayTitle)
+        if cantInvite {
+            if peers.count == 1 {
+                text = strings().inviteFailedTextCantSingle(peers[0].compactDisplayTitle)
+            } else {
+                text = strings().inviteFailedTextCantMultipleCountable(peers.count)
+            }
         } else {
-            text = strings().inviteFailedTextMultipleCountable(peers.count)
+            if peers.count == 1 {
+                text = strings().inviteFailedTextSingle(peers[0].compactDisplayTitle)
+            } else {
+                text = strings().inviteFailedTextMultipleCountable(peers.count)
+            }
         }
+        
         
         self.textLayout = .init(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         
@@ -108,6 +117,18 @@ private struct State : Equatable {
     let peerId: PeerId
     let peers: [PeerEquatable]
     var selected:Set<PeerId> = Set()
+    var peer: PeerEquatable?
+    var cachedData: CachedDataEquatable?
+    
+    var canInvite: Bool {
+        var link: String?
+        if let data = self.cachedData?.data as? CachedGroupData {
+            link = data.exportedInvitation?.link
+        } else if let data = self.cachedData?.data as? CachedChannelData {
+            link = data.exportedInvitation?.link
+        }
+        return link != nil
+    }
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -124,8 +145,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: InputDataEquatable.init(state), comparable: nil, item: { initialSize, stableId in
-        return InviteViaLinkHeaderItem(initialSize, peers: state.peers.map { $0.peer }, stableId: stableId, viewType: .legacy)
+    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+        return InviteViaLinkHeaderItem(initialSize, peers: state.peers.map { $0.peer }, cantInvite: state.canInvite, stableId: stableId, viewType: .legacy)
     }))
     index += 1
   
@@ -138,17 +160,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let peer: PeerEquatable
         let selected: Bool
         let viewType: GeneralViewType
+        let selectable: Bool
     }
     
     var items: [Tuple] = []
     
     for (i, peer) in state.peers.enumerated() {
-        items.append(.init(peer: peer, selected: state.selected.contains(peer.peer.id), viewType: bestGeneralViewType(state.peers, for: i)))
+        items.append(.init(peer: peer, selected: state.selected.contains(peer.peer.id), viewType: bestGeneralViewType(state.peers, for: i), selectable: state.canInvite))
     }
     
     for item in items {
+        
+        let interactionType: ShortPeerItemInteractionType
+        if item.selectable {
+            interactionType = .selectable(arguments.select, side: .right)
+        } else {
+            interactionType = .plain
+        }
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select, side: .right), viewType: item.viewType)
+            return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
         }))
         index += 1
     }
@@ -193,14 +223,29 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
         actionsDisposable.dispose()
     }
     
+    
+    let data = combineLatest(queue: .mainQueue(), getPeerView(peerId: peerId, postbox: context.account.postbox), getCachedDataView(peerId: peerId, postbox: context.account.postbox))
+
+    actionsDisposable.add(data.start(next: { peer, cachedData in
+        updateState { current in
+            var current = current
+            current.peer = .init(peer)
+            current.cachedData = .init(cachedData)
+            return current
+        }
+    }))
+    
    
     controller.validateData = { _ in
         
         let data = combineLatest(queue: .mainQueue(), getPeerView(peerId: peerId, postbox: context.account.postbox), getCachedDataView(peerId: peerId, postbox: context.account.postbox)) |> take(1)
         
         return .fail(.doSomething(next: { f in
-            _ = data.start(next: { peer, data in
-                
+            
+            if stateValue.with({ $0.canInvite }) {
+                let data = stateValue.with { $0.cachedData?.data }
+                let peer = stateValue.with { $0.peer?.peer }
+
                 var link: String?
                 if let data = data as? CachedGroupData {
                     link = data.exportedInvitation?.link
@@ -223,9 +268,10 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
                         _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 0.3).start()
                     })
                 }
-                
-                f(.none)
-            }, completed: close)
+            }
+        
+            close?()
+            f(.none)
         }))
         
     }
@@ -236,7 +282,11 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
 
     arguments.select.singleUpdater = { [weak modalInteractions] updated in
         modalInteractions?.updateDone { title in
-            title.set(text: updated.selected.isEmpty ? strings().inviteFailedSkip : strings().inviteFailedOK, for: .Normal)
+            if stateValue.with({ $0.canInvite }) {
+                title.set(text: updated.selected.isEmpty ? strings().inviteFailedSkip : strings().inviteFailedOK, for: .Normal)
+            } else {
+                title.set(text: strings().modalOK, for: .Normal)
+            }
         }
     }
     

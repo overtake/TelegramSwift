@@ -732,8 +732,11 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 break
             }
             if let selectIndex = selectIndex {
-                _ = genericView.select(item: genericView.item(at: selectIndex))
-                genericView.scroll(to: .center(id: genericView.item(at: selectIndex).stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
+                let item = genericView.item(at: selectIndex)
+                _ = genericView.select(item: item)
+                if !(item is ContextSearchMessageItem) {
+                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
+                }
             }
         }
     }

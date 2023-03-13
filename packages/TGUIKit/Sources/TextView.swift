@@ -1634,6 +1634,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             ctx.setAllowsFontSubpixelPositioning(true)
             ctx.setShouldSubpixelPositionFonts(true)
             
+            ctx.setAllowsFontSubpixelQuantization(true)
+            ctx.setShouldSubpixelQuantizeFonts(true)
+
+            
             if clearExceptRevealed {
                 let path = CGMutablePath()
                 
@@ -2318,7 +2322,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         self.textView?.frame = bounds
         self.embeddedContainer.frame = bounds
         self.drawLayer.frame = bounds
-        self.drawLayer.bounds = bounds.insetBy(dx: 0, dy: -3)
+        self.drawLayer.bounds = bounds.insetBy(dx: -2, dy: -3)
         self.updateInks(self.textLayout)
     }
     

@@ -6270,6 +6270,38 @@ public final class L10n {
     return L10n.tr("Localizable", "InviteFailed.Text.Single", p1)
   }
   /// %d
+  public static func inviteFailedTextCantMultipleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Cant.Multiple_countable", p1)
+  }
+  /// %d users can only be invited via link, but you don't nave permission to share invite links to this group.
+  public static func inviteFailedTextCantMultipleFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Cant.Multiple_few", p1)
+  }
+  /// %d users can only be invited via link, but you don't nave permission to share invite links to this group.
+  public static func inviteFailedTextCantMultipleMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Cant.Multiple_many", p1)
+  }
+  /// %d users can only be invited via link, but you don't nave permission to share invite links to this group.
+  public static func inviteFailedTextCantMultipleOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Cant.Multiple_one", p1)
+  }
+  /// %d users can only be invited via link, but you don't nave permission to share invite links to this group.
+  public static func inviteFailedTextCantMultipleOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Cant.Multiple_other", p1)
+  }
+  /// %d users can only be invited via link, but you don't nave permission to share invite links to this group.
+  public static func inviteFailedTextCantMultipleTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Cant.Multiple_two", p1)
+  }
+  /// %d users can only be invited via link, but you don't nave permission to share invite links to this group.
+  public static func inviteFailedTextCantMultipleZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Cant.Multiple_zero", p1)
+  }
+  /// %@ can only be invited via link, but you don't nave permission to share invite links to this group.
+  public static func inviteFailedTextCantSingle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "InviteFailed.Text.Cant.Single", p1)
+  }
+  /// %d
   public static func inviteLinkCanJoinCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "InviteLink.CanJoin_countable", p1)
   }
