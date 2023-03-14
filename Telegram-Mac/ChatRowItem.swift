@@ -350,17 +350,8 @@ class ChatRowItem: TableRowItem {
         if self.replyModel != nil {
             id += "_reply"
         }
-        if self.reactionsLayout != nil {
-            id += "_reactions"
-        }
-        if self.reactionsLayout != nil {
-            id += "_reactions"
-        }
         if self.topicLinkLayout != nil {
             id += "_topicLinkLayout"
-        }
-        if self.authorText != nil {
-            id += "_authorText"
         }
         if self.forwardNameLayout != nil {
             id += "_forwardNameLayout"
@@ -368,13 +359,9 @@ class ChatRowItem: TableRowItem {
         if self.replyMarkupModel != nil {
             id += "_replyMarkupModel"
         }
-        if self.hasPhoto, self.renderType != .bubble {
-            id += "_photo"
-        }
         if let mediaId = message?.media.first?.id {
             id += "_media_\(mediaId.id)"
         }
-        id += "_captionLayouts_\(self.captionLayouts.count)"
 
         _id = id
         return id
