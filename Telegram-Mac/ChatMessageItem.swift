@@ -665,14 +665,7 @@ class ChatMessageItem: ChatRowItem {
         
         fatalError("entry has not message")
     }
-    
-    override var identifier: String {
-        if webpageLayout == nil {
-            return super.identifier
-        } else {
-            return super.identifier + "\(stableId)"
-        }
-    }
+
     
     override var ignoreAtInitialization: Bool {
         return message?.adAttribute != nil
