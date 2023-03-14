@@ -209,6 +209,8 @@ class ChatMediaItem: ChatRowItem {
         }
     }
     
+    
+    
     private func updateParameters() {
         parameters?.chatLocationInput = chatInteraction.chatLocationInput
         parameters?.chatMode = chatInteraction.mode

@@ -56,43 +56,25 @@ public extension CAAnimation {
 }
 
 public func makeSpringAnimation(_ path:String) -> CABasicAnimation {
-    if #available(OSX 10.11, *) {
-        let springAnimation:CASpringAnimation = CASpringAnimation(keyPath: path)
-        springAnimation.mass = 3.0;
-        springAnimation.stiffness = 1000.0;
-        springAnimation.damping = 500.0;
-        springAnimation.initialVelocity = 0.0;
-        springAnimation.duration = 0.5;//springAnimation.settlingDuration;
-        springAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-        return springAnimation;
-    } else {
-        let anim:CABasicAnimation = CABasicAnimation(keyPath: path)
-        anim.duration = 0.2
-        anim.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
-        
-        return anim
-    }
-   
+    let springAnimation:CASpringAnimation = CASpringAnimation(keyPath: path)
+    springAnimation.mass = 3.0;
+    springAnimation.stiffness = 1000.0;
+    springAnimation.damping = 500.0;
+    springAnimation.initialVelocity = 0.0;
+    springAnimation.duration = 0.5;//springAnimation.settlingDuration;
+    springAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+    return springAnimation;
 }
 
 public func makeSpringBounceAnimation(_ path:String, _ initialVelocity:CGFloat, _ damping: CGFloat = 88.0) -> CABasicAnimation {
-    if #available(OSX 10.11, *) {
-        let springAnimation:CASpringAnimation = CASpringAnimation(keyPath: path)
-        springAnimation.mass = 5.0
-        springAnimation.stiffness = 900.0
-        springAnimation.damping = damping
-        springAnimation.initialVelocity = initialVelocity
-        springAnimation.duration = springAnimation.settlingDuration
-        springAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
-        return springAnimation;
-    } else {
-        let anim:CABasicAnimation = CABasicAnimation(keyPath: path)
-        anim.duration = 0.2
-        anim.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
-        
-        return anim
-    }
-    
+    let springAnimation:CASpringAnimation = CASpringAnimation(keyPath: path)
+    springAnimation.mass = 5.0
+    springAnimation.stiffness = 900.0
+    springAnimation.damping = damping
+    springAnimation.initialVelocity = initialVelocity
+    springAnimation.duration = springAnimation.settlingDuration
+    springAnimation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.linear)
+    return springAnimation;
 }
 
 

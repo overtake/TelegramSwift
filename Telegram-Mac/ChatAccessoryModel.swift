@@ -91,8 +91,7 @@ class ChatAccessoryView : Button {
                 
         headerView.update(model.header)
         
-        let isEqual = self.textView?.textLayout?.attributedString.string == model.message?.attributedString.string
-        if isEqual, let view = self.textView {
+        if let view = self.textView {
             view.update(model.message)
         } else {
             if let view = self.textView {
