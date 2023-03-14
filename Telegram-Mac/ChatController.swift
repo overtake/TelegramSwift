@@ -1003,7 +1003,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         let firstTransition = Queue.mainQueue().isCurrent()
         let cancelled = Atomic(value: false)
         
-        let prevIsLoading = fromView?.originalView == nil || fromView?.originalView?.isLoading == true || fromView?.originalView?.entries == []
+        let prevIsLoading = fromView?.originalView == nil || fromView?.originalView?.isLoading == true 
         
         if firstTransition, let state = scrollToItem, prevIsLoading {
                         
@@ -1485,7 +1485,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let emojiEffects: EmojiScreenEffect
 //    private var reactionManager:AddReactionManager?
     
-    private let queue: Queue = .init(name: "messagesViewQueue", qos: .background)
+    private let queue: Queue = messagesViewQueue//.init(name: "messagesViewQueue", qos: .userInteractive)
 
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
@@ -3251,7 +3251,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if item.view?.visibleRect.height != item.view?.frame.height {
                         item = self.genericView.tableView.item(at: bottomVisibleRow)
                     }
-                    self.genericView.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets(), true)
+                    self.genericView.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets(), toVisible: true)
                 }
                 
             }
@@ -3707,7 +3707,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let requestCount = strongSelf.requestCount
                                 let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated)
                                 let id = strongSelf.takeNextHistoryLocationId()
-                                strongSelf.setLocation(.init(content: content, id: id))
+                                delay(0.1, closure: { [weak strongSelf] in
+                                    strongSelf?.setLocation(.init(content: content, id: id))
+                                })
                             }
                         }))
                         //  }
@@ -6193,6 +6195,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
                    self?.changeState()
                 }, itemImage: MenuAnimation.menu_edit.value))
+                let threadId = chatInteraction.mode.threadId64
+                if let threadId = threadId, let threadData = chatInteraction.presentation.threadInfo, let peer = chatInteraction.peer {
+                    if threadData.isOwnedByMe || peer.isAdmin {
+                        items.append(ContextMenuItem(!threadData.isClosed ? strings().chatListContextPause : strings().chatListContextStart, handler: {
+                            _ = context.engine.peers.setForumChannelTopicClosed(id: peerId, threadId: threadId, isClosed: !threadData.isClosed).start()
+                        }, itemImage: !threadData.isClosed ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
+                        
+                        items.append(ContextSeparatorItem())
+                        items.append(ContextMenuItem(strings().chatListContextDelete, handler: {
+                            _ = removeChatInteractively(context: context, peerId: peerId, threadId: threadId, userId: nil).start()
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    }
+                }
+               
+                
             }
             for item in items {
                 menu.addItem(item)
@@ -6958,7 +6975,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else {
             isAdChat = false
         }
-        
+                
         if chatLocation.peerId.namespace == Namespaces.Peer.CloudChannel, mode == .history {
             self.adMessages = .init(context: context, height: sizeValue.get() |> map { $0 .height}, peerId: chatLocation.peerId)
         } else {
@@ -7107,7 +7124,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
             if value.inputQueryResult != oldValue.inputQueryResult || value.state != oldValue.state {
-                genericView.inputContextHelper.context(with: value.inputQueryResult, for: genericView, relativeView: genericView.inputView, animated: animated)
+                genericView.inputContextHelper.context(with: value.inputQueryResult, for: genericView, relativeView: genericView.inputView, animated: true)
             }
             if value.interfaceState.inputState != oldValue.interfaceState.inputState {
                 if didSetReady {

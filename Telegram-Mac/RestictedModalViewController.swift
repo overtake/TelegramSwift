@@ -630,99 +630,99 @@ class RestrictedModalViewController: TableModalViewController {
                 let _ = (peerView.get()
                     |> take(1)
                     |> deliverOnMainQueue).start(next: { [weak self] view in
-                        var defaultBannedRightsFlagsValue: TelegramChatBannedRightsFlags?
-                        guard let peer = view.peers[peerId] else {
-                            return
-                        }
-                        if let channel = peer as? TelegramChannel, let initialRightFlags = channel.defaultBannedRights?.flags {
-                            defaultBannedRightsFlagsValue = initialRightFlags
-                        } else if let group = peer as? TelegramGroup, let initialRightFlags = group.defaultBannedRights?.flags {
-                            defaultBannedRightsFlagsValue = initialRightFlags
-                        }
-                        guard let defaultBannedRightsFlags = defaultBannedRightsFlagsValue else {
-                            return
-                        }
-
-                        
+                       
+                    var defaultBannedRightsFlagsValue: TelegramChatBannedRightsFlags?
+                    guard let peer = view.peers[peerId] else {
+                        return
+                    }
+                    if let channel = peer as? TelegramChannel, let initialRightFlags = channel.defaultBannedRights?.flags {
+                        defaultBannedRightsFlagsValue = initialRightFlags
+                    } else if let group = peer as? TelegramGroup, let initialRightFlags = group.defaultBannedRights?.flags {
+                        defaultBannedRightsFlagsValue = initialRightFlags
+                    }
+                    guard let defaultBannedRightsFlags = defaultBannedRightsFlagsValue else {
+                        return
+                    }
+                    
+                    
                     var resolvedRights: TelegramChatBannedRights?
-                        if let initialParticipant = initialParticipant {
-                            var updateFlags: TelegramChatBannedRightsFlags?
-                            var updateTimeout: Int32?
-                            updateState { current in
-                                updateFlags = current.updatedFlags
-                                updateTimeout = current.updatedTimeout
-                                return current
-                            }
-                            
-                            if updateFlags == nil && updateTimeout == nil {
-                                if case let .member(_, _, _, maybeBanInfo, _) = initialParticipant {
-                                    if maybeBanInfo == nil {
-                                        updateFlags = defaultBannedRightsFlags
-                                        updateTimeout = Int32.max
-                                    }
+                    if let initialParticipant = initialParticipant {
+                        var updateFlags: TelegramChatBannedRightsFlags?
+                        var updateTimeout: Int32?
+                        updateState { current in
+                            updateFlags = current.updatedFlags
+                            updateTimeout = current.updatedTimeout
+                            return current
+                        }
+                        
+                        if updateFlags == nil && updateTimeout == nil {
+                            if case let .member(_, _, _, maybeBanInfo, _) = initialParticipant {
+                                if maybeBanInfo == nil {
+                                    updateFlags = defaultBannedRightsFlags
+                                    updateTimeout = Int32.max
                                 }
-                            }
-                            
-                            if updateFlags != nil || updateTimeout != nil {
-                                let currentRightsFlags: TelegramChatBannedRightsFlags
-                                if let updatedFlags = updateFlags {
-                                    currentRightsFlags = updatedFlags
-                                } else if case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
-                                    currentRightsFlags = banInfo.rights.flags
-                                } else {
-                                    currentRightsFlags = defaultBannedRightsFlags
-                                }
-                                
-                                let currentTimeout: Int32
-                                if let updateTimeout = updateTimeout {
-                                    currentTimeout = updateTimeout
-                                } else if case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
-                                    currentTimeout = banInfo.rights.untilDate
-                                } else {
-                                    currentTimeout = Int32.max
-                                }
-                                
-                                resolvedRights = TelegramChatBannedRights(flags: completeRights(currentRightsFlags), untilDate: currentTimeout)
-                            }
-                        } else if let _ = channelView.peers[channelView.peerId] as? TelegramChannel {
-                            var updateFlags: TelegramChatBannedRightsFlags?
-                            var updateTimeout: Int32?
-                            updateState { state in
-                                var state = state
-                                updateFlags = state.updatedFlags
-                                updateTimeout = state.updatedTimeout
-                                state.updating = false
-                                return state
-                            }
-                            
-                            if updateFlags == nil {
-                                updateFlags = defaultBannedRightsFlags
-                            }
-                            if updateTimeout == nil {
-                                updateTimeout = Int32.max
-                            }
-                            
-                            if let updateFlags = updateFlags, let updateTimeout = updateTimeout {
-                                resolvedRights = TelegramChatBannedRights(flags: completeRights(updateFlags), untilDate: updateTimeout)
                             }
                         }
                         
-                        var previousRights: TelegramChatBannedRights?
-                        if let initialParticipant = initialParticipant, case let .member(member) = initialParticipant, member.banInfo != nil {
-                            previousRights = member.banInfo?.rights
-                        }
-                        
-                        if let resolvedRights = resolvedRights, previousRights != resolvedRights {
-                            let cleanResolvedRightsFlags = resolvedRights.flags.union(defaultBannedRightsFlags)
-                            let cleanResolvedRights = TelegramChatBannedRights(flags: cleanResolvedRightsFlags, untilDate: resolvedRights.untilDate)
-
-                            if cleanResolvedRights.flags.isEmpty && previousRights == nil {
-                                self?.close()
+                        if updateFlags != nil || updateTimeout != nil {
+                            let currentRightsFlags: TelegramChatBannedRightsFlags
+                            if let updatedFlags = updateFlags {
+                                currentRightsFlags = updatedFlags
+                            } else if case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
+                                currentRightsFlags = banInfo.rights.flags
                             } else {
-                                self?.updated(cleanResolvedRights)
+                                currentRightsFlags = defaultBannedRightsFlags
                             }
                             
+                            let currentTimeout: Int32
+                            if let updateTimeout = updateTimeout {
+                                currentTimeout = updateTimeout
+                            } else if case let .member(_, _, _, maybeBanInfo, _) = initialParticipant, let banInfo = maybeBanInfo {
+                                currentTimeout = banInfo.rights.untilDate
+                            } else {
+                                currentTimeout = Int32.max
+                            }
+                            
+                            resolvedRights = TelegramChatBannedRights(flags: completeRights(currentRightsFlags), untilDate: currentTimeout)
                         }
+                    } else if let _ = channelView.peers[channelView.peerId] as? TelegramChannel {
+                        var updateFlags: TelegramChatBannedRightsFlags?
+                        var updateTimeout: Int32?
+                        updateState { state in
+                            var state = state
+                            updateFlags = state.updatedFlags
+                            updateTimeout = state.updatedTimeout
+                            state.updating = false
+                            return state
+                        }
+                        
+                        if updateFlags == nil {
+                            updateFlags = defaultBannedRightsFlags
+                        }
+                        if updateTimeout == nil {
+                            updateTimeout = Int32.max
+                        }
+                        
+                        if let updateFlags = updateFlags, let updateTimeout = updateTimeout {
+                           resolvedRights = TelegramChatBannedRights(flags: completeRights(updateFlags), untilDate: updateTimeout)
+                        }
+                    }
+                    
+                    var previousRights: TelegramChatBannedRights?
+                    if let initialParticipant = initialParticipant, case let .member(_, _, _, banInfo, _) = initialParticipant, banInfo != nil {
+                        previousRights = banInfo?.rights
+                    }
+                    if let resolvedRights = resolvedRights, previousRights != resolvedRights {
+                        let cleanResolvedRightsFlags = resolvedRights.flags.union(defaultBannedRightsFlags)
+                        let cleanResolvedRights = TelegramChatBannedRights(flags: cleanResolvedRightsFlags, untilDate: resolvedRights.untilDate)
+
+                        if cleanResolvedRights.flags.isEmpty && previousRights == nil {
+                            self?.close()
+                        } else {
+                            self?.updated(cleanResolvedRights)
+                        }
+                        
+                    }
                 })
                 
             }

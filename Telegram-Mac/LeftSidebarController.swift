@@ -13,12 +13,25 @@ import SwiftSignalKit
 import TelegramCore
 import InAppSettings
 
-func filterContextMenuItems(_ filter: ChatListFilter, context: AccountContext) -> [ContextMenuItem] {
+private func readAllInFilter(_ filter: ChatListFilter?, context: AccountContext) {
+    guard let filterPredicate = chatListFilterPredicate(for: filter) else {
+        return
+    }
+    var markItems: [(groupId: EngineChatList.Group, filterPredicate: ChatListFilterPredicate?)] = []
+    markItems.append((.root, filterPredicate))
+    for additionalGroupId in filterPredicate.includeAdditionalPeerGroupIds {
+        markItems.append((EngineChatList.Group(additionalGroupId), filterPredicate))
+    }
+    let _ = context.engine.messages.markAllChatsAsReadInteractively(items: markItems).start()
+}
+
+func filterContextMenuItems(_ filter: ChatListFilter, unreadCount: Int?, context: AccountContext) -> [ContextMenuItem] {
     var items:[ContextMenuItem] = []
     if var data = filter.data {
         items.append(.init(strings().chatListFilterEdit, handler: {
             context.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
         }, itemImage: MenuAnimation.menu_edit.value))
+        
         items.append(.init(strings().chatListFilterAddChats, handler: {
             showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(data.includePeers.peers), additionTopItems: nil, limit: 100, limitReachedText: strings().chatListFilterIncludeLimitReached, callback: { peerIds in
                 return context.engine.peers.updateChatListFiltersInteractively({ filters in
@@ -33,6 +46,12 @@ func filterContextMenuItems(_ filter: ChatListFilter, context: AccountContext) -
                 
             })), for: context.window)
         }, itemImage: MenuAnimation.menu_plus.value))
+        
+        if let unreadCount = unreadCount, unreadCount > 0 {
+            items.append(.init(strings().chatListFilterReadAll, handler: {
+                readAllInFilter(filter, context: context)
+            }, itemImage: MenuAnimation.menu_folder_read.value))
+        }
         
         items.append(ContextSeparatorItem())
         
@@ -58,8 +77,8 @@ func filterContextMenuItems(_ filter: ChatListFilter, context: AccountContext) -
 private final class LeftSidebarArguments {
     let context: AccountContext
     let callback:(ChatListFilter)->Void
-    let menuItems:(ChatListFilter)->[ContextMenuItem]
-    init(context: AccountContext, callback: @escaping(ChatListFilter)->Void, menuItems: @escaping(ChatListFilter)->[ContextMenuItem]) {
+    let menuItems:(ChatListFilter, Int?)->[ContextMenuItem]
+    init(context: AccountContext, callback: @escaping(ChatListFilter)->Void, menuItems: @escaping(ChatListFilter, Int?)->[ContextMenuItem]) {
         self.context = context
         self.callback = callback
         self.menuItems = menuItems
@@ -221,8 +240,8 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
                 rootNavigation.close(animated: true)
             }
             
-        }, menuItems: { filter in
-            return filterContextMenuItems(filter, context: context)
+        }, menuItems: { filter, unreadCount in
+            return filterContextMenuItems(filter, unreadCount: unreadCount, context: context)
         })
         let initialSize = self.atomicSize
         

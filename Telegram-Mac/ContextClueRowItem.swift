@@ -280,6 +280,8 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
                 } else {
                     window.sendKeyEvent(.Return, modifierFlags: [])
                 }
+            } else if !byClick {
+                tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0), toVisible: true)
             }
         }
     }
@@ -400,11 +402,13 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
                 if let item = item {
                     _ = tableView.select(item: item)
                 }
+            } else {
+                tableView.cancelSelection()
             }
         }
         
         if let selectedItem = tableView.selectedItem() {
-            tableView.scroll(to: .center(id: selectedItem.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
+            tableView.scroll(to: .center(id: selectedItem.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0), toVisible: true)
         }
         
         needsLayout = true

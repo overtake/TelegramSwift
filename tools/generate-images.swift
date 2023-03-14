@@ -839,6 +839,15 @@ func initialize() -> [String] {
     array.append("msg_emoji_work")
 
     
+    array.append("installed_stickers_archive")
+    array.append("installed_stickers_custom_emoji")
+    array.append("installed_stickers_dynamic_order")
+    array.append("installed_stickers_loop")
+    array.append("installed_stickers_reactions")
+    array.append("installed_stickers_suggest")
+    array.append("installed_stickers_trending")
+
+    
 
     return array
 }

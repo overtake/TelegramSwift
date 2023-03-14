@@ -497,7 +497,6 @@ class WPArticleContentView: WPContentView {
                 downloadIndicator?.center()
                 
                 var origin:NSPoint = NSMakePoint(layout.contentRect.width - imageView.frame.width - 10, 0)
-                
                 if layout.textLayout?.cutout == nil {
                     var y:CGFloat = 0
                     if let textLayout = layout.textLayout {
@@ -505,6 +504,8 @@ class WPArticleContentView: WPContentView {
                     }
                     origin = NSMakePoint(0, y)
                 }
+                
+                
                 
                 imageView.setFrameOrigin(origin.x, origin.y)
                 playIcon?.center()

@@ -553,9 +553,11 @@ class AuthController : GenericViewController<AuthView> {
         self.exportTokenDisposable.set(nil)
         self.tokenEventsDisposable.set(nil)
 
-        
-        guard let currentState = state.state else {
-            return
+        var currentState: UnauthorizedAccountStateContents
+        if let state = state.state {
+            currentState = state
+        } else {
+            currentState = .empty
         }
         
         if state.lockAfterLogin {
@@ -1096,6 +1098,7 @@ class AuthController : GenericViewController<AuthView> {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        NSApp.activate(ignoringOtherApps: true)
     }
     
 }

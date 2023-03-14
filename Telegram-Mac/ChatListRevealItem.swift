@@ -20,8 +20,8 @@ class ChatListRevealItem: TableStickItem {
     fileprivate let selected: ChatListFilter
     fileprivate let openSettings: (()->Void)?
     fileprivate let counters: ChatListFilterBadges
-    fileprivate let _menuItems: ((ChatListFilter)->[ContextMenuItem])?
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter)->[ContextMenuItem])? = nil) {
+    fileprivate let _menuItems: ((ChatListFilter, Int?)->[ContextMenuItem])?
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter, Int?)->[ContextMenuItem])? = nil) {
         self.action = action
         self.context = context
         self.tabs = tabs
@@ -47,8 +47,8 @@ class ChatListRevealItem: TableStickItem {
         return true
     }
     
-    func menuItems(for item: ChatListFilter) -> [ContextMenuItem] {
-        return self._menuItems?(item) ?? []
+    func menuItems(for item: ChatListFilter, unreadCount: Int?) -> [ContextMenuItem] {
+        return self._menuItems?(item, unreadCount) ?? []
     }
     
     override var stableId: AnyHashable {
@@ -232,9 +232,9 @@ final class ChatListRevealView : TableStickView {
         }
         segmentView.menuItems = { [weak item] selected in
             if let item = item, selected.uniqueId != -1 && selected.uniqueId != -2 {
-                return item.menuItems(for: item.tabs[selected.index])
+                return item.menuItems(for: item.tabs[selected.index], unreadCount: item.counters.count(for: item.tabs[selected.index])?.count)
             } else if let item = item, selected.uniqueId == -1 {
-                return item.menuItems(for: .allChats)
+                return item.menuItems(for: .allChats, unreadCount: nil)
             } else {
                 return []
             }

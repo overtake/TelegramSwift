@@ -233,7 +233,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
     }
     
     return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction) |> map { data in
-
+        
         let peer = data.message.peers[data.message.id.peerId]
         let isNotFailed = !message.flags.contains(.Failed) && !message.flags.contains(.Unsent) && !data.message.flags.contains(.Sending)
         let protected = data.message.containsSecretMedia || data.message.isCopyProtected()
@@ -253,9 +253,40 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var fourthBlock:[ContextMenuItem] = []
         var fifthBlock:[ContextMenuItem] = []
         var sixBlock:[ContextMenuItem] = []
-
         
-        if data.message.adAttribute != nil {
+        
+        if let adAttribute = data.message.adAttribute {
+            
+            if adAttribute.sponsorInfo != nil || adAttribute.additionalInfo != nil {
+                
+                
+                let submenu = ContextMenu()
+                let subItem = ContextMenuItem(strings().chatMessageSponsoredAdvertiser, itemImage: MenuAnimation.menu_channel.value)
+                
+                if let text = adAttribute.sponsorInfo {
+                    submenu.addItem(ContextMenuItem(text, handler: {
+                        copyToClipboard(text)
+                        showModalText(for: context.window, text: strings().contextAlertCopied)
+                    }, removeTail: false))
+                }
+                if let text = adAttribute.additionalInfo {
+                    if !submenu.items.isEmpty {
+                        submenu.addItem(ContextSeparatorItem())
+                    }
+                    submenu.addItem(ContextMenuItem(text, handler: {
+                        copyToClipboard(text)
+                        showModalText(for: context.window, text: strings().contextAlertCopied)
+                    }, removeTail: false))
+                }
+                
+                subItem.submenu = submenu
+                
+                items.append(subItem)
+                
+                items.append(ContextSeparatorItem())
+
+            }
+            
             items.append(ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
                 let link = "https://promote.telegram.org"
                 confirm(for: context.window, information: strings().chatMessageAdText(link), cancelTitle: "", thridTitle: strings().chatMessageAdReadMore, successHandler: { result in
@@ -267,11 +298,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         break
                     }
                 })
-            }))
+            }, itemImage: MenuAnimation.menu_report.value))
             if !context.premiumIsBlocked {
                 items.append(ContextMenuItem.init(strings().chatContextHideAd, handler: {
                     showModal(with: PremiumBoardingController(context: context), for: context.window)
-                }))
+                }, itemImage: MenuAnimation.menu_restrict.value))
             }
             return items
         }
@@ -780,33 +811,33 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 
                 
                 if resourceData.complete {
-                    if let file = data.file, file.isMusic || file.isVoice, let list = data.notifications {
-                        let settings = NotificationSoundSettings.extract(from: context.appConfiguration)
-                        let size = file.size ?? 0
-                        let contains = list.sounds.contains(where: { $0.file.fileId.id == file.fileId.id })
-                        let duration = file.duration ?? 0
-                        if size < settings.maxSize, duration < settings.maxDuration, list.sounds.count < settings.maxSavedCount, !contains {
-                            thirdBlock.append(ContextMenuItem(strings().chatContextSaveRingtoneAdd, handler: {
-                                let signal = context.engine.peers.saveNotificationSound(file: .message(message: .init(message), media: file))
-                                _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
-                                    alert(for: context.window, info: strings().unknownError)
-                                }, completed: {
-                                    showModalText(for: context.window, text: strings().chatContextSaveRingtoneAddSuccess)
-                                })
-                                
-                            }, itemImage: MenuAnimation.menu_note_download.value))
-                        } else if contains {
-                            thirdBlock.append(ContextMenuItem(strings().chatContextSaveRingtoneRemove, handler: {
-                                let signal = context.engine.peers.removeNotificationSound(file: .message(message: .init(message), media: file))
-                                _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
-                                    alert(for: context.window, info: strings().unknownError)
-                                }, completed: {
-                                    showModalText(for: context.window, text: strings().chatContextSaveRingtoneRemoveSuccess)
-                                })
-                                
-                            }, itemImage: MenuAnimation.menu_note_slash.value))
-                        }
-                    }
+//                    if let file = data.file, file.isMusic || file.isVoice, let list = data.notifications {
+//                        let settings = NotificationSoundSettings.extract(from: context.appConfiguration)
+//                        let size = file.size ?? 0
+//                        let contains = list.sounds.contains(where: { $0.file.fileId.id == file.fileId.id })
+//                        let duration = file.duration ?? 0
+//                        if size < settings.maxSize, duration < settings.maxDuration, list.sounds.count < settings.maxSavedCount, !contains {
+//                            thirdBlock.append(ContextMenuItem(strings().chatContextSaveRingtoneAdd, handler: {
+//                                let signal = context.engine.peers.saveNotificationSound(file: .message(message: .init(message), media: file))
+//                                _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
+//                                    alert(for: context.window, info: strings().unknownError)
+//                                }, completed: {
+//                                    showModalText(for: context.window, text: strings().chatContextSaveRingtoneAddSuccess)
+//                                })
+//                                
+//                            }, itemImage: MenuAnimation.menu_note_download.value))
+//                        } else if contains {
+//                            thirdBlock.append(ContextMenuItem(strings().chatContextSaveRingtoneRemove, handler: {
+//                                let signal = context.engine.peers.removeNotificationSound(file: .message(message: .init(message), media: file))
+//                                _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
+//                                    alert(for: context.window, info: strings().unknownError)
+//                                }, completed: {
+//                                    showModalText(for: context.window, text: strings().chatContextSaveRingtoneRemoveSuccess)
+//                                })
+//                                
+//                            }, itemImage: MenuAnimation.menu_note_slash.value))
+//                        }
+//                    }
                     
                     thirdBlock.append(ContextMenuItem(strings().chatContextSaveMedia, handler: {
                         saveAs(file, account: account)

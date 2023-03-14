@@ -65,6 +65,7 @@ open class ContextMenuItem : NSMenuItem {
     
     public let keyEquivalentValue: KeyEquiavalent
     let overrideWidth: CGFloat?
+    let removeTail: Bool
     
     public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none, removeTail: Bool = true, overrideWidth: CGFloat? = nil) {
         self.handler = handler
@@ -72,6 +73,7 @@ open class ContextMenuItem : NSMenuItem {
         self.dynamicTitle = dynamicTitle
         self.itemMode = itemMode
         self.itemImage = itemImage
+        self.removeTail = removeTail
         self.overrideWidth = overrideWidth
         self.keyEquivalentValue = keyEquivalent
         super.init(title: title, action: nil, keyEquivalent: "")

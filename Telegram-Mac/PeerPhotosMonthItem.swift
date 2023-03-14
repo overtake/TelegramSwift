@@ -264,7 +264,7 @@ class MediaCell : Control {
                 if layout.message.isMediaSpoilered || layout.message.containsSecretMedia {
                     signal = chatSecretPhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor, synchronousLoad: false)
                 } else {
-                    signal = mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(layout.message), media: image), scale: backingScaleFactor)
+                    signal = mediaGridMessagePhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor)
                 }
 
             } else if let file = layout.message.anyMedia as? TelegramMediaFile {
@@ -308,7 +308,7 @@ class MediaCell : Control {
             if let current = layout.message.anyMedia as? TelegramMediaImage {
                 image = current
             } else if let file = layout.message.anyMedia as? TelegramMediaFile {
-                image = TelegramMediaImage.init(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+                image = TelegramMediaImage(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
             } else {
                 fatalError()
             }

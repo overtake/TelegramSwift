@@ -1,4 +1,5 @@
 import Foundation
+import UserNotifications
 import TGUIKit
 import SwiftSignalKit
 import Postbox
@@ -313,8 +314,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.view.splitView.delegate = self;
         self.view.splitView.update(false)
         
-       
-        
+
         let accountId = context.account.id
         self.loggedOutDisposable.set(context.account.loggedOut.start(next: { value in
             if value {
@@ -516,6 +516,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            showModal(with: InvitePrivacyLimitedController(context: context, peerId: context.peerId, peers: []), for: context.window)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

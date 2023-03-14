@@ -246,9 +246,9 @@ class ChatRowItem: TableRowItem {
     
     private(set) var rightFrames: ChatRightView.Frames?
     private var rightHeight: CGFloat {
-        var height:CGFloat = isBubbled && !isFailed ? 15 : 16
+        var height:CGFloat = 16
         if isStateOverlayLayout {
-            height = 17
+            height = 16
         }
         return height
     }
@@ -339,6 +339,45 @@ class ChatRowItem: TableRowItem {
             }
         }
         return defaultContentInnerInset
+    }
+    private var _id: String?
+    override var identifier: String {
+        if let id = _id {
+            return id
+        }
+        var id: String = super.identifier
+        id += "_message"
+        if self.replyModel != nil {
+            id += "_reply"
+        }
+        if self.reactionsLayout != nil {
+            id += "_reactions"
+        }
+        if self.reactionsLayout != nil {
+            id += "_reactions"
+        }
+        if self.topicLinkLayout != nil {
+            id += "_topicLinkLayout"
+        }
+        if self.authorText != nil {
+            id += "_authorText"
+        }
+        if self.forwardNameLayout != nil {
+            id += "_forwardNameLayout"
+        }
+        if self.replyMarkupModel != nil {
+            id += "_replyMarkupModel"
+        }
+        if self.hasPhoto, self.renderType != .bubble {
+            id += "_photo"
+        }
+        if let mediaId = message?.media.first?.id {
+            id += "_media_\(mediaId.id)"
+        }
+        id += "_captionLayouts_\(self.captionLayouts.count)"
+
+        _id = id
+        return id
     }
     
     var defaultContentInnerInset: CGFloat {
@@ -2228,6 +2267,8 @@ class ChatRowItem: TableRowItem {
         let result = super.makeSize(width, oldWidth: oldWidth)
         isForceRightLine = false
         
+        _bubbleFrame = nil
+        
         commentsBubbleData?.makeSize()
         commentsBubbleDataOverlay?.makeSize()
         commentsData?.makeSize()
@@ -2508,8 +2549,14 @@ class ChatRowItem: TableRowItem {
         return nil
     }
 
+    var _bubbleFrame: NSRect? = nil
     
     var bubbleFrame: NSRect {
+        
+        if let frame = _bubbleFrame {
+            return frame
+        }
+                
         let nameWidth:CGFloat
         if hasBubble {
             nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
@@ -2580,6 +2627,8 @@ class ChatRowItem: TableRowItem {
         if let commentsBubbleData = commentsBubbleData {
             rect.size.width = max(rect.size.width, commentsBubbleData.size(hasBubble, false).width)
         }
+        
+        _bubbleFrame = rect
         return rect
     }
     

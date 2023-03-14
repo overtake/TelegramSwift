@@ -167,6 +167,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         private var imageView: InlineStickerView?
         private let disposable = MetaDisposable()
         private let appearDisposable = MetaDisposable()
+        private let fetchDisposables = DisposableSet()
         let reaction: ContextReaction
         let context: AccountContext
         private let stateDisposable = MetaDisposable()
@@ -174,6 +175,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         private var currentKey: String?
         
         private var selectionView : View?
+        
         
         required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool, NSRect?)->Void) {
             
@@ -187,13 +189,13 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             self.context = context
            
             super.init(frame: frameRect)
-            if !isLite {
-                let imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.selectedAnimation, emoji: ""), size: size, isPlayable: false)
+            
+            if let file = reaction.selectedAnimation {
+                let imageView = InlineStickerView(account: context.account, file: file, size: size, isPlayable: false)
                 self.imageView = imageView
                 addSubview(imageView)
             }
             addSubview(player)
-            self.imageView?.isHidden = false
             self.player.isHidden = false
 
            
@@ -268,6 +270,13 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                     self.imageView?.layer?.cornerRadius = 4
                 }
             }
+
+            if let file = reaction.selectedAnimation {
+                fetchDisposables.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .standalone(resource: file.resource)).start())
+            }
+            if let file = reaction.appearAnimation {
+                fetchDisposables.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .standalone(resource: file.resource)).start())
+            }
             
         }
         
@@ -285,6 +294,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             disposable.dispose()
             stateDisposable.dispose()
             appearDisposable.dispose()
+            fetchDisposables.dispose()
         }
         
         override func layout() {
@@ -330,10 +340,13 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             previous = state
         }
         
+        private var timestamp: TimeInterval? = Date().timeIntervalSince1970
+        
         func playAppearAnimation() {
             guard self.visibleRect != .zero && !self.isLite else {
                 return
             }
+          
             
             
             if let appearAnimation = reaction.appearAnimation {
@@ -343,10 +356,13 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 }
                 |> deliverOnMainQueue
                 
-                self.imageView?.removeFromSuperview()
+//                self.imageView?.removeFromSuperview()
                             
                 appearDisposable.set(signal.start(next: { [weak self] resourceData in
                     if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
+                        if let timestamp = self?.timestamp, Date().timeIntervalSince1970 - timestamp > 0.1 {
+                            return
+                        }
                         self?.apply(data, key: "appear", policy: .toEnd(from: 0))
                     }
                 }))

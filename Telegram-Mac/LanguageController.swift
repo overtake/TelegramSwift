@@ -42,6 +42,7 @@ private struct State : Equatable {
     var tableSearchState: TableSearchViewState = .none({ _ in })
     var language: TelegramLocalization
     var isPremium: Bool
+    var loading: LocalizationInfo?
 }
 
 private func _id_language(_ id: String) -> InputDataIdentifier {
@@ -156,17 +157,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             var value: LocalizationInfo
             var viewType: GeneralViewType
             var selected: Bool
+            var loading: Bool
         }
         var items: [Tuple] = []
         for (i, value) in saved.enumerated() {
             let viewType: GeneralViewType = bestGeneralViewType(saved, for: i)
             existingIds.insert(value.languageCode)
-            items.append(.init(value: value, viewType: viewType, selected: value.languageCode == state.language.primaryLanguage.languageCode))
+            items.append(.init(value: value, viewType: viewType, selected: value.languageCode == state.language.primaryLanguage.languageCode, loading: value.languageCode == state.loading?.languageCode))
 
         }
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_language(item.value.languageCode), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: item.value.title, description: item.value.localizedTitle, descTextColor: theme.colors.grayText, type: .selectable(item.selected), viewType: item.viewType, action: {
+                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: item.value.title, description: item.value.localizedTitle, descTextColor: theme.colors.grayText, type: item.loading ? .loading : .selectable(item.selected), viewType: item.viewType, action: {
                     arguments.change(item.value)
                 }, menuItems: {
                     return [ContextMenuItem(strings().messageContextDelete, handler: {
@@ -202,12 +204,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             for (i, value) in list.enumerated() {
                 let viewType: GeneralViewType = bestGeneralViewType(list, for: i)
                 existingIds.insert(value.languageCode)
-                items.append(.init(value: value, viewType: viewType, selected: value.languageCode == state.language.primaryLanguage.languageCode))
+                items.append(.init(value: value, viewType: viewType, selected: value.languageCode == state.language.primaryLanguage.languageCode, loading: value.languageCode == state.loading?.languageCode))
             }
             
             for item in items {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_language_official(item.value.languageCode), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: item.value.title, description: item.value.localizedTitle, descTextColor: theme.colors.grayText, type: .selectable(item.selected), viewType: item.viewType, action: {
+                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: item.value.title, description: item.value.localizedTitle, descTextColor: theme.colors.grayText, type:   item.loading ? .loading : .selectable(item.selected), viewType: item.viewType, action: {
                         arguments.change(item.value)
                     })
                 }))
@@ -247,7 +249,26 @@ func LanguageController(_ context: AccountContext) -> InputDataController {
 
     let arguments = Arguments(context: context, change: { value in
         if value.languageCode != appCurrentLanguage.primaryLanguage.languageCode {
-            applyDisposable.set(showModalProgress(signal: context.engine.localization.downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, languageCode: value.languageCode), for: context.window).start())
+            
+            updateState { current in
+                var current = current
+                current.loading = value
+                return current
+            }
+            
+            applyDisposable.set(context.engine.localization.downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, languageCode: value.languageCode).start(error: { error in
+                updateState { current in
+                    var current = current
+                    current.loading = nil
+                    return current
+                }
+            }, completed: {
+                updateState { current in
+                    var current = current
+                    current.loading = nil
+                    return current
+                }
+            }))
         }
     }, delete: { info in
         confirm(for: context.window, information: strings().languageRemovePack, successHandler: { _ in

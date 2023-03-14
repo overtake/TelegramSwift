@@ -1932,14 +1932,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 return
             }
         }
-        NSAnimationContext.current.duration = animated ? duration : 0.0
-        NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        self.tableView.beginUpdates()
-        self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
-        self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : .effectFade)
-        self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  .effectFade)
-        self.tableView.endUpdates()
+        if let _ = self.optionalItem(at: row) {
+            NSAnimationContext.current.duration = animated ? duration : 0.0
+            NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            self.tableView.beginUpdates()
+            self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: options)
+            self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: options)
+            self.tableView.endUpdates()
 
+        }
     }
     
     fileprivate func reloadHeightItems() {
@@ -2095,7 +2096,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
         }
         if let hash = selectedhash, scroll {
-            self.scroll(to: .top(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), true)
+            self.scroll(to: .top(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), toVisible: true)
         }
     }
     
@@ -2145,7 +2146,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         if let hash = selectedhash, scroll {
-            self.scroll(to: .bottom(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), true)
+            self.scroll(to: .bottom(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), toVisible: true)
         }
     }
     
@@ -2192,7 +2193,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
         }
         if let hash = highlitedHash, scroll {
-            self.scroll(to: .top(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), true)
+            self.scroll(to: .top(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), toVisible: true)
         }
     }
     
@@ -2241,7 +2242,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         if let hash = highlitedHash, scroll {
-            self.scroll(to: .bottom(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), true)
+            self.scroll(to: .bottom(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), toVisible: true)
         }
     }
     
@@ -2562,20 +2563,23 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let documentOffset = self.documentOffset
         
+        
+        
         let visibleItems = self.visibleItems()
         let visibleRange = self.visibleRows()
-        if transition.grouping && !transition.isEmpty {
-            self.tableView.beginUpdates()
-        }
-        
         
         for (_, item) in list.enumerated() {
             item._index = nil
         }
+        
 
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[(Int, TableRowItem)] = []
         
+        
+        if transition.grouping && !transition.isEmpty {
+            self.tableView.beginUpdates()
+        }
         
         for rdx in transition.deleted.reversed() {
             let effect:NSTableView.AnimationOptions
@@ -2589,8 +2593,20 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             self.remove(at: rdx, redraw: true, animation:effect)
         }
+        
+        for (i, item) in list.enumerated() {
+            item._index = i
+        }
+        
+        if transition.grouping && !transition.isEmpty {
+            self.tableView.endUpdates()
+        }
                 
 
+        if transition.grouping && !transition.isEmpty {
+            self.tableView.beginUpdates()
+        }
+        
         for (idx, item) in transition.inserted {
             let effect:NSTableView.AnimationOptions
             if case let .none(interface) = transition.state, interface != nil {
@@ -2732,9 +2748,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         case .bottom, .top, .center:
-            self.scroll(to: transition.state)
+            self.scroll(to: transition.state, previousDocumentOffset: documentOffset)
         case .up, .down, .upOffset:
-            self.scroll(to: transition.state)
+            self.scroll(to: transition.state, previousDocumentOffset: documentOffset)
         case let .saveVisible(side):
             saveVisible(side)
         }
@@ -2775,6 +2791,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             replace(item: item, at: index, animated: true)
         }
         self.endTableUpdates()
+        
+        self.tableView.tile()
+        self.reflectScrolledClipView(clipView)
+
         
 //        if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {
 //            if let y = getScrollY(visible) {
@@ -3064,9 +3084,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     
-    public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), timingFunction: CAMediaTimingFunctionName = .spring, _ toVisible:Bool = false, ignoreLayerAnimation: Bool = false, completion: @escaping(Bool)->Void = { _ in }) {
+    public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), timingFunction: CAMediaTimingFunctionName = .spring, toVisible:Bool = false, ignoreLayerAnimation: Bool = false, previousDocumentOffset: CGPoint? = nil, completion: @escaping(Bool)->Void = { _ in }) {
         
         var rowRect:NSRect = bounds
+        let documentOffset = previousDocumentOffset
         
         let findItem:(AnyHashable)->TableRowItem? = { [weak self] stableId in
             var item: TableRowItem? = self?.item(stableId: stableId)
@@ -3135,9 +3156,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let bottomInset = self.bottomInset != 0 ? (self.bottomInset) : 0
         let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
 
-        let documentHeight = self is HorizontalTableView ? documentSize.width : documentSize.height
+        let documentHeight = documentSize.height
         
-        if documentHeight <= height {
+        if documentHeight < height {
+            completion(false)
             return
         }
         
@@ -3155,7 +3177,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             case .top:
                // break
                 if !tableView.isFlipped {
-                    rowRect.origin.y -= (height - rowRect.height) - bottomInset
+                    rowRect.origin.y -= (height - rowRect.height) - bottomInset - contentInsets.top
                 }
             case .center:
                 if !tableView.isFlipped {
@@ -3230,13 +3252,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 scrollListener.handler(self.scrollPosition().current)
             }
         } else {
-            if let item = item, focus.focus {
-                if let view = viewNecessary(at: item.index) {
+            if let item = item  {
+                if focus.focus, let view = viewNecessary(at: item.index) {
                     view.focusAnimation(innerId)
                     focus.action?(view.interactableView)
                 }
+                completion(true)
+            } else {
+                if let documentOffset = documentOffset, documentOffset != clipView.documentOffset {
+                    clipView.scroll(to: documentOffset, animated: false)
+                    clipView.scroll(to: rowRect.origin, animated: animate)
+                }
             }
-            completion(true)
         }
 
     }

@@ -120,12 +120,12 @@ class ChatFileContentView: ChatMediaContentView {
                 case .Fetching:
                     if parent != nil {
                         _ = attr.append(string: progress == 0 ? strings().messageStatusArchivePreparing : strings().messageStatusArchiving(Int(progress * 100)), color: presentation.grayText, font: .normal(.text))
-                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                         layout.measure()
                         return layout
                     } else {
                         _ = attr.append(string: strings().messageStatusArchived, color: presentation.grayText, font: .normal(.text))
-                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                        let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                         layout.measure()
                         return layout
                     }
@@ -135,13 +135,13 @@ class ChatFileContentView: ChatMediaContentView {
                 }
             case .none, .waiting:
                 _ = attr.append(string: strings().messageStatusArchivePreparing, color: presentation.grayText, font: .normal(.text))
-                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                 layout.measure()
                 return layout
             case .done:
                 if parent == nil {
                     _ = attr.append(string: strings().messageStatusArchived, color: presentation.grayText, font: .normal(.text))
-                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                     layout.measure()
                     return layout
                 }
@@ -155,7 +155,7 @@ class ChatFileContentView: ChatMediaContentView {
                         errorText = strings().messageStatusArchiveFailed
                     }
                     _ = attr.append(string: errorText, color: theme.colors.redUI, font: .normal(.text))
-                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                    let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                     layout.measure()
                     return layout
                 }
@@ -171,7 +171,7 @@ class ChatFileContentView: ChatMediaContentView {
                 let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
                 let _ = attr.append(string: size, color: presentation.grayText, font: .normal(.text))
             }
-            let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+            let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
             layout.measure()
             return layout
             
@@ -179,7 +179,7 @@ class ChatFileContentView: ChatMediaContentView {
             if let _ = archiveStatus {
                 let size = strings().messageStatusArchived
                 let _ = attr.append(string: size, color: presentation.grayText, font: .normal(.text))
-                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
+                let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1, alwaysStaticItems: true)
                 layout.measure()
                 return layout
             }

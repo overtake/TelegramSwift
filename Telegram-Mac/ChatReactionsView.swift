@@ -188,7 +188,7 @@ final class ChatReactionsLayout {
         func getInlineLayer(_ mode: ChatReactionsLayout.Mode) -> InlineStickerItemLayer {
             switch source {
             case let .builtin(reaction):
-                return .init(account: context.account, file: reaction.staticIcon, size: presentation.reactionSize, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
+                return .init(account: context.account, file: reaction.centerAnimation ?? reaction.selectAnimation, size: NSMakeSize(presentation.reactionSize.width * 2, presentation.reactionSize.height * 2), playPolicy: .framesCount(1), shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             case let .custom(fileId, file, _):
                 var reactionSize: NSSize = presentation.reactionSize
                 if mode == .full {
@@ -347,7 +347,7 @@ final class ChatReactionsLayout {
                 if let reactions = reactions {
                     current = reactions
                 } else {
-                    current = context.engine.messages.messageReactionList(message: .init(self.message), reaction: self.value.value)
+                    current = context.engine.messages.messageReactionList(message: .init(self.message), readStats: nil, reaction: self.value.value)
                     self.reactions = current
                 }
                 let signal = current.state |> deliverOnMainQueue
@@ -371,11 +371,11 @@ final class ChatReactionsLayout {
                 source = .custom(fileId, file)
             }
             weak var weakSelf = self
-            let makeItem:(_ peer: Peer) -> ContextMenuItem = { peer in
+            let makeItem:(_ peer: Peer, _ readTimestamp: Int32?) -> ContextMenuItem = { peer, readTimestamp in
                 let title = peer.displayTitle.prefixWithDots(25)
                 let item = ReactionPeerMenu(title: title, handler: {
                     weakSelf?.openInfo(peer.id)
-                }, peer: peer, context: context, reaction: source)
+                }, peer: peer, context: context, reaction: source, readTimestamp: readTimestamp)
                 
                 let signal:Signal<(CGImage?, Bool), NoError>
                 signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
@@ -393,7 +393,7 @@ final class ChatReactionsLayout {
             }
             
             var items = state.items.map {
-                return makeItem($0.peer._asPeer())
+                return makeItem($0.peer._asPeer(), $0.timestamp)
             }
             
             switch source {

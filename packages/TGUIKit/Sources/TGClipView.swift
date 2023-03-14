@@ -300,8 +300,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         if animated {
             self.point = point
             NSAnimationContext.runAnimationGroup({ ctx in
-                ctx.duration = 0.2
-                ctx.timingFunction = .init(name: .easeOut)
+                ctx.duration = 0.35
+                let timingFunction = CAMediaTimingFunction(controlPoints: 0.5, 1.0 + 0.4 / 3.0, 1.0, 1.0)
+                ctx.timingFunction = timingFunction
                 self.animator().setBoundsOrigin(point)
             }, completionHandler: {
                 if point != self.bounds.origin {

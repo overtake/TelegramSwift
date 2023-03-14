@@ -48,17 +48,19 @@ class LeftSidebarFolderItem: TableRowItem {
     fileprivate let folder: ChatListFilter
     fileprivate let selected: Bool
     fileprivate let callback: (ChatListFilter)->Void
-    fileprivate let menuItems: (ChatListFilter)-> [ContextMenuItem]
+    fileprivate let menuItems: (ChatListFilter, Int?)-> [ContextMenuItem]
     
     let icon: CGImage
     let badge: CGImage?
     let nameLayout: TextViewLayout
+    let unreadCount: Int
     
     
-    init(_ initialSize: NSSize, folder: ChatListFilter, selected: Bool, unreadCount: Int, hasUnmutedUnread: Bool, callback: @escaping(ChatListFilter)->Void, menuItems: @escaping(ChatListFilter) -> [ContextMenuItem]) {
+    init(_ initialSize: NSSize, folder: ChatListFilter, selected: Bool, unreadCount: Int, hasUnmutedUnread: Bool, callback: @escaping(ChatListFilter)->Void, menuItems: @escaping(ChatListFilter, Int?) -> [ContextMenuItem]) {
         self.folder = folder
         self.selected = selected
         self.callback = callback
+        self.unreadCount = unreadCount
         self.menuItems = menuItems
         var folderIcon = FolderIcon(folder).icon(for: selected ? .sidebarActive : .sidebar)
         nameLayout = TextViewLayout(.initialize(string: folder.title, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10)), alignment: .center)
@@ -132,7 +134,7 @@ class LeftSidebarFolderItem: TableRowItem {
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        return .single(self.menuItems(folder))
+        return .single(self.menuItems(folder, unreadCount))
     }
     
     override var height: CGFloat {

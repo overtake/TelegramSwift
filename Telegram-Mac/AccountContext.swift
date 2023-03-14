@@ -338,6 +338,12 @@ final class AccountContext {
         return _contentSettings.with { $0 }
     }
     
+    private let _stickerSettings: Atomic<StickerSettings> = Atomic(value: StickerSettings.defaultSettings)
+    
+    var stickerSettings: StickerSettings {
+        return _stickerSettings.with { $0 }
+    }
+    
     
     public var closeFolderFirst: Bool = false
     
@@ -557,6 +563,11 @@ final class AccountContext {
             _ = contentSettings.swap(settings)
         }))
         
+        let st = _stickerSettings
+        prefDisposable.add(InAppSettings.stickerSettings(postbox: account.postbox).start(next: { settings in
+            _ = st.swap(settings)
+        }))
+        
         
         globalPeerHandler.set(.single(nil))
         
@@ -596,28 +607,28 @@ final class AccountContext {
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
         
-        var shouldReindex: Signal<SomeAccountSettings, NoError> = someAccountSetings(postbox: account.postbox) |> filter { value -> Bool in
-            if value.appVersion != ApiEnvironment.version {
-                return true
-            } else if let time = value.lastChatReindexTime {
-                return Int32(Date().timeIntervalSince1970) > time
-            } else {
-                return true
-            }
-        } |> deliverOnMainQueue
-        
-        shouldReindex = (shouldReindex |> then(.complete() |> suspendAwareDelay(60 * 60, queue: Queue.mainQueue()))) |> restart
-        
-        shouldReindexCacheDisposable.set(shouldReindex.start(next: { [weak self] _ in
-            self?.reindexCacheDisposable.set(engine.resources.reindexCacheInBackground(lowImpact: true).start())
-            _ = updateSomeSettingsInteractively(postbox: account.postbox, { settings in
-                var settings = settings
-                settings.lastChatReindexTime = Int32(Date().timeIntervalSince1970) + 2 * 60 * 60 * 24
-                settings.appVersion = ApiEnvironment.version
-                return settings
-            }).start()
-        }))
-        
+//        var shouldReindex: Signal<SomeAccountSettings, NoError> = someAccountSetings(postbox: account.postbox) |> filter { value -> Bool in
+//            if value.appVersion != ApiEnvironment.version {
+//                return true
+//            } else if let time = value.lastChatReindexTime {
+//                return Int32(Date().timeIntervalSince1970) > time
+//            } else {
+//                return true
+//            }
+//        } |> deliverOnMainQueue
+//
+//        shouldReindex = (shouldReindex |> then(.complete() |> suspendAwareDelay(60 * 60, queue: Queue.mainQueue()))) |> restart
+//
+//        shouldReindexCacheDisposable.set(shouldReindex.start(next: { [weak self] _ in
+//            self?.reindexCacheDisposable.set(engine.resources.reindexCacheInBackground(lowImpact: true).start())
+//            _ = updateSomeSettingsInteractively(postbox: account.postbox, { settings in
+//                var settings = settings
+//                settings.lastChatReindexTime = Int32(Date().timeIntervalSince1970) + 2 * 60 * 60 * 24
+//                settings.appVersion = ApiEnvironment.version
+//                return settings
+//            }).start()
+//        }))
+//
         
         #if !SHARE
         var freeSpaceSignal:Signal<UInt64?, NoError> = Signal { subscriber in
