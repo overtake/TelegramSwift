@@ -42,7 +42,7 @@ kernel vec4 alphaFrame(__sample s, __sample m) {
     }
 }
 
-let sampleBufferQueue = DispatchQueue.init(label: "sampleBufferQueue", qos: DispatchQoS.background, attributes: [])
+let sampleBufferQueue = DispatchQueue(label: "sampleBufferQueue", qos: .default, attributes: [])
 
 private let veryLongTimeInterval = CFTimeInterval(8073216000)
 

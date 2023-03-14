@@ -2594,7 +2594,14 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 msg_emoji_tongue: { NSImage(named: "msg_emoji_tongue")!.precomposed(palette.grayIcon) },
                                                 msg_emoji_vacation: { NSImage(named: "msg_emoji_vacation")!.precomposed(palette.grayIcon) },
                                                 msg_emoji_what: { NSImage(named: "msg_emoji_what")!.precomposed(palette.grayIcon) },
-                                                msg_emoji_work: { NSImage(named: "msg_emoji_work")!.precomposed(palette.grayIcon) }
+                                                msg_emoji_work: { NSImage(named: "msg_emoji_work")!.precomposed(palette.grayIcon) },
+                                                installed_stickers_archive: { NSImage(named: "Icon_InstalledStickers_Archive")!.precomposed(flipVertical: true) },
+                                                installed_stickers_custom_emoji: { NSImage(named: "Icon_InstalledStickers_CustomEmoji")!.precomposed(flipVertical: true) },
+                                                installed_stickers_dynamic_order: { NSImage(named: "Icon_InstalledStickers_DynamicOrder")!.precomposed(flipVertical: true) },
+                                                installed_stickers_loop: { NSImage(named: "Icon_InstalledStickers_Loop")!.precomposed(flipVertical: true) },
+                                                installed_stickers_reactions: { NSImage(named: "Icon_InstalledStickers_Reaction")!.precomposed() },
+                                                installed_stickers_suggest: { NSImage(named: "Icon_InstalledStickers_Suggest")!.precomposed(flipVertical: true) },
+                                                installed_stickers_trending: { NSImage(named: "Icon_InstalledStickers_Trending")!.precomposed(flipVertical: true) }
     )
 
 }
@@ -2678,7 +2685,7 @@ func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Window? = n
             contentView.addSubview(imageView)
 
             
-            let signal = Signal<Void, NoError>.single(Void()) |> delay(0.25, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
+            let signal = Signal<Void, NoError>.single(Void()) |> delay(0.05, queue: Queue.mainQueue()) |> afterDisposed { [weak imageView] in
                 if let imageView = imageView {
                     imageView.change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, completion: { [weak imageView] completed in
                         imageView?.removeFromSuperview()

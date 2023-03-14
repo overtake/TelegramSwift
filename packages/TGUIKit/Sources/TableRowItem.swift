@@ -186,7 +186,7 @@ open class TableRowItem: NSObject {
         return nil
     }
     
-    open func makeSize(_ width:CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth:CGFloat = 0) -> Bool {
+    @discardableResult open func makeSize(_ width:CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth:CGFloat = 0) -> Bool {
         self.oldWidth = width
         return true;
     }

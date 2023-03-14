@@ -19,7 +19,8 @@ func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentation
     switch chatPresentationInterfaceState.state {
     case .normal, .editing:
         if inputQuery != .none {
-            if inputQuery == currentQuery {
+            
+            if inputQuery == currentQuery, chatPresentationInterfaceState.inputContext == chatPresentationInterfaceState.effectiveInputContext {
                 return nil
             } else {
                 return makeInlineResult(inputQuery, chatPresentationInterfaceState: chatPresentationInterfaceState, currentQuery: currentQuery, context: context)
@@ -325,62 +326,14 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     return botResult |> then(maybeDelayedContextResults)
                 } else {
                     let inputQuery = inputContextQueryForChatPresentationIntefaceState(chatPresentationInterfaceState, includeContext: false)
-                    let location = chatPresentationInterfaceState.chatLocation
-                    switch inputQuery {
-                    case let .mention(query: query, includeRecent: _):
-                        let normalizedQuery = query.lowercased()
-                        
-                        if let global = chatPresentationInterfaceState.peer {
-                            return searchPeerMembers(context: context, peerId: global.id, chatLocation: chatPresentationInterfaceState.chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id, threadId: location.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
-                                    let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                                        if entry.message.extendedMedia is TelegramMediaAction {
-                                            return nil
-                                        }
-                                        return entry.message.author?.id
-                                    })
-                                    let sorted = participants.sorted{ lhs, rhs in
-                                        let lhsIndex = latestIds.firstIndex(where: {$0 == lhs.id})
-                                        let rhsIndex = latestIds.firstIndex(where: {$0 == rhs.id})
-                                        if let lhsIndex = lhsIndex, let rhsIndex = rhsIndex  {
-                                            return lhsIndex < rhsIndex
-                                        } else if lhsIndex == nil && rhsIndex != nil {
-                                            return false
-                                        } else if lhsIndex != nil && rhsIndex == nil {
-                                            return true
-                                        } else {
-                                            return lhs.displayTitle < rhs.displayTitle
-                                        }
-                                    }
-                                    return sorted
-                                }
-                                
-                            } |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                                    let filteredParticipants = participants.filter ({ peer in
-                                        if peer.id == context.peerId {
-                                            return false
-                                        }
-                                        if global.isChannel, let peer = peer as? TelegramUser, peer.botInfo?.inlinePlaceholder == nil {
-                                            return false
-                                        }
-                                        
-                                        if peer.indexName.matchesByTokens(normalizedQuery) {
-                                            return true
-                                        }
-                                        if let addressName = peer.addressName, addressName.lowercased().hasPrefix(normalizedQuery) {
-                                            return true
-                                        }
-                                        return peer.addressName == nil && normalizedQuery.isEmpty
-                                    })
-                                    
-                                    return { _ in return .mentions(filteredParticipants) }
-                            }
-                        }
-                        
-                    default:
-                        break
+                    
+                    let result = makeInlineResult(inputQuery, chatPresentationInterfaceState: chatPresentationInterfaceState, currentQuery: nil, context: context)?.1
+                    
+                    if let result = result {
+                        return result
+                    } else {
+                        return .single({ _ in return nil })
                     }
-                    return .single({_ in return nil})
                 }
         }
         

@@ -29,11 +29,11 @@ private let granularity: Int32 = 60 * 60 * 24
 
 
 func chatDateId(for timestamp:Int32) -> Int64 {
-    return Int64(Calendar.autoupdatingCurrent.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
+    return Int64(Calendar.current.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(timestamp))).timeIntervalSince1970)
 }
 func mediaDateId(for timestamp:Int32) -> Int64 {
-    let startMonth = Calendar.autoupdatingCurrent.date(from: Calendar.current.dateComponents([.year, .month], from: Date(timeIntervalSince1970: TimeInterval(timestamp))))!
-    let endMonth = Calendar.autoupdatingCurrent.date(byAdding: DateComponents(month: 1, day: -1), to: startMonth)!
+    let startMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date(timeIntervalSince1970: TimeInterval(timestamp))))!
+    let endMonth = Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: startMonth)!
     return Int64(endMonth.timeIntervalSince1970)
 }
 
@@ -79,7 +79,7 @@ class ChatDateStickItem : TableStickItem {
         } else {
             let dateFormatter = formatter
             
-            dateFormatter.calendar = Calendar.autoupdatingCurrent
+            dateFormatter.calendar = Calendar.current
             //dateFormatter.timeZone = NSTimeZone.local
             dateFormatter.dateFormat = "dd MMMM";
             //&& (timeinfoNow.tm_mon >= timeinfo.tm_mon || (timeinfoNow.tm_year - timeinfo.tm_year) >= 2)

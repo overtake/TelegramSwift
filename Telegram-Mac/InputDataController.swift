@@ -207,8 +207,6 @@ final class InputDataArguments {
     }
 }
 
-private let queue: Queue = Queue(name: "InputDataItemsQueue", qos: DispatchQoS.background)
-
 func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool, animateEverything: Bool = false, grouping: Bool = true) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
         
@@ -476,11 +474,11 @@ class InputDataController: GenericViewController<InputDataView> {
             
             if let focusIdentifier = focusIdentifier {
                 if let item = findItem(for: focusIdentifier) {
-                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
+                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), toVisible: true)
                 }
             } else if scrollIfNeeded {
                 if !scrollDown  {
-                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
+                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), toVisible: true)
                 } else {
                     tableView.scroll(to: .down(true))
                 }
@@ -505,7 +503,7 @@ class InputDataController: GenericViewController<InputDataView> {
                             var invoked: Bool = false
                             scrollFirstItem = item
                             if let item = item, !invoked {
-                                tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
+                                tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, toVisible: true)
                                 invoked = true
                             }
                         }

@@ -27,7 +27,7 @@ private final class Arguments {
 
 private struct State : Equatable {
     var tone: PeerMessageSound = .default
-    var list: NotificationSoundList? = nil
+    var list: [NotificationSoundList.NotificationSound]? = nil
 }
 
 private func _id_sound(_ sound: PeerMessageSound) -> InputDataIdentifier {
@@ -58,50 +58,50 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     let settings = NotificationSoundSettings.extract(from: arguments.context.appConfiguration)
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSoundTonesTitle.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-    
-    var hasUploaded: Bool = false
-    var canAdd: Bool = true
-    var contains: Bool? = nil
-    if let list = state.list {
-        hasUploaded = !list.sounds.isEmpty
-        canAdd = list.sounds.count < settings.maxSavedCount
-        if case .cloud = state.tone {
-            contains = list.sounds.contains(where: { .cloud(fileId: $0.file.fileId.id) == state.tone })
-        }
-        for (i, sound) in list.sounds.enumerated() {
-            var viewType: GeneralViewType = bestGeneralViewType(list.sounds, for: i)
-            if canAdd && i == list.sounds.count - 1 {
-                viewType = .innerItem
-            }
-            if list.sounds.count == 1, canAdd {
-                viewType = .firstItem
-            }
-            let id = sound.file.fileId.id
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sound(.cloud(fileId: id)), data: .init(name: localizedPeerNotificationSoundString(sound: .cloud(fileId: id), default: nil, list: list), color: theme.colors.text, type: .selectable(PeerMessageSound.cloud(fileId: id) == state.tone), viewType: viewType, action: {
-                arguments.selectSound(.cloud(fileId: id))
-            }, menuItems: {
-                return [ContextMenuItem(strings().contextRemove, handler: {
-                    arguments.removeCloudNote(sound.file)
-                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)]
-                
-            })))
-            index += 1
-
-        }
-    }
-    if canAdd {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_upload, data: .init(name: strings().notificationSoundTonesUpload, color: theme.colors.accent, icon: theme.icons.notification_sound_add, type: .none, viewType: hasUploaded ? .lastItem : .singleItem, action: arguments.upload)))
-        index += 1
-    }
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSoundTonesInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
-    
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSoundTonesTitle.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+//    index += 1
+//
+//    var hasUploaded: Bool = false
+//    var canAdd: Bool = true
+//    var contains: Bool? = nil
+//    if let list = state.list {
+//        hasUploaded = !list.isEmpty
+//        canAdd = list.count < settings.maxSavedCount
+//        if case .cloud = state.tone {
+//            contains = list.contains(where: { .cloud(fileId: $0.file.fileId.id) == state.tone })
+//        }
+//        for (i, sound) in list.enumerated() {
+//            var viewType: GeneralViewType = bestGeneralViewType(list, for: i)
+//            if canAdd && i == list.count - 1 {
+//                viewType = .innerItem
+//            }
+//            if list.count == 1, canAdd {
+//                viewType = .firstItem
+//            }
+//            let id = sound.file.fileId.id
+//            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sound(.cloud(fileId: id)), data: .init(name: localizedPeerNotificationSoundString(sound: .cloud(fileId: id), default: nil, list: list), color: theme.colors.text, type: .selectable(PeerMessageSound.cloud(fileId: id) == state.tone), viewType: viewType, action: {
+//                arguments.selectSound(.cloud(fileId: id))
+//            }, menuItems: {
+//                return [ContextMenuItem(strings().contextRemove, handler: {
+//                    arguments.removeCloudNote(sound.file)
+//                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)]
+//
+//            })))
+//            index += 1
+//
+//        }
+//    }
+//    if canAdd {
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_upload, data: .init(name: strings().notificationSoundTonesUpload, color: theme.colors.accent, icon: theme.icons.notification_sound_add, type: .none, viewType: hasUploaded ? .lastItem : .singleItem, action: arguments.upload)))
+//        index += 1
+//    }
+//
+//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSoundTonesInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+//    index += 1
+//
+//
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
     
     struct Tuple : Equatable {
         let sound: PeerMessageSound
@@ -122,11 +122,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     for (i, item) in items.enumerated() {
         
         var selected = state.tone == item.sound
-        if let contains = contains {
-            if !contains {
-                selected = item.sound == .default
-            }
-        }
+//        if let contains = contains {
+//            if !contains {
+//                selected = item.sound == .default
+//            }
+//        }
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_sound(item.sound), data: .init(name: localizedPeerNotificationSoundString(sound: item.sound, default: nil), color: theme.colors.text, type: .selectable(selected), viewType: bestGeneralViewType(items, for: i), action: {
             arguments.selectSound(item.sound)
         })))
@@ -172,7 +172,7 @@ func NotificationSoundController(context: AccountContext) -> InputDataController
     }
 
     let arguments = Arguments(context: context, selectSound: selectTone, upload: {
-        filePanel(with: ["mp3", "ogg"], allowMultiple: false, for: context.window, completion: { files in
+        filePanel(with: ["m4a"], allowMultiple: false, for: context.window, completion: { files in
             if let files = files {
                 let settings = NotificationSoundSettings.extract(from: context.appConfiguration)
                 var signals:[Signal<NotificationSoundList.NotificationSound, UploadNotificationSoundError>] = []
@@ -212,7 +212,9 @@ func NotificationSoundController(context: AccountContext) -> InputDataController
         updateState { current in
             var current = current
             current.tone = value.tone
-            current.list = list
+            current.list = list?.sounds.filter { value in
+                return true//value.file.mimeType.contains("m4a")
+            }
             return current
         }
     }))

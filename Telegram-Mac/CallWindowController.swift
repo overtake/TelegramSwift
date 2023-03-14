@@ -1430,6 +1430,7 @@ func closeCall(minimisize: Bool = false) {
                     break
                 }
             })
+            closeAllModals(window: controller.window)
             if controller.window.isFullScreen {
                 controller.window.toggleFullScreen(nil)
                 delay(0.8, closure: {

@@ -1019,11 +1019,6 @@ class NStickersView : View {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
-        if !transition.isAnimated {
-            var bp = 0
-            bp += 1
-        }
-        
         let inSearch = searchState?.state == .Focus || state?.selectedEmojiCategory != nil
         
         let initial: CGFloat = inSearch ? -46 : 0
@@ -1033,8 +1028,8 @@ class NStickersView : View {
         transition.updateFrame(view: packsView, frame: tabsContainer.focus(NSMakeSize(size.width, 36)))
 
         
-        let dest = min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46)
-        
+        let dest = max(0, min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46))
+
         let searchDest = inSearch ? 0 : dest
                 
         

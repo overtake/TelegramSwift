@@ -237,27 +237,28 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         clear.autohighlight = false
         clear.scaleOnClick = true
 
+        let theme = searchTheme ?? presentation.search
         
-        placeholder.attributedString = .initialize(string: presentation.search.placeholder(), color: searchTheme?.placeholderColor ?? presentation.search.placeholderColor, font: .normal(.text))
-        self.backgroundColor = searchTheme?.backgroundColor ?? presentation.search.backgroundColor
+        placeholder.attributedString = .initialize(string: theme.placeholder(), color: theme.placeholderColor, font: .normal(.text))
+        self.backgroundColor = theme.backgroundColor
         placeholder.sizeToFit()
         search.frame = NSMakeRect(0, 0, 20, 20)
         
         if let custom = customSearchControl {
             search.set(image: custom.icon, for: .Normal)
         } else {
-            search.set(image: searchTheme?.searchImage ?? presentation.search.searchImage, for: .Normal)
+            search.set(image: theme.searchImage, for: .Normal)
         }
         
         animateContainer.setFrameSize(NSMakeSize(placeholder.frame.width + placeholderTextInset, max(21, search.frame.height)))
         
-        clear.set(image: searchTheme?.clearImage ?? presentation.search.clearImage, for: .Normal)
+        clear.set(image: theme.clearImage, for: .Normal)
        _ =  clear.sizeToFit()
         
         placeholder.centerY(x: placeholderTextInset, addition: -1)
         search.centerY(addition: -1)
-        input.insertionPointColor = searchTheme?.textColor ?? presentation.search.textColor
-        progressIndicator.progressColor = searchTheme?.textColor ?? presentation.colors.text
+        input.insertionPointColor = theme.textColor
+        progressIndicator.progressColor = theme.textColor
         needsLayout = true
 
     }

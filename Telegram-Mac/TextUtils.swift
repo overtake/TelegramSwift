@@ -22,6 +22,11 @@ enum MessageTextMediaViewType {
 
 func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1) -> (string: NSString, justSpoiled: String) {
     var messageText: String = message.text
+    
+    if message.text.isEmpty, message.textEntities?.entities.isEmpty == false {
+        return (string: "", justSpoiled: "")
+    }
+    
     for attr in message.attributes {
         if let attr = attr as? TextEntitiesMessageAttribute {
             for entity in attr.entities {
@@ -262,6 +267,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                     
                     peerText += (folder ? ": " : "\r")
                     _ = attributedText.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
+                    _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
                 } else if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, applyUserName {
                     var peerText: String = (author.id == account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                     

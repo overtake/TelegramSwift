@@ -9430,6 +9430,97 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var installed_stickers_archive: CGImage {
+      if let image = cached.with({ $0["installed_stickers_archive"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_archive()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_archive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_custom_emoji: CGImage {
+      if let image = cached.with({ $0["installed_stickers_custom_emoji"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_custom_emoji()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_custom_emoji"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_dynamic_order: CGImage {
+      if let image = cached.with({ $0["installed_stickers_dynamic_order"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_dynamic_order()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_dynamic_order"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_loop: CGImage {
+      if let image = cached.with({ $0["installed_stickers_loop"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_loop()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_loop"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_reactions: CGImage {
+      if let image = cached.with({ $0["installed_stickers_reactions"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_reactions()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_reactions"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_suggest: CGImage {
+      if let image = cached.with({ $0["installed_stickers_suggest"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_suggest()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_suggest"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var installed_stickers_trending: CGImage {
+      if let image = cached.with({ $0["installed_stickers_trending"] }) {
+          return image
+      } else {
+          let image = _installed_stickers_trending()
+          _ = cached.modify { current in 
+              var current = current
+              current["installed_stickers_trending"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10156,6 +10247,13 @@ public final class TelegramIconsTheme {
   private let _msg_emoji_vacation: ()->CGImage
   private let _msg_emoji_what: ()->CGImage
   private let _msg_emoji_work: ()->CGImage
+  private let _installed_stickers_archive: ()->CGImage
+  private let _installed_stickers_custom_emoji: ()->CGImage
+  private let _installed_stickers_dynamic_order: ()->CGImage
+  private let _installed_stickers_loop: ()->CGImage
+  private let _installed_stickers_reactions: ()->CGImage
+  private let _installed_stickers_suggest: ()->CGImage
+  private let _installed_stickers_trending: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10882,7 +10980,14 @@ public final class TelegramIconsTheme {
       msg_emoji_tongue: @escaping()->CGImage,
       msg_emoji_vacation: @escaping()->CGImage,
       msg_emoji_what: @escaping()->CGImage,
-      msg_emoji_work: @escaping()->CGImage
+      msg_emoji_work: @escaping()->CGImage,
+      installed_stickers_archive: @escaping()->CGImage,
+      installed_stickers_custom_emoji: @escaping()->CGImage,
+      installed_stickers_dynamic_order: @escaping()->CGImage,
+      installed_stickers_loop: @escaping()->CGImage,
+      installed_stickers_reactions: @escaping()->CGImage,
+      installed_stickers_suggest: @escaping()->CGImage,
+      installed_stickers_trending: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11609,5 +11714,12 @@ public final class TelegramIconsTheme {
       self._msg_emoji_vacation = msg_emoji_vacation
       self._msg_emoji_what = msg_emoji_what
       self._msg_emoji_work = msg_emoji_work
+      self._installed_stickers_archive = installed_stickers_archive
+      self._installed_stickers_custom_emoji = installed_stickers_custom_emoji
+      self._installed_stickers_dynamic_order = installed_stickers_dynamic_order
+      self._installed_stickers_loop = installed_stickers_loop
+      self._installed_stickers_reactions = installed_stickers_reactions
+      self._installed_stickers_suggest = installed_stickers_suggest
+      self._installed_stickers_trending = installed_stickers_trending
   }
 }

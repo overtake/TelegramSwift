@@ -381,6 +381,47 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
+    public func addMembersAllowPartial(peerId: PeerId, memberIds: [PeerId]) -> Signal<[(PeerId, AddChannelMemberError)], NoError> {
+            let signals: [Signal<((ChannelParticipant?, RenderedChannelParticipant)?, PeerId, AddChannelMemberError?), NoError>] = memberIds.map({ memberId in
+                return engine.peers.addChannelMember(peerId: peerId, memberId: memberId)
+                |> map { result -> ((ChannelParticipant?, RenderedChannelParticipant)?, PeerId, AddChannelMemberError?) in
+                    return (result, memberId, nil)
+                }
+                |> `catch` { error -> Signal<((ChannelParticipant?, RenderedChannelParticipant)?, PeerId, AddChannelMemberError?), NoError> in
+                    return .single((nil, memberId, error))
+                }
+            })
+            return combineLatest(signals)
+            |> deliverOnMainQueue
+            |> beforeNext { [weak self] results in
+                if let strongSelf = self {
+                    strongSelf.impl.with { impl in
+                        for (result, _, _) in results {
+                            if let (previous, updated) = result {
+                                for (contextPeerId, context) in impl.contexts {
+                                    if peerId == contextPeerId {
+                                        context.replayUpdates([(previous, updated, nil)])
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            |> map { results -> [(PeerId, AddChannelMemberError)] in
+                var failedIds: [(PeerId, AddChannelMemberError)] = []
+                
+                for (_, memberId, error) in results {
+                    if let error = error {
+                        failedIds.append((memberId, error))
+                    }
+                }
+                
+                return failedIds
+            }
+        }
+
+    
     func addMembers(peerId: PeerId, memberIds: [PeerId]) -> Signal<[PeerId], AddChannelMemberError> {
         let signals: [Signal<(ChannelParticipant?, RenderedChannelParticipant)?, AddChannelMemberError>] = memberIds.map({ memberId in
             return engine.peers.addChannelMember(peerId: peerId, memberId: memberId)

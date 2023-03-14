@@ -69,6 +69,7 @@ final class PremiumLimitConfig {
     let about_length_limit_premium: Int
     
     let premium_purchase_blocked: Bool
+    let show_premium_gift_in_attach_menu: Bool
 
     init(appConfiguration: AppConfiguration) {
         if let data = appConfiguration.data {
@@ -109,7 +110,7 @@ final class PremiumLimitConfig {
             self.about_length_limit_premium = Int(data["about_length_limit_premium"] as? Double ?? 140)
             
             self.premium_purchase_blocked = data["premium_purchase_blocked"] as? Bool ?? true
-
+            self.show_premium_gift_in_attach_menu = data["premium_gift_attach_menu_icon"] as? Bool ?? false
         } else {
             self.channels_limit_default = 500
             self.channels_limit_premium = 1000
@@ -148,6 +149,7 @@ final class PremiumLimitConfig {
             self.about_length_limit_premium = 140
             
             self.premium_purchase_blocked = true
+            self.show_premium_gift_in_attach_menu = false
         }
     }
 }

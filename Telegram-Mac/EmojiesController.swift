@@ -537,7 +537,7 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
     for section in state.sections {
         let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji })
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack(section.info.id.id), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first)
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, color: color, context: arguments.context, info: section.info, topItem: section.items.first, isTopic: arguments.mode == .forumTopic)
         }))
         index += 1
     }
@@ -1425,8 +1425,8 @@ final class AnimatedEmojiesView : Control {
         transition.updateAlpha(view: borderView, alpha: inSearch ? 0 : 1)
 
         
-        let dest = min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46)
-        
+        let dest = max(0, min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46))
+
         let searchDest = inSearch ? 0 : dest
                 
         
@@ -1865,6 +1865,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 return .reactions
             case .status:
                 return .statuses
+            case .forumTopic:
+                return .topic
             default:
                 return .panel
             }
@@ -2088,7 +2090,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let combined = statePromise.get()
         
-        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnResourceQueue |> map { state in
+        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnPrepareQueue |> map { state in
             let sections = InputDataSignalValue(entries: entries(state, arguments: arguments))
             let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments))
             return (sections: sections, packs: packs, state: state)

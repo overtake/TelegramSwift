@@ -593,7 +593,7 @@ class ChatSelectText : NSObject {
                             layout.selectedRange.range = layout.selectedRange(startPoint:startPoint, currentPoint:endPoint)
                             layout.selectedRange.cursorAlignment = startPoint.x > endPoint.x ? .min(layout.selectedRange.range.max) : .max(layout.selectedRange.range.min)
                             selectManager.add(range: layout.selectedRange.range, textView: selectableView, text:layout.attributedString, header: view?.header, stableId: table.item(at: i).stableId)
-                            selectableView.setNeedsDisplay()
+                            selectableView.setNeedsDisplayLayer()
                             
                             
                         }

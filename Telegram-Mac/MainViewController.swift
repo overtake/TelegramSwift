@@ -381,7 +381,7 @@ class MainViewController: TelegramViewController {
                 confirm(for: context.window, information: strings().chatListPopoverConfirm, successHandler: { _ in
                     _ = context.engine.messages.markAllChatsAsReadInteractively(items: [(.root, nil), (.archive, nil)]).start()
                 })
-            }, itemImage: MenuAnimation.menu_read.value))
+            }, itemImage: MenuAnimation.menu_folder_read.value))
         }
         
         if self.tabController.current == navigation, !items.isEmpty, let event = NSApp.currentEvent {

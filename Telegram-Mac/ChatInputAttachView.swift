@@ -110,15 +110,24 @@ class ChatInputAttachView: ImageButton, Notifable {
                         }, itemImage: MenuAnimation.menu_shared_media.value))
                     }
                     
-                   
+                    
                     
                     let chatMode = chatInteraction.presentation.chatMode
 
                     let replyTo = chatInteraction.presentation.interfaceState.replyMessageId ?? chatMode.threadId
                     
                     let threadId = chatInteraction.presentation.chatLocation.threadId
-
+                    
                     let acceptMode = chatMode == .history || (chatMode.isThreadMode || chatMode.isTopicMode)
+                    
+                    
+                    if let cachedData = chatInteraction.presentation.cachedData as? CachedUserData, let peer = chatInteraction.presentation.mainPeer {
+                        if !cachedData.premiumGiftOptions.isEmpty, context.premiumLimits.show_premium_gift_in_attach_menu, !peer.isPremium {
+                            items.append(ContextMenuItem(strings().inputAttachPopoverGift, handler: {
+                                showModal(with: PremiumGiftController(context: context, peerId: peerId, options: cachedData.premiumGiftOptions), for: context.window)
+                            }, itemImage: MenuAnimation.menu_gift.value))
+                        }
+                    }
                     
                     if acceptMode, let peer = chatInteraction.presentation.peer {
                         for attach in chatInteraction.presentation.attachItems {
