@@ -251,7 +251,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         assertOnMainThread()
         self.autoresizesSubviews = false
         self.wantsLayer = true
-        allowedTouchTypes = [.direct]
+        acceptsTouchEvents = true
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
@@ -269,7 +269,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     override required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         assertOnMainThread()
-        allowedTouchTypes = [.direct]
+        acceptsTouchEvents = true
         self.wantsLayer = true
         self.autoresizesSubviews = false
         layer?.disableActions()

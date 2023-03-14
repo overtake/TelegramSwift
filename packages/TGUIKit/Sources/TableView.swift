@@ -2793,6 +2793,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.endTableUpdates()
         
         self.tableView.tile()
+        self.reflectScrolledClipView(clipView)
 
         
 //        if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {

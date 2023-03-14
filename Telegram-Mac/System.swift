@@ -15,9 +15,6 @@ import Postbox
 import CoreMediaIO
 import Localization
 
-private let _dQueue = Queue.init(name: "chatListQueue", qos: .userInteractive)
-private let _sQueue = Queue.init(name: "ChatQueue", qos: .userInteractive)
-
 public let resourcesQueue = Queue(name: "ResourcesQueue", qos: .userInteractive)
 public let prepareQueue = Queue(name: "PrepareQueue", qos: .userInteractive)
 public let messagesViewQueue = Queue(name: "messagesViewQueue", qos: .userInteractive)

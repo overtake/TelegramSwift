@@ -207,8 +207,6 @@ final class InputDataArguments {
     }
 }
 
-private let queue: Queue = Queue(name: "InputDataItemsQueue", qos: DispatchQoS.background)
-
 func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool, animateEverything: Bool = false, grouping: Bool = true) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
         

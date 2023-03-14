@@ -348,6 +348,9 @@ class ChatGroupedItem: ChatRowItem {
     }
     
     override var bubbleFrame: NSRect {
+        if let frame = _bubbleFrame {
+            return frame
+        }
         var frame = super.bubbleFrame
         
         if isBubbleFullFilled {
@@ -356,7 +359,7 @@ class ChatGroupedItem: ChatRowItem {
                 frame.size.width += self.mediaBubbleCornerInset * 2
             }
         }
-        
+        _bubbleFrame = frame
         return frame
     }
     
@@ -390,7 +393,7 @@ class ChatGroupedItem: ChatRowItem {
     
     override var _defaultHeight: CGFloat {
         if hasBubble && isBubbleFullFilled && captionLayouts.isEmpty {
-            return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2
+            return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2 - 1
         } else if hasBubble && !isBubbleFullFilled {
             return super._defaultHeight
         }
