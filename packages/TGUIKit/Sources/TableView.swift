@@ -2563,6 +2563,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let documentOffset = self.documentOffset
         
+        
+        
         let visibleItems = self.visibleItems()
         let visibleRange = self.visibleRows()
         
@@ -2746,9 +2748,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         case .bottom, .top, .center:
-            self.scroll(to: transition.state)
+            self.scroll(to: transition.state, previousDocumentOffset: documentOffset)
         case .up, .down, .upOffset:
-            self.scroll(to: transition.state)
+            self.scroll(to: transition.state, previousDocumentOffset: documentOffset)
         case let .saveVisible(side):
             saveVisible(side)
         }
@@ -3081,9 +3083,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     
-    public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), timingFunction: CAMediaTimingFunctionName = .spring, toVisible:Bool = false, ignoreLayerAnimation: Bool = false, completion: @escaping(Bool)->Void = { _ in }) {
+    public func scroll(to state:TableScrollState, inset:NSEdgeInsets = NSEdgeInsets(), timingFunction: CAMediaTimingFunctionName = .spring, toVisible:Bool = false, ignoreLayerAnimation: Bool = false, previousDocumentOffset: CGPoint? = nil, completion: @escaping(Bool)->Void = { _ in }) {
         
         var rowRect:NSRect = bounds
+        let documentOffset = previousDocumentOffset
         
         let findItem:(AnyHashable)->TableRowItem? = { [weak self] stableId in
             var item: TableRowItem? = self?.item(stableId: stableId)
@@ -3248,13 +3251,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 scrollListener.handler(self.scrollPosition().current)
             }
         } else {
-            if let item = item, focus.focus {
-                if let view = viewNecessary(at: item.index) {
+            if let item = item  {
+                if focus.focus, let view = viewNecessary(at: item.index) {
                     view.focusAnimation(innerId)
                     focus.action?(view.interactableView)
                 }
+                completion(true)
+            } else {
+                if let documentOffset = documentOffset, documentOffset != clipView.documentOffset {
+                    clipView.scroll(to: documentOffset, animated: false)
+                    clipView.scroll(to: rowRect.origin, animated: animate)
+                }
             }
-            completion(true)
         }
 
     }

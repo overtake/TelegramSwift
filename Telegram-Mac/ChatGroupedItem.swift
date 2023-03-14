@@ -456,7 +456,7 @@ class ChatGroupedItem: ChatRowItem {
         var _message: Message? = nil
         
         for i in 0 ..< layout.count {
-            if NSPointInRect(location, layout.frame(at: i)) {
+            if NSPointInRect(location, layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 _message = layout.messages[i]
                 break
             }
@@ -524,7 +524,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         let location = contentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         
         for i in 0 ..< item.layout.count {
-            if NSPointInRect(location, item.layout.frame(at: i)) {
+            if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 let contentNode = contents[i]
                 if contentNode is VideoStickerContentView {
                     if let file = contentNode.media as? TelegramMediaFile {
@@ -558,7 +558,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         
         if contentView.mouseInside() {
             for i in 0 ..< item.layout.count {
-                if NSPointInRect(location, item.layout.frame(at: i)) {
+                if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                     let result = contents[i].previewMediaIfPossible()
                     return result
                 }
@@ -783,7 +783,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         var applied: Bool = contentView.mouseInside()
         if contentView.mouseInside() {
             for i in 0 ..< item.layout.count {
-                if NSPointInRect(location, item.layout.frame(at: i)) {
+                if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                     let id = item.layout.messages[i].id
                     item.chatInteraction.withToggledSelectedMessage({ current in
                         if (select && !current.isSelectedMessageId(id)) || (!select && current.isSelectedMessageId(id)) {
@@ -835,7 +835,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         var selected: Bool = contentView.mouseInside()
         if contentView.mouseInside() {
             for i in 0 ..< item.layout.count {
-                if NSPointInRect(location, item.layout.frame(at: i)) {
+                if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                     item.chatInteraction.withToggledSelectedMessage({
                         $0.withToggledSelectedMessage(item.layout.messages[i].id)
                     })
@@ -932,7 +932,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         let location = contentView.convert(location, from: nil)
         
         for i in 0 ..< item.layout.count {
-            if NSPointInRect(location, item.layout.frame(at: i)) {
+            if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 return item.chatInteraction.presentation.isSelectedMessageId(item.layout.messages[i].id)
             }
         }
@@ -1101,7 +1101,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         var selected: Bool = false
         
         for i in 0 ..< item.layout.count {
-            if NSPointInRect(point, item.layout.frame(at: i)) {
+            if NSPointInRect(point, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 
                 let data = highlightFrameAndColor(item, at: i)
                 selectionBackground.removeFromSuperview()
