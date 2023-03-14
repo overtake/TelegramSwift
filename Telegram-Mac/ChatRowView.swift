@@ -878,7 +878,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }, itemImage: MenuAnimation.menu_read.value))
 
                 menu.addItem(ContextMenuItem(strings().chatContextPeerMention, handler: {
-                    var attr: NSMutableAttributedString = NSMutableAttributedString()
+                    let attr: NSMutableAttributedString = NSMutableAttributedString()
                     
                     if let addressName = peer.addressName {
                         attr.append(string: "@\(addressName) ", font: .normal(theme.fontSize))

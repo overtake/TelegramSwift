@@ -22,6 +22,11 @@ enum MessageTextMediaViewType {
 
 func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1) -> (string: NSString, justSpoiled: String) {
     var messageText: String = message.text
+    
+    if message.text.isEmpty, message.textEntities?.entities.isEmpty == false {
+        return (string: "", justSpoiled: "")
+    }
+    
     for attr in message.attributes {
         if let attr = attr as? TextEntitiesMessageAttribute {
             for entity in attr.entities {
