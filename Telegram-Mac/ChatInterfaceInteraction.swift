@@ -582,7 +582,9 @@ final class ChatInteraction : InterfaceObserver  {
                 })
                 showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: .simple(url: url, bot: botPeer.peer, buttonText: "", isInline: false), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
             case .makeWebview:
-                fatalError("not intended")
+                update(animated: animated, {
+                    $0.withoutInitialAction()
+                })
             case let .joinVoiceChat(joinHash):
                 update(animated: animated, {
                     $0.updatedGroupCall { $0?.withUpdatedJoinHash(joinHash) }.withoutInitialAction()
