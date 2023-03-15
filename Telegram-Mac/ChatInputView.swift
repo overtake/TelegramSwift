@@ -406,13 +406,17 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.messageActionsPanelView?.removeFromSuperview()
             self.blockedActionView?.removeFromSuperview()
             
-            self.blockedActionView = TitleButton(frame: bounds)
+            self.blockedActionView = TitleButton(frame: bounds.insetBy(dx: 5, dy: 5))
             self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.underSelectedColor)
             self.blockedActionView?.set(text: text, for: .Normal)
             self.blockedActionView?.scaleOnClick = true
             self.blockedActionView?.set(background: theme.colors.accent, for: .Normal)
             self.blockedActionView?.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
 
+            let shimmer = ShimmerEffectView()
+            shimmer.isStatic = true
+            self.blockedActionView?.addSubview(shimmer)
+            
             self.blockedActionView?.layer?.cornerRadius = 10
             if animated {
                 self.blockedActionView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -660,6 +664,15 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 transition.updateFrame(view: view, frame: bounds.insetBy(dx: 5, dy: 5))
             } else {
                 transition.updateFrame(view: view, frame: bounds)
+            }
+            for subview in view.subviews {
+                transition.updateFrame(view: subview, frame: view.bounds)
+                
+                if let shimmer = subview as? ShimmerEffectView {
+                    shimmer.updateAbsoluteRect(view.bounds, within: view.frame.size)
+                    shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: view.bounds, cornerRadius: view.frame.height / 2)], horizontal: true, size: view.frame.size)
+
+                }
             }
         }
         if let view = chatDiscussionView {
