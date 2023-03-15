@@ -410,10 +410,9 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
 -(void)removeAll:(id)sender {
     NSRange selectedRange = self.selectedRange;
     NSMutableAttributedString *attr = [self.attributedString mutableCopy];
-    [attr removeAttribute:TGCustomLinkAttributeName range:selectedRange];
-    [attr removeAttribute:TGSpoilerAttributeName range:selectedRange];
-    [attr removeAttribute:TGAnimatedEmojiAttributeName range:selectedRange];
+    [attr setAttributes:nil range:selectedRange];
     [attr addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:self.font.pointSize] range: selectedRange];
+
     
     [self.textStorage setAttributedString:attr];
     [self setSelectedRange:NSMakeRange(selectedRange.location + selectedRange.length, 0)];
@@ -1709,10 +1708,8 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         return;
     }
     NSMutableAttributedString *attr = [self.textView.attributedString mutableCopy];
-    [attr removeAttribute:NSFontAttributeName range:self.selectedRange];
-    [attr removeAttribute:TGCustomLinkAttributeName range:self.selectedRange];
-    [attr removeAttribute:TGSpoilerAttributeName range:self.selectedRange];
-    [attr removeAttribute:TGAnimatedEmojiAttributeName range:self.selectedRange];
+    [attr setAttributes:nil range:self.selectedRange];
+    [attr addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:self.textFont.pointSize] range: self.selectedRange];
     [self.textView.textStorage setAttributedString:attr];
 }
     
