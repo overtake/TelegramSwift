@@ -333,6 +333,7 @@ enum ChatState : Equatable {
     case selecting
     case block(String)
     case action(String, (ChatInteraction)->Void, AdditionAction?)
+    case botStart(String, (ChatInteraction)->Void)
     case channelWithDiscussion(discussionGroupId: PeerId?, leftAction: String, rightAction: String)
     case editing
     case recording(ChatRecordingState)
@@ -379,6 +380,12 @@ func ==(lhs:ChatState, rhs:ChatState) -> Bool {
         }
     case let .action(lhsAction,_, _):
         if case let .action(rhsAction, _, _) = rhs {
+            return lhsAction == rhsAction
+        } else {
+            return false
+        }
+    case let .botStart(lhsAction,_):
+        if case let .botStart(rhsAction, _) = rhs {
             return lhsAction == rhsAction
         } else {
             return false
@@ -559,9 +566,9 @@ struct ChatPresentationInterfaceState: Equatable {
     var state:ChatState {
         if self.selectionState == nil {
             if let initialAction = initialAction, case .start = initialAction  {
-                return .action(strings().chatInputStartBot, { chatInteraction in
+                return .botStart(strings().chatInputStartBot, { chatInteraction in
                     chatInteraction.invokeInitialAction()
-                }, nil)
+                })
             }
             
             if let recordingState = recordingState {
@@ -728,9 +735,9 @@ struct ChatPresentationInterfaceState: Equatable {
             
             if let peer = peer as? TelegramUser {
                 if peer.botInfo != nil, let historyCount = historyCount, historyCount == 0 {
-                    return .action(strings().chatInputStartBot, { chatInteraction in
+                    return .botStart(strings().chatInputStartBot, { chatInteraction in
                         chatInteraction.startBot()
-                    }, nil)
+                    })
                 }
             }
            

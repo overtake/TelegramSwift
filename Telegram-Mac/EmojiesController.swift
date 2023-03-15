@@ -2191,10 +2191,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         } else if mode == .reactions {
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
-        } else if mode == .forumTopic {
-            
         }
-
         
  
         let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: orderedItemListCollectionIds, namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)

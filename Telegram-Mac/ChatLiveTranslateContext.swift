@@ -218,7 +218,7 @@ final class ChatLiveTranslateContext {
         
         let translationState = chatTranslationState(context: context, peerId: peerId)
         
-        let should: Signal<(ChatTranslationState?, Appearance), NoError> = combineLatest(queue: prepareQueue, cachedData, translationState, baseAppSettings(accountManager: context.sharedContext.accountManager), appearanceSignal, getPeerView(peerId: context.peerId, postbox: context.account.postbox)) |> map { cachedData, translationState, settings, appearance, peer in
+        let should: Signal<(ChatTranslationState?, Appearance, Bool), NoError> = combineLatest(queue: prepareQueue, cachedData, translationState, baseAppSettings(accountManager: context.sharedContext.accountManager), appearanceSignal, getPeerView(peerId: context.peerId, postbox: context.account.postbox)) |> map { cachedData, translationState, settings, appearance, peer in
             
             var isHidden: Bool
             if let cachedData = cachedData as? CachedChannelData {
@@ -248,14 +248,14 @@ final class ChatLiveTranslateContext {
             }
             
             if !isHidden && translationState?.fromLang != translationState?.toLang  {
-                return (translationState, appearance)
+                return (translationState, appearance, peer?.isPremium == true)
             } else {
-                return (nil, appearance)
+                return (nil, appearance, peer?.isPremium == true)
             }
             
         } |> deliverOnPrepareQueue
         
-        shouldDisposable.set(should.start(next: { [weak self] state, appearance in
+        shouldDisposable.set(should.start(next: { [weak self] state, appearance, isPremium in
             self?.updateState { current in
                 var current = current
                 let to = state?.toLang ?? appearance.language.baseLanguageCode
@@ -268,7 +268,7 @@ final class ChatLiveTranslateContext {
                     current.canTranslate = false
                 }
                 if let isEnabled = state?.isEnabled {
-                    current.translate = isEnabled
+                    current.translate = isEnabled && isPremium
                 } else {
                     current.translate = false
                 }

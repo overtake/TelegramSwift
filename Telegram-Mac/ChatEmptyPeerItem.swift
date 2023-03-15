@@ -109,8 +109,7 @@ class ChatEmptyPeerItem: TableRowItem {
             case .replies:
                 _ = attr.append(string: strings().chatEmptyReplies, color: theme.colors.text, font: .medium(.text))
             case .topic:
-                //TODOLANG
-                _ = attr.append(string: "Send first message to start this topic.", color: theme.colors.text, font: .medium(.text))
+                _ = attr.append(string: strings().chatEmptyTopic, color: theme.colors.text, font: .medium(.text))
             }
         case .pinned:
             lineSpacing = nil
@@ -142,7 +141,7 @@ class ChatEmptyPeerItem: TableRowItem {
                     }
                     guard let `self` = self else {return}
                     let attr = NSMutableAttributedString()
-                    _ = attr.append(string: about, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                    _ = attr.append(string: about, color: theme.colors.text, font: .medium(.text))
                     attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                     self.textViewLayout = TextViewLayout(attr, alignment: .left)
                     self.textViewLayout.interactions = globalLinkExecutor
