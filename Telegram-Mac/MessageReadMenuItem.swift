@@ -144,6 +144,9 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
     
     override var textMaxWidth: CGFloat {
         let value = super.textMaxWidth
+        if self.state.isEmpty {
+            return value
+        }
         return value - 60
     }
     
