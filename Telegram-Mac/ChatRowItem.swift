@@ -2897,7 +2897,7 @@ class ChatRowItem: TableRowItem {
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
      
-            let reactions:Signal<[RecentReactionItem], NoError> = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: orderedItemListCollectionIds, namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map { view in
+            let reactions:Signal<[RecentReactionItem], NoError> = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: orderedItemListCollectionIds, namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 100) |> map { view in
                 
                 var recentReactionsView: OrderedItemListView?
                 var topReactionsView: OrderedItemListView?
