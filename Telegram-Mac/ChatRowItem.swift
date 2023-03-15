@@ -359,9 +359,6 @@ class ChatRowItem: TableRowItem {
         if self.replyMarkupModel != nil {
             id += "_replyMarkupModel"
         }
-        if let mediaId = message?.media.first?.id {
-            id += "_media_\(mediaId.id)"
-        }
 
         _id = id
         return id
@@ -850,6 +847,7 @@ class ChatRowItem: TableRowItem {
             return false
         }
         
+        
         if message.isCopyProtected() {
             return false
         }
@@ -870,6 +868,9 @@ class ChatRowItem: TableRowItem {
         }
         
         for peer in peers {
+            if peer.addressName == "reviews_bot" {
+                return true
+            }
             if let peer = peer as? TelegramChannel {
                 switch peer.info {
                 case .broadcast:

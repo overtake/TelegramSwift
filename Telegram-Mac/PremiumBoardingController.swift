@@ -808,6 +808,7 @@ final class PremiumBoardingController : ModalViewController {
         let activationDisposable = MetaDisposable()
         let context = self.context
         let source = self.source
+        let openFeatures = self.openFeatures
         
         PremiumLogEvents.promo_screen_show(source).send(context: context)
         
@@ -978,8 +979,24 @@ final class PremiumBoardingController : ModalViewController {
                     
                     return current
                 }
+                var videos = promoConfiguration.videos.map {
+                    (key: $0.key, value: $0.value)
+                }
+                if openFeatures {
+                    videos = videos.sorted(by: { lhs, rhs in
+                        if source.value == lhs.key {
+                            return true
+                        }
+                        return false
+                    })
+                }
+                var delayValue: CGFloat = 0
                 for (_, video) in promoConfiguration.videos {
-                    actionsDisposable.add(preloadVideoResource(postbox: context.account.postbox, userLocation: .other, userContentType: .init(file: video), resourceReference: .standalone(resource: video.resource), duration: 3.0).start())
+                    let signal = preloadVideoResource(postbox: context.account.postbox, userLocation: .other, userContentType: .init(file: video), resourceReference: .standalone(resource: video.resource), duration: 3.0) |> delay(delayValue, queue: .concurrentBackgroundQueue())
+                    actionsDisposable.add(signal.start())
+                    if openFeatures {
+                        delayValue += 1
+                    }
                 }
         }))
 

@@ -2758,12 +2758,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var nonAnimatedItems: [(Int, TableRowItem)] = []
         var animatedItems: [(Int, TableRowItem)] = []
 
+        var animated: Bool = transition.animated
+        if case let .none(interface) = transition.state, interface != nil {
+            animated = true
+        }
         for (index,item) in transition.updated {
-            let animated:Bool
-            let gap = abs(self.list[index].height - item.height)
-            let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
-            let value = (gap < height) || self.tableView.isFlipped
-            animated = (visibleRange.indexIn(index) || !transition.animateVisibleOnly) && value
+            let animated: Bool
+            animated = (visibleRange.indexIn(index) || !transition.animateVisibleOnly)
             if animated {
                 animatedItems.append((index, item))
             } else {
@@ -2773,7 +2774,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         
-        let visible = self.visibleItems()
+//        let visible = self.visibleItems()
         
         self.beginTableUpdates()
         for (index, item) in nonAnimatedItems {
@@ -2782,15 +2783,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.endTableUpdates()
         
 
-        if !tableView.isFlipped, case .none = transition.state {
-            saveScrollState(visible)
-        }
+//        if !tableView.isFlipped, case .none = transition.state {
+//            saveScrollState(visible)
+//        }
         
-        self.beginTableUpdates()
+       // self.beginTableUpdates()
         for (index, item) in animatedItems {
             replace(item: item, at: index, animated: true)
         }
-        self.endTableUpdates()
+       // self.endTableUpdates()
         
         self.tableView.tile()
         self.reflectScrolledClipView(clipView)

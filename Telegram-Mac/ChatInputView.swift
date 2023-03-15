@@ -402,6 +402,32 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
             self.accessory.change(opacity: 0.0, animated: animated)
+        case let .botStart(text, action):
+            self.messageActionsPanelView?.removeFromSuperview()
+            self.blockedActionView?.removeFromSuperview()
+            
+            self.blockedActionView = TitleButton(frame: bounds)
+            self.blockedActionView?.style = ControlStyle(font: .normal(.title),foregroundColor: theme.colors.underSelectedColor)
+            self.blockedActionView?.set(text: text, for: .Normal)
+            self.blockedActionView?.scaleOnClick = true
+            self.blockedActionView?.set(background: theme.colors.accent, for: .Normal)
+            self.blockedActionView?.set(background: theme.colors.accent.withAlphaComponent(0.8), for: .Highlight)
+
+            self.blockedActionView?.layer?.cornerRadius = 10
+            if animated {
+                self.blockedActionView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            self.blockedActionView?.set(handler: {_ in
+                action(chatInteraction)
+            }, for:.Click)
+
+
+
+            self.addSubview(self.blockedActionView!, positioned: .below, relativeTo: _ts)
+
+            self.contentView.isHidden = true
+            self.contentView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
         case let .channelWithDiscussion(discussionGroupId, leftAction, rightAction):
             self.messageActionsPanelView?.removeFromSuperview()
             self.chatDiscussionView = ChannelDiscussionInputView(frame: bounds)
@@ -630,7 +656,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             transition.updateFrame(view: view, frame: bounds)
         }
         if let view = blockedActionView {
-            transition.updateFrame(view: view, frame: bounds)
+            if view.scaleOnClick {
+                transition.updateFrame(view: view, frame: bounds.insetBy(dx: 20, dy: 10))
+            } else {
+                transition.updateFrame(view: view, frame: bounds)
+            }
         }
         if let view = chatDiscussionView {
             transition.updateFrame(view: view, frame: bounds)
