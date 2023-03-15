@@ -880,6 +880,8 @@ class PeerListContainerView : Control {
         }, theme.search.textColor, theme.search.placeholderColor)
         
         super.updateLocalizationAndTheme(theme: theme)
+        
+        updateLayout(self.frame.size, transition: .immediate)
     }
     
     required init?(coder: NSCoder) {
