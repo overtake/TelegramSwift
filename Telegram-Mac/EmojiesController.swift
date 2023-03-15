@@ -2161,20 +2161,9 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
 
         }
         
-        /*
-         public static let CloudRecentStatusEmoji: Int32 = 17
-         public static let CloudFeaturedStatusEmoji: Int32 = 18
-
-         */
-        
-        var orderedItemListCollectionIds: [Int32] = []
         var iconStatusEmoji: Signal<[TelegramMediaFile], NoError> = .single([])
 
-
         if mode == .status {
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudFeaturedStatusEmoji)
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentStatusEmoji)
-            
             
             iconStatusEmoji = context.engine.stickers.loadedStickerPack(reference: .iconStatusEmoji, forceActualized: false)
             |> map { result -> [TelegramMediaFile] in
@@ -2186,15 +2175,18 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 }
             }
             |> take(1)
-
-            
-        } else if mode == .reactions {
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
-            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
         }
         
  
-        let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: orderedItemListCollectionIds, namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
+        let emojies: Signal<ItemCollectionsView, NoError>
+        switch mode {
+        case .reactions:
+            emojies = context.diceCache.emojies_reactions
+        case .status:
+            emojies = context.diceCache.emojies_status
+        default:
+            emojies = context.diceCache.emojies
+        }
         
         
         let forumTopic: Signal<[StickerPackItem], NoError>

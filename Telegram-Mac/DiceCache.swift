@@ -112,10 +112,30 @@ class DiceCache {
     }
     private let _animatedEmojies:Promise<[String : StickerPackItem]> = .init()
     
+    private let _emojies_reactions = Promise<ItemCollectionsView>()
+    private let _emojies_status = Promise<ItemCollectionsView>()
+    private let _emojies = Promise<ItemCollectionsView>()
+
+    var emojies_reactions: Signal<ItemCollectionsView, NoError> {
+        return _emojies_reactions.get()
+    }
+    var emojies_status: Signal<ItemCollectionsView, NoError> {
+        return _emojies_status.get()
+    }
+    var emojies: Signal<ItemCollectionsView, NoError> {
+        return _emojies.get()
+    }
+    
     init(postbox: Postbox, engine: TelegramEngine) {
         self.postbox = postbox
         self.engine = engine
         
+        
+        _emojies_status.set(postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000))
+        
+        _emojies_reactions.set(postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000))
+
+        _emojies.set(postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000))
         
         self._animatedEmojies.set(engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
                                   |> map { result -> [String: StickerPackItem] in

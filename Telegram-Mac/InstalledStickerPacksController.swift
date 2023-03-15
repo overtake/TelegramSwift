@@ -529,7 +529,7 @@ class InstalledStickerPacksController: TableViewController {
         
         
       
-        let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
+        let emojies = context.diceCache.emojies
 
         
         let signal = combineLatest(queue: prepareQueue, statePromise.get(), stickerPacks, featured, archivedPromise.get(), appearanceSignal, preferencesView, context.reactions.stateValue, emojies)
