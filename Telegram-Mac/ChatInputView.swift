@@ -657,7 +657,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         }
         if let view = blockedActionView {
             if view.scaleOnClick {
-                transition.updateFrame(view: view, frame: bounds.insetBy(dx: 20, dy: 10))
+                transition.updateFrame(view: view, frame: bounds.insetBy(dx: 10, dy: 5))
             } else {
                 transition.updateFrame(view: view, frame: bounds)
             }
