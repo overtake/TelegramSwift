@@ -2111,17 +2111,18 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         })
         
         let transition: Signal<(sections: TableUpdateTransition, packs: TableUpdateTransition, state: State), NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, signal) |> mapToQueue { appearance, state in
-            let sectionEntries = state.sections.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-            let packEntries = state.packs.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+            let sectionEntries = state.sections.entries.map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+            let packEntries = state.packs.entries.map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
 
             let onMain = onMainQueue.swap(false)
             
             
+            let initialSize = initialSize.modify { $0 }
             
-            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize.modify{$0}, arguments: inputArguments, onMainQueue: false, animateEverything: true, grouping: false)
+            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: false, animateEverything: true, grouping: true)
             
             
-            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize.modify{$0}, arguments: inputArguments, onMainQueue: false, animateEverything: true, grouping: false)
+            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: false, animateEverything: true, grouping: true)
 
             return combineLatest(sectionsTransition, packsTransition) |> map { values in
                 return (sections: values.0, packs: values.1, state: state.state)

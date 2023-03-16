@@ -207,18 +207,18 @@ final class InputDataArguments {
     }
 }
 
-func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool, animateEverything: Bool = false, grouping: Bool = true) -> Signal<TableUpdateTransition, NoError> {
+func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool, animateEverything: Bool = false, grouping: Bool = true, makeFirstFast: Bool = false) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
         
         func makeItem(_ entry: InputDataEntry) -> TableRowItem {
             return entry.item(arguments: arguments, initialSize: initialSize)
         }
         
-        let applyQueue = onMainQueue ? .mainQueue() : prepareQueue
+        let applyQueue = prepareQueue
         
         let cancelled: Atomic<Bool> = Atomic(value: false)
         
-        if Thread.isMainThread && left.isEmpty {
+        if Thread.isMainThread || makeFirstFast, left.isEmpty {
             var initialIndex:Int = 0
             var height:CGFloat = 0
             var firstInsertion:[(Int, TableRowItem)] = []
@@ -237,22 +237,20 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
             initialIndex = firstInsertion.count
             subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: .none(nil), searchState: searchState))
             
-            if !cancelled.with({ $0 }) {
-                
-                var insertions:[(Int, TableRowItem)] = []
-                let updates:[(Int, TableRowItem)] = []
-                
-                for i in initialIndex ..< entries.count {
-                    let item:TableRowItem
-                    item = makeItem(entries[i].entry)
-                    insertions.append((i, item))
-                    if cancelled.with({ $0 }) {
-                        break
-                    }
-                }
+            applyQueue.justDispatch {
                 if !cancelled.with({ $0 }) {
-                    applyQueue.async {
-                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
+                    var insertions:[(Int, TableRowItem)] = []
+                    
+                    for i in initialIndex ..< entries.count {
+                        let item:TableRowItem
+                        item = makeItem(entries[i].entry)
+                        insertions.append((i, item))
+                        if cancelled.with({ $0 }) {
+                            break
+                        }
+                    }
+                    if !cancelled.with({ $0 }) {
+                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: [], state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
                         subscriber.putCompletion()
                     }
                 }
@@ -266,10 +264,8 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
                 }
             })
             if !cancelled.with({ $0 }) {
-                applyQueue.async {
-                    subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
-                    subscriber.putCompletion()
-                }
+                subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
+                subscriber.putCompletion()
             }
         }
         

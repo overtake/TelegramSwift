@@ -747,7 +747,7 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
             let string = stringForRelativeTimestamp(relativeTimestamp: readTimestamp, relativeTo: context.timestamp)
             let attr: NSAttributedString = .initialize(string: string, color: presentation.textColor, font: .normal(.text))
             let size = attr.sizeFittingWidth(.greatestFiniteMagnitude)
-            return max(size.width + leftInset * 2 + innerInset * 2 + 10, super.textSize)
+            return max(size.width + leftInset * 2 + innerInset * 2, super.textSize)
         } else {
             return super.textSize
         }
