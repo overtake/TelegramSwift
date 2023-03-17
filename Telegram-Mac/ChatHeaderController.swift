@@ -2778,7 +2778,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
                     let toString = _NSLocalizedString("Translate.Language.\(language.language)")
                     textView.set(text: strings().chatTranslateTo(toString), for: .Normal)
                 }
-                textView.sizeToFit(NSMakeSize(0, 4))
+                textView.sizeToFit(NSMakeSize(0, 6))
             }
         }
         updateLocalizationAndTheme(theme: theme)
