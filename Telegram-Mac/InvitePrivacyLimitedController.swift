@@ -116,7 +116,6 @@ private final class Arguments {
 private struct State : Equatable {
     let peerId: PeerId
     let peers: [PeerEquatable]
-    var selected:Set<PeerId> = Set()
     var peer: PeerEquatable?
     var cachedData: CachedDataEquatable?
     
@@ -166,7 +165,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var items: [Tuple] = []
     
     for (i, peer) in state.peers.enumerated() {
-        items.append(.init(peer: peer, selected: state.selected.contains(peer.peer.id), viewType: bestGeneralViewType(state.peers, for: i), selectable: state.canInvite))
+        items.append(.init(peer: peer, selected: arguments.select.presentation.selected.contains(peer.peer.id), viewType: bestGeneralViewType(state.peers, for: i), selectable: state.canInvite))
     }
     
     for item in items {
@@ -237,9 +236,7 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
     
    
     controller.validateData = { _ in
-        
-        let data = combineLatest(queue: .mainQueue(), getPeerView(peerId: peerId, postbox: context.account.postbox), getCachedDataView(peerId: peerId, postbox: context.account.postbox)) |> take(1)
-        
+                
         return .fail(.doSomething(next: { f in
             
             if stateValue.with({ $0.canInvite }) {

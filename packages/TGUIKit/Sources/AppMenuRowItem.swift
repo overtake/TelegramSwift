@@ -342,11 +342,17 @@ open class AppMenuRowView: AppMenuBasicItemView {
         
         
         containerView.set(handler: { [weak self] _ in
+            guard let item = self?.item as? AppMenuRowItem else {
+                return
+            }
             if !CheckWindow() {
                 return
             }
-            self?.drawable?.updateState(.Hover)
-            self?.updateState(.Hover)
+            if item.item.isEnabled {
+                self?.drawable?.updateState(.Hover)
+                self?.updateState(.Hover)
+            }
+           
             
             self?.hoverDisposable.set(delaySignal(0.5).start(completed: {
                 guard let item = self?.item as? AppMenuRowItem else {
@@ -357,11 +363,16 @@ open class AppMenuRowView: AppMenuBasicItemView {
             
         }, for: .Hover)
         containerView.set(handler: { [weak self] _ in
+            guard let item = self?.item as? AppMenuRowItem else {
+                return
+            }
             if !CheckWindow() {
                 return
             }
-            self?.drawable?.updateState(.Highlight)
-            self?.updateState(.Highlight)
+            if item.item.isEnabled {
+                self?.drawable?.updateState(.Highlight)
+                self?.updateState(.Highlight)
+            }
             self?.hoverDisposable.set(nil)
         }, for: .Highlight)
         containerView.set(handler: { [weak self] _ in
@@ -564,6 +575,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
                 self.imageView = current
             }
             current.layer?.contents = image
+            current.layer?.opacity = item.item.isEnabled ? 1 : 0.4
         } else if let view = self.imageView {
             self.imageView = nil
             performSubviewRemoval(view, animated: animated)
@@ -585,6 +597,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
                 self.more = current
             }
             current.image = item.item.state == .on ? item.presentation.selected : item.presentation.more
+            current.layer?.opacity = item.item.isEnabled ? 1 : 0.4
         } else if let view = self.more {
             self.more = nil
             performSubviewRemoval(view, animated: animated)
@@ -603,6 +616,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
                 self.keyEquivalent = current
             }
             current.update(keyEquivalent)
+            current.alphaValue = item.item.isEnabled ? 1 : 0.8
         } else if let view = self.keyEquivalent {
             self.keyEquivalent = nil
             performSubviewRemoval(view, animated: animated)

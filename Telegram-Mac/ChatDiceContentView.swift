@@ -13,16 +13,16 @@ import InAppSettings
 import TGUIKit
 import SwiftSignalKit
 
-let diceSide1: String = "1️⃣"
-let diceSide2: String = "2️⃣"
-let diceSide3: String = "3️⃣"
-let diceSide4: String = "4️⃣"
-let diceSide5: String = "5️⃣"
-let diceSide6: String = "6️⃣"
-let diceSide7: String = "7️⃣"
-let diceSide8: String = "8️⃣"
-let diceSide9: String = "9️⃣"
-let diceIdle: String = "#️⃣"
+let diceSide1: String = "1⃣"
+let diceSide2: String = "2⃣"
+let diceSide3: String = "3⃣"
+let diceSide4: String = "4⃣"
+let diceSide5: String = "5⃣"
+let diceSide6: String = "6⃣"
+let diceSide7: String = "7⃣"
+let diceSide8: String = "8⃣"
+let diceSide9: String = "9⃣"
+let diceIdle: String = "#⃣"
 
 
 
