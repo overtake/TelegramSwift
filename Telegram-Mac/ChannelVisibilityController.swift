@@ -278,7 +278,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             var peers = importers?.importers.map { $0.peer } ?? []
             peers = Array(peers.prefix(3))
             
-            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: link, lastPeers: peers, viewType: viewType, mode: isNew ? .short : .normal, menuItems: {
+            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: link, lastPeers: peers, viewType: viewType, mode: isNew ? .short : .normal(hasUsage: true), menuItems: {
                 
                 var items:[ContextMenuItem] = []
                 if let link = link {
