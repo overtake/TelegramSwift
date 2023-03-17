@@ -1945,6 +1945,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     public func isEqual(to layout:TextViewLayout) -> Bool {
         return self.textLayout == layout
     }
+    public override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        self.drawLayer.contentsScale = backingScaleFactor
+        setNeedsDisplayLayer()
+    }
 
     //
     

@@ -323,7 +323,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     var defaultContentHeight:CGFloat {
-        return chatState == .normal || chatState == .editing ? textView.frame.height : CGFloat(textView.min_height)
+        return  chatState == .normal || chatState == .editing ? textView.frame.height : CGFloat(textView.min_height)
     }
     
     func needUpdateChatState(with state:ChatState, _ animated:Bool) -> Void {
