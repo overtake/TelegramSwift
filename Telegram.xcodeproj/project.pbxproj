@@ -604,6 +604,7 @@
 		27EE444C297FD91B0077AA0F /* DateUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444B297FD91B0077AA0F /* DateUtils */; };
 		27EE444E297FD9950077AA0F /* CalendarUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444D297FD9950077AA0F /* CalendarUtils */; };
 		27EE44502981AD000077AA0F /* HelloView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EE444F2981AD000077AA0F /* HelloView.swift */; };
+		27EF749529C3161E009FA57B /* JoinCloudFolderController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EF749429C3161E009FA57B /* JoinCloudFolderController.swift */; };
 		27EFF4BB27BAF19600006834 /* Auth_CodeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BA27BAF19600006834 /* Auth_CodeEntry.swift */; };
 		27EFF4BD27BBDF4600006834 /* Auth_PasswordEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BC27BBDF4600006834 /* Auth_PasswordEntry.swift */; };
 		27EFF4BF27BBF2D600006834 /* Auth_NextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BE27BBF2D600006834 /* Auth_NextView.swift */; };
@@ -1990,6 +1991,7 @@
 		27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatReactionsView.swift; sourceTree = "<group>"; };
 		27ED5A692750CD4000BA55A7 /* FoundationUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = FoundationUtils; path = packages/FoundationUtils; sourceTree = "<group>"; };
 		27EE444F2981AD000077AA0F /* HelloView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloView.swift; sourceTree = "<group>"; };
+		27EF749429C3161E009FA57B /* JoinCloudFolderController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinCloudFolderController.swift; sourceTree = "<group>"; };
 		27EFF4BA27BAF19600006834 /* Auth_CodeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_CodeEntry.swift; sourceTree = "<group>"; };
 		27EFF4BC27BBDF4600006834 /* Auth_PasswordEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_PasswordEntry.swift; sourceTree = "<group>"; };
 		27EFF4BE27BBF2D600006834 /* Auth_NextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_NextView.swift; sourceTree = "<group>"; };
@@ -3946,6 +3948,7 @@
 				A76C8A9F2422132400FDB071 /* VerticalTabsView.swift */,
 				D0D087E1243DF4F100E05317 /* ChatlistFilterVisibilityItem.swift */,
 				D0D81AED243E2D6F00CB9D20 /* ChatListFilterFolderIconController.swift */,
+				27EF749429C3161E009FA57B /* JoinCloudFolderController.swift */,
 			);
 			name = filters;
 			sourceTree = "<group>";
@@ -6704,6 +6707,7 @@
 				C2167E4F1DC220D800F98E03 /* PeerMediaWebpageRowContent.swift in Sources */,
 				C2B1A10E1D9FD02400ACB1DD /* ChatInterfaceState.swift in Sources */,
 				27DCF4BD267C9D680019EC49 /* AudioCommandCenter.swift in Sources */,
+				27EF749529C3161E009FA57B /* JoinCloudFolderController.swift in Sources */,
 				C26546CC1EA0AC3C00E3969A /* ChatVideoMessageItem.swift in Sources */,
 				D048EDDE24FFEC5600977606 /* ChannelCommentsControls.swift in Sources */,
 				9FC4DAA821DE0626003E2A62 /* ChannelPermissionsController.swift in Sources */,

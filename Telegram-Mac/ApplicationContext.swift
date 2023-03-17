@@ -516,7 +516,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            showModal(with: PremiumBoardingController(context: context, source: .translations, openFeatures: true), for: context.window)
+            showModal(with: JoinCloudFolderController(context: context), for: context.window)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

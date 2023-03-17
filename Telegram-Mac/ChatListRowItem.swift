@@ -1654,6 +1654,7 @@ class ChatListRowItem: TableRowItem {
                            
                         }, state: data.includePeers.peers.contains(peerId) ? .on : nil, itemImage: FolderIcon(item).emoticon.drawable.value)
                         submenu.append(menuItem)
+                        menuItem.isEnabled = !data.includePeers.peers.contains(peerId) || data.includePeers.peers.count > 1
                     }
                 }
             }

@@ -298,6 +298,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.scrollCompletion = completion
 
         if animated {
+            
             self.point = point
             NSAnimationContext.runAnimationGroup({ ctx in
                 ctx.duration = 0.35

@@ -464,7 +464,7 @@ class ChatGroupedItem: ChatRowItem {
                 break
             }
         }
-        if layoutType == .files {
+        if layoutType == .files, _message == nil {
             let withText = layout.messages.filter { !$0.text.isEmpty }
             if withText.count == 1 {
                 _message = withText[0]
@@ -495,18 +495,13 @@ class ChatGroupedItem: ChatRowItem {
 class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     
     private(set) var contents: [ChatMediaContentView] = []
-    private var selectionBackground: CornerView = CornerView()
+    private var selectionBackground: CornerView?
     
     
     private var forceClearContentBackground: Bool = false
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        selectionBackground.isDynamicColorUpdateLocked = true
-        selectionBackground.didChangeSuperview = { [weak self] in
-            self?.forceClearContentBackground = self?.selectionBackground.superview != nil
-            self?.updateColors()
-        }
     }
     
     required init?(coder: NSCoder) {
@@ -1053,7 +1048,14 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     
                     let data = highlightFrameAndColor(item, at: i)
                     
-                    selectionBackground.removeFromSuperview()
+                    let selectionBackground = CornerView()
+                    selectionBackground.isDynamicColorUpdateLocked = true
+                    selectionBackground.didChangeSuperview = { [weak selectionBackground, weak self] in
+                        self?.forceClearContentBackground = selectionBackground?.superview != nil
+                        self?.updateColors()
+                    }
+                                        
+                    
                     selectionBackground.frame = data.frame
                     selectionBackground.backgroundColor = data.color
                     
@@ -1067,25 +1069,23 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                             positionFlags.remove(.top)
                         }
                     }
-                    selectionBackground.layer?.opacity = 0
 
                     selectionBackground.positionFlags = positionFlags
                     data.superview.addSubview(selectionBackground)
-                    
+                                        
                     let animation: CABasicAnimation = makeSpringAnimation("opacity")
                     
-                    animation.fromValue = selectionBackground.layer?.presentation()?.opacity ?? 0
-                    animation.toValue = 1.0
-                    animation.autoreverses = true
-                    animation.isRemovedOnCompletion = true
-                    animation.fillMode = .forwards
-                    animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
-                        self?.selectionBackground.removeFromSuperview()
+                    animation.fromValue = 0
+                    animation.toValue = 1
+                    animation.duration = 0.5
+                    animation.isRemovedOnCompletion = false
+                    animation.delegate = CALayerAnimationDelegate(completion: { [weak selectionBackground] completed in
+                        if let selectionBackground = selectionBackground {
+                            performSubviewRemoval(selectionBackground, animated: true, duration: 0.35, timingFunction: .spring)
+                        }
                     })
-                    animation.isAdditive = false
                     
                     selectionBackground.layer?.add(animation, forKey: "opacity")
-                    
                     break
                 }
             }
@@ -1103,12 +1103,21 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         
         var selected: Bool = false
         
+        if let selectionBackground = selectionBackground {
+            performSubviewRemoval(selectionBackground, animated: true)
+            self.selectionBackground = nil
+        }
+        
         for i in 0 ..< item.layout.count {
             if NSPointInRect(point, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 
                 let data = highlightFrameAndColor(item, at: i)
-                selectionBackground.removeFromSuperview()
-                selectionBackground.layer?.opacity = 1.0
+                let selectionBackground = CornerView()
+                selectionBackground.isDynamicColorUpdateLocked = true
+                selectionBackground.didChangeSuperview = { [weak self, weak selectionBackground] in
+                    self?.forceClearContentBackground = selectionBackground?.superview != nil
+                    self?.updateColors()
+                }
                 selectionBackground.frame = data.frame
                 selectionBackground.backgroundColor = data.color
                 var positionFlags: LayoutPositionFlags = data.flags
@@ -1124,6 +1133,10 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 
                 selectionBackground.positionFlags = positionFlags
                 data.superview.addSubview(selectionBackground)
+                
+                self.selectionBackground = selectionBackground
+                selectionBackground.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                
                 selected = true
                 break
             }
@@ -1136,7 +1149,11 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     
     override func onCloseContextMenu() {
         super.onCloseContextMenu()
-        selectionBackground.removeFromSuperview()
+        
+        if let selectionBackground = selectionBackground {
+            performSubviewRemoval(selectionBackground, animated: true)
+            self.selectionBackground = nil
+        }
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {

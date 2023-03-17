@@ -31,6 +31,11 @@ public func isValidEmail(_ email: String) -> Bool {
     guard let regex = try? NSRegularExpression(pattern: emailRegex) else {
         return false
     }
+    if let url = URL(string: email) {
+        if url.host != nil || url.scheme != nil {
+            return false
+        }
+    }
     
     // Check if the email string matches the pattern
     let range = NSRange(location: 0, length: email.utf16.count)
@@ -1630,12 +1635,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
 
         if let layout = textLayout, drawLayer == layer {
             
-            
             ctx.setAllowsFontSubpixelPositioning(true)
             ctx.setShouldSubpixelPositionFonts(true)
-            
-            ctx.setAllowsFontSubpixelQuantization(true)
-            ctx.setShouldSubpixelQuantizeFonts(true)
 
             
             if clearExceptRevealed {

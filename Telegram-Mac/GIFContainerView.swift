@@ -101,7 +101,7 @@ class GIFContainerView: Control {
     var accept: Bool {
         let wAccept = window != nil && (window!.isKeyWindow || self.ignoreWindowKey)  && !NSIsEmptyRect(visibleRect)
         var accept:Bool = wAccept
-        if let context = self.context, context.isLite(.gif) {
+        if let context = self.context, context.isLite(.gif) && tableView != nil {
             accept = accept && mouseInside()
         }
         return accept

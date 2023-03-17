@@ -258,7 +258,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override var backdorColor: NSColor {
-        guard let item = item as? ChatRowItem else {return super.backdorColor}
+        guard let item = item as? ChatRowItem else { return super.backdorColor }
         if let forceBackgroundColor = item.forceBackgroundColor {
             return forceBackgroundColor
         }
