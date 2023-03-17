@@ -40,8 +40,8 @@ private var menuIconActive: CGImage {
 
 class ExportedInvitationRowItem: GeneralRowItem {
 
-    enum Mode {
-        case normal
+    enum Mode : Equatable {
+        case normal(hasUsage: Bool)
         case short
     }
     
@@ -50,13 +50,13 @@ class ExportedInvitationRowItem: GeneralRowItem {
     fileprivate let linkTextLayout: TextViewLayout
     private let _menuItems: ()->Signal<[ContextMenuItem], NoError>
     fileprivate let shareLink:(String)->Void
-    fileprivate let usageTextLayout: TextViewLayout
+    fileprivate let usageTextLayout: TextViewLayout?
     fileprivate let lastPeers: [RenderedPeer]
     fileprivate let mode: Mode
     fileprivate let open:(_ExportedInvitation)->Void
     fileprivate let copyLink:(String)->Void
     fileprivate let publicAddress: String?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: _ExportedInvitation?, publicAddress: String? = nil, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(_ExportedInvitation)->Void = { _ in }, copyLink: @escaping(String)->Void = { _ in }) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: _ExportedInvitation?, publicAddress: String? = nil, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal(hasUsage: true), menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(_ExportedInvitation)->Void = { _ in }, copyLink: @escaping(String)->Void = { _ in }) {
         self.context = context
         self.exportedLink = exportedLink
         self._menuItems = menuItems
@@ -64,7 +64,7 @@ class ExportedInvitationRowItem: GeneralRowItem {
         self.publicAddress = publicAddress
         self.shareLink = share
         self.open = open
-        self.mode = enableBetaFeatures ? mode : .short
+        self.mode = mode
         self.copyLink = copyLink
         let text: String
         let color: NSColor
@@ -98,8 +98,13 @@ class ExportedInvitationRowItem: GeneralRowItem {
         
         linkTextLayout = TextViewLayout(.initialize(string: text, color: color, font: .normal(.text)), truncationType: .start, alignment: .center)
         
-
-        usageTextLayout = TextViewLayout(.initialize(string: usageText, color: usageColor, font: .normal(.text)))
+        if case .normal(hasUsage: true) = mode {
+            usageTextLayout = TextViewLayout(.initialize(string: usageText, color: usageColor, font: .normal(.text)))
+        } else if mode == .short {
+            usageTextLayout = TextViewLayout(.initialize(string: usageText, color: usageColor, font: .normal(.text)))
+        } else {
+            usageTextLayout = nil
+        }
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
     }
@@ -114,7 +119,9 @@ class ExportedInvitationRowItem: GeneralRowItem {
             } else if exportedLink == nil && publicAddress == nil {
                 height += 40
             }
-            height += 30 + viewType.innerInset.bottom
+            if let usageTextLayout = usageTextLayout {
+                height += 30 + viewType.innerInset.bottom
+            }
             if exportedLink == nil {
                 height += viewType.innerInset.bottom
             }
@@ -143,7 +150,7 @@ class ExportedInvitationRowItem: GeneralRowItem {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
         linkTextLayout.measure(width: blockWidth - viewType.innerInset.left * 2 + viewType.innerInset.right * 2 - 50)
-        usageTextLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
+        usageTextLayout?.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
         return result
     }
     

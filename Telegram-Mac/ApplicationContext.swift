@@ -522,7 +522,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
             
-            showModal(with: PremiumLimitController(context: context, type: .pin), for: context.window)
+            showModal(with: ShareCloudFolderController(context: context), for: context.window)
             return .invoked
         }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         #endif
