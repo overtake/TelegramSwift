@@ -297,7 +297,7 @@ func JoinCloudFolderController(context: AccountContext) -> InputDataModalControl
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: "Join Chats", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: "Add Folder", accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     

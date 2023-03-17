@@ -477,23 +477,23 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                 }
             }
             
-            if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
-                var files:[TelegramMediaFile] = []
-                for item in view.orderedItemListsViews[2].items {
-                    if let entry = item.contents.get(RecentMediaItem.self) {
-                        let file = entry.media
-                        if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
-                            if !file.isPremiumSticker || !context.premiumIsBlocked {
-                                ids[id] = id
-                                files.append(file)
-                            }
-                        }
-                    }
-                }
-                if !files.isEmpty {
-                    entries.append(.pack(index: .premium(2), files: files, packInfo: .premium, collectionId: .premium))
-                }
-            }
+//            if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
+//                var files:[TelegramMediaFile] = []
+//                for item in view.orderedItemListsViews[2].items {
+//                    if let entry = item.contents.get(RecentMediaItem.self) {
+//                        let file = entry.media
+//                        if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
+//                            if !file.isPremiumSticker || !context.premiumIsBlocked {
+//                                ids[id] = id
+//                                files.append(file)
+//                            }
+//                        }
+//                    }
+//                }
+//                if !files.isEmpty {
+//                    entries.append(.pack(index: .premium(2), files: files, packInfo: .premium, collectionId: .premium))
+//                }
+//            }
             
             if let specificPack = specificPack, let info = specificPack._0.packInfo {
                 var files:[TelegramMediaFile] = []
@@ -612,11 +612,11 @@ private func packEntries(view: ItemCollectionsView?, context: AccountContext, sp
         if !view.orderedItemListsViews[0].items.isEmpty {
             entries.append(.recent)
         }
-        if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
-            if context.isPremium || !context.premiumIsBlocked {
-                entries.append(.premium)
-            }
-        }
+//        if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
+//            if context.isPremium || !context.premiumIsBlocked {
+//                entries.append(.premium)
+//            }
+//        }
         if let specificPack = specificPack, let info = specificPack._0.packInfo?.0 {
             entries.append(.specificPack(data: SpecificPackData(info: info, peer: specificPack._1)))
         }
@@ -1402,7 +1402,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let settings = stickerSettings(postbox: context.account.postbox)
                 switch values.1 {
                 case .initial:
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
                     
                     return combineLatest(packsView, featuredView, settings, statePromise.get()) |> mapToSignal { view, featured, settings, state in
@@ -1413,7 +1413,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                             }
                     }
                 case let .scroll(aroundIndex):
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
 
                     
@@ -1432,7 +1432,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     }
                 case let .navigate(index):
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
                     return combineLatest(packsView, featuredView, statePromise.get())
                         |> mapToSignal { view, featured, state in
                             return specificPackData |> map { specificPack in

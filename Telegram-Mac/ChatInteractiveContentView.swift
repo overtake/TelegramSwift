@@ -605,7 +605,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if clearInstantly, parent?.stableId == self.parent?.stableId {
             clearInstantly = false
         }
-
+        
         super.update(with: media, size: size, context: context, parent:parent, table: table, parameters:parameters, positionFlags: positionFlags)
 
         
@@ -741,7 +741,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
 
             if let updateImageSignal = updateImageSignal {
-                self.image.ignoreFullyLoad = true
                 self.image.setSignal( updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
