@@ -1948,6 +1948,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     public override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
         self.drawLayer.contentsScale = backingScaleFactor
+        self.embeddedContainer.contentsScale = backingScaleFactor
         setNeedsDisplayLayer()
     }
 
