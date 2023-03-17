@@ -216,7 +216,7 @@ open class TitleButton: ImageButton {
         layout.measure(width: .greatestFiniteMagnitude)
         var size:NSSize = layout.layoutSize
         size.width = ceil(size.width) + (size.width == 0 ? 0 : 10)
-        size.height = ceil(size.height)
+        size.height = ceil(size.height + 1)
         return size
     }
     
