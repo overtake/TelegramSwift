@@ -1509,7 +1509,16 @@ public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
 //    
 //}
 
-public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
+private final class TextDrawLayer : SimpleLayer {
+    
+    var drawer:((CGContext)->Void)? = nil
+    
+    override func draw(in ctx: CGContext) {
+        drawer?(ctx)
+    }
+}
+
+public class TextView: Control, NSViewToolTipOwner {
     
     
     public func view(_ view: NSView, stringForToolTip tag: NSView.ToolTipTag, point: NSPoint, userData data: UnsafeMutableRawPointer?) -> String {
@@ -1548,7 +1557,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private var visualEffect: VisualEffect? = nil
 
     private var textView: View? = nil
-    private let drawLayer: SimpleLayer = SimpleLayer()
+    private let drawLayer: TextDrawLayer = TextDrawLayer()
     private var blockMask: SimpleLayer?
     
     var hasBackground: Bool {
@@ -1603,7 +1612,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         self.layer?.addSublayer(drawLayer)
         self.layer?.addSublayer(embeddedContainer)
         self.layer?.masksToBounds = false
-        self.drawLayer.delegate = self
+        
+        self.drawLayer.drawer = { [weak self] ctx in
+            guard let `self` = self else {
+                return
+            }
+            self.draw(self.drawLayer, in: ctx)
+        }
     }
 
     public required init(frame frameRect: NSRect) {
@@ -1627,7 +1642,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         //backgroundColor = .random
-        super.draw(layer, in: ctx)
+       // super.draw(layer, in: ctx)
 
 //        if hasBackground, layer != textView?.layer {
 //            return
