@@ -1640,6 +1640,15 @@ public class TextView: Control, NSViewToolTipOwner {
         super.draw(dirtyRect)
     }
     
+    var drawingLayer: CALayer {
+        if #available(macOS 10.13, *) {
+            return drawLayer
+        } else {
+            return self.layer!
+        }
+
+    }
+    
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         //backgroundColor = .random
        // super.draw(layer, in: ctx)
@@ -1648,7 +1657,7 @@ public class TextView: Control, NSViewToolTipOwner {
 //            return
 //        }
 
-        if let layout = textLayout, drawLayer == layer {
+        if let layout = textLayout, drawingLayer == layer {
             
             ctx.setAllowsFontSubpixelPositioning(true)
             ctx.setShouldSubpixelPositionFonts(true)
@@ -2053,12 +2062,12 @@ public class TextView: Control, NSViewToolTipOwner {
     
     public override func setNeedsDisplayLayer() {
        // super.setNeedsDisplayLayer()
-        self.drawLayer.setNeedsDisplay()
+        self.drawingLayer.setNeedsDisplay()
        // self.drawLayer.displayIfNeeded()
     }
     
     public override func setNeedsDisplay() {
-        self.drawLayer.setNeedsDisplay()
+        self.drawingLayer.setNeedsDisplay()
     }
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
