@@ -1655,7 +1655,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         if #available(macOS 10.13, *) {
             return drawLayer
         } else {
-            return textView?.layer
+            if self.hasBackground {
+                return textView?.layer
+            } else {
+                return self.layer
+            }
         }
 
     }
@@ -2072,12 +2076,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     }
     
     public override func setNeedsDisplayLayer() {
-       // super.setNeedsDisplayLayer()
+        self.layer?.setNeedsDisplay()
         self.drawingLayer?.setNeedsDisplay()
        // self.drawLayer.displayIfNeeded()
     }
     
     public override func setNeedsDisplay() {
+        self.layer?.setNeedsDisplay()
         self.drawingLayer?.setNeedsDisplay()
     }
     

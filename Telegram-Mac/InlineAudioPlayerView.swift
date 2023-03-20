@@ -181,29 +181,28 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }, for: .SingleClick)
         
         
-//        playingSpeed.contextMenu = {
-//            
-//            let menu = ContextMenu()
-//            
-//            menu.addItem(SliderContextMenuItem(volume: 0.5, { value, save in
-//                
-//            }))
-//            
-//            menu.addItem(ContextSeparatorItem())
-//            
-//            menu.addItem(ContextMenuItem("0.5x"))
-//            menu.addItem(ContextMenuItem("Normal"))
-//            menu.addItem(ContextMenuItem("1.5x"))
-//            menu.addItem(ContextMenuItem("2x"))
-//
-//            
-//            return menu
-//        }
+        playingSpeed.contextMenu = {
+            
+            let menu = ContextMenu()
+            //min = 0
+            //max = 2
+            menu.addItem(SliderContextMenuItem(volume: 1.0, minValue: 0.2, maxValue: 2.5, drawable: MenuAnimation.menu_speed, drawable_muted: MenuAnimation.menu_speed, { value, save in
+                
+            }))
+            
+            menu.addItem(ContextSeparatorItem())
+            
+            menu.addItem(ContextMenuItem("0.5x", itemImage: MenuAnimation.menu_check_selected.value))
+            menu.addItem(ContextMenuItem("Normal"))
+
+            
+            return menu
+        }
         
-        playingSpeed.set(handler: { [weak self] control in
-            FastSettings.setPlayingRate(FastSettings.playingRate != 1 ? 1.0 : 1.75)
-            self?.controller?.baseRate = FastSettings.playingRate
-        }, for: .Click)
+//        playingSpeed.set(handler: { [weak self] control in
+//            FastSettings.setPlayingRate(FastSettings.playingRate != 1 ? 1.0 : 1.75)
+//            self?.controller?.baseRate = FastSettings.playingRate
+//        }, for: .Click)
         
         
         volumeControl.set(handler: { [weak self] control in
