@@ -539,7 +539,7 @@ struct ChatPresentationInterfaceState: Equatable {
             return false
         }
         
-        return reply.rows.count > 0
+        return reply.rows.count > 0 && !reply.flags.contains(.persistent)
     }
     
     var canPinMessageInPeer: Bool {
