@@ -18,9 +18,17 @@ import SwiftSignalKit
 final class SliderContextMenuItem : ContextMenuItem {
     private let didUpdateValue:((CGFloat, Bool)->Void)?
     private let volume: CGFloat
-    init(volume: CGFloat, _ didUpdateValue:((CGFloat, Bool)->Void)? = nil) {
+    private let drawable: LocalAnimatedSticker
+    private let drawable_muted: LocalAnimatedSticker
+    private let minValue: CGFloat
+    private let maxValue: CGFloat
+    init(volume: CGFloat, minValue: CGFloat = 0, maxValue: CGFloat = 2.0, drawable: LocalAnimatedSticker = .menu_speaker, drawable_muted: LocalAnimatedSticker = .menu_speaker_muted, _ didUpdateValue:((CGFloat, Bool)->Void)? = nil) {
         self.volume = volume
+        self.minValue = minValue
+        self.maxValue = maxValue
         self.didUpdateValue = didUpdateValue
+        self.drawable = drawable
+        self.drawable_muted = drawable_muted
         super.init("")
     }
     
@@ -29,7 +37,7 @@ final class SliderContextMenuItem : ContextMenuItem {
     }
         
     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
-        return SliderContextMenuRowItem(.zero, presentation: presentation, interaction: interaction, menuItem: self, volume: volume, didUpdateValue: self.didUpdateValue)
+        return SliderContextMenuRowItem(.zero, presentation: presentation, interaction: interaction, menuItem: self, minValue: minValue, maxValue: maxValue, drawable: drawable, drawable_muted: drawable_muted, volume: volume, didUpdateValue: self.didUpdateValue)
     }
 }
 
@@ -37,9 +45,17 @@ final class SliderContextMenuItem : ContextMenuItem {
 private final class SliderContextMenuRowItem : AppMenuBasicItem {
     fileprivate let didUpdateValue:((CGFloat, Bool)->Void)?
     fileprivate let volume: CGFloat
-    init(_ initialSize: NSSize, presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction, menuItem: ContextMenuItem, volume: CGFloat, didUpdateValue:((CGFloat, Bool)->Void)?) {
+    fileprivate let drawable: LocalAnimatedSticker
+    fileprivate let drawable_muted: LocalAnimatedSticker
+    fileprivate let minValue: CGFloat
+    fileprivate let maxValue: CGFloat
+    init(_ initialSize: NSSize, presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction, menuItem: ContextMenuItem, minValue: CGFloat, maxValue: CGFloat, drawable: LocalAnimatedSticker, drawable_muted: LocalAnimatedSticker, volume: CGFloat, didUpdateValue:((CGFloat, Bool)->Void)?) {
         self.didUpdateValue = didUpdateValue
         self.volume = volume
+        self.minValue = minValue
+        self.maxValue = maxValue
+        self.drawable = drawable
+        self.drawable_muted = drawable_muted
         super.init(initialSize, presentation: presentation, menuItem: menuItem, interaction: interaction)
     }
     
@@ -104,6 +120,8 @@ private final class SliderContextMenuRowView : AppMenuBasicItemView {
         guard let item = item as? SliderContextMenuRowItem else {
             return
         }
+        volumeControl.minValue = item.minValue
+        volumeControl.maxValue = item.maxValue
         
         volumeControl.value = item.volume
         volumeControl.lineColor = item.presentation.borderColor.darker(amount: 0.4)
@@ -114,12 +132,12 @@ private final class SliderContextMenuRowView : AppMenuBasicItemView {
         }
         
         if self.drawable == nil, let menuItem = item.menuItem {
-            self.drawable = AppMenuAnimatedImage(LocalAnimatedSticker.menu_speaker, item.presentation.textColor, menuItem)
+            self.drawable = AppMenuAnimatedImage(item.drawable, item.presentation.textColor, menuItem)
             self.drawable?.setFrameSize(NSMakeSize(18, 18))
             self.addSubview(self.drawable!)
         }
         if self.drawable_muted == nil, let menuItem = item.menuItem {
-            self.drawable_muted = AppMenuAnimatedImage(LocalAnimatedSticker.menu_speaker_muted, item.presentation.textColor, menuItem)
+            self.drawable_muted = AppMenuAnimatedImage(item.drawable_muted, item.presentation.textColor, menuItem)
             self.drawable_muted?.setFrameSize(NSMakeSize(18, 18))
             self.addSubview(self.drawable_muted!)
         }
