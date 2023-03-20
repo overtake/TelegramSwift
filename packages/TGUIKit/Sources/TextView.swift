@@ -1518,7 +1518,7 @@ private final class TextDrawLayer : SimpleLayer {
     }
 }
 
-public class TextView: Control, NSViewToolTipOwner {
+public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     
     public func view(_ view: NSView, stringForToolTip tag: NSView.ToolTipTag, point: NSPoint, userData data: UnsafeMutableRawPointer?) -> String {
@@ -1622,6 +1622,8 @@ public class TextView: Control, NSViewToolTipOwner {
             let textView = View()
             self.addSubview(textView)
             self.textView = textView
+            
+            textView.displayDelegate = self
         }
         
         

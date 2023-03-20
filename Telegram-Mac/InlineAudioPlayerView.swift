@@ -180,6 +180,26 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             self?.gotoMessage()
         }, for: .SingleClick)
         
+        
+//        playingSpeed.contextMenu = {
+//            
+//            let menu = ContextMenu()
+//            
+//            menu.addItem(SliderContextMenuItem(volume: 0.5, { value, save in
+//                
+//            }))
+//            
+//            menu.addItem(ContextSeparatorItem())
+//            
+//            menu.addItem(ContextMenuItem("0.5x"))
+//            menu.addItem(ContextMenuItem("Normal"))
+//            menu.addItem(ContextMenuItem("1.5x"))
+//            menu.addItem(ContextMenuItem("2x"))
+//
+//            
+//            return menu
+//        }
+        
         playingSpeed.set(handler: { [weak self] control in
             FastSettings.setPlayingRate(FastSettings.playingRate != 1 ? 1.0 : 1.75)
             self?.controller?.baseRate = FastSettings.playingRate

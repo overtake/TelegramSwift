@@ -15,7 +15,7 @@ import SwiftSignalKit
 
 
 
-final class GroupCallVolumeMenuItem : ContextMenuItem {
+final class SliderContextMenuItem : ContextMenuItem {
     private let didUpdateValue:((CGFloat, Bool)->Void)?
     private let volume: CGFloat
     init(volume: CGFloat, _ didUpdateValue:((CGFloat, Bool)->Void)? = nil) {
@@ -29,12 +29,12 @@ final class GroupCallVolumeMenuItem : ContextMenuItem {
     }
         
     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
-        return GroupCallVolumeMenuRowItem(.zero, presentation: presentation, interaction: interaction, menuItem: self, volume: volume, didUpdateValue: self.didUpdateValue)
+        return SliderContextMenuRowItem(.zero, presentation: presentation, interaction: interaction, menuItem: self, volume: volume, didUpdateValue: self.didUpdateValue)
     }
 }
 
 
-private final class GroupCallVolumeMenuRowItem : AppMenuBasicItem {
+private final class SliderContextMenuRowItem : AppMenuBasicItem {
     fileprivate let didUpdateValue:((CGFloat, Bool)->Void)?
     fileprivate let volume: CGFloat
     init(_ initialSize: NSSize, presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction, menuItem: ContextMenuItem, volume: CGFloat, didUpdateValue:((CGFloat, Bool)->Void)?) {
@@ -44,7 +44,7 @@ private final class GroupCallVolumeMenuRowItem : AppMenuBasicItem {
     }
     
     override func viewClass() -> AnyClass {
-        return GroupCallVolumeMenuRowView.self
+        return SliderContextMenuRowView.self
     }
     
     override var effectiveSize: NSSize {
@@ -57,7 +57,7 @@ private final class GroupCallVolumeMenuRowItem : AppMenuBasicItem {
 }
 
 
-private final class GroupCallVolumeMenuRowView : AppMenuBasicItemView {
+private final class SliderContextMenuRowView : AppMenuBasicItemView {
     let volumeControl = VolumeMenuItemView(frame: NSMakeRect(0, 0, 200, 26))
     private var drawable_muted: AppMenuAnimatedImage?
     private var drawable: AppMenuAnimatedImage?
@@ -101,25 +101,25 @@ private final class GroupCallVolumeMenuRowView : AppMenuBasicItemView {
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
-        guard let item = item as? GroupCallVolumeMenuRowItem else {
+        guard let item = item as? SliderContextMenuRowItem else {
             return
         }
         
         volumeControl.value = item.volume
-        volumeControl.lineColor = item.presentation.borderColor
-
+        volumeControl.lineColor = item.presentation.borderColor.darker(amount: 0.4)
+        volumeControl.blobColor = item.presentation.textColor
         volumeControl.didUpdateValue = { [weak item, weak self] value, sync in
             item?.didUpdateValue?(value, sync)
             self?.updateValue(value)
         }
         
         if self.drawable == nil, let menuItem = item.menuItem {
-            self.drawable = AppMenuAnimatedImage(LocalAnimatedSticker.menu_speaker, NSColor(0xffffff), menuItem)
+            self.drawable = AppMenuAnimatedImage(LocalAnimatedSticker.menu_speaker, item.presentation.textColor, menuItem)
             self.drawable?.setFrameSize(NSMakeSize(18, 18))
             self.addSubview(self.drawable!)
         }
         if self.drawable_muted == nil, let menuItem = item.menuItem {
-            self.drawable_muted = AppMenuAnimatedImage(LocalAnimatedSticker.menu_speaker_muted, NSColor(0xffffff), menuItem)
+            self.drawable_muted = AppMenuAnimatedImage(LocalAnimatedSticker.menu_speaker_muted, item.presentation.textColor, menuItem)
             self.drawable_muted?.setFrameSize(NSMakeSize(18, 18))
             self.addSubview(self.drawable_muted!)
         }

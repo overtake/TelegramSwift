@@ -91,7 +91,7 @@ public final class VolumeMenuItemView : Control {
     }
     
     public var lineColor: NSColor = presentation.colors.grayUI.lighter().withAlphaComponent(0.8)
-    
+    public var blobColor: NSColor = .white
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -132,7 +132,7 @@ public final class VolumeMenuItemView : Control {
         let blobPath = CGMutablePath()
         blobPath.addRoundedRect(in: blobRect, cornerWidth: blobRect.width / 2, cornerHeight: blobRect.width / 2)
         
-        ctx.setFillColor(.white)
+        ctx.setFillColor(blobColor.cgColor)
         
         ctx.addPath(blobPath)
         ctx.fillPath()
