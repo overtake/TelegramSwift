@@ -1609,16 +1609,25 @@ public class TextView: Control, NSViewToolTipOwner {
     private func initialize() {
         layer?.disableActions()
         self.style = ControlStyle(backgroundColor: .clear)
-        self.layer?.addSublayer(drawLayer)
+        
+        if #available(macOS 10.13, *) {
+            self.layer?.addSublayer(drawLayer)
+            self.drawLayer.drawer = { [weak self] ctx in
+                guard let `self` = self else {
+                    return
+                }
+                self.draw(self.drawLayer, in: ctx)
+            }
+        } else {
+            let textView = View()
+            self.addSubview(textView)
+            self.textView = textView
+        }
+        
+        
         self.layer?.addSublayer(embeddedContainer)
         self.layer?.masksToBounds = false
-        
-        self.drawLayer.drawer = { [weak self] ctx in
-            guard let `self` = self else {
-                return
-            }
-            self.draw(self.drawLayer, in: ctx)
-        }
+
     }
 
     public required init(frame frameRect: NSRect) {
@@ -1640,11 +1649,11 @@ public class TextView: Control, NSViewToolTipOwner {
         super.draw(dirtyRect)
     }
     
-    var drawingLayer: CALayer {
+    var drawingLayer: CALayer? {
         if #available(macOS 10.13, *) {
             return drawLayer
         } else {
-            return self.layer!
+            return textView?.layer
         }
 
     }
@@ -2062,12 +2071,12 @@ public class TextView: Control, NSViewToolTipOwner {
     
     public override func setNeedsDisplayLayer() {
        // super.setNeedsDisplayLayer()
-        self.drawingLayer.setNeedsDisplay()
+        self.drawingLayer?.setNeedsDisplay()
        // self.drawLayer.displayIfNeeded()
     }
     
     public override func setNeedsDisplay() {
-        self.drawingLayer.setNeedsDisplay()
+        self.drawingLayer?.setNeedsDisplay()
     }
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
@@ -2297,7 +2306,11 @@ public class TextView: Control, NSViewToolTipOwner {
             if self.visualEffect == nil {
                 self.visualEffect = VisualEffect(frame: self.bounds)
                 addSubview(self.visualEffect!, positioned: .below, relativeTo: nil)
-                self.visualEffect?.layer?.addSublayer(drawLayer)
+                if let textView = self.textView {
+                    self.visualEffect?.addSubview(textView)
+                } else {
+                    self.visualEffect?.layer?.addSublayer(drawLayer)
+                }
                 self.visualEffect?.layer?.addSublayer(embeddedContainer)
             }
             self.visualEffect?.bgColor = blurBackground
@@ -2322,7 +2335,11 @@ public class TextView: Control, NSViewToolTipOwner {
                 self.layer?.mask = nil
             }
         }  else {
-            self.layer?.insertSublayer(drawLayer, at: 0)
+            if let textView = textView {
+                self.addSubview(textView, positioned: .below, relativeTo: nil)
+            } else {
+                self.layer?.insertSublayer(drawLayer, at: 0)
+            }
             self.layer?.insertSublayer(embeddedContainer, at: 1)
             self.visualEffect?.removeFromSuperview()
             self.visualEffect = nil
