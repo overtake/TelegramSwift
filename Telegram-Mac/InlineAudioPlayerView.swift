@@ -15,6 +15,53 @@ import SwiftSignalKit
 import RangeSet
 
 
+func optionsRateImage(rate: String, color: NSColor, isLarge: Bool) -> CGImage {
+    return generateImage(isLarge ? CGSize(width: 30, height: 30) : CGSize(width: 24.0, height: 24.0), rotatedContext: { size, context in
+        context.clear(CGRect(origin: CGPoint(), size: size))
+
+        let imageName: String = isLarge ? "playspeed_30" : "playspeed_24"
+        
+        if let image = NSImage(named: imageName )?.precomposed(color) {
+            context.draw(image, in: size.bounds)
+        }
+
+
+        let string = NSMutableAttributedString(string: rate, font: NSFont.semibold(isLarge ? 11 : 10), textColor: color)
+
+        var offset = CGPoint(x: 1.0, y: 0.0)
+        if rate.count >= 3 {
+            if rate == "0.5x" {
+                string.addAttribute(.kern, value: -0.8 as NSNumber, range: NSRange(string.string.startIndex ..< string.string.endIndex, in: string.string))
+                offset.x += -0.5
+            } else {
+                string.addAttribute(.kern, value: -0.5 as NSNumber, range: NSRange(string.string.startIndex ..< string.string.endIndex, in: string.string))
+                offset.x += -0.3
+            }
+        } else {
+            offset.x += -0.3
+        }
+
+        offset.x *= 0.5
+        offset.y *= 0.5
+
+        
+        let layout = TextViewLayout(string, maximumNumberOfLines: 1, truncationType: .middle)
+        layout.measure(width: size.width)
+        let line = layout.lines[0]
+        
+        context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
+        context.textPosition = size.bounds.focus(line.frame.size).origin.offsetBy(dx: 0, dy: isLarge ? 10 : 8)
+        CTLineDraw(line.line, context)
+
+        
+//        let boundingRect = string.boundingRect(with: size, options: [], context: nil)
+    //    string.draw(at: CGPoint(x: offset.x + floor((size.width - boundingRect.width) / 2.0), y: offset.y + floor((size.height - boundingRect.height) / 2.0)))
+
+    })!
+}
+
+
+
 class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
 
@@ -184,16 +231,25 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         playingSpeed.contextMenu = {
             
             let menu = ContextMenu()
-            //min = 0
-            //max = 2
-            menu.addItem(SliderContextMenuItem(volume: 1.0, minValue: 0.2, maxValue: 2.5, drawable: MenuAnimation.menu_speed, drawable_muted: MenuAnimation.menu_speed, { value, save in
-                
+
+            let customItem = ContextMenuItem(String(format: "%.1fx", FastSettings.playingRate), image: NSImage(cgImage: generateEmptySettingsIcon(), size: NSMakeSize(24, 24)))
+            
+            menu.addItem(SliderContextMenuItem(volume: FastSettings.playingRate, minValue: 0.2, maxValue: 2.5, midValue: 1, drawable: MenuAnimation.menu_speed, drawable_muted: MenuAnimation.menu_speed, { [weak self] value, _ in
+                customItem.title = String(format: "%.1fx", value)
+                FastSettings.setPlayingRate(value)
+                self?.controller?.baseRate = FastSettings.playingRate
             }))
             
-            menu.addItem(ContextSeparatorItem())
             
-            menu.addItem(ContextMenuItem("0.5x", itemImage: MenuAnimation.menu_check_selected.value))
-            menu.addItem(ContextMenuItem("Normal"))
+            menu.addItem(customItem)
+            
+            if FastSettings.playingRate != 1.0 {
+                menu.addItem(ContextSeparatorItem())
+                menu.addItem(ContextMenuItem(strings().playbackSpeedSetToDefault, handler: { [weak self] in
+                    FastSettings.setPlayingRate(1.0)
+                    self?.controller?.baseRate = FastSettings.playingRate
+                }, itemImage: MenuAnimation.menu_reset.value))
+            }
 
             
             return menu
@@ -444,12 +500,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             }
         }
         
-        switch FastSettings.playingRate {
-        case 1.0:
-            playingSpeed.set(image: theme.icons.audioplayer_speed_x1, for: .Normal)
-        default:
-            playingSpeed.set(image: theme.icons.audioplayer_speed_x2, for: .Normal)
-        }
+        playingSpeed.set(image: optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingRate), color: theme.colors.accent, isLarge: true), for: .Normal)
         
         switch FastSettings.volumeRate {
         case 0:

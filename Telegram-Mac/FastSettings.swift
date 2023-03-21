@@ -226,7 +226,7 @@ class FastSettings {
     
         
     static var playingRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 2.0)
+        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 0.2), 2.5)
     }
     
     static func setPlayingRate(_ rate: Double) {
@@ -234,7 +234,7 @@ class FastSettings {
     }
     
     static var playingVideoRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingVideoRate), 1), 2.0)
+        return min(max(UserDefaults.standard.double(forKey: kPlayingVideoRate), 0.2), 2.5)
     }
     
     static func setPlayingVideoRate(_ rate: Double) {

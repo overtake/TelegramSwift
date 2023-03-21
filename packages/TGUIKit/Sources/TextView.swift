@@ -541,7 +541,10 @@ public final class TextViewLayout : Equatable {
                 }
                                         
                 if abs(rightOffset - leftOffset) < 150 {
-                    embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex), frame: CGRect(x: floor(min(leftOffset, rightOffset)), y: floor(descent - (ascent + descent)), width: floor(abs(rightOffset - leftOffset) + rightInset), height: floor(ascent + descent)), item: item))
+                    let x = floor(min(leftOffset, rightOffset))
+                    let width = floor(abs(rightOffset - leftOffset) + rightInset)
+                    let height = floor(ascent + descent)
+                    embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex), frame: CGRect(x: x, y: floor(descent - (ascent + descent)), width: width, height: height), item: item))
                 }
             }
             
@@ -684,7 +687,18 @@ public final class TextViewLayout : Equatable {
                 }
                 lineRange = CTLineGetStringRange(coreTextLine)
                 
+                var isRTL = false
+                let glyphRuns = CTLineGetGlyphRuns(coreTextLine) as NSArray
+                if glyphRuns.count != 0 {
+                    let run = glyphRuns[0] as! CTRun
+                    if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
+                        isRTL = true
+                    }
+                }
                 
+                if isRTL {
+                    lineAdditionalWidth = 0
+                }
                 
                 let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
                 let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
@@ -719,14 +733,7 @@ public final class TextViewLayout : Equatable {
                 }
                 
 
-                var isRTL = false
-                let glyphRuns = CTLineGetGlyphRuns(coreTextLine) as NSArray
-                if glyphRuns.count != 0 {
-                    let run = glyphRuns[0] as! CTRun
-                    if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
-                        isRTL = true
-                    }
-                }
+                
                 var penFlush = self.penFlush
                 if penFlush == 0 {
                     if isRTL {

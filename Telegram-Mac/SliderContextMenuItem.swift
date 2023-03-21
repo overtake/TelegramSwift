@@ -22,10 +22,12 @@ final class SliderContextMenuItem : ContextMenuItem {
     private let drawable_muted: LocalAnimatedSticker
     private let minValue: CGFloat
     private let maxValue: CGFloat
-    init(volume: CGFloat, minValue: CGFloat = 0, maxValue: CGFloat = 2.0, drawable: LocalAnimatedSticker = .menu_speaker, drawable_muted: LocalAnimatedSticker = .menu_speaker_muted, _ didUpdateValue:((CGFloat, Bool)->Void)? = nil) {
+    private let midValue: CGFloat?
+    init(volume: CGFloat, minValue: CGFloat = 0, maxValue: CGFloat = 2.0, midValue: CGFloat? = nil, drawable: LocalAnimatedSticker = .menu_speaker, drawable_muted: LocalAnimatedSticker = .menu_speaker_muted, _ didUpdateValue:((CGFloat, Bool)->Void)? = nil) {
         self.volume = volume
         self.minValue = minValue
         self.maxValue = maxValue
+        self.midValue = midValue
         self.didUpdateValue = didUpdateValue
         self.drawable = drawable
         self.drawable_muted = drawable_muted
@@ -37,7 +39,7 @@ final class SliderContextMenuItem : ContextMenuItem {
     }
         
     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
-        return SliderContextMenuRowItem(.zero, presentation: presentation, interaction: interaction, menuItem: self, minValue: minValue, maxValue: maxValue, drawable: drawable, drawable_muted: drawable_muted, volume: volume, didUpdateValue: self.didUpdateValue)
+        return SliderContextMenuRowItem(.zero, presentation: presentation, interaction: interaction, menuItem: self, minValue: minValue, maxValue: maxValue, midValue: midValue, drawable: drawable, drawable_muted: drawable_muted, volume: volume, didUpdateValue: self.didUpdateValue)
     }
 }
 
@@ -49,11 +51,13 @@ private final class SliderContextMenuRowItem : AppMenuBasicItem {
     fileprivate let drawable_muted: LocalAnimatedSticker
     fileprivate let minValue: CGFloat
     fileprivate let maxValue: CGFloat
-    init(_ initialSize: NSSize, presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction, menuItem: ContextMenuItem, minValue: CGFloat, maxValue: CGFloat, drawable: LocalAnimatedSticker, drawable_muted: LocalAnimatedSticker, volume: CGFloat, didUpdateValue:((CGFloat, Bool)->Void)?) {
+    fileprivate let midValue: CGFloat?
+    init(_ initialSize: NSSize, presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction, menuItem: ContextMenuItem, minValue: CGFloat, maxValue: CGFloat, midValue: CGFloat?, drawable: LocalAnimatedSticker, drawable_muted: LocalAnimatedSticker, volume: CGFloat, didUpdateValue:((CGFloat, Bool)->Void)?) {
         self.didUpdateValue = didUpdateValue
         self.volume = volume
         self.minValue = minValue
         self.maxValue = maxValue
+        self.midValue = midValue
         self.drawable = drawable
         self.drawable_muted = drawable_muted
         super.init(initialSize, presentation: presentation, menuItem: menuItem, interaction: interaction)
@@ -122,8 +126,9 @@ private final class SliderContextMenuRowView : AppMenuBasicItemView {
         }
         volumeControl.minValue = item.minValue
         volumeControl.maxValue = item.maxValue
-        
+        volumeControl.middleValue = item.midValue
         volumeControl.value = item.volume
+        
         volumeControl.lineColor = item.presentation.borderColor.darker(amount: 0.4)
         volumeControl.blobColor = item.presentation.textColor
         volumeControl.didUpdateValue = { [weak item, weak self] value, sync in

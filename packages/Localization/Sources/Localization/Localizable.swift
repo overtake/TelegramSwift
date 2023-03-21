@@ -8589,6 +8589,8 @@ public final class L10n {
   public static func phoneNumberCodeFragmentInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "PhoneNumber.Code.Fragment.Info", p1)
   }
+  /// Set to Default
+  public static var playbackSpeedSetToDefault: String  { return L10n.tr("Localizable", "PlaybackSpeed.SetToDefault") }
   /// Sorry, public polls can’t be forwarded to channels.
   public static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
   /// [Collapse]()
