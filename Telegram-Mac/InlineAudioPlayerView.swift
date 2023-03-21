@@ -357,9 +357,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                     self?.updateStatus(status.0, status.1)
                 }
             }))
-        controller.baseRate = (controller is APChatVoiceController) ? FastSettings.playingRate : 1.0
+        controller.baseRate = FastSettings.playingRate
 
-        self.playingSpeed.isHidden = !(controller is APChatVoiceController)
 
         controller.add(listener: self)
         self.ready.set(controller.ready.get())
@@ -500,7 +499,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             }
         }
         
-        playingSpeed.set(image: optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingRate), color: theme.colors.accent, isLarge: true), for: .Normal)
+        playingSpeed.set(image: optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingRate), color: FastSettings.playingRate == 1.0 ? theme.colors.grayIcon : theme.colors.accent, isLarge: true), for: .Normal)
         
         switch FastSettings.volumeRate {
         case 0:
@@ -585,7 +584,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
 
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
         
        
         progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
@@ -600,9 +598,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         textViewContainer.setFrameSize(NSMakeSize(effectiveWidth, 40))
         textViewContainer.centerY(x: next.frame.maxX + 20)
-        
-        playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 10)
-        
+                
         
         if let artistNameView = artistNameView {
             trackNameView.setFrameOrigin(NSMakePoint(0, 4))
@@ -611,15 +607,24 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             trackNameView.centerY(x: 0)
         }
         
-        if repeatControl.isHidden {
-            if playingSpeed.isHidden {
-                volumeControl.centerY(x: dismiss.frame.minX - 10 - volumeControl.frame.width)
-            } else {
-                volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
-            }
-        } else {
-            volumeControl.centerY(x: repeatControl.frame.minX - 10 - volumeControl.frame.width)
+        let controls = [volumeControl, playingSpeed, repeatControl].filter { !$0.isHidden }
+        
+        var x: CGFloat = dismiss.frame.minX - 10
+        for control in controls {
+            x = x - control.frame.width
+            control.centerY(x: x)
+            x -= 10
         }
+        
+//        if repeatControl.isHidden {
+//            if playingSpeed.isHidden {
+//                volumeControl.centerY(x: dismiss.frame.minX - 10 - volumeControl.frame.width)
+//            } else {
+//                volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
+//            }
+//        } else {
+//            volumeControl.centerY(x: repeatControl.frame.minX - 10 - volumeControl.frame.width)
+//        }
         
         
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)

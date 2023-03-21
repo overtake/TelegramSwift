@@ -580,6 +580,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             
         }
     }
+    private var previousIsSpoiler: Bool? = nil
 
     override func update(with media: Media, size:NSSize, context:AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
@@ -592,7 +593,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
         let isSpoiler = (messageSpoiler || forceSpoiler) && (parameters?.isRevealed == false)
 
         
-        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || animated || self.frame.size != size
+        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || animated || self.frame.size != size || previousIsSpoiler != isSpoiler
+        
+        self.previousIsSpoiler = isSpoiler
 
         if mediaUpdated, let rhs = media as? TelegramMediaFile, let lhs = self.media as? TelegramMediaFile  {
             if !lhs.isSemanticallyEqual(to: rhs) {
@@ -741,7 +744,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
             self.image.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: clearInstantly)
 
             if let updateImageSignal = updateImageSignal {
-                self.image.setSignal( updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
+                self.image.ignoreFullyLoad = mediaUpdated
+                self.image.setSignal(updateImageSignal, animate: !versionUpdated, cacheImage: { [weak media] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
                     }

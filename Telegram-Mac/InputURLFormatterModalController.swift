@@ -10,22 +10,19 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
-private struct InputURLFormatterState : Equatable {
-    let text: String
-    let url: String?
+private struct State : Equatable {
+    var text: String
+    var url: String?
     init(text: String, url: String?) {
         self.text = text
         self.url = url
     }
-    
-    func withUpdatedUrl(_ url: String?) -> InputURLFormatterState {
-        return InputURLFormatterState(text: self.text, url: url)
-    }
 }
 
 private let _id_input_url = InputDataIdentifier("_id_input_url")
+private let _id_text = InputDataIdentifier("_id_text")
 
-private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDataEntry] {
+private func entries(state: State) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -37,9 +34,8 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterTextHeader), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_text"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.text, font: .normal(.text))
-    }))
+    
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.text), error: nil, identifier: _id_text, mode: .plain, data: InputDataRowData( viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().inputFormatterTextPlaceholder, filter: { $0 }, limit: 10000))
     index += 1
     
     
@@ -50,7 +46,7 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterURLHeader), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.url), error: nil, identifier: _id_input_url, mode: .plain, data: InputDataRowData( viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().inputFormatterURLHeader, filter: { $0 }, limit: 10000))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.url), error: nil, identifier: _id_input_url, mode: .plain, data: InputDataRowData( viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().inputFormatterURLPlaceholder, filter: { $0 }, limit: 10000))
     index += 1
 
     
@@ -60,26 +56,33 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     return entries
 }
 
-func InputURLFormatterModalController(string: String, defaultUrl: String? = nil, completion: @escaping(String?) -> Void) -> InputDataModalController {
+func InputURLFormatterModalController(string: String, defaultUrl: String? = nil, completion: @escaping(String, String?) -> Void) -> InputDataModalController {
     
     
-    let initialState = InputURLFormatterState(text: string, url: defaultUrl?.removingPercentEncoding)
+    let initialState = State(text: string, url: defaultUrl?.removingPercentEncoding)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
-    let updateState: ((InputURLFormatterState) -> InputURLFormatterState) -> Void = { f in
+    let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
     
     let dataSignal = statePromise.get() |> map { state in
-        return inputURLFormatterEntries(state: state)
+        return entries(state: state)
     }
     
     var close: (() -> Void)? = nil
     
     let controller = InputDataController(dataSignal: dataSignal |> map { InputDataSignalValue(entries: $0) }, title: strings().inputFormatterURLHeader, validateData: { data in
         
-        if let string = data[_id_input_url]?.stringValue {
+        let url = data[_id_input_url]?.stringValue
+        let text = data[_id_text]?.stringValue ?? ""
+        
+        if text.isEmpty {
+            return .fail(.fields([_id_text : .shake]))
+        }
+        
+        if let string = url {
             
             let attr = NSMutableAttributedString(string: string)
             
@@ -87,7 +90,6 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
             
             var url:String? = nil
 
-            
             attr.enumerateAttribute(NSAttributedString.Key.link, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
                 
                 if let value = value as? inAppLink {
@@ -105,23 +107,21 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
                 
             })
             
-            completion(url)
+            completion(text, url)
             close?()
             return .none
-            
-            
         }
         
         return .fail(.fields([_id_input_url: .shake]))
         
     }, updateDatas: { data in
-        
-        updateState {
-            $0.withUpdatedUrl(data[_id_input_url]?.stringValue)
+        updateState { current in
+            var current = current
+            current.url = data[_id_input_url]?.stringValue
+            current.text = data[_id_text]?.stringValue ?? ""
+            return current
         }
-        
         return .none
-        
     })
     
     
@@ -139,6 +139,9 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
         modalController?.modal?.close()
     }
     
+    controller.didAppear = { controller in
+        controller.makeFirstResponderIfPossible(for: _id_input_url, focusIdentifier: nil, scrollDown: false, scrollIfNeeded: true)
+    }
    
     
     return modalController
