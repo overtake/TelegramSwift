@@ -42,11 +42,20 @@ public final class Reactions {
     public init(_ engine: TelegramEngine) {
         self.engine = engine
         
-        state.set((engine.stickers.availableReactions() |> then(.complete() |> suspendAwareDelay(1 * 60 * 60, queue: .concurrentDefaultQueue()))) |> restart)
+        self.restartState()
         
         disposable.set(self.stateValue.start(next: { [weak self] state in
             self?.available = state
+            if state == nil {
+                Queue.mainQueue().after(5.0, {
+                    self?.restartState()
+                })
+            }
         }))
+    }
+    
+    private func restartState() {
+        state.set((engine.stickers.availableReactions() |> then(.complete() |> suspendAwareDelay(1 * 60 * 60, queue: .concurrentDefaultQueue()))) |> restart)
     }
     
     public func react(_ messageId: MessageId, values: [UpdateMessageReaction], fromRect: NSRect? = nil, storeAsRecentlyUsed: Bool = false) {

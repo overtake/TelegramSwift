@@ -2329,7 +2329,7 @@ class ChatRowItem: TableRowItem {
         if !(self is ChatGroupedItem) {
             for layout in captionLayouts {
                 if layout.layout.layoutSize == .zero {
-                    layout.layout.measure(width: maxContentWidth, saveRTL: true)
+                    layout.layout.measure(width: maxContentWidth)
                     if layout.isLoading {
                         layout.block = layout.layout.generateBlock(backgroundColor: .blackTransparent)
                     }

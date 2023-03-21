@@ -226,7 +226,7 @@ class FastSettings {
     
         
     static var playingRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 2.0)
+        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 0.2), 2.5)
     }
     
     static func setPlayingRate(_ rate: Double) {
@@ -234,7 +234,7 @@ class FastSettings {
     }
     
     static var playingVideoRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingVideoRate), 1), 2.0)
+        return min(max(UserDefaults.standard.double(forKey: kPlayingVideoRate), 0.2), 2.5)
     }
     
     static func setPlayingVideoRate(_ rate: Double) {
@@ -325,7 +325,20 @@ class FastSettings {
         UserDefaults.standard.setValue(value, forKey: kShowEmptyTips)
     }
     
-    
+    static func systemUnsupported(_ time: Int32?) -> Bool {
+        if #available(macOS 10.13, *) {
+            return false
+        } else {
+            if let time = time {
+                return time < Int(Date().timeIntervalSince1970)
+            } else {
+                return true
+            }
+        }
+    }
+    static func hideUnsupported() {
+        UserDefaults.standard.setValue(Int(Date().timeIntervalSince1970) + 7 * 24 * 60 * 60, forKey: "unsupported")
+    }
     
     
     static func toggleRecordingState() {
@@ -663,6 +676,12 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bo
         }
         
         try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+
+        let quarantineData = "does not really matter what is here".cString(using: String.Encoding.utf8)!
+        let quarantineDataLength = Int(strlen(quarantineData))
+        
+        setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
+    
         
         let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
         
@@ -788,6 +807,12 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 
                 try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
            
+                let quarantineData = "does not really matter what is here".cString(using: String.Encoding.utf8)!
+                let quarantineDataLength = Int(strlen(quarantineData))
+                
+                setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
+
+                
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
                 
                 let fs = fileSize(boxPath)

@@ -1834,6 +1834,30 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         [self update:YES];
     }
 }
+
+-(void)addLink:(NSString *_Nullable)link text: (NSString * __nonnull)text range: (NSRange)range {
+    if (link == nil) {
+        NSMutableAttributedString *copy = [self.attributedString mutableCopy];
+        [copy replaceCharactersInRange:range withString:text];
+        [copy removeAttribute:TGCustomLinkAttributeName range: range];
+        [self setAttributedString:copy animated:false];
+    } else {
+        
+        id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
+        
+        NSAttributedString *was = [self.attributedString mutableCopy];
+        
+        NSMutableAttributedString *be = [self.attributedString mutableCopy];
+
+        [be addAttribute:TGCustomLinkAttributeName value:tag range:range];
+        [be replaceCharactersInRange:range withString:text];
+        
+        MarkdownUndoItem *item = [[MarkdownUndoItem alloc] initWithAttributedString:was be:be inRange:range];
+        [self.textView addItem:item];
+
+        [self update:YES];
+    }
+}
     
     
 - (void)replaceMention:(NSString *)mention username:(bool)username userId:(int32_t)userId

@@ -134,6 +134,8 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 -(void)removeAllAttributes;
 -(void)addLink:(NSString *_Nullable)link;
 -(void)addLink:(NSString *_Nullable)link range: (NSRange)range;
+-(void)addLink:(NSString *_Nullable)link text: (NSString * __nonnull)text range: (NSRange)range;
+
 - (void)textDidChange:( NSNotification * _Nullable )notification;
 
 - (void)addSimpleItem:(SimpleUndoItem *)item;

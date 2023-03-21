@@ -302,7 +302,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     
     func needUpdateReplyMarkup(with state:ChatPresentationInterfaceState, _ animated:Bool) {
-        if let keyboardMessage = state.keyboardButtonsMessage, let attribute = keyboardMessage.replyMarkup, state.isKeyboardShown {
+        if let keyboardMessage = state.keyboardButtonsMessage, let attribute = keyboardMessage.replyMarkup, state.isKeyboardShown || attribute.flags.contains(.persistent) {
             replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: keyboardMessage), theme, bottomView.documentView as? View, true)
             replyMarkupModel?.measureSize(frame.width - 30)
             replyMarkupModel?.redraw()
@@ -934,8 +934,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             effectiveRange = range
         }
         
-        showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] url in
-            self?.textView.addLink(url, range: effectiveRange)
+        showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] text, url in
+            self?.textView.addLink(url, text: text, range: effectiveRange)
         }), for: window)
         
     }

@@ -1461,8 +1461,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         if effectiveRange.location == NSNotFound || defaultTag == nil {
             effectiveRange = range
         }
-        showModal(with: InputURLFormatterModalController(string: genericView.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] url in
-            self?.genericView.textView.addLink(url, range: effectiveRange)
+        showModal(with: InputURLFormatterModalController(string: genericView.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] text, url in
+            self?.genericView.textView.addLink(url, text: text, range: effectiveRange)
         }), for: window)
         
     }

@@ -1158,7 +1158,7 @@ NSArray<NSString *> *cut_long_message(NSString *message, int max_length) {
             
             NSUInteger index = substring.length;
             
-            if(index + inc > message.length) {
+            if(index >= max_length) {
                 
                 NSUInteger idx = giveupString(@"\n\n");
                 if (idx != NSNotFound) {

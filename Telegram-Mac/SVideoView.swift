@@ -652,17 +652,20 @@ private final class SVideoControlsView : Control {
     }
     
     func updateBaseRate() {
-        if FastSettings.playingVideoRate == 1.0 {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_1X")!.precomposed(), for: .Normal)
-        } else if FastSettings.playingVideoRate <= 1.25 {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_125X")!.precomposed(), for: .Normal)
-        } else if FastSettings.playingVideoRate <= 1.5 {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_15X")!.precomposed(), for: .Normal)
-        } else if FastSettings.playingVideoRate <= 1.75 {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_175X")!.precomposed(), for: .Normal)
-        } else {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_2X")!.precomposed(), for: .Normal)
-        }
+        
+        menuItems.set(image: optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingVideoRate), color: .white, isLarge: true), for: .Normal)
+        
+//        if FastSettings.playingVideoRate == 1.0 {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_1X")!.precomposed(), for: .Normal)
+//        } else if FastSettings.playingVideoRate <= 1.25 {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_125X")!.precomposed(), for: .Normal)
+//        } else if FastSettings.playingVideoRate <= 1.5 {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_15X")!.precomposed(), for: .Normal)
+//        } else if FastSettings.playingVideoRate <= 1.75 {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_175X")!.precomposed(), for: .Normal)
+//        } else {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_2X")!.precomposed(), for: .Normal)
+//        }
         self.menuItems.sizeToFit()
     }
     
@@ -1092,27 +1095,25 @@ class SVideoView: NSView {
                 self?.isInMenu = false
             }
             menu.delegate = menu
-    
-            menu.addItem(ContextMenuItem("1x", handler: {
-                self?.interactions?.setBaseRate(1.0)
+            
+            let customItem = ContextMenuItem(String(format: "%.1fx", FastSettings.playingVideoRate), image: NSImage(cgImage: generateEmptySettingsIcon(), size: NSMakeSize(24, 24)))
+            
+            menu.addItem(SliderContextMenuItem(volume: FastSettings.playingVideoRate, minValue: 0.2, maxValue: 2.5, midValue: 1, drawable: MenuAnimation.menu_speed, drawable_muted: MenuAnimation.menu_speed, { [weak self] value, _ in
+                customItem.title = String(format: "%.1fx", value)
+                self?.interactions?.setBaseRate(value)
                 self?.controls.updateBaseRate()
             }))
-            menu.addItem(ContextMenuItem.init("1.25x", handler: {
-                self?.interactions?.setBaseRate(1.25)
-                self?.controls.updateBaseRate()
-            }))
-            menu.addItem(ContextMenuItem.init("1.5x", handler: {
-                self?.interactions?.setBaseRate(1.5)
-                self?.controls.updateBaseRate()
-            }))
-            menu.addItem(ContextMenuItem.init("1.75x", handler: {
-                self?.interactions?.setBaseRate(1.75)
-                self?.controls.updateBaseRate()
-            }))
-            menu.addItem(ContextMenuItem.init("2x", handler: {
-                self?.interactions?.setBaseRate(2.0)
-                self?.controls.updateBaseRate()
-            }))
+            
+            menu.addItem(customItem)
+            
+            if FastSettings.playingVideoRate != 1.0 {
+                menu.addItem(ContextSeparatorItem())
+                menu.addItem(ContextMenuItem(strings().playbackSpeedSetToDefault, handler: { [weak self] in
+                    self?.interactions?.setBaseRate(1.0)
+                    self?.controls.updateBaseRate()
+                }, itemImage: MenuAnimation.menu_reset.value))
+            }
+            
             menu.appearance = darkPalette.appearance
             return menu
         }
