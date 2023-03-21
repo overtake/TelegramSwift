@@ -465,7 +465,9 @@ private final class WallpaperPreviewView: View {
         let item2 = ChatRowItem.item(frame.size, from: secondEntry, interaction: chatInteraction, theme: theme)
         
 
-        
+        item1.makeSize(frame.size.width)
+        item2.makeSize(frame.size.width)
+
         _ = tableView.addItem(item: item2)
         _ = tableView.addItem(item: item1)
         
