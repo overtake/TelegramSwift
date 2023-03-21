@@ -661,7 +661,7 @@ class AnimationLayerContainer : View {
     override func layout() {
         super.layout()
         if let imageLayer = self.imageLayer {
-            imageLayer.frame = self.bounds
+            imageLayer.frame = focus(imageLayer.frame.size)
         }
     }
     

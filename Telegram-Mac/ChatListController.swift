@@ -22,7 +22,8 @@ private final class Arguments {
     let createTopic: ()->Void
     let switchOffForum: ()->Void
     let getHideProgress:()->CGFloat?
-    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?) {
+    let hideDeprecatedSystem:()->Void
+    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void) {
         self.context = context
         self.setupFilter = setupFilter
         self.openFilterSettings = openFilterSettings
@@ -30,6 +31,7 @@ private final class Arguments {
         self.createTopic = createTopic
         self.switchOffForum = switchOffForum
         self.getHideProgress = getHideProgress
+        self.hideDeprecatedSystem = hideDeprecatedSystem
     }
 }
 
@@ -40,6 +42,7 @@ enum UIChatListEntryId : Hashable {
     case reveal
     case empty
     case loading
+    case systemDeprecated
 }
 
 
@@ -58,6 +61,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     case group(Int, EngineChatList.GroupItem, Bool, ItemHideStatus, PeerListState.AppearMode, Bool)
     case reveal([ChatListFilter], ChatListFilter, ChatListFilterBadges)
     case empty(ChatListFilter, PeerListMode, SplitViewState, PeerEquatable?)
+    case systemDeprecated(ChatListFilter)
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
@@ -81,6 +85,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             }
         case let .empty(filter, mode, state, peer):
             if case .empty(filter, mode, state, peer) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .systemDeprecated(filter):
+            if case .systemDeprecated(filter) = rhs {
                 return true
             } else {
                 return false
@@ -133,6 +143,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: index)
         case .empty:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
+        case .systemDeprecated:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         case .loading:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         }
@@ -156,6 +168,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .reveal
         case .empty:
             return .empty
+        case .systemDeprecated:
+            return .systemDeprecated
         case .loading:
             return .loading
         }
@@ -203,6 +217,8 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 }, menuItems: arguments.tabsMenuItems)
             case let .empty(filter, mode, state, peer):
                 return ChatListEmptyRowItem(initialSize, stableId: entry.stableId, filter: filter, mode: mode, peer: peer?.peer, layoutState: state, context: arguments.context, openFilterSettings: arguments.openFilterSettings, createTopic: arguments.createTopic, switchOffForum: arguments.switchOffForum)
+            case .systemDeprecated:
+                return ChatListSystemDeprecatedItem(initialSize, stableId: entry.stableId, hideAction: arguments.hideDeprecatedSystem)
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             }
@@ -414,6 +430,10 @@ class ChatListController : PeersListController {
             }
         }, getHideProgress: { [weak self] in
             return self?.getSwipeProgress()
+        }, hideDeprecatedSystem: {
+            _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+                $0.withUpdatedDeprecatedNotice(Int32(Date().timeIntervalSince1970 + 31 * 24 * 60 * 60))
+            }).start()
         })
         
         
@@ -528,6 +548,9 @@ class ChatListController : PeersListController {
             
             if !filterData.isEmpty && !filterData.sidebar, state?.appear == .normal {
                 mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
+            }
+            if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain {
+                mapped.append(.systemDeprecated(filterData.filter))
             }
             
             let entries = mapped.sorted().compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
@@ -1368,11 +1391,18 @@ class ChatListController : PeersListController {
                 }
                 return false
             } else if item.isForum {
-                open(with: item.entryId, initialAction: nil, addition: false)
-                return false
+                if byClick {
+                    open(with: item.entryId, initialAction: nil, addition: false)
+                    return false
+                } else {
+                    return true
+                }
             }
         }
         if item is ChatListRevealItem {
+            return false
+        }
+        if item is ChatListSystemDeprecatedItem {
             return false
         }
         return true

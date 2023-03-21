@@ -189,7 +189,6 @@ public extension NSFont {
         } else {
             return NSFontManager.shared.convert(.normal(size), toHaveTrait: [.boldFontMask])
         }
-        
     }
     
     static func bold(_ size:FontSize) ->NSFont {

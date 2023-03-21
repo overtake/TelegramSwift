@@ -541,7 +541,10 @@ public final class TextViewLayout : Equatable {
                 }
                                         
                 if abs(rightOffset - leftOffset) < 150 {
-                    embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex), frame: CGRect(x: floor(min(leftOffset, rightOffset)), y: floor(descent - (ascent + descent)), width: floor(abs(rightOffset - leftOffset) + rightInset), height: floor(ascent + descent)), item: item))
+                    let x = floor(min(leftOffset, rightOffset))
+                    let width = floor(abs(rightOffset - leftOffset) + rightInset)
+                    let height = floor(ascent + descent)
+                    embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex), frame: CGRect(x: x, y: floor(descent - (ascent + descent)), width: width, height: height), item: item))
                 }
             }
             
@@ -684,7 +687,18 @@ public final class TextViewLayout : Equatable {
                 }
                 lineRange = CTLineGetStringRange(coreTextLine)
                 
+                var isRTL = false
+                let glyphRuns = CTLineGetGlyphRuns(coreTextLine) as NSArray
+                if glyphRuns.count != 0 {
+                    let run = glyphRuns[0] as! CTRun
+                    if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
+                        isRTL = true
+                    }
+                }
                 
+                if isRTL {
+                    lineAdditionalWidth = 0
+                }
                 
                 let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
                 let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
@@ -719,14 +733,7 @@ public final class TextViewLayout : Equatable {
                 }
                 
 
-                var isRTL = false
-                let glyphRuns = CTLineGetGlyphRuns(coreTextLine) as NSArray
-                if glyphRuns.count != 0 {
-                    let run = glyphRuns[0] as! CTRun
-                    if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
-                        isRTL = true
-                    }
-                }
+                
                 var penFlush = self.penFlush
                 if penFlush == 0 {
                     if isRTL {
@@ -1509,6 +1516,15 @@ public func ==(lhs:TextSelectedRange, rhs:TextSelectedRange) -> Bool {
 //    
 //}
 
+private final class TextDrawLayer : SimpleLayer {
+    
+    var drawer:((CGContext)->Void)? = nil
+    
+    override func draw(in ctx: CGContext) {
+        drawer?(ctx)
+    }
+}
+
 public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     
@@ -1548,7 +1564,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private var visualEffect: VisualEffect? = nil
 
     private var textView: View? = nil
-    private let drawLayer: SimpleLayer = SimpleLayer()
+    private let drawLayer: TextDrawLayer = TextDrawLayer()
     private var blockMask: SimpleLayer?
     
     var hasBackground: Bool {
@@ -1600,10 +1616,27 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private func initialize() {
         layer?.disableActions()
         self.style = ControlStyle(backgroundColor: .clear)
-        self.layer?.addSublayer(drawLayer)
+        
+        if #available(macOS 10.13, *) {
+            self.layer?.addSublayer(drawLayer)
+            self.drawLayer.drawer = { [weak self] ctx in
+                guard let `self` = self else {
+                    return
+                }
+                self.draw(self.drawLayer, in: ctx)
+            }
+        } else {
+            let textView = View()
+            self.addSubview(textView)
+            self.textView = textView
+            
+            textView.displayDelegate = self
+        }
+        
+        
         self.layer?.addSublayer(embeddedContainer)
         self.layer?.masksToBounds = false
-        self.drawLayer.delegate = self
+
     }
 
     public required init(frame frameRect: NSRect) {
@@ -1625,15 +1658,28 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         super.draw(dirtyRect)
     }
     
+    var drawingLayer: CALayer? {
+        if #available(macOS 10.13, *) {
+            return drawLayer
+        } else {
+            if self.hasBackground {
+                return textView?.layer
+            } else {
+                return self.layer
+            }
+        }
+
+    }
+    
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         //backgroundColor = .random
-        super.draw(layer, in: ctx)
+       // super.draw(layer, in: ctx)
 
 //        if hasBackground, layer != textView?.layer {
 //            return
 //        }
 
-        if let layout = textLayout, drawLayer == layer {
+        if let layout = textLayout, drawingLayer == layer {
             
             ctx.setAllowsFontSubpixelPositioning(true)
             ctx.setShouldSubpixelPositionFonts(true)
@@ -2037,13 +2083,14 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     }
     
     public override func setNeedsDisplayLayer() {
-       // super.setNeedsDisplayLayer()
-        self.drawLayer.setNeedsDisplay()
+        self.layer?.setNeedsDisplay()
+        self.drawingLayer?.setNeedsDisplay()
        // self.drawLayer.displayIfNeeded()
     }
     
     public override func setNeedsDisplay() {
-        self.drawLayer.setNeedsDisplay()
+        self.layer?.setNeedsDisplay()
+        self.drawingLayer?.setNeedsDisplay()
     }
     
     func set(selectedRange range:NSRange, display:Bool = true) -> Void {
@@ -2273,7 +2320,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             if self.visualEffect == nil {
                 self.visualEffect = VisualEffect(frame: self.bounds)
                 addSubview(self.visualEffect!, positioned: .below, relativeTo: nil)
-                self.visualEffect?.layer?.addSublayer(drawLayer)
+                if let textView = self.textView {
+                    self.visualEffect?.addSubview(textView)
+                } else {
+                    self.visualEffect?.layer?.addSublayer(drawLayer)
+                }
                 self.visualEffect?.layer?.addSublayer(embeddedContainer)
             }
             self.visualEffect?.bgColor = blurBackground
@@ -2298,7 +2349,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 self.layer?.mask = nil
             }
         }  else {
-            self.layer?.insertSublayer(drawLayer, at: 0)
+            if let textView = textView {
+                self.addSubview(textView, positioned: .below, relativeTo: nil)
+            } else {
+                self.layer?.insertSublayer(drawLayer, at: 0)
+            }
             self.layer?.insertSublayer(embeddedContainer, at: 1)
             self.visualEffect?.removeFromSuperview()
             self.visualEffect = nil

@@ -745,7 +745,7 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
     override var textSize: CGFloat {
         if let readTimestamp = self.readTimestamp {
             let string = stringForRelativeTimestamp(relativeTimestamp: readTimestamp, relativeTo: context.timestamp)
-            let attr: NSAttributedString = .initialize(string: string, color: presentation.textColor, font: .normal(.text))
+            let attr: NSAttributedString = .initialize(string: string, color: presentation.textColor, font: .medium(.text))
             let size = attr.sizeFittingWidth(.greatestFiniteMagnitude)
             return max(size.width + leftInset * 2 + innerInset * 2, super.textSize)
         } else {
@@ -812,7 +812,7 @@ private final class ReadTimestampView : View {
     
     func update(timestamp: Int32, relativeTo: Int32, maxSize: NSSize, context: AccountContext, presentation: AppMenu.Presentation, isReaction: Bool) -> NSSize {
         let string = stringForRelativeTimestamp(relativeTimestamp: timestamp, relativeTo: relativeTo)
-        let textLayout = TextViewLayout(.initialize(string: string, color: presentation.textColor, font: .normal(.text)), maximumNumberOfLines: 1)
+        let textLayout = TextViewLayout(.initialize(string: string, color: presentation.textColor, font: .medium(.text)), maximumNumberOfLines: 1)
         textLayout.measure(width: maxSize.width - 20)
         self.textView.update(textLayout)
         

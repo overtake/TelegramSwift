@@ -2151,7 +2151,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 //            _ = updateChatListFolderSettings(context.account.postbox, {
 //                $0.withUpdatedSidebar(true)
 //            }).start()
-            
+        case .systemDeprecated:
+            break
         case .reveal:
             break
         case .empty:
