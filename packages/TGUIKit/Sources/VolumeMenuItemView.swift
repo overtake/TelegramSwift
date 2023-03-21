@@ -37,7 +37,7 @@ public final class VolumeMenuItemView : Control {
         let percentValue = ((point.x - lineRect.minX + 6 / 2) / lineRect.width) * maxValue
         var currentValue = min(max(minValue, percentValue), maxValue)
         
-        let mid = (maxValue - minValue) / 2
+        let mid = middleValue ?? ((maxValue - minValue) / 2)
         let magnify: CGFloat = 0.08
         
         if currentValue > mid - magnify && currentValue < mid + magnify {
@@ -89,6 +89,11 @@ public final class VolumeMenuItemView : Control {
             needsDisplay = true
         }
     }
+    public var middleValue: CGFloat? = nil {
+        didSet {
+            needsDisplay = true
+        }
+    }
     
     public var lineColor: NSColor = presentation.colors.grayUI.lighter().withAlphaComponent(0.8)
     public var blobColor: NSColor = .white
@@ -119,15 +124,22 @@ public final class VolumeMenuItemView : Control {
         
         linePath.addRoundedRect(in: NSMakeRect(lineRect.minX - 1, (frame.height - 6) / 2, 2, 6), cornerWidth: 1, cornerHeight: 1)
         linePath.addRoundedRect(in: NSMakeRect(lineRect.maxX - 1, (frame.height - 6) / 2, 2, 6), cornerWidth: 1, cornerHeight: 1)
-        linePath.addRoundedRect(in: NSMakeRect(lineRect.midX - 1, (frame.height - 6) / 2, 2, 6), cornerWidth: 1, cornerHeight: 1)
+        
+        let maximum = (maxValue - minValue)
+        
+        let mid = middleValue ?? (maximum / 2)
+        let midPercent = mid / maximum
+        
+        linePath.addRoundedRect(in: NSMakeRect(lineRect.width * midPercent - 1, (frame.height - 6) / 2, 2, 6), cornerWidth: 1, cornerHeight: 1)
 
         
         ctx.addPath(linePath)
         ctx.fillPath()
         
+        
 
         
-        let blobRect = CGRect(origin: NSMakePoint(lineRect.minX + ((value * lineRect.width) / maxValue) - 5, (frame.height - blobSize.height) / 2), size: blobSize)
+        let blobRect = CGRect(origin: NSMakePoint(lineRect.minX + (((value - minValue) * lineRect.width) / maximum) - 5, (frame.height - blobSize.height) / 2), size: blobSize)
         
         let blobPath = CGMutablePath()
         blobPath.addRoundedRect(in: blobRect, cornerWidth: blobRect.width / 2, cornerHeight: blobRect.width / 2)

@@ -432,7 +432,7 @@ class ChatGroupedItem: ChatRowItem {
             maxContentWidth -= bubbleDefaultInnerInset
         }
         for layout in captionLayouts {
-            layout.layout.measure(width: maxContentWidth, saveRTL: true)
+            layout.layout.measure(width: maxContentWidth)
             if layout.isLoading {
                 layout.block = layout.layout.generateBlock(backgroundColor: .blackTransparent)
             }
