@@ -325,7 +325,20 @@ class FastSettings {
         UserDefaults.standard.setValue(value, forKey: kShowEmptyTips)
     }
     
-    
+    static func systemUnsupported(_ time: Int32?) -> Bool {
+        if #available(macOS 10.13, *) {
+            return false
+        } else {
+            if let time = time {
+                return time < Int(Date().timeIntervalSince1970)
+            } else {
+                return true
+            }
+        }
+    }
+    static func hideUnsupported() {
+        UserDefaults.standard.setValue(Int(Date().timeIntervalSince1970) + 7 * 24 * 60 * 60, forKey: "unsupported")
+    }
     
     
     static func toggleRecordingState() {

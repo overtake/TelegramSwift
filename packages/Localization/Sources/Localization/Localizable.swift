@@ -4841,6 +4841,16 @@ public final class L10n {
   public static var dateToday: String  { return L10n.tr("Localizable", "Date.Today") }
   /// Delete for all members
   public static var deleteChatDeleteGroupForAll: String  { return L10n.tr("Localizable", "DeleteChat.DeleteGroupForAll") }
+  /// Your version of macOS no longer supported. Please update your Mac.
+  public static var deprecatedText: String  { return L10n.tr("Localizable", "Deprecated.Text") }
+  /// Update macOS
+  public static var deprecatedTitle: String  { return L10n.tr("Localizable", "Deprecated.Title") }
+  /// We are no longer updating app for your system version. Please update your system to receive the latest updates from Telegram.
+  public static var deprecatedAlertText: String  { return L10n.tr("Localizable", "Deprecated.Alert.Text") }
+  /// Hide for a month
+  public static var deprecatedAlertThird: String  { return L10n.tr("Localizable", "Deprecated.Alert.Third") }
+  /// Update Your System
+  public static var deprecatedAlertTitle: String  { return L10n.tr("Localizable", "Deprecated.Alert.Title") }
   /// Link Group
   public static var discussionSetModalOK: String  { return L10n.tr("Localizable", "Discussion.Set.Modal.OK") }
   /// Do you want make **%@** the discussion board for **%@**?\n\nAny member of this group will be able to see messages in the channel.
@@ -6193,6 +6203,8 @@ public final class L10n {
   public static var inputDataDateYearPlaceholder1: String  { return L10n.tr("Localizable", "InputData.Date.Year.Placeholder1") }
   /// TEXT
   public static var inputFormatterTextHeader: String  { return L10n.tr("Localizable", "InputFormatter.Text.Header") }
+  /// Text
+  public static var inputFormatterTextPlaceholder: String  { return L10n.tr("Localizable", "InputFormatter.Text.Placeholder") }
   /// URL
   public static var inputFormatterURLHeader: String  { return L10n.tr("Localizable", "InputFormatter.URL.Header") }
   /// URL
