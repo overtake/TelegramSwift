@@ -337,21 +337,27 @@ class ChatInteractiveContentView: ChatMediaContentView {
         deInit()
     }
     
+    private var lite: Bool {
+        return (isGif && isLite(.gif)) || (!isGif && isLite(.video))
+
+    }
     
     @objc func updatePlayerIfNeeded() {
         
         var accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
         
-        if (isGif && isLite(.gif)) || (!isGif && isLite(.video)) {
+        if lite {
             accept = accept && mouseInside()
         }
                         
         if let autoplayView = autoplayVideoView {
             if accept {
                 autoplayView.mediaPlayer.play()
+                self.progressView?.isHidden = true
             } else {
                 autoplayView.mediaPlayer.pause()
                 autoplayVideoView?.playTimer?.invalidate()
+                self.progressView?.isHidden = false
             }
         }
     }
@@ -522,17 +528,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     var autoplayVideo: Bool {
-        if #available(OSX 10.12, *) {
-        } else {
-            return false
-        }
-        
         if let autoremoveAttribute = parent?.autoremoveAttribute, autoremoveAttribute.timeout <= 60 {
            return false
         }
 
         if let media = media as? TelegramMediaFile, let parameters = self.parameters {
-            return (media.isStreamable || authenticFetchStatus == .Local) && (autoDownload || authenticFetchStatus == .Local) && parameters.autoplay && (parent?.groupingKey == nil || self.frame.width == superview?.frame.width)
+            let autoplay = (media.isStreamable || authenticFetchStatus == .Local) && (autoDownload || authenticFetchStatus == .Local) && parameters.autoplay && (parent?.groupingKey == nil || self.frame.width == superview?.frame.width)
+            return autoplay
         }
         return false
     }
@@ -833,7 +835,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     if let strongSelf = self {
                         
                         strongSelf.authenticFetchStatus = authentic
-
+                        
                         
                         var authentic = authentic
                         if strongSelf.autoplayVideo {
@@ -888,10 +890,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                 strongSelf?.updateMediaStatus(status, animated: !first)
                             }))
                         }
-                       
+                        
                         
                         strongSelf.updatePlayerIfNeeded()
-
+                        
                         if let file = media as? TelegramMediaFile, strongSelf.autoplayVideoView == nil  {
                             strongSelf.updateVideoAccessory(parent == nil ? .Local : authentic, file: file, animated: !first)
                             first = false
@@ -915,12 +917,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             
                             switch status {
                             case .Local:
-                                self?.image.animatesAlphaOnFirstTransition = false
+                                strongSelf.image.animatesAlphaOnFirstTransition = false
                             default:
-                                self?.image.animatesAlphaOnFirstTransition = false
+                                strongSelf.image.animatesAlphaOnFirstTransition = false
                             }
                             
-                            var removeProgress: Bool = strongSelf.autoplayVideo && !isSpoiler
+                            var removeProgress: Bool = strongSelf.autoplayVideo && !isSpoiler && strongSelf.lite == false
                             if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
                                 removeProgress = true
                             }
