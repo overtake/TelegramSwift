@@ -23,7 +23,7 @@ class ReplyMarkupButtonLayout {
     init(button:ReplyMarkupButton, theme: TelegramPresentationTheme, isInput: Bool, paid: Bool) {
         self.button = button
         self.presentation = theme
-        self.text = TextViewLayout(NSAttributedString.initialize(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
+        self.text = TextViewLayout(NSAttributedString.initialize(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .semibold(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
     }
     
     func measure(_ width:CGFloat) {
