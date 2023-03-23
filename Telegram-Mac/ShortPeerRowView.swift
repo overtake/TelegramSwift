@@ -456,6 +456,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
                 }
             }
+            current.layer?.opacity = item.enabled ? 1 : 0.8
             current.set(selected: interaction.presentation.selected.contains(item.peerId), animated: animated)
                    
             if let view = deleteControl {
