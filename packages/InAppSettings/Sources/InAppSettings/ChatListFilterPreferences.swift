@@ -42,7 +42,7 @@ public extension ChatListFilter {
                 id = tempId
             }
         }
-        return .filter(id: id, title: "", emoticon: nil, data: ChatListFilterData(categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: ChatListFilterIncludePeers(), excludePeers: []))
+        return .filter(id: id, title: "", emoticon: nil, data: ChatListFilterData(isShared: false, categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: ChatListFilterIncludePeers(), excludePeers: []))
     }
 }
 

@@ -3157,6 +3157,8 @@ public final class L10n {
   public static var chatSendJoinRequestInfo: String  { return L10n.tr("Localizable", "Chat.SendJoinRequest.Info") }
   /// Request to join sent
   public static var chatSendJoinRequestTitle: String  { return L10n.tr("Localizable", "Chat.SendJoinRequest.Title") }
+  /// You are sending messages too fast. Please wait a bit.
+  public static var chatSendMessageErrorTooFast: String  { return L10n.tr("Localizable", "Chat.SendMessage.Error.TooFast") }
   /// Sorry, you can only send only 100 scheduled messages.
   public static var chatSendMessageErrorTooMuchScheduled: String  { return L10n.tr("Localizable", "Chat.SendMessageError.TooMuchScheduled") }
   /// %@ doesn't accept voice and video messages
@@ -4841,11 +4843,11 @@ public final class L10n {
   public static var dateToday: String  { return L10n.tr("Localizable", "Date.Today") }
   /// Delete for all members
   public static var deleteChatDeleteGroupForAll: String  { return L10n.tr("Localizable", "DeleteChat.DeleteGroupForAll") }
-  /// Your version of macOS no longer supported. Please update your Mac.
+  /// Your version of macOS is no longer supported. Please update your Mac.
   public static var deprecatedText: String  { return L10n.tr("Localizable", "Deprecated.Text") }
   /// Update macOS
   public static var deprecatedTitle: String  { return L10n.tr("Localizable", "Deprecated.Title") }
-  /// We are no longer updating app for your system version. Please update your system to receive the latest updates from Telegram.
+  /// We are no longer updating the app for your system version. Please update your system to receive the latest Telegram updates.
   public static var deprecatedAlertText: String  { return L10n.tr("Localizable", "Deprecated.Alert.Text") }
   /// Hide for a month
   public static var deprecatedAlertThird: String  { return L10n.tr("Localizable", "Deprecated.Alert.Third") }

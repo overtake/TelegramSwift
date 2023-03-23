@@ -1848,12 +1848,11 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         NSAttributedString *was = [self.attributedString mutableCopy];
         
         NSMutableAttributedString *be = [self.attributedString mutableCopy];
-
-        [be addAttribute:TGCustomLinkAttributeName value:tag range:range];
+        [be addAttribute:TGCustomLinkAttributeName value:tag range: range];
         [be replaceCharactersInRange:range withString:text];
-        
-        MarkdownUndoItem *item = [[MarkdownUndoItem alloc] initWithAttributedString:was be:be inRange:range];
-        [self.textView addItem:item];
+
+        SimpleUndoItem *item = [[SimpleUndoItem alloc] initWithAttributedString:was be:be wasRange:range beRange:NSMakeRange(range.location, text.length)]; //[[SimpleUndoItem alloc] initWithAttributedString:was be:be inRange:range];
+        [self addSimpleItem:item];
 
         [self update:YES];
     }
