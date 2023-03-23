@@ -119,7 +119,7 @@ class ShareViewController: NSViewController {
         
         var useBetaFeatures: Bool = false
         #if BETA || DEBUG
-        useBetaFeatures = false
+        useBetaFeatures = true
         #endif
         
         let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: 90, voipVersions: [], appData: appData, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), deviceModelName: deviceModelPretty(), useBetaFeatures: useBetaFeatures)

@@ -6527,6 +6527,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .voiceMessagesForbidden:
                     let peer = strongSelf.chatInteraction.presentation.mainPeer
                     text = strings().chatSendVoicePrivacyError(peer?.compactDisplayTitle ?? "")
+                case .sendingTooFast:
+                    text = strings().chatSendMessageErrorTooFast
                 }
                 confirm(for: context.window, information: text, cancelTitle: "", thridTitle: strings().genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
                     guard let strongSelf = strongSelf else {return}
