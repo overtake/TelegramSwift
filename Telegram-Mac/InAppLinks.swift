@@ -1107,6 +1107,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         })
         
         afterComplete(true)
+    case let .folder(_, slug, context):
+        loadAndShowChatFolder(context: context, slug: slug)
     case let .loginCode(_, code):
         appDelegate?.applyExternalLoginCode(code)
     }
@@ -1246,6 +1248,7 @@ enum inAppLink {
     case restorePurchase(link: String, context: AccountContext)
     case urlAuth(link: String, context: AccountContext)
     case loginCode(link: String, code: String)
+    case folder(link: String, slug: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1301,6 +1304,8 @@ enum inAppLink {
             return link
         case let .urlAuth(link, _):
             return link
+        case let .folder(link, _, _):
+            return link
         case let .loginCode(link, _):
             return link
         case .nothing:
@@ -1312,7 +1317,7 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "folder/"]
 
 let telegram_scheme:String = "tg://"
 let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login"]
@@ -1542,6 +1547,12 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let data = string.components(separatedBy: "/")
                         if data.count == 2, let context = context {
                             return .invoice(link: urlString, context: context, slug: value)
+                        }
+                        return .external(link: urlString, false)
+                    case actions_me[10]:
+                        let data = string.components(separatedBy: "/")
+                        if data.count == 2, let context = context {
+                            return .folder(link: urlString, slug: value, context: context)
                         }
                         return .external(link: urlString, false)
                     default:

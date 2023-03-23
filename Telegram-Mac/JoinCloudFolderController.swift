@@ -180,8 +180,11 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
+    var title: String
     var peers: [PeerEquatable] = []
     var selected: Set<PeerId> = Set()
+    var alreadyMemberPeerIds: Set<EnginePeer.Id>
+
 }
 
 private let _id_header = InputDataIdentifier("_id_header")
@@ -201,59 +204,96 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     //header
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return JoinCloudFolderHeaderItem(initialSize: initialSize, stableId: stableId, name: "Gaming club", count: state.selected.count)
+        return JoinCloudFolderHeaderItem(initialSize: initialSize, stableId: stableId, name: state.title, count: state.selected.count)
     }))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("Do you want to add 3 chats to your folder Gaming Club?", linkHandler: { _ in }), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("Do you want to add \(state.peers.count) chats to your folder \(state.title)?", linkHandler: { _ in }), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .customModern(10)))
-    sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("3 CHATS TO JOIN"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
+   
     
     struct Tuple : Equatable {
         let peer: PeerEquatable
         let selected: Bool
         let viewType: GeneralViewType
         let selectable: Bool
+        let enabled: Bool
     }
     
-    var items: [Tuple] = []
+    var toJoin: [Tuple] = []
+    var joined: [Tuple] = []
     
-    for (i, peer) in state.peers.enumerated() {
-        items.append(.init(peer: peer, selected: state.selected.contains(peer.peer.id), viewType: bestGeneralViewType(state.peers, for: i), selectable: true))
+    let _to_list = state.peers.filter { !state.alreadyMemberPeerIds.contains($0.peer.id) }
+    let _already_list = state.peers.filter { state.alreadyMemberPeerIds.contains($0.peer.id) }
+
+    for (i, peer) in _to_list.enumerated() {
+        toJoin.append(.init(peer: peer, selected: state.selected.contains(peer.peer.id), viewType: bestGeneralViewType(_to_list, for: i), selectable: true, enabled: true))
+    }
+    for (i, peer) in _already_list.enumerated() {
+        joined.append(.init(peer: peer, selected: true, viewType: bestGeneralViewType(_already_list, for: i), selectable: true, enabled: false))
     }
     
-    for item in items {
+    
+    if !toJoin.isEmpty {
+        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        sectionId += 1
         
-        let interactionType: ShortPeerItemInteractionType
-        if item.selectable {
-            interactionType = .selectable(arguments.select, side: .left)
-        } else {
-            interactionType = .plain
-        }
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, status: "838 members", inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
-        }))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("\(toJoin.count) CHATS TO JOIN"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
+        
+        for item in toJoin {
+            
+            let interactionType: ShortPeerItemInteractionType
+            if item.selectable {
+                interactionType = .selectable(arguments.select, side: .left)
+            } else {
+                interactionType = .plain
+            }
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.peer.peer.isChannel ? strings().peerStatusChannel : strings().peerStatusGroup, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
+            }))
+            index += 1
+        }
     }
     
+    
+    if !joined.isEmpty {
+        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        sectionId += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("\(joined.count) CHATS ALREADY JOINED"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        for item in joined {
+            
+            let interactionType: ShortPeerItemInteractionType
+            if item.selectable {
+                interactionType = .selectable(arguments.select, side: .left)
+            } else {
+                interactionType = .plain
+            }
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.peer.peer.isChannel ? strings().peerStatusChannel : strings().peerStatusGroup, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
+            }))
+            index += 1
+        }
+    }
+    
+   
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     return entries
 }
 
-func JoinCloudFolderController(context: AccountContext) -> InputDataModalController {
+func JoinCloudFolderController(context: AccountContext, slug: String, content: ChatFolderLinkContents) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let peers: [PeerEquatable] = [context.myPeer].compactMap { .init($0) }
+    let peers: [PeerEquatable] = content.peers.map { $0._asPeer() }.compactMap { .init($0) }
 
-    let initialState = State(peers: peers, selected: Set(peers.map { $0.peer.id }))
+    let initialState = State(title: content.title ?? "", peers: peers, selected: Set(peers.map { $0.peer.id }), alreadyMemberPeerIds: content.alreadyMemberPeerIds)
     
     var close:(()->Void)? = nil
     
@@ -291,7 +331,7 @@ func JoinCloudFolderController(context: AccountContext) -> InputDataModalControl
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Add 3 Chats")
+    let controller = InputDataController(dataSignal: signal, title: "Add \(initialState.selected.count) Chats")
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -307,10 +347,21 @@ func JoinCloudFolderController(context: AccountContext) -> InputDataModalControl
         modalController?.close()
     })
     
-    controller.afterTransaction = { [weak modalInteractions] updated in
+    controller.validateData = { _ in
+        let state = stateValue.with { $0 }
+        return .fail(.doSomething(next: { _ in
+            close?()
+            _ = showModalProgress(signal: context.engine.peers.joinChatFolderLink(slug: slug, peerIds: Array(state.selected)), for: context.window).start(completed: {
+                showModalText(for: context.window, text: "Added")
+            })
+        }))
+    }
+    
+    controller.afterTransaction = { [weak modalInteractions] controller in
         modalInteractions?.updateDone { title in
             title.isEnabled = !selected.presentation.selected.isEmpty
         }
+        controller.setCenterTitle("Add \(stateValue.with { $0.selected.count }) Chat")
     }
     
     close = { [weak modalController] in
@@ -326,3 +377,10 @@ func JoinCloudFolderController(context: AccountContext) -> InputDataModalControl
 
 
 
+func loadAndShowChatFolder(context: AccountContext, slug: String) -> Void {
+    _ = showModalProgress(signal: context.engine.peers.checkChatFolderLink(slug: slug), for: context.window).start(next: { content in
+        showModal(with: JoinCloudFolderController(context: context, slug: slug, content: content), for: context.window)
+    }, error: { error in
+        alert(for: context.window, info: strings().unknownError)
+    })
+}

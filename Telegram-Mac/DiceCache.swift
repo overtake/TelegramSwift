@@ -284,12 +284,12 @@ class DiceCache {
                 return
             }
             for diceData in data {
-                let context = self.dataContexts[diceData.key.fixed] ?? EmojiDataContext()
+                let context = self.dataContexts[diceData.key] ?? EmojiDataContext()
                 context.data = diceData.value
                 for subscriber in context.subscribers.copyItems() {
                     subscriber(diceData.value)
                 }
-                self.dataContexts[diceData.key.fixed] = context
+                self.dataContexts[diceData.key] = context
             }
             for effect in dataEffects {
                 let context = self.dataEffectsContexts[effect.key] ?? EmojiDataContext()
