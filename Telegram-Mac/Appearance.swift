@@ -752,6 +752,17 @@ private func generatePlayerListAlbumPlaceholder(_ icon: CGImage?, background: NS
     })!
 }
 
+private func generateFolderLinkIcon(palette: ColorPalette, revoked: Bool) -> CGImage {
+    return generateImage(NSMakeSize(35, 35), contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.setFillColor(revoked ? palette.redUI.cgColor : palette.accent.cgColor)
+        ctx.fillEllipse(in: size.bounds)
+        
+        let image = NSImage(named: "Icon_InviteViaLink")!.precomposed(palette.underSelectedColor)
+        ctx.draw(image, in: size.bounds.focus(NSMakeSize(25, 25)))
+    })!
+}
+
 private func generateLocationPinIcon(_ background: NSColor) -> CGImage {
     return generateImage(NSMakeSize(40, 40), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
@@ -2603,7 +2614,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 installed_stickers_loop: { NSImage(named: "Icon_InstalledStickers_Loop")!.precomposed(flipVertical: true) },
                                                 installed_stickers_reactions: { NSImage(named: "Icon_InstalledStickers_Reaction")!.precomposed() },
                                                 installed_stickers_suggest: { NSImage(named: "Icon_InstalledStickers_Suggest")!.precomposed(flipVertical: true) },
-                                                installed_stickers_trending: { NSImage(named: "Icon_InstalledStickers_Trending")!.precomposed(flipVertical: true) }
+                                                installed_stickers_trending: { NSImage(named: "Icon_InstalledStickers_Trending")!.precomposed(flipVertical: true) },
+                                                folder_invite_link: { generateFolderLinkIcon(palette: palette, revoked: false) },
+                                                folder_invite_link_revoked: { generateFolderLinkIcon(palette: palette, revoked: true) }
     )
 
 }
@@ -2726,4 +2739,3 @@ func generateWebAppThemeParams(_ presentationTheme: PresentationTheme) -> [Strin
         "secondary_bg_color":Int32(bitPattern: presentationTheme.colors.listBackground.rgb)
     ]
 }
-

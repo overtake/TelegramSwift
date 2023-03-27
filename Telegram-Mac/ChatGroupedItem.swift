@@ -464,12 +464,13 @@ class ChatGroupedItem: ChatRowItem {
                 break
             }
         }
-        if layoutType == .files, _message == nil {
+        if _message == nil {
             let withText = layout.messages.filter { !$0.text.isEmpty }
             if withText.count == 1 {
                 _message = withText[0]
             }
         }
+        
         
         let msg = _message ?? self.message
         

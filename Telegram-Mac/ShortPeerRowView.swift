@@ -80,6 +80,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             if let item = item as? ShortPeerRowItem, let table = item.table, table.alwaysOpenRowsOnMouseUp, mouseInside() {
                 if item.enabled {
                     invokeAction(item, clickCount: event.clickCount)
+                } else {
+                    if let action = item.disabledAction {
+                        action()
+                        containerView.shake(beep: false)
+                    }
                 }
             }
         }
