@@ -510,7 +510,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
             if let file = message.media.first as? TelegramMediaFile  {
                 let controller: APController
                 if file.isMusic {
-                    controller = APChatMusicController(context: context, chatLocationInput: chatLocationInput, mode: mode, index: MessageIndex(message), messages: messages)
+                    controller = APChatMusicController(context: context, chatLocationInput: chatLocationInput, mode: mode, index: MessageIndex(message), baseRate: FastSettings.playingMusicRate, messages: messages)
                 } else {
                     controller = APChatVoiceController(context: context, chatLocationInput: chatLocationInput, mode: mode, index: MessageIndex(message), baseRate: FastSettings.playingRate, volume: FastSettings.volumeRate)
                 }
