@@ -317,13 +317,13 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
                 if let soundSettings = soundSettings {
                     switch soundSettings {
                     case .enabled:
-                        let name = soundName.nsstring.lastPathComponent.nsstring.deletingPathExtension
-//                        let container = containerUrl + "/Library/Sounds/"
-//                        let soundPath = container + name
-//                        try? FileManager.default.createDirectory(atPath: container, withIntermediateDirectories: true)
-//                        try? FileManager.default.copyItem(atPath: soundName, toPath: soundPath)
-                        content.sound = .init(named: .init(name))
-                      //  appDelegate?.playSound(soundName)
+                        if soundName.hasPrefix(containerUrl) {
+                            content.sound = nil
+                            appDelegate?.playSound(soundName)
+                        } else {
+                            let name = soundName.nsstring.lastPathComponent.nsstring.deletingPathExtension
+                            content.sound = .init(named: .init(name))
+                        }
                     default:
                         break
                     }

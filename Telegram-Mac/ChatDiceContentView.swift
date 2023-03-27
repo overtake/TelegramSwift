@@ -246,7 +246,8 @@ class ChatDiceContentView: ChatMediaContentView {
         
         let data: Signal<(Data?, TelegramMediaFile), NoError> = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, synchronous: approximateSynchronousValue) |> mapToSignal { values in
             for value in values {
-                if value.0 == sideSymbol {
+                let str = value.0.withoutColorizer
+                if str == sideSymbol {
                     return .single((value.1, value.2))
                 }
             }

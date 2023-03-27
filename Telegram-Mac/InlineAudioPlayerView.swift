@@ -15,6 +15,21 @@ import SwiftSignalKit
 import RangeSet
 
 
+private func effectivePlayingRate(for controller: APController) -> Double {
+    if controller is APChatMusicController {
+        return FastSettings.playingMusicRate
+    } else {
+        return FastSettings.playingRate
+    }
+}
+private func setPlayingRate(_ rate: Double, for controller: APController) {
+    if controller is APChatMusicController {
+        FastSettings.setPlayingMusicRate(rate)
+    } else {
+        FastSettings.setPlayingRate(rate)
+    }
+}
+
 func optionsRateImage(rate: String, color: NSColor, isLarge: Bool) -> CGImage {
     return generateImage(isLarge ? CGSize(width: 30, height: 30) : CGSize(width: 24.0, height: 24.0), rotatedContext: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
@@ -228,26 +243,34 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }, for: .SingleClick)
         
         
-        playingSpeed.contextMenu = {
+        playingSpeed.contextMenu = { [weak self] in
             
             let menu = ContextMenu()
-
-            let customItem = ContextMenuItem(String(format: "%.1fx", FastSettings.playingRate), image: NSImage(cgImage: generateEmptySettingsIcon(), size: NSMakeSize(24, 24)))
             
-            menu.addItem(SliderContextMenuItem(volume: FastSettings.playingRate, minValue: 0.2, maxValue: 2.5, midValue: 1, drawable: MenuAnimation.menu_speed, drawable_muted: MenuAnimation.menu_speed, { [weak self] value, _ in
+            guard let controller = self?.controller else {
+                return menu
+            }
+
+            let customItem = ContextMenuItem(String(format: "%.1fx", effectivePlayingRate(for: controller)), image: NSImage(cgImage: generateEmptySettingsIcon(), size: NSMakeSize(24, 24)))
+            
+            menu.addItem(SliderContextMenuItem(volume: effectivePlayingRate(for: controller), minValue: 0.2, maxValue: 2.5, midValue: 1, drawable: MenuAnimation.menu_speed, drawable_muted: MenuAnimation.menu_speed, { [weak self] value, _ in
                 customItem.title = String(format: "%.1fx", value)
-                FastSettings.setPlayingRate(value)
-                self?.controller?.baseRate = FastSettings.playingRate
+                if let controller = self?.controller {
+                    setPlayingRate(value, for: controller)
+                    self?.controller?.baseRate = effectivePlayingRate(for: controller)
+                }
             }))
             
             
             menu.addItem(customItem)
             
-            if FastSettings.playingRate != 1.0 {
+            if effectivePlayingRate(for: controller) != 1.0 {
                 menu.addItem(ContextSeparatorItem())
                 menu.addItem(ContextMenuItem(strings().playbackSpeedSetToDefault, handler: { [weak self] in
-                    FastSettings.setPlayingRate(1.0)
-                    self?.controller?.baseRate = FastSettings.playingRate
+                    if let controller = self?.controller {
+                        setPlayingRate(1.0, for: controller)
+                        controller.baseRate = effectivePlayingRate(for: controller)
+                    }
                 }, itemImage: MenuAnimation.menu_reset.value))
             }
 
@@ -357,7 +380,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                     self?.updateStatus(status.0, status.1)
                 }
             }))
-        controller.baseRate = FastSettings.playingRate
+        controller.baseRate = effectivePlayingRate(for: controller)
 
 
         controller.add(listener: self)
@@ -435,6 +458,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         return (trackName, artistName)
     }
     
+    
     private func update(_ song: APSongItem, controller: APController, animated: Bool) {
         
         
@@ -499,7 +523,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             }
         }
         
-        playingSpeed.set(image: optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingRate), color: FastSettings.playingRate == 1.0 ? theme.colors.grayIcon : theme.colors.accent, isLarge: true), for: .Normal)
+        playingSpeed.set(image: optionsRateImage(rate: String(format: "%.1fx", effectivePlayingRate(for: controller)), color: effectivePlayingRate(for: controller) == 1.0 ? theme.colors.grayIcon : theme.colors.accent, isLarge: true), for: .Normal)
         
         switch FastSettings.volumeRate {
         case 0:
