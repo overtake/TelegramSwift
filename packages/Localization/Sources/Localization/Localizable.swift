@@ -4069,6 +4069,8 @@ public final class L10n {
   public static func chatListFilterHideZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.Filter.Hide_zero", p1)
   }
+  /// Create Share Link
+  public static var chatListFilterInviteLink: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink") }
   /// **Adding Chats**\nPlease wait a few moments while we fill this folder for you...
   public static var chatListFilterLoading: String  { return L10n.tr("Localizable", "ChatList.Filter.Loading") }
   /// Muted
@@ -4089,6 +4091,8 @@ public final class L10n {
   public static var chatListFilterSetup: String  { return L10n.tr("Localizable", "ChatList.Filter.Setup") }
   /// Add Folder
   public static var chatListFilterSetupEmpty: String  { return L10n.tr("Localizable", "ChatList.Filter.SetupEmpty") }
+  /// Share
+  public static var chatListFilterShare: String  { return L10n.tr("Localizable", "ChatList.Filter.Share") }
   /// %d
   public static func chatListFilterShowMoreCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.Filter.ShowMore_countable", p1)
@@ -4173,6 +4177,48 @@ public final class L10n {
   public static func chatListFilterIncludeLimitReachedNew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.Filter.Include.LimitReached.New", p1)
   }
+  /// Delete
+  public static var chatListFilterInviteLinkDelete: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Delete") }
+  /// includes %d chats
+  public static func chatListFilterInviteLinkDesc(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Desc", p1)
+  }
+  /// %d
+  public static func chatListFilterInviteLinkDescCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Desc_countable", p1)
+  }
+  /// includes %d chats
+  public static func chatListFilterInviteLinkDescFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Desc_few", p1)
+  }
+  /// includes %d chats
+  public static func chatListFilterInviteLinkDescMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Desc_many", p1)
+  }
+  /// include %d chat
+  public static func chatListFilterInviteLinkDescOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Desc_one", p1)
+  }
+  /// includes %d chats
+  public static func chatListFilterInviteLinkDescOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Desc_other", p1)
+  }
+  /// includes %d chats
+  public static func chatListFilterInviteLinkDescTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Desc_two", p1)
+  }
+  /// includes %d chats
+  public static func chatListFilterInviteLinkDescZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Desc_zero", p1)
+  }
+  /// INVITE LINK
+  public static var chatListFilterInviteLinkHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.header") }
+  /// Give your friends and colleagues access to the entire folder including all of its groups and channels where you have the necessary rights.
+  public static var chatListFilterInviteLinkInfo: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Info") }
+  /// revoked
+  public static var chatListFilterInviteLinkRevoked: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Revoked") }
+  /// Are you sure you want to delete share link?
+  public static var chatListFilterInviteLinkDeleteConfirm: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Delete.Confirm") }
   /// Add a Custom Folder
   public static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
   /// Drag and drop folders to change order. Right click to remove.
@@ -7839,6 +7885,8 @@ public final class L10n {
   public static var peerMediaCalendarTitle: String  { return L10n.tr("Localizable", "Peer.Media.Calendar.Title") }
   /// channel
   public static var peerStatusChannel: String  { return L10n.tr("Localizable", "Peer.Status.channel") }
+  /// forum
+  public static var peerStatusForum: String  { return L10n.tr("Localizable", "Peer.Status.forum") }
   /// group
   public static var peerStatusGroup: String  { return L10n.tr("Localizable", "Peer.Status.group") }
   /// last seen just now

@@ -9521,6 +9521,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var folder_invite_link: CGImage {
+      if let image = cached.with({ $0["folder_invite_link"] }) {
+          return image
+      } else {
+          let image = _folder_invite_link()
+          _ = cached.modify { current in 
+              var current = current
+              current["folder_invite_link"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var folder_invite_link_revoked: CGImage {
+      if let image = cached.with({ $0["folder_invite_link_revoked"] }) {
+          return image
+      } else {
+          let image = _folder_invite_link_revoked()
+          _ = cached.modify { current in 
+              var current = current
+              current["folder_invite_link_revoked"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10254,6 +10280,8 @@ public final class TelegramIconsTheme {
   private let _installed_stickers_reactions: ()->CGImage
   private let _installed_stickers_suggest: ()->CGImage
   private let _installed_stickers_trending: ()->CGImage
+  private let _folder_invite_link: ()->CGImage
+  private let _folder_invite_link_revoked: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10987,7 +11015,9 @@ public final class TelegramIconsTheme {
       installed_stickers_loop: @escaping()->CGImage,
       installed_stickers_reactions: @escaping()->CGImage,
       installed_stickers_suggest: @escaping()->CGImage,
-      installed_stickers_trending: @escaping()->CGImage
+      installed_stickers_trending: @escaping()->CGImage,
+      folder_invite_link: @escaping()->CGImage,
+      folder_invite_link_revoked: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11721,5 +11751,7 @@ public final class TelegramIconsTheme {
       self._installed_stickers_reactions = installed_stickers_reactions
       self._installed_stickers_suggest = installed_stickers_suggest
       self._installed_stickers_trending = installed_stickers_trending
+      self._folder_invite_link = folder_invite_link
+      self._folder_invite_link_revoked = folder_invite_link_revoked
   }
 }

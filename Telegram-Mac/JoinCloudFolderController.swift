@@ -145,7 +145,7 @@ private final class JoinCloudFolderHeaderView : TableRowView {
             }
             current.setFrameSize(badge.size)
             badge.view = current
-
+            badge.setNeedDisplay()
         } else if let view = self.badgeView {
             performSubviewRemoval(view, animated: animated, scale: true)
             self.badgeView = nil
@@ -173,9 +173,11 @@ private final class JoinCloudFolderHeaderView : TableRowView {
 private final class Arguments {
     let context: AccountContext
     let select: SelectPeerInteraction
-    init(context: AccountContext, select: SelectPeerInteraction) {
+    let alreadyError:(Peer)->Void
+    init(context: AccountContext, select: SelectPeerInteraction, alreadyError: @escaping(Peer)->Void) {
         self.context = context
         self.select = select
+        self.alreadyError = alreadyError
     }
 }
 
@@ -184,6 +186,15 @@ private struct State : Equatable {
     var peers: [PeerEquatable] = []
     var selected: Set<PeerId> = Set()
     var alreadyMemberPeerIds: Set<EnginePeer.Id>
+    
+    var hasSelectedToJoin: Bool {
+        let to_join = peers
+            .filter { !alreadyMemberPeerIds.contains($0.peer.id) }
+            .filter { selected.contains($0.peer.id) }
+        
+        return !to_join.isEmpty
+        
+    }
 
 }
 
@@ -208,7 +219,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("Do you want to add \(state.peers.count) chats to your folder \(state.title)?", linkHandler: { _ in }), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("Do you want to add **\(state.selected.count)** chats to your folder **\(state.title)**?", linkHandler: { _ in }), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
     index += 1
     
    
@@ -238,6 +249,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if !toJoin.isEmpty {
         entries.append(.sectionId(sectionId, type: .customModern(10)))
         sectionId += 1
+
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("\(toJoin.count) CHATS TO JOIN"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
@@ -259,7 +271,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     if !joined.isEmpty {
-        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("\(joined.count) CHATS ALREADY JOINED"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -274,7 +286,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 interactionType = .plain
             }
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.peer.peer.isChannel ? strings().peerStatusChannel : strings().peerStatusGroup, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.peer.peer.isChannel ? strings().peerStatusChannel : strings().peerStatusGroup, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType, disabledAction: {
+                    arguments.alreadyError(item.peer.peer)
+                })
             }))
             index += 1
         }
@@ -325,13 +339,21 @@ func JoinCloudFolderController(context: AccountContext, slug: String, content: C
         selected.toggleSelection(peer.peer)
     }
 
-    let arguments = Arguments(context: context, select: selected)
+    let arguments = Arguments(context: context, select: selected, alreadyError: { peer in
+        let text: String
+        if peer.isChannel {
+            text = "You are already a member of this group."
+        } else {
+            text = "You are already a member of this channel."
+        }
+        showModalText(for: context.window, text: text)
+    })
 
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Add \(initialState.selected.count) Chats")
+    let controller = InputDataController(dataSignal: signal, title: "Add Folder")
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -359,9 +381,10 @@ func JoinCloudFolderController(context: AccountContext, slug: String, content: C
     
     controller.afterTransaction = { [weak modalInteractions] controller in
         modalInteractions?.updateDone { title in
-            title.isEnabled = !selected.presentation.selected.isEmpty
+            let state = stateValue.with { $0 }
+            title.isEnabled = true
+            title.set(text: state.hasSelectedToJoin ? "Join Chats" : "Add Folder", for: .Normal)
         }
-        controller.setCenterTitle("Add \(stateValue.with { $0.selected.count }) Chat")
     }
     
     close = { [weak modalController] in

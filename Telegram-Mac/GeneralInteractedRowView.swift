@@ -408,7 +408,9 @@ class GeneralInteractedRowView: GeneralRowView {
             }
             item.action()
         } else {
-            item.disabledAction()
+            if let action = item.disabledAction {
+                action()
+            }
         }
     }
     private func invokeIfNeededUp() {

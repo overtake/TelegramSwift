@@ -26,7 +26,8 @@ private final class DeveloperArguments {
     let toggleNativeGraphicContext:()->Void
     let toggleDebugWebApp:()->Void
     let toggleNetwork:()->Void
-    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void, toggleMenu:@escaping(Bool)->Void, toggleDebugWebApp:@escaping()->Void, toggleAnimatedInputEmoji: @escaping()->Void, toggleNativeGraphicContext:@escaping()->Void, toggleNetwork:@escaping()->Void) {
+    let toggleDownloads:()->Void
+    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void, toggleMenu:@escaping(Bool)->Void, toggleDebugWebApp:@escaping()->Void, toggleAnimatedInputEmoji: @escaping()->Void, toggleNativeGraphicContext:@escaping()->Void, toggleNetwork:@escaping()->Void, toggleDownloads:@escaping()->Void) {
         self.importColors = importColors
         self.exportColors = exportColors
         self.toggleLogs = toggleLogs
@@ -37,6 +38,7 @@ private final class DeveloperArguments {
         self.toggleAnimatedInputEmoji = toggleAnimatedInputEmoji
         self.toggleNativeGraphicContext = toggleNativeGraphicContext
         self.toggleNetwork = toggleNetwork
+        self.toggleDownloads = toggleDownloads
     }
 }
 
@@ -53,6 +55,7 @@ private enum DeveloperEntryId : Hashable {
     case crash
     case debugWebApp
     case network
+    case downloads
     case section(Int32)
     var hashValue: Int {
         switch self {
@@ -80,6 +83,8 @@ private enum DeveloperEntryId : Hashable {
             return 10
         case .network:
             return 11
+        case .downloads:
+            return 12
         case .section(let section):
             return 11 + Int(section)
         }
@@ -100,6 +105,7 @@ private enum DeveloperEntry : TableItemListNodeEntry {
     case crash(sectionId: Int32)
     case debugWebApp(sectionId: Int32)
     case network(sectionId: Int32, enabled: Bool)
+    case downloads(sectionId: Int32, enabled: Bool)
     case section(Int32)
     
     var stableId:DeveloperEntryId {
@@ -128,6 +134,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             return .debugWebApp
         case .network:
             return .network
+        case .downloads:
+            return .downloads
         case .section(let section):
             return .section(section)
         }
@@ -158,6 +166,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
         case let .debugWebApp(sectionId):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case let .network(sectionId, _):
+            return (sectionId * 1000) + Int32(stableId.hashValue)
+        case let .downloads(sectionId, _):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -211,6 +221,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Debug Web App", type: .switchable(FastSettings.debugWebApp), action: arguments.toggleDebugWebApp)
         case let .network(_, enabled):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Experimental Network", type: .switchable(enabled), action: arguments.toggleNetwork)
+        case let .downloads(_, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Experimental Downloads", type: .switchable(enabled), action: arguments.toggleDownloads)
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -239,6 +251,8 @@ private func developerEntries(loginSettings: LoggingSettings, networkSettings: N
     entries.append(.nativeGraphicContext(sectionId: sectionId, enabled: FastSettings.useNativeGraphicContext))
     entries.append(.debugWebApp(sectionId: sectionId))
     entries.append(.network(sectionId: sectionId, enabled: networkSettings.useNetworkFramework ?? false))
+    entries.append(.downloads(sectionId: sectionId, enabled: networkSettings.useExperimentalDownload ?? false))
+    
     entries.append(.crash(sectionId: sectionId))
 
     entries.append(.section(sectionId))
@@ -323,6 +337,16 @@ class DeveloperViewController: TableViewController {
                     current.useNetworkFramework = !value
                 } else {
                     current.useNetworkFramework = true
+                }
+                return current
+            }).start()
+        }, toggleDownloads: {
+            _ = updateNetworkSettingsInteractively(postbox: context.account.postbox, network: context.account.network, { current in
+                var current = current
+                if let value = current.useExperimentalDownload {
+                    current.useExperimentalDownload = !value
+                } else {
+                    current.useExperimentalDownload = true
                 }
                 return current
             }).start()

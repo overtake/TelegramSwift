@@ -848,6 +848,9 @@ func initialize() -> [String] {
     array.append("installed_stickers_trending")
 
     
+    array.append("folder_invite_link")
+    array.append("folder_invite_link_revoked")
+
 
     return array
 }
