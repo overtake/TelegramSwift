@@ -50,7 +50,7 @@ class StickerPreviewModalView : View, ModalPreviewControllerView {
             let layout = TextViewLayout(.initialize(string: reference.media.stickerText?.fixed, color: nil, font: .normal(30.0)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
-            textView.centerX()
+            textView.centerX(y: 0)
             if animated {
                 textView.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
             }
@@ -354,7 +354,7 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             let layout = TextViewLayout(.initialize(string: reference.media.stickerText?.fixed ?? reference.media.customEmojiText?.fixed, color: nil, font: .normal(30.0)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
-            textView.centerX(y: player.frame.minY - textView.frame.height - 20)
+            textView.centerX(y: max(0, player.frame.minY - textView.frame.height - 20))
             if animated {
                 textView.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
             }
