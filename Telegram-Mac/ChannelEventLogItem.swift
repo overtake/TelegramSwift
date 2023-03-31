@@ -722,7 +722,7 @@ class ServiceEventLogItem: TableRowItem {
                     let text = strings().channelAdminLogRevokedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
                 }
-            case let .participantJoinedViaInvite(invite):
+            case let .participantJoinedViaInvite(invite, joinedViaFolderLink):
                 if let invite = invite._invitation {
                     let text = strings().channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
