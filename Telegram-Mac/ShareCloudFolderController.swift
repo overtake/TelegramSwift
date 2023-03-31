@@ -227,7 +227,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
     var initialSelected: Set<PeerId> = Set()
     
     if let data = filter.data {
-        let peers = context.account.postbox.transaction { transaction in
+        let peers: Signal<[PeerEquatable], NoError> = context.account.postbox.transaction { transaction -> [PeerEquatable] in
             var peers:[PeerEquatable] = []
             
             let peerIds = ((link?.peerIds ?? []) + data.includePeers.peers).uniqueElements
