@@ -808,7 +808,7 @@ public final class TextViewLayout : Equatable {
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
-                       // layoutSize.height += fontLineSpacing
+                        layoutSize.height += fontLineSpacing
                     }
                     break
                 }

@@ -553,6 +553,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                     }
                 } else if peer is TelegramUser, !peer.isBot, peerView.peerIsContact {
                     editable = context.account.peerId != peer.id
+                } else if let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) {
+                    editable = true
                 } else {
                     editable = false
                 }

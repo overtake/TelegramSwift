@@ -40,6 +40,7 @@ public class InputDataModalController : ModalViewController {
     public override var modalTheme: ModalViewController.Theme {
         return getModalTheme?() ?? super.modalTheme
     }
+
     
     var isFullScreenImpl: (()->Bool)? = nil
     

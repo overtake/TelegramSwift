@@ -272,11 +272,19 @@ final class InputDataTextInsertAnimatedViewData : NSObject {
 }
 
 struct InputDataGeneralTextRightData : Equatable {
+    static func == (lhs: InputDataGeneralTextRightData, rhs: InputDataGeneralTextRightData) -> Bool {
+        return lhs.text == rhs.text && lhs.isLoading == rhs.isLoading && lhs.update == rhs.update
+    }
+    
     let isLoading: Bool
     let text: NSAttributedString?
-    init(isLoading: Bool, text: NSAttributedString?) {
+    let action:(()->Void)?
+    private let update: UInt32?
+    init(isLoading: Bool, text: NSAttributedString?, action:(()->Void)? = nil, update: UInt32? = nil) {
         self.isLoading = isLoading
         self.text = text
+        self.action = action
+        self.update = update
     }
 }
 

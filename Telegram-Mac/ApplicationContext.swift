@@ -302,6 +302,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             }
         }))
         
+        closeAllPopovers(for: context.window)
+        closeAllModals(window: context.window)
+        AppMenu.closeAll()
       
        // var forceNotice:Bool = false
         if FastSettings.isMinimisize {

@@ -496,6 +496,8 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let peer = peer as? TelegramUser {
             if peerView.peerIsContact {
                 canEditPhoto = peer.photo.isEmpty
+            } else if let botInfo = peer.botInfo {
+                canEditPhoto = botInfo.flags.contains(.canEdit) 
             } else {
                 canEditPhoto = false
             }

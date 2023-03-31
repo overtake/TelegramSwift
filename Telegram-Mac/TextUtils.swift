@@ -674,11 +674,12 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case let .webViewData(data):
             text = strings().chatServiceWebData(data)
-        case let .giftPremium(currency, amount, _):
+        case let .giftPremium(currency, amount, _, cryptoCurrency, cryptoCurrencyAmount):
+            let formatted = formatCurrencyAmount(amount, currency: currency)
             if authorId == account.peerId {
-                text = strings().chatServicePremiumGiftSentYou(formatCurrencyAmount(amount, currency: currency))
+                text = strings().chatServicePremiumGiftSentYou(formatted)
             } else {
-                text = strings().chatServicePremiumGiftSent(authorName, formatCurrencyAmount(amount, currency: currency))
+                text = strings().chatServicePremiumGiftSent(authorName, formatted)
             }
         case let .topicEdited(components):
             var fileId: Int64?

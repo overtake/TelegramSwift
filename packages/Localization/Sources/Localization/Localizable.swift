@@ -575,6 +575,12 @@ public final class L10n {
   public static var botTransferOwnershipPasswordDesc: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Desc") }
   /// Two-Step Verification
   public static var botTransferOwnershipPasswordTitle: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Title") }
+  /// USERNAME
+  public static var botUsernameHeader: String  { return L10n.tr("Localizable", "BotUsername.Header") }
+  /// This username cannot be edited.
+  public static var botUsernameInfo: String  { return L10n.tr("Localizable", "BotUsername.Info") }
+  /// Username
+  public static var botUsernameTitle: String  { return L10n.tr("Localizable", "BotUsername.Title") }
   /// Leave as regular group
   public static var broadcastGroupsCancel: String  { return L10n.tr("Localizable", "BroadcastGroups.Cancel") }
   /// Convert to Broadcast Group
@@ -4069,7 +4075,7 @@ public final class L10n {
   public static func chatListFilterHideZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.Filter.Hide_zero", p1)
   }
-  /// Create Share Link
+  /// Create a New Link
   public static var chatListFilterInviteLink: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink") }
   /// **Adding Chats**\nPlease wait a few moments while we fill this folder for you...
   public static var chatListFilterLoading: String  { return L10n.tr("Localizable", "ChatList.Filter.Loading") }
@@ -4213,11 +4219,15 @@ public final class L10n {
   }
   /// INVITE LINK
   public static var chatListFilterInviteLinkHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.header") }
+  /// No way to share folder with chat types or excluded chats.
+  public static var chatListFilterInviteLinkIncludeExcludeError: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.IncludeExcludeError") }
   /// Give your friends and colleagues access to the entire folder including all of its groups and channels where you have the necessary rights.
   public static var chatListFilterInviteLinkInfo: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Info") }
   /// revoked
   public static var chatListFilterInviteLinkRevoked: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Revoked") }
-  /// Are you sure you want to delete share link?
+  /// Share Folder
+  public static var chatListFilterInviteLinkShare: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Share") }
+  /// Are you sure you want to delete this folder? This will also deactivate all the invite links used to share this folder?
   public static var chatListFilterInviteLinkDeleteConfirm: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Delete.Confirm") }
   /// Add a Custom Folder
   public static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
@@ -4259,6 +4269,36 @@ public final class L10n {
   public static var chatListFilterTilteDefaultUnmuted: String  { return L10n.tr("Localizable", "ChatList.Filter.Tilte.Default.Unmuted") }
   /// Unread
   public static var chatListFilterTilteDefaultUnread: String  { return L10n.tr("Localizable", "ChatList.Filter.Tilte.Default.Unread") }
+  /// Click here to view them
+  public static var chatListFolderUpdatesInfo: String  { return L10n.tr("Localizable", "ChatList.FolderUpdates.Info") }
+  /// %d
+  public static func chatListFolderUpdatesTitleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_countable", p1)
+  }
+  /// You can join [%d new chats]()
+  public static func chatListFolderUpdatesTitleFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_few", p1)
+  }
+  /// You can join [%d new chats]()
+  public static func chatListFolderUpdatesTitleMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_many", p1)
+  }
+  /// You can join [%d new chat]()
+  public static func chatListFolderUpdatesTitleOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_one", p1)
+  }
+  /// You can join [%d new chats]()
+  public static func chatListFolderUpdatesTitleOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_other", p1)
+  }
+  /// You can join [%d new chats]()
+  public static func chatListFolderUpdatesTitleTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_two", p1)
+  }
+  /// You can join [%d new chats]()
+  public static func chatListFolderUpdatesTitleZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_zero", p1)
+  }
   /// For 1 Day
   public static var chatListMute1Day: String  { return L10n.tr("Localizable", "ChatList.Mute.1Day") }
   /// For 1 Hour
@@ -8273,6 +8313,16 @@ public final class L10n {
   public static var peerInfoBotShare: String  { return L10n.tr("Localizable", "PeerInfo.Bot.Share") }
   /// This bot is able to manage group or channel
   public static var peerInfoBotAddToInfo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo.Info") }
+  /// Edit Commands
+  public static var peerInfoBotEditCommands: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Commands") }
+  /// Use [@BotFather]() to manage this bot.
+  public static var peerInfoBotEditInfo: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Info") }
+  /// Edit Intro
+  public static var peerInfoBotEditIntro: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Intro") }
+  /// Change Bot Settings
+  public static var peerInfoBotEditSettings: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Settings") }
+  /// Username
+  public static var peerInfoBotEditUsername: String  { return L10n.tr("Localizable", "PeerInfo.BotEdit.Username") }
   /// has access to messages
   public static var peerInfoBotStatusHasAccess: String  { return L10n.tr("Localizable", "PeerInfo.BotStatus.HasAccess") }
   /// has no access to messages
@@ -8347,6 +8397,8 @@ public final class L10n {
   public static var peerInfoConfirmSecretChatHeader: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.SecretChat.Header") }
   /// Start
   public static var peerInfoConfirmSecretChatOK: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.SecretChat.OK") }
+  /// About
+  public static var peerInfoDescriptionPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.Description.Placeholder") }
   /// Add
   public static var peerInfoDiscussionAdd: String  { return L10n.tr("Localizable", "PeerInfo.Discussion.Add") }
   /// Add group chat for comments.
@@ -8977,6 +9029,14 @@ public final class L10n {
   public static func premiumLimitLockedSavedGifsInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Limit.Locked.SavedGifs.Info", p1)
   }
+  /// Sorry, you can't add more than **%1$@** shared folders. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedSharedFoldersInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.SharedFolders.Info", p1)
+  }
+  /// Sorry, you can't add more than **%1$@** shared invite links. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedSharedFoldersInvitesInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.SharedFoldersInvites.Info", p1)
+  }
   /// Sorry, you can't pin more than **%1$@** chats to the top. Unpin some of the currently pinned ones or subscribe to **Telegram Premium** to double the limit to **%2$@** chats.
   public static func premiumLimitPinInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Limit.Pin.Info", p1, p2)
@@ -8996,6 +9056,14 @@ public final class L10n {
   /// Sorry, you can't save more than **%1$@** GIFs. Replace an older GIF or subscribe to **Telegram Premium** to double the limit to **%2$@** GIFs.
   public static func premiumLimitSavedGifsInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Limit.SavedGifs.Info", p1, p2)
+  }
+  /// You can only add **%1$@** shareable folders. Upgrade to **Telegram Premium** to increase this limit up to **%2$@**.
+  public static func premiumLimitSharedFoldersInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.SharedFolders.Info", p1, p2)
+  }
+  /// You can only create **%1$@** invite links. Upgrade to **Telegram Premium** to increase the links limit to **%2$@**.
+  public static func premiumLimitSharedFoldersInvitesInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.SharedFoldersInvites.Info", p1, p2)
   }
   /// You already have Telegram Premium.
   public static var premiumOffsetAlreadyHave: String  { return L10n.tr("Localizable", "Premium.Offset.AlreadyHave") }

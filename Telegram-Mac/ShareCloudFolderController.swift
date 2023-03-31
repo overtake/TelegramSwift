@@ -19,25 +19,25 @@ private final class Arguments {
     let select: SelectPeerInteraction
     let copy:(String)->Void
     let share:(String)->Void
-    let revoke:()->Void
     let delete:()->Void
     let cantSelect:(Peer)->Void
-    init(context: AccountContext, select: SelectPeerInteraction, copy:@escaping(String)->Void, share:@escaping(String)->Void, revoke:@escaping()->Void, delete: @escaping()->Void, cantSelect:@escaping(Peer)->Void) {
+    let nameLink: ()->Void
+    init(context: AccountContext, select: SelectPeerInteraction, copy:@escaping(String)->Void, share:@escaping(String)->Void, delete: @escaping()->Void, cantSelect:@escaping(Peer)->Void, nameLink: @escaping()->Void) {
         self.context = context
         self.select = select
         self.copy = copy
         self.share = share
-        self.revoke = revoke
         self.delete = delete
         self.cantSelect = cantSelect
+        self.nameLink = nameLink
     }
 }
 
 func peerCanBeSharedInFolder(_ peer: Peer, filter: ChatListFilter? = nil) -> Bool {
     if let filter = filter, let data = filter.data {
-        if !data.includePeers.peers.contains(peer.id) {
-            return false
-        }
+//        if !data.includePeers.peers.contains(peer.id) {
+//            return false
+//        }
     }
     if peer.isChannel || peer.isSupergroup {
         return peer.addressName != nil || peer.groupAccess.canCreateInviteLink
@@ -107,18 +107,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     items.append(ContextMenuItem(strings().contextCopy, handler: {
                         arguments.copy(link.link)
                     }, itemImage: MenuAnimation.menu_copy.value))
-                                 
-//                    items.append(ContextMenuItem("Name Link", handler: {
-//                      //  arguments.copy(link.link)
-//                    }, itemImage: MenuAnimation.menu_create_group.value))
                     
+                    items.append(ContextMenuItem("Name Link", handler: {
+                        arguments.nameLink()
+                    }, itemImage: MenuAnimation.menu_edit.value))
+                                 
                     items.append(ContextSeparatorItem())
                     
-                    if link.isRevoked {
-                        items.append(ContextMenuItem("Restore", handler: arguments.revoke, itemMode: .normal, itemImage: MenuAnimation.menu_reset.value))
-                    } else {
-                        items.append(ContextMenuItem("Revoke", handler: arguments.revoke, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
-                    }
+                    items.append(ContextMenuItem("Delete", handler: arguments.delete, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     
                 }
                 
@@ -209,7 +205,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter, link: ExportedChatFolderLink?, updated:@escaping(ExportedChatFolderLink)->Void) -> InputDataModalController {
+func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter, link: ExportedChatFolderLink?, updated:@escaping(ExportedChatFolderLink, ExportedChatFolderLink?)->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
@@ -223,7 +219,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         statePromise.set(stateValue.modify (f))
     }
     
-    
+    var initialSelected: Set<PeerId> = Set()
     
     if let data = filter.data {
         let peers = context.account.postbox.transaction { transaction in
@@ -249,12 +245,6 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
             
             let peers = access + cantInvite
             
-            updateState { current in
-                var current = current
-                current.peers = peers
-                current.selected = Set(access.map { $0.peer.id })
-                return current
-            }
             for peer in access {
                 if let link = link {
                     if link.peerIds.contains(peer.peer.id) {
@@ -263,6 +253,15 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
                 } else {
                     selected?.toggleSelection(peer.peer)
                 }
+            }
+            
+            initialSelected = selected?.presentation.selected ?? []
+            
+            updateState { current in
+                var current = current
+                current.peers = peers
+                current.selected = initialSelected
+                return current
             }
 
         }))
@@ -290,23 +289,12 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         copyToClipboard(link)
     }, share: { link in
         showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
-    }, revoke: {
-        if let link = stateValue.with ({ $0.link }) {
-            _ = showModalProgress(signal: context.engine.peers.editChatFolderLink(filterId: filter.id, link: link, title: nil, peerIds: nil, revoke: !link.isRevoked), for: context.window).start(next: { link in
-                updated(link)
-                updateState { current in
-                    var current = current
-                    current.link = link
-                    return current
-                }
-                showSuccess(window: context.window)
-            })
-        }
     }, delete: {
         if let link = stateValue.with ({ $0.link }) {
-            confirm(for: context.window, information: "Are you sure you want to delete this link?", okTitle: "Revoke", successHandler: { _ in
+            confirm(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, okTitle: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
                 let signal = context.engine.peers.deleteChatFolderLink(filterId: filter.id, link: link)
                 _ = showModalProgress(signal: signal, for: context.window).start()
+                updated(link, nil)
                 close?()
             })
         }
@@ -324,6 +312,14 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
             text = "You don't have the admin rights to share invite links to this group chat."
         }
         showModalText(for: context.window, text: text)
+    }, nameLink: {
+        showModal(with: TextInputController(context: context, title: "Link Name", placeholder: "Link Name", initialText: stateValue.with { $0.link?.title ?? "" }, limit: 32, callback: { name in
+            updateState { current in
+                var current = current
+                current.link?.title = name
+                return current
+            }
+        }), for: context.window)
     })
 
     
@@ -331,7 +327,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Share Folder")
+    let controller = InputDataController(dataSignal: signal, title: link?.title ?? filter.title)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -341,7 +337,21 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         controller?.validateInputValues()
     }, drawBorder: true, height: 50, singleButton: true)
     
-    let modalController = InputDataModalController(controller, modalInteractions: link != nil ? modalInteractions : nil)
+    let modalController = InputDataModalController(controller, modalInteractions: link != nil ? modalInteractions : nil, closeHandler: { f in
+        if let link = link {
+            let state = stateValue.with { $0 }
+            if (link != state.link) || (initialSelected != state.selected) {
+                confirm(for: context.window, information: "You have changed the settings of this folder. Discard changes?", okTitle: "Discard", successHandler: { _ in
+                    f()
+                })
+            } else {
+                f()
+            }
+        } else {
+            f()
+        }
+    })
+       
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
@@ -349,17 +359,21 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
     
     controller.validateData = { data in
         let state = stateValue.with { $0 }
-        if let link = state.link {
-            if state.selected != Set(link.peerIds) {
-                _ = showModalProgress(signal: context.engine.peers.editChatFolderLink(filterId: state.filter.id, link: link, title: link.title, peerIds: Array(state.selected), revoke: false), for: context.window).start(next: { link in
-                    updated(link)
-                    showSuccess(window: context.window)
-                }, error: { error in
-                    alert(for: context.window, info: strings().unknownError)
-                })
+        if let current = state.link {
+            if state.selected.isEmpty {
+                arguments.delete()
+            } else {
+                if state.selected != Set(current.peerIds) || link?.title != current.title {
+                    _ = showModalProgress(signal: context.engine.peers.editChatFolderLink(filterId: state.filter.id, link: current, title: current.title, peerIds: Array(state.selected), revoke: false), for: context.window).start(next: { upd in
+                        updated(current, upd)
+                        showSuccess(window: context.window)
+                    }, error: { error in
+                        alert(for: context.window, info: strings().unknownError)
+                    })
+                }
+                close?()
             }
         }
-        close?()
         return .none
 
     }
@@ -372,8 +386,19 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         return controller
     }
     
-   // context.engine.peers.exportChatFolder(filterId: <#T##Int32#>, title: <#T##String#>, peerIds: <#T##[PeerId]#>)
     
+    controller.afterTransaction = { [weak modalInteractions, weak modalController] controller in
+        modalInteractions?.updateDone { title in
+            title.set(color: stateValue.with { $0.selected.isEmpty } ? theme.colors.redUI : theme.colors.accent, for: .Normal)
+            title.set(text: stateValue.with { $0.selected.isEmpty } ? "Delete" : "Done", for: .Normal)
+        }
+        if let title = stateValue.with({ $0.link?.title }) {
+            controller.centerModalHeader = .init(title: title)
+            modalController?.updateLocalizationAndTheme(theme: theme)
+        }
+    }
+    
+        
     return modalController
 }
 

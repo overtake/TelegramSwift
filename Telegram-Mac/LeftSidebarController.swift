@@ -56,14 +56,17 @@ func filterContextMenuItems(_ filter: ChatListFilter, unreadCount: Int?, context
         items.append(ContextSeparatorItem())
         
         items.append(.init(strings().chatListFilterDelete, handler: {
-            confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
-                _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
-                    var filters = filters
-                    filters.removeAll(where: { $0.id == filter.id })
-                    return filters
-                }).start()
-            })
-            
+            if filter.data?.isShared == true {
+                deleteSharedFolder(context: context, filter: filter)
+            } else {
+                confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
+                    _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
+                        var filters = filters
+                        filters.removeAll(where: { $0.id == filter.id })
+                        return filters
+                    }).start()
+                })
+            }
         }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
     } else {
         items.append(.init(strings().chatListFilterEditFilters, handler: {

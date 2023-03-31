@@ -38,6 +38,8 @@ enum PremiumLogEventsSource : Equatable {
         case dialogs_folder_pinned
         case accounts
         case about
+        case community_invites
+        case communities_joined
     }
     
     case deeplink(String?)
