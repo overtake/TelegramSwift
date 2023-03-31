@@ -48,6 +48,8 @@ private func loadCurrencyFormatterEntries() -> [String: CurrencyFormatterEntry] 
         }
     }
     
+    result["TON"] = .init(symbol: "", thousandsSeparator: ",", decimalSeparator: ".", symbolOnLeft: true, spaceBetweenAmountAndSymbol: false, decimalDigits: 9)
+    
     return result
 }
 

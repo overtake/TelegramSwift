@@ -18,8 +18,9 @@ class GeneralInteractedRowView: GeneralRowView {
     private(set) var progressView: ProgressIndicator?
     private(set) var textView:TextView?
     private(set) var descriptionView: TextView?
-    private var nextView:ImageView = ImageView()
-    
+    private let nextView:ImageView = ImageView()
+    private var imageContext:ImageView?
+
     private var badgeView: View?
     
     private var rightIconView: ImageView?
@@ -122,6 +123,21 @@ class GeneralInteractedRowView: GeneralRowView {
                 textView?.removeFromSuperview()
                 textView = nil
             }
+            if case let .nextImage(image) = item.type {
+                let current:ImageView
+                if let view = self.imageContext {
+                    current = view
+                } else {
+                    current = ImageView()
+                    containerView.addSubview(current)
+                    self.imageContext = current
+                }
+                current.image = image 
+                current.sizeToFit()
+            } else if let view = self.imageContext {
+                performSubviewRemoval(view, animated: animated)
+                self.imageContext = nil
+            }
             textView?.backgroundColor = backdorColor
             
             if case let .selectable(value) = item.type {
@@ -143,6 +159,9 @@ class GeneralInteractedRowView: GeneralRowView {
                 needNextImage = true
             }
             if case .nextContext = item.type {
+                needNextImage = true
+            }
+            if case .nextImage = item.type {
                 needNextImage = true
             }
             if case let .contextSelector(value, items) = item.type {
@@ -471,15 +490,22 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let textView = textView {
                     var width:CGFloat = 100
                     if let name = item.nameLayout {
-                        width = frame.width - name.0.size.width - nextInset - insets.right - insets.left - 10
+                        width = containerView.frame.width - name.0.size.width - nextInset - insets.right - insets.left - 10
                     }
                     textView.textLayout?.measure(width: width)
                     textView.update(textView.textLayout)
-                    textView.centerY(x:frame.width - insets.right - textView.frame.width - nextInset, addition: -1)
+                    textView.centerY(x: containerView.frame.width - insets.right - textView.frame.width - nextInset, addition: -1)
                     if !nextView.isHidden {
                         textView.setFrameOrigin(textView.frame.minX,textView.frame.minY - 1)
                     }
                 }
+                if let current = self.imageContext {
+                    current.centerY(x: containerView.frame.width - insets.right - current.frame.width - nextInset)
+                    if !nextView.isHidden {
+                        current.setFrameOrigin(current.frame.minX, current.frame.minY - 2)
+                    }
+                }
+                
                 nextView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
                 if let progressView = progressView {
                     progressView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width, addition: -1)
@@ -512,6 +538,12 @@ class GeneralInteractedRowView: GeneralRowView {
                     textView.centerY(x: containerView.frame.width - innerInsets.right - textView.frame.width - nextInset)
                     if !nextView.isHidden {
                         textView.setFrameOrigin(textView.frame.minX, textView.frame.minY - 1)
+                    }
+                }
+                if let current = self.imageContext {
+                    current.centerY(x: containerView.frame.width - innerInsets.right - current.frame.width - nextInset)
+                    if !nextView.isHidden {
+                        current.setFrameOrigin(current.frame.minX, current.frame.minY - 2)
                     }
                 }
                 

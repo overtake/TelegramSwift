@@ -70,7 +70,14 @@ final class PremiumLimitConfig {
     
     let premium_purchase_blocked: Bool
     let show_premium_gift_in_attach_menu: Bool
+    
+    let community_invites_limit_default: Int
+    let community_invites_limit_premium: Int
 
+    let communities_joined_limit_default: Int
+    let communities_joined_limit_premium: Int
+
+    
     init(appConfiguration: AppConfiguration) {
         if let data = appConfiguration.data {
             self.channels_limit_default = Int(data["channels_limit_default"] as? Double ?? 500)
@@ -111,6 +118,13 @@ final class PremiumLimitConfig {
             
             self.premium_purchase_blocked = data["premium_purchase_blocked"] as? Bool ?? true
             self.show_premium_gift_in_attach_menu = data["premium_gift_attach_menu_icon"] as? Bool ?? false
+            
+            self.community_invites_limit_default = Int(data["community_invites_limit_default"] as? Double ?? 3)
+            self.community_invites_limit_premium = Int(data["community_invites_limit_premium"] as? Double ?? 100)
+
+            self.communities_joined_limit_default = Int(data["communities_joined_limit_default"] as? Double ?? 2)
+            self.communities_joined_limit_premium = Int(data["communities_joined_limit_premium"] as? Double ?? 20)
+
         } else {
             self.channels_limit_default = 500
             self.channels_limit_premium = 1000
@@ -150,6 +164,14 @@ final class PremiumLimitConfig {
             
             self.premium_purchase_blocked = true
             self.show_premium_gift_in_attach_menu = false
+            
+            self.community_invites_limit_default = 3
+            self.community_invites_limit_premium = 100
+
+            self.communities_joined_limit_default = 2
+            self.communities_joined_limit_premium = 20
+
+
         }
     }
 }

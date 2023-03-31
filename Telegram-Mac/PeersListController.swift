@@ -2021,7 +2021,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         if let searchController = self.searchController {
             
-            let animated = animated && searchController.didSetReady
+            let animated = animated && searchController.didSetReady && !searchController.view.isHidden
             
             searchController.viewWillDisappear(animated)
             searchController.view.layer?.opacity = animated ? 1.0 : 0.0
@@ -2152,6 +2152,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 //                $0.withUpdatedSidebar(true)
 //            }).start()
         case .systemDeprecated:
+            break
+        case .sharedFolderUpdated:
             break
         case .reveal:
             break
@@ -2306,6 +2308,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         default:
             break
         }
+        self.searchController?.view._change(opacity: 0, animated: true, completion: { [weak self] completed in
+            if completed {
+                self?.searchController?.view.isHidden = true
+            }
+        })
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -2315,6 +2322,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         default:
             break
         }
+        self.searchController?.view.isHidden = false
+        self.searchController?.view._change(opacity: 1, animated: true)
     }
     
     override var stake: StakeSettings {

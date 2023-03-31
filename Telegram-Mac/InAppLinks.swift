@@ -1108,7 +1108,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         
         afterComplete(true)
     case let .folder(_, slug, context):
-        loadAndShowChatFolder(context: context, slug: slug)
+        loadAndShowSharedFolder(context: context, slug: slug)
     case let .loginCode(_, code):
         appDelegate?.applyExternalLoginCode(code)
     }
@@ -1317,10 +1317,10 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "folder/"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "list/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "list"]
 
 let ton_scheme:String = "ton://"
 
@@ -1971,6 +1971,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[17]:
                     if let code = vars[keyURLCode] {
                         return .loginCode(link: urlString, code: code)
+                    }
+                case known_scheme[18]:
+                    if let slug = vars[keyURLSlug], let context = context {
+                        return .folder(link: urlString, slug: slug, context: context)
                     }
                 default:
                     break

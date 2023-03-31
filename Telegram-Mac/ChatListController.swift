@@ -23,7 +23,8 @@ private final class Arguments {
     let switchOffForum: ()->Void
     let getHideProgress:()->CGFloat?
     let hideDeprecatedSystem:()->Void
-    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void) {
+    let applySharedFolderUpdates:(ChatFolderUpdates)->Void
+    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void) {
         self.context = context
         self.setupFilter = setupFilter
         self.openFilterSettings = openFilterSettings
@@ -32,6 +33,7 @@ private final class Arguments {
         self.switchOffForum = switchOffForum
         self.getHideProgress = getHideProgress
         self.hideDeprecatedSystem = hideDeprecatedSystem
+        self.applySharedFolderUpdates = applySharedFolderUpdates
     }
 }
 
@@ -43,6 +45,7 @@ enum UIChatListEntryId : Hashable {
     case empty
     case loading
     case systemDeprecated
+    case sharedFolderUpdated
 }
 
 
@@ -62,6 +65,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     case reveal([ChatListFilter], ChatListFilter, ChatListFilterBadges)
     case empty(ChatListFilter, PeerListMode, SplitViewState, PeerEquatable?)
     case systemDeprecated(ChatListFilter)
+    case sharedFolderUpdated(ChatFolderUpdates)
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
@@ -91,6 +95,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             }
         case let .systemDeprecated(filter):
             if case .systemDeprecated(filter) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .sharedFolderUpdated(updates):
+            if case .sharedFolderUpdated(updates) = rhs {
                 return true
             } else {
                 return false
@@ -145,6 +155,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         case .systemDeprecated:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
+        case .sharedFolderUpdated:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .loading:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         }
@@ -170,6 +182,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .empty
         case .systemDeprecated:
             return .systemDeprecated
+        case .sharedFolderUpdated:
+            return .sharedFolderUpdated
         case .loading:
             return .loading
         }
@@ -219,6 +233,10 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 return ChatListEmptyRowItem(initialSize, stableId: entry.stableId, filter: filter, mode: mode, peer: peer?.peer, layoutState: state, context: arguments.context, openFilterSettings: arguments.openFilterSettings, createTopic: arguments.createTopic, switchOffForum: arguments.switchOffForum)
             case .systemDeprecated:
                 return ChatListSystemDeprecatedItem(initialSize, stableId: entry.stableId, hideAction: arguments.hideDeprecatedSystem)
+            case let .sharedFolderUpdated(updates):
+                return ChatListFolderUpdatedRowItem(initialSize, stableId: entry.stableId, updates: updates, action: {
+                    arguments.applySharedFolderUpdates(updates)
+                })
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             }
@@ -351,6 +369,7 @@ class ChatListController : PeersListController {
         if changedFolder {
             self.removeRevealStateIfNeeded(nil)
             self.genericView.tableView.scroll(to: .up(true))
+            self.folderUpdatesDisposable.set(context.engine.peers.pollChatFolderUpdates(folderId: data.filter.id).start())
         }
 
         self.genericView.searchView.change(state: .None,  true)
@@ -365,6 +384,7 @@ class ChatListController : PeersListController {
     private let disposable = MetaDisposable()
     private let reorderDisposable = MetaDisposable()
     private let globalPeerDisposable = MetaDisposable()
+    private let folderUpdatesDisposable = MetaDisposable()
     private let animateGroupNextTransition:Atomic<EngineChatList.Group?> = Atomic(value: nil)
     
     private let downloadsSummary: DownloadsSummary
@@ -434,6 +454,8 @@ class ChatListController : PeersListController {
             _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {
                 $0.withUpdatedDeprecatedNotice(Int32(Date().timeIntervalSince1970 + 31 * 24 * 60 * 60))
             }).start()
+        }, applySharedFolderUpdates: { updates in
+            showModal(with: JoinCloudFolderController(context: context, content: .joinChats(updates: updates, content: updates.chatFolderLinkContents)), for: context.window)
         })
         
         
@@ -458,10 +480,11 @@ class ChatListController : PeersListController {
 
         let previousfilter = Atomic<FilterData?>(value: self.filterValue)
 
-        let chatHistoryView: Signal<(ChatListViewUpdate, FilterData, Bool), NoError> = signal |> mapToSignal { data -> Signal<(ChatListViewUpdate, FilterData, Bool), NoError> in
+        let chatHistoryView: Signal<(ChatListViewUpdate, FilterData, Bool, ChatFolderUpdates?), NoError> = signal |> mapToSignal { data in
             
-            return chatListViewForLocation(chatListLocation: mode.location, location: data.request, filter: data.filter, account: context.account) |> map {
-                return ($0, data, false)
+            let signal = combineLatest(context.engine.peers.subscribedChatFolderUpdates(folderId: data.filter.id), chatListViewForLocation(chatListLocation: mode.location, location: data.request, filter: data.filter, account: context.account))
+            return  signal |> map { updates, view in
+                return (view, data, false, updates)
             }
         }
         
@@ -470,6 +493,7 @@ class ChatListController : PeersListController {
         let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
                     
             let filterData = value.1
+            let folderUpdates = value.3
             let update = value.0
             let removeNextAnimation = update.removeNextAnimation
             let previous = first.swap((hasEarlier: update.list.hasEarlier,
@@ -551,6 +575,9 @@ class ChatListController : PeersListController {
             }
             if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain {
                 mapped.append(.systemDeprecated(filterData.filter))
+            }
+            if let updates = folderUpdates {
+                mapped.append(.sharedFolderUpdated(updates))
             }
             
             let entries = mapped.sorted().compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
@@ -1315,6 +1342,7 @@ class ChatListController : PeersListController {
         filterDisposable.dispose()
         suggestAutoarchiveDisposable.dispose()
         downloadsDisposable.dispose()
+        folderUpdatesDisposable.dispose()
     }
     
     

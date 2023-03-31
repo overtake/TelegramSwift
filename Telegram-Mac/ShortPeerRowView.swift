@@ -90,6 +90,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         }
         
     }
+    
+    override func shakeView() {
+        containerView.shake(beep: true)
+    }
+    
     private func invokeIfNeededDown() {
         if let event = NSApp.currentEvent {
             super.mouseDown(with: event)

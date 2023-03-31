@@ -77,6 +77,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         }
     }
     
+    let sharedImage = NSImage(named: "Icon_SharedFolder")!.precomposed(theme.colors.grayText)
 
     for (filter, count) in filtersWithCounts {
         var viewType = bestGeneralViewType(filtersWithCounts.map { $0.0 }, for: filter)
@@ -87,12 +88,13 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
             viewType = .innerItem
         }
         
+        
         switch filter {
         case .allChats:
             entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(emoticon: .allChats).icon(for: .preview), type: .none, viewType: viewType)))
             index += 1
-        case let .filter(_, title, _, _):
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
+        case let .filter(_, title, _, data):
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: data.isShared ? .nextImage(sharedImage) :  .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
                 arguments.openPreset(filter, false)
             }, menuItems: {
                 return [ContextMenuItem(strings().chatListFilterListRemove, handler: {

@@ -795,6 +795,7 @@ final class InlineStickerItemLayer : SimpleLayer {
     }
     
     deinit {
+        fetchDisposable.dispose()
         infoDisposable?.dispose()
         previewDisposable?.dispose()
         resourceDisposable.dispose()
