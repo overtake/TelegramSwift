@@ -455,7 +455,7 @@ class ChatListController : PeersListController {
                 $0.withUpdatedDeprecatedNotice(Int32(Date().timeIntervalSince1970 + 31 * 24 * 60 * 60))
             }).start()
         }, applySharedFolderUpdates: { updates in
-            showModal(with: JoinCloudFolderController(context: context, content: .joinChats(updates: updates, content: updates.chatFolderLinkContents)), for: context.window)
+            showModal(with: SharedFolderClosureController(context: context, content: .joinChats(updates: updates, content: updates.chatFolderLinkContents)), for: context.window)
         })
         
         

@@ -52,6 +52,11 @@ func filterContextMenuItems(_ filter: ChatListFilter, unreadCount: Int?, context
                 readAllInFilter(filter, context: context)
             }, itemImage: MenuAnimation.menu_folder_read.value))
         }
+        if data.isShared {
+            items.append(.init(strings().chatListFilterShare, handler: {
+                shareSharedFolder(context: context, filter: filter)
+            }, itemImage: MenuAnimation.menu_share.value))
+        }
         
         items.append(ContextSeparatorItem())
         

@@ -23,6 +23,7 @@ protocol PictureInPictureControl {
     func play()
     func didEnter()
     func didExit()
+    func isPlaying() -> Bool
     var view: NSView { get }
     var isPictureInPicture: Bool { get }
     
@@ -331,14 +332,17 @@ func exitPictureInPicture() {
 
 func pausepip() {
     if let window = window as? ModernPictureInPictureVideoWindow {
-        window.control.pause()
-        window.forcePaused = true
+        if window.control.isPlaying() {
+            window.control.pause()
+            window.forcePaused = true
+        }
     }
 }
 
 func playPipIfNeeded() {
     if let window = window as? ModernPictureInPictureVideoWindow, window.forcePaused {
         window.control.play()
+        window.forcePaused = false
     }
 }
 

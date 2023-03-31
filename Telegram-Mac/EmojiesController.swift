@@ -503,7 +503,7 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
         hasRecent = !state.recentStatusItems.isEmpty || !state.featuredStatusItems.isEmpty
     case .emoji:
         hasRecent = true
-    case .reactions:
+    case .reactions, .quickReaction:
         hasRecent = !state.recentReactionsItems.isEmpty || !state.topReactionsItems.isEmpty
     case .selectAvatar:
         hasRecent = true
@@ -691,7 +691,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     } else {
         for key in seglist {
             
-            if key == .Recent, arguments.mode == .reactions {
+            if key == .Recent, arguments.mode == .reactions || arguments.mode == .quickReaction {
                 
                 
                 var reactionsRecent:[StickerPackItem] = []
@@ -1857,11 +1857,14 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case emoji
         case status
         case reactions
+        case quickReaction
         case selectAvatar
         case forumTopic
         var itemMode: EmojiesSectionRowItem.Mode {
             switch self {
             case .reactions:
+                return .reactions
+            case .quickReaction:
                 return .reactions
             case .status:
                 return .statuses
@@ -2181,7 +2184,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
  
         let emojies: Signal<ItemCollectionsView, NoError>
         switch mode {
-        case .reactions:
+        case .reactions, .quickReaction:
             emojies = context.diceCache.emojies_reactions
         case .status:
             emojies = context.diceCache.emojies_status
@@ -2205,7 +2208,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
         
         let searchCategories: Signal<EmojiSearchCategories?, NoError>
-        if mode == .emoji || mode == .reactions {
+        if mode == .emoji || mode == .reactions || mode == .quickReaction {
             searchCategories = context.engine.stickers.emojiSearchCategories(kind: .emoji)
         } else if mode == .status {
             searchCategories = context.engine.stickers.emojiSearchCategories(kind: .status)

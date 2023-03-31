@@ -47,7 +47,7 @@ public func fetchCachedResourceRepresentation(account: Account, resource: MediaR
         if let diceCache = account.diceCache {
             return diceCache.interactiveSymbolData(baseSymbol: representation.emoji, synchronous: false) |> map { values -> (String, Data?, TelegramMediaFile)? in
                 for value in values {
-                    if value.0 == representation.value {
+                    if value.0.withoutColorizer == representation.value {
                         return value
                     }
                 }

@@ -634,7 +634,7 @@ private final class PremiumBoardingView : View {
         
         
         if state.isPremium != previousState?.isPremium {
-            if state.peer == nil && !state.isPremium {
+            if !state.isPremium {
                 let bottomView = View(frame: NSMakeRect(0, frame.height - bottomHeight, frame.width, bottomHeight))
                 containerView.addSubview(bottomView)
                 
@@ -651,7 +651,7 @@ private final class PremiumBoardingView : View {
                     bottomView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-        } else if let bottomView = bottomView {
+        } else if let bottomView = bottomView, state.isPremium {
             if state.peer != nil || state.isPremium {
                 self.bottomView = nil
                 performSubviewRemoval(bottomView, animated: animated)

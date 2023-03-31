@@ -77,7 +77,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         }
     }
     
-    let sharedImage = NSImage(named: "Icon_SharedFolder")!.precomposed(theme.colors.grayText)
+    let sharedImage = NSImage(named: "Icon_SharedFolder")!.precomposed(theme.colors.grayText.withAlphaComponent(0.8))
 
     for (filter, count) in filtersWithCounts {
         var viewType = bestGeneralViewType(filtersWithCounts.map { $0.0 }, for: filter)
@@ -97,9 +97,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
             entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: data.isShared ? .nextImage(sharedImage) :  .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
                 arguments.openPreset(filter, false)
             }, menuItems: {
-                return [ContextMenuItem(strings().chatListFilterListRemove, handler: {
-                    arguments.removePreset(filter)
-                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)]
+                return filterContextMenuItems(filter, unreadCount: nil, context: arguments.context)
             })))
             index += 1
 

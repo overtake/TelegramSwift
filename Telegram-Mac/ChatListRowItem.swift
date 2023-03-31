@@ -1471,19 +1471,19 @@ class ChatListRowItem: TableRowItem {
                     
                     
                     
-//                    if let sounds = soundsData.1 {
-//                        for sound in sounds.sounds {
-//                            let tone: PeerMessageSound = .cloud(fileId: sound.file.fileId.id)
-//                            soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .cloud(fileId: sound.file.fileId.id), default: nil, list: sounds.sounds), handler: {
-//                                updateSound(tone)
-//                            }, hover: {
-//                                playSound(tone)
-//                            }, state: selectedSound == .cloud(fileId: sound.file.fileId.id) ? .on : nil))
-//                        }
-//                        if !sounds.sounds.isEmpty {
-//                            soundList.addItem(ContextSeparatorItem())
-//                        }
-//                    }
+                    if let sounds = soundsData.1 {
+                        for sound in sounds.sounds {
+                            let tone: PeerMessageSound = .cloud(fileId: sound.file.fileId.id)
+                            soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .cloud(fileId: sound.file.fileId.id), default: nil, list: sounds.sounds), handler: {
+                                updateSound(tone)
+                            }, hover: {
+                                playSound(tone)
+                            }, state: selectedSound == .cloud(fileId: sound.file.fileId.id) ? .on : nil))
+                        }
+                        if !sounds.sounds.isEmpty {
+                            soundList.addItem(ContextSeparatorItem())
+                        }
+                    }
                     
                  
                     for i in 0 ..< 12 {
@@ -1539,15 +1539,13 @@ class ChatListRowItem: TableRowItem {
                         submenu.addItem(sound)
                         
                         muteItem.submenu = submenu
-                    }
-                    /*
-                     else {
+                    } else {
                          let submenu = ContextMenu()
                          submenu.addItem(sound)
                          muteItem.submenu = submenu
                      }
                      
-                     */
+                     
                     
                     firstGroup.append(muteItem)
                 }
