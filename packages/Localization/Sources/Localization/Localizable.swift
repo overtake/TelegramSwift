@@ -575,12 +575,32 @@ public final class L10n {
   public static var botTransferOwnershipPasswordDesc: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Desc") }
   /// Two-Step Verification
   public static var botTransferOwnershipPasswordTitle: String  { return L10n.tr("Localizable", "Bot.TransferOwnership.Password.Title") }
+  /// active
+  public static var botUsernameActive: String  { return L10n.tr("Localizable", "BotUsername.Active") }
   /// USERNAME
   public static var botUsernameHeader: String  { return L10n.tr("Localizable", "BotUsername.Header") }
   /// This username cannot be edited.
   public static var botUsernameInfo: String  { return L10n.tr("Localizable", "BotUsername.Info") }
+  /// not active
+  public static var botUsernameNotActive: String  { return L10n.tr("Localizable", "BotUsername.NotActive") }
   /// Username
   public static var botUsernameTitle: String  { return L10n.tr("Localizable", "BotUsername.Title") }
+  /// Do you want to show this link on bot?
+  public static var botUsernameActivateInfo: String  { return L10n.tr("Localizable", "BotUsername.Activate.Info") }
+  /// Show
+  public static var botUsernameActivateOk: String  { return L10n.tr("Localizable", "BotUsername.Activate.Ok") }
+  /// Activate Username
+  public static var botUsernameActivateTitle: String  { return L10n.tr("Localizable", "BotUsername.Activate.Title") }
+  /// Do you want to hide this link from bot?
+  public static var botUsernameDeactivateInfo: String  { return L10n.tr("Localizable", "BotUsername.Deactivate.Info") }
+  /// Hide
+  public static var botUsernameDeactivateOk: String  { return L10n.tr("Localizable", "BotUsername.Deactivate.Ok") }
+  /// Deactivate Username
+  public static var botUsernameDeactivateTitle: String  { return L10n.tr("Localizable", "BotUsername.Deactivate.Title") }
+  /// Drag and drop links to change order in which they will be displayed on bot info page.
+  public static var botUsernameListInfo: String  { return L10n.tr("Localizable", "BotUsername.List.Info") }
+  /// USERNAMES ORDER
+  public static var botUsernameListTitle: String  { return L10n.tr("Localizable", "BotUsername.List.Title") }
   /// Leave as regular group
   public static var broadcastGroupsCancel: String  { return L10n.tr("Localizable", "BroadcastGroups.Cancel") }
   /// Convert to Broadcast Group

@@ -35,6 +35,8 @@ enum SVideoStyle {
 
 
 class SVideoController: GenericViewController<SVideoView>, PictureInPictureControl {
+    
+    
    
     
     
@@ -135,6 +137,10 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     func didExit() {
         
+    }
+    
+    func isPlaying() -> Bool {
+        return !self.isPaused
     }
     
     private func updateIdleTimer() {

@@ -141,6 +141,7 @@ class FastSettings {
     
     private static let kNoticeAdChannel = "kNoticeAdChannel"
     private static let kPlayingRate = "kPlayingRate2"
+    private static let kPlayingMusicRate = "kPlayingMusicRate"
     private static let kPlayingVideoRate = "kPlayingVideoRate"
 
     private static let kSVCShareMicro = "kSVCShareMicro"
@@ -235,6 +236,18 @@ class FastSettings {
     
     static func setPlayingRate(_ rate: Double) {
         UserDefaults.standard.set(rate, forKey: kPlayingRate)
+    }
+    
+    static var playingMusicRate: Double {
+        let double = UserDefaults.standard.double(forKey: kPlayingMusicRate)
+        if double == 0 {
+            return 1.0
+        }
+        return min(max(double, 0.2), 2.5)
+    }
+    
+    static func setPlayingMusicRate(_ rate: Double) {
+        UserDefaults.standard.set(rate, forKey: kPlayingMusicRate)
     }
     
     static var playingVideoRate: Double {

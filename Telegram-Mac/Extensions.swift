@@ -160,6 +160,13 @@ public extension String {
         return str
     }
     
+    var withoutColorizer: String {
+        let str = String(self.unicodeScalars.filter {
+            $0 != "\u{fe0f}"
+        })
+        return str
+    }
+    
     static func stringForShortCallDurationSeconds(for seconds: Int32) -> String {
         if seconds < 60 {
             return Telegram.strings().callShortSecondsCountable(Int(seconds))

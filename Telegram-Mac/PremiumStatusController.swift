@@ -96,7 +96,7 @@ final class SetupQuickReactionController : TelegramViewController {
     
     let callback: (TelegramMediaFile)->Void
     init(_ context: AccountContext, callback: @escaping(TelegramMediaFile)->Void) {
-        self.emojis = .init(context, mode: .reactions)
+        self.emojis = .init(context, mode: .quickReaction)
         self.callback = callback
         super.init(context)
         bar = .init(height: 0)

@@ -39,7 +39,12 @@ func peerCanBeSharedInFolder(_ peer: Peer, filter: ChatListFilter? = nil) -> Boo
 //            return false
 //        }
     }
-    if peer.isChannel || peer.isSupergroup {
+    if peer.isChannel || peer.isSupergroup || peer.isGigagroup {
+        if let channel = peer as? TelegramChannel {
+            if channel.flags.contains(.requestToJoin) {
+                return false
+            }
+        }
         return peer.addressName != nil || peer.groupAccess.canCreateInviteLink
     }
     return false

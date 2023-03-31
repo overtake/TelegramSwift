@@ -674,6 +674,8 @@ class UserInfoArguments : PeerInfoArguments {
         let peerId = self.peerId
         let title = self.peer?.compactDisplayTitle ?? ""
         
+        let isEditableBot = self.peer?.botInfo?.flags.contains(.canEdit) == true
+        
         let suggestSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
             return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
             } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
@@ -698,7 +700,6 @@ class UserInfoArguments : PeerInfoArguments {
         
         switch type {
         case .suggest:
-            var disposable: Disposable? = nil
             self.updatePhotoDisposable.set((suggestSignal |> deliverOnMainQueue).start(next: { value in
                 updateState { current in
                     return current.withUpdatedSuggestingPhotoState({ _ in
@@ -706,7 +707,9 @@ class UserInfoArguments : PeerInfoArguments {
                     })
                 }
             }, completed: { [weak self] in
-                showModalText(for: context.window, text: strings().userInfoSuggestTooltip(title))
+                if !isEditableBot {
+                    showModalText(for: context.window, text: strings().userInfoSuggestTooltip(title))
+                }
                 updateState { current in
                     return current.withoutSuggestingPhotoState()
                 }
@@ -733,7 +736,9 @@ class UserInfoArguments : PeerInfoArguments {
                     return state.withoutUpdatingPhotoState()
                 }
                 resetPeerPhotos(peerId: peerId)
-                showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
+                if !isEditableBot {
+                    showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
+                }
             }))
         }        
     }
@@ -1501,7 +1506,7 @@ enum UserInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditUsername, type: .nextContext(text), viewType: viewType, action: arguments.openEditBotUsername)
         case let .botEditIntro(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditIntro, icon: NSImage(named: "Icon_PeerInfo_BotIntro")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {
-                arguments.editBot(nil)
+                arguments.editBot("intro")
             })
         case let .botEditCommands(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotEditCommands, icon: NSImage(named: "Icon_PeerInfo_BotCommands")?.precomposed(theme.colors.accent, flipVertical: true), nameStyle: blueActionButton, viewType: viewType, action: {

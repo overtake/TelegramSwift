@@ -72,7 +72,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     if !state.usernames.usernames.isEmpty {
-        entries.append(.desc(sectionId: sectionId, index: 4, text: .plain(strings().usernameListTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: 4, text: .plain(strings().botUsernameListTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         
         
         var index: Int32 = 5
@@ -92,7 +92,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
         index += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().usernameListInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().botUsernameListInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     }
     
     return entries
@@ -126,9 +126,9 @@ func EditBotUsernameController(context: AccountContext, peerId: PeerId) -> Input
         } else {
             updatedFlags.remove(.isActive)
         }
-        let title: String = value ? strings().usernameActivateTitle : strings().usernameDeactivateTitle
-        let info: String = value ? strings().usernameActivateInfo : strings().usernameDeactivateInfo
-        let ok: String = value ? strings().usernameActivateOk : strings().usernameDeactivateOk
+        let title: String = value ? strings().botUsernameActivateTitle : strings().botUsernameDeactivateTitle
+        let info: String = value ? strings().botUsernameActivateInfo : strings().botUsernameDeactivateInfo
+        let ok: String = value ? strings().botUsernameActivateOk : strings().botUsernameDeactivateOk
         
         confirm(for: context.window, header: title, information: info, okTitle: ok, successHandler: { _ in
             _ = context.engine.peers.toggleAddressNameActive(domain: .bot(peerId), name: username.username, active: value).start()
@@ -151,15 +151,11 @@ func EditBotUsernameController(context: AccountContext, peerId: PeerId) -> Input
         }
         return .complete()
     }
-    var first: Bool = true
     actionsDisposable.add(view.start(next: { usernames in
         updateState { current in
             var current = current
             current.usernames = usernames
-            if first {
-                current.state = .none(username: usernames.username)
-                first = false
-            }
+            current.state = .none(username: usernames.username)
             return current
         }
     }))
@@ -168,58 +164,12 @@ func EditBotUsernameController(context: AccountContext, peerId: PeerId) -> Input
         return InputDataSignalValue(entries: entries(state, arguments: arguments), animated: !nextTransactionNonAnimated.swap(false))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().telegramUsernameSettingsViewController)
+    let controller = InputDataController(dataSignal: signal, title: strings().botUsernameTitle)
     
-    controller.updateDatas = { data in
-        let username = data[_id_username]?.stringValue ?? ""
-        updateState { current in
-            var current = current
-            current.state = .none(username: username)
-            return current
-        }
-        
-        let signal = context.engine.peers.validateAddressNameInteractive(domain: .bot(peerId), name: username) |> map { state -> AddressNameAvailabilityState in
-            switch state {
-            case let .availability(availability):
-                switch availability {
-                case .available:
-                    return .success(username: username)
-                case .invalid:
-                    return .fail(username: username, formatError: .invalidCharacters, availability: availability)
-                case .taken:
-                    return .fail(username: username, formatError: nil, availability: availability)
-                case .purchaseAvailable:
-                    return .fail(username: username, formatError: nil, availability: availability)
-                }
-            case let .invalidFormat(error):
-                if username == "" {
-                    return .none(username: "")
-                } else {
-                    return .fail(username: username, formatError: error, availability: .invalid)
-                }
-            case .checking:
-                return .progress(username: username)
-            }
-        } |> deliverOnMainQueue
-
-        availabilityDisposable.set(signal.start(next: { state in
-            updateState { current in
-                var current = current
-                current.state = state
-                return current
-            }
-        }))
-        return .fail(.none)
-    }
     
     controller.updateDoneValue = { data in
         return { f in
-            let isEnabled = stateValue.with { $0.isEnabled }
-            if isEnabled {
-                f(.enabled(strings().navigationDone))
-            } else {
-                f(.disabled(strings().navigationDone))
-            }
+            f(.enabled(strings().navigationDone))
         }
     }
     
@@ -230,13 +180,8 @@ func EditBotUsernameController(context: AccountContext, peerId: PeerId) -> Input
         switch state {
         case .success, .none:
             return .fail(.doSomething(next: { f in
-                let isEnabled = stateValue.with { $0.isEnabled }
-                if isEnabled {
-                    _ = context.engine.peers.updateAddressName(domain: .bot(peerId), name: state.username).start()
-                    f(.success(.navigationBack))
-                } else {
-                    f(.none)
-                }
+                _ = context.engine.peers.updateAddressName(domain: .bot(peerId), name: state.username).start()
+                f(.success(.navigationBack))
             }))
         default:
             return .fail(.none)

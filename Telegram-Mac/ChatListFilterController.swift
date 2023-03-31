@@ -1165,8 +1165,15 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                                     var current = current
                                     current.creatingLink = false
                                     current.inviteLinks?.append(link)
+                                    var filter = current.filter
+                                    var data = data
+                                    data.isShared = true
+                                    filter = filter.withUpdatedData(data)
+                                    current.filter = filter
+                                    current.initialFilter = filter
                                     return current
                                 }
+                                save(false)
                                 showModal(with: ShareCloudFolderController(context: context, filter: filter, link: link, updated: updateLink), for: context.window)
                             }, error: { error in
                                 

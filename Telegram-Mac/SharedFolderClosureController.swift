@@ -177,11 +177,17 @@ private final class Arguments {
     let alreadyError:(Peer)->Void
     let content: JoinCloudFolderMode
     let merge:()->Void
-    init(context: AccountContext, content: JoinCloudFolderMode, select: SelectPeerInteraction, alreadyError: @escaping(Peer)->Void, merge:@escaping()->Void) {
+    let shareFolder:(ExportedChatFolderLink?)->Void
+    let copy:(String)->Void
+    let deleteLink:(ExportedChatFolderLink)->Void
+    init(context: AccountContext, content: JoinCloudFolderMode, select: SelectPeerInteraction, alreadyError: @escaping(Peer)->Void, merge:@escaping()->Void, shareFolder:@escaping(ExportedChatFolderLink?)->Void, copy: @escaping(String)->Void, deleteLink:@escaping(ExportedChatFolderLink)->Void) {
         self.context = context
         self.content = content
         self.select = select
         self.alreadyError = alreadyError
+        self.shareFolder = shareFolder
+        self.copy = copy
+        self.deleteLink = deleteLink
         self.merge = merge
     }
 }
@@ -192,6 +198,9 @@ private struct State : Equatable {
     var selected: Set<PeerId> = Set()
     var alreadyMemberPeerIds: Set<EnginePeer.Id>
     var localFolderId: Int32?
+    var inviteLinks:[ExportedChatFolderLink]?
+    var linkSaving: String? = nil
+    var creatingLink: Bool = false
     var hasSelectedToJoin: Bool {
         let to_join = peers
             .filter { !alreadyMemberPeerIds.contains($0.peer.id) }
@@ -207,6 +216,10 @@ private struct State : Equatable {
 private let _id_header = InputDataIdentifier("_id_header")
 private func _id_peer(_ id: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(id.toInt64())")
+}
+private let _id_share_invite = InputDataIdentifier("_id_share_invite")
+private func _id_invite_link(_ string: String) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_invite_link\(string)")
 }
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -228,6 +241,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         selectedCount = state.selected.count > 0 ? "+\(state.selected.count)" : nil
     case .remove:
         selectedCount = nil
+    case .sharedLinks:
+        selectedCount = nil
     }
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
@@ -247,7 +262,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     case .joinChats:
         header = "Do you want to add **\(state.selected.count)** chats to your folder **\(state.title)**?"
     case .remove:
-        header = "Do you want to quit the chats you joined when adding the folder \(state.title)?";
+        header = "Do you want to quit the chats you joined when adding the folder \(state.title)?"
+    case .sharedLinks:
+        header = "Create more links to set up different access levels for different people."
     }
     
     
@@ -290,13 +307,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             info = "\(toJoin.count) CHATS IN FOLDER TO JOIN"
         case .remove:
             info = "\(toJoin.count) CHATS TO QUIT"
+        case .sharedLinks:
+            info = "INVITE LINKS"
         }
         
         let allSelected = toJoin.filter {
             $0.selected
         }.count == toJoin.count
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(info), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: allSelected ? "DESELECT ALL" : "SELECT ALL", color: theme.colors.accent, font: .normal(.text)), action: {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(info), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: allSelected ? "DESELECT ALL" : "SELECT ALL", color: theme.colors.accent, font: .normal(.short)), action: {
             for join in toJoin {
                 if join.selected, allSelected {
                     arguments.select.toggleSelection(join.peer.peer)
@@ -351,7 +370,76 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
     }
-    
+    if let links = state.inviteLinks {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterInviteLinkHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        index += 1
+        
+        let viewType: GeneralViewType
+        
+        if let invite = state.inviteLinks, !invite.isEmpty {
+            viewType = .firstItem
+        } else if state.inviteLinks == nil {
+            viewType = .firstItem
+        } else {
+            viewType = .singleItem
+        }
+        
+        let text: String = "Create Share Link"
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_share_invite, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: blueActionButton, type: state.creatingLink ? .loading : .none, viewType: viewType, action: {
+                arguments.shareFolder(nil)
+            }, thumb: GeneralThumbAdditional(thumb: theme.icons.group_invite_via_link, textInset: 52, thumbInset: 4))
+        }))
+        index += 0
+        
+        struct Tuple : Equatable {
+            let link:ExportedChatFolderLink
+            let viewType: GeneralViewType
+            let saving: Bool
+        }
+        var items: [Tuple] = []
+        for (i, link) in links.enumerated() {
+            items.append(.init(link: link, viewType: bestGeneralViewTypeAfterFirst(links, for: i), saving: state.linkSaving == link.link))
+        }
+        
+        for item in items {
+            
+            let info: String
+            if item.link.isRevoked {
+                info = strings().chatListFilterInviteLinkRevoked
+            } else {
+                info = strings().chatListFilterInviteLinkDescCountable(item.link.peerIds.count)
+            }
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_invite_link(item.link.slug), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
+                return GeneralInteractedRowItem(initialSize, name: item.link.title.isEmpty ? item.link.link : item.link.title, description: info, type: item.saving ? .loading : .none, viewType: item.viewType, action: {
+                    arguments.shareFolder(item.link)
+                }, thumb: GeneralThumbAdditional(thumb: item.link.isRevoked ? theme.icons.folder_invite_link_revoked : theme.icons.folder_invite_link, textInset: 52, thumbInset: 4), menuItems: {
+                    var items: [ContextMenuItem] = []
+                    
+                    items.append(ContextMenuItem(strings().contextCopy, handler: {
+                        arguments.copy(item.link.link)
+                    }, itemImage: MenuAnimation.menu_copy.value))
+                                 
+                    items.append(ContextSeparatorItem())
+                    
+                    items.append(ContextMenuItem(strings().chatListFilterInviteLinkDelete, handler: {
+                        arguments.deleteLink(item.link)
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+
+                    
+                    return items
+                })
+            }))
+            index += 0
+        }
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterInviteLinkInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+
+    }
+
    
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -363,12 +451,15 @@ enum JoinCloudFolderMode {
     case join(slug: String, content: ChatFolderLinkContents)
     case joinChats(updates: ChatFolderUpdates,content: ChatFolderLinkContents)
     case remove(filter: ChatListFilter, peers: [Peer])
+    case sharedLinks(filter: ChatListFilter, links:[ExportedChatFolderLink])
     var peers: [Peer] {
         switch self {
         case let .join(_, content), let .joinChats(_, content):
             return content.peers.map { $0._asPeer() }
         case let .remove(_, peers):
             return peers
+        case .sharedLinks:
+            return []
         }
     }
     var title: String {
@@ -377,13 +468,15 @@ enum JoinCloudFolderMode {
             return content.title ?? ""
         case let .remove(filter, _):
             return filter.title
+        case let .sharedLinks(filter, _):
+            return filter.title
         }
     }
     var alreadyMemberPeerIds: Set<PeerId> {
         switch self {
         case let .join(_, content), let .joinChats(_, content):
             return content.alreadyMemberPeerIds
-        case .remove:
+        case .remove, .sharedLinks:
             return []
         }
     }
@@ -391,22 +484,30 @@ enum JoinCloudFolderMode {
         switch self {
         case let .join(_, content), let .joinChats(_, content):
             return content.localFilterId
-        case let .remove(filter, _):
+        case let .remove(filter, _), let .sharedLinks(filter, _):
             return filter.id
+        }
+    }
+    var inviteLinks: [ExportedChatFolderLink]? {
+        switch self {
+        case let  .sharedLinks(_, links):
+            return links
+        default:
+            return nil
         }
     }
 }
 
-func JoinCloudFolderController(context: AccountContext, content: JoinCloudFolderMode) -> InputDataModalController {
+func SharedFolderClosureController(context: AccountContext, content: JoinCloudFolderMode) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
     let peers: [PeerEquatable] = content.peers.compactMap { .init($0) }
 
-    let initialState = State(title: content.title, peers: peers, selected: Set(peers.map { $0.peer.id }), alreadyMemberPeerIds: content.alreadyMemberPeerIds, localFolderId: content.localFilterId)
+    let initialState = State(title: content.title, peers: peers, selected: Set(peers.map { $0.peer.id }), alreadyMemberPeerIds: content.alreadyMemberPeerIds, localFolderId: content.localFilterId, inviteLinks: content.inviteLinks)
     
     var close:(()->Void)? = nil
-    
+    var getController:(()->InputDataController?)? = nil
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -434,6 +535,20 @@ func JoinCloudFolderController(context: AccountContext, content: JoinCloudFolder
     for peer in peers {
         selected.toggleSelection(peer.peer)
     }
+    
+    let updateLink:(ExportedChatFolderLink, ExportedChatFolderLink?)->Void = { link, updated in
+        updateState { current in
+            var current = current
+            current.creatingLink = false
+            if let index = current.inviteLinks?.firstIndex(where: { $0.link == link.link }) {
+                current.inviteLinks?.remove(at: index)
+                if let updated = updated {
+                    current.inviteLinks?.insert(updated, at: index)
+                }
+            }
+            return current
+        }
+    }
 
     let arguments = Arguments(context: context, content: content, select: selected, alreadyError: { peer in
         let text: String
@@ -449,6 +564,71 @@ func JoinCloudFolderController(context: AccountContext, content: JoinCloudFolder
             current.selected = selected.presentation.selected
             return current
         }
+    }, shareFolder: { link in
+        switch content {
+        case let .sharedLinks(filter, _):
+            if let data = filter.data {
+                if let link = link {
+                    showModal(with: ShareCloudFolderController(context: context, filter: filter, link: link, updated: updateLink), for: context.window)
+                } else {
+                    let makeUrl = context.engine.peers.exportChatFolder(filterId: filter.id, title: "", peerIds: data.includePeers.peers) |> deliverOnMainQueue
+                    actionsDisposable.add(makeUrl.start(next: { link in
+                        updateState { current in
+                            var current = current
+                            current.creatingLink = false
+                            current.inviteLinks?.append(link)
+                            return current
+                        }
+                        showModal(with: ShareCloudFolderController(context: context, filter: filter, link: link, updated: updateLink), for: context.window)
+                    }, error: { error in
+                        switch error {
+                        case .limitExceeded:
+                            showPremiumLimit(context: context, type: .sharedInvites)
+                        default:
+                            alert(for: context.window, info: strings().unknownError)
+                        }
+                        
+                        updateState { current in
+                            var current = current
+                            current.creatingLink = false
+                            return current
+                        }
+                    }))
+                }
+            }
+        default:
+            break
+        }
+    }, copy: { link in
+        getController?()?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
+        copyToClipboard(link)
+    }, deleteLink: { link in
+        if let filterId = content.localFilterId {
+            confirm(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, okTitle: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
+                
+                var index: Int? = nil
+                updateState { current in
+                    var current = current
+                    index = current.inviteLinks?.firstIndex(of: link)
+                    if let index = index {
+                        current.inviteLinks?.remove(at: index)
+                    }
+                    return current
+                }
+                let signal = context.engine.peers.deleteChatFolderLink(filterId: filterId, link: link) |> deliverOnMainQueue
+                
+                actionsDisposable.add(signal.start(error: { error in
+                    alert(for: context.window, info: strings().unknownError)
+                    updateState { current in
+                        var current = current
+                        if let index = index {
+                            current.inviteLinks?.insert(link, at: index)
+                        }
+                        return current
+                    }
+                }))
+            })
+        }
     })
 
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -463,9 +643,15 @@ func JoinCloudFolderController(context: AccountContext, content: JoinCloudFolder
         actionsDisposable.dispose()
     }
     
-    let modalInteractions = ModalInteractions(acceptTitle: "", accept: { [weak controller] in
-        _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    let modalInteractions: ModalInteractions?
+    switch content {
+    case .sharedLinks:
+        modalInteractions = nil
+    default:
+        modalInteractions = ModalInteractions(acceptTitle: "", accept: { [weak controller] in
+            _ = controller?.returnKeyAction()
+        }, drawBorder: true, height: 50, singleButton: true)
+    }
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     
@@ -511,6 +697,8 @@ func JoinCloudFolderController(context: AccountContext, content: JoinCloudFolder
             case let .remove(filter, _):
                 _ = context.engine.peers.leaveChatFolder(folderId: filter.id, removePeerIds: stateValue.with { Array($0.selected) }).start()
                 close?()
+            case .sharedLinks:
+                break
             }
         }))
     }
@@ -541,6 +729,8 @@ func JoinCloudFolderController(context: AccountContext, content: JoinCloudFolder
                 } else {
                     string = "Remove Folder and Chats"
                 }
+            case .sharedLinks:
+                string = ""
             }
             
             title.set(text: string, for: .Normal)
@@ -553,6 +743,8 @@ func JoinCloudFolderController(context: AccountContext, content: JoinCloudFolder
             title = "Add \(stateValue.with { $0.selected.count }) chats"
         case .remove:
             title = "Remove Folder"
+        case .sharedLinks:
+            title = "Share Folder"
         }
         controller.centerModalHeader = .init(title: title)
         modalController?.updateLocalizationAndTheme(theme: theme)
@@ -560,6 +752,9 @@ func JoinCloudFolderController(context: AccountContext, content: JoinCloudFolder
     
     close = { [weak modalController] in
         modalController?.modal?.close()
+    }
+    getController = { [weak controller] in
+        return controller
     }
     
     return modalController
@@ -573,9 +768,19 @@ func JoinCloudFolderController(context: AccountContext, content: JoinCloudFolder
 
 func loadAndShowSharedFolder(context: AccountContext, slug: String) -> Void {
     _ = showModalProgress(signal: context.engine.peers.checkChatFolderLink(slug: slug), for: context.window).start(next: { content in
-        showModal(with: JoinCloudFolderController(context: context, content: .join(slug: slug, content: content)), for: context.window)
+        showModal(with: SharedFolderClosureController(context: context, content: .join(slug: slug, content: content)), for: context.window)
     }, error: { error in
         alert(for: context.window, info: strings().unknownError)
+    })
+}
+
+func shareSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void {
+    let signal = showModalProgress(signal: context.engine.peers.getExportedChatFolderLinks(id: filter.id), for: context.window)
+    
+    _ = signal.start(next: { links in
+        if let links = links {
+            showModal(with: SharedFolderClosureController(context: context, content: .sharedLinks(filter: filter, links: links)), for: context.window)
+        }
     })
 }
 
@@ -598,7 +803,7 @@ func deleteSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void
                 _ = context.engine.peers.leaveChatFolder(folderId: filter.id, removePeerIds: []).start()
             })
         } else {
-            showModal(with: JoinCloudFolderController(context: context, content: .remove(filter: filter, peers: peers)), for: context.window)
+            showModal(with: SharedFolderClosureController(context: context, content: .remove(filter: filter, peers: peers)), for: context.window)
         }
     })
     

@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "share_16.png",
+      "filename" : "chain_24.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "share_16@2x.png",
+      "filename" : "chain_24@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
