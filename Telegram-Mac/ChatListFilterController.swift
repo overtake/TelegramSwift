@@ -1131,7 +1131,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                     
                     let folderLimits = shareFolderPremiumLimits(context: context, current: filter, links: stateValue.with { $0.inviteLinks })
                                         
-                    let canCreateLink = context.account.postbox.transaction { transaction in
+                    let canCreateLink: Signal<[Peer], NoError> = context.account.postbox.transaction { transaction -> [Peer] in
                         var peers:[Peer] = []
                                                 
                         for peerId in data.includePeers.peers {
