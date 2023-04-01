@@ -785,8 +785,8 @@ func shareSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void 
 }
 
 func deleteSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void {
-    let peers = showModalProgress(signal: context.engine.peers.requestLeaveChatFolderSuggestions(folderId: filter.id), for: context.window) |> mapToSignal { peerIds in
-       return context.account.postbox.transaction { transaction in
+    let peers:Signal<[Peer], NoError> = showModalProgress(signal: context.engine.peers.requestLeaveChatFolderSuggestions(folderId: filter.id), for: context.window) |> mapToSignal { peerIds -> Signal<[Peer], NoError> in
+        return context.account.postbox.transaction { transaction -> [Peer] in
             var peers: [Peer] = []
            for peerId in peerIds {
                if let peer = transaction.getPeer(peerId) {
