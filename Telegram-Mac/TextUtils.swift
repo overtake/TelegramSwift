@@ -798,6 +798,10 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             if let peer = message.peers[peerId], let botPeer = message.peers[message.id.peerId] {
                 text = strings().chatServicePeerRequested(peer.displayTitle, botPeer.displayTitle)
             }
+        case let .setChatWallpaper(wallpaper):
+            //TODOLANG
+            text = "wallpaper updated"
+            break
         }
     }
     return (text, entities, media)
