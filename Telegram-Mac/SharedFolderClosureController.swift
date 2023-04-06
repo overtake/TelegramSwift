@@ -27,8 +27,8 @@ private final class JoinCloudFolderHeaderItem : GeneralRowItem {
         }
         //TODOLANG
         self.nameLayout = .init(.initialize(string: name, color: theme.colors.accent, font: .medium(.title)))
-        self.leftLayout = .init(.initialize(string: "All Chats", color: theme.colors.listGrayText, font: .normal(.text)))
-        self.rightLayout = .init(.initialize(string: "Personal", color: theme.colors.listGrayText, font: .normal(.text)))
+        self.leftLayout = .init(.initialize(string: strings().sharedFolderTitleAllChats, color: theme.colors.listGrayText, font: .normal(.text)))
+        self.rightLayout = .init(.initialize(string: strings().sharedFolderTitlePersonal, color: theme.colors.listGrayText, font: .normal(.text)))
 
         super.init(initialSize, stableId: stableId)
         
@@ -201,6 +201,8 @@ private struct State : Equatable {
     var inviteLinks:[ExportedChatFolderLink]?
     var linkSaving: String? = nil
     var creatingLink: Bool = false
+    var membersCount: [EnginePeer.Id: Int] = [:]
+
     var hasSelectedToJoin: Bool {
         let to_join = peers
             .filter { !alreadyMemberPeerIds.contains($0.peer.id) }
@@ -250,35 +252,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
-    
-    let header: String
-    switch arguments.content {
-    case .join:
-        if state.isAlreadyInFolder {
-            header = "You have already added this folder and its chats."
-        } else {
-            header = "Do you want to add **\(state.selected.count)** chats to your folder **\(state.title)**?"
-        }
-    case .joinChats:
-        header = "Do you want to add **\(state.selected.count)** chats to your folder **\(state.title)**?"
-    case .remove:
-        header = "Do you want to quit the chats you joined when adding the folder \(state.title)?"
-    case .sharedLinks:
-        header = "Create more links to set up different access levels for different people."
-    }
-    
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(header, linkHandler: { _ in }), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
-    index += 1
-    
-   
-    
     struct Tuple : Equatable {
         let peer: PeerEquatable
         let selected: Bool
         let viewType: GeneralViewType
         let selectable: Bool
         let enabled: Bool
+        let status: String
     }
     
     var toJoin: [Tuple] = []
@@ -288,11 +268,65 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     let _already_list = state.peers.filter { state.alreadyMemberPeerIds.contains($0.peer.id) }
 
     for (i, peer) in _to_list.enumerated() {
-        toJoin.append(.init(peer: peer, selected: state.selected.contains(peer.peer.id), viewType: bestGeneralViewType(_to_list, for: i), selectable: true, enabled: true))
+        let status: String
+        if let count = state.membersCount[peer.peer.id] {
+            status = strings().peerStatusMemberCountable(count)
+        } else {
+            if peer.peer.isChannel {
+                status = strings().peerStatusChannel
+            } else if peer.peer.isForum {
+                status = strings().peerStatusForum
+            } else {
+                status = strings().peerStatusGroup
+            }
+        }
+        toJoin.append(.init(peer: peer, selected: state.selected.contains(peer.peer.id), viewType: bestGeneralViewType(_to_list, for: i), selectable: true, enabled: true, status: status))
     }
     for (i, peer) in _already_list.enumerated() {
-        joined.append(.init(peer: peer, selected: true, viewType: bestGeneralViewType(_already_list, for: i), selectable: true, enabled: false))
+        let status: String
+        if let count = state.membersCount[peer.peer.id] {
+            status = strings().peerStatusMemberCountable(count)
+        } else {
+            if peer.peer.isChannel {
+                status = strings().peerStatusChannel
+            } else if peer.peer.isForum {
+                status = strings().peerStatusForum
+            } else {
+                status = strings().peerStatusGroup
+            }
+        }
+        joined.append(.init(peer: peer, selected: true, viewType: bestGeneralViewType(_already_list, for: i), selectable: true, enabled: false, status: status))
     }
+    
+    
+    let header: String
+    switch arguments.content {
+    case let .join(_, content):
+        if state.isAlreadyInFolder {
+            header = strings().sharedFolderStatusFullyAdded
+        } else {
+            if content.localFilterId != nil {
+                let count = state.selected.count - joined.count
+                header = strings().sharedFolderStatusAddChatsCountable(count, state.title)
+            } else {
+                header = strings().sharedFolderStatusAddNew
+            }
+        }
+    case .joinChats:
+        let count = state.selected.count - joined.count
+        header = strings().sharedFolderStatusAddChatsCountable(count, state.title)
+    case .remove:
+        header = strings().sharedFolderStatusRemove(state.title)
+    case .sharedLinks:
+        header = strings().sharedFolderStatusLinks
+    }
+    
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(header, linkHandler: { _ in }), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+    index += 1
+    
+   
+    
     
     
     if !toJoin.isEmpty {
@@ -302,29 +336,39 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let info: String
         switch arguments.content {
         case .join:
-            info = "\(toJoin.count) CHATS TO JOIN"
+            info = strings().sharedFolderListHeaderChatsToJoinCountable(toJoin.count) 
         case .joinChats:
-            info = "\(toJoin.count) CHATS IN FOLDER TO JOIN"
+            info = strings().sharedFolderListHeaderUpdatesCountable(toJoin.count)
         case .remove:
-            info = "\(toJoin.count) CHATS TO QUIT"
+            info = strings().sharedFolderListHeaderQuitCountable(toJoin.count)
         case .sharedLinks:
-            info = "INVITE LINKS"
+            info = strings().sharedFolderListHeaderInviteLinks
         }
         
         let allSelected = toJoin.filter {
             $0.selected
         }.count == toJoin.count
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(info), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: allSelected ? "DESELECT ALL" : "SELECT ALL", color: theme.colors.accent, font: .normal(.short)), action: {
-            for join in toJoin {
-                if join.selected, allSelected {
-                    arguments.select.toggleSelection(join.peer.peer)
-                } else if !allSelected, !join.selected {
-                    arguments.select.toggleSelection(join.peer.peer)
+        var rightItem = InputDataGeneralTextRightData(isLoading: false, text: nil)
+        
+        if toJoin.count > 1 {
+            rightItem = .init(isLoading: false, text: .initialize(string: allSelected ? strings().sharedFolderDeselectAll : strings().sharedFolderSelectAll, color: theme.colors.accent, font: .normal(.short)), action: {
+                for join in toJoin {
+                    if allSelected {
+                        if join.selected {
+                            arguments.select.toggleSelection(join.peer.peer)
+                        }
+                    } else {
+                        if !join.selected {
+                           arguments.select.toggleSelection(join.peer.peer)
+                       }
+                    }
                 }
-            }
-            arguments.merge()
-        }, update: arc4random()))))
+                arguments.merge()
+            }, update: arc4random())
+        }
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(info), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: rightItem)))
         index += 1
         
         for item in toJoin {
@@ -336,7 +380,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 interactionType = .plain
             }
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.peer.peer.isChannel ? strings().peerStatusChannel : strings().peerStatusGroup, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
             }))
             index += 1
         }
@@ -351,7 +395,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         sectionId += 1
 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("\(joined.count) CHATS ALREADY JOINED"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+       
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain( strings().sharedFolderListHeaderAlreadyCountable(joined.count)), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         for item in joined {
@@ -363,7 +408,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 interactionType = .plain
             }
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.peer.peer.isChannel ? strings().peerStatusChannel : strings().peerStatusGroup, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType, disabledAction: {
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType, disabledAction: {
                     arguments.alreadyError(item.peer.peer)
                 })
             }))
@@ -384,7 +429,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             viewType = .singleItem
         }
         
-        let text: String = "Create Share Link"
+        let text: String = strings().sharedFolderCreateLink
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_share_invite, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: blueActionButton, type: state.creatingLink ? .loading : .none, viewType: viewType, action: {
@@ -406,11 +451,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         for item in items {
             
             let info: String
-            if item.link.isRevoked {
-                info = strings().chatListFilterInviteLinkRevoked
-            } else {
-                info = strings().chatListFilterInviteLinkDescCountable(item.link.peerIds.count)
-            }
+            info = strings().chatListFilterInviteLinkDescCountable(item.link.peerIds.count)
+
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_invite_link(item.link.slug), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                 return GeneralInteractedRowItem(initialSize, name: item.link.title.isEmpty ? item.link.link : item.link.title, description: info, type: item.saving ? .loading : .none, viewType: item.viewType, action: {
@@ -449,14 +491,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 enum JoinCloudFolderMode {
     case join(slug: String, content: ChatFolderLinkContents)
-    case joinChats(updates: ChatFolderUpdates,content: ChatFolderLinkContents)
-    case remove(filter: ChatListFilter, peers: [Peer])
+    case joinChats(updates: ChatFolderUpdates,content: ChatFolderLinkContents, filter: ChatListFilter)
+    case remove(filter: ChatListFilter, peers: [Peer], default: [PeerId])
     case sharedLinks(filter: ChatListFilter, links:[ExportedChatFolderLink])
     var peers: [Peer] {
         switch self {
-        case let .join(_, content), let .joinChats(_, content):
+        case let .join(_, content), let .joinChats(_, content, _):
             return content.peers.map { $0._asPeer() }
-        case let .remove(_, peers):
+        case let .remove(_, peers, _):
             return peers
         case .sharedLinks:
             return []
@@ -464,9 +506,9 @@ enum JoinCloudFolderMode {
     }
     var title: String {
         switch self {
-        case let .join(_, content), let .joinChats(_, content):
+        case let .join(_, content), let .joinChats(_, content, _):
             return content.title ?? ""
-        case let .remove(filter, _):
+        case let .remove(filter, _, _):
             return filter.title
         case let .sharedLinks(filter, _):
             return filter.title
@@ -474,17 +516,25 @@ enum JoinCloudFolderMode {
     }
     var alreadyMemberPeerIds: Set<PeerId> {
         switch self {
-        case let .join(_, content), let .joinChats(_, content):
+        case let .join(_, content):
             return content.alreadyMemberPeerIds
+        case let .joinChats(_, content, _):
+            return Set(content.peers.filter { peer in
+                if let peer = peer._asPeer() as? TelegramChannel {
+                    return peer.participationStatus == .member
+                } else {
+                    return false
+                }
+            }.map { $0.id })
         case .remove, .sharedLinks:
             return []
         }
     }
     var localFilterId: Int32? {
         switch self {
-        case let .join(_, content), let .joinChats(_, content):
+        case let .join(_, content), let .joinChats(_, content, _):
             return content.localFilterId
-        case let .remove(filter, _), let .sharedLinks(filter, _):
+        case let .remove(filter, _, _), let .sharedLinks(filter, _):
             return filter.id
         }
     }
@@ -531,10 +581,42 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
             return current
         }
     }
-    
-    for peer in peers {
-        selected.toggleSelection(peer.peer)
+    switch content {
+    case let .remove(_, _, `default`):
+        for peer in peers {
+            if `default`.contains(peer.peer.id) {
+                selected.toggleSelection(peer.peer)
+            }
+        }
+    default:
+        for peer in peers {
+            selected.toggleSelection(peer.peer)
+        }
     }
+    
+    let participantCount = context.engine.data.get(EngineDataMap(peers.map { $0.peer.id }.map(TelegramEngine.EngineData.Item.Peer.ParticipantCount.init(id:))))
+
+    
+    updateState { current in
+        var current = current
+        current.selected = selected.presentation.selected
+        return current
+    }
+    
+    actionsDisposable.add(participantCount.start(next: { participantCount in
+        var memberCounts: [EnginePeer.Id: Int] = [:]
+        for (id, count) in participantCount {
+            if let count {
+                memberCounts[id] = count
+            }
+        }
+        updateState { current in
+            var current = current
+            current.membersCount = memberCounts
+            return current
+        }
+    }))
+    
     
     let updateLink:(ExportedChatFolderLink, ExportedChatFolderLink?)->Void = { link, updated in
         updateState { current in
@@ -553,9 +635,9 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
     let arguments = Arguments(context: context, content: content, select: selected, alreadyError: { peer in
         let text: String
         if peer.isChannel {
-            text = "You are already a member of this group."
+            text = strings().sharedFolderAlertAlreadyMemberChannel
         } else {
-            text = "You are already a member of this channel."
+            text = strings().sharedFolderAlertAlreadyMemberGroup
         }
         showModalText(for: context.window, text: text)
     }, merge: {
@@ -571,29 +653,73 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
                 if let link = link {
                     showModal(with: ShareCloudFolderController(context: context, filter: filter, link: link, updated: updateLink), for: context.window)
                 } else {
-                    let makeUrl = context.engine.peers.exportChatFolder(filterId: filter.id, title: "", peerIds: data.includePeers.peers) |> deliverOnMainQueue
-                    actionsDisposable.add(makeUrl.start(next: { link in
-                        updateState { current in
-                            var current = current
-                            current.creatingLink = false
-                            current.inviteLinks?.append(link)
-                            return current
+                    
+                    let folderLimits = shareFolderPremiumLimits(context: context, current: filter, links: stateValue.with { $0.inviteLinks })
+                                        
+                    let canCreateLink: Signal<Bool, NoError> = context.account.postbox.transaction { transaction -> Bool in
+                        var peers:[Peer] = []
+                                                
+                        for peerId in data.includePeers.peers {
+                            if let peer = transaction.getPeer(peerId) {
+                                peers.append(peer)
+                            }
                         }
-                        showModal(with: ShareCloudFolderController(context: context, filter: filter, link: link, updated: updateLink), for: context.window)
-                    }, error: { error in
-                        switch error {
-                        case .limitExceeded:
-                            showPremiumLimit(context: context, type: .sharedInvites)
-                        default:
-                            alert(for: context.window, info: strings().unknownError)
+                        return !peers.filter { peerCanBeSharedInFolder($0) }.isEmpty
+                    } |> deliverOnMainQueue
+                    
+                    _ = combineLatest(folderLimits, canCreateLink).start(next: { limits, canCreateLink in
+                        if canCreateLink {
+                            if limits.limitInvites || limits.limitFilters {
+                                if limits.limitFilters {
+                                    showPremiumLimit(context: context, type: .sharedFolders)
+                                } else if limits.limitInvites {
+                                    showPremiumLimit(context: context, type: .sharedInvites)
+                                }
+                                updateState { current in
+                                    var current = current
+                                    current.creatingLink = false
+                                    return current
+                                }
+                                return
+                            }
+                            
+                            let makeUrl = context.engine.peers.exportChatFolder(filterId: filter.id, title: "", peerIds: data.includePeers.peers) |> deliverOnMainQueue
+                            actionsDisposable.add(makeUrl.start(next: { link in
+                                updateState { current in
+                                    var current = current
+                                    current.creatingLink = false
+                                    current.inviteLinks?.append(link)
+                                    return current
+                                }
+                                showModal(with: ShareCloudFolderController(context: context, filter: filter, link: link, updated: updateLink), for: context.window)
+                            }, error: { error in
+                                switch error {
+                                case .limitExceeded:
+                                    showPremiumLimit(context: context, type: .sharedInvites)
+                                case .sharedFolderLimitExceeded:
+                                    showPremiumLimit(context: context, type: .sharedFolders)
+                                case .tooManyChannels:
+                                    showInactiveChannels(context: context, source: .join)
+                                case .tooManyChannelsInAccount:
+                                    showPremiumLimit(context: context, type: .channels)
+                                case .someUserTooManyChannels:
+                                    alert(for: context.window, info: strings().sharedFolderErrorSomeUserTooMany)
+                                case .generic:
+                                    alert(for: context.window, info: strings().unknownError)
+                                }
+                                
+                                updateState { current in
+                                    var current = current
+                                    current.creatingLink = false
+                                    return current
+                                }
+                            }))
+                            
+                        } else {
+                            showModal(with: ShareCloudFolderController(context: context, filter: filter, link: nil, updated: updateLink), for: context.window)
                         }
-                        
-                        updateState { current in
-                            var current = current
-                            current.creatingLink = false
-                            return current
-                        }
-                    }))
+                    })
+                    
                 }
             }
         default:
@@ -671,6 +797,8 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
                     showPremiumLimit(context: context, type: .sharedFolders)
                 case .tooManyChannels:
                     showInactiveChannels(context: context, source: .join)
+                case .tooManyChannelsInAccount:
+                    showPremiumLimit(context: context, type: .channels)
                 case .generic:
                     alert(for: context.window, info: strings().unknownError)
                 }
@@ -678,25 +806,50 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
             
             switch content {
             case let .join(slug, _):
-                if !state.isAlreadyInFolder {
-                    _ = showModalProgress(signal: context.engine.peers.joinChatFolderLink(slug: slug, peerIds: Array(state.selected)), for: context.window).start(error: processError, completed: {
+                if !state.isAlreadyInFolder, !state.selected.isEmpty {
+                    _ = showModalProgress(signal: context.engine.peers.joinChatFolderLink(slug: slug, peerIds: Array(state.selected)), for: context.window).start(next: { result in
+                        var title: String? = nil
+                        let text: String
+                        if result.newChatCount != 0 {
+                            title = strings().sharedFolderTooltipAddedTitle(result.title)
+                            text = strings().sharedFolderTooltipAddedTextCountable(result.newChatCount)
+                        } else {
+                            text = strings().sharedFolderTooltipAddedTitle(result.title)
+                        }
                         close?()
-                        showModalText(for: context.window, text: "Added!")
+                        showModalText(for: context.window, text: text, title: title)
+                        navigateToChatListFilter(result.folderId, context: context)
                         
-                    })
+                    }, error: processError)
                 } else {
                     close?()
                 }
-            case let .joinChats(updates, _):
-                let joinSignal = context.engine.peers.joinAvailableChatsInFolder(updates: updates, peerIds: Array(stateValue.with { $0.selected }))
-                _ = showModalProgress(signal: joinSignal, for: context.window).start(error: processError, completed: {
+            case let .joinChats(updates, _, filter):
+                if state.hasSelectedToJoin {
+                    let joinSignal = context.engine.peers.joinAvailableChatsInFolder(updates: updates, peerIds: Array(stateValue.with { $0.selected }))
+                    _ = showModalProgress(signal: joinSignal, for: context.window).start(error: processError, completed: {
+                        close?()
+                        if stateValue.with({ $0.selected.count }) > 0 {
+                            showModalText(for: context.window, text: strings().sharedFolderTooltipUpdatedTextCountable(stateValue.with { $0.selected.count }), title: strings().sharedFolderTooltipUpdatedTitle(filter.title))
+                        }
+                    })
+                } else {
+                    _ = context.engine.peers.hideChatFolderUpdates(folderId: filter.id).start()
                     close?()
-                    showModalText(for: context.window, text: "Joined!")
-                })
-
-            case let .remove(filter, _):
-                _ = context.engine.peers.leaveChatFolder(folderId: filter.id, removePeerIds: stateValue.with { Array($0.selected) }).start()
-                close?()
+                }
+            case let .remove(filter, _, _):
+                let invoke:()->Void = {
+                    _ = context.engine.peers.leaveChatFolder(folderId: filter.id, removePeerIds: stateValue.with { Array($0.selected) }).start()
+                    close?()
+                }
+                
+                if filter.data?.hasSharedLinks == true {
+                    confirm(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
+                        invoke()
+                    })
+                } else {
+                    invoke()
+                }
             case .sharedLinks:
                 break
             }
@@ -706,45 +859,52 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
     controller.afterTransaction = { [weak modalInteractions, weak modalController] controller in
         modalInteractions?.updateDone { title in
             let state = stateValue.with { $0 }
-            title.isEnabled = true
+            var enabled: Bool = true
             let string: String
             switch content {
             case .join:
                 if state.hasSelectedToJoin {
-                    string = "Add Folder And Chats"
+                    if content.localFilterId == nil {
+                        string = strings().sharedFolderDoneAddFolder
+                    } else {
+                        string = strings().sharedFolderDoneJoinChats
+                    }
                 } else if state.localFolderId == nil {
-                    string = "Add Folder"
+                    string = strings().sharedFolderDoneAddFolder
                 } else {
-                    string = "OK"
+                    string = strings().modalOK
+                }
+                if state.selected.isEmpty {
+                    enabled = false
                 }
             case .joinChats:
                 if state.hasSelectedToJoin {
-                    string = "Join Chats"
+                    string = strings().sharedFolderDoneJoinChats
                 } else {
-                    string = "Do Not Join Any Chats"
+                    string = strings().sharedFolderDoneDonNotJoinChats
                 }
             case .remove:
                 if state.selected.isEmpty {
-                    string = "Remove Folder"
+                    string = strings().sharedFolderDoneRemoveFolder
                 } else {
-                    string = "Remove Folder and Chats"
+                    string = strings().sharedFolderDoneRemoveFolderAndChats
                 }
             case .sharedLinks:
                 string = ""
             }
-            
+            title.isEnabled = enabled
             title.set(text: string, for: .Normal)
         }
         let title: String
         switch content {
         case .join:
-            title = "Add Folder"
+            title = strings().sharedFolderTitleAddFolder
         case .joinChats:
-            title = "Add \(stateValue.with { $0.selected.count }) chats"
+            title = strings().sharedFolderTitleAddChatsCountable(stateValue.with { $0.selected.count })
         case .remove:
-            title = "Remove Folder"
+            title = strings().sharedFolderTitleRemoveFolder
         case .sharedLinks:
-            title = "Share Folder"
+            title = strings().sharedFolderTitleShareFolder
         }
         controller.centerModalHeader = .init(title: title)
         modalController?.updateLocalizationAndTheme(theme: theme)
@@ -770,7 +930,10 @@ func loadAndShowSharedFolder(context: AccountContext, slug: String) -> Void {
     _ = showModalProgress(signal: context.engine.peers.checkChatFolderLink(slug: slug), for: context.window).start(next: { content in
         showModal(with: SharedFolderClosureController(context: context, content: .join(slug: slug, content: content)), for: context.window)
     }, error: { error in
-        alert(for: context.window, info: strings().unknownError)
+        switch error {
+        case .generic:
+            alert(for: context.window, info: strings().chatMessageFolderExpired)
+        }
     })
 }
 
@@ -785,25 +948,31 @@ func shareSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void 
 }
 
 func deleteSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void {
-    let peers:Signal<[Peer], NoError> = showModalProgress(signal: context.engine.peers.requestLeaveChatFolderSuggestions(folderId: filter.id), for: context.window) |> mapToSignal { peerIds -> Signal<[Peer], NoError> in
-        return context.account.postbox.transaction { transaction -> [Peer] in
-            var peers: [Peer] = []
-           for peerId in peerIds {
-               if let peer = transaction.getPeer(peerId) {
-                   peers.append(peer)
-               }
-           }
-            return peers
-        }
-    } |> deliverOnMainQueue
     
-    _ = peers.start(next: { peers in
-        if peers.isEmpty {
-            confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
-                _ = context.engine.peers.leaveChatFolder(folderId: filter.id, removePeerIds: []).start()
-            })
+    let includePeers: Signal<[Peer], NoError> = context.engine.data.get(
+        EngineDataList(filter.data!.includePeers.peers.map(TelegramEngine.EngineData.Item.Peer.Peer.init(id:)))) |> map {
+            $0.compactMap { $0?._asPeer() }
+        }
+    
+    let defaultPeers:Signal<[PeerId], NoError> = context.engine.peers.requestLeaveChatFolderSuggestions(folderId: filter.id)
+    
+    _ = showModalProgress(signal: combineLatest(includePeers, defaultPeers), for: context.window).start(next: { includePeers, defaultPeers in
+        
+        let invoke:()->Void = {
+            _ = context.engine.peers.leaveChatFolder(folderId: filter.id, removePeerIds: []).start()
+        }
+        if defaultPeers.isEmpty {
+            if filter.data?.hasSharedLinks == true {
+                confirm(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
+                    invoke()
+                })
+            } else {
+                confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
+                    invoke()
+                })
+            }
         } else {
-            showModal(with: SharedFolderClosureController(context: context, content: .remove(filter: filter, peers: peers)), for: context.window)
+            showModal(with: SharedFolderClosureController(context: context, content: .remove(filter: filter, peers: includePeers, default: defaultPeers)), for: context.window)
         }
     })
     

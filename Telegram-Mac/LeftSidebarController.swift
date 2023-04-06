@@ -25,7 +25,7 @@ private func readAllInFilter(_ filter: ChatListFilter?, context: AccountContext)
     let _ = context.engine.messages.markAllChatsAsReadInteractively(items: markItems).start()
 }
 
-func filterContextMenuItems(_ filter: ChatListFilter, unreadCount: Int?, context: AccountContext) -> [ContextMenuItem] {
+func filterContextMenuItems(_ filter: ChatListFilter, unreadCount: Int?, includeAllMuted: Bool? = nil, context: AccountContext) -> [ContextMenuItem] {
     var items:[ContextMenuItem] = []
     if var data = filter.data {
         items.append(.init(strings().chatListFilterEdit, handler: {
@@ -47,11 +47,21 @@ func filterContextMenuItems(_ filter: ChatListFilter, unreadCount: Int?, context
             })), for: context.window)
         }, itemImage: MenuAnimation.menu_plus.value))
         
-        if let unreadCount = unreadCount, unreadCount > 0 {
-            items.append(.init(strings().chatListFilterReadAll, handler: {
-                readAllInFilter(filter, context: context)
-            }, itemImage: MenuAnimation.menu_folder_read.value))
+        if let unreadCount = unreadCount {
+            if unreadCount > 0 {
+                items.append(.init(strings().chatListFilterReadAll, handler: {
+                    readAllInFilter(filter, context: context)
+                }, itemImage: MenuAnimation.menu_folder_read.value))
+            }
         }
+        if data.categories.isEmpty && !data.excludeRead && !data.excludeMuted && !data.excludeArchived && data.excludePeers.isEmpty && !data.includePeers.peers.isEmpty {
+            if let allMuted = includeAllMuted {
+                items.append(.init(allMuted ? strings().chatListFilterUnmuteAll : strings().chatListFilterMuteAll, handler: {
+                    let _ = context.engine.peers.updateMultiplePeerMuteSettings(peerIds: data.includePeers.peers, muted: !allMuted).start()
+                }, itemImage: !allMuted ? MenuAnimation.menu_mute.value : MenuAnimation.menu_unmuted.value))
+            }
+        }
+        
         if data.isShared {
             items.append(.init(strings().chatListFilterShare, handler: {
                 shareSharedFolder(context: context, filter: filter)
@@ -85,8 +95,8 @@ func filterContextMenuItems(_ filter: ChatListFilter, unreadCount: Int?, context
 private final class LeftSidebarArguments {
     let context: AccountContext
     let callback:(ChatListFilter)->Void
-    let menuItems:(ChatListFilter, Int?)->[ContextMenuItem]
-    init(context: AccountContext, callback: @escaping(ChatListFilter)->Void, menuItems: @escaping(ChatListFilter, Int?)->[ContextMenuItem]) {
+    let menuItems:(ChatListFilter, Int?, Bool?)->[ContextMenuItem]
+    init(context: AccountContext, callback: @escaping(ChatListFilter)->Void, menuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem]) {
         self.context = context
         self.callback = callback
         self.menuItems = menuItems
@@ -177,7 +187,7 @@ private enum LeftSibarBarEntry : Comparable, Identifiable {
     func item(_ arguments: LeftSidebarArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .folder(_, selected, filter, unreadCount, hasUnmutedUnread):
-            return LeftSidebarFolderItem(initialSize, folder: filter, selected: selected, unreadCount: unreadCount, hasUnmutedUnread: hasUnmutedUnread, callback: arguments.callback, menuItems: arguments.menuItems)
+            return LeftSidebarFolderItem(initialSize, context: arguments.context, folder: filter, selected: selected, unreadCount: unreadCount, hasUnmutedUnread: hasUnmutedUnread, callback: arguments.callback, menuItems: arguments.menuItems)
         case .topOffset:
             return GeneralRowItem(initialSize, height: 16, stableId: stableId, backgroundColor: .clear)
         }
@@ -232,29 +242,20 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
         
         genericView.context = context
         
-        let arguments = LeftSidebarArguments(context: context, callback: { [weak self] filter in
-            self?.updateFilter { state in
-                return state.withUpdatedFilter(filter)
-            }
-            
-            let rootNavigation = context.bindings.rootNavigation()
-            
-            let leftController = context.bindings.mainController()
-            leftController.showChatList()
-            
-            leftController.navigation.close(animated: context.layout != .single || rootNavigation.stackCount == 1)
-            
-            if context.layout == .single {
-                rootNavigation.close(animated: true)
-            }
-            
-        }, menuItems: { filter, unreadCount in
-            return filterContextMenuItems(filter, unreadCount: unreadCount, context: context)
+        let arguments = LeftSidebarArguments(context: context, callback: { filter in
+            navigateToChatListFilter(filter.id, context: context)
+
+        }, menuItems: { filter, unreadCount, allMuted in
+            return filterContextMenuItems(filter, unreadCount: unreadCount, includeAllMuted: allMuted, context: context)
         })
         let initialSize = self.atomicSize
         
         let previous: Atomic<[AppearanceWrapperEntry<LeftSibarBarEntry>]> = Atomic(value: [])
                 
+        
+       
+
+        
         let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, filterData, chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), appearanceSignal) |> map { filterData, badges, appearance in
             let entries = leftSidebarEntries(filterData, badges).map { AppearanceWrapperEntry.init(entry: $0, appearance: appearance) }
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, arguments: arguments)
@@ -284,5 +285,24 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
                 }).start()
             })
         }))
+    }
+}
+
+
+func navigateToChatListFilter(_ filter: Int32, context: AccountContext) {
+    
+    context.bindings.mainController().chatList.updateFilter { state in
+        return state.withUpdatedFilterId(filter)
+    }
+    
+    let rootNavigation = context.bindings.rootNavigation()
+    
+    let leftController = context.bindings.mainController()
+    leftController.showChatList()
+    
+    leftController.navigation.close(animated: context.layout != .single || rootNavigation.stackCount == 1)
+    
+    if context.layout == .single {
+        rootNavigation.close(animated: true)
     }
 }

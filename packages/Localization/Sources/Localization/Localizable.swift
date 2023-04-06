@@ -1115,6 +1115,10 @@ public final class L10n {
   public static func channelAdminLogUpdatedParticipantVolume(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.UpdatedParticipantVolume", p1, p2, p3)
   }
+  /// %1$@ joined via invite link %2$@ (folder)
+  public static func channelAdminLogJoinedViaInviteLinkViaFolder(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.JoinedViaInviteLink.ViaFolder", p1, p2)
+  }
   /// Sorry, you're not allowed to promote this user to become an admin.
   public static var channelAdminsAddAdminError: String  { return L10n.tr("Localizable", "Channel.Admins.AddAdminError") }
   /// promoted by %@
@@ -4099,6 +4103,8 @@ public final class L10n {
   public static var chatListFilterInviteLink: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink") }
   /// **Adding Chats**\nPlease wait a few moments while we fill this folder for you...
   public static var chatListFilterLoading: String  { return L10n.tr("Localizable", "ChatList.Filter.Loading") }
+  /// Mute All
+  public static var chatListFilterMuteAll: String  { return L10n.tr("Localizable", "ChatList.Filter.MuteAll") }
   /// Muted
   public static var chatListFilterMutedChats: String  { return L10n.tr("Localizable", "ChatList.Filter.MutedChats") }
   /// Create Folder
@@ -4153,6 +4159,8 @@ public final class L10n {
   public static var chatListFilterTitle: String  { return L10n.tr("Localizable", "ChatList.Filter.Title") }
   /// You can organize your chats by right click.
   public static var chatListFilterTooltip: String  { return L10n.tr("Localizable", "ChatList.Filter.Tooltip") }
+  /// Unmute All
+  public static var chatListFilterUnmuteAll: String  { return L10n.tr("Localizable", "ChatList.Filter.UnmuteAll") }
   /// Done
   public static var chatListFilterAddDone: String  { return L10n.tr("Localizable", "ChatList.Filter.Add.Done") }
   /// INCLUDE CHAT TYPES
@@ -4239,15 +4247,13 @@ public final class L10n {
   }
   /// INVITE LINK
   public static var chatListFilterInviteLinkHeader: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.header") }
-  /// No way to share folder with chat types or excluded chats.
+  /// You can't to share folder with chat types or excluded chats.
   public static var chatListFilterInviteLinkIncludeExcludeError: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.IncludeExcludeError") }
   /// Give your friends and colleagues access to the entire folder including all of its groups and channels where you have the necessary rights.
   public static var chatListFilterInviteLinkInfo: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Info") }
-  /// revoked
-  public static var chatListFilterInviteLinkRevoked: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Revoked") }
   /// Share Folder
   public static var chatListFilterInviteLinkShare: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Share") }
-  /// Are you sure you want to delete this folder? This will also deactivate all the invite links used to share this folder?
+  /// Are you sure you want to revoke and delete this invite link?
   public static var chatListFilterInviteLinkDeleteConfirm: String  { return L10n.tr("Localizable", "ChatList.Filter.InviteLink.Delete.Confirm") }
   /// Add a Custom Folder
   public static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
@@ -4295,27 +4301,27 @@ public final class L10n {
   public static func chatListFolderUpdatesTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_countable", p1)
   }
-  /// You can join [%d new chats]()
+  /// %d New Chats Available
   public static func chatListFolderUpdatesTitleFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_few", p1)
   }
-  /// You can join [%d new chats]()
+  /// %d New Chats Available
   public static func chatListFolderUpdatesTitleMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_many", p1)
   }
-  /// You can join [%d new chat]()
+  /// %d New Chats Available
   public static func chatListFolderUpdatesTitleOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_one", p1)
   }
-  /// You can join [%d new chats]()
+  /// %d New Chats Available
   public static func chatListFolderUpdatesTitleOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_other", p1)
   }
-  /// You can join [%d new chats]()
+  /// %d New Chats Available
   public static func chatListFolderUpdatesTitleTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_two", p1)
   }
-  /// You can join [%d new chats]()
+  /// %d New Chats Available
   public static func chatListFolderUpdatesTitleZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ChatList.FolderUpdates.Title_zero", p1)
   }
@@ -4475,6 +4481,10 @@ public final class L10n {
   public static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
   /// Open App
   public static var chatMessageOpenApp: String  { return L10n.tr("Localizable", "ChatMessage.OpenApp") }
+  /// VIEW CHAT LIST
+  public static var chatMessageViewChatList: String  { return L10n.tr("Localizable", "ChatMessage.ViewChatList") }
+  /// The folder link has expired
+  public static var chatMessageFolderExpired: String  { return L10n.tr("Localizable", "ChatMessage.Folder.Expired") }
   /// views
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
   /// channel created
@@ -5543,6 +5553,8 @@ public final class L10n {
   }
   /// Done
   public static var exportedInvitationDone: String  { return L10n.tr("Localizable", "ExportedInvitation.Done") }
+  /// joined via folder invite link
+  public static var exportedInvitationJoinedViaFolder: String  { return L10n.tr("Localizable", "ExportedInvitation.JoinedViaFolder") }
   /// LINK CREATED BY
   public static var exportedInvitationLinkCreatedBy: String  { return L10n.tr("Localizable", "ExportedInvitation.LinkCreatedBy") }
   /// %d
@@ -10685,12 +10697,404 @@ public final class L10n {
   public static var shareExtensionUnauthorizedDescription: String  { return L10n.tr("Localizable", "ShareExtension.Unauthorized.Description") }
   /// OK
   public static var shareExtensionUnauthorizedOK: String  { return L10n.tr("Localizable", "ShareExtension.Unauthorized.OK") }
+  /// DESELECT ALL
+  public static var shareFolderDeselectAll: String  { return L10n.tr("Localizable", "ShareFolder.DeselectAll") }
+  /// SELECT ALL
+  public static var shareFolderSelectAll: String  { return L10n.tr("Localizable", "ShareFolder.SelectAll") }
+  /// Share Folder
+  public static var shareFolderTitle: String  { return L10n.tr("Localizable", "ShareFolder.Title") }
+  /// Delete
+  public static var shareFolderContextDelete: String  { return L10n.tr("Localizable", "ShareFolder.Context.Delete") }
+  /// Name Link
+  public static var shareFolderContextNameLink: String  { return L10n.tr("Localizable", "ShareFolder.Context.NameLink") }
+  /// Discard
+  public static var shareFolderDiscardOk: String  { return L10n.tr("Localizable", "ShareFolder.Discard.Ok") }
+  /// You have changed the settings of this folder. Discard changes?
+  public static var shareFolderDiscardText: String  { return L10n.tr("Localizable", "ShareFolder.Discard.Text") }
+  /// Delete
+  public static var shareFolderDoneDelete: String  { return L10n.tr("Localizable", "ShareFolder.Done.Delete") }
+  /// Done
+  public static var shareFolderDoneDone: String  { return L10n.tr("Localizable", "ShareFolder.Done.Done") }
+  /// Select groups and channels that you want everyone who adds the folder via invite link to join.
+  public static var shareFolderHeaderInfo: String  { return L10n.tr("Localizable", "ShareFolder.Header.Info") }
+  /// %d
+  public static func shareFolderHeaderTitleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Header.Title_countable", p1)
+  }
+  /// %d CHAT SELECTED
+  public static func shareFolderHeaderTitleFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Header.Title_few", p1)
+  }
+  /// %d CHAT SELECTED
+  public static func shareFolderHeaderTitleMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Header.Title_many", p1)
+  }
+  /// %d CHAT SELECTED
+  public static func shareFolderHeaderTitleOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Header.Title_one", p1)
+  }
+  /// %d CHAT SELECTED
+  public static func shareFolderHeaderTitleOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Header.Title_other", p1)
+  }
+  /// %d CHATS SELECTED
+  public static func shareFolderHeaderTitleTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Header.Title_two", p1)
+  }
+  /// %d CHATS SELECTED
+  public static func shareFolderHeaderTitleZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Header.Title_zero", p1)
+  }
+  /// CHATS
+  public static var shareFolderHeaderTitleZeroValueHolder: String  { return L10n.tr("Localizable", "ShareFolder.Header.Title_ZeroValueHolder") }
+  /// You can only share groups and channels in which you are allowed to create invite links.
+  public static var shareFolderHeaderEmptyInfo: String  { return L10n.tr("Localizable", "ShareFolder.Header.Empty.Info") }
+  /// THESE CHATS CANNOT BE SHARED
+  public static var shareFolderHeaderEmptyTitle: String  { return L10n.tr("Localizable", "ShareFolder.Header.Empty.Title") }
+  /// INVITE LINK
+  public static var shareFolderInviteLinkTitle: String  { return L10n.tr("Localizable", "ShareFolder.InviteLink.Title") }
+  /// Link name
+  public static var shareFolderNameLinkPlaceholder: String  { return L10n.tr("Localizable", "ShareFolder.NameLink.Placeholder") }
+  /// Name Link
+  public static var shareFolderNameLinkTitle: String  { return L10n.tr("Localizable", "ShareFolder.NameLink.Title") }
+  /// you can invite others here
+  public static var shareFolderStatusAllowed: String  { return L10n.tr("Localizable", "ShareFolder.Status.Allowed") }
+  /// you can't share bots
+  public static var shareFolderStatusDisallowedBot: String  { return L10n.tr("Localizable", "ShareFolder.Status.Disallowed.Bot") }
+  /// this chat is no longer part of folder
+  public static var shareFolderStatusDisallowedNoLonger: String  { return L10n.tr("Localizable", "ShareFolder.Status.Disallowed.NoLonger") }
+  /// you can't invite others here
+  public static var shareFolderStatusDisallowedOthers: String  { return L10n.tr("Localizable", "ShareFolder.Status.Disallowed.Others") }
+  /// you can't share private chats
+  public static var shareFolderStatusDisallowedPrivateChats: String  { return L10n.tr("Localizable", "ShareFolder.Status.Disallowed.PrivateChats") }
+  /// You can't share chats with bots.
+  public static var shareFolderStatusDisallowedAlertBot: String  { return L10n.tr("Localizable", "ShareFolder.Status.Disallowed.Alert.Bot") }
+  /// You don't have the admin rights to share invite links to this channel.
+  public static var shareFolderStatusDisallowedAlertChannel: String  { return L10n.tr("Localizable", "ShareFolder.Status.Disallowed.Alert.Channel") }
+  /// You don't have the admin rights to share invite links to this group chat.
+  public static var shareFolderStatusDisallowedAlertGroup: String  { return L10n.tr("Localizable", "ShareFolder.Status.Disallowed.Alert.Group") }
+  /// This chat is no longer part of folder. Please add it to folder first.
+  public static var shareFolderStatusDisallowedAlertNoLonger: String  { return L10n.tr("Localizable", "ShareFolder.Status.Disallowed.Alert.NoLonger") }
+  /// You can't share private chats.
+  public static var shareFolderStatusDisallowedAlertPrivateChats: String  { return L10n.tr("Localizable", "ShareFolder.Status.Disallowed.Alert.PrivateChats") }
+  /// There are no chats in this folder that you can share with others
+  public static var shareFolderTitleEmpty: String  { return L10n.tr("Localizable", "ShareFolder.Title.Empty") }
+  /// %1@$ %2d$
+  public static func shareFolderTitleTextCountable(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Title.Text_Countable", p1, p2)
+  }
+  /// Anyone with this link can add **(%1@$)** folder and the %2d$ chats selected below.
+  public static func shareFolderTitleTextFew(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Title.Text_few", p1, p2)
+  }
+  /// Anyone with this link can add **(%1@$)** folder and the %2d$ chats selected below.
+  public static func shareFolderTitleTextMany(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Title.Text_many", p1, p2)
+  }
+  /// Anyone with this link can add **(%1@$)** folder and the %2d$ chat selected below.
+  public static func shareFolderTitleTextOne(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Title.Text_one", p1, p2)
+  }
+  /// Anyone with this link can add **(%1@$)** folder and the %2d$ chats selected below.
+  public static func shareFolderTitleTextOther(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Title.Text_other", p1, p2)
+  }
+  /// Anyone with this link can add **(%1@$)** folder and the %2d$ chats selected below.
+  public static func shareFolderTitleTextTwo(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Title.Text_two", p1, p2)
+  }
+  /// Anyone with this link can add **(%1@$)** folder and the %2d$ chats selected below.
+  public static func shareFolderTitleTextZero(_ p1: String, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "ShareFolder.Title.Text_zero", p1, p2)
+  }
   /// Select
   public static var shareModalSelect: String  { return L10n.tr("Localizable", "ShareModal.Select") }
   /// Forward to...
   public static var shareModalSearchForwardPlaceholder: String  { return L10n.tr("Localizable", "ShareModal.Search.ForwardPlaceholder") }
   /// Share to...
   public static var shareModalSearchPlaceholder: String  { return L10n.tr("Localizable", "ShareModal.Search.Placeholder") }
+  /// Create Invite Link
+  public static var sharedFolderCreateLink: String  { return L10n.tr("Localizable", "SharedFolder.CreateLink") }
+  /// DESELECT ALL
+  public static var sharedFolderDeselectAll: String  { return L10n.tr("Localizable", "SharedFolder.DeselectAll") }
+  /// SELECT ALL
+  public static var sharedFolderSelectAll: String  { return L10n.tr("Localizable", "SharedFolder.SelectAll") }
+  /// You are already a member of this channel.
+  public static var sharedFolderAlertAlreadyMemberChannel: String  { return L10n.tr("Localizable", "SharedFolder.Alert.AlreadyMember.Channel") }
+  /// You are already a member of this group.
+  public static var sharedFolderAlertAlreadyMemberGroup: String  { return L10n.tr("Localizable", "SharedFolder.Alert.AlreadyMember.Group") }
+  /// Delete Folder?
+  public static var sharedFolderConfirmDelete: String  { return L10n.tr("Localizable", "SharedFolder.Confirm.Delete") }
+  /// Are you sure you want to delete this folder? This will also deactivate all the invite links used to share this folder.
+  public static var sharedFolderConfirmDeleteText: String  { return L10n.tr("Localizable", "SharedFolder.Confirm.Delete.Text") }
+  /// Add Folder
+  public static var sharedFolderDoneAddFolder: String  { return L10n.tr("Localizable", "SharedFolder.Done.AddFolder") }
+  /// Do Not Join Any Chats
+  public static var sharedFolderDoneDonNotJoinChats: String  { return L10n.tr("Localizable", "SharedFolder.Done.DonNotJoinChats") }
+  /// Join Chats
+  public static var sharedFolderDoneJoinChats: String  { return L10n.tr("Localizable", "SharedFolder.Done.JoinChats") }
+  /// Remove Folder
+  public static var sharedFolderDoneRemoveFolder: String  { return L10n.tr("Localizable", "SharedFolder.Done.RemoveFolder") }
+  /// Remove Folder and Chats
+  public static var sharedFolderDoneRemoveFolderAndChats: String  { return L10n.tr("Localizable", "SharedFolder.Done.RemoveFolderAndChats") }
+  /// One of the groups in this folder can’t be added because one of its admins has too many groups and channels.
+  public static var sharedFolderErrorSomeUserTooMany: String  { return L10n.tr("Localizable", "SharedFolder.Error.SomeUserTooMany") }
+  /// %d
+  public static func sharedFolderListHeaderAlreadyCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Already_countable", p1)
+  }
+  /// %d CHATS ALREADY JOINED
+  public static func sharedFolderListHeaderAlreadyFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Already_few", p1)
+  }
+  /// %d CHATS ALREADY JOINED
+  public static func sharedFolderListHeaderAlreadyMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Already_many", p1)
+  }
+  /// %d CHATS ALREADY JOINED
+  public static func sharedFolderListHeaderAlreadyOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Already_one", p1)
+  }
+  /// %d CHATS ALREADY JOINED
+  public static func sharedFolderListHeaderAlreadyOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Already_other", p1)
+  }
+  /// %d CHATS ALREADY JOINED
+  public static func sharedFolderListHeaderAlreadyTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Already_two", p1)
+  }
+  /// %d CHATS ALREADY JOINED
+  public static func sharedFolderListHeaderAlreadyZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Already_zero", p1)
+  }
+  /// %d
+  public static func sharedFolderListHeaderChatsToJoinCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.ChatsToJoin_countable", p1)
+  }
+  /// %d CHATS TO JOIN
+  public static func sharedFolderListHeaderChatsToJoinFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.ChatsToJoin_few", p1)
+  }
+  /// %d CHATS TO JOIN
+  public static func sharedFolderListHeaderChatsToJoinMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.ChatsToJoin_many", p1)
+  }
+  /// %d CHATS TO JOIN
+  public static func sharedFolderListHeaderChatsToJoinOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.ChatsToJoin_one", p1)
+  }
+  /// %d CHATS TO JOIN
+  public static func sharedFolderListHeaderChatsToJoinOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.ChatsToJoin_other", p1)
+  }
+  /// %d CHATS TO JOIN
+  public static func sharedFolderListHeaderChatsToJoinTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.ChatsToJoin_two", p1)
+  }
+  /// %d CHATS TO JOIN
+  public static func sharedFolderListHeaderChatsToJoinZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.ChatsToJoin_zero", p1)
+  }
+  /// INVITE LINKS
+  public static var sharedFolderListHeaderInviteLinks: String  { return L10n.tr("Localizable", "SharedFolder.ListHeader.InviteLinks") }
+  /// %d
+  public static func sharedFolderListHeaderQuitCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Quit_countable", p1)
+  }
+  /// %d CHATS TO QUIT
+  public static func sharedFolderListHeaderQuitFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Quit_few", p1)
+  }
+  /// %d CHATS TO QUIT
+  public static func sharedFolderListHeaderQuitMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Quit_many", p1)
+  }
+  /// %d CHATS TO QUIT
+  public static func sharedFolderListHeaderQuitOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Quit_one", p1)
+  }
+  /// %d CHATS TO QUIT
+  public static func sharedFolderListHeaderQuitOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Quit_other", p1)
+  }
+  /// %d CHATS TO QUIT
+  public static func sharedFolderListHeaderQuitTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Quit_two", p1)
+  }
+  /// %d CHATS TO QUIT
+  public static func sharedFolderListHeaderQuitZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Quit_zero", p1)
+  }
+  /// %d
+  public static func sharedFolderListHeaderUpdatesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Updates_countable", p1)
+  }
+  /// %d CHATS IN FOLDER TO JOIN
+  public static func sharedFolderListHeaderUpdatesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Updates_few", p1)
+  }
+  /// %d CHATS IN FOLDER TO JOIN
+  public static func sharedFolderListHeaderUpdatesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Updates_many", p1)
+  }
+  /// %d CHATS IN FOLDER TO JOIN
+  public static func sharedFolderListHeaderUpdatesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Updates_one", p1)
+  }
+  /// %d CHATS IN FOLDER TO JOIN
+  public static func sharedFolderListHeaderUpdatesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Updates_other", p1)
+  }
+  /// %d CHATS IN FOLDER TO JOIN
+  public static func sharedFolderListHeaderUpdatesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Updates_two", p1)
+  }
+  /// %d CHATS IN FOLDER TO JOIN
+  public static func sharedFolderListHeaderUpdatesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.ListHeader.Updates_zero", p1)
+  }
+  /// %d %@
+  public static func sharedFolderStatusAddChatsCountable(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Status.AddChats_countable", p1, p2)
+  }
+  /// Do you want to add **%1d$** chats to your folder **%2@$**?
+  public static func sharedFolderStatusAddChatsFew(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Status.AddChats_few", p1, p2)
+  }
+  /// Do you want to add **%1d$** chats to your folder **%2@$**?
+  public static func sharedFolderStatusAddChatsMany(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Status.AddChats_many", p1, p2)
+  }
+  /// Do you want to add **%1d$** chats to your folder **%2@$**?
+  public static func sharedFolderStatusAddChatsOne(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Status.AddChats_one", p1, p2)
+  }
+  /// Do you want to add **%1d$** chats to your folder **%2@$**?
+  public static func sharedFolderStatusAddChatsOther(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Status.AddChats_other", p1, p2)
+  }
+  /// Do you want to add **%1d$** chats to your folder **%2@$**?
+  public static func sharedFolderStatusAddChatsTwo(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Status.AddChats_two", p1, p2)
+  }
+  /// Do you want to add **%1d$** chats to your folder **%2@$**?
+  public static func sharedFolderStatusAddChatsZero(_ p1: Int, _ p2: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Status.AddChats_zero", p1, p2)
+  }
+  /// Select chats to add them to your folder
+  public static var sharedFolderStatusAddChatsZeroValueHolder: String  { return L10n.tr("Localizable", "SharedFolder.Status.AddChats_ZeroValueHolder") }
+  /// Do you want to add a new chat folder and join its groups and channels?
+  public static var sharedFolderStatusAddNew: String  { return L10n.tr("Localizable", "SharedFolder.Status.AddNew") }
+  /// You have already added this folder and its chats.
+  public static var sharedFolderStatusFullyAdded: String  { return L10n.tr("Localizable", "SharedFolder.Status.FullyAdded") }
+  /// Create more links to set up different access levels for different people.
+  public static var sharedFolderStatusLinks: String  { return L10n.tr("Localizable", "SharedFolder.Status.Links") }
+  /// Do you want to quit the chats you joined when adding the folder **%1@$**?
+  public static func sharedFolderStatusRemove(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Status.Remove", p1)
+  }
+  /// %d
+  public static func sharedFolderTitleAddChatsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Title.AddChats_countable", p1)
+  }
+  /// Add %d chats
+  public static func sharedFolderTitleAddChatsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Title.AddChats_few", p1)
+  }
+  /// Add %d chats
+  public static func sharedFolderTitleAddChatsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Title.AddChats_many", p1)
+  }
+  /// Add %d chat
+  public static func sharedFolderTitleAddChatsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Title.AddChats_one", p1)
+  }
+  /// Add %d chats
+  public static func sharedFolderTitleAddChatsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Title.AddChats_other", p1)
+  }
+  /// Add %d chats
+  public static func sharedFolderTitleAddChatsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Title.AddChats_two", p1)
+  }
+  /// Add %d chats
+  public static func sharedFolderTitleAddChatsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Title.AddChats_zero", p1)
+  }
+  /// Add Folder
+  public static var sharedFolderTitleAddFolder: String  { return L10n.tr("Localizable", "SharedFolder.Title.AddFolder") }
+  /// All Chats
+  public static var sharedFolderTitleAllChats: String  { return L10n.tr("Localizable", "SharedFolder.Title.AllChats") }
+  /// Personal
+  public static var sharedFolderTitlePersonal: String  { return L10n.tr("Localizable", "SharedFolder.Title.Personal") }
+  /// Remove Folder
+  public static var sharedFolderTitleRemoveFolder: String  { return L10n.tr("Localizable", "SharedFolder.Title.RemoveFolder") }
+  /// Share Folder
+  public static var sharedFolderTitleShareFolder: String  { return L10n.tr("Localizable", "SharedFolder.Title.ShareFolder") }
+  /// %d
+  public static func sharedFolderTooltipAddedTextCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Added.Text_countable", p1)
+  }
+  /// You also joined %d new chats
+  public static func sharedFolderTooltipAddedTextFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Added.Text_few", p1)
+  }
+  /// You also joined %d new chats
+  public static func sharedFolderTooltipAddedTextMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Added.Text_many", p1)
+  }
+  /// You also joined %d new chat
+  public static func sharedFolderTooltipAddedTextOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Added.Text_one", p1)
+  }
+  /// You also joined %d new chats
+  public static func sharedFolderTooltipAddedTextOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Added.Text_other", p1)
+  }
+  /// You also joined %d new chats
+  public static func sharedFolderTooltipAddedTextTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Added.Text_two", p1)
+  }
+  /// You also joined %d new chats
+  public static func sharedFolderTooltipAddedTextZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Added.Text_zero", p1)
+  }
+  /// Folder %@ Added
+  public static func sharedFolderTooltipAddedTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Added.Title", p1)
+  }
+  /// %d
+  public static func sharedFolderTooltipUpdatedTextCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Updated.Text_countable", p1)
+  }
+  /// You also joined %d new chats
+  public static func sharedFolderTooltipUpdatedTextFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Updated.Text_few", p1)
+  }
+  /// You also joined %d new chats
+  public static func sharedFolderTooltipUpdatedTextMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Updated.Text_many", p1)
+  }
+  /// You also joined %d new chat
+  public static func sharedFolderTooltipUpdatedTextOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Updated.Text_one", p1)
+  }
+  /// You also joined %d new chats
+  public static func sharedFolderTooltipUpdatedTextOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Updated.Text_other", p1)
+  }
+  /// You also joined %d new chats
+  public static func sharedFolderTooltipUpdatedTextTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Updated.Text_two", p1)
+  }
+  /// You have joined %d new chats
+  public static func sharedFolderTooltipUpdatedTextZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Updated.Text_zero", p1)
+  }
+  /// Folder %@ Updated
+  public static func sharedFolderTooltipUpdatedTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "SharedFolder.Tooltip.Updated.Title", p1)
+  }
   /// CHAT
   public static var shortcutsControllerChat: String  { return L10n.tr("Localizable", "ShortcutsController.Chat") }
   /// GESTURES
@@ -11245,7 +11649,7 @@ public final class L10n {
   public static func storageExceptionsHeaderTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StorageExceptions.Header_two", p1)
   }
-  /// %d EXCEPTION
+  /// %d EXCEPTIONS
   public static func storageExceptionsHeaderZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StorageExceptions.Header_zero", p1)
   }

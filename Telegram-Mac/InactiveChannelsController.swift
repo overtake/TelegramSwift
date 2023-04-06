@@ -157,7 +157,7 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
     }))
     
     let arguments = InactiveChannelsArguments(context: context, select: SelectPeerInteraction(), premium: {
-        
+        showModal(with: PremiumBoardingController(context: context, source: .double_limits(.channels)), for: context.window)
     })
     
     let signal = statePromise.get() |> map { state in

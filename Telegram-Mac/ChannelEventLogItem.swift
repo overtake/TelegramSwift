@@ -724,7 +724,12 @@ class ServiceEventLogItem: TableRowItem {
                 }
             case let .participantJoinedViaInvite(invite, joinedViaFolderLink):
                 if let invite = invite._invitation {
-                    let text = strings().channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    let text: String
+                    if joinedViaFolderLink {
+                       text = strings().channelAdminLogJoinedViaInviteLinkViaFolder(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    } else {
+                       text = strings().channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    }
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
                 }
             case let  .participantJoinByRequest(invite, peerId):

@@ -162,7 +162,12 @@ class EBlockRowView: TableRowView {
         updateLines(item: item, animated: animated)
     }
     
-   
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        for (_, line) in lines {
+            line.contentsScale = backingScaleFactor
+        }
+    }
     
     func updateLines(item: EBlockItem, animated: Bool) {
         

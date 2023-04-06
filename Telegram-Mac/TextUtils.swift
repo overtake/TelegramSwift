@@ -802,6 +802,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             //TODOLANG
             text = "wallpaper updated"
             break
+        case .setSameChatWallpaper:
+            text = "same wallpaper"
         }
     }
     return (text, entities, media)

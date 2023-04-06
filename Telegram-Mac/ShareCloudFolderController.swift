@@ -22,7 +22,8 @@ private final class Arguments {
     let delete:()->Void
     let cantSelect:(Peer)->Void
     let nameLink: ()->Void
-    init(context: AccountContext, select: SelectPeerInteraction, copy:@escaping(String)->Void, share:@escaping(String)->Void, delete: @escaping()->Void, cantSelect:@escaping(Peer)->Void, nameLink: @escaping()->Void) {
+    let merge:()->Void
+    init(context: AccountContext, select: SelectPeerInteraction, copy:@escaping(String)->Void, share:@escaping(String)->Void, delete: @escaping()->Void, cantSelect:@escaping(Peer)->Void, nameLink: @escaping()->Void, merge:@escaping()->Void) {
         self.context = context
         self.select = select
         self.copy = copy
@@ -30,16 +31,12 @@ private final class Arguments {
         self.delete = delete
         self.cantSelect = cantSelect
         self.nameLink = nameLink
+        self.merge = merge
     }
 }
 
 func peerCanBeSharedInFolder(_ peer: Peer, filter: ChatListFilter? = nil) -> Bool {
-    if let filter = filter, let data = filter.data {
-//        if !data.includePeers.peers.contains(peer.id) {
-//            return false
-//        }
-    }
-    if peer.isChannel || peer.isSupergroup || peer.isGigagroup {
+    if peer.isChannel || peer.isSupergroup || peer.isGigagroup || peer.isGroup {
         if let channel = peer as? TelegramChannel {
             if channel.flags.contains(.requestToJoin) {
                 return false
@@ -55,7 +52,7 @@ private struct State : Equatable {
     var link: ExportedChatFolderLink?
     var peers: [PeerEquatable] = []
     var selected: Set<PeerId> = Set()
-    
+    var membersCount: [EnginePeer.Id: Int] = [:]
     var isEmpty: Bool {
         return peers.filter {
             peerCanBeSharedInFolder($0.peer, filter: filter)
@@ -82,16 +79,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     let titleText: String
     if !state.isEmpty {
-        titleText = "Anyone with this link can add **\(name)** folder and the \(state.selected.count) chats selected below."
+        titleText = strings().shareFolderTitleTextCountable(name, state.selected.count)
     } else {
-        titleText = "There are no chats in this folder that you can share with others."
+        titleText = strings().shareFolderTitleEmpty
     }
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         let attr: NSMutableAttributedString = .init()
         attr.append(string: titleText, color: theme.colors.listGrayText, font: .normal(.text))
         attr.detectBoldColorInString(with: .medium(.text))
-        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.new_folder, text: attr, stickerSize: NSMakeSize(80, 80))
+        return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: LocalAnimatedSticker.share_folder, text: attr, stickerSize: NSMakeSize(80, 80))
     }))
     index += 1
     
@@ -99,7 +96,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     if let link = state.link {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("INVITE LINK"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().shareFolderInviteLinkTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
 
@@ -113,13 +110,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                         arguments.copy(link.link)
                     }, itemImage: MenuAnimation.menu_copy.value))
                     
-                    items.append(ContextMenuItem("Name Link", handler: {
+                    items.append(ContextMenuItem(strings().shareFolderContextNameLink, handler: {
                         arguments.nameLink()
                     }, itemImage: MenuAnimation.menu_edit.value))
                                  
                     items.append(ContextSeparatorItem())
                     
-                    items.append(ContextMenuItem("Delete", handler: arguments.delete, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    items.append(ContextMenuItem(strings().shareFolderContextDelete, handler: arguments.delete, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     
                 }
                 
@@ -132,20 +129,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         sectionId += 1
     }
 
-    
-    let headerText: String
-    let infoText: String
-    if state.isEmpty {
-        headerText = "THESE CHATS CANNOT BE SHARED";
-        infoText = "You can only share groups and channels in which you are allowed to create invite links."
-    } else {
-        headerText = "\(state.selected.count) CHATS SELECTED"
-        infoText = "Select groups and channels that you want everyone who adds the folder via invite link to join."
-    }
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(headerText), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
-    
     struct Tuple : Equatable {
         let peer: PeerEquatable
         let selected: Bool
@@ -160,6 +143,41 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         items.append(.init(peer: peer, selected: state.selected.contains(peer.peer.id), viewType: bestGeneralViewType(state.peers, for: i), selectable: true, enabled: peerCanBeSharedInFolder(peer.peer, filter: state.filter)))
     }
     
+    var rightItem = InputDataGeneralTextRightData(isLoading: false, text: nil)
+    
+    if items.count > 1, !state.isEmpty {
+        let allSelected = items.filter {
+            $0.selected && $0.enabled
+        }.count == items.filter({ $0.enabled }).count
+        
+        rightItem = .init(isLoading: false, text: .initialize(string: allSelected ? strings().shareFolderDeselectAll : strings().shareFolderSelectAll, color: theme.colors.accent, font: .normal(.short)), action: {
+            for item in items {
+                if item.enabled {
+                    if item.selected, allSelected {
+                        arguments.select.toggleSelection(item.peer.peer)
+                    } else if !allSelected, !item.selected {
+                        arguments.select.toggleSelection(item.peer.peer)
+                    }
+                }
+            }
+            arguments.merge()
+        }, update: arc4random())
+    }
+    
+    
+    let headerText: String
+    let infoText: String
+    if state.isEmpty {
+        headerText = strings().shareFolderHeaderEmptyTitle
+        infoText = strings().shareFolderHeaderEmptyInfo
+    } else {
+        headerText = strings().shareFolderHeaderTitleCountable(state.selected.count)
+        infoText = strings().shareFolderHeaderInfo
+    }
+    
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(headerText), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: rightItem)))
+    index += 1
+    
     for item in items {
         
         let interactionType: ShortPeerItemInteractionType
@@ -171,22 +189,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         let text: String
         if item.enabled {
-            if item.peer.peer.isChannel {
-                text = strings().peerStatusChannel
-            } else if item.peer.peer.isForum {
-                text = strings().peerStatusForum
-            } else {
-                text = strings().peerStatusGroup
-            }
+            text = strings().shareFolderStatusAllowed
         } else {
             if let data = state.filter.data, !data.includePeers.peers.contains(item.peer.peer.id) {
-                text = "This chat is no longer part of folder"
+                text = strings().shareFolderStatusDisallowedNoLonger
             } else if item.peer.peer.isBot {
-                text = "you can't share bots"
+                text = strings().shareFolderStatusDisallowedBot
             } else if item.peer.peer.isUser {
-                text = "you can't share private chats"
+                text = strings().shareFolderStatusDisallowedPrivateChats
             } else {
-                text = "you can't invite others here"
+                text = strings().shareFolderStatusDisallowedOthers
             }
         }
         
@@ -227,10 +239,12 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
     var initialSelected: Set<PeerId> = Set()
     
     if let data = filter.data {
+        
+        let peerIds = ((link?.peerIds ?? []) + data.includePeers.peers).uniqueElements
+
         let peers: Signal<[PeerEquatable], NoError> = context.account.postbox.transaction { transaction -> [PeerEquatable] in
             var peers:[PeerEquatable] = []
             
-            let peerIds = ((link?.peerIds ?? []) + data.includePeers.peers).uniqueElements
             
             for peerId in peerIds {
                 if let peer = transaction.getPeer(peerId) {
@@ -239,7 +253,12 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
             }
             return peers
         } |> deliverOnMainQueue
-        actionsDisposable.add(peers.start(next: { [weak selected] peers in
+        
+        let participantCount = context.engine.data.get(EngineDataMap(peerIds.map(TelegramEngine.EngineData.Item.Peer.ParticipantCount.init(id:))))
+
+        
+        
+        actionsDisposable.add(combineLatest(peers, participantCount).start(next: { [weak selected] peers, participantCount in
             
             let access = peers.filter {
                 peerCanBeSharedInFolder($0.peer, filter: filter)
@@ -247,6 +266,14 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
             let cantInvite = peers.filter {
                 !peerCanBeSharedInFolder($0.peer, filter: filter)
             }
+           
+            var memberCounts: [EnginePeer.Id: Int] = [:]
+            for (id, count) in participantCount {
+                if let count {
+                    memberCounts[id] = count
+                }
+            }
+
             
             let peers = access + cantInvite
             
@@ -266,6 +293,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
                 var current = current
                 current.peers = peers
                 current.selected = initialSelected
+                current.membersCount = memberCounts
                 return current
             }
 
@@ -306,33 +334,45 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
     }, cantSelect: { peer in
         let text: String
         if let data = filter.data, !data.includePeers.peers.contains(peer.id) {
-            text = "This chat is no longer part of folder. Please add it to folder first.";
+            text = strings().shareFolderStatusDisallowedAlertNoLonger
         } else if peer.isUser {
-            text = "You can't share private chat.";
+            text = strings().shareFolderStatusDisallowedAlertPrivateChats
         } else if peer.isBot {
-            text = "You can't share bot.";
+            text = strings().shareFolderStatusDisallowedAlertBot
         } else if peer.isChannel {
-            text = "You don't have the admin rights to share invite links to this channel."
+            text = strings().shareFolderStatusDisallowedAlertChannel
         } else {
-            text = "You don't have the admin rights to share invite links to this group chat."
+            text = strings().shareFolderStatusDisallowedAlertGroup
         }
         showModalText(for: context.window, text: text)
     }, nameLink: {
-        showModal(with: TextInputController(context: context, title: "Link Name", placeholder: "Link Name", initialText: stateValue.with { $0.link?.title ?? "" }, limit: 32, callback: { name in
+        showModal(with: TextInputController(context: context, title: strings().shareFolderNameLinkTitle, placeholder: strings().shareFolderNameLinkPlaceholder, initialText: stateValue.with { $0.link?.title ?? "" }, limit: 32, callback: { name in
             updateState { current in
                 var current = current
                 current.link?.title = name
                 return current
             }
         }), for: context.window)
+    }, merge: {
+        updateState { current in
+            var current = current
+            current.selected = selected.presentation.selected
+            return current
+        }
     })
 
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
+    let title: String
+    if let linkTitle = link?.title, !linkTitle.isEmpty {
+        title = linkTitle
+    } else {
+        title = strings().shareFolderTitle
+    }
     
-    let controller = InputDataController(dataSignal: signal, title: link?.title ?? filter.title)
+    let controller = InputDataController(dataSignal: signal, title: title)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -346,7 +386,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         if let link = link {
             let state = stateValue.with { $0 }
             if (link != state.link) || (initialSelected != state.selected) {
-                confirm(for: context.window, information: "You have changed the settings of this folder. Discard changes?", okTitle: "Discard", successHandler: { _ in
+                confirm(for: context.window, information: strings().shareFolderDiscardText, okTitle: strings().shareFolderDiscardOk, successHandler: { _ in
                     f()
                 })
             } else {
@@ -395,9 +435,9 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
     controller.afterTransaction = { [weak modalInteractions, weak modalController] controller in
         modalInteractions?.updateDone { title in
             title.set(color: stateValue.with { $0.selected.isEmpty } ? theme.colors.redUI : theme.colors.accent, for: .Normal)
-            title.set(text: stateValue.with { $0.selected.isEmpty } ? "Delete" : "Done", for: .Normal)
+            title.set(text: stateValue.with { $0.selected.isEmpty } ? strings().shareFolderDoneDelete : strings().shareFolderDoneDone, for: .Normal)
         }
-        if let title = stateValue.with({ $0.link?.title }) {
+        if let title = stateValue.with({ $0.link?.title }), !title.isEmpty {
             controller.centerModalHeader = .init(title: title)
             modalController?.updateLocalizationAndTheme(theme: theme)
         }
@@ -406,11 +446,5 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         
     return modalController
 }
-
-
-/*
- 
- */
-
 
 

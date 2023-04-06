@@ -48,16 +48,17 @@ class LeftSidebarFolderItem: TableRowItem {
     fileprivate let folder: ChatListFilter
     fileprivate let selected: Bool
     fileprivate let callback: (ChatListFilter)->Void
-    fileprivate let menuItems: (ChatListFilter, Int?)-> [ContextMenuItem]
-    
+    fileprivate let menuItems: (ChatListFilter, Int?, Bool?)-> [ContextMenuItem]
+    fileprivate let context: AccountContext
     let icon: CGImage
     let badge: CGImage?
     let nameLayout: TextViewLayout
     let unreadCount: Int
     
     
-    init(_ initialSize: NSSize, folder: ChatListFilter, selected: Bool, unreadCount: Int, hasUnmutedUnread: Bool, callback: @escaping(ChatListFilter)->Void, menuItems: @escaping(ChatListFilter, Int?) -> [ContextMenuItem]) {
+    init(_ initialSize: NSSize, context: AccountContext, folder: ChatListFilter, selected: Bool, unreadCount: Int, hasUnmutedUnread: Bool, callback: @escaping(ChatListFilter)->Void, menuItems: @escaping(ChatListFilter, Int?, Bool?) -> [ContextMenuItem]) {
         self.folder = folder
+        self.context = context
         self.selected = selected
         self.callback = callback
         self.unreadCount = unreadCount
@@ -134,7 +135,40 @@ class LeftSidebarFolderItem: TableRowItem {
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        return .single(self.menuItems(folder, unreadCount))
+        
+        let id = self.folder.id
+        let folder = self.folder
+        let unreadCount = self.unreadCount
+        let context = self.context
+        
+        let filterPeersAreMuted: Signal<Bool, NoError> = context.engine.peers.currentChatListFilters()
+        |> take(1)
+        |> mapToSignal { filters -> Signal<Bool, NoError> in
+            guard let filter = filters.first(where: { $0.id == id }) else {
+                return .single(false)
+            }
+            guard case let .filter(_, _, _, data) = filter else {
+                return .single(false)
+            }
+            return context.engine.data.get(
+                EngineDataList(data.includePeers.peers.map(TelegramEngine.EngineData.Item.Peer.NotificationSettings.init(id:)))
+            )
+            |> map { list -> Bool in
+                for item in list {
+                    switch item.muteState {
+                    case .default, .unmuted:
+                        return false
+                    default:
+                        break
+                    }
+                }
+                return true
+            }
+        } |> deliverOnMainQueue
+        
+        return filterPeersAreMuted |> map { [weak self] allMuted in
+            return self?.menuItems(folder, unreadCount, allMuted) ?? []
+        }
     }
     
     override var height: CGFloat {

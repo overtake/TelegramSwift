@@ -267,6 +267,8 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
+    
+    controller.autoInputAction = true
                                                                                 
     controller.afterTransaction = { [weak emojis] controller in
         let value = stateValue.with { value in
