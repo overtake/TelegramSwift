@@ -18,13 +18,14 @@ private final class Arguments {
     let context: AccountContext
     let setupFilter: (ChatListFilter)->Void
     let openFilterSettings: (ChatListFilter)->Void
-    let tabsMenuItems: (ChatListFilter, Int?)->[ContextMenuItem]
+    let tabsMenuItems: (ChatListFilter, Int?, Bool?)->[ContextMenuItem]
     let createTopic: ()->Void
     let switchOffForum: ()->Void
     let getHideProgress:()->CGFloat?
     let hideDeprecatedSystem:()->Void
     let applySharedFolderUpdates:(ChatFolderUpdates)->Void
-    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void) {
+    let hideSharedFolderUpdates:()->Void
+    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void) {
         self.context = context
         self.setupFilter = setupFilter
         self.openFilterSettings = openFilterSettings
@@ -34,6 +35,7 @@ private final class Arguments {
         self.getHideProgress = getHideProgress
         self.hideDeprecatedSystem = hideDeprecatedSystem
         self.applySharedFolderUpdates = applySharedFolderUpdates
+        self.hideSharedFolderUpdates = hideSharedFolderUpdates
     }
 }
 
@@ -236,7 +238,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
             case let .sharedFolderUpdated(updates):
                 return ChatListFolderUpdatedRowItem(initialSize, stableId: entry.stableId, updates: updates, action: {
                     arguments.applySharedFolderUpdates(updates)
-                })
+                }, hide: arguments.hideSharedFolderUpdates)
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             }
@@ -315,7 +317,10 @@ struct FilterData : Equatable {
     var isFirst: Bool {
         return self.tabs.firstIndex(of: filter) == 0
     }
-    
+    func withUpdatedFilterId(_ filterId: Int32?) -> FilterData {
+        let filter = self.tabs.first(where: { $0.id == filterId }) ?? .allChats
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, request: self.request)
+    }
     func withUpdatedFilter(_ filter: ChatListFilter?) -> FilterData {
         let filter = filter ?? self.tabs.first ?? .allChats
         return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, request: self.request)
@@ -432,8 +437,8 @@ class ChatListController : PeersListController {
             } else {
                 context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
             }
-        }, tabsMenuItems: { filter, unreadCount in
-            return filterContextMenuItems(filter, unreadCount: unreadCount, context: context)
+        }, tabsMenuItems: { filter, unreadCount, allMuted in
+            return filterContextMenuItems(filter, unreadCount: unreadCount, includeAllMuted: allMuted, context: context)
         }, createTopic: {
             switch mode {
             case let .forum(peerId, _):
@@ -454,8 +459,14 @@ class ChatListController : PeersListController {
             _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {
                 $0.withUpdatedDeprecatedNotice(Int32(Date().timeIntervalSince1970 + 31 * 24 * 60 * 60))
             }).start()
-        }, applySharedFolderUpdates: { updates in
-            showModal(with: SharedFolderClosureController(context: context, content: .joinChats(updates: updates, content: updates.chatFolderLinkContents)), for: context.window)
+        }, applySharedFolderUpdates: { [weak self] updates in
+            if let filter = self?.filterValue?.filter {
+                showModal(with: SharedFolderClosureController(context: context, content: .joinChats(updates: updates, content: updates.chatFolderLinkContents, filter: filter)), for: context.window)
+            }
+        }, hideSharedFolderUpdates: { [weak self] in
+            if let filter = self?.filterValue?.filter {
+                _ = context.engine.peers.hideChatFolderUpdates(folderId: filter.id).start()
+            }
         })
         
         

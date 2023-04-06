@@ -14,10 +14,10 @@ import InAppSettings
 import TGUIKit
 
 
-private func shareFolderPremiumLimits(context: AccountContext, current: ChatListFilter, links: [ExportedChatFolderLink]?) -> Signal<(limitFilters: Bool, limitInvites: Bool), NoError> {
+func shareFolderPremiumLimits(context: AccountContext, current: ChatListFilter, links: [ExportedChatFolderLink]?) -> Signal<(limitFilters: Bool, limitInvites: Bool), NoError> {
     return chatListFilterPreferences(engine: context.engine) |> take(1) |> map { data in
         var shared = data.list.filter { $0.data?.isShared == true }
-        if current.data?.isShared == true {
+        if current.data?.isShared == true, current.data?.hasSharedLinks == true {
             shared.removeAll()
         }
         let links = links ?? []
@@ -360,7 +360,7 @@ private struct State: Equatable {
     var initialFilter: ChatListFilter
     var showAllInclude: Bool
     var showAllExclude: Bool
-    let isNew: Bool
+    var isNew: Bool
     var changedName: Bool
     var inviteLinks: [ExportedChatFolderLink]?
     var creatingLink: Bool
@@ -685,7 +685,7 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
             if let invite = state.inviteLinks, !invite.isEmpty {
                 viewType = .firstItem
             } else if state.inviteLinks == nil {
-                viewType = .firstItem
+                viewType = .singleItem
             } else {
                 viewType = .singleItem
             }
@@ -698,21 +698,15 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
             }
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_share_invite, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: blueActionButton, type: state.creatingLink ? .loading : .none, viewType: viewType, action: {
+                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: blueActionButton, type: state.creatingLink || state.inviteLinks == nil ? .loading : .none, viewType: viewType, action: {
                     arguments.shareFolder(nil)
                 }, thumb: GeneralThumbAdditional(thumb: theme.icons.group_invite_via_link, textInset: 52, thumbInset: 4))
             }))
             index += 0
             
            
-
             
-            if state.inviteLinks == nil {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_links, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                    return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
-                }))
-                index += 0
-            } else if let links = state.inviteLinks {
+            if let links = state.inviteLinks {
                 struct Tuple : Equatable {
                     let link:ExportedChatFolderLink
                     let viewType: GeneralViewType
@@ -726,12 +720,8 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
                 for item in items {
                     
                     let info: String
-                    if item.link.isRevoked {
-                        info = strings().chatListFilterInviteLinkRevoked
-                    } else {
-                        info = strings().chatListFilterInviteLinkDescCountable(item.link.peerIds.count)
-                    }
-                    
+                    info = strings().chatListFilterInviteLinkDescCountable(item.link.peerIds.count)
+
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_invite_link(item.link.slug), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                         return GeneralInteractedRowItem(initialSize, name: item.link.title.isEmpty ? item.link.link : item.link.title, description: info, type: item.saving ? .loading : .none, viewType: item.viewType, action: {
                             arguments.shareFolder(item.link)
@@ -787,17 +777,25 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     var getController:(()->InputDataController?)? = nil
     
-    let save:(Bool)->Void = { replace in
+    let save:(Bool)->Void = { savedOnServer in
         _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
             let filter = stateValue.with { $0.filter }
             var filters = filters
             if let index = filters.firstIndex(where: {$0.id == filter.id}) {
                 filters[index] = filter
-            } else if !replace {
+            } else {
                 filters.append(filter)
             }
             return filters
         }).start()
+        
+        if savedOnServer {
+            updateState { current in
+                var current = current
+                current.isNew = false
+                return current
+            }
+        }
     }
     
     let actionsDisposable = DisposableSet()
@@ -1127,7 +1125,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                         return current
                     }
                     
-                    save(false)
+                    save(true)
                     
                     let folderLimits = shareFolderPremiumLimits(context: context, current: filter, links: stateValue.with { $0.inviteLinks })
                                         
@@ -1180,7 +1178,15 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                                 switch error {
                                 case .limitExceeded:
                                     showPremiumLimit(context: context, type: .sharedInvites)
-                                default:
+                                case .sharedFolderLimitExceeded:
+                                    showPremiumLimit(context: context, type: .sharedFolders)
+                                case .tooManyChannels:
+                                    showInactiveChannels(context: context, source: .join)
+                                case .tooManyChannelsInAccount:
+                                    showPremiumLimit(context: context, type: .channels)
+                                case .someUserTooManyChannels:
+                                    alert(for: context.window, info: strings().sharedFolderErrorSomeUserTooMany)
+                                case .generic:
                                     alert(for: context.window, info: strings().unknownError)
                                 }
                                 
@@ -1231,7 +1237,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                         return current
                     }
                     
-                    save(false)
+                    save(true)
                     
                     showModal(with: ShareCloudFolderController(context: context, filter: filter, link: link, updated: updateLink), for: context.window)
                 }))
@@ -1352,7 +1358,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     controller.updateDoneValue = { data in
         return { f in
-            if isNew {
+            if stateValue.with({ $0.isNew }) {
                 f(.enabled(strings().chatListFilterDone))
             } else {
                 f(.enabled(strings().navigationDone))
@@ -1369,10 +1375,11 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         return controller
     }
     
-    
     controller.afterTransaction = { controller in
         let type = stateValue.with { chatListFilterType($0.filter) }
         let nameIsUpdated = stateValue.with { $0.changedName }
+        
+        
         if !nameIsUpdated {
             switch type {
             case .generic:
@@ -1457,7 +1464,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                             alert(for: context.window, info: strings().unknownError)
                         }
                     }, completed: {
-                        save(false)
+                        save(true)
                         f(.success(.navigationBack))
                     })
                 } else {
@@ -1466,8 +1473,6 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 }
             }            
         }))
-        
-       
     }
     
     return controller

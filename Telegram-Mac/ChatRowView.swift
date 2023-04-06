@@ -865,33 +865,33 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         if let peer = item.peer {
             avatar.setPeer(context: item.context, peer: peer, message: item.message)
-            avatar.contextMenu = { [weak chatInteraction] in
-                
-                let menu = ContextMenu()
-                
-                menu.addItem(ContextMenuItem(strings().chatContextPeerOpenInfo, handler: {
-                    chatInteraction?.openInfo(peer.id, false, nil, nil)
-                }, itemImage: MenuAnimation.menu_open_profile.value))
-                
-                menu.addItem(ContextMenuItem(strings().chatContextPeerSendMessage, handler: {
-                    chatInteraction?.openInfo(peer.id, true, nil, nil)
-                }, itemImage: MenuAnimation.menu_read.value))
-
-                menu.addItem(ContextMenuItem(strings().chatContextPeerMention, handler: {
-                    let attr: NSMutableAttributedString = NSMutableAttributedString()
+            if peer.id.id._internalGetInt64Value() != 0 {
+                avatar.contextMenu = { [weak chatInteraction] in
                     
-                    if let addressName = peer.addressName {
-                        attr.append(string: "@\(addressName) ", font: .normal(theme.fontSize))
-                    } else {
-                        attr.append(string: peer.compactDisplayTitle + " ", font: .normal(theme.fontSize))
-                        let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: peer.id.toInt64()), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
-                        attr.addAttribute(.init(rawValue: TGCustomLinkAttributeName), value: tag, range: attr.range)
-                    }
-                    _ = chatInteraction?.appendText(attr)
-                }, itemImage: MenuAnimation.menu_atsign.value))
+                    let menu = ContextMenu()
+                    
+                    menu.addItem(ContextMenuItem(strings().chatContextPeerOpenInfo, handler: {
+                        chatInteraction?.openInfo(peer.id, false, nil, nil)
+                    }, itemImage: MenuAnimation.menu_open_profile.value))
+                    
+                    menu.addItem(ContextMenuItem(strings().chatContextPeerSendMessage, handler: {
+                        chatInteraction?.openInfo(peer.id, true, nil, nil)
+                    }, itemImage: MenuAnimation.menu_read.value))
 
-                
-                return menu
+                    menu.addItem(ContextMenuItem(strings().chatContextPeerMention, handler: {
+                        let attr: NSMutableAttributedString = NSMutableAttributedString()
+                        
+                        if let addressName = peer.addressName {
+                            attr.append(string: "@\(addressName) ", font: .normal(theme.fontSize))
+                        } else {
+                            attr.append(string: peer.compactDisplayTitle + " ", font: .normal(theme.fontSize))
+                            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: peer.id.toInt64()), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
+                            attr.addAttribute(.init(rawValue: TGCustomLinkAttributeName), value: tag, range: attr.range)
+                        }
+                        _ = chatInteraction?.appendText(attr)
+                    }, itemImage: MenuAnimation.menu_atsign.value))
+                    return menu
+                }
             }
         }
         

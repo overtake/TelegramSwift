@@ -208,12 +208,24 @@ public func chatListFilterItems(engine: TelegramEngine, accountManager: AccountM
                                     if state.isUnread {
                                         peerCount = max(1, peerCount)
                                     }
-                                    
-                                    if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, case .muted = notificationSettings.muteState {
-                                        peerTagAndCount[peerId] = (tag, peerCount, false)
-                                    } else {
-                                        peerTagAndCount[peerId] = (tag, peerCount, true)
+                                    var peerIsNotMember: Bool = false
+                                    if let peer = peer as? TelegramChannel {
+                                        if peer.participationStatus != .member {
+                                            peerIsNotMember = true
+                                        }
+                                    } else if let peer = peer as? TelegramGroup {
+                                        if peer.membership != .Member {
+                                            peerIsNotMember = true
+                                        }
                                     }
+                                    if !peerIsNotMember {
+                                        if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, case .muted = notificationSettings.muteState {
+                                            peerTagAndCount[peerId] = (tag, peerCount, false)
+                                        } else {
+                                            peerTagAndCount[peerId] = (tag, peerCount, true)
+                                        }
+                                    }
+                                    
                                 }
                             }
                         }

@@ -239,15 +239,14 @@ private func getAuxiliaryServers(appConfiguration: AppConfiguration) -> [CallAux
 
 func getPrivateCallSessionData(_ account: Account, accountManager: AccountManager<TelegramAccountManagerTypes>, peerId: PeerId) -> Signal<PCallSession.InitialData, NoError> {
     return combineLatest(
-        account.postbox.preferencesView(keys: [PreferencesKeys.voipConfiguration, ApplicationSpecificPreferencesKeys.voipDerivedState, PreferencesKeys.appConfiguration])
-            |> take(1),
+        account.postbox.preferencesView(keys: [PreferencesKeys.voipConfiguration, ApplicationSpecificPreferencesKeys.voipDerivedState, PreferencesKeys.appConfiguration]),
         account.postbox.transaction { transaction -> Peer? in
             return transaction.getPeer(peerId)
         },
         voiceCallSettings(accountManager),
-        proxySettings(accountManager: accountManager) |> take(1),
-        account.networkType |> take(1)
-    ) |> map { preferences, peer, voiceSettings, proxy, networkType in
+        proxySettings(accountManager: accountManager),
+        account.networkType
+    ) |> take(1) |> map { preferences, peer, voiceSettings, proxy, networkType in
         
         let configuration = preferences.values[PreferencesKeys.voipConfiguration]?.get(VoipConfiguration.self) ?? VoipConfiguration.defaultValue
         let appConfiguration = preferences.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue

@@ -780,7 +780,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         
         let location = contentView.convert(point, from: nil)
         var applied: Bool = contentView.mouseInside()
-        if contentView.mouseInside() {
+        if applied {
             for i in 0 ..< item.layout.count {
                 if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                     let id = item.layout.messages[i].id
@@ -931,11 +931,14 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         let location = contentView.convert(location, from: nil)
         
         for i in 0 ..< item.layout.count {
-            if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
+            if NSPointInRect(location, item.layout.frame(at: i)) {
                 return item.chatInteraction.presentation.isSelectedMessageId(item.layout.messages[i].id)
             }
         }
-        return false
+        let selected = item.layout.messages.filter {
+            item.chatInteraction.presentation.isSelectedMessageId($0.id)
+        }
+        return selected.count == item.layout.messages.count
     }
     
     private var isHasSelectedItem: Bool {

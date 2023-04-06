@@ -20,8 +20,8 @@ class ChatListRevealItem: TableStickItem {
     fileprivate let selected: ChatListFilter
     fileprivate let openSettings: (()->Void)?
     fileprivate let counters: ChatListFilterBadges
-    fileprivate let _menuItems: ((ChatListFilter, Int?)->[ContextMenuItem])?
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter, Int?)->[ContextMenuItem])? = nil) {
+    fileprivate let _menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])?
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])? = nil) {
         self.action = action
         self.context = context
         self.tabs = tabs
@@ -47,8 +47,44 @@ class ChatListRevealItem: TableStickItem {
         return true
     }
     
-    func menuItems(for item: ChatListFilter, unreadCount: Int?) -> [ContextMenuItem] {
-        return self._menuItems?(item, unreadCount) ?? []
+    func menuItems(for item: ChatListFilter, unreadCount: Int?) -> Signal<[ContextMenuItem], NoError> {
+        
+        let id = item.id
+        let folder = item
+        let context = self.context
+        
+        guard let context = self.context else {
+            return .complete()
+        }
+        
+        let filterPeersAreMuted: Signal<Bool, NoError> = context.engine.peers.currentChatListFilters()
+        |> take(1)
+        |> mapToSignal { filters -> Signal<Bool, NoError> in
+            guard let filter = filters.first(where: { $0.id == id }) else {
+                return .single(false)
+            }
+            guard case let .filter(_, _, _, data) = filter else {
+                return .single(false)
+            }
+            return context.engine.data.get(
+                EngineDataList(data.includePeers.peers.map(TelegramEngine.EngineData.Item.Peer.NotificationSettings.init(id:)))
+            )
+            |> map { list -> Bool in
+                for item in list {
+                    switch item.muteState {
+                    case .default, .unmuted:
+                        return false
+                    default:
+                        break
+                    }
+                }
+                return true
+            }
+        } |> deliverOnMainQueue
+        
+        return filterPeersAreMuted |> map { [weak self] allMuted in
+            return self?._menuItems?(item, unreadCount, allMuted) ?? []
+        }
     }
     
     override var stableId: AnyHashable {
@@ -236,7 +272,7 @@ final class ChatListRevealView : TableStickView {
             } else if let item = item, selected.uniqueId == -1 {
                 return item.menuItems(for: .allChats, unreadCount: nil)
             } else {
-                return []
+                return .single([])
             }
         }
       

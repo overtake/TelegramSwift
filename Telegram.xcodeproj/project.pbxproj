@@ -455,6 +455,7 @@
 		27C4089725B0A1F400372302 /* ClosureInviteLinkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */; };
 		27C4089A25B0BD4F00372302 /* NumberSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089925B0BD4E00372302 /* NumberSelectorController.swift */; };
 		27C4F5DE26B3F62E008123EC /* VideoMessageConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4F5DD26B3F62E008123EC /* VideoMessageConfig.swift */; };
+		27C6B65D29DC123500F7E7AC /* share_folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27C6B65C29DC123500F7E7AC /* share_folder.tgs */; };
 		27CB174C2763257900DD25E0 /* menu_secret_chat.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB174B2763257900DD25E0 /* menu_secret_chat.tgs */; };
 		27CB174E276325C600DD25E0 /* menu_call.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB174D276325C600DD25E0 /* menu_call.tgs */; };
 		27CB1750276325E700DD25E0 /* menu_video_call.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB174F276325E700DD25E0 /* menu_video_call.tgs */; };
@@ -1859,6 +1860,7 @@
 		27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureInviteLinkController.swift; sourceTree = "<group>"; };
 		27C4089925B0BD4E00372302 /* NumberSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberSelectorController.swift; sourceTree = "<group>"; };
 		27C4F5DD26B3F62E008123EC /* VideoMessageConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoMessageConfig.swift; sourceTree = "<group>"; };
+		27C6B65C29DC123500F7E7AC /* share_folder.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = share_folder.tgs; sourceTree = "<group>"; };
 		27CB174B2763257900DD25E0 /* menu_secret_chat.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_secret_chat.tgs; sourceTree = "<group>"; };
 		27CB174D276325C600DD25E0 /* menu_call.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_call.tgs; sourceTree = "<group>"; };
 		27CB174F276325E700DD25E0 /* menu_video_call.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_video_call.tgs; sourceTree = "<group>"; };
@@ -5615,6 +5617,7 @@
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
 				27F67415297680DC0014DCB9 /* duck_empty.tgs */,
+				27C6B65C29DC123500F7E7AC /* share_folder.tgs */,
 				276F9B892935FD7800E35997 /* pirate_flag.tgs */,
 				27F4F1872848CFCC00A3B4D4 /* premium_unlock.tgs */,
 				2747FD412930FD570045B95C /* global_autoremove.tgs */,
@@ -6147,6 +6150,7 @@
 			files = (
 				272934102778DFFA00F10D3C /* menu_file.tgs in Resources */,
 				27803C0127A3E944007B0FA9 /* menu_folder_student.tgs in Resources */,
+				27C6B65D29DC123500F7E7AC /* share_folder.tgs in Resources */,
 				27F674182976EC430014DCB9 /* duck_empty.tgs in Resources */,
 				27672EAE26F8D62600297DB4 /* 0.m4a in Resources */,
 				27672EAF26F8D62800297DB4 /* 1.m4a in Resources */,

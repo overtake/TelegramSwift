@@ -250,6 +250,8 @@ class ChatMessageItem: ChatRowItem {
                 if let postId = postId, postId > 0 {
                     return strings().chatMessageActionShowMessage
                 }
+            case .folder:
+                return strings().chatMessageViewChatList
             default:
                 break
             }

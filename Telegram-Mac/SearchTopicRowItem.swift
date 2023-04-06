@@ -137,7 +137,7 @@ private class SearchTopicRowView : TableRowView {
                     self.inlineTopicPhotoLayer = nil
                 }
                 if let fileId = info.icon {
-                    current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
+                    current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .framesCount(1))
                 } else {
                     let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: item.threadId ==  1)
                     current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
