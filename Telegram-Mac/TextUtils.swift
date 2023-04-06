@@ -798,12 +798,18 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             if let peer = message.peers[peerId], let botPeer = message.peers[message.id.peerId] {
                 text = strings().chatServicePeerRequested(peer.displayTitle, botPeer.displayTitle)
             }
-        case let .setChatWallpaper(wallpaper):
-            //TODOLANG
-            text = "wallpaper updated"
-            break
+        case .setChatWallpaper:
+            if authorId == account.peerId {
+                text = strings().chatServiceYouChangedWallpaper
+            } else {
+                text = strings().chatServiceChangedWallpaper(authorName)
+            }
         case .setSameChatWallpaper:
-            text = "same wallpaper"
+            if authorId == account.peerId {
+                text = strings().chatServiceYouChangedToSameWallpaper
+            } else {
+                text = strings().chatServiceChangedToSameWallpaper(authorName)
+            }
         }
     }
     return (text, entities, media)

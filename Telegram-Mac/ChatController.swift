@@ -14,6 +14,7 @@ import Postbox
 import SwiftSignalKit
 import InAppSettings
 import ObjcUtils
+import ThemeSettings
 
 private var nextClientId: Int32 = 1
 
@@ -2289,29 +2290,42 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             adMessages = .single((nil, [], 0))
         }
         
-        let themeEmoticon: Signal<String?, NoError> = self.peerView.get() |> map {
+        struct ThemeTuple : Equatable {
+            let themeEmoticon: String?
+            let wallpaper: TelegramWallpaper?
+            init(_ themeEmoticon: String?, _ wallpaper: TelegramWallpaper?) {
+                self.themeEmoticon = themeEmoticon
+                self.wallpaper = wallpaper
+            }
+        }
+        
+        let themeEmoticon: Signal<ThemeTuple, NoError> = self.peerView.get() |> map {
             ($0 as? PeerView)?.cachedData
         } |> map { cachedData in
-            var themeEmoticon: String? = nil
+            var themeEmoticon: ThemeTuple = ThemeTuple(nil, nil)
             if let cachedData = cachedData as? CachedUserData {
-                themeEmoticon = cachedData.themeEmoticon?.fixed
+                themeEmoticon = ThemeTuple(cachedData.themeEmoticon, cachedData.wallpaper)
             } else if let cachedData = cachedData as? CachedGroupData {
-                themeEmoticon = cachedData.themeEmoticon?.fixed
+                themeEmoticon = ThemeTuple(cachedData.themeEmoticon, nil)
             } else if let cachedData = cachedData as? CachedChannelData {
-                themeEmoticon = cachedData.themeEmoticon?.fixed
+                themeEmoticon = ThemeTuple(cachedData.themeEmoticon, nil)
             }
             return themeEmoticon
         } |> distinctUntilChanged
         
         
-        let chatTheme:Signal<(String?, TelegramPresentationTheme), NoError> = combineLatest(context.chatThemes, themeEmoticon, appearanceSignal) |> map { chatThemes, themeEmoticon, appearance in
+        let chatTheme:Signal<(String?, TelegramPresentationTheme), NoError> = combineLatest(context.chatThemes, themeEmoticon, appearanceSignal) |> map { chatThemes, themeValues, appearance in
             
             var theme: TelegramPresentationTheme = appearance.presentation
-            if let themeEmoticon = themeEmoticon {
+            if let themeEmoticon = themeValues.themeEmoticon {
                 let chatThemeData = chatThemes.first(where: { $0.0 == themeEmoticon})?.1
                 theme = chatThemeData ?? appearance.presentation
             }
-            return (themeEmoticon, theme)
+            if let wallpaper = themeValues.wallpaper {
+               let wp = Wallpaper(wallpaper)
+                theme = theme.withUpdatedWallpaper(ThemeWallpaper(wallpaper: wp, associated: .init(cloud: wallpaper, wallpaper: wp)))
+            }
+            return (themeValues.themeEmoticon, theme)
         }
         
         self.chatThemeValue.set(chatTheme)
