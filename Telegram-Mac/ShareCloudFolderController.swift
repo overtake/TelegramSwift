@@ -269,7 +269,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
            
             var memberCounts: [EnginePeer.Id: Int] = [:]
             for (id, count) in participantCount {
-                if let count {
+                if let count = count {
                     memberCounts[id] = count
                 }
             }

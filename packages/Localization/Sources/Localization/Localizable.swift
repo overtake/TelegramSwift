@@ -4487,6 +4487,14 @@ public final class L10n {
   public static var chatMessageFolderExpired: String  { return L10n.tr("Localizable", "ChatMessage.Folder.Expired") }
   /// views
   public static var chatMessageTooltipViews: String  { return L10n.tr("Localizable", "ChatMessage.Tooltip.Views") }
+  /// %1$@ set the same background for this chat
+  public static func chatServiceChangedToSameWallpaper(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatService.ChangedToSameWallpaper", p1)
+  }
+  /// %1$@ set a new background for this chat
+  public static func chatServiceChangedWallpaper(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatService.ChangedWallpaper", p1)
+  }
   /// channel created
   public static var chatServiceChannelCreated: String  { return L10n.tr("Localizable", "ChatService.ChannelCreated") }
   /// Your request to join the channel was approved
@@ -4501,10 +4509,16 @@ public final class L10n {
   public static func chatServiceUserJoinedGroupByRequest(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.UserJoinedGroupByRequest", p1)
   }
+  /// You set the same background for this chat
+  public static var chatServiceYouChangedToSameWallpaper: String  { return L10n.tr("Localizable", "ChatService.YouChangedToSameWallpaper") }
+  /// You set a new background for this chat
+  public static var chatServiceYouChangedWallpaper: String  { return L10n.tr("Localizable", "ChatService.YouChangedWallpaper") }
   /// You successfully updated your profile photo
   public static var chatServiceSuggestSuccess: String  { return L10n.tr("Localizable", "ChatService.Suggest.Success") }
   /// View Photo
   public static var chatServiceSuggestView: String  { return L10n.tr("Localizable", "ChatService.Suggest.View") }
+  /// View Background
+  public static var chatServiceWallpaperView: String  { return L10n.tr("Localizable", "ChatService.Wallpaper.View") }
   /// Colorful
   public static var chatThemeColorful: String  { return L10n.tr("Localizable", "ChatTheme.Colorful") }
   /// Chat Theme

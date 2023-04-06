@@ -606,7 +606,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
     actionsDisposable.add(participantCount.start(next: { participantCount in
         var memberCounts: [EnginePeer.Id: Int] = [:]
         for (id, count) in participantCount {
-            if let count {
+            if let count = count {
                 memberCounts[id] = count
             }
         }
