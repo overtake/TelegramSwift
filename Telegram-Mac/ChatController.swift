@@ -1533,6 +1533,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let startSecretChatDisposable = MetaDisposable()
     private let inputSwapDisposable = MetaDisposable()
     private let liveTranslateDisposable = MetaDisposable()
+    private let presentationDisposable = DisposableSet()
     
     private var keepMessageCountersSyncrhonizedDisposable: Disposable?
     
@@ -1547,7 +1548,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private var grouppedFloatingPhotos: [([ChatRowItem], NSView)] = []
     
     private let chatThemeValue: Promise<(String?, TelegramPresentationTheme)> = Promise((nil, theme))
-    private let chatThemeTempValue: Promise<TelegramPresentationTheme?> = Promise(nil)
+    private let chatThemeTempValue: Promise<(String?, TelegramPresentationTheme)?> = Promise(nil)
 
    
     var chatInteraction:ChatInteraction
@@ -1619,7 +1620,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private var themeSelector: ChatThemeSelectorController? = nil
     
     private let uiState: Atomic<State> = Atomic(value: State())
-    private let stateValue: ValuePromise<State> = ValuePromise(State(), ignoreRepeated: true)
+    private let stateValue: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     
     private struct State : Equatable {
         var transribe: [MessageId: TranscribeAudioState] = [:]
@@ -1628,6 +1629,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var threadLoading: MessageId?
         var mediaRevealed: Set<MessageId> = Set()
         var translate: ChatLiveTranslateContext.State?
+        var presentation:TelegramPresentationTheme = theme
+        var presentation_genuie:TelegramPresentationTheme = theme
+        var bespoke_wallpaper: ThemeWallpaper?
+        var presentation_emoticon: String? = nil
     }
     private func updateState(_ f:(State)->State) -> Void {
         stateValue.set(uiState.modify(f))
@@ -2290,50 +2295,111 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             adMessages = .single((nil, [], 0))
         }
         
-        struct ThemeTuple : Equatable {
-            let themeEmoticon: String?
-            let wallpaper: TelegramWallpaper?
-            init(_ themeEmoticon: String?, _ wallpaper: TelegramWallpaper?) {
-                self.themeEmoticon = themeEmoticon
-                self.wallpaper = wallpaper
-            }
-        }
         
-        let themeEmoticon: Signal<ThemeTuple, NoError> = self.peerView.get() |> map {
+        let themeEmoticon: Signal<String?, NoError> = self.peerView.get() |> map {
             ($0 as? PeerView)?.cachedData
         } |> map { cachedData in
-            var themeEmoticon: ThemeTuple = ThemeTuple(nil, nil)
+            var themeEmoticon: String? = nil
             if let cachedData = cachedData as? CachedUserData {
-                themeEmoticon = ThemeTuple(cachedData.themeEmoticon, cachedData.wallpaper)
+                themeEmoticon = cachedData.themeEmoticon
             } else if let cachedData = cachedData as? CachedGroupData {
-                themeEmoticon = ThemeTuple(cachedData.themeEmoticon, nil)
+                themeEmoticon = cachedData.themeEmoticon
             } else if let cachedData = cachedData as? CachedChannelData {
-                themeEmoticon = ThemeTuple(cachedData.themeEmoticon, nil)
+                themeEmoticon = cachedData.themeEmoticon
             }
             return themeEmoticon
         } |> distinctUntilChanged
         
+        enum WallpaperResult : Equatable {
+            case result(Wallpaper?)
+            case loading 
+        }
         
-        let chatTheme:Signal<(String?, TelegramPresentationTheme), NoError> = combineLatest(context.chatThemes, themeEmoticon, appearanceSignal) |> map { chatThemes, themeValues, appearance in
+        let wallpaper: Signal<TelegramWallpaper?, NoError> = self.peerView.get() |> map {
+            return (($0 as? PeerView)?.cachedData as? CachedUserData)?.wallpaper
+        } |> distinctUntilChanged
+        
+        
+        let themeWallpaper: Signal<WallpaperResult, NoError> = wallpaper |> mapToSignal { wallpaper in
+            if let wallpaper = wallpaper?.uiWallpaper {
+                if backgroundExists(wallpaper) {
+                    return .single(.result(wallpaper))
+                } else {
+                    return .single(.loading) |> then(moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper) |> map {
+                        .result($0)
+                    })
+                }
+            }
+            return .single(.result(nil))
+        }
+        |> distinctUntilChanged
+        |> deliverOnMainQueue
+        
+                
+        let chatTheme:Signal<(String?, TelegramPresentationTheme), NoError> = combineLatest(context.chatThemes, themeEmoticon, appearanceSignal) |> map { chatThemes, themeEmoticon, appearance -> (String?, TelegramPresentationTheme) in
             
             var theme: TelegramPresentationTheme = appearance.presentation
-            if let themeEmoticon = themeValues.themeEmoticon {
+            if let themeEmoticon = themeEmoticon {
                 let chatThemeData = chatThemes.first(where: { $0.0 == themeEmoticon})?.1
                 theme = chatThemeData ?? appearance.presentation
             }
-            if let wallpaper = themeValues.wallpaper {
-               let wp = Wallpaper(wallpaper)
-                theme = theme.withUpdatedWallpaper(ThemeWallpaper(wallpaper: wp, associated: .init(cloud: wallpaper, wallpaper: wp)))
+            return (themeEmoticon, theme)
+        }
+        
+        
+        struct ThemeTuple : Equatable {
+            let theme: TelegramPresentationTheme
+            let emoticon: String?
+            let genuie: TelegramPresentationTheme
+        }
+        
+        let effectiveTheme: Signal<ThemeTuple, NoError> = combineLatest(chatTheme, chatThemeTempValue.get()) |> map { genuie, temp in
+            if let temp = temp {
+                return .init(theme: temp.1, emoticon: temp.0, genuie: genuie.1)
+            } else {
+                return .init(theme: genuie.1, emoticon: genuie.0, genuie: genuie.1)
             }
-            return (themeValues.themeEmoticon, theme)
         }
+        |> distinctUntilChanged
+        |> deliverOnMainQueue
         
-        self.chatThemeValue.set(chatTheme)
+        presentationDisposable.add(combineLatest(effectiveTheme, themeWallpaper).start(next: { [weak self] presentation, wallpaper in
+            let emoticon = presentation.emoticon
+            let theme = presentation.theme
+            let genuie = presentation.genuie
+            self?.updateState { current in
+                var current = current
+                current.presentation_emoticon = emoticon
+                current.presentation_genuie = genuie
+                switch wallpaper {
+                case let .result(result):
+                    current.presentation = theme
+                    if let wallpaper = result {
+                        current.bespoke_wallpaper = .init(wallpaper: wallpaper, associated: nil)
+                    } else {
+                        current.bespoke_wallpaper = current.presentation.wallpaper
+                    }
+                    if current.presentation.wallpaper != current.bespoke_wallpaper {
+                        if let wallpaper = current.bespoke_wallpaper {
+                            current.presentation = current.presentation.withUpdatedWallpaper(wallpaper)
+                        } else {
+                            current.presentation = current.presentation.withUpdatedWallpaper(theme.wallpaper)
+                        }
+                    }
+                case .loading:
+                    break
+                }
+                return current
+            }
+            
+            let presentation = self?.uiState.with { ($0.presentation_emoticon, $0.presentation )}
+            if let presentation = presentation {
+                self?.chatThemeValue.set(.single(presentation))
+            }
+        }))
         
         
-        let effectiveTheme = combineLatest(self.chatThemeValue.get() |> map { $0.1 }, chatThemeTempValue.get()) |> map {
-            $1 ?? $0
-        }
+        
        
         let historyViewTransition = combineLatest(queue: queue,
                                                   historyViewUpdate,
@@ -2345,14 +2411,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   customThreadOutgoingReadState,
                                                   updatingMedia,
                                                   adMessages,
-                                                  effectiveTheme,
                                                   reactions,
                                                   stateValue.get()
-    ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions, uiState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
+    ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, reactions, uiState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
             let pollAnswersLoading = uiState.pollAnswers
             let threadLoading = uiState.threadLoading
-
+            let chatTheme = uiState.presentation
             let searchStateUpdated = _searchState.swap(searchState) != searchState
             
             let isLoading: Bool
@@ -3292,6 +3357,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.chatInteraction.setupChatThemes = { [weak self] in
             self?.showChatThemeSelector()
+        }
+        self.chatInteraction.closeChatThemes = { [weak self] in
+            self?.closeChatThemesSelector()
         }
         
         
@@ -6466,6 +6534,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         inputSwapDisposable.dispose()
         keepMessageCountersSyncrhonizedDisposable?.dispose()
         liveTranslateDisposable.dispose()
+        presentationDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -7585,8 +7654,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func requestUpdateCenterBar() {
        
     }
-    
+    func closeChatThemesSelector() {
+        self.themeSelector?.close(true)
+    }
     func showChatThemeSelector() {
+        
+        guard themeSelector == nil else {
+            return
+        }
+        
         self.themeSelector = ChatThemeSelectorController(context, chatTheme: chatThemeValue.get(), chatInteraction: self.chatInteraction)
         self.themeSelector?.onReady = { [weak self] controller in
             self?.genericView.showChatThemeSelector(controller.view, animated: true)
@@ -7601,10 +7677,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         self.themeSelector?.previewCurrent = { [weak self] theme in
-            self?.chatThemeTempValue.set(.single(theme))
+            if let value = theme.1 {
+                self?.chatThemeTempValue.set(.single((theme.0, value)))
+            } else {
+                self?.chatThemeTempValue.set(.single(nil))
+            }
         }
         
-        self.themeSelector?._frameRect = NSMakeRect(0, self.frame.maxY, frame.width, 200)
+        self.themeSelector?._frameRect = NSMakeRect(0, self.frame.maxY, frame.width, 230)
         self.themeSelector?.loadViewIfNeeded()
         
         self.chatInteraction.update({ $0.updatedInterfaceState({ $0.withUpdatedThemeEditing(true) })})

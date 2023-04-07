@@ -1413,6 +1413,35 @@ func getAverageColor(_ color: NSColor) -> NSColor {
     return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
 }
 
+func backgroundExists(_ wallpaper: Wallpaper) -> Bool {
+    #if !SHARE
+    var backgroundMode: TableBackgroundMode
+    switch wallpaper {
+    case .builtin:
+        return true
+    case let.color(color):
+        return true
+    case let .gradient(_, colors, rotation):
+        return true
+    case let .image(representation, settings):
+        if let resource = largestImageRepresentation(representation)?.resource {
+            return FileManager.default.fileExists(atPath: wallpaperPath(resource, settings: settings))
+        } else {
+            return false
+        }
+        
+    case let .file(_, file, settings, _):
+        return FileManager.default.fileExists(atPath: wallpaperPath(file.resource, settings: settings))
+    case .none:
+        return true
+    case let .custom(representation, blurred):
+        return FileManager.default.fileExists(atPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))
+    }
+    #else
+    return false
+    #endif
+}
+
 func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSize: NSSize = NSMakeSize(1040, 1580)) -> TableBackgroundMode {
     #if !SHARE
     var backgroundMode: TableBackgroundMode

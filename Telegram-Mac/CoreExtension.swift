@@ -2638,11 +2638,17 @@ func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, ref
     } else if settings.blur {
         resourceData = postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedBlurredWallpaperRepresentation(), complete: true)
     } else {
-        resourceData = postbox.mediaBox.resourceData(resource)
+        if let resource = resource as? LocalFileReferenceMediaResource {
+            return moveWallpaperToCache(postbox: postbox, path: resource.localFilePath, resource: resource, settings: settings)
+        } else {
+            resourceData = postbox.mediaBox.resourceData(resource)
+        }
     }
     
    
-    return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: reference, resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
+    return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: reference, resource: resource), reportResultStatus: true) |> `catch` { _ in
+        return .single(.local)
+    }, resourceData) |> mapToSignal { _, data in
         if data.complete {
             return moveWallpaperToCache(postbox: postbox, path: data.path, resource: resource, settings: settings)
         } else {
@@ -3450,10 +3456,13 @@ extension Wallpaper {
             return .color(color)
         case let .gradient(id, colors, rotation):
             return .gradient(.init(id: id, colors: colors, settings: WallpaperSettings(rotation: rotation)))
+        case let .file(slug, file, settings, isPattern):
+            return .file(.init(id: file.fileId.id, accessHash: 0, isCreator: true, isDefault: false, isPattern: isPattern, isDark: false, slug: slug, file: file, settings: settings))
+        case let .image(representation, settings):
+            return .file(.init(id: 0, accessHash: 0, isCreator: true, isDefault: false, isPattern: false, isDark: false, slug: "", file: TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: representation.last!.resource, previewRepresentations: representation, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: []), settings: settings))
         default:
-            break
+            return nil
         }
-        return nil
     }
 }
 

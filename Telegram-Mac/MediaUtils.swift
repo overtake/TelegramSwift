@@ -3157,6 +3157,33 @@ func crossplatformPreview(account: Account, palette: ColorPalette, wallpaper: Wa
     }
 }
 
+func wallpaperPreview(account: Account, palette: ColorPalette, wallpaper: Wallpaper, mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false, scale: CGFloat = 2.0, isBlurred: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+    let signal: Signal<Wallpaper, NoError> = moveWallpaperToCache(postbox: account.postbox, wallpaper: wallpaper)
+    
+    return signal |> map { wallpaper in
+        return ImageDataTransformation(data: ImageRenderData(nil, nil, false), execute: { arguments, data in
+            
+            let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
+            let preview = generateBackgroundMode(wallpaper, palette: palette, maxSize: WallpaperDimensions.aspectFilled(arguments.boundingSize))
+            
+            
+            context.withContext { ctx in
+                ctx.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
+                ctx.rotate(by: 180 * CGFloat.pi / -180.0)
+                ctx.scaleBy(x: -1, y: 1)
+                ctx.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
+                
+                drawBg(preview, palette: palette, bubbled: true, rect: arguments.drawingRect, in: ctx)
+            }
+            
+            addCorners(context, arguments: arguments, scale: arguments.scale)
+            
+            return context
+        })
+    }
+}
+
+
 
 private func patternWallpaperDatas(account: Account, representations: [ImageRepresentationWithReference], mode: PatternWallpaperDrawMode, autoFetchFullSize: Bool = false) -> Signal<ImageRenderData, NoError> {
     if let smallestRepresentation = smallestImageRepresentation(representations.map({ $0.representation })), let largestRepresentation = largestImageRepresentation(representations.map({ $0.representation })), let smallestIndex = representations.firstIndex(where: { $0.representation == smallestRepresentation }), let largestIndex = representations.firstIndex(where: { $0.representation == largestRepresentation }) {
@@ -3324,38 +3351,39 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                             c.fill(rect)
                         }
                         
-                        if colors.count == 1, let color = colors.first {
-                            c.setFillColor(color.cgColor)
-                            c.fill(arguments.drawingRect)
-                        } else {
-                        
-                            if colors.count <= 2 {
-                                let gradientColors = colors.map { $0.cgColor } as CFArray
-                                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-
-                                var locations: [CGFloat] = []
-                                for i in 0 ..< colors.count {
-                                    locations.append(delta * CGFloat(i))
-                                }
-                                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                                
-                                c.saveGState()
-                                c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
-                                c.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
-                                c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
-                                
-                                c.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: arguments.drawingSize.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-                                c.restoreGState()
+                        if !colors.isEmpty {
+                            if colors.count == 1, let color = colors.first {
+                                c.setFillColor(color.cgColor)
+                                c.fill(arguments.drawingRect)
                             } else {
-                                let preview = AnimatedGradientBackgroundView.generatePreview(size: arguments.drawingSize.fitted(.init(width: 30, height: 30)), colors: colors)
+                                if colors.count <= 2 {
+                                    let gradientColors = colors.map { $0.cgColor } as CFArray
+                                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
 
-                                c.saveGState()
-                                c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
-                                c.scaleBy(x: 1.0, y: -1.0)
-                                c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
-                                c.draw(preview, in: arguments.drawingSize.bounds)
-                                c.restoreGState()
+                                    var locations: [CGFloat] = []
+                                    for i in 0 ..< colors.count {
+                                        locations.append(delta * CGFloat(i))
+                                    }
+                                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                    
+                                    c.saveGState()
+                                    c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
+                                    c.rotate(by: CGFloat(rotation ?? 0) * CGFloat.pi / -180.0)
+                                    c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
+                                    
+                                    c.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: arguments.drawingSize.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                                    c.restoreGState()
+                                } else {
+                                    let preview = AnimatedGradientBackgroundView.generatePreview(size: arguments.drawingSize.fitted(.init(width: 30, height: 30)), colors: colors)
+
+                                    c.saveGState()
+                                    c.translateBy(x: arguments.drawingSize.width / 2.0, y: arguments.drawingSize.height / 2.0)
+                                    c.scaleBy(x: 1.0, y: -1.0)
+                                    c.translateBy(x: -arguments.drawingSize.width / 2.0, y: -arguments.drawingSize.height / 2.0)
+                                    c.draw(preview, in: arguments.drawingSize.bounds)
+                                    c.restoreGState()
+                                }
                             }
                         }
                     }
