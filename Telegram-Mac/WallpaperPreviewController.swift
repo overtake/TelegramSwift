@@ -868,8 +868,25 @@ private final class WallpaperPreviewView: View {
 
 enum WallpaperSource {
     case link(TelegramWallpaper)
+    case chat(PeerId, TelegramWallpaper?)
+    case message(MessageId, TelegramWallpaper?)
     case gallery(TelegramWallpaper)
     case none
+    
+    func withWallpaper(_ wallpaper: TelegramWallpaper) -> WallpaperSource {
+        switch self {
+        case .none:
+            return .gallery(wallpaper)
+        case let .message(messageId, _):
+            return .message(messageId, wallpaper)
+        case let .chat(peerId, _):
+            return .chat(peerId, wallpaper)
+        case .gallery:
+            return .gallery(wallpaper)
+        case .link:
+            return .link(wallpaper)
+        }
+    }
 }
 
 private func cropWallpaperImage(_ image: CGImage, dimensions: NSSize, rect: NSRect, magnify: CGFloat, settings: WallpaperSettings?) -> CGImage {
@@ -1137,11 +1154,12 @@ class WallpaperPreviewController: ModalViewController {
     private let context: AccountContext
 
     let source: WallpaperSource
-    
-    init(_ context: AccountContext, wallpaper: Wallpaper, source: WallpaperSource) {
+    let onComplete:(()->Void)?
+    init(_ context: AccountContext, wallpaper: Wallpaper, source: WallpaperSource, onComplete:(()->Void)? = nil) {
         self.wallpaper = wallpaper.isSemanticallyEqual(to: theme.wallpaper.wallpaper) ? wallpaper.withUpdatedBlurrred(theme.wallpaper.wallpaper.isBlurred) : wallpaper
         self.context = context
         self.source = source
+        self.onComplete = onComplete
         super.init(frame: NSMakeRect(0, 0, 380, 300))
         bar = .init(height: 0)
     }
@@ -1272,28 +1290,100 @@ class WallpaperPreviewController: ModalViewController {
     private func applyAndClose() {
         let context = self.context
         closeAllModals()
+        self.onComplete?()
         
-        let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect) |> mapToSignal { wallpaper in
-            return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper)
-        }
+        let current = self.genericView.wallpaper
+        let source = self.source
         
-        _ = signal.start(next: { wallpaper in
-            _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper().withSavedAssociatedTheme().withUpdatedBubbled(true)
-            }) |> delay(0.4, queue: .mainQueue()) |> deliverOnMainQueue).start(completed: {
-                var stats:[Signal<Void, NoError>] = []
-                switch self.source {
-                case let .gallery(wallpaper):
-                    stats = [installWallpaper(account: context.account, wallpaper: wallpaper)]
-                case let .link(wallpaper):
-                    stats = [installWallpaper(account: context.account, wallpaper: wallpaper), saveWallpaper(account: context.account, wallpaper: wallpaper)]
-                case .none:
-                    break
-                }
-                let _ = combineLatest(stats).start()
+        switch source {
+        case .gallery, .link, .none:
+            let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect) |> mapToSignal { wallpaper in
+                return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper)
+            }
+            
+            _ = signal.start(next: { wallpaper in
+                _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                    return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper().withSavedAssociatedTheme().withUpdatedBubbled(true)
+                }) |> delay(0.2, queue: .mainQueue()) |> deliverOnMainQueue).start(completed: {
+                    var stats:[Signal<Void, NoError>] = []
+                    switch source {
+                    case let .gallery(wallpaper):
+                        stats = [installWallpaper(account: context.account, wallpaper: wallpaper)]
+                    case let .link(wallpaper):
+                        stats = [installWallpaper(account: context.account, wallpaper: wallpaper), saveWallpaper(account: context.account, wallpaper: wallpaper)]
+                    default:
+                        break
+                    }
+                    let _ = combineLatest(stats).start()
+                })
             })
-        })
-        
+        case .chat, .message:
+            _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                return settings.withUpdatedBubbled(true)
+            }) |> delay(0.2, queue: .mainQueue()) |> deliverOnMainQueue).start(completed: {
+                
+                
+                let uploadSignal:Signal<TelegramWallpaper?, NoError>
+                switch current {
+                case let .image(represenations, settings):
+                    uploadSignal = uploadWallpaper(account: context.account, resource: represenations.last!.resource, settings: settings, forChat: true) |> filter { value in
+                        switch value {
+                        case .complete:
+                            return true
+                        default:
+                            return false
+                        }
+                    }
+                    |> map(Optional.init)
+                    |> `catch` { _ in
+                        return .single(nil)
+                    }
+                    |> take(1)
+                    |> map { value in
+                        switch value {
+                        case let .complete(wallpaper):
+                            return wallpaper
+                        default:
+                            return nil
+                        }
+                    }
+                default:
+                    uploadSignal = .single(nil)
+                }
+                let pId: PeerId?
+                
+                let complete:Signal<Void, NoError>
+                let before: Signal<Void, NoError>
+
+                switch source {
+                case let .chat(peerId, wallpaper):
+                    pId = peerId
+                    complete = uploadSignal |> mapToSignal { uploaded in
+                        context.engine.themes.setChatWallpaper(peerId: peerId, wallpaper: uploaded ?? current.cloudWallpaper)
+                    }
+                case let .message(messageId, _):
+                    pId = messageId.peerId
+                    complete = context.engine.themes.setExistingChatWallpaper(messageId: messageId, settings: current.settings) |> `catch` { _ in return .complete() }
+                default:
+                    complete = .complete()
+                    pId = nil
+                }
+                if let peerId = pId {
+                    before = context.account.postbox.transaction { transaction in
+                        transaction.updatePeerCachedData(peerIds: Set([peerId]), update: { _, cachedData in
+                            var cachedData = cachedData as? CachedUserData
+                            if cachedData == nil {
+                                cachedData = CachedUserData()
+                            }
+                            return cachedData?.withUpdatedWallpaper(current.cloudWallpaper)
+                        })
+                    }
+                } else {
+                    before = .complete()
+                }
+                let _ = (before |> then(complete)).start()
+            })
+        }
     }
     
     override var modalInteractions: ModalInteractions? {

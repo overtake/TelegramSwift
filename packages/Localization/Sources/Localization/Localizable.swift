@@ -2103,6 +2103,10 @@ public final class L10n {
   public static var chatChatThemeCancel: String  { return L10n.tr("Localizable", "Chat.ChatTheme.Cancel") }
   /// No\nTheme
   public static var chatChatThemeNoTheme: String  { return L10n.tr("Localizable", "Chat.ChatTheme.NoTheme") }
+  /// Reset Background
+  public static var chatChatThemeResetToDefault: String  { return L10n.tr("Localizable", "Chat.ChatTheme.ResetToDefault") }
+  /// Select Background
+  public static var chatChatThemeSelectBackground: String  { return L10n.tr("Localizable", "Chat.ChatTheme.SelectBackground") }
   /// You have been blocked to posting comments.
   public static var chatCommentsKicked: String  { return L10n.tr("Localizable", "Chat.Comments.Kicked") }
   /// No comments here yet...
@@ -4501,6 +4505,8 @@ public final class L10n {
   public static var chatServiceJoinedChannelByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedChannelByRequest") }
   /// Your request to join the group was approved
   public static var chatServiceJoinedGroupByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedGroupByRequest") }
+  /// Update Background
+  public static var chatServiceUpdateBackground: String  { return L10n.tr("Localizable", "ChatService.UpdateBackground") }
   /// %@ joined the channel by request
   public static func chatServiceUserJoinedChannelByRequest(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.UserJoinedChannelByRequest", p1)
@@ -4509,6 +4515,8 @@ public final class L10n {
   public static func chatServiceUserJoinedGroupByRequest(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.UserJoinedGroupByRequest", p1)
   }
+  /// View Background
+  public static var chatServiceViewBackground: String  { return L10n.tr("Localizable", "ChatService.ViewBackground") }
   /// You set the same background for this chat
   public static var chatServiceYouChangedToSameWallpaper: String  { return L10n.tr("Localizable", "ChatService.YouChangedToSameWallpaper") }
   /// You set a new background for this chat
@@ -4517,12 +4525,14 @@ public final class L10n {
   public static var chatServiceSuggestSuccess: String  { return L10n.tr("Localizable", "ChatService.Suggest.Success") }
   /// View Photo
   public static var chatServiceSuggestView: String  { return L10n.tr("Localizable", "ChatService.Suggest.View") }
-  /// View Background
-  public static var chatServiceWallpaperView: String  { return L10n.tr("Localizable", "ChatService.Wallpaper.View") }
   /// Colorful
   public static var chatThemeColorful: String  { return L10n.tr("Localizable", "ChatTheme.Colorful") }
   /// Chat Theme
   public static var chatThemeTheme: String  { return L10n.tr("Localizable", "ChatTheme.Theme") }
+  /// Theme will be also applied for %@
+  public static func chatThemeThemeInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatTheme.Theme.Info", p1)
+  }
   /// Report Messages
   public static var chatTitleReportMessages: String  { return L10n.tr("Localizable", "ChatTitle.ReportMessages") }
   /// Default

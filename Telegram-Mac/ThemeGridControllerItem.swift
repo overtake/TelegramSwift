@@ -125,8 +125,16 @@ final class SettingsThemeWallpaperView: BackgroundView {
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sz.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor)
             
-
-            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor), clearInstantly: false)
+            let signal = chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor)
+            
+            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale))
+            
+            if !self.imageView.isFullyLoaded {
+                self.imageView.setSignal(signal, clearInstantly: false, cacheImage: { result in
+                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+                })
+            }
+            
 
 
             self.imageView.set(arguments: arguments)

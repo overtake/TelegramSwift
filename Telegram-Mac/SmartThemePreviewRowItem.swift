@@ -134,7 +134,7 @@ private final class ChatThemeRowView: HorizontalRowView {
                 
                 let context = item.context
                 
-                if let first = item.emojies[current.0.fixed]  {
+                if let first = item.emojies[current.0]  {
                     let params = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, hidePlayer: true, media: first.file)
                     self.emojiView.update(with: first.file, size: NSMakeSize(25, 25), context: context, table: nil, parameters: params, animated: animated)
                     self.emojiTextView.isHidden = true
@@ -149,10 +149,14 @@ private final class ChatThemeRowView: HorizontalRowView {
                 self.emojiTextView.update(emojiTextLayout)
                 
                 self.emojiView.overridePlayValue = false
-                self.noThemeTextView?.removeFromSuperview()
-                self.noThemeTextView = nil
-                self.textView.update(nil)
             }
+            
+            self.noThemeTextView?.removeFromSuperview()
+            self.noThemeTextView = nil
+            self.textView.update(nil)
+            
+            self.emojiView.isHidden = false
+            
             self.imageView.image = current.1
             self.imageView.sizeToFit()
             self.imageView.isHidden = false
@@ -162,6 +166,8 @@ private final class ChatThemeRowView: HorizontalRowView {
         } else {
             
             self.emojiTextView.update(nil)
+            
+            self.emojiView.isHidden = true
             
             self.imageView.image = nil
             self.imageView.isHidden = true
@@ -187,6 +193,7 @@ private final class ChatThemeRowView: HorizontalRowView {
                 self.imageView.isHidden = true
                 self.noThemeTextView?.removeFromSuperview()
                 self.noThemeTextView = TextView()
+                self.noThemeTextView?.isEventLess = true
                 self.noThemeTextView?.userInteractionEnabled = false
                 self.noThemeTextView?.isSelectable = false
                 self.addSubview(self.noThemeTextView!)

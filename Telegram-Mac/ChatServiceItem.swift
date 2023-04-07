@@ -14,6 +14,8 @@ import Postbox
 import SwiftSignalKit
 import InAppSettings
 import CurrencyFormat
+import ThemeSettings
+
 
 class ChatServiceItem: ChatRowItem {
     
@@ -79,10 +81,28 @@ class ChatServiceItem: ChatRowItem {
             return 10 + 100 + 10 + text.layoutSize.height + 10 + 30 + 10
         }
     }
+    
+    struct WallpaperData {
+        let wallpaper: Wallpaper
+        let aesthetic: TelegramWallpaper
+        let peerId: PeerId
+        let isIncoming: Bool
+        init(wallpaper: Wallpaper, aesthetic: TelegramWallpaper, peerId: PeerId, isIncoming: Bool) {
+            self.wallpaper = wallpaper
+            self.aesthetic = aesthetic
+            self.peerId = peerId
+            self.isIncoming = isIncoming
+        }
+        
+        var height: CGFloat {
+            return 160
+        }
+    }
 
     
     private(set) var giftData: GiftData? = nil
     private(set) var suggestPhotoData: SuggestPhotoData? = nil
+    private(set) var wallpaperData: WallpaperData? = nil
 
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
@@ -101,21 +121,22 @@ class ChatServiceItem: ChatRowItem {
 
         
         let nameColor:(PeerId) -> NSColor = { peerId in
-            
-            if theme.controllerBackgroundMode.hasWallpaper {
-                return theme.chatServiceItemTextColor
-            }
-            let mainPeer = coreMessageMainPeer(message)
-            
-            if mainPeer is TelegramChannel || mainPeer is TelegramGroup {
-                if let peer = mainPeer as? TelegramChannel, case .broadcast(_) = peer.info {
-                    return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
-                } else if context.peerId != peerId {
-                    let value = abs(Int(peerId.id._internalGetInt64Value()) % 7)
-                    return theme.chat.peerName(value)
-                }
-            }
-            return theme.chat.linkColor(isIncoming, false)
+            return theme.chatServiceItemTextColor
+
+//            if theme.controllerBackgroundMode.hasWallpaper {
+//                return theme.chatServiceItemTextColor
+//            }
+//            let mainPeer = coreMessageMainPeer(message)
+//
+//            if mainPeer is TelegramChannel || mainPeer is TelegramGroup {
+//                if let peer = mainPeer as? TelegramChannel, case .broadcast(_) = peer.info {
+//                    return theme.chat.linkColor(isIncoming, entry.renderType == .bubble)
+//                } else if context.peerId != peerId {
+//                    let value = abs(Int(peerId.id._internalGetInt64Value()) % 7)
+//                    return theme.chat.peerName(value)
+//                }
+//            }
+//            return theme.chat.linkColor(isIncoming, false)
         }
         
         
@@ -772,7 +793,7 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-                case .setChatWallpaper:
+                case let .setChatWallpaper(wallpaper):
                     
                     let text: String
                     if authorId == context.peerId {
@@ -787,7 +808,7 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-
+                    self.wallpaperData = .init(wallpaper: wallpaper.uiWallpaper, aesthetic: wallpaper, peerId: message.id.peerId, isIncoming: authorId != context.peerId)
                 case .setSameChatWallpaper:
                     let text: String
                     if authorId == context.peerId {
@@ -852,6 +873,9 @@ class ChatServiceItem: ChatRowItem {
             height += data.height + (isBubbled ? 9 : 6)
         }
         if let data = self.suggestPhotoData {
+            height += data.height + (isBubbled ? 9 : 6)
+        }
+        if let data = self.wallpaperData {
             height += data.height + (isBubbled ? 9 : 6)
         }
         return height
@@ -1263,6 +1287,93 @@ class ChatServiceRowView: TableRowView {
         }
     }
     
+    private class WallpaperView : Control {
+        
+        private let disposable = MetaDisposable()
+        private let wallpaper: TransformImageView = TransformImageView(frame: NSMakeRect(0, 0, 100, 100))
+        
+
+        private var visualEffect: VisualEffect?
+                        
+        fileprivate let viewButton = TitleButton()
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(wallpaper)
+            addSubview(viewButton)
+            viewButton.scaleOnClick = true
+            viewButton.autohighlight = false
+            self.scaleOnClick = true
+            self.wallpaper.layer?.cornerRadius = 50
+            layer?.cornerRadius = 10
+        }
+        
+        
+        func update(item: ChatServiceItem, data: ChatServiceItem.WallpaperData, animated: Bool) {
+            
+            let size = NSMakeSize(100, 100)
+            
+            if item.shouldBlurService {
+                let current: VisualEffect
+                if let view = self.visualEffect {
+                    current = view
+                } else {
+                    current = VisualEffect(frame: bounds)
+                    self.visualEffect = current
+                    addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                }
+                current.bgColor = item.presentation.blurServiceColor
+                
+                self.backgroundColor = .clear
+                
+            } else if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+                self.backgroundColor = item.presentation.chatServiceItemColor
+            }
+            let updateImageSignal = wallpaperPreview(account: item.context.account, palette: item.presentation.colors, wallpaper: data.wallpaper, mode: .thumbnail)
+            
+            let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
+            
+            let settings = TelegramThemeSettings.init(baseTheme: .classic, accentColor: 0, outgoingAccentColor: nil, messageColors: [], animateMessageColors: false, wallpaper: data.aesthetic)
+            
+            wallpaper.setSignal(signal: cachedMedia(media: settings, arguments: arguments, scale: System.backingScale))
+            
+            if !wallpaper.isFullyLoaded {
+                wallpaper.setSignal(updateImageSignal, cacheImage: { result in
+                    cacheMedia(result, media: settings, arguments: arguments, scale: System.backingScale)
+                })
+            }
+            
+            wallpaper.set(arguments: arguments)
+                        
+            viewButton.set(font: .normal(.text), for: .Normal)
+            viewButton.set(color: item.shouldBlurService ? .white : theme.colors.underSelectedColor, for: .Normal)
+            viewButton.set(background: item.shouldBlurService ? item.presentation.chatServiceItemColor.withAlphaComponent(0.5) : item.presentation.colors.accent, for: .Normal)
+            viewButton.set(text: data.isIncoming ? strings().chatServiceViewBackground : strings().chatServiceUpdateBackground, for: .Normal)
+            viewButton.sizeToFit(NSMakeSize(20, 12))
+            
+            viewButton.layer?.cornerRadius = viewButton.frame.height / 2
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            visualEffect?.frame = bounds
+            wallpaper.centerX(y: 10)
+            viewButton.centerX(y: wallpaper.frame.maxY + 10)
+        }
+        
+        deinit {
+            disposable.dispose()
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+
+    
     
     private var textView:TextView
     private var imageView:TransformImageView?
@@ -1272,6 +1383,7 @@ class ChatServiceRowView: TableRowView {
     
     private var giftView: GiftView?
     private var suggestView: SuggestView?
+    private var wallpaperView: WallpaperView?
 
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     
@@ -1332,6 +1444,9 @@ class ChatServiceRowView: TableRowView {
                 view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
             }
             if let view = suggestView {
+                view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
+            }
+            if let view = wallpaperView {
                 view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
             }
         }
@@ -1523,6 +1638,38 @@ class ChatServiceRowView: TableRowView {
             performSubviewRemoval(view, animated: animated)
             self.suggestView = nil
         }
+        
+        if let data = item.wallpaperData {
+            let current: WallpaperView
+            if let view = self.wallpaperView {
+                current = view
+            } else {
+                current = WallpaperView(frame: NSMakeRect(0, 0, 200, data.height))
+                self.wallpaperView = current
+                addSubview(current)
+                
+                let open: (Control)->Void = { [weak self] _ in
+                    if let item = self?.item as? ChatServiceItem, let messageId = item.message?.id, let data = item.wallpaperData {
+                        if data.isIncoming {
+                            let chatInteraction = item.chatInteraction
+                            showModal(with: WallpaperPreviewController(item.context, wallpaper: data.wallpaper, source: .message(messageId, nil), onComplete: { [weak chatInteraction] in
+                                chatInteraction?.closeChatThemes()
+                            }), for: item.context.window)
+                        } else {
+                            item.chatInteraction.setupChatThemes()
+                        }
+                    }
+                }
+                current.set(handler: open, for: .Click)
+                current.viewButton.set(handler: open, for: .Click)
+            }
+            
+            current.update(item: item, data: data, animated: animated)
+        } else if let view = self.wallpaperView {
+            performSubviewRemoval(view, animated: animated)
+            self.wallpaperView = nil
+        }
+
         
         updateInlineStickers(context: item.context, view: self.textView, textLayout: item.text)
         
