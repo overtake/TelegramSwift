@@ -579,7 +579,7 @@ public final class L10n {
   public static var botUsernameActive: String  { return L10n.tr("Localizable", "BotUsername.Active") }
   /// USERNAME
   public static var botUsernameHeader: String  { return L10n.tr("Localizable", "BotUsername.Header") }
-  /// This username cannot be edited.
+  /// This username cannot be edited. You can aquire additional usernames on [Fragment]().
   public static var botUsernameInfo: String  { return L10n.tr("Localizable", "BotUsername.Info") }
   /// not active
   public static var botUsernameNotActive: String  { return L10n.tr("Localizable", "BotUsername.NotActive") }
