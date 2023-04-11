@@ -1899,7 +1899,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        self.updateFloatingPhotos(self.genericView.scroll, animated: animated, currentAnimationRows: currentAnimationRows)
+        self.updateFloatingPhotos(self.genericView.scroll, animated: false, currentAnimationRows: currentAnimationRows)
         
     }
     
