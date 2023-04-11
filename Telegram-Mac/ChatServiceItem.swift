@@ -1298,7 +1298,7 @@ class ChatServiceRowView: TableRowView {
         fileprivate let viewButton = TitleButton()
         private var progressView: RadialProgressView?
         private let statusDisposable = MetaDisposable()
-        
+        private var progressText: TextView?
         
         
         required init(frame frameRect: NSRect) {
@@ -1322,21 +1322,25 @@ class ChatServiceRowView: TableRowView {
                 return
             }
             
+            viewButton.isHidden = messageId.namespace == Namespaces.Message.Local
+            
             self.message = item.message
             
-            var mediaUpdated = previous?.stableId != item.message?.stableId
+            let mediaUpdated = previous?.stableId != item.message?.stableId
             
             let context = item.context
             
             let size = NSMakeSize(100, 100)
             if messageId.namespace == Namespaces.Message.Local {
                 self.statusDisposable.set((item.context.account.pendingPeerMediaUploadManager.uploadProgress(messageId: messageId)
-                |> deliverOnMainQueue).start(next: { [weak self] progress in
-                    self?.updateProgress(progress, messageId: messageId, context: context)
+                |> deliverOnMainQueue).start(next: { [weak self, weak item] progress in
+                    if let item = item {
+                        self?.updateProgress(progress, messageId: messageId, item: item, context: context)
+                    }
                 }))
             } else {
                 self.statusDisposable.set(nil)
-                self.updateProgress(nil, messageId: messageId, context: context)
+                self.updateProgress(nil, messageId: messageId, item: item, context: context)
             }
             
             if item.shouldBlurService {
@@ -1384,7 +1388,7 @@ class ChatServiceRowView: TableRowView {
         }
         
         
-        private func updateProgress(_ progress: Float?, messageId: MessageId, context: AccountContext) {
+        private func updateProgress(_ progress: Float?, messageId: MessageId, item: ChatServiceItem, context: AccountContext) {
             if let progress = progress {
                 let current: RadialProgressView
                 if let view = self.progressView {
@@ -1400,10 +1404,36 @@ class ChatServiceRowView: TableRowView {
                     context.account.pendingPeerMediaUploadManager.cancel(peerId: messageId.peerId)
                 })
                 current.state = .Fetching(progress: progress, force: false)
-            } else if let view = self.progressView {
-                performSubviewRemoval(view, animated: true)
-                self.progressView = nil
+                
+                
+                let progressTextView: TextView
+                if let view = self.progressText {
+                    progressTextView = view
+                } else {
+                    progressTextView = TextView()
+                    progressTextView.userInteractionEnabled = false
+                    progressTextView.isSelectable = false
+                    self.progressText = progressTextView
+                    self.addSubview(progressTextView)
+                }
+                let text = strings().chatServiceUploadingWallpaper("\(Int(progress * 100))")
+                let attr = NSMutableAttributedString()
+                attr.append(string: text, color: item.presentation.chatServiceItemTextColor, font: .normal(.short))
+                attr.detectBoldColorInString(with: .medium(.short))
+                let layout = TextViewLayout(attr, alignment: .center)
+                layout.measure(width: frame.width - 40)
+                progressTextView.update(layout)
+            } else {
+                if let view = self.progressView {
+                    performSubviewRemoval(view, animated: true)
+                    self.progressView = nil
+                }
+                if let view = self.progressText {
+                    performSubviewRemoval(view, animated: true)
+                    self.progressText = nil
+                }
             }
+            needsLayout = true
         }
 
         
@@ -1412,6 +1442,7 @@ class ChatServiceRowView: TableRowView {
             visualEffect?.frame = bounds
             wallpaper.centerX(y: 10)
             viewButton.centerX(y: wallpaper.frame.maxY + 10)
+            progressText?.centerX(y: wallpaper.frame.maxY + 10)
             progressView?.center()
         }
         

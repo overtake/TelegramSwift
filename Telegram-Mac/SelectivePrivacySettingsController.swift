@@ -339,7 +339,7 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
     entries.append(.everybody(sectionId, state.setting == .everybody, .firstItem))
     
     switch kind {
-    case .presence, .voiceCalls, .forwards, .phoneNumber, .profilePhoto:
+    case .presence, .voiceCalls, .forwards, .phoneNumber, .profilePhoto, .groupInvitations:
         entries.append(.contacts(sectionId, state.setting == .contacts, .innerItem))
         entries.append(.nobody(sectionId, state.setting == .nobody, .lastItem))
     default:

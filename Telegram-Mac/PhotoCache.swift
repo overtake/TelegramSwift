@@ -12,7 +12,7 @@ import TelegramCore
 import ColorPalette
 import Postbox
 import TGUIKit
-
+import ThemeSettings
 
 enum ThemeSource : Equatable {
     case local(ColorPalette, TelegramTheme?)
@@ -27,6 +27,15 @@ private final class PhotoCachedRecord {
         self.date = CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970
         self.size = size
         self.image = image
+    }
+}
+
+private final class WallpaperCachedRecord {
+    let date:TimeInterval
+    let mode:TableBackgroundMode
+    init(mode:TableBackgroundMode) {
+        self.date = CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970
+        self.mode = mode
     }
 }
 
@@ -53,6 +62,7 @@ enum PhotoCacheKeyEntry : Hashable {
     case media(Media, TransformImageArguments, CGFloat, LayoutPositionFlags?)
     case slot(SlotMachineValue, TransformImageArguments, CGFloat)
     case platformTheme(TelegramThemeSettings, TransformImageArguments, CGFloat, LayoutPositionFlags?)
+    case background(Wallpaper, ColorPalette)
     case messageId(stableId: Int64, TransformImageArguments, CGFloat, LayoutPositionFlags)
     case theme(ThemeSource, Bool, AppearanceThumbSource)
     case emoji(String, CGFloat)
@@ -153,6 +163,45 @@ enum PhotoCacheKeyEntry : Hashable {
             hasher.combine("emoji")
             hasher.combine(emoji)
             hasher.combine(scale)
+        case let .background(wallpaper, palette):
+            hasher.combine("wallpaper")
+            hasher.combine(palette.toString)
+            switch wallpaper {
+            case .none:
+                hasher.combine("none")
+            case .builtin:
+                hasher.combine("builtin")
+            case let .color(color):
+                hasher.combine("color")
+                hasher.combine("\(color)")
+            case let .custom(rep, blurred):
+                hasher.combine("custom")
+                hasher.combine("\(rep.resource.id.hashValue)")
+                hasher.combine("\(blurred)")
+            case let .file(slug, file, settings, isPattern):
+                hasher.combine("file")
+                hasher.combine("\(slug)")
+                hasher.combine("\(file.fileId.id)")
+                hasher.combine("\(settings.colors)")
+                hasher.combine("\(settings.blur)")
+                hasher.combine("\(settings.motion)")
+                hasher.combine("\(String(describing: settings.rotation))")
+                hasher.combine("\(isPattern)")
+            case let .image(reps, settings):
+                hasher.combine("image")
+                for rep in reps {
+                    hasher.combine("\(rep.resource.id.hashValue)")
+                }
+                hasher.combine("\(settings.colors)")
+                hasher.combine("\(settings.blur)")
+                hasher.combine("\(settings.motion)")
+                hasher.combine("\(String(describing: settings.rotation))")
+            case let .gradient(id, colors, rotation):
+                hasher.combine("gradient")
+                hasher.combine("\(String(describing: id))")
+                hasher.combine("\(colors)")
+                hasher.combine("\(String(describing: rotation))")
+            }
         }
     }
     
@@ -238,10 +287,46 @@ enum PhotoCacheKeyEntry : Hashable {
             } else {
                 return false
             }
+        case let .background(wallpaper, colors):
+            if case .background(wallpaper, colors) = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
 }
 
+
+private class WallpaperCache {
+    let memoryLimit:Int
+    let maxCount:Int = 50
+    private var values:NSCache<NSNumber, WallpaperCachedRecord> = NSCache()
+    
+    init(_ memoryLimit:Int = 100) {
+        self.memoryLimit = memoryLimit
+        self.values.countLimit = memoryLimit
+    }
+    
+    fileprivate func cacheImage(_ mode: TableBackgroundMode, for key:PhotoCacheKeyEntry) {
+        self.values.setObject(WallpaperCachedRecord(mode: mode), forKey: .init(value: key.hashValue))
+    }
+    
+    private func freeMemoryIfNeeded() {
+    }
+    
+    func cachedImage(for key:PhotoCacheKeyEntry) -> TableBackgroundMode? {
+        return self.values.object(forKey: .init(value: key.hashValue))?.mode
+    }
+    
+    func removeRecord(for key:PhotoCacheKeyEntry) {
+        self.values.removeObject(forKey: .init(value: key.hashValue))
+    }
+    
+    func clearAll() {
+        self.values.removeAllObjects()
+    }
+}
 
 
 private class PhotoCache {
@@ -281,6 +366,7 @@ private let peerPhotoCache = PhotoCache(300)
 private let photosCache = PhotoCache(300)
 private let photoThumbsCache = PhotoCache(500)
 private let themeThums = PhotoCache(500)
+private let wallpaperCache = WallpaperCache(20)
 
 private let stickersCache = PhotoCache(1000)
 
@@ -409,6 +495,14 @@ func cacheMedia(_ result: TransformImageResult, media: TelegramThemeSettings, ar
     }
 }
 
+
+func cacheBackground(_ result: Wallpaper, palette: ColorPalette, background: TableBackgroundMode) -> Void {
+    let entry:PhotoCacheKeyEntry = .background(result, palette)
+    wallpaperCache.cacheImage(background, for: entry)
+}
+func cachedBackground(_ wallpaper: Wallpaper, palette: ColorPalette) -> TableBackgroundMode? {
+    return wallpaperCache.cachedImage(for: .background(wallpaper, palette))
+}
 
 
 func cacheMedia(_ result: TransformImageResult, messageId: Int64, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {

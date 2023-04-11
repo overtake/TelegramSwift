@@ -1476,6 +1476,14 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
                     ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
                     ctx.fill(size.bounds)
                 })!._NSImage
+            } else if palette.isDark, intense > 0 {
+                image = generateImage(image.size, contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.draw(image._cgImage!, in: size.bounds)
+                    
+                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
+                    ctx.fill(size.bounds)
+                })!._NSImage
             }
 
             backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
@@ -1813,7 +1821,14 @@ class TelegramPresentationTheme : PresentationTheme {
         if let value = _backgroundMode {
             return value
         } else {
-            let backgroundMode: TableBackgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize)
+            
+            let backgroundMode: TableBackgroundMode
+            if let cached = cachedBackground(wallpaper.wallpaper, palette: colors) {
+                backgroundMode = cached
+            } else {
+                backgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize)
+                cacheBackground(wallpaper.wallpaper, palette: colors, background: backgroundMode)
+            }
             
             self._backgroundMode = backgroundMode
             return backgroundMode

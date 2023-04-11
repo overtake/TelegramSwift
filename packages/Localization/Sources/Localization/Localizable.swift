@@ -2103,9 +2103,9 @@ public final class L10n {
   public static var chatChatThemeCancel: String  { return L10n.tr("Localizable", "Chat.ChatTheme.Cancel") }
   /// No\nTheme
   public static var chatChatThemeNoTheme: String  { return L10n.tr("Localizable", "Chat.ChatTheme.NoTheme") }
-  /// Reset Background
+  /// Remove Wallpaper
   public static var chatChatThemeResetToDefault: String  { return L10n.tr("Localizable", "Chat.ChatTheme.ResetToDefault") }
-  /// Choose Background
+  /// Choose Wallpaper
   public static var chatChatThemeSelectBackground: String  { return L10n.tr("Localizable", "Chat.ChatTheme.SelectBackground") }
   /// You have been blocked to posting comments.
   public static var chatCommentsKicked: String  { return L10n.tr("Localizable", "Chat.Comments.Kicked") }
@@ -3673,8 +3673,16 @@ public final class L10n {
   public static var chatTranslateMenuHide: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide") }
   /// Choose Another Language
   public static var chatTranslateMenuTo: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.To") }
+  /// Translation bar is now hidden for this bot. You can enable it in profile.
+  public static var chatTranslateMenuHideBotTooltip: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide.Bot.Tooltip") }
   /// Translation bar is now hidden for this channel. You can enable it in profile.
-  public static var chatTranslateMenuHideTooltip: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide.Tooltip") }
+  public static var chatTranslateMenuHideChannelTooltip: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide.Channel.Tooltip") }
+  /// Translation bar is now hidden for this group. You can enable it in profile.
+  public static var chatTranslateMenuHideGroupTooltip: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide.Group.Tooltip") }
+  /// Translation bar is now hidden for %1$@. You can enable it in profile.
+  public static func chatTranslateMenuHideUserTooltip(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Translate.Menu.Hide.User.Tooltip", p1)
+  }
   /// You can always enable it in Language Settings.
   public static var chatTranslateMenuHidePaywallTooltip: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.HidePaywall.Tooltip") }
   /// %d
@@ -4507,6 +4515,10 @@ public final class L10n {
   public static var chatServiceJoinedGroupByRequest: String  { return L10n.tr("Localizable", "ChatService.JoinedGroupByRequest") }
   /// Update Background
   public static var chatServiceUpdateBackground: String  { return L10n.tr("Localizable", "ChatService.UpdateBackground") }
+  /// Setting new wallpaper...\n**%1$@%**
+  public static func chatServiceUploadingWallpaper(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatService.UploadingWallpaper", p1)
+  }
   /// %@ joined the channel by request
   public static func chatServiceUserJoinedChannelByRequest(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.UserJoinedChannelByRequest", p1)
