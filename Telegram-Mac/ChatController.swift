@@ -444,13 +444,13 @@ class ChatControllerView : View, ChatInputDelegate {
         self.themeSelectorView?.removeFromSuperview()
         self.themeSelectorView = view
         addSubview(view)
-        updateFrame(self.frame, transition: animated ? .animated(duration: 0.3, curve: .easeOut) : .immediate)
+        updateFrame(self.frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     func hideChatThemeSelector(animated: Bool) {
         if let view = self.themeSelectorView {
             self.themeSelectorView = nil
-            let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.3, curve: .easeOut) : .immediate
+            let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
             self.updateFrame(self.frame, transition: transition)
             if animated {
                 transition.updateFrame(view: view, frame: CGRect(origin: CGPoint(x: 0, y: frame.maxY), size: view.frame.size), completion: { [weak view] _ in
@@ -3921,7 +3921,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 showModalText(for: context.window, text: strings().chatTranslateMenuHidePaywallTooltip)
             } else {
                 self?.liveTranslate?.hideTranslation()
-                showModalText(for: context.window, text: strings().chatTranslateMenuHideTooltip)
+                if let peer = self?.chatInteraction.peer {
+                    let text: String
+                    if peer.isUser {
+                        text = strings().chatTranslateMenuHideUserTooltip(peer.compactDisplayTitle)
+                    } else if peer.isChannel {
+                        text = strings().chatTranslateMenuHideChannelTooltip
+                    } else if peer.isBot {
+                        text = strings().chatTranslateMenuHideBotTooltip
+                    } else {
+                        text = strings().chatTranslateMenuHideGroupTooltip
+                    }
+                    showModalText(for: context.window, text: text)
+                }
             }
         }
         chatInteraction.doNotTranslate = { code in
