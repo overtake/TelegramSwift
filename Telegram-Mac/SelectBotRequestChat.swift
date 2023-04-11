@@ -160,7 +160,7 @@ private final class SelectBotRequestEmptyView: GeneralRowView {
     }
 }
 
-private class SelectChatComplicated : SelectChatsBehavior {
+ class SelectChatComplicated : SelectChatsBehavior {
     private let peerType: ReplyMarkupButtonRequestPeerType
     private let context: AccountContext
     

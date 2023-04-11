@@ -272,7 +272,10 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
         
         let context = self.context
         let peerId = chatInteraction.peerId
-        let peer = chatInteraction.peer
+        
+        guard let peer = chatInteraction.peer else {
+            return
+        }
         
         
         let readySignal = self.ready.get() |> take(1) |> deliverOnMainQueue
@@ -326,7 +329,7 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
         
         genericView.selectBackground.set(handler: { [weak self] _ in
             if let wallpaper = self?.genericView.wallpaper {
-                showModal(with: ChatWallpaperModalController(context, selected: wallpaper.wallpaper, source: .chat(peerId, nil)), for: context.window)
+                showModal(with: ChatWallpaperModalController(context, selected: wallpaper.wallpaper, source: .chat(peer, nil)), for: context.window)
             }
         }, for: .Click)
         

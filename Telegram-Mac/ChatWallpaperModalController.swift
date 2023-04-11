@@ -138,7 +138,13 @@ class ChatWallpaperModalController: ModalViewController {
                             }
                         }
                         
-                        let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
+                        let data = try? Data(contentsOf: URL(fileURLWithPath: path))
+                        guard let data = data else {
+                            return
+                        }
+                        let resource = LocalFileMediaResource(fileId: arc4random64(), size: Int64(data.count))
+                        context.account.postbox.mediaBox.storeResourceData(resource.id, data: data)
+                        
                         representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                         
                         showModal(with: WallpaperPreviewController(context, wallpaper: .image(representations, settings: WallpaperSettings()), source: source, onComplete: self?.onComplete), for: context.window)
@@ -207,12 +213,17 @@ class ChatWallpaperModalController: ModalViewController {
                 showModal(with: WallpaperPreviewController(context, wallpaper: wallpaper, source: source, onComplete: self?.onComplete), for: context.window)
             default:
                 close()
-                delay(0.2, closure: {
-                    _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                        return settings.updateWallpaper{ $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper()
-                    }).start()
-                    
-                })
+                switch source {
+                case let .chat(peer, _):
+                    _ = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: nil).start()
+                default:
+                    delay(0.2, closure: {
+                        _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                            return settings.updateWallpaper{ $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper()
+                        }).start()
+                        
+                    })
+                }
             }
             
         }, deleteWallpaper: { wallpaper, telegramWallpaper in

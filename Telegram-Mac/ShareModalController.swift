@@ -705,6 +705,57 @@ class ShareCallbackObject : ShareObject {
 }
 
 
+class ShareCallbackPeerTypesObject : ShareObject {
+    private let callback:([PeerId])->Signal<Never, NoError>
+    private let peerTypes: ReplyMarkupButtonAction.PeerTypes
+    init(_ context: AccountContext, peerTypes: ReplyMarkupButtonAction.PeerTypes, callback:@escaping([PeerId])->Signal<Never, NoError>) {
+        self.callback = callback
+        self.peerTypes = peerTypes
+        super.init(context, limit: 1)
+    }
+    
+    override var multipleSelection: Bool {
+        return false
+    }
+    override var hasCaptionView: Bool {
+        return false
+    }
+    override var blockCaptionView: Bool {
+        return true
+    }
+    
+    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        return callback(peerIds) |> mapError { _ in return String() }
+    }
+    
+    override func possibilityPerformTo(_ peer: Peer) -> Bool {
+        if self.peerTypes.isEmpty {
+            return super.possibilityPerformTo(peer)
+        }
+        if peer.isUser {
+            if peerTypes.contains(.users) {
+                return canSendMessagesToPeer(peer)
+            }
+        }
+        if peer.isGroup || peer.isSupergroup || peer.isGigagroup {
+            if peerTypes.contains(.groups) {
+                return canSendMessagesToPeer(peer)
+            }
+        }
+        if peer.isChannel {
+            if peerTypes.contains(.channels) {
+                return canSendMessagesToPeer(peer)
+            }
+        }
+        if peer.isBot {
+            if peerTypes.contains(.bots) {
+                return canSendMessagesToPeer(peer)
+            }
+        }
+        return false
+    }
+    
+}
 
 
 class ShareMessageObject : ShareObject {

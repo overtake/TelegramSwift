@@ -42,14 +42,14 @@ class ChatSwitchInlineController: ChatController {
                         if let attribute = attribute as? ReplyMarkupMessageAttribute {
                             for row in attribute.rows {
                                 for button in row.buttons {
-                                    if case let .switchInline(samePeer: _, query: query) = button.action {
+                                    if case let .switchInline(samePeer: _, query: query, _) = button.action {
                                         let text = "@\(message.inlinePeer?.username ?? "") \(query)"
                                         let controller: ChatController
                                         switch self.fallbackMode {
                                         case .history, .pinned:
                                             controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
                                         case let .thread(data, mode):
-                                            controller = ChatController.init(context: context, chatLocation: .thread(data), mode: .thread(data: data, mode: mode), messageId: nil, initialAction: .inputText(text: text, behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
+                                            controller = ChatController(context: context, chatLocation: .thread(data), mode: .thread(data: data, mode: mode), messageId: nil, initialAction: .inputText(text: text, behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
                                         case .scheduled:
                                             controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
                                         }

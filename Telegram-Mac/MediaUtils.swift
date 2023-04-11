@@ -18,7 +18,7 @@ import GZIP
 import Svg
 import ColorPalette
 import ThemeSettings
-
+import RangeSet
 
 extension FileMediaReference {
     var userLocation: MediaResourceUserLocation {
@@ -118,11 +118,11 @@ func smallestImageRepresentation(_ representation:[TelegramMediaImageRepresentat
     return representation.first
 }
 
-public func representationFetchRangeForDisplayAtSize(representation: TelegramMediaImageRepresentation, dimension: Int?) -> Range<Int>? {
+public func representationFetchRangeForDisplayAtSize(representation: TelegramMediaImageRepresentation, dimension: Int?) -> Range<Int64>? {
     if representation.progressiveSizes.count > 1, let dimension = dimension {
-        var largestByteSize = Int(representation.progressiveSizes[0])
+        var largestByteSize = Int64(representation.progressiveSizes[0])
         for (maxDimension, byteSizes) in progressiveRangeMap {
-            largestByteSize = Int(representation.progressiveSizes[min(representation.progressiveSizes.count - 1, byteSizes.last!)])
+            largestByteSize = Int64(representation.progressiveSizes[min(representation.progressiveSizes.count - 1, byteSizes.last!)])
             if maxDimension >= dimension {
                 break
             }
@@ -1632,7 +1632,14 @@ func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approxi
 func chatMessagePhotoInteractiveFetched(account: Account, imageReference: ImageMediaReference, toRepresentationSize: NSSize = NSMakeSize(1280, 1280)) -> Signal<Void, NoError> {
     
     if let large = imageReference.media.representationForDisplayAtSize(.init(toRepresentationSize)) {
-        return fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: imageReference.userLocation, userContentType: imageReference.userContentType, reference: imageReference.resourceReference(large.resource), range: nil, statsCategory: .image) |> `catch` { _ in return .complete() } |> map {_ in}
+        let rangeValue = representationFetchRangeForDisplayAtSize(representation: large, dimension: nil)
+        let range: (Range<Int64>, MediaBoxFetchPriority)?
+        if let rangeValue = rangeValue {
+            range = (rangeValue, .elevated)
+        } else {
+            range = nil
+        }
+        return fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: imageReference.userLocation, userContentType: imageReference.userContentType, reference: imageReference.resourceReference(large.resource), range: range, statsCategory: .image) |> `catch` { _ in return .complete() } |> map {_ in}
     } else {
         return .never()
     }
@@ -2172,8 +2179,8 @@ func addCorners(_ context: DrawingContext, arguments: TransformImageArguments, s
 }
 
 
-func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: CGSize(width: 240, height: 240), autoFetchFullSize: true)
+func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, autoFetchFullSize: Bool = true) -> Signal<ImageDataTransformation, NoError> {
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: CGSize(width: 240, height: 240), autoFetchFullSize: autoFetchFullSize)
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
