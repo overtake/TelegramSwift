@@ -2105,7 +2105,7 @@ public final class L10n {
   public static var chatChatThemeNoTheme: String  { return L10n.tr("Localizable", "Chat.ChatTheme.NoTheme") }
   /// Reset Background
   public static var chatChatThemeResetToDefault: String  { return L10n.tr("Localizable", "Chat.ChatTheme.ResetToDefault") }
-  /// Select Background
+  /// Choose Background
   public static var chatChatThemeSelectBackground: String  { return L10n.tr("Localizable", "Chat.ChatTheme.SelectBackground") }
   /// You have been blocked to posting comments.
   public static var chatCommentsKicked: String  { return L10n.tr("Localizable", "Chat.Comments.Kicked") }
@@ -8145,6 +8145,8 @@ public final class L10n {
   public static var peerInfoChannelReported: String  { return L10n.tr("Localizable", "PeerInfo.ChannelReported") }
   /// Channel Type
   public static var peerInfoChannelType: String  { return L10n.tr("Localizable", "PeerInfo.ChannelType") }
+  /// Change Background
+  public static var peerInfoChatBackground: String  { return L10n.tr("Localizable", "PeerInfo.ChatBackground") }
   /// Change Colors
   public static var peerInfoChatColors: String  { return L10n.tr("Localizable", "PeerInfo.ChatColors") }
   /// Convert To Supergroup
@@ -13495,6 +13497,10 @@ public final class L10n {
   public static var voiecChatSettingsRecordVideoTitle: String  { return L10n.tr("Localizable", "VoiecChat.Settings.Record.Video.Title") }
   /// Edit
   public static var w486f4DlTitle: String  { return L10n.tr("Localizable", "W48-6f-4Dl.title") }
+  /// %1$@ will be able to apply this wallpaper
+  public static func wallpaperBackgroundNoApplyToPeer(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Wallpaper.Background.NoApplyToPeer", p1)
+  }
   /// Apply
   public static var wallpaperPreviewApply: String  { return L10n.tr("Localizable", "WallpaperPreview.Apply") }
   /// Blurred

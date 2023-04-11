@@ -278,20 +278,23 @@ class ChatControllerView : View, ChatInputDelegate {
         bp += 1
     }
     
+    private var backgroundMode: TableBackgroundMode?
     
     func updateBackground(_ mode: TableBackgroundMode, navigationView: NSView?) {
         if mode != theme.controllerBackgroundMode {
-            if backgroundView == nil, let navigationView = navigationView {
+            if let navigationView = navigationView, backgroundMode != mode, self.backgroundView == nil {
                 let point = NSMakePoint(0, -frame.minY)
-                backgroundView = BackgroundView(frame: CGRect.init(origin: point, size: navigationView.bounds.size))
-                backgroundView?.useSharedAnimationPhase = false
-                addSubview(backgroundView!, positioned: .below, relativeTo: self.subviews.first)
+                let backgroundView = BackgroundView(frame: CGRect.init(origin: point, size: navigationView.bounds.size))
+                backgroundView.useSharedAnimationPhase = false
+                addSubview(backgroundView, positioned: .below, relativeTo: self.subviews.first)
+                self.backgroundView = backgroundView
             }
-            backgroundView?.backgroundMode = mode
+            self.backgroundMode = mode
+            self.backgroundView?.backgroundMode = mode
             self.navigationView = navigationView
-        } else {
-            backgroundView?.removeFromSuperview()
-            backgroundView = nil
+        } else if let view = backgroundView {
+            performSubviewRemoval(view, animated: true)
+            self.backgroundView = nil
         }
     }
     
@@ -6157,7 +6160,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 self?.createGroup()
                             }, itemImage: MenuAnimation.menu_create_group.value))
                             
-                            items.append(ContextMenuItem(strings().peerInfoChatColors, handler: { [weak self] in
+                            items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
                                 self?.showChatThemeSelector()
                             }, itemImage: MenuAnimation.menu_change_colors.value))
                         }

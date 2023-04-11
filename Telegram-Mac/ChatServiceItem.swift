@@ -1296,6 +1296,10 @@ class ChatServiceRowView: TableRowView {
         private var visualEffect: VisualEffect?
                         
         fileprivate let viewButton = TitleButton()
+        private var progressView: RadialProgressView?
+        private let statusDisposable = MetaDisposable()
+        
+        
         
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
@@ -1308,10 +1312,32 @@ class ChatServiceRowView: TableRowView {
             layer?.cornerRadius = 10
         }
         
+        private var message: Message?
         
         func update(item: ChatServiceItem, data: ChatServiceItem.WallpaperData, animated: Bool) {
             
+            let previous = self.message
+            
+            guard let messageId = item.message?.id else {
+                return
+            }
+            
+            self.message = item.message
+            
+            var mediaUpdated = previous?.stableId != item.message?.stableId
+            
+            let context = item.context
+            
             let size = NSMakeSize(100, 100)
+            if messageId.namespace == Namespaces.Message.Local {
+                self.statusDisposable.set((item.context.account.pendingPeerMediaUploadManager.uploadProgress(messageId: messageId)
+                |> deliverOnMainQueue).start(next: { [weak self] progress in
+                    self?.updateProgress(progress, messageId: messageId, context: context)
+                }))
+            } else {
+                self.statusDisposable.set(nil)
+                self.updateProgress(nil, messageId: messageId, context: context)
+            }
             
             if item.shouldBlurService {
                 let current: VisualEffect
@@ -1337,10 +1363,10 @@ class ChatServiceRowView: TableRowView {
             
             let settings = TelegramThemeSettings.init(baseTheme: .classic, accentColor: 0, outgoingAccentColor: nil, messageColors: [], animateMessageColors: false, wallpaper: data.aesthetic)
             
-            wallpaper.setSignal(signal: cachedMedia(media: settings, arguments: arguments, scale: System.backingScale))
+            wallpaper.setSignal(signal: cachedMedia(media: settings, arguments: arguments, scale: System.backingScale), clearInstantly: mediaUpdated)
             
             if !wallpaper.isFullyLoaded {
-                wallpaper.setSignal(updateImageSignal, cacheImage: { result in
+                wallpaper.setSignal(updateImageSignal, clearInstantly: mediaUpdated, cacheImage: { result in
                     cacheMedia(result, media: settings, arguments: arguments, scale: System.backingScale)
                 })
             }
@@ -1357,14 +1383,40 @@ class ChatServiceRowView: TableRowView {
             needsLayout = true
         }
         
+        
+        private func updateProgress(_ progress: Float?, messageId: MessageId, context: AccountContext) {
+            if let progress = progress {
+                let current: RadialProgressView
+                if let view = self.progressView {
+                    current = view
+                } else {
+                    current = RadialProgressView(theme:RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
+                    current.frame = wallpaper.focus(NSMakeSize(40, 40))
+                    self.progressView = current
+                    wallpaper.addSubview(current)
+                    
+                }
+                current.fetchControls = .init(fetch: {
+                    context.account.pendingPeerMediaUploadManager.cancel(peerId: messageId.peerId)
+                })
+                current.state = .Fetching(progress: progress, force: false)
+            } else if let view = self.progressView {
+                performSubviewRemoval(view, animated: true)
+                self.progressView = nil
+            }
+        }
+
+        
         override func layout() {
             super.layout()
             visualEffect?.frame = bounds
             wallpaper.centerX(y: 10)
             viewButton.centerX(y: wallpaper.frame.maxY + 10)
+            progressView?.center()
         }
         
         deinit {
+            statusDisposable.dispose()
             disposable.dispose()
         }
         

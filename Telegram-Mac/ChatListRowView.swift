@@ -690,7 +690,7 @@ private final class ChatListMediaPreviewView: View {
             playIcon.isHidden = true
             if let largest = largestImageRepresentation(image.representations) {
                 dimensions = largest.dimensions.size
-                signal = mediaGridMessagePhoto(account: self.context.account, imageReference: .message(message: MessageReference(self.message), media: image), scale: backingScaleFactor)
+                signal = mediaGridMessagePhoto(account: self.context.account, imageReference: .message(message: MessageReference(self.message), media: image), scale: backingScaleFactor, autoFetchFullSize: true)
             }
         } else if let file = self.media as? TelegramMediaFile {
             if file.isAnimated {

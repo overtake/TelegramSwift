@@ -750,17 +750,20 @@ final class ChatInteraction : InterfaceObserver  {
                         strongSelf.requestMessageActionCallback(keyboardMessage.id, true, nil)
                     case let .callback(data):
                         strongSelf.requestMessageActionCallback(keyboardMessage.id, false, data)
-                    case let .switchInline(samePeer: same, query: query):
+                    case let .switchInline(samePeer: same, query: query, peerTypes):
                         let text = "@\(keyboardMessage.inlinePeer?.username ?? keyboardMessage.author?.username ?? "") \(query)"
                         if same {
                             strongSelf.updateInput(with: text)
                         } else {
-                            if let peer = keyboardMessage.inlinePeer ?? keyboardMessage.effectiveAuthor {
-                                strongSelf.context.bindings.rootNavigation().set(modalAction: ShareInlineResultNavigationAction(payload: text, botName: peer.displayTitle), strongSelf.context.layout != .single)
-                                if strongSelf.context.layout == .single {
-                                    strongSelf.context.bindings.rootNavigation().push(ForwardChatListController(strongSelf.context))
+                            
+                            let object = ShareCallbackPeerTypesObject(context, peerTypes: peerTypes, callback: { peerIds in
+                                if let peerId = peerIds.first {
+                                    let controller = ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: .inputText(text: text, behavior: .automatic))
+                                    context.bindings.rootNavigation().push(controller)
                                 }
-                            }
+                                return .complete()
+                            })
+                            showModal(with: ShareModalController(object), for: context.window)
                             
                         }
                     case .payment:
