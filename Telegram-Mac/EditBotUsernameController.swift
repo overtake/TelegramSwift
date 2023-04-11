@@ -62,7 +62,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.general(sectionId: sectionId, index: 1, value: .none, error: nil, identifier: _id_username, data: .init(name: state.state.username ?? "", color: theme.colors.text, viewType: .singleItem, enabled: false)))
     
     
-    entries.append(.desc(sectionId: sectionId, index: 2, text: .plain(strings().botUsernameInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: 2, text: .markdown(strings().botUsernameInfo, linkHandler: { _ in
+        execute(inapp: .external(link: "https://fragment.com", false))
+    }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     
     
     // entries
