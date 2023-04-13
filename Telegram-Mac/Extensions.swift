@@ -2568,6 +2568,23 @@ extension NSImage {
     var _cgImage: CGImage? {
         return self.cgImage(forProposedRect: nil, context: nil, hints: nil)
     }
+    
+    var jpegCGImage: CGImage? {
+        guard let tiffData = self.tiffRepresentation,
+              let bitmapImageRep = NSBitmapImageRep(data: tiffData) else {
+            return nil
+        }
+
+        let compressionFactor: CGFloat = 1.0
+        
+        guard let jpegData = bitmapImageRep.representation(using: .jpeg, properties: [.compressionFactor: compressionFactor]),
+              let dataProvider = CGDataProvider(data: jpegData as CFData),
+              let cgImage = CGImage(jpegDataProviderSource: dataProvider, decode: nil, shouldInterpolate: true, intent: .defaultIntent) else {
+            return nil
+        }
+        
+        return cgImage
+    }
 }
 
 

@@ -91,7 +91,7 @@ final class ChatThemeSelectorView : View {
         
         let animated = !first
         first = false
-        
+        bubblesSwitch.autoswitch = false
         bubblesSwitch.setIsOn(bubbled)
         
         self.wallpaper = wallpaper
@@ -292,16 +292,17 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
         
         
         currentSelectedValue.set(chatTheme |> take(1) |> map { $0 })
-        
+        var temprorary: (String?, TelegramPresentationTheme)? = nil
+
         _ = (currentSelectedValue.get() |> take(1)).start(next: { [weak self] value in
             self?.currentSelected = value
+            temprorary = value
         })
         
         let animatedEmojiStickers = context.diceCache.animatedEmojies
-        var temprorary: (String?, TelegramPresentationTheme)?
         disposable.set(combineLatest(queue: .mainQueue(), themesAndThumbs, chatTheme, currentSelectedValue.get(), animatedEmojiStickers).start(next: { [weak self] themes, chatTheme, currentSelected, emojies in
             
-            let selected: (String?, TelegramPresentationTheme)? = temprorary ?? currentSelected
+            let selected: (String?, TelegramPresentationTheme)? = temprorary
             let bubbled = themes.1
                         
             self?.genericView.updateThemes(peer, themes.0, wallpaper: chatTheme.1.wallpaper, bubbled: bubbled, emojies: emojies, context: context, chatTheme: selected, previewCurrent: { preview in
@@ -329,7 +330,9 @@ final class ChatThemeSelectorController : TelegramGenericViewController<ChatThem
         
         genericView.selectBackground.set(handler: { [weak self] _ in
             if let wallpaper = self?.genericView.wallpaper {
-                showModal(with: ChatWallpaperModalController(context, selected: wallpaper.wallpaper, source: .chat(peer, nil)), for: context.window)
+                showModal(with: ChatWallpaperModalController(context, selected: wallpaper.wallpaper, source: .chat(peer, nil), onComplete: { [weak self] in
+                    self?.close(true)
+                }), for: context.window)
             }
         }, for: .Click)
         

@@ -271,7 +271,7 @@ private final class WallpaperPreviewView: View {
         
         addTableItems(context, source: source)
         
-        self.layout()
+      //  self.layout()
 
         
         blurCheckbox.onChangedValue = { [weak self] isSelected in
@@ -507,6 +507,13 @@ private final class WallpaperPreviewView: View {
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     
+    override var needsLayout: Bool {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
+    }
+    
     
     private func updateMode(_ mode: WallpaperColorSelectMode, animated: Bool) {
         self.colorPicker.updateMode(mode, animated: animated)
@@ -546,9 +553,7 @@ private final class WallpaperPreviewView: View {
         
       
 
-        
-        transition.updateFrame(view: tableView, frame: bounds)
-        
+                
         if let progressView = progressView {
             transition.updateFrame(view: progressView, frame: progressView.centerFrame())
         }
@@ -561,22 +566,20 @@ private final class WallpaperPreviewView: View {
         
        
         
-        let backgroundSize: NSSize
-        switch self.previewState  {
-        case .color:
-            backgroundSize = NSMakeSize(frame.width, frame.height - colorPickerSize.height)
-        case .pattern:
-            backgroundSize = NSMakeSize(frame.width, frame.height - patternsSize.height)
-        default:
-            backgroundSize = frame.size
-        }
+        let backgroundSize: NSSize = size
+//        switch self.previewState  {
+//        case .color:
+//            backgroundSize = NSMakeSize(frame.width, size.height - colorPickerSize.height)
+//        case .pattern:
+//            backgroundSize = NSMakeSize(frame.width, frame.height - colorPickerSize.height)
+//        default:
+//            backgroundSize = frame.size
+//        }
         transition.updateFrame(view: backgroundView, frame: backgroundSize.bounds)
         backgroundView.updateLayout(size: backgroundSize, transition: transition)
         
         switch previewState {
-        case .color, .pattern:
-            transition.updateFrame(view: documentView, frame: .init(origin: .init(x: 0, y: frame.height - colorPicker.frame.height - tableView.listHeight - 10), size: documentSize))
-            
+        case .color, .pattern:            
             let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, frame.height - colorPicker.frame.height - checkboxSize.height - 10), size: checkboxSize)
             
             transition.updateFrame(view: checkboxContainer, frame: checkboxRect)
@@ -584,7 +587,6 @@ private final class WallpaperPreviewView: View {
             let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, frame.height - checkboxSize.height - 10), size: checkboxSize)
             
             transition.updateFrame(view: checkboxContainer, frame: checkboxRect)
-            transition.updateFrame(view: documentView, frame: .init(origin: .init(x: 0, y: frame.height - tableView.listHeight - 10), size: documentSize))
 
             transition.updateFrame(view: colorPicker, frame: CGRect(origin: NSMakePoint(0, frame.height), size: colorPickerSize))
             
@@ -624,6 +626,13 @@ private final class WallpaperPreviewView: View {
             x += view.frame.width + 10
         }
 
+        switch previewState {
+        case .color, .pattern:
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: frame.height - colorPicker.frame.height - tableView.listHeight - 10 - 120), size: documentSize))
+        case .normal:
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: frame.height - tableView.listHeight - 10 - 120), size: documentSize))
+        }
+        
     }
     
     func updateModifyState(_ state: WallpaperPreviewState, animated: Bool) {

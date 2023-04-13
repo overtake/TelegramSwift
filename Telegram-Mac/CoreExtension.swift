@@ -2638,11 +2638,7 @@ func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, ref
     } else if settings.blur {
         resourceData = postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedBlurredWallpaperRepresentation(), complete: true)
     } else {
-        if let resource = resource as? LocalFileReferenceMediaResource {
-            return moveWallpaperToCache(postbox: postbox, path: resource.localFilePath, resource: resource, settings: settings)
-        } else {
-            resourceData = postbox.mediaBox.resourceData(resource)
-        }
+        resourceData = postbox.mediaBox.resourceData(resource)
     }
     
    
@@ -2709,7 +2705,7 @@ extension WallpaperSettings {
     }
 }
 
-func wallpaperPath(_ resource: TelegramMediaResource, settings: WallpaperSettings) -> String {
+func wallpaperPath(_ resource: TelegramMediaResource, palette: ColorPalette = theme.colors, settings: WallpaperSettings) -> String {
     return ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + ".png"
 }
 

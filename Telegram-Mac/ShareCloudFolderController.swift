@@ -81,7 +81,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if !state.isEmpty {
         titleText = strings().shareFolderTitleTextCountable(name, state.selected.count)
     } else {
-        titleText = strings().shareFolderTitleEmpty
+        titleText = strings().shareFolderTitleTextEmpty
     }
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
@@ -242,18 +242,16 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         
         let peerIds = ((link?.peerIds ?? []) + data.includePeers.peers).uniqueElements
 
-        let peers: Signal<[PeerEquatable], NoError> = context.account.postbox.transaction { transaction -> [PeerEquatable] in
-            var peers:[PeerEquatable] = []
-            
-            
-            for peerId in peerIds {
-                if let peer = transaction.getPeer(peerId) {
-                    peers.append(.init(peer))
+        let peers = combineLatest(peerIds.map {  getPeerView(peerId: $0, postbox: context.account.postbox) }) |> map {
+            return $0.compactMap(PeerEquatable.init).filter { peer in
+                if let peer = peer.peer as? TelegramGroup {
+                    return peer.migrationReference == nil
+                } else {
+                    return true
                 }
             }
-            return peers
         } |> deliverOnMainQueue
-        
+    
         let participantCount = context.engine.data.get(EngineDataMap(peerIds.map(TelegramEngine.EngineData.Item.Peer.ParticipantCount.init(id:))))
 
         

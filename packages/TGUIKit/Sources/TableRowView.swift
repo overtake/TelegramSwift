@@ -249,6 +249,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
 
+    open func canAnimateUpdate(_ item: TableRowItem) -> Bool {
+        return true
+    }
     
     open func showContextMenu(_ event:NSEvent) -> Void {
         

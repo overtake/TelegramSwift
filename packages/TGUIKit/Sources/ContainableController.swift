@@ -186,6 +186,7 @@ public extension ContainedViewLayoutTransition {
             }
             animatePos(layer)
             animateSize(layer)
+            layer.frame = frame
             
             CATransaction.commit()
         }

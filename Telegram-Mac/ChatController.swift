@@ -2318,8 +2318,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             case loading 
         }
         
-        let wallpaper: Signal<TelegramWallpaper?, NoError> = self.peerView.get() |> map {
-            return (($0 as? PeerView)?.cachedData as? CachedUserData)?.wallpaper
+        
+        var uploadingPeerMedia = context.account.pendingPeerMediaUploadManager.uploadingPeerMedia
+        uploadingPeerMedia = .single([:]) |> then(uploadingPeerMedia)
+        
+        let wallpaper: Signal<TelegramWallpaper?, NoError> = combineLatest(uploadingPeerMedia, self.peerView.get()) |> map { uploading, peerView in
+            if let content = uploading[peerId]?.content {
+                switch content {
+                case let .wallpaper(wallpaper):
+                    return wallpaper
+                }
+            }
+            if let peerView = peerView as? PeerView {
+                return (peerView.cachedData as? CachedUserData)?.wallpaper
+            }
+            return nil
         } |> distinctUntilChanged
         
         
