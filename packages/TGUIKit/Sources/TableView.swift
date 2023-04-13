@@ -904,6 +904,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 //        self.tableView.autoresizingMask = [.height]
 //        self.autoresizingMask = [.width, .height]
         
+
+        
         self.tableView.delegate = self;
         self.tableView.dataSource = self;
         self.tableView.sdelegate = self

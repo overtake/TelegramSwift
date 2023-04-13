@@ -31,6 +31,14 @@ public func ==(lhs:ScrollPosition, rhs:ScrollPosition) -> Bool {
     return NSEqualRects(lhs.rect, rhs.rect) && lhs.direction == rhs.direction && NSEqualRanges(lhs.visibleRows, rhs.visibleRows)
 }
 
+final class Scroller : NSScroller {
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.clear.set()
+        dirtyRect.fill()
+        self.drawKnob()
+    }
+}
+
 open class ScrollView: NSScrollView{
     private var currentpos:ScrollPosition = ScrollPosition()
     public var deltaCorner:Int64 = 60
@@ -141,8 +149,13 @@ open class ScrollView: NSScrollView{
         //self.hasVerticalScroller = false
         
        // self.scrollerStyle = .overlay
+         if NSScroller.preferredScrollerStyle == .legacy {
+             self.verticalScroller = Scroller()
+         }
  
     }
+    
+    
     
     open override func draw(_ dirtyRect: NSRect) {
         
