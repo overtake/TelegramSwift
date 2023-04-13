@@ -88,8 +88,10 @@ open class BackgroundView: View {
             self.tile = tile
         }
         
+        var validLayout: CGRect? = nil
         
         func update(frame: NSRect, transition: ContainedViewLayoutTransition) {
+            
             
             var rects:[CGRect] = []
             var frame = frame
@@ -116,7 +118,7 @@ open class BackgroundView: View {
                         self.tileLayers.removeLast().removeFromSuperlayer()
                     }
                     while self.tileLayers.count < rects.count {
-                        let layer = CALayer()
+                        let layer = SimpleLayer()
 //                        layer.disableActions()
                         self.tileLayers.append(layer)
                     }
@@ -217,6 +219,7 @@ open class BackgroundView: View {
             if oldValue != backgroundMode {
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
+                tileControl.validLayout = nil
                 var backgroundView: NSView? = nil
                 switch backgroundMode {
                 case let .background(image, intensity, colors, rotation):
@@ -324,11 +327,11 @@ open class BackgroundView: View {
     }
     
     public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(layer: imageView, frame: bounds)
-        transition.updateFrame(view: container, frame: bounds)
-        tileControl.update(frame: bounds, transition: transition)
+        transition.updateFrame(layer: imageView, frame: size.bounds)
+        transition.updateFrame(view: container, frame: size.bounds)
+        tileControl.update(frame: size.bounds, transition: transition)
         if let backgroundView = backgroundView {
-            transition.updateFrame(view: backgroundView, frame: bounds)
+            transition.updateFrame(view: backgroundView, frame: size.bounds)
             if let backgroundView = backgroundView as? AnimatedGradientBackgroundView {
                 backgroundView.updateLayout(size: size, transition: transition)
             }

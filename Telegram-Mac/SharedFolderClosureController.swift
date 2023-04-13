@@ -951,7 +951,7 @@ func deleteSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void
     
     let includePeers: Signal<[Peer], NoError> = context.engine.data.get(
         EngineDataList(filter.data!.includePeers.peers.map(TelegramEngine.EngineData.Item.Peer.Peer.init(id:)))) |> map {
-            $0.compactMap { $0?._asPeer() }
+            $0.compactMap { $0?._asPeer() }.filter { $0.isChannel || $0.isSupergroup || $0.isGroup }
         }
     
     let defaultPeers:Signal<[PeerId], NoError> = context.engine.peers.requestLeaveChatFolderSuggestions(folderId: filter.id)

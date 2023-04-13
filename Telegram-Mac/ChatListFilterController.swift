@@ -1166,13 +1166,16 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                                     var filter = current.filter
                                     var data = data
                                     data.isShared = true
+                                    for peerId in link.peerIds.reversed() {
+                                        _ = data.includePeers.addPeer(peerId)
+                                    }
                                     filter = filter.withUpdatedData(data)
                                     current.filter = filter
                                     current.initialFilter = filter
                                     return current
                                 }
                                 save(false)
-                                showModal(with: ShareCloudFolderController(context: context, filter: filter, link: link, updated: updateLink), for: context.window)
+                                showModal(with: ShareCloudFolderController(context: context, filter: stateValue.with { $0.filter }, link: link, updated: updateLink), for: context.window)
                             }, error: { error in
                                 
                                 switch error {

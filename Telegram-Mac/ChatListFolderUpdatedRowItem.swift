@@ -59,12 +59,20 @@ private final class ChatListFolderUpdatedRowItemView : TableRowView {
         
         
         control.border = [.Bottom]
+        next.scaleOnClick = true
         
         control.set(handler: { [weak self] control in
             if let item = self?.item as? GeneralRowItem {
                 item.action()
             }
         }, for: .Click)
+        
+        next.set(handler: { [weak self] _ in
+            if let item = self?.item as? ChatListFolderUpdatedRowItem {
+                item.hide()
+            }
+        }, for: .Click)
+        
     }
     
     
@@ -96,6 +104,7 @@ private final class ChatListFolderUpdatedRowItemView : TableRowView {
         next.set(image: theme.icons.modalClose, for: .Normal)
         next.sizeToFit()
         
+       
         needsLayout = true
     }
 }

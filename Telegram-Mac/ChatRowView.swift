@@ -1736,11 +1736,27 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
+    override func canAnimateUpdate(_ item: TableRowItem) -> Bool {
+        guard let item = item as? ChatRowItem else {
+            return false
+        }
+        
+        let previous = self.item as? ChatRowItem
+        
+        if item.presentation.bubbled != previous?.presentation.bubbled {
+            return false
+        }
+        
+        return super.canAnimateUpdate(item)
+    }
+    
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         super.updateLayout(size: size, transition: transition)
         guard let item = item as? ChatRowItem else {
             return
         }
+        
+        
         hasBeenLayout = true
                 
         transition.updateFrame(view: bubbleView, frame: bubbleFrame(item))
