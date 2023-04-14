@@ -1847,7 +1847,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
 
                     }
                     let keys = peerIds.map {PostboxViewKey.peer(peerId: $0, components: .all)}
-                    return combineLatest(context.account.postbox.combinedView(keys: keys), context.account.postbox.loadedPeerWithId(context.peerId)) |> map { values, selfPeer in
+                    return combineLatest(context.account.postbox.combinedView(keys: keys), context.account.postbox.loadedPeerWithId(context.peerId)) |> map { values, selfPeer -> (EngineChatList, FilterData, [PeerId: PeerStatusStringResult], Peer) in
                         var presences:[PeerId: PeerStatusStringResult] = [:]
                         for value in values.views {
                             if let view = value.value as? PeerView {
@@ -1857,6 +1857,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         return (chatList.0, chatList.1, presences, selfPeer)
                     } |> deliverOn(prepareQueue) |> take(1) |> map { value -> TableUpdateTransition in
                         var entries:[SelectablePeersEntry] = []
+                        
+                        
                         
                         var contains:[PeerId:PeerId] = [:]
                         
