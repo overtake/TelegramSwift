@@ -2379,7 +2379,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         |> distinctUntilChanged
         |> deliverOnMainQueue
         
-        presentationDisposable.add(combineLatest(effectiveTheme, themeWallpaper).start(next: { [weak self] presentation, wallpaper in
+        let appearanceReady: ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
+        
+        if chatLocation.peerId.namespace != Namespaces.Peer.SecretChat, chatLocation.peerId != context.peerId, mode != .pinned, mode != .scheduled {
+            self.liveTranslate = .init(peerId: chatLocation.peerId, context: context)
+        } else {
+            self.liveTranslate = nil
+        }
+        
+        
+        let translateSignal: Signal<ChatLiveTranslateContext.State?, NoError>
+        if let liveTranslate = self.liveTranslate {
+            translateSignal = liveTranslate.state
+            |> map(Optional.init)
+        } else {
+            translateSignal = .single(nil)
+        }
+      
+        presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal).start(next: { [weak self] presentation, wallpaper, translate in
             let emoticon = presentation.emoticon
             let theme = presentation.theme
             let genuie = presentation.genuie
@@ -2387,6 +2404,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var current = current
                 current.presentation_emoticon = emoticon
                 current.presentation_genuie = genuie
+                current.translate = translate
                 switch wallpaper {
                 case let .result(result):
                     current.presentation = theme
@@ -2411,6 +2429,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let presentation = self?.uiState.with { ($0.presentation_emoticon, $0.presentation )}
             if let presentation = presentation {
                 self?.chatThemeValue.set(.single(presentation))
+            }
+            appearanceReady.set(true)
+            if let state = translate {
+                self?.chatInteraction.update({ current in
+                    return current.withUpdatedTranslateState(.init(canTranslate: state.canTranslate, translate: state.translate, from: state.from, to: state.to, paywall: state.paywall, result: state.result))
+                })
+                self?.genericView.tableView.notifyScrollHandlers()
             }
         }))
         
@@ -5282,13 +5307,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             (self?.centerBarView as? ChatTitleBarView)?.connectionStatus = status
         }
         
-        let combine = combineLatest(queue: .mainQueue(), _historyReady.get() , peerView.get() |> take(1) |> map { _ in } |> then(initialData), genericView.inputView.ready.get())
+        let combine = combineLatest(queue: .mainQueue(), _historyReady.get(), appearanceReady.get(), peerView.get() |> take(1) |> map { _ in } |> then(initialData), genericView.inputView.ready.get())
         
         
         //self.ready.set(.single(true))
         
-        self.ready.set(combine |> map { (hReady, _, iReady) in
-            return hReady && iReady
+        self.ready.set(combine |> map { (hReady, appearanceReady, _, iReady) in
+            return hReady && iReady && appearanceReady
         })
         
         
@@ -5684,22 +5709,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         pollChannelDiscussionDisposable.set(discussion.start())
         
         
-        
-        if let liveTranslate = liveTranslate {
-            let signal = liveTranslate.state
-            |> deliverOnMainQueue
-            liveTranslateDisposable.set(signal.start(next: { [weak self] state in
-                self?.updateState { current in
-                    var current = current
-                    current.translate = state
-                    return current
-                }
-                self?.chatInteraction.update({ current in
-                    return current.withUpdatedTranslateState(.init(canTranslate: state.canTranslate, translate: state.translate, from: state.from, to: state.to, paywall: state.paywall, result: state.result))
-                })
-                self?.genericView.tableView.notifyScrollHandlers()
-            }))
-        }
+       
         
         let count = 50
         let location:ChatHistoryLocation
@@ -5878,6 +5888,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         let wasEmpty = genericView.tableView.isEmpty
+        self.updateBackgroundColor(processedView.theme.controllerBackgroundMode)
 
         initialDataHandler.set(.single(initialData))
         
@@ -5916,7 +5927,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         genericView.tableView.merge(with: transition, appearAnimated: appearAnimated)
         collectFloatingPhotos(animated: animated && !transition.isEmpty, currentAnimationRows: currentAnimationRows)
 
-        self.updateBackgroundColor(processedView.theme.controllerBackgroundMode)
         
         genericView.chatTheme = processedView.theme
                    
@@ -7093,11 +7103,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.adMessages = nil
         }
         
-        if chatLocation.peerId.namespace != Namespaces.Peer.SecretChat, chatLocation.peerId != context.peerId, mode != .pinned, mode != .scheduled {
-            self.liveTranslate = .init(peerId: chatLocation.peerId, context: context)
-        } else {
-            self.liveTranslate = nil
-        }
+        
        
         var takeTableItem:((MessageId)->ChatRowItem?)? = nil
         
