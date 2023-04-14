@@ -116,6 +116,9 @@ final class MenuView: Control, TableViewDelegate {
         if #available(macOS 11.0, *) {
             addSubview(visualView)
         }
+        
+        tableView.verticalScroller = nil
+        
         addSubview(backgroundView)
         addSubview(tableView)
         self.visualView.wantsLayer = true

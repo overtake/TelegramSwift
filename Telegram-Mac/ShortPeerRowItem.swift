@@ -96,6 +96,9 @@ final class SelectPeerInteraction : InterfaceObserver {
     var action:(PeerId, Int64?)->Void = { _, _ in }
     var openForum:(PeerId)->Void = { _ in }
     var singleUpdater:((SelectPeerPresentation)->Void)? = nil
+    
+    var updateFolder:((ChatListFilter)->Void)? = nil
+    
     func update(animated:Bool = true, _ f:(SelectPeerPresentation)->SelectPeerPresentation)->Void {
         let oldValue = self.presentation
         presentation = f(presentation)
