@@ -195,6 +195,7 @@ final class WallpaperCheckboxView : Control {
         }
         set {
             _isSelected = newValue
+            self.checkbox.set(isSelected: newValue, animated: false)
             self.update(by: self.bgcolor)
         }
     }

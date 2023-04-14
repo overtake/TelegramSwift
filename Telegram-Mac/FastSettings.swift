@@ -164,7 +164,7 @@ class FastSettings {
     private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
 
     
-    
+
     
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
@@ -515,6 +515,32 @@ class FastSettings {
     
     static func setSecretChatWebPreviewAvailable(for accountId: Int64, value: Bool) -> Void {
         UserDefaults.standard.set(value, forKey: "IsSecretChatWebPreviewAvailable_\(accountId)")
+        UserDefaults.standard.synchronize()
+    }
+    
+    
+    private static let kDefaultScreenShareKey = "kDefaultScreenShare"
+    private static let kDefaultVideoShare = "kDefaultVideoShare"
+    static func defaultScreenShare() -> String? {
+        return UserDefaults.standard.value(forKey: kDefaultScreenShareKey) as? String
+    }
+    static func setDefaultScreenShare(_ uniqueId: String?) -> Void {
+        if let uniqueId = uniqueId {
+            UserDefaults.standard.set(uniqueId, forKey: kDefaultScreenShareKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: kDefaultScreenShareKey)
+        }
+        UserDefaults.standard.synchronize()
+    }
+    static func defaultVideoShare() -> String? {
+        return UserDefaults.standard.value(forKey: kDefaultVideoShare) as? String
+    }
+    static func setDefaultVideoShare(_ uniqueId: String?) -> Void {
+        if let uniqueId = uniqueId {
+            UserDefaults.standard.set(uniqueId, forKey: kDefaultVideoShare)
+        } else {
+            UserDefaults.standard.removeObject(forKey: kDefaultVideoShare)
+        }
         UserDefaults.standard.synchronize()
     }
     
