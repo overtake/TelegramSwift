@@ -942,22 +942,25 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case "web_app_switch_inline_query":
             if let interaction = chatInteraction, let data = self.requestData {
                 if data.isInline == true, let json = json, let query = json["query"] as? String {
-                    self.close()
                     let address = (data.bot.addressName ?? "")
                     let inputQuery = "@\(address)" + " " + query
 
                     if let chatTypes = json["chat_types"] as? [String], !chatTypes.isEmpty {
-                        let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { peerId, threadId in
+                        let controller = ShareModalController(SharefilterCallbackObject(context, limits: chatTypes, callback: { [weak self] peerId, threadId in
                             let action: ChatInitialAction = .inputText(text: inputQuery, behavior: .automatic)
                             if let threadId = threadId {
                                 _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: peerId, context: context, animated: true, addition: true, initialAction: action).start()
                             } else {
                                 context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: action))
                             }
+                            self?.needCloseConfirmation = false
+                            self?.close()
                             return .complete()
                         }))
                         showModal(with: controller, for: context.window)
                     } else {
+                        self.needCloseConfirmation = false
+                        self.close()
                         interaction.updateInput(with: inputQuery)
                     }
                 }

@@ -833,8 +833,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         self.controller = controller
         
-        let prevBackgroundView = containerView.copy() as! NSView
-        let nextBackgroundView = containerView.copy() as! NSView
+        let prevBackgroundView = containerView.copy(previous.bgMode)
+        let nextBackgroundView = containerView.copy(controller.bgMode)
         
         if !previous.isOpaque {
             previous.view.addSubview(prevBackgroundView, positioned: .below, relativeTo: previous.view.subviews.first)
