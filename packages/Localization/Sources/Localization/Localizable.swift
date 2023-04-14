@@ -3123,6 +3123,8 @@ public final class L10n {
   public static var chatSecretChatPreviewText: String  { return L10n.tr("Localizable", "Chat.SecretChat.Preview.Text") }
   /// Schedule a Message
   public static var chatSendScheduledMessage: String  { return L10n.tr("Localizable", "Chat.Send.ScheduledMessage") }
+  /// Send When Online
+  public static var chatSendSendWhenOnline: String  { return L10n.tr("Localizable", "Chat.Send.SendWhenOnline") }
   /// Set a Reminder
   public static var chatSendSetReminder: String  { return L10n.tr("Localizable", "Chat.Send.SetReminder") }
   /// Send Without Sound
@@ -10819,27 +10821,27 @@ public final class L10n {
   public static func shareFolderTitleTextCountable(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "ShareFolder.Title.Text_countable", p1, p2)
   }
-  /// Anyone with this link can add **(%1$@)** folder and the %2$d chats selected below.
+  /// Anyone with this link can add **%1$@** folder and the %2$d chats selected below.
   public static func shareFolderTitleTextFew(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "ShareFolder.Title.Text_few", p1, p2)
   }
-  /// Anyone with this link can add **(%1$@)** folder and the %2$d chats selected below.
+  /// Anyone with this link can add **%1$@** folder and the %2$d chats selected below.
   public static func shareFolderTitleTextMany(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "ShareFolder.Title.Text_many", p1, p2)
   }
-  /// Anyone with this link can add **(%1$@)** folder and the %2$d chat selected below.
+  /// Anyone with this link can add **%1$@** folder and the %2$d chat selected below.
   public static func shareFolderTitleTextOne(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "ShareFolder.Title.Text_one", p1, p2)
   }
-  /// Anyone with this link can add **(%1$@)** folder and the %2$d chats selected below.
+  /// Anyone with this link can add **%1$@** folder and the %2$d chats selected below.
   public static func shareFolderTitleTextOther(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "ShareFolder.Title.Text_other", p1, p2)
   }
-  /// Anyone with this link can add **(%1$@)** folder and the %2$d chats selected below.
+  /// Anyone with this link can add **%1$@** folder and the %2$d chats selected below.
   public static func shareFolderTitleTextTwo(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "ShareFolder.Title.Text_two", p1, p2)
   }
-  /// Anyone with this link can add **(%1$@)** folder and the %2$d chats selected below.
+  /// Anyone with this link can add **%1$@** folder and the %2$d chats selected below.
   public static func shareFolderTitleTextZero(_ p1: String, _ p2: Int) -> String {
     return L10n.tr("Localizable", "ShareFolder.Title.Text_zero", p1, p2)
   }

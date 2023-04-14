@@ -979,14 +979,18 @@ final class GroupCallUIController : ViewController {
                     let deviceId = sharedContext.devicesContext.currentCameraId
                     
                     actionsDisposable.add(devicesSignal.start(next: { devices in
-                        let device = devices.camera.first(where: { deviceId == $0.uniqueID })
+                        let preselectedDevice = devices.camera.first(where: { FastSettings.defaultVideoShare() == $0.uniqueID })
+                        let device = preselectedDevice ?? devices.camera.first(where: { deviceId == $0.uniqueID })
                         if let device = device {
                             select(CameraCaptureDevice(device))
                         }
                     }))
                 case .screencast:
                     let screens = DesktopCaptureSourceManagerMac(_s: ())
-                    if let first = screens.list().first {
+                    let windows = DesktopCaptureSourceManagerMac(_w: ())
+                    let sf = screens.list().first(where: { $0.uniqueKey() == FastSettings.defaultScreenShare() })
+                    let wf = windows.list().first(where: { $0.uniqueKey() == FastSettings.defaultScreenShare() })
+                    if let first = sf ?? wf ?? screens.list().first {
                         select(first)
                     }
                 }
