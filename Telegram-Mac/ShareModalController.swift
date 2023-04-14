@@ -14,6 +14,7 @@ import Localization
 import Postbox
 import TGModernGrowingTextView
 import KeyboardKey
+import InAppSettings
 
 fileprivate class ShareButton : Control {
     private var badge: BadgeNode?
@@ -241,6 +242,9 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         self.tableView.scroll(to: .up(false))
         self.tableView.merge(with: transition)
         self.tableView.cancelHighlight()
+        
+        let item = self.tableView.item(stableId: UIChatListEntryId.reveal)
+        self.topSeparator.change(opacity: item != nil ? 0 : 1, animated: transition.animated)
     }
     
     private var forumTopicItems:[ForumTopicItem] = []
@@ -699,7 +703,7 @@ class ShareCallbackObject : ShareObject {
     }
     
     override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
-        return callback(peerIds) |> mapError { _ in return String() }
+        return callback(peerIds) |> castError(String.self)
     }
     
 }
@@ -725,7 +729,7 @@ class ShareCallbackPeerTypesObject : ShareObject {
     }
     
     override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
-        return callback(peerIds) |> mapError { _ in return String() }
+        return callback(peerIds) |> castError(String.self)
     }
     
     override func possibilityPerformTo(_ peer: Peer) -> Bool {
@@ -1076,6 +1080,7 @@ enum SelectablePeersEntryStableId : Hashable {
     case plain(PeerId, ChatListIndex)
     case emptySearch
     case separator(ChatListIndex)
+    case folders
     var hashValue: Int {
         switch self {
         case let .plain(peerId, _):
@@ -1084,11 +1089,14 @@ enum SelectablePeersEntryStableId : Hashable {
             return index.hashValue
         case .emptySearch:
             return 0
+        case .folders:
+            return -1
         }
     }
 }
 
 enum SelectablePeersEntry : Comparable, Identifiable {
+    case folders([ChatListFilter], ChatListFilter)
     case secretChat(Peer, PeerId, ChatListIndex, PeerStatusStringResult?, Bool, Bool)
     case plain(Peer, ChatListIndex, PeerStatusStringResult?, Int32?, Bool, Bool)
     case separator(String, ChatListIndex)
@@ -1103,6 +1111,8 @@ enum SelectablePeersEntry : Comparable, Identifiable {
             return .separator(index)
         case .emptySearch:
             return .emptySearch
+        case .folders:
+            return .folders
         }
     }
     
@@ -1116,6 +1126,8 @@ enum SelectablePeersEntry : Comparable, Identifiable {
             return index
         case .emptySearch:
             return ChatListIndex(pinningIndex: nil, messageIndex: MessageIndex.absoluteLowerBound())
+        case .folders:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())
         }
     }
 }
@@ -1140,6 +1152,12 @@ func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
         }
     case let .separator(text, index):
         if case .separator(text, index) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .folders(filters, current):
+        if case .folders(filters, current) = rhs {
             return true
         } else {
             return false
@@ -1184,6 +1202,8 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
             return SeparatorRowItem(initialSize, entry.stableId, string: text)
         case .emptySearch:
             return SearchEmptyRowItem(initialSize, stableId: entry.stableId)
+        case let .folders(filters, current):
+            return ChatListRevealItem(initialSize, context: context, tabs: filters, selected: current, counters: ChatListFilterBadges(total: 0, filters: []), action: selectInteraction.updateFolder)
         }
         
         
@@ -1207,6 +1227,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     private let disposable:MetaDisposable = MetaDisposable()
     private let exportLinkDisposable:MetaDisposable = MetaDisposable()
     private let tokenDisposable: MetaDisposable = MetaDisposable()
+    private let filterDisposable = MetaDisposable()
     
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
     private let inputContextHelper: InputContextHelper
@@ -1568,7 +1589,6 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         
         let initialSize = self.atomicSize.modify({$0})
-        let request = Promise<ChatListIndexRequest>()
         let context = self.share.context
         let share = self.share
         let selectInteraction = self.selectInteractions
@@ -1682,7 +1702,6 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
 
         }))
         
-        let previousChatList:Atomic<ChatListView?> = Atomic(value: nil)
 
         
         
@@ -1706,7 +1725,53 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         }
         
         
-        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, request.get() |> distinctUntilChanged, search.get() |> distinctUntilChanged, forumPeerId.get(), multipleSelection.get()) |> mapToSignal { location, query, forumPeerId, multipleSelection -> Signal<TableUpdateTransition, NoError> in
+        
+        let filter = ValuePromise<FilterData>(ignoreRepeated: true)
+        let filterValue = Atomic<FilterData>(value: FilterData(filter: .allChats, tabs: [], sidebar: false, request: .Initial(50, nil)))
+        
+        func updateFilter(_ f:(FilterData)->FilterData) {
+            let previous = filterValue.with { $0 }
+            let data = filterValue.modify(f)
+            if previous.filter != data.filter {
+                self.genericView.tableView.scroll(to: .up(true))
+            }
+            filter.set(data)
+        }
+        
+        var first: Bool = true
+        let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue
+        filterDisposable.set(filterView.start(next: { filters in
+            updateFilter( { current in
+                var current = current
+                current = current.withUpdatedTabs(filters.list)
+                if !first, let updated = filters.list.first(where: { $0.id == current.filter.id }) {
+                    current = current.withUpdatedFilter(updated)
+                } else {
+                    current = current.withUpdatedFilter(nil)
+                }
+                return current
+            } )
+            first = false
+        }))
+        
+        genericView.tableView.set(stickClass: ChatListRevealItem.self, handler: { _ in
+            
+        })
+        
+        selectInteraction.updateFolder = { filter in
+            updateFilter {
+                $0.withUpdatedFilter(filter)
+            }
+        }
+        
+        let chatList: Signal<(EngineChatList, FilterData), NoError> = filter.get() |> mapToSignal { data in
+            let signal = chatListViewForLocation(chatListLocation: .chatList(groupId: .root), location: data.request, filter: data.filter, account: context.account) |> take(1)
+            return  signal |> map { view in
+                return (view.list, data)
+            }
+        }
+        
+        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, search.get() |> distinctUntilChanged, forumPeerId.get(), multipleSelection.get(), chatList) |> mapToSignal { query, forumPeerId, multipleSelection, chatList -> Signal<TableUpdateTransition, NoError> in
             
             if query.request.isEmpty || query.state == .None {
                 if !multipleSelection && query.state == .Focus && forumPeerId == nil {
@@ -1776,46 +1841,20 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                     } |> take(1)
                 } else {
-                    var signal:Signal<(ChatListView,ViewUpdateType), NoError>
-                    
-                    
-                    switch(location) {
-                    case let .Initial(count, _):
-                        signal = context.account.viewTracker.tailChatListView(groupId: .root, filterPredicate: nil, count: count) |> take(1)
-                    case let .Index(index, _):
-                        switch index {
-                        case let .chatList(index):
-                            signal = context.account.viewTracker.aroundChatListView(groupId: .root, filterPredicate: nil, index: index, count: 30) |> take(1)
-                        case .forum:
-                            signal = .never()
-                        }
+                    var peerIds:[PeerId] = []
+                    for entry in chatList.0.items {
+                        peerIds.append(entry.renderedPeer.peerId)
+
                     }
-                    
-                    return signal |> deliverOnPrepareQueue |> mapToSignal { value -> Signal<(ChatListView,ViewUpdateType, [PeerId: PeerStatusStringResult], Peer), NoError> in
-                        var peerIds:[PeerId] = []
-                        for entry in value.0.entries {
-                            switch entry {
-                            case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
-                                peerIds.append(renderedPeer.peerId)
-                            default:
-                                break
+                    let keys = peerIds.map {PostboxViewKey.peer(peerId: $0, components: .all)}
+                    return combineLatest(context.account.postbox.combinedView(keys: keys), context.account.postbox.loadedPeerWithId(context.peerId)) |> map { values, selfPeer in
+                        var presences:[PeerId: PeerStatusStringResult] = [:]
+                        for value in values.views {
+                            if let view = value.value as? PeerView {
+                                presences[view.peerId] = stringStatus(for: view, context: context)
                             }
                         }
-                        
-                        _ = previousChatList.swap(value.0)
-                        
-                        let keys = peerIds.map {PostboxViewKey.peer(peerId: $0, components: .all)}
-                        return combineLatest(context.account.postbox.combinedView(keys: keys), context.account.postbox.loadedPeerWithId(context.peerId)) |> map { values, selfPeer in
-                            var presences:[PeerId: PeerStatusStringResult] = [:]
-                            for value in values.views {
-                                if let view = value.value as? PeerView {
-                                    presences[view.peerId] = stringStatus(for: view, context: context)
-                                }
-                            }
-                            
-                            return (value.0, value.1, presences, selfPeer)
-                            
-                        } |> take(1)
+                        return (chatList.0, chatList.1, presences, selfPeer)
                     } |> deliverOn(prepareQueue) |> take(1) |> map { value -> TableUpdateTransition in
                         var entries:[SelectablePeersEntry] = []
                         
@@ -1849,26 +1888,28 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                             contains[value.3.id] = value.3.id
                         }
                         
-                        for entry in value.0.entries {
-                            switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _, _, autoremoveTimeout):
-                                if let main = renderedPeer.peer {
-                                    if contains[main.id] == nil {
-                                        if share.possibilityPerformTo(main) {
-                                            if let peer = renderedPeer.chatMainPeer {
-                                                if main.id.namespace == Namespaces.Peer.SecretChat {
-                                                    entries.append(.secretChat(peer, main.id, id, value.2[peer.id], true, multipleSelection))
-                                                } else {
-                                                    entries.append(.plain(peer, id, value.2[peer.id], autoremoveTimeout, true, multipleSelection))
-                                                }
+                        for item in value.0.items {
+                            if let main = item.renderedPeer.peer?._asPeer() {
+                                if contains[main.id] == nil {
+                                    if share.possibilityPerformTo(main) {
+                                        if let peer = item.renderedPeer.chatMainPeer?._asPeer() {
+                                            if main.id.namespace == Namespaces.Peer.SecretChat {
+                                                entries.append(.secretChat(peer, main.id, item.chatListIndex, value.2[peer.id], true, multipleSelection))
+                                            } else {
+                                                entries.append(.plain(peer, item.chatListIndex, value.2[peer.id], item.autoremoveTimeout, true, multipleSelection))
                                             }
-                                            contains[main.id] = main.id
                                         }
+                                        contains[main.id] = main.id
                                     }
                                 }
-                            default:
-                                break
                             }
+                        }
+                        
+                        if !value.1.isEmpty {
+                            entries.append(.folders(value.1.tabs, value.1.filter))
+                        } else {
+                            var bp = 0
+                            bp += 1
                         }
                         
                         entries.sort(by: <)
@@ -1880,7 +1921,6 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 
             } else if forumPeerId == nil {
                 
-                _ = previousChatList.swap(nil)
                 
                 var all = query.request.transformKeyboard
                 all.insert(query.request.lowercased(), at: 0)
@@ -1944,6 +1984,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                             entries.append(.emptySearch)
                         }
                     
+                        
+                    
                         entries.sort(by: <)
                     
                         return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: false, multipleSelection: multipleSelection, selectInteraction:selectInteraction, share: share)
@@ -1970,9 +2012,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             self?.genericView.applyTransition(transition)
             self?.readyOnce()
         }))
-        
-        request.set(.single(.Initial(100, nil)))
-        
+                
         
     }
     
@@ -2299,6 +2339,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         tokenDisposable.dispose()
         exportLinkDisposable.dispose()
         forumDisposable.dispose()
+        filterDisposable.dispose()
     }
     
 }
