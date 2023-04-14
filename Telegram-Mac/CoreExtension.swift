@@ -976,9 +976,7 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
     
     if let peer = message.peers[message.id.peerId] as? TelegramUser {
         if peer.isUser, let timer = message.autoremoveAttribute {
-            if !chatInteraction.hasSetDestructiveTimer {
-                return false
-            } else if timer.timeout <= 60 {
+            if timer.timeout <= 60 {
                 return false;
             }
         }

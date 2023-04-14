@@ -346,6 +346,15 @@ open class BackgroundView: View {
         view.updateLayout(size: view.frame.size, transition: .immediate)
         return view
     }
+    
+    open func copy(_ backgroundMode: TableBackgroundMode?) -> BackgroundView {
+        let view = BackgroundView(frame: self.frame)
+        view.isCopy = true
+        view.backgroundMode = backgroundMode ?? self.backgroundMode
+        view.useSharedAnimationPhase = true
+        view.updateLayout(size: view.frame.size, transition: .immediate)
+        return view
+    }
 }
 
 
@@ -684,8 +693,10 @@ open class ViewController : NSObject {
             viewDidResized(frame.size)
         }
     }
+    public private(set) var bgMode: TableBackgroundMode?
     
     open func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
+        self.bgMode = backgroundMode
         switch backgroundMode {
         case .background, .gradient:
             backgroundColor = .clear
