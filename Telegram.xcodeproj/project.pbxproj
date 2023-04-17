@@ -595,6 +595,7 @@
 		27E070FF27906B8C0026BFA1 /* UniversalSoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E070FE27906B8B0026BFA1 /* UniversalSoftwareVideoSource.swift */; };
 		27E0710127906B9B0026BFA1 /* SoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E0710027906B9A0026BFA1 /* SoftwareVideoSource.swift */; };
 		27E5C3BD2739761300C52BA0 /* MurMurHash32 in Frameworks */ = {isa = PBXBuildFile; productRef = 27E5C3BC2739761300C52BA0 /* MurMurHash32 */; };
+		27E60C1129ED35E200E10E39 /* menu_online.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E60C1029ED35E200E10E39 /* menu_online.tgs */; };
 		27E6DB0A2689C71E003D6164 /* MetalFunctions.metal in Sources */ = {isa = PBXBuildFile; fileRef = 27E6DB092689C71E003D6164 /* MetalFunctions.metal */; };
 		27E78DEB2743EEF6002D5A23 /* CrashHandler in Frameworks */ = {isa = PBXBuildFile; productRef = 27E78DEA2743EEF6002D5A23 /* CrashHandler */; };
 		27E7E49E270DFED900CF3A24 /* request_join_link.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E7E49D270DFED900CF3A24 /* request_join_link.tgs */; };
@@ -1992,6 +1993,8 @@
 		27E5997F261B404000228411 /* CurrencyLocale.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyLocale.swift; sourceTree = "<group>"; };
 		27E5C3BB273975D600C52BA0 /* MurMurHash32 */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MurMurHash32; path = "submodules/telegram-ios/submodules/MurMurHash32"; sourceTree = "<group>"; };
 		27E5C3BE27397C5200C52BA0 /* sqlcipher */ = {isa = PBXFileReference; lastKnownFileType = folder; name = sqlcipher; path = "submodules/telegram-ios/submodules/sqlcipher"; sourceTree = "<group>"; };
+		27E60C0F29ED272800E10E39 /* Emoji */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = Emoji; path = "submodules/telegram-ios/submodules/Emoji"; sourceTree = "<group>"; };
+		27E60C1029ED35E200E10E39 /* menu_online.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_online.tgs; sourceTree = "<group>"; };
 		27E6DB092689C71E003D6164 /* MetalFunctions.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = MetalFunctions.metal; sourceTree = "<group>"; };
 		27E78DE92743EEC7002D5A23 /* CrashHandler */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CrashHandler; path = packages/CrashHandler; sourceTree = "<group>"; };
 		27E7E49D270DFED900CF3A24 /* request_join_link.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = request_join_link.tgs; sourceTree = "<group>"; };
@@ -3387,6 +3390,7 @@
 				27093B2A279FD70F001C36D8 /* folders */,
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
+				27E60C1029ED35E200E10E39 /* menu_online.tgs */,
 				2747FD3A2927BFBE0045B95C /* menu_hide.tgs */,
 				276279D5298D32EF0096F904 /* menu_more.tgs */,
 				2751015029C86A15004CEFF3 /* menu_speed.tgs */,
@@ -3594,6 +3598,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				27E60C0F29ED272800E10E39 /* Emoji */,
 				27AAAD5829A49F2500F70A9A /* System */,
 				27D6044C2958647000588C21 /* DarwinDirStat */,
 				2738A2D2289C416D00EC1010 /* CurrencyFormat */,
@@ -6270,6 +6275,7 @@
 				27B8AFEB26380B4E0044C71B /* screenon.tgs in Resources */,
 				27CE376F2760B11B007E6F1B /* menu_read.tgs in Resources */,
 				276F9B8A2935FD7800E35997 /* pirate_flag.tgs in Resources */,
+				27E60C1129ED35E200E10E39 /* menu_online.tgs in Resources */,
 				27CB1750276325E700DD25E0 /* menu_video_call.tgs in Resources */,
 				27803BFE27A3E944007B0FA9 /* menu_folder_work.tgs in Resources */,
 				27803C0827A3E944007B0FA9 /* menu_folder_music.tgs in Resources */,

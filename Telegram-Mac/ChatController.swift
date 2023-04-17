@@ -7695,7 +7695,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return
         }
         
-        self.themeSelector = ChatThemeSelectorController(context, chatTheme: chatThemeValue.get(), chatInteraction: self.chatInteraction)
+        self.themeSelector = ChatThemeSelectorController(context, installedTheme: self.uiState.with { $0.presentation_emoticon }, chatTheme: chatThemeValue.get(), chatInteraction: self.chatInteraction)
         self.themeSelector?.onReady = { [weak self] controller in
             self?.genericView.showChatThemeSelector(controller.view, animated: true)
         }

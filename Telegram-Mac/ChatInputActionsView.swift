@@ -551,11 +551,17 @@ class ChatInputActionsView: View {
                 case .history, .thread:
                     if !peer.isSecretChat {
                         let text = peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
-                        items.append(ContextMenuItem(text, handler: {
+                        items.append(ContextMenuItem(text, handler: { [weak chatInteraction] in
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
                                 chatInteraction?.sendMessage(false, date)
                             }), for: context.window)
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
+                        
+                        if peer.id != chatInteraction.context.peerId {
+                            items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: { [weak chatInteraction] in
+                                chatInteraction?.sendMessage(false, scheduleWhenOnlineDate)
+                            }, itemImage: MenuAnimation.menu_online.value))
+                        }
                     }
                 default:
                     break

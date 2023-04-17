@@ -291,9 +291,16 @@ fileprivate class PreviewSenderView : Control {
                             }), for: context.window)
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
                         
+                        if peer.id != chatInteraction.context.peerId {
+                            items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: {  [weak controller] in
+                                controller?.send(false, atDate: scheduleWhenOnlineDate)
+                            }, itemImage: MenuAnimation.menu_online.value))
+                        }
+                        
                         items.append(ContextMenuItem(strings().previewSenderSendAsSpoiler, handler: { [weak controller] in
                             controller?.send(false, asSpoiler: true)
                         }, itemImage: MenuAnimation.menu_send_spoiler.value))
+                        
                     }
                 default:
                     break

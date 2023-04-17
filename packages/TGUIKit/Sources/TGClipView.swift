@@ -296,7 +296,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     public func scroll(to point: NSPoint, animated:Bool, completion: @escaping (Bool) -> Void = {_ in})  {
         
         self.scrollCompletion = completion
-
+        self.destinationOrigin = point
         if animated {
             
             self.point = point
@@ -306,15 +306,17 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 ctx.timingFunction = timingFunction
                 self.animator().setBoundsOrigin(point)
             }, completionHandler: {
-                if point != self.bounds.origin {
-                    self.setBoundsOrigin(point)
-                }
+//                if point != self.bounds.origin, self.point == point {
+//                    self.setBoundsOrigin(point)
+//                }
+                self.destinationOrigin = nil
                 self.point = nil
                 self.scrollCompletion?(point == self.bounds.origin)
             })
         } else {
             self.setBoundsOrigin(point)
             self.point = nil
+            self.destinationOrigin = nil
             self.scrollCompletion?(false)
         }
         

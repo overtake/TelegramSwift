@@ -1401,7 +1401,7 @@ class WallpaperPreviewController: ModalViewController {
                 default:
                     switch source {
                     case let .chat(peer, _):
-                        complete = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: current.cloudWallpaper)
+                        complete = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: current.cloudWallpaper) |> `catch` { _ in return .complete() }
                     case let .message(messageId, _):
                         complete = context.engine.themes.setExistingChatWallpaper(messageId: messageId, settings: current.settings) |> `catch` { _ in return .complete() } |> ignoreValues
                     default:
