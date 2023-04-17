@@ -3724,3 +3724,5 @@ public func showSuccess(window: Window) {
 func isLite(_ key: LiteModeKey = .any) -> Bool {
     return appDelegate?.sharedApplicationContextValue?.sharedContext.isLite(key) ?? false
 }
+
+let scheduleWhenOnlineDate = Date(timeIntervalSince1970: TimeInterval(scheduleWhenOnlineTimestamp))

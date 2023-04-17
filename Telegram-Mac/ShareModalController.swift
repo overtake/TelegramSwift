@@ -78,6 +78,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
 
     fileprivate var sendWithoutSound: (()->Void)? = nil
     fileprivate var scheduleMessage: (()->Void)? = nil
+    fileprivate var scheduleWhenOnline: (()->Void)? = nil
 
     private let topSeparator = View()
     fileprivate var hasShareMenu: Bool = true {
@@ -129,6 +130,10 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: {
                 self?.scheduleMessage?()
             }, itemImage: MenuAnimation.menu_schedule_message.value))
+            
+            items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: {
+                self?.scheduleWhenOnline?()
+            }, itemImage: MenuAnimation.menu_online.value))
             
             if !items.isEmpty {
                 let menu = ContextMenu()
@@ -1690,6 +1695,16 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                 self?.share.scheduleDate = date
                 _ = self?.invoke()
             }), for: context.window)
+        }
+        
+        genericView.scheduleWhenOnline = { [weak self] in
+            guard let share = self?.share else {
+                return
+            }
+            let context = share.context
+            let peerId = share.context.peerId
+            self?.share.scheduleDate = scheduleWhenOnlineDate
+            _ = self?.invoke()
         }
         
         tokenDisposable.set(genericView.tokenizedView.tokensUpdater.start(next: { tokens in

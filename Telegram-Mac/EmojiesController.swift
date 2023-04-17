@@ -2217,11 +2217,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         } else {
             searchCategories = .single(nil)
         }
-
-
         
         let reactions = context.reactions.stateValue
-        
         let reactionSettings = context.account.postbox.preferencesView(keys: [PreferencesKeys.reactionSettings])
            |> map { preferencesView -> ReactionSettings in
                let reactionSettings: ReactionSettings

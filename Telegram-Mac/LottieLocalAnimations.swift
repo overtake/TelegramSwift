@@ -143,6 +143,7 @@ enum LocalAnimatedSticker : String {
     case menu_save_as
     case menu_select_messages
     case menu_schedule_message
+    case menu_online
     case menu_send_now
     case menu_seen
     case menu_view_replies
