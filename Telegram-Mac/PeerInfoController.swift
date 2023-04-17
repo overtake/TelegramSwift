@@ -23,6 +23,14 @@ class PeerInfoArguments {
     
     var peer: Peer?
     
+    var effectivePeerId: PeerId {
+        if let peer = peer as? TelegramSecretChat {
+            return peer.associatedPeerId ?? peerId
+        } else {
+            return peer?.id ?? peerId
+        }
+    }
+    
     let pullNavigation:()->NavigationViewController?
     let mediaController: ()->PeerMediaController?
     
@@ -68,7 +76,7 @@ class PeerInfoArguments {
     
     func toggleNotifications(_ currentlyMuted: Bool) {
         
-        toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: peerId, threadId: nil).start())
+        toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: effectivePeerId, threadId: nil).start())
         
         pullNavigation()?.controller.show(toaster: ControllerToaster(text: currentlyMuted ? strings().toastUnmuted : strings().toastMuted))
     }
@@ -552,7 +560,11 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                         editable = group.groupAccess.canEditGroupInfo || group.groupAccess.canEditMembers
                     }
                 } else if peer is TelegramUser, !peer.isBot, peerView.peerIsContact {
-                    editable = context.account.peerId != peer.id
+                    if peerId.namespace == Namespaces.Peer.SecretChat {
+                        editable = false
+                    } else {
+                        editable = context.account.peerId != peer.id
+                    }
                 } else if let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) {
                     editable = true
                 } else {
