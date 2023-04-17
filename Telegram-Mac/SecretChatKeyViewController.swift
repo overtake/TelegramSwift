@@ -103,9 +103,9 @@ class SecretChatKeyViewController: TelegramGenericViewController<SecretChatKeyVi
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        disposable.set((combineLatest(context.account.postbox.combinedView(keys: [.peerChatState(peerId: peerId)]), context.account.viewTracker.peerView( peerId), appearanceSignal) |> deliverOnMainQueue).start(next: { [weak self] view, peerView, _ in
+        disposable.set((combineLatest(context.account.postbox.combinedView(keys: [.peerChatState(peerId: peerId)]), context.account.viewTracker.peerView(peerId), appearanceSignal) |> deliverOnMainQueue).start(next: { [weak self] view, peerView, _ in
            
-            if let peerId = self?.peerId, let view = view.views[.peerChatState(peerId: peerId)] as? PeerChatStateView, let state = view.chatState as? SecretChatKeyState {
+            if let peerId = self?.peerId, let view = view.views[.peerChatState(peerId: peerId)] as? PeerChatStateView, let state = view.chatState?.getLegacy() as? SecretChatState {
                 if let keyFingerprint = state.keyFingerprint {
                     if let peer = peerViewMainPeer(peerView) {
                         self?.genericView.update(with: keyFingerprint, participant: peer)

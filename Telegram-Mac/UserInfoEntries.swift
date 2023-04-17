@@ -129,7 +129,7 @@ class UserInfoArguments : PeerInfoArguments {
 
     
     func giftPremium(_ options: [CachedPremiumGiftOption]) {
-        showModal(with: PremiumGiftController(context: context, peerId: self.peerId, options: options), for: context.window)
+        showModal(with: PremiumGiftController(context: context, peerId: self.effectivePeerId, options: options), for: context.window)
     }
     
     func editBot(_ payload: String?, action: Bool = true) -> Void {
@@ -161,10 +161,7 @@ class UserInfoArguments : PeerInfoArguments {
     func shareContact() {
         let context = self.context
         
-        let peer = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue
-        
-
-        
+        let peer = getPeerView(peerId: effectivePeerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue
         shareDisposable.set(peer.start(next: { [weak self] peer in
             if let context = self?.context, let peer = peer as? TelegramUser {
                 showModal(with: ShareModalController(ShareContactObject(context, user: peer)), for: context.window)
@@ -304,7 +301,7 @@ class UserInfoArguments : PeerInfoArguments {
     }
     
     func sendMessage() {
-        self.peerChat(self.peerId)
+        self.peerChat(self.effectivePeerId)
     }
     
     func reportReaction(_ messageId: MessageId) {
@@ -318,7 +315,7 @@ class UserInfoArguments : PeerInfoArguments {
     
     func call(_ isVideo: Bool) {
         let context = self.context
-        let peer = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> map {
+        let peer = getPeerView(peerId: effectivePeerId, postbox: context.account.postbox) |> take(1) |> map {
             return $0?.id
         } |> filter { $0 != nil } |> map { $0! }
         
