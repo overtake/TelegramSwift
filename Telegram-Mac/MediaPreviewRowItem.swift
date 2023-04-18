@@ -192,7 +192,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
         
         
         editControl.canEdit = (item.media is TelegramMediaImage)
-        editControl.isInteractiveMedia = item.media.isInteractiveMedia
+        editControl.isInteractiveMedia = item.media.isInteractiveMedia || item.media.probablySticker
         editControl.canDelete = item.delete != nil
         editControl.set(edit: { [weak item] in
             item?.edit()

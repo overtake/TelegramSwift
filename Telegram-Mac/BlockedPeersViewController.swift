@@ -189,14 +189,15 @@ private func blockedPeersControllerEntries(state: BlockedPeerControllerState, bl
         entries.append(.section(sectionId))
         sectionId += 1
     }
-    for rendered in blockedState.peers {
+    let list = blockedState.peers.filter { $0.peer?.isDeleted == false }
+    for rendered in list {
         if let peer = rendered.peer {
             var deleting:ShortPeerDeleting? = nil
             if state.editing {
                 deleting = ShortPeerDeleting(editable: true)
             }
 
-            entries.append(.peerItem(sectionId, index, peer, deleting, state.removingPeerId != peer.id, bestGeneralViewType(blockedState.peers, for: rendered)))
+            entries.append(.peerItem(sectionId, index, peer, deleting, state.removingPeerId != peer.id, bestGeneralViewType(list, for: rendered)))
             index += 1
         }
     }

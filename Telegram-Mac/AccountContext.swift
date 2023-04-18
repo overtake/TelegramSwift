@@ -282,6 +282,7 @@ final class AccountContext {
     private let prefDisposable = DisposableSet()
     private let reindexCacheDisposable = MetaDisposable()
     private let shouldReindexCacheDisposable = MetaDisposable()
+    private let checkSidebarShouldEnable = MetaDisposable()
 
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
     
@@ -603,6 +604,24 @@ final class AccountContext {
             self?.updateTheme(update)
         }))
         
+        var previous: [ChatListFilter]?
+        checkSidebarShouldEnable.set(engine.peers.updatedChatListFilters().start(next: { filters in
+            if previous != filters, let previous = previous {
+                let prevCount = previous.count
+                let newCount = filters.count
+                if newCount > prevCount, newCount > 3 {
+                    _ = updateChatListFolderSettings(account.postbox, { current in
+                        if !current.interacted {
+                            return current.withUpdatedSidebar(true)
+                        } else {
+                            return current
+                        }
+                    }).start()
+                }
+            }
+            previous = filters
+        }))
+        
         
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
@@ -787,6 +806,7 @@ final class AccountContext {
         globalLocationDisposable.dispose()
         reindexCacheDisposable.dispose()
         shouldReindexCacheDisposable.dispose()
+        checkSidebarShouldEnable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
