@@ -6182,20 +6182,22 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }, itemImage: MenuAnimation.menu_video_chat.value))
                         }
                         if peer.isUser, peer.id != context.peerId {
-                            if !peer.isBot {
+                            if !peer.isBot, !isServicePeer(peer) {
                                 items.append(ContextMenuItem(strings().peerInfoActionVideoCall, handler: { [weak self] in
                                     self?.chatInteraction.call(isVideo: true)
                                 }, itemImage: MenuAnimation.menu_video_call.value))
                             }
                             
-                            
-                            items.append(ContextMenuItem(strings().chatContextCreateGroup, handler: { [weak self] in
-                                self?.createGroup()
-                            }, itemImage: MenuAnimation.menu_create_group.value))
-                            
-                            items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
-                                self?.showChatThemeSelector()
-                            }, itemImage: MenuAnimation.menu_change_colors.value))
+                            if !isServicePeer(peer) {
+                                items.append(ContextMenuItem(strings().chatContextCreateGroup, handler: { [weak self] in
+                                    self?.createGroup()
+                                }, itemImage: MenuAnimation.menu_create_group.value))
+                            }
+                            if !isServicePeer(peer) {
+                                items.append(ContextMenuItem(strings().peerInfoChatBackground, handler: { [weak self] in
+                                    self?.showChatThemeSelector()
+                                }, itemImage: MenuAnimation.menu_change_colors.value))
+                            }
                         }
                         
                         let deleteChat = { [weak self] in
@@ -6230,7 +6232,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if !items.isEmpty {
                             items.append(ContextSeparatorItem())
                         }
-                        if peer.canManageDestructTimer && context.peerId != peer.id {
+
+                        if peer.canManageDestructTimer && context.peerId != peer.id, !isServicePeer(peer) && !peer.isSecretChat {
                             
                             let best:(Int32) -> MenuAnimation = { value in
 //                                    if value == Int32.secondsInHour {
@@ -6260,10 +6263,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                                 selected = timeout.effectiveValue
                             }
-                            
                             let item = ContextMenuItem(strings().chatContextAutoDelete, handler: {
                                 clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                             }, itemImage: selected == 0 ?  MenuAnimation.menu_secret_chat.value : best(selected).value)
+                            
+                            
                             
                             let submenu = ContextMenu()
                             

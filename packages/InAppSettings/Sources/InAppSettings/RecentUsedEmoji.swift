@@ -114,7 +114,14 @@ public class RecentUsedEmoji: Codable, Equatable {
                         emoji = skin.modify
                     }
                 }
-                list.append(emoji)
+                if emoji.isSingleEmoji {
+                    let updated = emoji + "\u{fe0f}"
+                    if updated.glyphCount == 1 {
+                        list.append(updated)
+                    } else {
+                        list.append(emoji)
+                    }
+                }
             }
         }
         self._emojies = list

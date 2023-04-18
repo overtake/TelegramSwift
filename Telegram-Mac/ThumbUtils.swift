@@ -247,7 +247,11 @@ func takeSenderOptions(for urls:[URL]) -> [PreviewOptions] {
                 options.append(.file)
             }
         }
+        if mime == "image/webp" {
+            options.removeAll(where: { $0 == .media })
+        }
     }
+    
     
     if options.isEmpty {
         options.append(.file)

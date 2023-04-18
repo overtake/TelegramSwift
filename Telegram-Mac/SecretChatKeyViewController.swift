@@ -14,16 +14,21 @@ import ObjcUtils
 import SwiftSignalKit
 
 class SecretChatKeyView : View {
+    private let scrollView = ScrollView(frame: .zero)
     let imageView:ImageView = ImageView()
     let textView:TextView = TextView()
     let descriptionView =  TextView()
+    private let documentView = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(imageView)
-        addSubview(textView)
-        addSubview(descriptionView)
+        addSubview(scrollView)
+        documentView.addSubview(imageView)
+        documentView.addSubview(textView)
+        documentView.addSubview(descriptionView)
+        scrollView.documentView = documentView
         descriptionView.userInteractionEnabled = false
         updateLocalizationAndTheme(theme: theme)
+        
     }
     
     required init?(coder: NSCoder) {
@@ -80,19 +85,21 @@ class SecretChatKeyView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        backgroundColor = theme.colors.grayBackground
-        textView.backgroundColor = theme.colors.grayBackground
-        descriptionView.backgroundColor = theme.colors.grayBackground
     }
     
     override func layout() {
         super.layout()
         
+        scrollView.frame = bounds
+        documentView.frame = bounds
+        
         imageView.centerX(y: 30)
         textView.centerX(y: imageView.frame.maxY + 30)
         
-        descriptionView.textLayout?.measure(width: frame.width - 60)
+        descriptionView.resize(frame.width - 60)
         descriptionView.centerX(y: textView.frame.maxY + 30)
+        
+        documentView.frame = .init(origin: .zero, size: NSMakeSize(frame.width, descriptionView.frame.maxY + 30))
     }
 }
 

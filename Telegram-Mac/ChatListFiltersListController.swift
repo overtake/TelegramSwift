@@ -200,7 +200,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         }).start()
     }, toggleSidebar: { sidebar in
         _ = updateChatListFolderSettings(context.account.postbox, {
-            $0.withUpdatedSidebar(sidebar)
+            $0.withUpdatedSidebar(sidebar).withUpdatedSidebarInteracted(true)
         }).start()
     }, limitExceeded: {
         showModal(with: PremiumLimitController(context: context, type: .folders), for: context.window)

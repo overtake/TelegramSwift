@@ -131,6 +131,10 @@ final class ChatThemeSelectorView : View {
                 accept.scaleOnClick = true
                 accept.layer?.cornerRadius = .cornerRadius
                 controls.addSubview(accept)
+                
+                accept.set(handler: { [weak self] _ in
+                    self?.acceptTheme?()
+                }, for: .SingleClick)
                 self.accept = accept
                 isNew = true
                 if animated {
