@@ -2584,6 +2584,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[(Int, TableRowItem)] = []
         
+        CATransaction.begin()
         
         if transition.grouping && !transition.isEmpty {
             self.tableView.beginUpdates()
@@ -2663,6 +2664,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             inserted.0.view?.onInsert(inserted.1, appearAnimated: appearAnimated && accept)
         }
         
+        CATransaction.commit()
         
         let state: TableScrollState
         
