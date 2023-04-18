@@ -481,7 +481,9 @@ class ChatMessageItem: ChatRowItem {
                                  color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
                              }
                              let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                             copy.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
+                             if let range = copy.range.intersection(range) {
+                                 copy.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
+                             }
                          default:
                              break
                          }
@@ -812,9 +814,16 @@ class ChatMessageItem: ChatRowItem {
         
         let new = addLocallyGeneratedEntities(text, enabledTypes: [.timecode], entities: entities, mediaDuration: mediaDuration)
         var nsString: NSString?
-        entities  = entities + (new ?? [])
+        entities = entities + (new ?? [])
+        
+        
+        
         for entity in entities {
-            let range = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
+            let r = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
+            
+            guard let range = string.range.intersection(r) else {
+                continue
+            }
             
             switch entity.type {
             case .Url:
