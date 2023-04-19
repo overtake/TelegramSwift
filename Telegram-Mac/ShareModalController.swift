@@ -131,9 +131,6 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
                 self?.scheduleMessage?()
             }, itemImage: MenuAnimation.menu_schedule_message.value))
             
-            items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: {
-                self?.scheduleWhenOnline?()
-            }, itemImage: MenuAnimation.menu_online.value))
             
             if !items.isEmpty {
                 let menu = ContextMenu()

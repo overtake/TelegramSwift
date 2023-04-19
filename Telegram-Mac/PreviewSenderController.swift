@@ -291,7 +291,7 @@ fileprivate class PreviewSenderView : Control {
                             }), for: context.window)
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
                         
-                        if peer.id != chatInteraction.context.peerId {
+                        if peer.id != chatInteraction.context.peerId, chatInteraction.presentation.canScheduleWhenOnline {
                             items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: {  [weak controller] in
                                 controller?.send(false, atDate: scheduleWhenOnlineDate)
                             }, itemImage: MenuAnimation.menu_online.value))

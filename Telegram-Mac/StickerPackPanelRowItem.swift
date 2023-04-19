@@ -269,16 +269,6 @@ class StickerPackPanelRowItem: TableRowItem {
                                 self.arguments.sendMedia(file, contentView, false, true, self.collectionId.itemCollectionId)
                             }
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
-                        
-                        items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: { [weak self] in
-                            guard let `self` = self else {
-                                return
-                            }
-                            
-                            if let contentView = self.view {
-                                self.arguments.sendMedia(file, contentView, false, true, self.collectionId.itemCollectionId)
-                            }
-                        }, itemImage: MenuAnimation.menu_schedule_message.value))
                     }
                     break
                 }

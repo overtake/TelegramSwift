@@ -4315,9 +4315,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.toggleNotifications = { isMuted in
+        chatInteraction.toggleNotifications = { [weak self] isMuted in
+            let peerId = self?.chatInteraction.presentation.peer?.associatedPeerId ?? chatLocation.peerId
             if isMuted == nil || isMuted == true {
-                _ = context.engine.peers.togglePeerMuted(peerId: chatLocation.peerId, threadId: chatLocation.threadId).start()
+                _ = context.engine.peers.togglePeerMuted(peerId: peerId, threadId: chatLocation.threadId).start()
             } else {
                 var options:[ModalOptionSet] = []
                 
@@ -4328,14 +4329,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 options.append(ModalOptionSet(title: strings().chatListMute3Days, selected: false, editable: true))
                 options.append(ModalOptionSet(title: strings().chatListMuteForever, selected: true, editable: true))
                 
-                var intervals:[Int32] = [60 * 60, 60 * 60 * 4, 60 * 60 * 8, 60 * 60 * 24, 60 * 60 * 24 * 3, Int32.max]
+                let intervals:[Int32] = [60 * 60, 60 * 60 * 4, 60 * 60 * 8, 60 * 60 * 24, 60 * 60 * 24 * 3, Int32.max]
                 
                 showModal(with: ModalOptionSetController(context: context, options: options, selectOne: true, actionText: (strings().chatInputMute, theme.colors.accent), title: strings().peerInfoNotifications, result: { result in
                     
                     for (i, option) in result.enumerated() {
                         inner: switch option {
                         case .selected:
-                            _ = context.engine.peers.updatePeerMuteSetting(peerId: chatLocation.peerId, threadId: chatLocation.threadId, muteInterval: intervals[i]).start()
+                            _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: chatLocation.threadId, muteInterval: intervals[i]).start()
                             break
                         default:
                             break inner
@@ -5245,7 +5246,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 return nil
                             }
                         }
-                        return present.withUpdatedCachedData(peerView.cachedData).withUpdatedThreadInfo(threadInfo)
+                        return present.withUpdatedCachedData(peerView.cachedData)
+                            .withUpdatedThreadInfo(threadInfo)
+                            .withUpdatedPresence(peerView.peerPresences[peerView.peerId] as? TelegramUserPresence)
                     }
                     return presentation
                 })
