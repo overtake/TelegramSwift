@@ -557,7 +557,8 @@ class ChatInputActionsView: View {
                             }), for: context.window)
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
                         
-                        if peer.id != chatInteraction.context.peerId {
+                        if peer.id != chatInteraction.context.peerId, chatInteraction.presentation.canScheduleWhenOnline {
+                            
                             items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: { [weak chatInteraction] in
                                 chatInteraction?.sendMessage(false, scheduleWhenOnlineDate)
                             }, itemImage: MenuAnimation.menu_online.value))

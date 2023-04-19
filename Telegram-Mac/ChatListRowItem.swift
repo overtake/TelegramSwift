@@ -1157,6 +1157,7 @@ class ChatListRowItem: TableRowItem {
     }
     
     func toggleMuted() {
+        let peerId = renderedPeer?.chatMainPeer?.id ?? peerId
         if let peerId = peerId {
             ChatListRowItem.toggleMuted(context: context, peerId: peerId, isMuted: isMuted, threadId: self.mode.threadId)
         }
@@ -1285,6 +1286,7 @@ class ChatListRowItem: TableRowItem {
         let message = self.message
         let context = self.context
         let peerId = self.peerId
+        let effectivePeerId = self.renderedPeer?.chatMainPeer?.id ?? self.peerId
         let peer = self.peer
         let filter = self.filter
         let isMuted = self.isMuted
@@ -1324,7 +1326,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         let toggleMute:()->Void = {
-            if let peerId = peerId {
+            if let peerId = effectivePeerId {
                 ChatListRowItem.toggleMuted(context: context, peerId: peerId, isMuted: isMuted, threadId: threadId)
             }
         }
@@ -1508,7 +1510,7 @@ class ChatListRowItem: TableRowItem {
                     sound.submenu = soundList
                     
                     
-                    if !isMuted {
+                    if !isMuted, let peerId = effectivePeerId {
                         let submenu = ContextMenu()
                         submenu.addItem(ContextMenuItem(strings().chatListMute1Hour, handler: {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: 60 * 60 * 1).start()
