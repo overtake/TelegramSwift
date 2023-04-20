@@ -292,7 +292,7 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiS
                 }
 
             }
-            if !line.contains(where: {$0.string == String(e.first!) }), let first = e.first {
+            if let first = e.first, !line.contains(where: { $0.string == String(first) }) {
                 if String(first).length > 1 {
                     line.append(.initialize(string: String(first), font: .normal(26.0)))
                     i += 1
