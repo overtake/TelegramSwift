@@ -190,8 +190,8 @@ class EBlockRowView: TableRowView {
                     self.content.layer?.addSublayer(view)
                     
                     if animated {
-                        view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
-                        view.animateAlpha(from: 0, to: 1, duration: 0.2)
+                       // view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
+                       // view.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
                 let size = NSMakeSize(xAdd, yAdd)
