@@ -288,14 +288,7 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiS
             var e:String = emoji.emojiUnmodified
             for modifier in skinModifiers {
                 if e == modifier.emoji {
-                    if e.length == 5 {
-                        let mutable = NSMutableString()
-                        mutable.insert(e, at: 0)
-                        mutable.insert(modifier.modifier, at: 2)
-                        e = mutable as String
-                    } else {
-                        e = e + modifier.modifier
-                    }
+                    e = e.emojiWithSkinModifier(modifier.modifier)
                 }
 
             }
@@ -870,8 +863,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
            
             if arguments.mode == .emoji {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(key.rawValue), equatable: InputDataEquatable(key), comparable: nil, item: { initialSize, stableId in
-                    return EBlockItem(initialSize, stableId: stableId, attrLines: seg[key]!, segment: key, account: arguments.context.account, selectHandler: arguments.sendEmoji)
+                struct Tuple : Equatable {
+                    let key: EmojiSegment
+                    let lines: [[NSAttributedString]]
+                }
+                let tuple = Tuple(key: key, lines: seg[key]!)
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(key.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return EBlockItem(initialSize, stableId: stableId, attrLines: tuple.lines, segment: tuple.key, account: arguments.context.account, selectHandler: arguments.sendEmoji)
                 }))
                 index += 1
             }

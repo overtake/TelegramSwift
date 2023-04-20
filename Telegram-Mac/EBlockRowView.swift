@@ -118,6 +118,10 @@ class EBlockRowView: TableRowView {
         self.currentDownItem = nil
     }
     
+    var emojiUnderMouse: String? {
+        return itemUnderMouse?.1.string
+    }
+    
     private var itemUnderMouse: (LineLayer, NSAttributedString)? {
         guard let window = self.window else {
             return nil

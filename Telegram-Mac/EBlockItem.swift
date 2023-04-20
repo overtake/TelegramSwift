@@ -9,6 +9,8 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
+import SwiftSignalKit
+import InAppSettings
 
 class EBlockItem: TableRowItem {
 
@@ -41,4 +43,19 @@ class EBlockItem: TableRowItem {
         return EBlockRowView.self;
     }
     
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        var items: [ContextMenuItem] = []
+        let postbox = self.account.postbox
+        if let view = self.view as? EBlockRowView {
+            if let emoji = view.emojiUnderMouse?.emojiUnmodified, emoji.canHaveSkinToneModifier {
+                items.append(EmojiToleranceContextMenuItem(emoji: emoji, callback: { value in
+                    _ = modifySkinEmoji(emoji, modifier: value, postbox: postbox).start()
+                }))
+            }
+        }
+        
+       
+        return .single(items)
+    }
 }
