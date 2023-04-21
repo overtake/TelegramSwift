@@ -115,8 +115,11 @@ final class SelectPeerInteraction : InterfaceObserver {
                 .withUpdatedMultipleSelection(true)
         })
     }
-
-
+    func toggleSelection( _ peerId: PeerId) {
+        if let peer = self.presentation.peers[peerId] {
+            self.toggleSelection(peer)
+        }
+    }
 }
 
 struct ShortPeerDeleting  : Equatable {

@@ -683,7 +683,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case let .topicEdited(components):
             var fileId: Int64?
-            if let component = components.last {
+            if let component = components.first {
                 switch component {
                 case let .title(title):
                     if authorId == account.peerId {

@@ -8159,7 +8159,7 @@ public final class L10n {
   public static var peerInfoChannelReported: String  { return L10n.tr("Localizable", "PeerInfo.ChannelReported") }
   /// Channel Type
   public static var peerInfoChannelType: String  { return L10n.tr("Localizable", "PeerInfo.ChannelType") }
-  /// Change Background
+  /// Change Wallpaper
   public static var peerInfoChatBackground: String  { return L10n.tr("Localizable", "PeerInfo.ChatBackground") }
   /// Change Colors
   public static var peerInfoChatColors: String  { return L10n.tr("Localizable", "PeerInfo.ChatColors") }

@@ -2660,7 +2660,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 installed_stickers_suggest: { NSImage(named: "Icon_InstalledStickers_Suggest")!.precomposed(flipVertical: true) },
                                                 installed_stickers_trending: { NSImage(named: "Icon_InstalledStickers_Trending")!.precomposed(flipVertical: true) },
                                                 folder_invite_link: { generateFolderLinkIcon(palette: palette, revoked: false) },
-                                                folder_invite_link_revoked: { generateFolderLinkIcon(palette: palette, revoked: true) }
+                                                folder_invite_link_revoked: { generateFolderLinkIcon(palette: palette, revoked: true) },
+                              folders_sidebar_edit: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon, flipVertical: true) },
+                              folders_sidebar_edit_active: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon.withAlphaComponent(0.8), flipVertical: true) }
+
     )
 
 }

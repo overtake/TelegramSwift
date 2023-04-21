@@ -9547,6 +9547,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var folders_sidebar_edit: CGImage {
+      if let image = cached.with({ $0["folders_sidebar_edit"] }) {
+          return image
+      } else {
+          let image = _folders_sidebar_edit()
+          _ = cached.modify { current in 
+              var current = current
+              current["folders_sidebar_edit"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var folders_sidebar_edit_active: CGImage {
+      if let image = cached.with({ $0["folders_sidebar_edit_active"] }) {
+          return image
+      } else {
+          let image = _folders_sidebar_edit_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["folders_sidebar_edit_active"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10282,6 +10308,8 @@ public final class TelegramIconsTheme {
   private let _installed_stickers_trending: ()->CGImage
   private let _folder_invite_link: ()->CGImage
   private let _folder_invite_link_revoked: ()->CGImage
+  private let _folders_sidebar_edit: ()->CGImage
+  private let _folders_sidebar_edit_active: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11017,7 +11045,9 @@ public final class TelegramIconsTheme {
       installed_stickers_suggest: @escaping()->CGImage,
       installed_stickers_trending: @escaping()->CGImage,
       folder_invite_link: @escaping()->CGImage,
-      folder_invite_link_revoked: @escaping()->CGImage
+      folder_invite_link_revoked: @escaping()->CGImage,
+      folders_sidebar_edit: @escaping()->CGImage,
+      folders_sidebar_edit_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11753,5 +11783,7 @@ public final class TelegramIconsTheme {
       self._installed_stickers_trending = installed_stickers_trending
       self._folder_invite_link = folder_invite_link
       self._folder_invite_link_revoked = folder_invite_link_revoked
+      self._folders_sidebar_edit = folders_sidebar_edit
+      self._folders_sidebar_edit_active = folders_sidebar_edit_active
   }
 }

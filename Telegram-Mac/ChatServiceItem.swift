@@ -688,7 +688,7 @@ class ChatServiceItem: ChatRowItem {
                 case let .topicEdited(components):
                     let text: String
                     var fileId: Int64? = nil
-                    if let component = components.last {
+                    if let component = components.first {
                         switch component {
                         case let .title(title):
                             if authorId == context.peerId {
