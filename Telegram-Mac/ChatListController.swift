@@ -818,6 +818,15 @@ class ChatListController : PeersListController {
     private func enqueueTransition(_ transition: TableUpdateTransition) {
         self.genericView.tableView.merge(with: transition)
         self.readyOnce()
+        
+        let top: CGFloat
+        if let item = genericView.tableView.firstItem as? ChatListRevealItem {
+            top = item.height
+        } else {
+            top = 0
+        }
+        self.genericView.tableView.scrollerInsets = .init(top: top)
+        
         switch self.mode {
         case .folder:
             if self.genericView.tableView.isEmpty {
