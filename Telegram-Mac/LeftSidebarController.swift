@@ -109,6 +109,7 @@ final class LeftSidebarView: Control {
     private let visualEffectView: NSVisualEffectView
     private let borderView = View()
     fileprivate var context: AccountContext?
+    fileprivate let edit = ImageButton()
     required init(frame frameRect: NSRect) {
         self.visualEffectView = NSVisualEffectView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
@@ -117,6 +118,7 @@ final class LeftSidebarView: Control {
         addSubview(self.borderView)
 
         addSubview(self.tableView)
+        addSubview(self.edit)
         tableView.getBackgroundColor = {
             return .clear
         }
@@ -124,6 +126,9 @@ final class LeftSidebarView: Control {
         visualEffectView.blendingMode = .behindWindow
         visualEffectView.material = .ultraDark
         visualEffectView.state = .active
+        
+        self.edit.autohighlight = false
+        self.edit.scaleOnClick = false
        
         updateLocalizationAndTheme(theme: theme)
         
@@ -140,11 +145,17 @@ final class LeftSidebarView: Control {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        let theme = theme as! TelegramPresentationTheme
         
         borderView.backgroundColor = theme.colors.border
         self.backgroundColor = theme.colors.listBackground
         self.borderView.isHidden = !theme.colors.isDark
         self.visualEffectView.isHidden = theme.colors.isDark
+        self.edit.set(image: theme.icons.folders_sidebar_edit, for: .Normal)
+        self.edit.set(image: theme.icons.folders_sidebar_edit_active, for: .Highlight)
+        self.edit.borderColor = theme.colors.grayIcon.withAlphaComponent(0.1)
+        needsLayout = true
+
     }
     
     required init?(coder: NSCoder) {
@@ -154,8 +165,10 @@ final class LeftSidebarView: Control {
     override func layout() {
         super.layout()
         self.visualEffectView.frame = bounds
-        self.tableView.frame = bounds
+        self.tableView.frame = NSMakeRect(0, 0, frame.width, frame.height - 50)
         self.borderView.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
+        self.edit.frame = NSMakeRect(0, frame.height - 50, frame.width, 50)
+        self.edit.border = tableView.frame.height < tableView.documentSize.height ? [.Top] : []
     }
 }
 
@@ -252,8 +265,14 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
         
         let previous: Atomic<[AppearanceWrapperEntry<LeftSibarBarEntry>]> = Atomic(value: [])
                 
-        
-       
+        genericView.edit.set(handler: { _ in
+            if let controller = context.bindings.rootNavigation().controller as? InputDataController {
+                if controller.identifier == "filters" {
+                    return
+                }
+            }
+            context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+        }, for: .Click)
 
         
         let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, filterData, chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), appearanceSignal) |> map { filterData, badges, appearance in
@@ -269,6 +288,7 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
                 return
             }
             self.genericView.tableView.merge(with: transition)
+            self.genericView.updateLocalizationAndTheme(theme: theme)
             self.readyOnce()
             
             let range:NSRange

@@ -851,6 +851,8 @@ func initialize() -> [String] {
     array.append("folder_invite_link")
     array.append("folder_invite_link_revoked")
 
+    array.append("folders_sidebar_edit")
+    array.append("folders_sidebar_edit_active")
 
     return array
 }

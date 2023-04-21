@@ -209,7 +209,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             
             basicSearchView.isHidden = hasCaptionView
             tokenizedView.isHidden = !hasCaptionView
-            dismiss.isHidden = hasCaptionView
+            dismiss.isHidden = false
             
             if oldValue != hasCaptionView, hasCaptionView {
                 textContainerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -469,6 +469,8 @@ class ShareObject {
     
     var withoutSound: Bool = false
     var scheduleDate: Date? = nil
+    
+    var threadIds: [PeerId : MessageId] = [:]
     
     init(_ context:AccountContext, emptyPerformOnClose: Bool = false, excludePeerIds:Set<PeerId> = [], defaultSelectedIds: Set<PeerId> = [], additionTopItems:ShareAdditionItems? = nil, limit: Int? = nil) {
         self.limit = limit
@@ -1039,6 +1041,8 @@ final class ForwardMessagesObject : ShareObject {
                         return (peer, nil)
                     }
                 }
+                let threadId = threadIds[peerId]
+                
                 signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
                     let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                     var caption: Signal<[MessageId?], NoError>?
@@ -1647,8 +1651,20 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         selectInteraction.action = { [weak self] peerId, threadId in
             guard let `self` = self else { return }
+            
+            if share.multipleSelection, let threadId = threadId {
+                let peer = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+                _ = peer.start(next: { [weak self] peer in
+                    self?.selectInteractions.toggleSelection(peer)
+                    self?.cancelForum(animated: true)
+                })
+                self.share.threadIds[peerId] = makeThreadIdMessageId(peerId: peerId, threadId: threadId)
+                return
+            }
+            
             let id = threadId != nil ? makeThreadIdMessageId(peerId: peerId, threadId: threadId!) : nil
-            _ = share.perform(to: [peerId], threadId: id, comment: self.contextChatInteraction.presentation.interfaceState.inputState).start(error: { error in
+            let signal = share.perform(to: [peerId], threadId: id, comment: self.contextChatInteraction.presentation.interfaceState.inputState) |> deliverOnMainQueue
+            _ = signal.start(error: { error in
                alert(for: context.window, info: error)
             }, completed: { [weak self] in
                 self?.close()
@@ -1921,9 +1937,6 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                         if !value.1.isEmpty {
                             entries.append(.folders(value.1.tabs, value.1.filter))
-                        } else {
-                            var bp = 0
-                            bp += 1
                         }
                         
                         entries.sort(by: <)

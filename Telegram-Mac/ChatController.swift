@@ -7397,7 +7397,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
             self.state = value.selectionState != nil ? .Edit : .Normal
             
-            if let upgradedToPeerId = upgradedToPeerId {
+            if let upgradedToPeerId = upgradedToPeerId, navigationController?.controller == self {
                 let controller = ChatController(context: context, chatLocation: .peer(upgradedToPeerId))
                 navigationController?.removeAll()
                 navigationController?.push(controller, false, style: ViewControllerStyle.none)

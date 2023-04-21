@@ -708,7 +708,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             case .left:
                 interaction.action(item.peerId, nil)
             default:
-                interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
+                if item.peer.isForum, !interaction.presentation.selected.contains(item.peerId) {
+                    interaction.openForum(item.peerId)
+                } else {
+                    interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
+                }
             }
         case .deletable(_, true):
             break
