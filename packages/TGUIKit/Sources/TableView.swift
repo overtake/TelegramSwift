@@ -327,6 +327,15 @@ public extension TableScrollState {
         }
     }
     
+    var isNone: Bool {
+        switch self {
+        case .none:
+            return true
+        default:
+            return false
+        }
+    }
+    
     var animated: Bool {
         switch self {
         case let .top(_, _, animated, _, _):
@@ -2583,10 +2592,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[(Int, TableRowItem)] = []
-        
-        CATransaction.begin()
-        
-        if transition.grouping && !transition.isEmpty {
+                
+        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
             self.tableView.beginUpdates()
         }
         
@@ -2607,7 +2614,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
-        if transition.grouping && !transition.isEmpty {
+        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
             self.tableView.endUpdates()
         }
                 
@@ -2664,7 +2671,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             inserted.0.view?.onInsert(inserted.1, appearAnimated: appearAnimated && accept)
         }
         
-        CATransaction.commit()
+        self.tableView.tile()
         
         let state: TableScrollState
         
