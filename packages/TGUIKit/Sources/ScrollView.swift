@@ -32,10 +32,15 @@ public func ==(lhs:ScrollPosition, rhs:ScrollPosition) -> Bool {
 }
 
 final class Scroller : NSScroller {
+    weak var scrollView: NSScrollView?
     override func draw(_ dirtyRect: NSRect) {
         NSColor.clear.set()
         dirtyRect.fill()
-        self.drawKnob()
+        if let scrollView = self.scrollView {
+            if scrollView.contentView.documentRect.height > scrollView.frame.height {
+                self.drawKnob()
+            }
+        }
     }
 }
 
@@ -150,7 +155,9 @@ open class ScrollView: NSScrollView{
         
        // self.scrollerStyle = .overlay
          if NSScroller.preferredScrollerStyle == .legacy {
-             self.verticalScroller = Scroller()
+             let scroller = Scroller()
+             scroller.scrollView = self
+             self.verticalScroller = scroller
          }
  
     }
