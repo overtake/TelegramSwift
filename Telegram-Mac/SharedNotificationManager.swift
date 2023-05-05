@@ -551,7 +551,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     text = strings().notificationGroupReacted(peer.displayTitle, reactionText.fixed, msg)
                                 }
                             case .messages:
-                                text = chatListText(account: account, for: message, applyUserName: true).string
+                                text = chatListText(account: account, for: message, applyUserName: true, notifications: true).string
                                 if text.contains("\r") {
                                     let parts = text.components(separatedBy: "\r")
                                     text = parts[1]

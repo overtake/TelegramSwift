@@ -3064,9 +3064,39 @@ class ChatRowItem: TableRowItem {
                 let reveal:((NSView & StickerFramesCollector)->Void)?
                 
                 
+                var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
+
+                if let reactions = message.effectiveReactions {
+                    for reaction in reactions {
+                        if reaction.isSelected {
+                            switch reaction.value {
+                            case let .builtin(emoji):
+                                selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
+                            case let .custom(fileId):
+                                selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                            }
+                        }
+                    }
+                }
+                
                 if accessToAll {
                     reveal = { view in
-                        let window = ReactionsWindowController(context, message: message)
+                        let window = ReactionsWindowController(context, peerId: message.id.peerId, selectedItems: selectedItems, react: { sticker, fromRect in
+                            let value: UpdateMessageReaction
+                            if let bundle = sticker.file.stickerText {
+                                value = .builtin(bundle)
+                            } else {
+                                value = .custom(fileId: sticker.file.fileId.id, file: sticker.file)
+                            }
+                            if case .custom = value, !context.isPremium {
+                                showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
+                                    showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                                })
+                            } else {
+                                let updated = message.newReactions(with: value)
+                                context.reactions.react(message.id, values: updated, fromRect: fromRect, storeAsRecentlyUsed: true)
+                            }
+                        })
                         window.show(view)
                     }
                 } else {

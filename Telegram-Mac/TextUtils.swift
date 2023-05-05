@@ -20,7 +20,7 @@ enum MessageTextMediaViewType {
     case none
 }
 
-func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1) -> (string: NSString, justSpoiled: String) {
+func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false) -> (string: NSString, justSpoiled: String) {
     var messageText: String = message.text
     
     if message.text.isEmpty, message.textEntities?.entities.isEmpty == false {
@@ -37,6 +37,23 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     break
                 }
             }
+        }
+    }
+    
+    let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
+    
+    if message.id.peerId == supportId, message.flags.contains(.Incoming), !notifications {
+        let regexPattern = #"[\d\-]{5,7}"#
+        do {
+            let regex = try NSRegularExpression(pattern: regexPattern, options: [])
+            let range = NSRange(location: 0, length: messageText.utf16.count)
+            
+            let matches = regex.matches(in: messageText, range: range)
+            for match in matches {
+                messageText = messageText.spoiler(match.range)
+            }
+        } catch {
+            print("Error creating regular expression: \(error.localizedDescription)")
         }
     }
     
@@ -170,7 +187,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false, notifications: Bool = false) -> NSAttributedString {
     
     
     if let draft = draft, !draft.text.isEmpty {
@@ -252,7 +269,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         
-        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount)
+        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount, notifications: notifications)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
         

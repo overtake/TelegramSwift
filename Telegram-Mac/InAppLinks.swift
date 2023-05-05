@@ -275,7 +275,7 @@ var globalLinkExecutor:TextViewInteractions {
             return false
         }, translate: { text, window in
             let language = Translate.detectLanguage(for: text)
-            let toLang = appAppearance.language.baseLanguageCode
+            let toLang = appAppearance.languageCode
             var current: AccountContext?
             appDelegate?.enumerateAccountContexts({ context in
                 if context.window === window {
@@ -691,6 +691,12 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                 
                                 let botApp = context.engine.messages.getBotApp(botId: peer.id, shortName: appname)
                                 
+                                let chat = context.bindings.rootNavigation().first {
+                                    $0 is ChatController
+                                } as? ChatController
+                                
+                                let peerId = chat?.chatLocation.peerId
+                                
                                 let openWebview:(ChatInitialAction)->Void = { action in
                                     let chat = context.bindings.rootNavigation().first {
                                         $0 is ChatController
@@ -701,7 +707,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                 
                                 
                                 let makeRequestAppWebView:(BotApp, Bool)->Signal<(BotApp, String?), RequestAppWebViewError> = { botApp, allowWrite in
-                                    return context.engine.messages.requestAppWebView(peerId: peer.id, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), allowWrite: allowWrite) |> map {
+                                    return context.engine.messages.requestAppWebView(peerId: peerId ?? peer.id, appReference: .id(id: botApp.id, accessHash: botApp.accessHash), payload: command, themeParams: generateWebAppThemeParams(theme), allowWrite: allowWrite) |> map {
                                         return (botApp, $0)
                                     }
                                 }
@@ -1705,7 +1711,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                     action = .openMedia(Int32(timemark))
                                 }
                             } else if userAndPost.count == 2, post == nil {
-                                action = .makeWebview(appname: userAndPost[1], command: params[keyURLStartapp])
+                                var appname = userAndPost[1]
+                                if let range = userAndPost[1].range(of: "?") {
+                                    appname = String(userAndPost[1][..<range.lowerBound])
+                                }
+                                action = .makeWebview(appname: appname, command: params[keyURLStartapp])
                             }
                             
                             if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {

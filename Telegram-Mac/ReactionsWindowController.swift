@@ -27,7 +27,7 @@ final class ReactionsWindowController : NSObject {
         private let backgroundView = View()
         private let container = View()
         private var mask: SimpleShapeLayer?
-        init(_ content: NSView) {
+        init(_ content: NSView, theme: TelegramPresentationTheme) {
             
             
             self.contentView = content
@@ -144,9 +144,9 @@ final class ReactionsWindowController : NSObject {
     private var keyDisposable: Disposable?
     private var panelKeyDisposable: Disposable?
 
-    private func makeView(_ content: NSView, _ initialView: NSView, _ initialRect: NSRect, animated: Bool) -> (Window, V) {
+    private func makeView(_ content: NSView, _ initialView: NSView, _ initialRect: NSRect, animated: Bool, theme: TelegramPresentationTheme) -> (Window, V) {
         
-        let v = V(content)
+        let v = V(content, theme: theme)
         
         let panel = Window(contentRect: NSMakeRect(initialRect.minX - 21, initialRect.maxY - 320 + (initialRect.height + 20) - 32 + 36, 390, 340), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
         panel._canBecomeMain = false
@@ -178,51 +178,26 @@ final class ReactionsWindowController : NSObject {
         
     }
 
+    private var onClose:(()->Void)?
+    private let presentation: TelegramPresentationTheme
     
-    init(_ context: AccountContext, message: Message) {
+    init(_ context: AccountContext, peerId: PeerId, selectedItems: [EmojiesSectionRowItem.SelectedItem], react: @escaping(StickerPackItem, NSRect?)->Void, onClose:(()->Void)? = nil, presentation: TelegramPresentationTheme = theme) {
         self.context = context
+        self.presentation = presentation
+        self.onClose = onClose
         
-        var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
         
-        if let reactions = message.effectiveReactions {
-            for reaction in reactions {
-                if reaction.isSelected {
-                    switch reaction.value {
-                    case let .builtin(emoji):
-                        selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
-                    case let .custom(fileId):
-                        selectedItems.append(.init(source: .custom(fileId), type: .transparent))
-                    }
-                }
-            }
-        }
-        
-        self.emojies = .init(context, mode: .reactions, selectedItems: selectedItems)
+        self.emojies = .init(context, mode: .reactions, selectedItems: selectedItems, presentation: presentation)
         self.emojies.loadViewIfNeeded()
         super.init()
         
-        let interactions = EntertainmentInteractions(.emoji, peerId: message.id.peerId)
+        let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
         
         interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
-            let value: UpdateMessageReaction
-            if let bundle = sticker.file.stickerText {
-                value = .builtin(bundle)
-            } else {
-                value = .custom(fileId: sticker.file.fileId.id, file: sticker.file)
-            }
-            if case .custom = value, !context.isPremium {
-                showModalText(for: context.window, text: strings().customReactionPremiumAlert, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
-                })
-            } else {
-                let updated = message.newReactions(with: value)
-                context.reactions.react(message.id, values: updated, fromRect: fromRect, storeAsRecentlyUsed: true)
-            }
-           
+            react(sticker, fromRect)
             self?.close(animated: true)
-            
         }
-        emojies.update(with: interactions, chatInteraction: .init(chatLocation: .peer(message.id.peerId), context: context))
+        emojies.update(with: interactions, chatInteraction: .init(chatLocation: .peer(peerId), context: context))
 
         
         emojies.closeCurrent = { [weak self] in
@@ -275,7 +250,7 @@ final class ReactionsWindowController : NSObject {
         let initialScreenRect = initialWindow.convertToScreen(initialView.convert(initialView.bounds, to: nil))
         
         self.emojies.view.frame = self.emojies.view.bounds
-        let (panel, view) = makeView(self.emojies.view, initialView, initialScreenRect, animated: animated)
+        let (panel, view) = makeView(self.emojies.view, initialView, initialScreenRect, animated: animated, theme: self.presentation)
         
         panel.makeKeyAndOrderFront(nil)
         
@@ -381,6 +356,8 @@ final class ReactionsWindowController : NSObject {
     }
     
     private func close(animated: Bool = false) {
+        
+        self.onClose?()
         
         self.overlay.removeFromSuperview()
         self.context.window.removeAllHandlers(for: self)

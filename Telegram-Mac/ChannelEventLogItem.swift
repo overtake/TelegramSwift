@@ -775,6 +775,14 @@ class ServiceEventLogItem: TableRowItem {
                     text = strings().channelEventLogServiceAntispamDisabled(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .toggleCopyProtection(isEnabled):
+                let text: String
+                if isEnabled {
+                    text = strings().channelEventLogMessageToggleNoForwardsOn(peer.displayTitle)
+                } else {
+                    text = strings().channelEventLogMessageToggleNoForwardsOff(peer.displayTitle)
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:
                 break
             }

@@ -243,7 +243,7 @@ final class ChatLiveTranslateContext {
                 translationState?.paywall = false
             }
             
-            if let state = translationState, state.paywall {
+            if let state = translationState, state.paywall && peer?.isPremium == false {
                 isHidden = false
             }
             
@@ -258,7 +258,7 @@ final class ChatLiveTranslateContext {
         shouldDisposable.set(should.start(next: { [weak self] state, appearance, isPremium in
             self?.updateState { current in
                 var current = current
-                let to = state?.toLang ?? appearance.language.baseLanguageCode
+                let to = state?.toLang ?? appearance.languageCode
                 let toUpdated = current.to != to
                 if let state = state, state.fromLang != to, state.fromLang != "" {
                     current.from = state.fromLang
@@ -272,7 +272,7 @@ final class ChatLiveTranslateContext {
                 } else {
                     current.translate = false
                 }
-                current.paywall = state?.paywall ?? false
+                current.paywall = isPremium ? false : (state?.paywall ?? false)
                 if !current.canTranslate || !current.translate || toUpdated {
                     current.result = [:]
                 }
@@ -433,7 +433,7 @@ final class ChatLiveTranslateContext {
 
 
 func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Signal<ChatTranslationState?, NoError> {
-    let baseLang = appAppearance.language.baseLanguageCode
+    let baseLang = appAppearance.languageCode
     return baseAppSettings(accountManager: context.sharedContext.accountManager)
     |> mapToSignal { settings in
         if !settings.translateChats {

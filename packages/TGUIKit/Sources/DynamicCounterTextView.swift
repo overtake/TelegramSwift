@@ -124,7 +124,7 @@ public final class DynamicCounterTextView : View {
         }
     }
     
-    public var effectiveSubviews: [NSView] {
+    public var effectiveSubviews: [TextView] {
         return textViews.map { $0.value.0 }
     }
     

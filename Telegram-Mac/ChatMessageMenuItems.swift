@@ -413,10 +413,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 let text = message.text
                 let language = Translate.detectLanguage(for: text)
                 
-                let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.language.baseLanguageCode])
+                let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
                 if language == nil || !toLang.contains(language!), !muteTranslate {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                        showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.language.baseLanguageCode, text: text), for: context.window)
+                        showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text), for: context.window)
                         data.chatInteraction.enableTranslatePaywall()
                     }, itemImage: MenuAnimation.menu_translate.value))
                 }
@@ -476,10 +476,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         let selectedText = attr.attributedSubstring(from: range)
                         let text = selectedText.string
                         let language = Translate.detectLanguage(for: text)
-                        let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.language.baseLanguageCode])
+                        let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
                         if language == nil || !toLang.contains(language!), !muteTranslate {
                             thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                                showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.language.baseLanguageCode, text: text), for: context.window)
+                                showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text), for: context.window)
                                 data.chatInteraction.enableTranslatePaywall()
                             }, itemImage: MenuAnimation.menu_translate.value))
                         }
@@ -514,10 +514,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if !state.text.isEmpty && !state.isPending {
                 let text = state.text
                 let language = Translate.detectLanguage(for: text)
-                let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.language.baseLanguageCode])
+                let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.languageCode])
                 if language == nil || !toLang.contains(language!) {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                        showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.language.baseLanguageCode, text: text), for: context.window)
+                        showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.languageCode, text: text), for: context.window)
                         data.chatInteraction.enableTranslatePaywall()
                     }, itemImage: MenuAnimation.menu_translate.value))
                 }

@@ -291,10 +291,20 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
 }
     
 -(BOOL)becomeFirstResponder {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if ([_weakd respondsToSelector:@selector(responderDidUpdate)]) {
+            [_weakd responderDidUpdate];
+        }
+    });
     return [super becomeFirstResponder];
 }
     
 -(BOOL)resignFirstResponder {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if ([_weakd respondsToSelector:@selector(responderDidUpdate)]) {
+            [_weakd responderDidUpdate];
+        }
+    });
     return [super resignFirstResponder];
 }
     
@@ -310,7 +320,7 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     __block BOOL addedTransformations = false;
 
     
-    
+    menu.appearance = self.appearance;
     
     [menu.itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull item, NSUInteger idx, BOOL * _Nonnull s) {
         
@@ -993,6 +1003,7 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         [[_placeholder cell] setTruncatesLastVisibleLine:YES];
         
         [self addSubview:_placeholder];
+        
         
         _textView.weakTextView = self;
         

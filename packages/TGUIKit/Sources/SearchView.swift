@@ -228,7 +228,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         inputContainer.background = .clear
         inputContainer.backgroundColor = .clear
-        input.textColor = searchTheme?.textColor ?? presentation.search.textColor
+        input.textColor = searchTheme?.textColor ?? theme.search.textColor
         input.backgroundColor = .clear
         
         search.autohighlight = false

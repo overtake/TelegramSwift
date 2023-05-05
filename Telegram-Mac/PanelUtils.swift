@@ -19,13 +19,13 @@ let photoExts:[String] = ["png","jpg","jpeg","tiff", "heic"]
 let videoExts:[String] = ["mp4","mov","avi", "m4v"]
 let audioExts:[String] = ["mp3","wav", "m4a", "ogg"]
 
-func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, canChooseDirectories: Bool = false, for window:Window, completion:@escaping ([String]?)->Void) {
+func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, canChooseDirectories: Bool = false, for window:Window, appearance: NSAppearance? = theme.appearance, completion:@escaping ([String]?)->Void) {
     delay(0.01, closure: {
         var result:[String] = []
         let panel:NSOpenPanel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = canChooseDirectories
-        
+        panel.appearance = appearance
         panel.canCreateDirectories = true
         panel.allowedFileTypes = exts
         panel.allowsMultipleSelection = allowMultiple

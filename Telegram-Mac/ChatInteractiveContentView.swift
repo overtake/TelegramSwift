@@ -519,6 +519,14 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 super.executeInteraction(isControl)
             }
         } else {
+            if let context = context {
+                if NSEvent.modifierFlags.contains([.command, .shift]), let parent = parent {
+                    showModal(with: StoryModalController(context: context, messageId: parent.id), for: context.window, animationType: .alpha)
+                    return
+                }
+            }
+
+            
             if autoplayVideo {
                 open()
             } else {
@@ -654,7 +662,17 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if mediaUpdated /*mediaUpdated*/ {
             
             
+            var dimensions: NSSize = size
             
+            if let image = media as? TelegramMediaImage {
+                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
+            } else if let file = media as? TelegramMediaFile {
+                dimensions = file.dimensions?.size ?? size
+            }
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
+
+
             
             if let image = media as? TelegramMediaImage {
                 

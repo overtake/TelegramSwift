@@ -150,7 +150,9 @@ fileprivate class PreviewSenderView : Control {
     
     
     private let disposable = MetaDisposable()
-    required init(frame frameRect: NSRect) {
+    private let theme: TelegramPresentationTheme
+    required init(frame frameRect: NSRect, theme: TelegramPresentationTheme) {
+        self.theme = theme
         super.init(frame: frameRect)
         
         backgroundColor = theme.colors.background
@@ -160,6 +162,9 @@ fileprivate class PreviewSenderView : Control {
         closeButton.set(image: theme.icons.modalClose, for: .Normal)
         _ = closeButton.sizeToFit()
         
+        tableView.getBackgroundColor = {
+            .clear
+        }
         
         photoButton.appTooltip = strings().previewSenderMediaTooltip
         fileButton.appTooltip = strings().previewSenderFileTooltip
@@ -469,16 +474,22 @@ fileprivate class PreviewSenderView : Control {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
 }
 
 private final class SenderPreviewArguments {
     let context: AccountContext
+    let theme: TelegramPresentationTheme
     let edit:(URL)->Void
     let paint: (URL)->Void
     let delete:(URL)->Void
     let reorder:(Int, Int) -> Void
-    init(context: AccountContext, edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete: @escaping(URL)->Void, reorder: @escaping(Int, Int) -> Void) {
+    init(context: AccountContext, theme: TelegramPresentationTheme, edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete: @escaping(URL)->Void, reorder: @escaping(Int, Int) -> Void) {
         self.context = context
+        self.theme = theme
         self.edit = edit
         self.paint = paint
         self.delete = delete
@@ -606,7 +617,7 @@ private enum PreviewEntry : Comparable, Identifiable {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         case let .media(_, _, url, media, isSpoiler):
-            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, editedData: state.editedData[url], isSpoiler: isSpoiler, edit: {
+            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, theme: arguments.theme, editedData: state.editedData[url], isSpoiler: isSpoiler, edit: {
                 arguments.edit(url)
             }, paint: {
                 arguments.paint(url)
@@ -614,7 +625,7 @@ private enum PreviewEntry : Comparable, Identifiable {
                 arguments.delete(url)
             })
         case let .archive(_, _, _, media):
-            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, editedData: nil, isSpoiler: false, edit: {
+            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, theme: arguments.theme, editedData: nil, isSpoiler: false, edit: {
               //  arguments.edit(url)
             }, delete: {
               // arguments.delete(url)
@@ -861,7 +872,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     override var responderPriority: HandlerPriority {
-        return .high
+        return .modal
     }
     
     private var sendCurrentMedia:((Bool, Date?, Bool?)->Void)? = nil
@@ -1008,6 +1019,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let context = self.context
         let initialSize = self.atomicSize
+        let theme = self.presentation ?? theme
 
         
         genericView.textView.inputView.isEditable = true
@@ -1033,8 +1045,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             genericView.textView.setAttributedString(attributedString, animated: false)
         } else {
             self.temporaryInputState = chatInteraction.presentation.interfaceState.inputState
-            let text = chatInteraction.presentation.interfaceState.inputState.attributedString
-            
+            let text = chatInteraction.presentation.interfaceState.inputState.attributedString(theme)
             genericView.textView.setAttributedString(text, animated: false)
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedInputState(ChatTextInputState())})})
         }
@@ -1065,7 +1076,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let removeTransitionAnimation: Atomic<Bool> = Atomic(value: false)
         
-        let arguments = SenderPreviewArguments(context: context, edit: { [weak self] url in
+        let arguments = SenderPreviewArguments(context: context, theme: presentation ?? theme, edit: { [weak self] url in
             self?.runEditor?(url, false)
         }, paint: { [weak self] url in
             self?.runEditor?(url, true)
@@ -1279,7 +1290,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 tooltip(for: self.genericView.sendButton, text: strings().slowModeMultipleError)
                 self.genericView.textView.setSelectedRange(NSMakeRange(0, attributed.length))
                 self.genericView.textView.shake()
-            } else if let peer = self.chatInteraction.peer {
+            } else {
+                let peer = self.chatInteraction.peer
                 let state = stateValue.with { $0.currentState }
                 let medias = stateValue.with { $0.medias }
                 var permissions:[(String, Int)] = []
@@ -1571,8 +1583,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     private let asMedia: Bool
     private let attributedString: NSAttributedString?
-    init(urls:[URL], chatInteraction:ChatInteraction, asMedia:Bool = true, attributedString: NSAttributedString? = nil) {
-        
+    private let presentation: TelegramPresentationTheme?
+    init(urls:[URL], chatInteraction:ChatInteraction, asMedia:Bool = true, attributedString: NSAttributedString? = nil, presentation: TelegramPresentationTheme? = nil) {
+        self.presentation = presentation
         let filtred = urls.filter { url in
             return FileManager.default.fileExists(atPath: url.path)
         }.uniqueElements
@@ -1583,7 +1596,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let context = chatInteraction.context
         self.asMedia = asMedia
         self.context = context
-        self.emoji = EmojiesController(context)
+        self.emoji = EmojiesController(context, presentation: presentation ?? theme)
         
        
 
@@ -1682,11 +1695,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 inputContextHelper.context(with: value.inputQueryResult, for: self.genericView, relativeView: self.genericView.forHelperView, animated: animated)
             }
         } else if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-            if value == self.contextChatInteraction.presentation {
+            if value === self.contextChatInteraction.presentation {
                 if value.effectiveInput != oldValue.effectiveInput {
                     updateInput(value, prevState: oldValue, animated)
                 }
-            } else if value == self.chatInteraction.presentation {
+            } else if value === self.chatInteraction.presentation {
                 if value.slowMode != oldValue.slowMode {
                     let urls = self.urls
                     self.urls = urls
@@ -1731,7 +1744,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
             textView.animates = false
-            textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+            textView.setAttributedString(state.effectiveInput.attributedString(theme), animated:animated)
             textView.animates = true
         }
         let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
@@ -1898,6 +1911,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
 
+    override func initializer() -> NSView {
+        return PreviewSenderView(frame: frame, theme: presentation ?? theme)
+    }
     
     override func didResizeView(_ size: NSSize, animated: Bool) {
         self.genericView.updateHeight(self.genericView.textView.frame.height, animated)

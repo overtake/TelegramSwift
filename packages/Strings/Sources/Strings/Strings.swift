@@ -161,14 +161,7 @@ public extension String {
             return true
         }
         
-        var string = ""
-        for scalar in self.unicodeScalars {
-            if scalar == UnicodeScalar.ZeroWidthJoiner {
-                string.append("\u{1f3fb}")
-            }
-            string.unicodeScalars.append(scalar)
-        }
-        return string.glyphCount == 1
+        return self.emojiWithSkinModifier(self.emojiSkinToneModifiers[0]).glyphCount == 1
     }
     
     var glyphCount: Int {

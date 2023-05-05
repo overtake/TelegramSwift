@@ -23,6 +23,13 @@
 		27034078282CF7BE00D0156C /* PremiumStarSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27034077282CF7BE00D0156C /* PremiumStarSceneView.swift */; };
 		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
 		270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* WidgetStickersController.swift */; };
+		270B7CBA29F66649009C994C /* StoryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CB929F66649009C994C /* StoryModalController.swift */; };
+		270B7CBC29F67361009C994C /* StoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBB29F67361009C994C /* StoryView.swift */; };
+		270B7CBE29F7BCCA009C994C /* StoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBD29F7BCCA009C994C /* StoryListView.swift */; };
+		270B7CC029F7BFF0009C994C /* StoryInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBF29F7BFF0009C994C /* StoryInputView.swift */; };
+		270B7CC229F7CC66009C994C /* StoryFetchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC129F7CC66009C994C /* StoryFetchManager.swift */; };
+		270B7CC429FA925D009C994C /* StoryControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC329FA925D009C994C /* StoryControlsView.swift */; };
+		270B7CC629FA9E1E009C994C /* StoryListNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */; };
 		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
 		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
 		270F020726F0B0830099D2AA /* EmojiAnimationEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */; };
@@ -34,6 +41,8 @@
 		2713B223260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B21D260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift */; };
 		2713B224260A42FE00CE0EC6 /* MediaTrackFrameBuffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2713B21E260A42FE00CE0EC6 /* MediaTrackFrameBuffer.swift */; };
 		27161A9C27EC98290069BCEF /* menu_drugs.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27161A9B27EC98280069BCEF /* menu_drugs.tgs */; };
+		2718244D2A0507A300AFBD4C /* menu_success.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718244C2A0507A300AFBD4C /* menu_success.tgs */; };
+		2718244F2A05413000AFBD4C /* StoryMyInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718244E2A05413000AFBD4C /* StoryMyInputView.swift */; };
 		2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718FF8127BFB28900196BC4 /* login_airplane.tgs */; };
 		2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718FF8727C3A11F00196BC4 /* DownloadsController.swift */; };
 		271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */; };
@@ -1456,6 +1465,13 @@
 		27034077282CF7BE00D0156C /* PremiumStarSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStarSceneView.swift; sourceTree = "<group>"; };
 		2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStatusStatusRowItem.swift; sourceTree = "<group>"; };
 		270A2629269D8F1000B31B2B /* WidgetStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStickersController.swift; sourceTree = "<group>"; };
+		270B7CB929F66649009C994C /* StoryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryModalController.swift; sourceTree = "<group>"; };
+		270B7CBB29F67361009C994C /* StoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryView.swift; sourceTree = "<group>"; };
+		270B7CBD29F7BCCA009C994C /* StoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListView.swift; sourceTree = "<group>"; };
+		270B7CBF29F7BFF0009C994C /* StoryInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryInputView.swift; sourceTree = "<group>"; };
+		270B7CC129F7CC66009C994C /* StoryFetchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryFetchManager.swift; sourceTree = "<group>"; };
+		270B7CC329FA925D009C994C /* StoryControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryControlsView.swift; sourceTree = "<group>"; };
+		270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListNavigationView.swift; sourceTree = "<group>"; };
 		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
 		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
 		270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiAnimationEffectView.swift; sourceTree = "<group>"; };
@@ -1467,6 +1483,8 @@
 		2713B21D260A42FE00CE0EC6 /* MediaTrackFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaTrackFrameDecoder.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaTrackFrameDecoder.swift"; sourceTree = SOURCE_ROOT; };
 		2713B21E260A42FE00CE0EC6 /* MediaTrackFrameBuffer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MediaTrackFrameBuffer.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/MediaTrackFrameBuffer.swift"; sourceTree = SOURCE_ROOT; };
 		27161A9B27EC98280069BCEF /* menu_drugs.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_drugs.tgs; sourceTree = "<group>"; };
+		2718244C2A0507A300AFBD4C /* menu_success.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_success.tgs; sourceTree = "<group>"; };
+		2718244E2A05413000AFBD4C /* StoryMyInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMyInputView.swift; sourceTree = "<group>"; };
 		2718FF8127BFB28900196BC4 /* login_airplane.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = login_airplane.tgs; sourceTree = "<group>"; };
 		2718FF8727C3A11F00196BC4 /* DownloadsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsController.swift; sourceTree = "<group>"; };
 		2718FF8B27C3CCC700196BC4 /* FetchManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FetchManager; path = packages/FetchManager; sourceTree = "<group>"; };
@@ -3013,6 +3031,21 @@
 			path = folders;
 			sourceTree = "<group>";
 		};
+		270B7CB829F66638009C994C /* stories */ = {
+			isa = PBXGroup;
+			children = (
+				270B7CB929F66649009C994C /* StoryModalController.swift */,
+				270B7CBB29F67361009C994C /* StoryView.swift */,
+				270B7CBD29F7BCCA009C994C /* StoryListView.swift */,
+				270B7CBF29F7BFF0009C994C /* StoryInputView.swift */,
+				270B7CC129F7CC66009C994C /* StoryFetchManager.swift */,
+				270B7CC329FA925D009C994C /* StoryControlsView.swift */,
+				270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */,
+				2718244E2A05413000AFBD4C /* StoryMyInputView.swift */,
+			);
+			name = stories;
+			sourceTree = "<group>";
+		};
 		271F78C42806FC0C0040EE8F /* avatar */ = {
 			isa = PBXGroup;
 			children = (
@@ -3393,6 +3426,7 @@
 				27E60C1029ED35E200E10E39 /* menu_online.tgs */,
 				2747FD3A2927BFBE0045B95C /* menu_hide.tgs */,
 				276279D5298D32EF0096F904 /* menu_more.tgs */,
+				2718244C2A0507A300AFBD4C /* menu_success.tgs */,
 				2751015029C86A15004CEFF3 /* menu_speed.tgs */,
 				279BD40D29BB283700A8B640 /* menu_atsign.tgs */,
 				2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */,
@@ -4406,6 +4440,7 @@
 		C22E062F1D80439800A11C88 /* ui */ = {
 			isa = PBXGroup;
 			children = (
+				270B7CB829F66638009C994C /* stories */,
 				27361ED2282122B500808241 /* premium */,
 				277DFE6D27848A9700F78396 /* menu-items */,
 				27E7E4A3270F0F8200CF3A24 /* connecting */,
@@ -6280,6 +6315,7 @@
 				27803BFE27A3E944007B0FA9 /* menu_folder_work.tgs in Resources */,
 				27803C0827A3E944007B0FA9 /* menu_folder_music.tgs in Resources */,
 				2747969128F5A5C500A891F3 /* anim_play.json in Resources */,
+				2718244D2A0507A300AFBD4C /* menu_success.tgs in Resources */,
 				27CB17522763284500DD25E0 /* menu_unblock.tgs in Resources */,
 				9FDE0A8F21AD41C2001546D7 /* emoji1014-1.txt in Resources */,
 				27336735276241820027441E /* menu_plus.tgs in Resources */,
@@ -6639,6 +6675,7 @@
 				27A6976A273D09AA00B33415 /* DesktopCapturePreviewItem.swift in Sources */,
 				27A69768273D096700B33415 /* DesktopCapturerWindow.swift in Sources */,
 				27A69767273D096200B33415 /* CallSettingsController.swift in Sources */,
+				270B7CBC29F67361009C994C /* StoryView.swift in Sources */,
 				27A69766273D093500B33415 /* CameraViews.swift in Sources */,
 				27A69765273D092C00B33415 /* CallWindowController.swift in Sources */,
 				27F7EEC0293F53E600B6E324 /* UserInfoResetPhotoItem.swift in Sources */,
@@ -6905,6 +6942,8 @@
 				A7C1379E23DF21EA00803ED3 /* ChatListRevealItem.swift in Sources */,
 				C22A899F1EBCC2AA005B963D /* CallNavigationHeaderView.swift in Sources */,
 				27949113260A41EB0003BFA0 /* FFMpegMediaFrameSourceContextHelpers.swift in Sources */,
+				2718244F2A05413000AFBD4C /* StoryMyInputView.swift in Sources */,
+				270B7CBE29F7BCCA009C994C /* StoryListView.swift in Sources */,
 				A742CDCD240FB32F00C6B69B /* ChatListFilterRecommendedItem.swift in Sources */,
 				27AAE01328E2E9BD004DA38D /* ForumTopicEmojiSelectRowItem.swift in Sources */,
 				2744AE6D25B44E1500E8849F /* ExportedInvitationController.swift in Sources */,
@@ -7056,6 +7095,7 @@
 				D076F88D2296FD18004F895A /* AnimtedStickerHeaderItem.swift in Sources */,
 				D0A27650249CE588005E3C77 /* GroupsStatsController.swift in Sources */,
 				C2CFCAC01EBB9C8100843F6A /* CallAudioPlayer.swift in Sources */,
+				270B7CC029F7BFF0009C994C /* StoryInputView.swift in Sources */,
 				C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */,
 				C230B9161DD39E780057F596 /* CreateGroupViewController.swift in Sources */,
 				C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */,
@@ -7108,6 +7148,7 @@
 				27F4F17C2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift in Sources */,
 				27361ED4282122C700808241 /* StickerPremiumHolderView.swift in Sources */,
 				D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */,
+				270B7CBA29F66649009C994C /* StoryModalController.swift in Sources */,
 				D071E8A8214BBE21001B6024 /* ChatStickersTouchBarPopover.swift in Sources */,
 				C2B1A0F11D9D94E400ACB1DD /* SeparatorRowView.swift in Sources */,
 				9F21A7D521C16CB90037784F /* InstantPagePeerReferenceItem.swift in Sources */,
@@ -7120,6 +7161,7 @@
 				A789E08423E05EAE00AEB34A /* ChatListFiltersListController.swift in Sources */,
 				C2D187EE1E28B9CB0038961D /* ShareInlineResultNavigationAction.swift in Sources */,
 				2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */,
+				270B7CC629FA9E1E009C994C /* StoryListNavigationView.swift in Sources */,
 				C226742B1DBE16B9000BA9ED /* CachedResourceRepresentations.swift in Sources */,
 				C2167E571DC221E600F98E03 /* PeerMediaRowContent.swift in Sources */,
 				D0DD91FE246A8A380039D83D /* PeerMediaGifsController.swift in Sources */,
@@ -7194,6 +7236,7 @@
 				270202BF261A1BF500CFCE6D /* PaymentsTipsRowItem.swift in Sources */,
 				27034074282BDEBF00D0156C /* PremiumBoardingHeaderItem.swift in Sources */,
 				9F7B741122296FD7006610E4 /* SharedNotificationManager.swift in Sources */,
+				270B7CC229F7CC66009C994C /* StoryFetchManager.swift in Sources */,
 				9F7B740F2229618E006610E4 /* SharedWakeupManager.swift in Sources */,
 				9F10CE8E20617C36002DD61A /* PassportInsertPasswordItem.swift in Sources */,
 				2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */,
@@ -7362,6 +7405,7 @@
 				C27AAFEF1DEB2EA9009B9629 /* EmptyComposeController.swift in Sources */,
 				27F2BBCD27BE7F9700A37463 /* Auth_CodeEntryContol.swift in Sources */,
 				2760E55B269706D7001C59F8 /* WidgetView.swift in Sources */,
+				270B7CC429FA925D009C994C /* StoryControlsView.swift in Sources */,
 				C2B4D0C11E34E07100CBC4E6 /* PrettyGridUtils.swift in Sources */,
 				C27A8E991EC9D48000C8E7E7 /* QuickSwitcherModalController.swift in Sources */,
 				C230BEB21EE97B290029586C /* ChannelEventLogController.swift in Sources */,

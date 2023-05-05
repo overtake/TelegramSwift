@@ -198,6 +198,7 @@ final class ChatInteraction : InterfaceObserver  {
     var dismissPendingRequests:([PeerId])->Void = { _ in }
     var setupChatThemes:()->Void = { }
     var closeChatThemes:()->Void = { }
+    var appendAttributedText:(NSAttributedString)->Void = { _ in }
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())
@@ -373,7 +374,7 @@ final class ChatInteraction : InterfaceObserver  {
     func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
 
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
-        let inputText = presentation.effectiveInput.attributedString.mutableCopy() as! NSMutableAttributedString
+        let inputText = presentation.effectiveInput.attributedString(theme).mutableCopy() as! NSMutableAttributedString
         
         if self.presentation.state != .normal && presentation.state != .editing {
             return selectedRange.lowerBound ..< selectedRange.lowerBound

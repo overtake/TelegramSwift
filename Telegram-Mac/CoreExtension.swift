@@ -3672,10 +3672,6 @@ extension NSAttributedString {
     static func makeEmojiHolder(_ emoji: String, fromRect: NSRect?) -> NSAttributedString {
         let attach = NSMutableAttributedString()
         _ = attach.append(string: emoji)
-        if let fromRect = fromRect, FastSettings.animateInputEmoji {
-            let tag = TGInputTextEmojiHolder(uniqueId: arc4random64(), emoji: emoji, rect: fromRect, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: NSColor.clear))
-            attach.addAttribute(.init(rawValue: TGEmojiHolderAttributeName), value: tag, range: NSMakeRange(0, emoji.length))
-        }
         return attach
     }
 }
@@ -3726,3 +3722,10 @@ func isLite(_ key: LiteModeKey = .any) -> Bool {
 }
 
 let scheduleWhenOnlineDate = Date(timeIntervalSince1970: TimeInterval(scheduleWhenOnlineTimestamp))
+
+
+extension SearchTheme {
+    static func initialize(_ palette: ColorPalette) -> SearchTheme {
+        return SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { strings().searchFieldSearch }, palette.text, palette.grayText)
+    }
+}

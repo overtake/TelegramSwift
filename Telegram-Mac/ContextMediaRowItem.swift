@@ -187,6 +187,10 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
         return self
     }
     
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
 
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -303,7 +307,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 }
                 
                 container.setFrameOrigin(inset, 0)
-                container.background = theme.colors.background
+                container.background = .clear
                 addSubview(container)
                 inset += item.result.sizes[i].width
             }
@@ -344,29 +348,17 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
     override func layout() {
         super.layout()
         
-        if let item = item as? ContextMediaRowItem  {
-            //if item.result.isFilled(for: frame.width) {
-                let drawn = subviews.reduce(0, { (acc, view) -> CGFloat in
-                    return acc + view.frame.width
-                })
-                if drawn < frame.width {
-                    dif = 2
-                    var inset:CGFloat = dif
-                    for subview in subviews {
-                        subview.setFrameOrigin(inset, 0)
-                        subview.frame = CGRect(origin: CGPoint(x: inset, y: 0), size: subview.frame.size).insetBy(dx: 1, dy: 1)
-                        inset += subview.frame.width + dif
-                    }
-                }
-       //     }
-//            else if !subviews.isEmpty {
-//                var x:CGFloat = 0
-//                let itemWidth = ceil((frame.width - CGFloat(subviews.count - 1)) / CGFloat(subviews.count))
-//                for subview in subviews {
-//                    subview.frame = NSMakeRect(x, 0, itemWidth, subview.frame.height)
-//                    x += itemWidth + 1
-//                }
-//            }
+        let drawn = subviews.reduce(0, { (acc, view) -> CGFloat in
+            return acc + view.frame.width
+        })
+        if drawn < frame.width {
+            dif = 2
+            var inset:CGFloat = dif
+            for subview in subviews {
+                subview.setFrameOrigin(inset, 0)
+                subview.frame = CGRect(origin: CGPoint(x: inset, y: 0), size: subview.frame.size).insetBy(dx: 1, dy: 1)
+                inset += subview.frame.width + dif
+            }
         }
     }
     

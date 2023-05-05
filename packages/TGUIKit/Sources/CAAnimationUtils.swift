@@ -319,7 +319,6 @@ public extension CALayer {
         tr = CATransform3DTranslate(tr, -anchor.x, -anchor.y, 0)
         animation.toValue = NSValue(caTransform3D: tr)
 
-        
         self.add(animation, forKey: "transform.scale.x")
     }
 

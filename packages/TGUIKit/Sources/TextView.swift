@@ -1567,6 +1567,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private let drawLayer: TextDrawLayer = TextDrawLayer()
     private var blockMask: SimpleLayer?
     
+    
     var hasBackground: Bool {
         return blurBackground != nil
     }
@@ -1658,7 +1659,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         super.draw(dirtyRect)
     }
     
-    var drawingLayer: CALayer? {
+    public var drawingLayer: CALayer? {
         if #available(macOS 10.13, *) {
             return drawLayer
         } else {

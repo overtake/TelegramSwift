@@ -2690,7 +2690,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         })
         
         let codeIndex = codes.firstIndex(where: {
-            $0.code.contains(appAppearance.language.baseLanguageCode)
+            $0.code.contains(appAppearance.languageCode)
         })
         if let codeIndex = codeIndex {
             codes.move(at: codeIndex, to: 0)
