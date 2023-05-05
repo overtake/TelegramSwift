@@ -520,7 +520,7 @@ final class ChatTextInputState: Codable, Equatable {
         return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attributes)
     }
 
-    var attributedString:NSAttributedString {
+    func attributedString(_ theme: TelegramPresentationTheme) -> NSAttributedString {
         let string = NSMutableAttributedString()
         _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
 
@@ -579,7 +579,7 @@ final class ChatTextInputState: Codable, Equatable {
         return string.copy() as! NSAttributedString
     }
 
-    func makeAttributeString(addPreAsBlock: Bool = false) -> NSAttributedString {
+    func makeAttributeString(addPreAsBlock: Bool = false, theme: TelegramPresentationTheme = theme) -> NSAttributedString {
         let string = NSMutableAttributedString()
         _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
         var pres:[Range<Int>] = []
@@ -615,9 +615,9 @@ final class ChatTextInputState: Codable, Equatable {
     }
 
 
-    func subInputState(from range: NSRange) -> ChatTextInputState {
+    func subInputState(from range: NSRange, theme: TelegramPresentationTheme = theme) -> ChatTextInputState {
 
-        var subText = attributedString.attributedSubstring(from: range).trimmed
+        var subText = attributedString(theme).attributedSubstring(from: range).trimmed
 
         let localAttributes = chatTextAttributes(from: subText)
 

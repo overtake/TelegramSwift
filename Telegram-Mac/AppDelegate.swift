@@ -1466,7 +1466,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         if let context = contextValue?.context, authContextValue == nil {
             _ = sharedContextOnce.start(next: { applicationContext in
                 if !applicationContext.notificationManager.isLocked {
-                    showModal(with: QuickSwitcherModalController(context), for: self.window)
+                    if !hasModals() {
+                        showModal(with: QuickSwitcherModalController(context), for: self.window)
+                    }
                 }
             })
         }

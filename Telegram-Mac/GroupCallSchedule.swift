@@ -73,19 +73,21 @@ private final class GroupCallScheduleTimerView : View {
         
         let counterSubviews = counter.effectiveSubviews
         
-        while mask.subviews.count > counterSubviews.count {
-            mask.subviews.removeLast()
-        }
-        while mask.subviews.count < counterSubviews.count {
-            let view = ImageView()
-            view.image = maskImage
-            view.sizeToFit()
-            mask.addSubview(view)
-        }
+        addSubview(counter)
         
-        for (i, mask) in mask.subviews.enumerated() {
-            mask.layer?.mask = counterSubviews[i].layer
-        }
+//        while mask.subviews.count > counterSubviews.count {
+//            mask.subviews.removeLast()
+//        }
+//        while mask.subviews.count < counterSubviews.count {
+//            let view = ImageView()
+//            view.image = maskImage
+//            view.sizeToFit()
+//            mask.addSubview(view)
+//        }
+        
+//        for (i, mask) in mask.subviews.enumerated() {
+//            mask.layer?.mask = counterSubviews[i].drawingLayer
+//        }
         mask.setFrameSize(value.size)
         mask.change(pos: NSMakePoint(round((frame.width - value.size.width) / 2), focus(mask.frame.size).minY), animated: animated)
         self.nextTimer?.start()

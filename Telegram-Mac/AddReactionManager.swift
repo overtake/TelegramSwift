@@ -175,15 +175,17 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         private var currentKey: String?
         
         private var selectionView : View?
+        private let presentation: TelegramPresentationTheme
         
         
-        required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool, NSRect?)->Void) {
+        required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, theme: TelegramPresentationTheme) {
             
             let size: NSSize = reaction.isSelected ? NSMakeSize(25, 24) : NSMakeSize(frameRect.width, 30)
             let rect = CGRect(origin: .zero, size: size)
             
             let isLite = context.isLite(.emoji)
             
+            self.presentation = theme
             self.player = LottiePlayerView(frame: rect)
             self.reaction = reaction
             self.context = context
@@ -349,11 +351,11 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
           
             
             
-            if let appearAnimation = reaction.appearAnimation {
+            if let appearAnimation = reaction.selectedAnimation {
                 let signal = context.account.postbox.mediaBox.resourceData(appearAnimation.resource, attemptSynchronously: true)
                 |> filter {
                     $0.complete
-                }
+                } |> take(1)
                 |> deliverOnMainQueue
                 
 //                self.imageView?.removeFromSuperview()
@@ -383,7 +385,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     
     class ShowMore : Control {
         private let imageView = ImageView()
-        required init(frame frameRect: NSRect) {
+        required init(frame frameRect: NSRect, theme: TelegramPresentationTheme) {
             super.init(frame: frameRect)
             self.backgroundColor = theme.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1)
             self.scaleOnClick = true
@@ -401,6 +403,10 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
+        
+        required init(frame frameRect: NSRect) {
+            fatalError("init(frame:) has not been implemented")
+        }
     }
     
     private let scrollView = HorizontalScrollView()
@@ -414,20 +420,24 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private let visualEffect = NSVisualEffectView(frame: .zero)
     private let radiusLayer: CGFloat?
     
-    private let showMore = ShowMore(frame: NSMakeRect(0, 0, 34, 34))
+    private let showMore: ShowMore
     private let revealReactions:((NSView & StickerFramesCollector)->Void)?
     
     private let maskLayer = SimpleShapeLayer()
     private let backgroundColorView = View()
     private let shadowLayer = SimpleShapeLayer()
+    private let presentation: TelegramPresentationTheme
     
-    
-    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil) {
+    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil, presentation: TelegramPresentationTheme = theme) {
         self.list = list
+        self.showMore = ShowMore(frame: NSMakeRect(0, 0, 34, 34), theme: presentation)
         self.revealReactions = revealReactions
         self.radiusLayer = radiusLayer
+        self.presentation = presentation
         super.init(frame: frameRect)
         
+        
+        let theme = presentation
         
         backgroundView.layer?.mask = maskLayer
         if !isLite(.blur) {
@@ -516,7 +526,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         for reaction in list {
             let add:(ContextReaction)->Void = { reaction in
                 let itemSize = size.bounds
-                let reaction = ReactionView(frame: NSMakeRect(x, 3, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
+                let reaction = ReactionView(frame: NSMakeRect(x, 3, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add, theme: presentation)
                 
                 self.documentView.addSubview(reaction)
                 x += size.width + 4
@@ -694,36 +704,36 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         return mutablePath
     }
 }
-
-private final class LockView : View {
-    private let visualEffect = NSVisualEffectView()
-    override init() {
-        let frameRect = NSMakeSize(20, 20).bounds
-        super.init(frame: frameRect)
-        addSubview(visualEffect)
-        visualEffect.wantsLayer = true
-        visualEffect.blendingMode = .withinWindow
-        visualEffect.state = .active
-        visualEffect.material = theme.dark ? .dark : .light
-        
-        let maskLayer = CALayer()
-        maskLayer.frame = frameRect
-        maskLayer.contents = theme.icons.premium_reaction_lock
-        
-        self.layer?.mask = maskLayer
-        
-        self.background = theme.colors.grayText.withAlphaComponent(0.5)
-        
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
-    }
-}
+//
+//private final class LockView : View {
+//    private let visualEffect = NSVisualEffectView()
+//    override init() {
+//        let frameRect = NSMakeSize(20, 20).bounds
+//        super.init(frame: frameRect, theme: TelegramPresentationTheme)
+//        addSubview(visualEffect)
+//        visualEffect.wantsLayer = true
+//        visualEffect.blendingMode = .withinWindow
+//        visualEffect.state = .active
+//        visualEffect.material = theme.dark ? .dark : .light
+//
+//        let maskLayer = CALayer()
+//        maskLayer.frame = frameRect
+//        maskLayer.contents = theme.icons.premium_reaction_lock
+//
+//        self.layer?.mask = maskLayer
+//
+//        self.background = theme.colors.grayText.withAlphaComponent(0.5)
+//
+//    }
+//
+//    required init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
+//
+//    required init(frame frameRect: NSRect) {
+//        fatalError("init(frame:) has not been implemented")
+//    }
+//}
 
 
 /*

@@ -25,6 +25,7 @@ public struct SearchTheme {
         self.textColor = textColor
         self.placeholderColor = placeholderColor
     }
+    
 }
 
 public enum PaletteWallpaper : Equatable {

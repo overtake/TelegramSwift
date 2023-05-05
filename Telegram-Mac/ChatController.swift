@@ -3120,6 +3120,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             _ = combineLatest(unmuteSignal, removeFlagsSignal).start()
         }
         
+        chatInteraction.appendAttributedText = { [weak self] attr in
+            _ = self?.chatInteraction.appendText(attr)
+        }
+        
         chatInteraction.sendPlainText = { [weak self] text in
             if let strongSelf = self, let peer = self?.chatInteraction.presentation.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 

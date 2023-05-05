@@ -783,7 +783,7 @@ func chatMessageWebFilePhoto(account: Account, photo: TelegramMediaWebFile, toRe
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
-                    c.setFillColor(theme.colors.grayBackground.cgColor)
+                   // c.setFillColor(theme.colors.grayBackground.cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 
@@ -2241,7 +2241,7 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
             
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
-                c.setFillColor(theme.colors.grayBackground.cgColor)
+             //   c.setFillColor(theme.colors.grayBackground.cgColor)
                 if arguments.boundingSize != arguments.imageSize {
                     c.fill(arguments.drawingRect)
                 }

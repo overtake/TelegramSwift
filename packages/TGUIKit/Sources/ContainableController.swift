@@ -120,7 +120,6 @@ public extension ContainedViewLayoutTransition {
                 })
             default:
                 
-                CATransaction.begin()
                 var ignoreSize: Bool = false
                 if let view = view as? TableView {
                     view.change(size: frame.size, animated: true, duration: duration, timingFunction: curve.timingFunction, completion: { completed in
@@ -148,7 +147,6 @@ public extension ContainedViewLayoutTransition {
                         completion?(completed)
                     }
                 })
-                CATransaction.commit()
             }
         }
     }
@@ -164,7 +162,6 @@ public extension ContainedViewLayoutTransition {
             }
         case let .animated(duration, _):
 
-            CATransaction.begin()
             
             func animateSize(_ layer: CALayer) -> Void {
                 var presentBounds:NSRect = layer.bounds
@@ -188,7 +185,6 @@ public extension ContainedViewLayoutTransition {
             animateSize(layer)
             layer.frame = frame
             
-            CATransaction.commit()
         }
     }
     

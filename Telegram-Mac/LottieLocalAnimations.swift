@@ -253,6 +253,7 @@ enum LocalAnimatedSticker : String {
     case menu_more
     case menu_atsign
     case menu_speed
+    case menu_success
 
     case emoji_category_activities
     case emoji_category_angry

@@ -264,6 +264,26 @@ class GeneralRowItem: TableRowItem {
         
         let unselectedImage: CGImage
         let selectedImage: CGImage
+        
+        static func initialize(_ theme: TelegramPresentationTheme) -> GeneralRowItem.Theme {
+            return .init(backgroundColor: theme.colors.background,
+                         grayBackground: theme.colors.grayBackground,
+                         grayForeground: theme.colors.grayForeground,
+                         highlightColor: theme.colors.grayHighlight,
+                         borderColor: theme.colors.border,
+                         accentColor: theme.colors.accent,
+                         secondaryColor: theme.colors.grayUI,
+                         textColor: theme.colors.text,
+                         grayTextColor: theme.colors.grayText,
+                         underSelectedColor: theme.colors.underSelectedColor,
+                         accentSelectColor: theme.colors.accentSelect,
+                         redColor: theme.colors.redUI,
+                         indicatorColor: theme.colors.indicatorColor,
+                         appearance: theme.colors.appearance,
+                         switchAppearance: nil,
+                         unselectedImage: theme.icons.chatToggleUnselected,
+                         selectedImage: theme.icons.chatToggleSelected)
+        }
 
         init(backgroundColor: NSColor = theme.colors.background,
              grayBackground: NSColor = theme.colors.grayBackground,

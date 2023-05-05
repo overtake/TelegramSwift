@@ -253,8 +253,10 @@ open class Control: View {
     }
     
     public var controlIsHidden: Bool {
-        return super.isHidden || layer!.opacity < Float(1.0)
+        return super.isHidden || (layer!.opacity < Float(1.0) && !controlOpacityEventIgnored)
     }
+    
+    public var controlOpacityEventIgnored: Bool = false
     
     open override var isHidden: Bool {
         get {
@@ -446,7 +448,7 @@ open class Control: View {
         }
         
         if userInteractionEnabled && !event.modifierFlags.contains(.control) {
-            if isEnabled && layer!.opacity > 0 {
+            if isEnabled && !controlIsHidden {
                 send(event: .Up)
                 
                 if longInvoked {
@@ -606,11 +608,6 @@ open class Control: View {
         super.init(frame: frameRect)
         animates = false
 //        layer?.disableActions()
-        guard #available(OSX 10.12, *) else {
-            layer?.opacity = 0.99
-            return
-        }
-        
       
         
         //self.wantsLayer = true
@@ -623,12 +620,7 @@ open class Control: View {
         animates = false
         layer?.disableActions()
 
-        guard #available(OSX 10.12, *) else {
-            layer?.opacity = 0.99
-            return
-        }
-        
-      
+       
         
         //self.wantsLayer = true
         //self.layer?.isOpaque = true

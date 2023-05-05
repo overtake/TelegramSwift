@@ -1319,6 +1319,14 @@ public final class L10n {
   public static func channelEventLogMessageRankName(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageRankName", p1, p2)
   }
+  /// %@ allowed message forwarding
+  public static func channelEventLogMessageToggleNoForwardsOff(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageToggleNoForwardsOff", p1)
+  }
+  /// %@ restricted message forwarding
+  public static func channelEventLogMessageToggleNoForwardsOn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageToggleNoForwardsOn", p1)
+  }
   /// transferred ownership
   public static var channelEventLogMessageTransfered: String  { return L10n.tr("Localizable", "Channel.EventLog.MessageTransfered") }
   /// transferred ownership to %1$@ %2$@

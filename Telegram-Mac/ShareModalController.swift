@@ -826,6 +826,7 @@ class ShareMessageObject : ShareObject {
         }
         let date = self.scheduleDate
         let withoutSound = self.withoutSound
+        let threadIds = self.threadIds
         for peerId in peerIds {
             let viewSignal: Signal<(Peer, PeerId?), NoError> = combineLatest(context.account.postbox.loadedPeerWithId(peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox))
             |> take(1)
@@ -836,6 +837,9 @@ class ShareMessageObject : ShareObject {
                     return (peer, nil)
                 }
             }
+            
+            let threadId = threadIds[peerId] ?? threadId
+            
             signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
                 let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                 var caption: Signal<[MessageId?], NoError>?
@@ -1041,7 +1045,7 @@ final class ForwardMessagesObject : ShareObject {
                         return (peer, nil)
                     }
                 }
-                let threadId = threadIds[peerId]
+                let threadId = threadIds[peerId] ?? threadId
                 
                 signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
                     let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
@@ -1369,7 +1373,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
             textView.animates = false
-            textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+            textView.setAttributedString(state.effectiveInput.attributedString(theme), animated:animated)
             textView.animates = true
         }
         let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
