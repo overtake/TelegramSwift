@@ -34,16 +34,18 @@ final class StoryListView : Control, Notifable {
     
     fileprivate var transition: TransitionData?
 
-    var storyId: MessageId? {
-        if let selectedIndex = self.selectedIndex {
-            return messages[selectedIndex].id
+    var storyId: Int64? {
+        if let selectedIndex = self.selectedIndex, let entry = entry {
+            return entry.item.items[selectedIndex].id
         }
         return nil
     }
+    var id: PeerId? {
+        return self.entry?.id
+    }
     
     private var stories: [StoryView?] = []
-    private var messages: [Message] = []
-    private var groupId: PeerId? = nil
+    private var entry: StoryListEntry? = nil
     private var current: StoryView?
     private var selectedIndex: Int? = nil
     private var arguments: StoryArguments?
@@ -71,7 +73,6 @@ final class StoryListView : Control, Notifable {
     
     func setArguments(_ arguments: StoryArguments?) -> Void {
         self.arguments = arguments
-        
         arguments?.interaction.add(observer: self)
     }
     required init(frame frameRect: NSRect) {
@@ -151,7 +152,7 @@ final class StoryListView : Control, Notifable {
             controls.updateMuted(isMuted: value.isMuted)
         }
         
-        if let groupId = self.groupId {
+        if let groupId = self.entry?.id {
             let curInput = value.inputs[groupId]
             let prevInput = oldValue.inputs[groupId]
             if let curInput = curInput, let prevInput = prevInput {
@@ -160,7 +161,7 @@ final class StoryListView : Control, Notifable {
             inputView.updateState(value, animated: animated)
         }
         
-        if isPaused, let storyView = self.current, self.groupId == value.groupId, value.inputInFocus {
+        if isPaused, let storyView = self.current, self.entry?.id == value.entryId, value.inputInFocus {
             let current: Control
             if let view = self.pauseOverlay {
                 current = view
@@ -197,12 +198,12 @@ final class StoryListView : Control, Notifable {
         let aspect = StoryView.size.aspectFitted(maxSize)
 
         if container.superview == self {
-            transition.updateFrame(view: container, frame: CGRect.init(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor, (frame.width - aspect.width) / 2), y: 0), size: NSMakeSize(aspect.width, size.height)))
+            transition.updateFrame(view: container, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor, (frame.width - aspect.width) / 2), y: 20), size: NSMakeSize(aspect.width, size.height)))
         }
 
         
         if let current = self.current {
-            let rect = CGRect(origin: CGPoint(x: 0, y: 20), size: aspect)
+            let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: aspect)
             transition.updateFrame(view: current, frame: rect)
             
             transition.updateFrame(view: controls, frame: rect)
@@ -216,54 +217,116 @@ final class StoryListView : Control, Notifable {
             }
 
         }
-//        let inputRect = inputView.centerFrameX(y: size.height - inputView.frame.height - 30)
-//        transition.updateFrame(view: inputView, frame: inputRect)
         inputView.updateInputState(animated: transition.isAnimated)
+    }
+    
+    func animateAppearing(from control: NSView) {
         
-
+        guard let superview = control.superview else {
+            return
+        }
+        
+        let newRect = container.frame
+        let origin = self.convert(control.frame.origin, from: superview)
+        let oldRect = CGRect(origin: origin, size: control.frame.size)
+                
+        
+        container.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.2, timingFunction: .default)
+        container.layer?.animateScaleX(from: oldRect.width / newRect.width, to: 1, duration: 0.2, timingFunction: .default)
+        container.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: 0.2, timingFunction: .default)
+        
+        current?.animateAppearing(disappear: false)
+        
+//        let mask = SimpleShapeLayer()
+//        mask.frame = self.bounds
+//        mask.backgroundColor = .black
+//        let path = CGMutablePath()
+//        path.addRoundedRect(in: oldRect, cornerWidth: control.frame.width / 2, cornerHeight: control.frame.height / 2)
+//        path.closeSubpath()
+//
+//        mask.path = path
+//
+//        self.layer?.mask = mask
+//
+//        let toPath = CGMutablePath()
+//        toPath.addRoundedRect(in: newRect, cornerWidth: 0, cornerHeight: 0)
+//        toPath.closeSubpath()
+//
+//        let maskAnim = mask.makeAnimation(from: path, to: toPath, keyPath: "path", timingFunction: .default, duration: 5, removeOnCompletion: false, completion: { [weak self] _ in
+//            self?.layer?.mask = nil
+//        })
+//        mask.add(maskAnim, forKey: "path")
+    }
+    
+    func animateDisappearing(to control: NSView) {
+        
+        guard let superview = control.superview else {
+            return
+        }
+        
+        let oldRect = container.frame
+        let origin = self.convert(control.frame.origin, from: superview)
+        let newRect = CGRect(origin: origin, size: control.frame.size)
+                
+        current?.animateAppearing(disappear: true)
+        
+        container.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.2, timingFunction: .default, removeOnCompletion: false)
+        container.layer?.animateScaleX(from: 1, to: newRect.width / oldRect.width, duration: 0.2, timingFunction: .default, removeOnCompletion: false)
+        container.layer?.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: 0.2, timingFunction: .default, removeOnCompletion: false)
         
     }
 
-    func update(context: AccountContext, stories:[Message], selected: Int) {
+    func update(context: AccountContext, entry: StoryListEntry, selected: Int?) {
                 
+        
         self.context = context
-        self.stories = Array(repeating: nil, count: stories.count)
-        self.messages = stories
-        self.groupId = stories[0].author?.id
+        self.stories = Array(repeating: nil, count: entry.count)
+        self.entry = entry
         self.navigator.initialize(count: stories.count)
         
-        
-        let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(maxSize)
+        if self.inputView == nil {
+            let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
+            let aspect = StoryView.size.aspectFitted(maxSize)
 
-        if groupId == context.peerId {
-            self.inputView = StoryMyInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
-        } else {
-            self.inputView = StoryInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
-        }
-        self.container.addSubview(self.inputView)
-        
-        inputView.installInputStateUpdate({ [weak self] state in
-            switch state {
-            case .focus:
-                self?.arguments?.inputFocus()
-            case .none:
-                self?.arguments?.inputUnfocus()
+            if entry.id == context.peerId {
+                self.inputView = StoryMyInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
+            } else {
+                self.inputView = StoryInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
             }
-        })
+            self.container.addSubview(self.inputView)
+            
+            inputView.installInputStateUpdate({ [weak self] state in
+                switch state {
+                case .focus:
+                    self?.arguments?.inputFocus()
+                case .none:
+                    self?.arguments?.inputUnfocus()
+                }
+            })
+            
+            self.inputView.setArguments(self.arguments, groupId: entry.id)
+        }
         
-        self.inputView.setArguments(self.arguments, groupId: self.groupId)
-        
+        if let selected = selected {
+            self.select(at: selected)
+        } else if let current = self.current, !entry.item.items.contains(where: { current.isEqual(to: $0.id) }) {
+            let index = min((self.selectedIndex ?? 0), entry.count - 1)
+            self.select(at: index)
+        } else if let current = self.current, let story = current.story {
+            self.updateStoryState(current.state)
+            self.inputView.update(story, animated: true)
+        }
         
         self.preloadAround()
         
-        self.select(at: selected)
+       
     }
     
     func select(at index: Int) {
-        guard let context = context, let arguments = self.arguments, let groupId = self.groupId else {
+        guard let context = context, let arguments = self.arguments, let entry = self.entry else {
             return
         }
+        let groupId = entry.id
         let previous = self.current
         
 
@@ -273,7 +336,7 @@ final class StoryListView : Control, Notifable {
         } else {
             let size = NSMakeSize(frame.width - 100, frame.height - 110)
             let aspect = StoryView.size.aspectFitted(size)
-            current = StoryView.makeView(for: self.messages[index], context: context, frame: aspect.bounds)
+            current = StoryView.makeView(for: entry.item.items[index], peerId: entry.id, peer: entry.item.peer?._asPeer(), context: context, frame: aspect.bounds)
             self.stories[index] = current
         }
                 
@@ -285,12 +348,12 @@ final class StoryListView : Control, Notifable {
             previous.disappear()
         }
         
-        let story = self.messages[index]
+        let story = entry.item.items[index]
         
         self.updateLayout(size: self.frame.size, transition: .immediate)
 
 
-        self.controls.update(context: context, arguments: arguments, groupId: groupId, story: story, animated: false)
+        self.controls.update(context: context, arguments: arguments, groupId: groupId, peer: entry.item.peer?._asPeer(), story: story, animated: false)
         
         self.selectedIndex = index
         container.addSubview(current, positioned: .below, relativeTo: self.controls)
@@ -311,8 +374,10 @@ final class StoryListView : Control, Notifable {
         self.arguments?.interaction.update { current in
             var current = current
             current.storyId = story.id
+            current.entryState[groupId] = story.id
             return current
         }
+        self.inputView.update(story, animated: false)
     }
     
     private func updateStoryState(_ state: StoryView.State) {
@@ -337,7 +402,7 @@ final class StoryListView : Control, Notifable {
     }
     
     private func preloadAround() {
-        guard let index = self.selectedIndex, let context = self.context else {
+        guard let index = self.selectedIndex, let context = self.context, let entry = self.entry else {
             return
         }
         let size = NSMakeSize(frame.width - 100, frame.height - 110)
@@ -348,7 +413,7 @@ final class StoryListView : Control, Notifable {
                 stories[i] = nil
             } else {
                 if stories[i] == nil {
-                    stories[i] = StoryView.makeView(for: self.messages[i], context: context, frame: aspect.bounds)
+                    stories[i] = StoryView.makeView(for: entry.item.items[i], peerId: entry.id, peer: entry.item.peer?._asPeer(), context: context, frame: aspect.bounds)
                 }
             }
         }

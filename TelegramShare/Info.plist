@@ -21,7 +21,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>246375</string>
+	<string>246650</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSMinimumSystemVersion</key>

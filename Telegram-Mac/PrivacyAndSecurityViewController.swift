@@ -466,7 +466,7 @@ func countForSelectivePeers(_ peers: [PeerId: SelectivePrivacyPeer]) -> Int {
 
 private func stringForSelectiveSettings(settings: SelectivePrivacySettings) -> String {
     switch settings {
-    case let .disableEveryone(enableFor):
+    case let .disableEveryone(enableFor, disableFor):
         if enableFor.isEmpty {
             return strings().privacySettingsControllerNobody
         } else {

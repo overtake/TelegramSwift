@@ -136,6 +136,8 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
             text = "PHONE BANNED"
         case .timeout:
             text = "timeout"
+        case .appOutdated:
+            text = "please update your app"
         }
         errorLabel.state.set(.error(text))
     }

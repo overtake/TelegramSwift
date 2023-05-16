@@ -613,10 +613,10 @@ final class MessageReadMenuItem : ContextMenuItem {
 }
 
 extension ContextMenuItem {
-    static func makeItemAvatar(_ item: ContextMenuItem, account: Account, peer: Peer, source: PeerPhoto) {
+    static func makeItemAvatar(_ item: ContextMenuItem, account: Account, peer: Peer, source: PeerPhoto, selfAsSaved: Bool = true) {
         let signal:Signal<(CGImage?, Bool), NoError>
         
-        if peer.id == account.peerId {
+        if peer.id == account.peerId, selfAsSaved {
             let icon = theme.icons.searchSaved
             signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
         } else {

@@ -808,6 +808,19 @@ private func generateTriangle(_ size: NSSize, color: NSColor) -> CGImage {
     })!
 }
 
+private func generateStoryState(_ color: NSColor, size: NSSize) -> CGImage {
+    return generateImage(size, contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        ctx.setFillColor(color.cgColor)
+        ctx.fillEllipse(in: size.bounds)
+        
+        ctx.setBlendMode(.clear)
+        ctx.fillEllipse(in: size.bounds.insetBy(dx: 1.5, dy: 1.5))
+    })!
+}
+
 
 
 private func generateLocationMapPinIcon(_ background: NSColor) -> CGImage {
@@ -2662,7 +2675,15 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 folder_invite_link: { generateFolderLinkIcon(palette: palette, revoked: false) },
                                                 folder_invite_link_revoked: { generateFolderLinkIcon(palette: palette, revoked: true) },
                               folders_sidebar_edit: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon, flipVertical: true) },
-                              folders_sidebar_edit_active: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon.withAlphaComponent(0.8), flipVertical: true) }
+                              folders_sidebar_edit_active: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon.withAlphaComponent(0.8), flipVertical: true) },
+                              story_unseen: { generateStoryState(palette.accent, size: NSMakeSize(50, 50)) },
+                              story_seen: { generateStoryState(palette.grayIcon.withAlphaComponent(0.5), size: NSMakeSize(50, 50)) },
+                              story_selected: { generateStoryState(palette.underSelectedColor, size: NSMakeSize(50, 50)) },
+                              story_unseen_chat: { generateStoryState(palette.accent, size: NSMakeSize(36, 36)) },
+                              story_seen_chat: { generateStoryState(palette.grayIcon, size: NSMakeSize(36, 36)) },
+                              story_unseen_profile: { generateStoryState(palette.accent, size: NSMakeSize(120, 120)) },
+                              story_seen_profile: { generateStoryState(palette.grayIcon, size: NSMakeSize(120, 120)) }
+
 
     )
 

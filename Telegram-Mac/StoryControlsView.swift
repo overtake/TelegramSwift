@@ -11,6 +11,7 @@ import TGUIKit
 import TelegramCore
 import Postbox
 import SwiftSignalKit
+import DateUtils
 
 private let more_image = NSImage(named: "Icon_StoryMore")!.precomposed(NSColor.white)
 private let muted_image = NSImage(named: "Icon_StoryMute")!.precomposed(NSColor.white)
@@ -94,8 +95,8 @@ final class StoryControlsView : Control {
         muted.set(image: isMuted ? muted_image : unmuted_image, for: .Normal)
     }
     
-    func update(context: AccountContext, arguments: StoryArguments, groupId: PeerId, story: Message, animated: Bool) {
-        guard let peer = story.author else {
+    func update(context: AccountContext, arguments: StoryArguments, groupId: PeerId, peer: Peer?, story: StoryListContext.Item, animated: Bool) {
+        guard let peer = peer else {
             return
         }
         self.groupId = groupId
@@ -109,7 +110,7 @@ final class StoryControlsView : Control {
         let date = NSMutableAttributedString()
 
         date.append(string: " \(strings().bullet) ", color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
-        date.append(string: "24m ago", color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
+        date.append(string: DateUtils.string(forRelativeLastSeen: story.timestamp), color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
         
         
         let dateLayout = TextViewLayout(date)

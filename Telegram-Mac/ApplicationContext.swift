@@ -519,6 +519,17 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            filePanel(for: context.window, completion: { paths in
+                var signals:[Signal<Never, NoError>] = []
+                if let paths = paths {
+                    for path in paths {
+                        if let image = NSImage(contentsOfFile: path), let cgImage = image._cgImage, let data = cgImage.jpegData {
+                            signals.append(context.engine.messages.uploadStory(media: EngineStoryInputMedia.image(dimensions: .init(cgImage.size), data: data), privacy: EngineStoryPrivacy(base: .everyone, additionallyIncludePeers: [])))
+                        }
+                    }
+                    _ = showModalProgress(signal: combineLatest(signals), for: context.window).start()
+                }
+            })
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

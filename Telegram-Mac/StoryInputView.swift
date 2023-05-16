@@ -37,6 +37,7 @@ protocol StoryInput {
     func makeUrl()
     func resetInputView()
     
+    func update(_ story: StoryListContext.Item, animated: Bool)
     
     var isFirstResponder: Bool { get }
     var text: TGModernGrowingTextView? { get }
@@ -150,6 +151,9 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         self.action.update(state: textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, animated: true)
     }
     
+    func update(_ story: StoryListContext.Item, animated: Bool) {
+        
+    }
     
     func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
         let size = NSMakeSize(frame.width, height + 16)
@@ -171,7 +175,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         let wSize = NSMakeSize(window.frame.width - 100, superview.frame.height - 110)
         let aspect = StoryView.size.aspectFitted(wSize)
 
-        transition.updateFrame(view: self, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor,  (superview.frame.width - size.width) / 2), y: 20 + aspect.height + 10 - size.height + 50), size: size))
+        transition.updateFrame(view: self, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor,  (superview.frame.width - size.width) / 2), y: aspect.height + 10 - size.height + 50), size: size))
         self.updateLayout(size: size, transition: transition)
 
     }
@@ -373,7 +377,8 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     required init(frame frameRect: NSRect) {
         self.visualEffect = VisualEffect()
         super.init(frame: frameRect)
-        addSubview(visualEffect)
+        self.background = .blackTransparent
+      //  addSubview(visualEffect)
         addSubview(attach)
         addSubview(action)
         addSubview(stickers)

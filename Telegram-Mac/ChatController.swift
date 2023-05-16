@@ -1537,6 +1537,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let inputSwapDisposable = MetaDisposable()
     private let liveTranslateDisposable = MetaDisposable()
     private let presentationDisposable = DisposableSet()
+    private let storiesDisposable = MetaDisposable()
     
     private var keepMessageCountersSyncrhonizedDisposable: Disposable?
     
@@ -1625,6 +1626,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let uiState: Atomic<State> = Atomic(value: State())
     private let stateValue: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     
+    private var stories: StoryListContext?
+    
+    
     private struct State : Equatable {
         var transribe: [MessageId: TranscribeAudioState] = [:]
         var pollAnswers: [MessageId : ChatPollStateData] = [:]
@@ -1632,6 +1636,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var threadLoading: MessageId?
         var mediaRevealed: Set<MessageId> = Set()
         var translate: ChatLiveTranslateContext.State?
+        var storyState: StoryListContext.State?
         var presentation:TelegramPresentationTheme = theme
         var presentation_genuie:TelegramPresentationTheme = theme
         var bespoke_wallpaper: ThemeWallpaper?
@@ -2388,6 +2393,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         
+        if chatLocation.peerId.namespace == Namespaces.Peer.CloudUser, chatLocation.peerId != context.peerId, mode == .history {
+            self.stories = context.stories
+        } else {
+            self.stories = nil
+        }
+        
+        
+        
         let translateSignal: Signal<ChatLiveTranslateContext.State?, NoError>
         if let liveTranslate = self.liveTranslate {
             translateSignal = liveTranslate.state
@@ -2395,8 +2408,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } else {
             translateSignal = .single(nil)
         }
+        
+        let storiesSignal: Signal<StoryListContext.State?, NoError>
+        if let stories = self.stories {
+            storiesSignal = stories.state
+            |> map(Optional.init)
+        } else {
+            storiesSignal = .single(nil)
+        }
       
-        presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal).start(next: { [weak self] presentation, wallpaper, translate in
+        presentationDisposable.add(combineLatest(queue:.mainQueue(), effectiveTheme, themeWallpaper, translateSignal, storiesSignal).start(next: { [weak self] presentation, wallpaper, translate, storyState in
             let emoticon = presentation.emoticon
             let theme = presentation.theme
             let genuie = presentation.genuie
@@ -2405,6 +2426,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 current.presentation_emoticon = emoticon
                 current.presentation_genuie = genuie
                 current.translate = translate
+                current.storyState = storyState
                 switch wallpaper {
                 case let .result(result):
                     current.presentation = theme
@@ -3361,8 +3383,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     } else {
                         threadInfo = nil
                     }
+                    let stories: StoryListContext?
+                    if peerId == strongSelf.chatInteraction.peerId {
+                        stories = strongSelf.stories
+                    } else {
+                        stories = nil
+                    }
                     
-                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, threadInfo: threadInfo))
+                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, stories: stories, threadInfo: threadInfo))
                 }
             }
         }
@@ -3945,6 +3973,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var current = current
                 current.mediaRevealed.insert(messageId)
                 return current
+            }
+        }
+        chatInteraction.openStories = { [weak self] f in
+            if let stories = self?.stories {
+                StoryModalController.ShowStories(context: context, stories: stories, initialId: .init(peerId: peerId, id: nil, takeControl: f))
             }
         }
         
@@ -5078,12 +5111,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
+        let isFirst = Atomic(value: true)
         
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo in
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach, threadInfo, stateValue.get()).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems, threadInfo, uiState in
             
                         
             guard let `self` = self else {return}
-            (self.centerBarView as? ChatTitleBarView)?.peerView = postboxView as? PeerView
+            let title = (self.centerBarView as? ChatTitleBarView)
+            title?.update(postboxView as? PeerView, stories: uiState.storyState, animated: !isFirst.swap(false))
             let peerView = postboxView as? PeerView
             self.currentPeerView = peerView
             switch self.chatInteraction.mode {
@@ -6582,6 +6617,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         keepMessageCountersSyncrhonizedDisposable?.dispose()
         liveTranslateDisposable.dispose()
         presentationDisposable.dispose()
+        storiesDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
