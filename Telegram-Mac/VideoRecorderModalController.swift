@@ -15,6 +15,7 @@ import SwiftSignalKit
 class VideoRecorderModalController: ModalViewController {
 
     private let pipeline: VideoRecorderPipeline
+    private let state: ChatRecordingState
     private let chatInteraction: ChatInteraction
     
     private let disposable = MetaDisposable()
@@ -28,8 +29,9 @@ class VideoRecorderModalController: ModalViewController {
         return view as! VideoRecorderModalView
     }
     
-    init(chatInteraction: ChatInteraction, pipeline: VideoRecorderPipeline) {
+    init(state: ChatRecordingState, pipeline: VideoRecorderPipeline) {
         self.chatInteraction = chatInteraction
+        self.state = state
         self.pipeline = pipeline
         super.init(frame: NSMakeRect(0, 0, 300, 300))
         bar = .init(height: 0)

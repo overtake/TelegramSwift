@@ -46,6 +46,7 @@
 		271824512A08C60400AFBD4C /* StoryChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271824502A08C60400AFBD4C /* StoryChatListView.swift */; };
 		2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718FF8127BFB28900196BC4 /* login_airplane.tgs */; };
 		2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718FF8727C3A11F00196BC4 /* DownloadsController.swift */; };
+		2719D8012A139B9D00081079 /* StoryRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D8002A139B9D00081079 /* StoryRecordingView.swift */; };
 		271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */; };
 		271D4F3427689DF0004FD034 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 271D4F3327689DF0004FD034 /* WebKit.framework */; };
 		271D4F362769D07E004FD034 /* menu_reactions.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 271D4F352769D07D004FD034 /* menu_reactions.tgs */; };
@@ -1492,6 +1493,7 @@
 		2718FF8B27C3CCC700196BC4 /* FetchManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FetchManager; path = packages/FetchManager; sourceTree = "<group>"; };
 		2719655325EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallRecorderRowItem.swift; sourceTree = "<group>"; };
 		271999E62683C04B000DE2B7 /* MetalPerformanceShaders.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalPerformanceShaders.framework; path = System/Library/Frameworks/MetalPerformanceShaders.framework; sourceTree = SDKROOT; };
+		2719D8002A139B9D00081079 /* StoryRecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryRecordingView.swift; sourceTree = "<group>"; };
 		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		271D4F3327689DF0004FD034 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		271D4F352769D07D004FD034 /* menu_reactions.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_reactions.tgs; sourceTree = "<group>"; };
@@ -3045,6 +3047,7 @@
 				270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */,
 				2718244E2A05413000AFBD4C /* StoryMyInputView.swift */,
 				271824502A08C60400AFBD4C /* StoryChatListView.swift */,
+				2719D8002A139B9D00081079 /* StoryRecordingView.swift */,
 			);
 			name = stories;
 			sourceTree = "<group>";
@@ -7097,6 +7100,7 @@
 				9FF5A1CB2232A2FF00BC1359 /* UpgradedAccount.swift in Sources */,
 				9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */,
 				D076F88D2296FD18004F895A /* AnimtedStickerHeaderItem.swift in Sources */,
+				2719D8012A139B9D00081079 /* StoryRecordingView.swift in Sources */,
 				D0A27650249CE588005E3C77 /* GroupsStatsController.swift in Sources */,
 				C2CFCAC01EBB9C8100843F6A /* CallAudioPlayer.swift in Sources */,
 				270B7CC029F7BFF0009C994C /* StoryInputView.swift in Sources */,

@@ -470,14 +470,15 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate let threadId: Int64?
     fileprivate let stories: StoryListContext.State?
     
-    var lastStory: StoryListContext.Item? {
-        let items = stories?.itemSets.first(where: { $0.peerId == self.peer?.id })?.items
-        if let items = items {
-            if let story = items.first(where: { !$0.isSeen }) {
-                return story
+    var lastStory: (StoryListContext.Item, Bool)? {
+        let itemsSet = stories?.itemSets.first(where: { $0.peerId == self.peer?.id })
+        if let itemsSet = itemsSet, !itemsSet.items.isEmpty {
+            if let story = itemsSet.items.first(where: { itemsSet.maxReadId < $0.id }) {
+                return (story, true)
             }
+            return (itemsSet.items.last!, false)
         }
-        return items?.last
+        return nil
     }
     
     let canEditPhoto: Bool
@@ -1273,7 +1274,9 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         photoContainer.scaleOnClick = true
         
-        if let story = item.lastStory {
+        if let storyData = item.lastStory {
+            let story = storyData.0
+            let isUnseen = storyData.1
             let current: ImageView
             let isNew: Bool
             if let view = self.storyStateView {
@@ -1285,7 +1288,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 photoContainer.addSubview(current)
                 isNew = true
             }
-            current.image = !story.isSeen ? theme.icons.story_unseen_profile : theme.icons.story_seen_profile
+            current.image = isUnseen ? theme.icons.story_unseen_profile : theme.icons.story_seen_profile
 
             if animated, isNew {
                 current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)

@@ -183,10 +183,12 @@ final class StoryMyInputView : Control, StoryInput {
         views.contextMenu = { [weak self] in
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
             if let story = self?.story, let arguments = self?.arguments {
-                for peer in story.seenPeers {
-                    menu.addItem(makeItem(peer._asPeer(), context: arguments.context, callback: { peerId in
-                        arguments.openPeerInfo(peerId)
-                    }))
+                if let views = story.views {
+                    for peer in views.seenPeers {
+                        menu.addItem(makeItem(peer._asPeer(), context: arguments.context, callback: { peerId in
+                            arguments.openPeerInfo(peerId)
+                        }))
+                    }
                 }
             }
             return menu
@@ -214,7 +216,9 @@ final class StoryMyInputView : Control, StoryInput {
             return
         }
         self.story = story
-        let text: NSAttributedString = .initialize(string: story.seenCount == 0 ? "No Views yet" : "\(story.seenCount) views", color: storyTheme.colors.text, font: .normal(.short))
+        let storyViews = story.views
+        
+        let text: NSAttributedString = .initialize(string: storyViews == nil ? "No Views yet" : "\(storyViews!.seenCount) views", color: storyTheme.colors.text, font: .normal(.short))
         let layout = TextViewLayout(text)
         layout.measure(width: .greatestFiniteMagnitude)
         self.viewsText.update(layout)
@@ -222,12 +226,12 @@ final class StoryMyInputView : Control, StoryInput {
         
         let avatars: AvatarContentView?
         
-        let photos = story.seenPeers.map { $0.id }
-        
+        let photos = storyViews?.seenPeers.map { $0.id } ?? []
+        let peers = storyViews?.seenPeers.map { $0._asPeer() } ?? []
         if photos != self.photos {
             self.photos = photos
             if !photos.isEmpty {
-                avatars = .init(context: arguments.context, peers: story.seenPeers.map { $0._asPeer() }, size: NSMakeSize(24, 24))
+                avatars = .init(context: arguments.context, peers: peers, size: NSMakeSize(24, 24))
             } else {
                 avatars = nil
             }
