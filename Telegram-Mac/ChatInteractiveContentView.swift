@@ -519,14 +519,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 super.executeInteraction(isControl)
             }
         } else {
-            if let context = context {
-                if NSEvent.modifierFlags.contains([.command, .shift]), let parent = parent {
-                    showModal(with: StoryModalController(context: context, messageId: parent.id), for: context.window, animationType: .alpha)
-                    return
-                }
-            }
-
-            
             if autoplayVideo {
                 open()
             } else {

@@ -470,7 +470,7 @@ class SelectivePrivacySettingsController: TableViewController {
         var initialDisableFor: [PeerId: SelectivePrivacyPeer] = [:]
 
         switch current {
-        case let .disableEveryone(enableFor):
+        case let .disableEveryone(enableFor, enableForCloseFriends):
             initialEnableFor = enableFor
         case let .enableContacts(enableFor, disableFor):
             initialEnableFor = enableFor
@@ -484,7 +484,7 @@ class SelectivePrivacySettingsController: TableViewController {
 
         if let callCurrent = callSettings {
             switch callCurrent {
-            case let .disableEveryone(enableFor):
+            case let .disableEveryone(enableFor, enableForCloseFriends):
                 initialCallP2PEnableFor = enableFor
                 initialCallP2PDisableFor = [:]
             case let .enableContacts(enableFor, disableFor):
@@ -872,7 +872,7 @@ class SelectivePrivacySettingsController: TableViewController {
                 case .contacts:
                     settings = SelectivePrivacySettings.enableContacts(enableFor: current.enableFor, disableFor: current.disableFor)
                 case .nobody:
-                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor)
+                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor, enableForCloseFriends: true)
                 }
 
                 if let mode = current.callP2PMode {
@@ -882,7 +882,7 @@ class SelectivePrivacySettingsController: TableViewController {
                     case .contacts:
                         callSettings = SelectivePrivacySettings.enableContacts(enableFor: current.callP2PEnableFor, disableFor: current.callP2PDisableFor)
                     case .nobody:
-                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor)
+                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor, enableForCloseFriends: true)
                     }
                 }
                 current.saving = true

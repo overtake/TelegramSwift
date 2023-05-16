@@ -463,7 +463,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
     
     actionsDisposable.add(availableSignal.start(next: { peers in
         updateState {
-            $0.withUpdatedAvailablePeers(peers)
+            $0.withUpdatedAvailablePeers(peers.map { $0._asPeer() })
         }
     }, error: { error in
         

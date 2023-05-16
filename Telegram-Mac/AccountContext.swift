@@ -175,12 +175,14 @@ final class AccountContext {
     let cachedGroupCallContexts: AccountGroupCallContextCacheImpl
     let networkStatusManager: NetworkStatusManager
     let inAppPurchaseManager: InAppPurchaseManager
+    let stories: StoryListContext
     
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
     
     var audioPlayer:APController?
+    
     
     let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
     let blockedPeersContext: BlockedPeersContext
@@ -376,6 +378,7 @@ final class AccountContext {
         self.webSessions = engine.privacy.webSessions()
         self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
         self.reactions = Reactions(engine)
+        self.stories = engine.messages.allStories()
         #endif
         
         

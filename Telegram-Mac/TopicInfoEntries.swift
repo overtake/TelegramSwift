@@ -233,7 +233,7 @@ enum TopicInfoEntry: PeerInfoEntry {
         let arguments = arguments as! TopicInfoArguments
         switch self {
         case let .info(_, peerView, editable, threadData, threadId, viewType):
-            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: threadData, threadId: threadId, viewType: viewType, editing: editable)
+            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, stories: nil, threadData: threadData, threadId: threadId, viewType: viewType, editing: editable)
         case let .addressName(_, value, viewType):
             let link = "https://t.me/\(value)"
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: link, context: arguments.context, viewType: viewType, isTextSelectable: false, callback:{

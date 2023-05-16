@@ -49,6 +49,10 @@ extension AuthorizationCodeRequestError : Equatable {
             if case .timeout = rhs {
                 return true
             }
+        case .appOutdated:
+            if case .appOutdated = rhs {
+                return true
+            }
         }
         return false
     }

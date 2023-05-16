@@ -706,8 +706,9 @@ public class Modal: NSObject {
         } else {
             background = self.background
         }
-        if let controller = controller, controller.contentBelowBackground {
-            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.25, timingFunction: .spring, completion: { [weak self, weak background] _ in
+        switch animationType {
+        case let .noneDelayed(duration):
+            delay(duration, closure: { [weak self, weak background] in
                 background?.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
@@ -715,29 +716,42 @@ public class Modal: NSObject {
                 self?.controller?.modal = nil
                 self?.controller = nil
             })
-
-        } else if animateBackground {
-            background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.25, removeOnCompletion: false, completion: {[weak self, weak background] complete in
-                if let stongSelf = self {
+        default:
+            if let controller = controller, controller.contentBelowBackground {
+                controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.25, timingFunction: .spring, completion: { [weak self, weak background] _ in
                     background?.removeFromSuperview()
-                    stongSelf.controller?.view.removeFromSuperview()
-                    stongSelf.controller?.viewDidDisappear(true)
-                    stongSelf.controller?.modal = nil
-                    stongSelf.controller = nil
-                }
-            })
-        } else if let lastActive = activeModals.last?.value {
-            background.removeFromSuperview()
-            self.controller?.view.removeFromSuperview()
-            self.controller?.viewDidDisappear(true)
-            self.controller?.modal = nil
-            self.controller = nil
-            lastActive.containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self?.controller?.view.removeFromSuperview()
+                    self?.controller?.view.removeFromSuperview()
+                    self?.controller?.viewDidDisappear(true)
+                    self?.controller?.modal = nil
+                    self?.controller = nil
+                })
+
+            } else if animateBackground {
+                background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.25, removeOnCompletion: false, completion: {[weak self, weak background] complete in
+                    if let stongSelf = self {
+                        background?.removeFromSuperview()
+                        stongSelf.controller?.view.removeFromSuperview()
+                        stongSelf.controller?.viewDidDisappear(true)
+                        stongSelf.controller?.modal = nil
+                        stongSelf.controller = nil
+                    }
+                })
+            } else if let lastActive = activeModals.last?.value {
+                background.removeFromSuperview()
+                self.controller?.view.removeFromSuperview()
+                self.controller?.viewDidDisappear(true)
+                self.controller?.modal = nil
+                self.controller = nil
+                lastActive.containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
         }
+        
+       
        
        
         switch animationType {
-        case .common:
+        case .common, .noneDelayed:
             break
         case let .scaleToRect(newRect, contentView):
             let oldRect = contentView.convert(contentView.bounds, to: background)
@@ -848,6 +862,8 @@ public class Modal: NSObject {
                                 view.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: 0.3, timingFunction: .spring)
                             case .alpha:
                                 view.layer?.animateAlpha(from: 1.0, to: 1.0, duration: 0.15, timingFunction: .spring)
+                            case .none:
+                                break
                             }
                         }
                     }
@@ -961,9 +977,11 @@ public enum ModalAnimationType {
     case scaleCenter
     case scaleFrom(NSRect)
     case alpha
+    case none
 }
 public enum ModalAnimationCloseBehaviour {
     case common
+    case noneDelayed(duration: CGFloat)
     case scaleToRect(NSRect, NSView)
 }
 

@@ -891,6 +891,8 @@ public final class L10n {
   public static func changeNumberSendDataErrorPhoneNumberOccupied(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChangeNumber.SendData.Error.PhoneNumberOccupied", p1)
   }
+  /// Sorry, changing phone number is now available only from official mobile app. Please use Telegram on your mobile to update your phone number.
+  public static var changePhoneUseMobile: String  { return L10n.tr("Localizable", "ChangePhone.UseMobile") }
   /// All your Telegram contacts will get your new number added to their address book, provided they had your old number and you haven't blocked them in Telegram.
   public static var changePhoneNumberIntroAlert: String  { return L10n.tr("Localizable", "ChangePhoneNumber.Intro.Alert") }
   /// You can change your Telegram number here. Your account and all your cloud data — messages, media, contacts, etc. will be moved to the new number.\n\n**Important**: all your Telegram contacts will get your **new number** added to their address book, provided they had your old number and you haven't blocked them in Telegram.
@@ -8477,6 +8479,8 @@ public final class L10n {
   public static var peerInfoConfirmSecretChatHeader: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.SecretChat.Header") }
   /// Start
   public static var peerInfoConfirmSecretChatOK: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.SecretChat.OK") }
+  /// Open Photo
+  public static var peerInfoContextOpenPhoto: String  { return L10n.tr("Localizable", "PeerInfo.Context.OpenPhoto") }
   /// About
   public static var peerInfoDescriptionPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.Description.Placeholder") }
   /// Add
@@ -12121,8 +12125,20 @@ public final class L10n {
   public static func themePreviewUsesCountZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ThemePreview.UsesCount_zero", p1)
   }
+  /// {date} hour ago
+  public static var timeAgoHour: String  { return L10n.tr("Localizable", "Time.agoHour") }
+  /// {date} hours ago
+  public static var timeAgoHours: String  { return L10n.tr("Localizable", "Time.agoHours") }
+  /// {date} minute ago
+  public static var timeAgoMinute: String  { return L10n.tr("Localizable", "Time.agoMinute") }
+  /// {date} minutes ago
+  public static var timeAgoMinutes: String  { return L10n.tr("Localizable", "Time.agoMinutes") }
   /// at
   public static var timeAt: String  { return L10n.tr("Localizable", "Time.at") }
+  /// {date}
+  public static var timeAtDate: String  { return L10n.tr("Localizable", "Time.AtDate") }
+  /// just now
+  public static var timeJustnow: String  { return L10n.tr("Localizable", "Time.justnow") }
   /// last seen
   public static var timeLastSeen: String  { return L10n.tr("Localizable", "Time.last_seen") }
   /// Jan %@, %@ at %@

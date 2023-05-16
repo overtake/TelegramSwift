@@ -2485,6 +2485,14 @@ extension CGImage {
         guard CGImageDestinationFinalize(destination) else { return nil }
         return mutableData as Data
     }
+    
+    var jpegData: Data? {
+        guard let mutableData = CFDataCreateMutable(nil, 0),
+            let destination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) else { return nil }
+        CGImageDestinationAddImage(destination, self, nil)
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return mutableData as Data
+    }
 }
 
 func localizedPsa(_ key: String, type: String, args: [CVarArg] = []) -> String {

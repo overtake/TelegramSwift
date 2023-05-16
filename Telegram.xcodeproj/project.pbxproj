@@ -43,6 +43,7 @@
 		27161A9C27EC98290069BCEF /* menu_drugs.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27161A9B27EC98280069BCEF /* menu_drugs.tgs */; };
 		2718244D2A0507A300AFBD4C /* menu_success.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718244C2A0507A300AFBD4C /* menu_success.tgs */; };
 		2718244F2A05413000AFBD4C /* StoryMyInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718244E2A05413000AFBD4C /* StoryMyInputView.swift */; };
+		271824512A08C60400AFBD4C /* StoryChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271824502A08C60400AFBD4C /* StoryChatListView.swift */; };
 		2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718FF8127BFB28900196BC4 /* login_airplane.tgs */; };
 		2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718FF8727C3A11F00196BC4 /* DownloadsController.swift */; };
 		271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */; };
@@ -1485,6 +1486,7 @@
 		27161A9B27EC98280069BCEF /* menu_drugs.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_drugs.tgs; sourceTree = "<group>"; };
 		2718244C2A0507A300AFBD4C /* menu_success.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_success.tgs; sourceTree = "<group>"; };
 		2718244E2A05413000AFBD4C /* StoryMyInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMyInputView.swift; sourceTree = "<group>"; };
+		271824502A08C60400AFBD4C /* StoryChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChatListView.swift; sourceTree = "<group>"; };
 		2718FF8127BFB28900196BC4 /* login_airplane.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = login_airplane.tgs; sourceTree = "<group>"; };
 		2718FF8727C3A11F00196BC4 /* DownloadsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsController.swift; sourceTree = "<group>"; };
 		2718FF8B27C3CCC700196BC4 /* FetchManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FetchManager; path = packages/FetchManager; sourceTree = "<group>"; };
@@ -3042,6 +3044,7 @@
 				270B7CC329FA925D009C994C /* StoryControlsView.swift */,
 				270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */,
 				2718244E2A05413000AFBD4C /* StoryMyInputView.swift */,
+				271824502A08C60400AFBD4C /* StoryChatListView.swift */,
 			);
 			name = stories;
 			sourceTree = "<group>";
@@ -6677,6 +6680,7 @@
 				27A69767273D096200B33415 /* CallSettingsController.swift in Sources */,
 				270B7CBC29F67361009C994C /* StoryView.swift in Sources */,
 				27A69766273D093500B33415 /* CameraViews.swift in Sources */,
+				271824512A08C60400AFBD4C /* StoryChatListView.swift in Sources */,
 				27A69765273D092C00B33415 /* CallWindowController.swift in Sources */,
 				27F7EEC0293F53E600B6E324 /* UserInfoResetPhotoItem.swift in Sources */,
 				27F2BBC727BE76D000A37463 /* Auth_Email.swift in Sources */,

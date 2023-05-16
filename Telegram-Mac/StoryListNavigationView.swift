@@ -29,6 +29,10 @@ final class StoryListNavigationView : View {
     
     
     func initialize(count: Int) {
+        for part in parts {
+            part.removeFromSuperlayer()
+        }
+        parts.removeAll()
         for _ in 0 ..< count {
             let part = SimpleLayer(frame: NSMakeRect(0, 0, 0, 2))
             part.backgroundColor = NSColor.white.withAlphaComponent(0.3).cgColor
@@ -75,12 +79,9 @@ final class StoryListNavigationView : View {
         let itemSize = NSMakeSize(max(2, partSize), 2)
         
         var x: CGFloat = 6
-        for (i, part) in parts.enumerated() {
+        for part in parts {
             transition.updateFrame(layer: part, frame: CGRect(origin: CGPoint(x: x, y: 0), size: itemSize))
             x += itemSize.width + 2
-//            if i == selected {
-//                selector.frame = part.frame
-//            }
         }
         
         

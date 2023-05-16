@@ -853,7 +853,19 @@ func initialize() -> [String] {
 
     array.append("folders_sidebar_edit")
     array.append("folders_sidebar_edit_active")
+    
+    array.append("story_unseen")
+    array.append("story_seen")
+    array.append("story_selected")
 
+    array.append("story_unseen_chat")
+    array.append("story_seen_chat")
+
+    
+    array.append("story_unseen_profile")
+    array.append("story_seen_profile")
+
+    
     return array
 }
 //swift ./tools/generate-images.swift

@@ -9573,6 +9573,97 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var story_unseen: CGImage {
+      if let image = cached.with({ $0["story_unseen"] }) {
+          return image
+      } else {
+          let image = _story_unseen()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_unseen"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_seen: CGImage {
+      if let image = cached.with({ $0["story_seen"] }) {
+          return image
+      } else {
+          let image = _story_seen()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_seen"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_selected: CGImage {
+      if let image = cached.with({ $0["story_selected"] }) {
+          return image
+      } else {
+          let image = _story_selected()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_selected"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_unseen_chat: CGImage {
+      if let image = cached.with({ $0["story_unseen_chat"] }) {
+          return image
+      } else {
+          let image = _story_unseen_chat()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_unseen_chat"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_seen_chat: CGImage {
+      if let image = cached.with({ $0["story_seen_chat"] }) {
+          return image
+      } else {
+          let image = _story_seen_chat()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_seen_chat"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_unseen_profile: CGImage {
+      if let image = cached.with({ $0["story_unseen_profile"] }) {
+          return image
+      } else {
+          let image = _story_unseen_profile()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_unseen_profile"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_seen_profile: CGImage {
+      if let image = cached.with({ $0["story_seen_profile"] }) {
+          return image
+      } else {
+          let image = _story_seen_profile()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_seen_profile"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10310,6 +10401,13 @@ public final class TelegramIconsTheme {
   private let _folder_invite_link_revoked: ()->CGImage
   private let _folders_sidebar_edit: ()->CGImage
   private let _folders_sidebar_edit_active: ()->CGImage
+  private let _story_unseen: ()->CGImage
+  private let _story_seen: ()->CGImage
+  private let _story_selected: ()->CGImage
+  private let _story_unseen_chat: ()->CGImage
+  private let _story_seen_chat: ()->CGImage
+  private let _story_unseen_profile: ()->CGImage
+  private let _story_seen_profile: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11047,7 +11145,14 @@ public final class TelegramIconsTheme {
       folder_invite_link: @escaping()->CGImage,
       folder_invite_link_revoked: @escaping()->CGImage,
       folders_sidebar_edit: @escaping()->CGImage,
-      folders_sidebar_edit_active: @escaping()->CGImage
+      folders_sidebar_edit_active: @escaping()->CGImage,
+      story_unseen: @escaping()->CGImage,
+      story_seen: @escaping()->CGImage,
+      story_selected: @escaping()->CGImage,
+      story_unseen_chat: @escaping()->CGImage,
+      story_seen_chat: @escaping()->CGImage,
+      story_unseen_profile: @escaping()->CGImage,
+      story_seen_profile: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11785,5 +11890,12 @@ public final class TelegramIconsTheme {
       self._folder_invite_link_revoked = folder_invite_link_revoked
       self._folders_sidebar_edit = folders_sidebar_edit
       self._folders_sidebar_edit_active = folders_sidebar_edit_active
+      self._story_unseen = story_unseen
+      self._story_seen = story_seen
+      self._story_selected = story_selected
+      self._story_unseen_chat = story_unseen_chat
+      self._story_seen_chat = story_seen_chat
+      self._story_unseen_profile = story_unseen_profile
+      self._story_seen_profile = story_seen_profile
   }
 }

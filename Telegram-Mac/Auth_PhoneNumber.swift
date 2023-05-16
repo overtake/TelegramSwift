@@ -683,6 +683,8 @@ final class Auth_PhoneNumberView : View {
             text = strings().loginNewPhoneBannedError
         case .timeout:
             text = "timeout"
+        case .appOutdated:
+            text = "please update your app"
         }
         errorLabel.state.set(.error(text))
     }
