@@ -2005,7 +2005,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              photoContainer.userInteractionEnabled = item.lastStory != nil
              photoContainer.scaleOnClick = true
              
-             if let story = item.lastStory {
+             if let storyData = item.lastStory {
+                 let story = storyData.0
+                 let isUnseen = storyData.1
                  let current: ImageView
                  let isNew: Bool
                  if let view = self.storyStateView {
@@ -2020,7 +2022,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  if isSelect {
                      current.image = theme.icons.story_selected
                  } else {
-                     current.image = story.isSeen ? theme.icons.story_seen : theme.icons.story_unseen
+                     current.image = !isUnseen ? theme.icons.story_seen : theme.icons.story_unseen
                  }
                  if animated, isNew {
                      current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)

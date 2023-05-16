@@ -695,7 +695,7 @@ public class Modal: NSObject {
             }
         }
         
-        let animateBackground = !unhideModalIfNeeded() || self.controller?.containerBackground == .clear
+        let animateBackground = !unhideModalIfNeeded() || self.controller?.containerBackground == .clear || animationType == .animateBackground
         
         if callAcceptInteraction, let interactionsView = interactionsView {
             interactionsView.interactions.accept?()
@@ -717,7 +717,7 @@ public class Modal: NSObject {
                 self?.controller = nil
             })
         default:
-            if let controller = controller, controller.contentBelowBackground {
+            if let controller = controller, controller.contentBelowBackground, !animateBackground {
                 controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.25, timingFunction: .spring, completion: { [weak self, weak background] _ in
                     background?.removeFromSuperview()
                     self?.controller?.view.removeFromSuperview()
@@ -751,7 +751,7 @@ public class Modal: NSObject {
        
        
         switch animationType {
-        case .common, .noneDelayed:
+        case .common, .noneDelayed, .animateBackground:
             break
         case let .scaleToRect(newRect, contentView):
             let oldRect = contentView.convert(contentView.bounds, to: background)
@@ -843,6 +843,7 @@ public class Modal: NSObject {
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : controller.background
                     if strongSelf.animated {
                         if case .alpha = strongSelf.animationType {
+                        } else if case .animateBackground = strongSelf.animationType {
                         } else {
                             strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
                         }
@@ -862,6 +863,8 @@ public class Modal: NSObject {
                                 view.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: 0.3, timingFunction: .spring)
                             case .alpha:
                                 view.layer?.animateAlpha(from: 1.0, to: 1.0, duration: 0.15, timingFunction: .spring)
+                            case .animateBackground:
+                                strongSelf.visualEffectView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                             case .none:
                                 break
                             }
@@ -978,10 +981,12 @@ public enum ModalAnimationType {
     case scaleFrom(NSRect)
     case alpha
     case none
+    case animateBackground
 }
-public enum ModalAnimationCloseBehaviour {
+public enum ModalAnimationCloseBehaviour : Equatable {
     case common
     case noneDelayed(duration: CGFloat)
+    case animateBackground
     case scaleToRect(NSRect, NSView)
 }
 

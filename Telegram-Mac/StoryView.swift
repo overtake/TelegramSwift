@@ -65,7 +65,7 @@ class StoryView : Control {
     fileprivate var peer: Peer?
     fileprivate var context: AccountContext?
     
-    func isEqual(to storyId: Int64?) -> Bool {
+    func isEqual(to storyId: Int32?) -> Bool {
         return self.story?.id == storyId
     }
     

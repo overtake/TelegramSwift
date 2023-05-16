@@ -34,7 +34,7 @@ final class StoryListView : Control, Notifable {
     
     fileprivate var transition: TransitionData?
 
-    var storyId: Int64? {
+    var storyId: Int32? {
         if let selectedIndex = self.selectedIndex, let entry = entry {
             return entry.item.items[selectedIndex].id
         }
@@ -42,6 +42,194 @@ final class StoryListView : Control, Notifable {
     }
     var id: PeerId? {
         return self.entry?.id
+    }
+    
+    private class Text : Control {
+        
+        enum State : Equatable {
+            case concealed
+            case revealed
+        }
+        
+        var state: State = .concealed
+        
+        private let scrollView = ScrollView()
+        private let textView = TextView()
+        private let documentView = View()
+        private let container = Control()
+        
+        private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+        
+        required init(frame frameRect: NSRect) {
+            scrollView.background = NSColor.blackTransparent
+            super.init(frame: frameRect)
+            addSubview(container)
+            container.addSubview(self.scrollView)
+            self.scrollView.documentView = documentView
+            self.documentView.addSubview(self.textView)
+            
+            
+            self.layer?.cornerRadius = 10
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(size: frame.size, transition: .immediate)
+        }
+        
+        func update(text: String, entities: [MessageTextEntity], context: AccountContext, state: State, transition: ContainedViewLayoutTransition, toggleState: @escaping(State)->Void, arguments: StoryArguments?) -> NSSize {
+            
+            self.state = state
+            
+            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: storyTheme.fontSize, openInfo: { [weak arguments] peerId, toChat, messageId, initialAction in
+                if toChat {
+                    arguments?.openChat(peerId, messageId, initialAction)
+                } else {
+                    arguments?.openPeerInfo(peerId)
+                }
+            }, textColor: storyTheme.colors.text, linkColor: storyTheme.colors.link, monospacedPre: storyTheme.colors.monospacedPre, monospacedCode: storyTheme.colors.monospacedCode).mutableCopy() as! NSMutableAttributedString
+            
+            
+
+            
+            var spoilers:[TextViewLayout.Spoiler] = []
+            for entity in entities {
+                switch entity.type {
+                case .Spoiler:
+                    let color: NSColor = storyTheme.colors.text
+                    let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
+                    if let range = attributed.range.intersection(range) {
+                        attributed.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
+                    }
+                default:
+                    break
+                }
+            }
+            InlineStickerItem.apply(to: attributed, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
+            
+            
+            attributed.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: attributed.range, options: .init(), using: { value, range, stop in
+                if let text = value as? TGInputTextTag {
+                    if let color = text.attribute.value as? NSColor {
+                        spoilers.append(.init(range: range, color: color, isRevealed: false))
+                    }
+                }
+            })
+            
+            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: NSColor.black, spoilers: spoilers)
+            layout.measure(width: frame.width - 20)
+            layout.interactions = globalLinkExecutor
+            
+            if !layout.isPerfectSized {
+                container.set(cursor: NSCursor.pointingHand, for: .Hover)
+                container.set(cursor: NSCursor.pointingHand, for: .Highlight)
+            } else {
+                container.set(cursor: NSCursor.arrow, for: .Hover)
+                container.set(cursor: NSCursor.arrow, for: .Highlight)
+            }
+            
+            self.textView.update(layout)
+            
+            self.removeAllHandlers()
+            self.set(handler: { control in
+                toggleState(.concealed)
+            }, for: .Click)
+            
+            container.removeAllHandlers()
+            container.set(handler: { control in
+                toggleState(.revealed)
+            }, for: .Click)
+            
+            self.container.userInteractionEnabled = state == .concealed
+            self.userInteractionEnabled = state == .revealed
+            self.textView.userInteractionEnabled = state == .revealed
+            
+
+//            self.container.isEventLess = !self.container.userInteractionEnabled
+            self.isEventLess = !self.userInteractionEnabled
+//            self.textView.isEventLess = !self.container.userInteractionEnabled
+            
+            self.updateInlineStickers(context: context, view: textView, textLayout: layout)
+            
+            self.updateLayout(size: frame.size, transition: transition)
+            
+            return frame.size
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            let containerSize = NSMakeSize(frame.width, min(textView.frame.height + 10, 208 + 10))
+            let rect = CGRect(origin: NSMakePoint(0, size.height - containerSize.height), size: containerSize)
+            transition.updateFrame(view: container, frame: rect)
+
+            transition.updateFrame(view: scrollView, frame: container.bounds)
+            transition.updateFrame(view: documentView, frame: NSMakeRect(0, 0, container.frame.width, textView.frame.height + 10))
+
+            transition.updateFrame(view: textView, frame: CGRect.init(origin: NSMakePoint(10, 5), size: textView.frame.size))
+            
+        }
+        
+        func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+            
+
+            let textColor = storyTheme.colors.text
+            
+            var validIds: [InlineStickerItemLayer.Key] = []
+            var index: Int = textView.hashValue
+            
+            for item in textLayout.embeddedItems {
+                if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                    
+                    let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                    validIds.append(id)
+                    
+                    
+                    let rect: NSRect
+                    if textLayout.isBigEmoji {
+                        rect = item.rect
+                    } else {
+                        rect = item.rect.insetBy(dx: -2, dy: -2)
+                    }
+                    
+                    let view: InlineStickerItemLayer
+                    if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                        view = current
+                    } else {
+                        self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                        view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
+                        self.inlineStickerItemViews[id] = view
+                        view.superview = textView
+                        textView.addEmbeddedLayer(view)
+                    }
+                    index += 1
+                    var isKeyWindow: Bool = false
+                    if let window = window {
+                        if !window.canBecomeKey {
+                            isKeyWindow = true
+                        } else {
+                            isKeyWindow = window.isKeyWindow
+                        }
+                    }
+                    view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
+                    view.frame = rect
+                }
+            }
+            
+            var removeKeys: [InlineStickerItemLayer.Key] = []
+            for (key, itemLayer) in self.inlineStickerItemViews {
+                if !validIds.contains(key) {
+                    removeKeys.append(key)
+                    itemLayer.removeFromSuperlayer()
+                }
+            }
+            for key in removeKeys {
+                self.inlineStickerItemViews.removeValue(forKey: key)
+            }
+        }
+
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
     }
     
     private var stories: [StoryView?] = []
@@ -52,6 +240,7 @@ final class StoryListView : Control, Notifable {
     private var context: AccountContext?
     private let controls = StoryControlsView(frame: .zero)
     private let navigator = StoryListNavigationView(frame: .zero)
+    private var text: Text?
     private let container = View()
     
     private var pauseOverlay: Control? = nil
@@ -127,6 +316,9 @@ final class StoryListView : Control, Notifable {
         guard let value = value as? StoryInteraction.State, let oldValue = oldValue as? StoryInteraction.State else {
             return
         }
+        guard let context = self.arguments?.context else {
+            return
+        }
         
         var isPaused: Bool = false
 
@@ -150,6 +342,11 @@ final class StoryListView : Control, Notifable {
                 current?.unmute()
             }
             controls.updateMuted(isMuted: value.isMuted)
+        }
+        if oldValue.readingText != value.readingText {
+            if let story = self.current?.story {
+                self.updateText(story, state: value.readingText ? .revealed : .concealed, animated: animated, context: context)
+            }
         }
         
         if let groupId = self.entry?.id {
@@ -218,6 +415,13 @@ final class StoryListView : Control, Notifable {
 
         }
         inputView.updateInputState(animated: transition.isAnimated)
+        
+        if let text = self.text {
+            var rect = text.bounds
+            rect.origin.x = 0
+            rect.origin.y = controls.frame.maxY - text.frame.height
+            transition.updateFrame(view: text, frame: rect)
+        }
     }
     
     func animateAppearing(from control: NSView) {
@@ -378,6 +582,52 @@ final class StoryListView : Control, Notifable {
             return current
         }
         self.inputView.update(story, animated: false)
+        
+        self.updateText(story, state: .concealed, animated: false, context: context)
+    }
+    
+    private func updateText(_ story: StoryListContext.Item, state: Text.State, animated: Bool, context: AccountContext) {
+        
+        let text = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+        
+        let entities: [MessageTextEntity] = [.init(range: 0..<5, type: MessageTextEntityType.Bold), .init(range: 6..<10, type: MessageTextEntityType.Italic), .init(range: 40..<100, type: MessageTextEntityType.Spoiler)]
+        
+        /*
+        , entities: [.init(range: 0..<5, type: MessageTextEntityType.Bold), .init(range: 6..<10, type: MessageTextEntityType.Italic), .init(range: 40..<100, type: MessageTextEntityType.Spoiler), .init(range: 100..<110, type: MessageTextEntityType.Code)]
+         */
+        
+        if !text.isEmpty {
+            let current: Text
+            if let view = self.text {
+                current = view
+            } else {
+                current = Text(frame: NSMakeRect(0, container.frame.maxY - 100, container.frame.width, controls.frame.height))
+                self.text = current
+                container.addSubview(current, positioned: .above, relativeTo: controls)
+            }
+            let transition: ContainedViewLayoutTransition
+            if animated {
+                transition = .animated(duration: 0.2, curve: .easeOut)
+            } else {
+                transition = .immediate
+            }
+            let size = current.update(text: text, entities: entities, context: context, state: state, transition: transition, toggleState: { [weak self] state in
+                self?.arguments?.interaction.update { current in
+                    var current = current
+                    current.readingText = state == .revealed
+                    current.isSpacePaused = false
+                    return current
+                }
+            }, arguments: arguments)
+            
+            let rect = CGRect(origin: NSMakePoint(0, controls.frame.height - size.height), size: size)
+            transition.updateFrame(view: current, frame: rect)
+            
+            
+        } else if let view = self.text {
+            performSubviewRemoval(view, animated: false)
+            self.text = nil
+        }
     }
     
     private func updateStoryState(_ state: StoryView.State) {
@@ -648,6 +898,6 @@ extension StoryListView {
                 completed(true)
             }
         }
-
     }
+
 }

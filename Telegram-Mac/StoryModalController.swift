@@ -21,7 +21,7 @@ private struct Reaction {
 
 struct StoryInitialIndex {
     let peerId: PeerId
-    let id: Int64?
+    let id: Int32?
     let takeControl:((PeerId)->NSView?)?
 }
 
@@ -42,7 +42,15 @@ struct StoryListEntry : Equatable, Comparable, Identifiable {
         return item.items.count
     }
     var hasUnseen: Bool {
-        return self.item.items.contains(where: { !$0.isSeen })
+        return self.item.items.contains(where: { !isSeen($0) })
+    }
+    
+    func isSeen(_ item: StoryListContext.Item) -> Bool {
+        if self.item.maxReadId >= item.id {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
@@ -53,8 +61,10 @@ let storyTheme = generateTheme(palette: nightAccentPalette, cloudTheme: nil, bub
 
 final class StoryInteraction : InterfaceObserver {
     struct State : Equatable {
+        
+        
         var inputs: [PeerId : ChatTextInputState] = [:]
-        var entryState:[PeerId : Int64] = [:]
+        var entryState:[PeerId : Int32] = [:]
         var input: ChatTextInputState {
             if let entryId = entryId {
                 if let input = inputs[entryId] {
@@ -75,12 +85,15 @@ final class StoryInteraction : InterfaceObserver {
         var hasReactions: Bool = false
         var isSpacePaused: Bool = false
         var playingReaction: Bool = false
+        var readingText: Bool = false
         var isMuted: Bool = false
-        var storyId: Int64? = nil
+        var storyId: Int32? = nil
         var entryId: PeerId? = nil
+        var inputRecording: ChatRecordingState?
         var recordType: RecordingStateSettings = FastSettings.recordingState
+        
         var isPaused: Bool {
-            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused
+            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil
         }
         
     }
@@ -152,6 +165,11 @@ final class StoryInteraction : InterfaceObserver {
         
         return selectedRange.lowerBound ..< selectedRange.lowerBound + text.length
     }
+    
+    deinit {
+        var bp = 0
+        bp += 1
+    }
 //
 //    func appendText(_ text:String, selectedRange:Range<Int>? = nil) -> Range<Int> {
 //        return self.appendText(NSAttributedString(string: text, font: .normal(theme.fontSize)), selectedRange: selectedRange)
@@ -171,11 +189,11 @@ final class StoryArguments {
     let prevStory:()->Void
     let close:()->Void
     let openPeerInfo:(PeerId)->Void
-    let openChat:(PeerId)->Void
+    let openChat:(PeerId, MessageId?, ChatInitialAction?)->Void
     let sendMessage:()->Void
     let toggleRecordType:()->Void
-    let deleteStory:(Int64)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId)->Void, sendMessage:@escaping()->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(Int64)->Void) {
+    let deleteStory:(Int32)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping()->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(Int32)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -222,6 +240,11 @@ final class StoryArguments {
             current.isSpacePaused = false
             return current
         }
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
 }
 
@@ -672,6 +695,9 @@ private final class StoryViewController: Control, Notifable {
     var isInputFocused: Bool {
         return self.arguments?.interaction.presentation.inputInFocus ?? false
     }
+    var isTextEmpty: Bool {
+        return self.arguments?.interaction.presentation.input.inputText.isEmpty == true
+    }
     
     var hasNextGroup: Bool {
         guard let currentIndex = self.currentIndex, !isPaused else {
@@ -781,8 +807,10 @@ private final class StoryViewController: Control, Notifable {
             
             self.currentIndex = initialEntryIndex
             
+            entry.item.maxReadId
+            
             let initialId = self.arguments?.interaction.presentation.entryState[entryId] ?? initial?.id
-            let initialIndex = entry.item.items.firstIndex(where: { $0.id == initialId }) ?? entry.item.items.firstIndex(where: { !$0.isSeen }) ?? 0
+            let initialIndex = entry.item.items.firstIndex(where: { $0.id == initialId }) ?? entry.item.items.firstIndex(where: { !entry.isSeen($0) }) ?? 0
             
             storyView.update(context: context, entry: entry, selected: initialIndex)
             self.current = storyView
@@ -894,7 +922,7 @@ private final class StoryViewController: Control, Notifable {
                 
                 let initial = arguments?.interaction.presentation.entryState[entryId]
                 
-                let initialIndex = entry.item.items.firstIndex(where: { $0.id == initial }) ?? entry.item.items.firstIndex(where: { !$0.isSeen }) ?? (!isNext ? entry.count - 1 : 0)
+                let initialIndex = entry.item.items.firstIndex(where: { $0.id == initial }) ?? entry.item.items.firstIndex(where: { !entry.isSeen($0) }) ?? (!isNext ? entry.count - 1 : 0)
                 self.currentIndex = nextGroupIndex
                 
                 self.arguments?.interaction.update { current in
@@ -1150,7 +1178,7 @@ private final class StoryViewController: Control, Notifable {
         let tooltip = TooptipView(frame: .zero)
         
         tooltip.update(source: source, size: NSMakeSize(current.contentRect.width - 20, 40), context: arguments.context, callback: { [weak arguments] in
-            arguments?.openChat(entryId)
+            arguments?.openChat(entryId, nil, nil)
         })
         
         self.addSubview(tooltip)
@@ -1375,10 +1403,10 @@ final class StoryModalController : ModalViewController, Notifable {
                 }
                 self?.close()
             }
-        }, openChat: { [weak self] peerId in
+        }, openChat: { [weak self] peerId, messageId, initial in
             let controller = context.bindings.rootNavigation().controller as? ChatController
             if controller?.chatLocation.peerId != peerId {
-                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
+                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initial))
             }
             self?.close()
         }, sendMessage: { [weak self] in
@@ -1543,6 +1571,7 @@ final class StoryModalController : ModalViewController, Notifable {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+        let context = self.context
         
         window?.set(handler: { [weak self] _ in
             return self?.previous() ?? .invoked
@@ -1562,11 +1591,42 @@ final class StoryModalController : ModalViewController, Notifable {
             }
             self?.interactions.update { current in
                 var current = current
-                current.isSpacePaused = !current.isSpacePaused
+                if current.isPaused {
+                    current.isSpacePaused = false
+                } else {
+                    current.isSpacePaused = !current.isSpacePaused
+                }
                 return current
             }
             return .invoked
         }, with: self, for: .Space, priority: .modal)
+        
+        
+        window?.set(handler: { [weak self] _ in
+            guard self?.genericView.isTextEmpty == true else {
+                return .rejected
+            }
+            
+            
+            let state: ChatRecordingState
+            if self?.interactions.presentation.recordType == .voice {
+                state = ChatRecordingAudioState(context: context, liveUpload: false, autohold: true)
+            } else {
+                state = ChatRecordingVideoState(context: context, liveUpload: false, autohold: true)
+                showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: state.pipeline), for: context.window)
+            }
+            state.start()
+
+            delay(0.1, closure: {
+                self?.interactions.update { current in
+                    var current = current
+                    current.inputRecording = state
+                    return current
+                }
+            })
+            
+            return .invoked
+        }, with: self, for: .R, priority: .modal, modifierFlags: [.command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputTextView?.boldWord()
@@ -1609,7 +1669,28 @@ final class StoryModalController : ModalViewController, Notifable {
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {
-        if self.genericView.inputView == window?.firstResponder {
+        if let _ = interactions.presentation.inputRecording {
+           interactions.update { current in
+               var current = current
+               current.inputRecording = nil
+               return current
+           }
+           return .invoked
+       } else if interactions.presentation.readingText {
+            interactions.update { current in
+                var current = current
+                current.readingText = false
+                return current
+            }
+            return .invoked
+        } else if let _ = interactions.presentation.inputRecording {
+            interactions.update { current in
+                var current = current
+                current.inputRecording = nil
+                return current
+            }
+            return .invoked
+        } else if self.genericView.inputView == window?.firstResponder {
             self.genericView.resetInputView()
             return .invoked
         } else if interactions.presentation.hasReactions {
@@ -1656,8 +1737,8 @@ final class StoryModalController : ModalViewController, Notifable {
         return false
     }
     
-    override func close(animationType: ModalAnimationCloseBehaviour = .noneDelayed(duration: 0.2)) {
-        super.close(animationType: animationType)
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        super.close(animationType: .common)
         genericView.animateDisappear(initialId)
     }
 
@@ -1666,7 +1747,7 @@ final class StoryModalController : ModalViewController, Notifable {
     }
     
     static func ShowStories(context: AccountContext, stories: StoryListContext, initialId: StoryInitialIndex?) {
-        showModal(with: StoryModalController(context: context, stories: stories, initialId: initialId), for: context.window, animationType: .none)
+        showModal(with: StoryModalController(context: context, stories: stories, initialId: initialId), for: context.window, animationType: .animateBackground)
     }
 }
 

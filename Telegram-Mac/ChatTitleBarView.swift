@@ -340,9 +340,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         self.stories = stories
         let peerId = self.chatInteraction.peerId
         let item = stories?.itemSets.first(where: { $0.peerId == peerId })
-        let hasStory = item != nil
-        let hasUnseen = item?.items.contains(where: { !$0.isSeen }) == true
-        if hasStory {
+        if let item = item {
+            let hasUnseen = item.items.contains(where: { item.maxReadId < $0.id })
+
             let current: ImageView
             let isNew: Bool
             if let view = self.storyState {

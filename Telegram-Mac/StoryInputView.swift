@@ -124,7 +124,7 @@ private final class StoryReplyActionButton : View {
 final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     
     private let rtfAttachmentsDisposable = MetaDisposable()
-    
+    private var recordingView: StoryRecordingView?
 
     func updateInputText(_ state: ChatTextInputState, prevState: ChatTextInputState, animated: Bool) {
         if textView.string() != state.inputText || state.attributes != prevState.attributes {
@@ -148,7 +148,33 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             return
         }
         self.reactions.isSelected = state.hasReactions
-        self.action.update(state: textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, animated: true)
+        self.action.update(state: textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, animated: animated)
+        
+        self.updateRecoringState(state, animated: animated)
+    }
+    
+    private func updateRecoringState(_ state: StoryInteraction.State, animated: Bool) {
+        guard let arguments = self.arguments else {
+            return
+        }
+        if let recording = state.inputRecording {
+            let current: StoryRecordingView
+            if let view = self.recordingView {
+                current = view
+            } else {
+                current = StoryRecordingView(frame: NSMakeRect(0, 0, frame.width, frame.height), arguments: arguments, state: state, recorder: recording)
+                self.recordingView = current
+                self.addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.updateState(state)
+        } else if let view = self.recordingView {
+            performSubviewRemoval(view, animated: animated)
+            self.recordingView = nil
+        }
     }
     
     func update(_ story: StoryListContext.Item, animated: Bool) {
@@ -306,7 +332,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     }
     
     func textViewIsTypingEnabled() -> Bool {
-        return true
+        return self.arguments?.interaction.presentation.inputRecording == nil
     }
     
     func responderDidUpdate() {
@@ -322,7 +348,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     }
     
     func updateInputState(animated: Bool = true) {
-        self.inputState = self.isFirstResponder ? .focus(isEmpty: self.textView.string().isEmpty) : .none(isEmpty: self.textView.string().isEmpty)
+        self.inputState = self.isFirstResponder || self.arguments?.interaction.presentation.inputRecording != nil ? .focus(isEmpty: self.textView.string().isEmpty) : .none(isEmpty: self.textView.string().isEmpty)
         
         guard let superview = self.superview, let window = self.window, let arguments = self.arguments else {
             return
@@ -374,6 +400,9 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     private let stickers = ImageButton(frame: NSMakeRect(0, 0, 50, 50))
     private var reactions = ImageButton(frame: NSMakeRect(0, 0, 50, 50))
     
+    
+    
+    
     required init(frame frameRect: NSRect) {
         self.visualEffect = VisualEffect()
         super.init(frame: frameRect)
@@ -414,8 +443,8 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         attach.set(image: attach_image_active, for: .Highlight)
         attach.sizeToFit(.zero, NSMakeSize(50, 50), thatFit: true)
         
-        textView.installGetAttach({ attachment, size in
-            guard let context = self.arguments?.context else {
+        textView.installGetAttach({ [weak self] attachment, size in
+            guard let context = self?.arguments?.context else {
                 return nil
             }
             
