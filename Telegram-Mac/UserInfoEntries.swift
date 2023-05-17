@@ -304,6 +304,7 @@ class UserInfoArguments : PeerInfoArguments {
         self.peerChat(self.effectivePeerId)
     }
     
+    
     func reportReaction(_ messageId: MessageId) {
         let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: peerId) |> `catch` { _ in .complete() }
         let report = context.engine.peers.reportPeerReaction(authorId: self.peerId, messageId: messageId) |> ignoreValues

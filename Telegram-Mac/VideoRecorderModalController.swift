@@ -16,7 +16,6 @@ class VideoRecorderModalController: ModalViewController {
 
     private let pipeline: VideoRecorderPipeline
     private let state: ChatRecordingState
-    private let chatInteraction: ChatInteraction
     
     private let disposable = MetaDisposable()
     private let countdownDisposable = MetaDisposable()
@@ -29,10 +28,13 @@ class VideoRecorderModalController: ModalViewController {
         return view as! VideoRecorderModalView
     }
     
-    init(state: ChatRecordingState, pipeline: VideoRecorderPipeline) {
-        self.chatInteraction = chatInteraction
+    let sendMedia:([MediaSenderContainer])->Void
+    let resetState:()->Void
+    init(state: ChatRecordingState, pipeline: VideoRecorderPipeline, sendMedia:@escaping([MediaSenderContainer])->Void, resetState:@escaping()->Void) {
+        self.sendMedia = sendMedia
         self.state = state
         self.pipeline = pipeline
+        self.resetState = resetState
         super.init(frame: NSMakeRect(0, 0, 300, 300))
         bar = .init(height: 0)
     }
@@ -83,17 +85,24 @@ class VideoRecorderModalController: ModalViewController {
         
     }
     
+    override var canBecomeResponder: Bool {
+        return false
+    }
+    
+    override func becomeFirstResponder() -> Bool? {
+        return nil
+    }
+    
     private func runTimer() {
         countdownDisposable.set((pipeline.powerAndDuration.get() |> deliverOnMainQueue).start(next: { [weak self] _, duration in
             guard let `self` = self else {return}
             self.genericView.updateProgress(Float(duration / VideoRecorderPipeline.videoMessageMaxDuration))
-            
             if duration >= VideoRecorderPipeline.videoMessageMaxDuration {
                 self.stopAndMakeRecordedVideo()
-                if let stateData = self.chatInteraction.presentation.recordingState?.data {
-                    self.chatInteraction.mediaPromise.set(stateData)
-                }
-                self.chatInteraction.update({$0.withoutRecordingState()})
+                _ = (self.state.data |> deliverOnMainQueue).start(next: { [weak self] medias in
+                    self?.sendMedia(medias)
+                })
+                self.resetState()
                 self.close()
             }
             
@@ -120,9 +129,9 @@ class VideoRecorderModalController: ModalViewController {
     
     
     override func escapeKeyAction() -> KeyHandlerResult {
-        close()
-        chatInteraction.presentation.recordingState?.stop()
-        chatInteraction.update({$0.withoutRecordingState()})
+        self.close()
+        self.state.stop()
+        self.resetState()
         return .invoked
     }
     

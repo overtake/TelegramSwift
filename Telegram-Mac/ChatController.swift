@@ -2755,7 +2755,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                             if access {
                                 let state = ChatRecordingVideoState(context: chatInteraction.context, liveUpload: chatInteraction.peerId.namespace != Namespaces.Peer.SecretChat, autohold: hold)
-                                showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: state.pipeline), for: context.window)
+                                showModal(with: VideoRecorderModalController(state: state, pipeline: state.pipeline, sendMedia: { [weak chatInteraction] medias in
+                                    chatInteraction?.sendMedia(medias)
+                                }, resetState: { [weak chatInteraction] in
+                                    chatInteraction?.update { $0.withoutRecordingState() }
+                                }), for: context.window)
+                                
                                 chatInteraction.update({$0.withRecordingState(state)})
                             } else {
                                 confirm(for: context.window, information: strings().requestAccesErrorHaveNotAccessVideoMessages, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in

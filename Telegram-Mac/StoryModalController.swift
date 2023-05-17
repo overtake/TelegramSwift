@@ -102,6 +102,28 @@ final class StoryInteraction : InterfaceObserver {
         self.presentation = presentation
     }
     
+    func startRecording(context: AccountContext, autohold: Bool) {
+        let state: ChatRecordingState
+        if self.presentation.recordType == .voice {
+            state = ChatRecordingAudioState(context: context, liveUpload: false, autohold: autohold)
+        } else {
+            let videoState = ChatRecordingVideoState(context: context, liveUpload: false, autohold: autohold)
+            state = videoState
+            showModal(with: VideoRecorderModalController(state: state, pipeline: videoState.pipeline, sendMedia: { medias in
+                
+            }, resetState: { [weak self] in
+                self?.resetRecording()
+            }), for: context.window)
+        }
+        state.start()
+
+        self.update { current in
+            var current = current
+            current.inputRecording = state
+            return current
+        }
+    }
+    
     func update(animated:Bool = true, _ f:(State)->State)->Void {
         let oldValue = self.presentation
         self.presentation = f(presentation)
@@ -164,6 +186,14 @@ final class StoryInteraction : InterfaceObserver {
         })
         
         return selectedRange.lowerBound ..< selectedRange.lowerBound + text.length
+    }
+    
+    func resetRecording() {
+        update { current in
+            var current = current
+            current.inputRecording = nil
+            return current
+        }
     }
     
     deinit {
@@ -240,6 +270,10 @@ final class StoryArguments {
             current.isSpacePaused = false
             return current
         }
+    }
+    
+    func startRecording(autohold: Bool) {
+        self.interaction.startRecording(context: context, autohold: autohold)
     }
     
     deinit {
@@ -496,7 +530,7 @@ private final class StoryViewController: Control, Notifable {
         override func layout() {
             self.photo?.center()
             if let photo = self.photo {
-                photo.isHidden = frame.width < 70
+                photo.isHidden = frame.width < 100
                 if !photo.isHidden {
                     if isNext {
                         button.centerY(x: photo.frame.minX - button.frame.width)
@@ -806,9 +840,7 @@ private final class StoryViewController: Control, Notifable {
             let entryId = entry.item.peerId
             
             self.currentIndex = initialEntryIndex
-            
-            entry.item.maxReadId
-            
+                        
             let initialId = self.arguments?.interaction.presentation.entryState[entryId] ?? initial?.id
             let initialIndex = entry.item.items.firstIndex(where: { $0.id == initialId }) ?? entry.item.items.firstIndex(where: { !entry.isSeen($0) }) ?? 0
             
@@ -1606,25 +1638,7 @@ final class StoryModalController : ModalViewController, Notifable {
             guard self?.genericView.isTextEmpty == true else {
                 return .rejected
             }
-            
-            
-            let state: ChatRecordingState
-            if self?.interactions.presentation.recordType == .voice {
-                state = ChatRecordingAudioState(context: context, liveUpload: false, autohold: true)
-            } else {
-                state = ChatRecordingVideoState(context: context, liveUpload: false, autohold: true)
-                showModal(with: VideoRecorderModalController(chatInteraction: chatInteraction, pipeline: state.pipeline), for: context.window)
-            }
-            state.start()
-
-            delay(0.1, closure: {
-                self?.interactions.update { current in
-                    var current = current
-                    current.inputRecording = state
-                    return current
-                }
-            })
-            
+            self?.interactions.startRecording(context: context, autohold: true)
             return .invoked
         }, with: self, for: .R, priority: .modal, modifierFlags: [.command])
         

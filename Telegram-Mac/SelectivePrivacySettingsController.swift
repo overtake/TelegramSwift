@@ -21,6 +21,7 @@ enum SelectivePrivacySettingsKind {
     case forwards
     case phoneNumber
     case voiceMessages
+    case bio
 }
 
 private enum SelectivePrivacySettingType {
