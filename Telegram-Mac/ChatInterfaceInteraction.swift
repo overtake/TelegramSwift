@@ -161,6 +161,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openBank: (String)->Void = { _ in }
     var afterSentTransition:()->Void = {}
     var getGradientOffsetRect:()->NSRect = {  return .zero }
+    var markAdAction:(Data)->Void = { _ in }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
     var openFocusedMedia:(Int32?)->Void = { _ in return }

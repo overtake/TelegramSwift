@@ -1474,6 +1474,9 @@ private final class ChatAdData {
         self.context.markAsSeen(opaqueId: opaqueId)
     }
 
+    func markAction(opaqueId: Data) {
+        self.context.markAction(opaqueId: opaqueId)
+    }
     
     deinit {
         disposable.dispose()
@@ -4700,6 +4703,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let peerId = strongSelf.chatInteraction.peerId
                 _ = context.engine.peers.dismissPeerStatusOptions(peerId: peerId).start()
             }
+        }
+        
+        chatInteraction.markAdAction = { [weak self] opaqueId in
+            self?.adMessages?.markAction(opaqueId: opaqueId)
         }
         
         chatInteraction.toggleSidebar = { [weak self] in
