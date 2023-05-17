@@ -87,7 +87,7 @@ final class StoryListView : Control, Notifable {
                 } else {
                     arguments?.openPeerInfo(peerId)
                 }
-            }, textColor: storyTheme.colors.text, linkColor: storyTheme.colors.link, monospacedPre: storyTheme.colors.monospacedPre, monospacedCode: storyTheme.colors.monospacedCode).mutableCopy() as! NSMutableAttributedString
+            }, textColor: storyTheme.colors.text, linkColor: storyTheme.colors.link, monospacedPre: storyTheme.colors.text, monospacedCode: storyTheme.colors.text).mutableCopy() as! NSMutableAttributedString
             
             
 
@@ -164,6 +164,7 @@ final class StoryListView : Control, Notifable {
             transition.updateFrame(view: scrollView, frame: container.bounds)
             transition.updateFrame(view: documentView, frame: NSMakeRect(0, 0, container.frame.width, textView.frame.height + 10))
 
+            textView.resize(size.width - 20)
             transition.updateFrame(view: textView, frame: CGRect.init(origin: NSMakePoint(10, 5), size: textView.frame.size))
             
         }
@@ -358,7 +359,7 @@ final class StoryListView : Control, Notifable {
             inputView.updateState(value, animated: animated)
         }
         
-        if isPaused, let storyView = self.current, self.entry?.id == value.entryId, value.inputInFocus {
+        if isPaused, let storyView = self.current, self.entry?.id == value.entryId, value.inputInFocus || value.inputRecording != nil {
             let current: Control
             if let view = self.pauseOverlay {
                 current = view
@@ -418,6 +419,7 @@ final class StoryListView : Control, Notifable {
         
         if let text = self.text {
             var rect = text.bounds
+            rect.size.width = container.frame.width
             rect.origin.x = 0
             rect.origin.y = controls.frame.maxY - text.frame.height
             transition.updateFrame(view: text, frame: rect)
@@ -588,13 +590,10 @@ final class StoryListView : Control, Notifable {
     
     private func updateText(_ story: StoryListContext.Item, state: Text.State, animated: Bool, context: AccountContext) {
         
-        let text = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+        let text = story.text//"Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
         
-        let entities: [MessageTextEntity] = [.init(range: 0..<5, type: MessageTextEntityType.Bold), .init(range: 6..<10, type: MessageTextEntityType.Italic), .init(range: 40..<100, type: MessageTextEntityType.Spoiler)]
+        let entities: [MessageTextEntity] = story.entities//[.init(range: 0..<5, type: MessageTextEntityType.Bold), .init(range: 6..<10, type: MessageTextEntityType.Italic), .init(range: 40..<100, type: MessageTextEntityType.Spoiler)]
         
-        /*
-        , entities: [.init(range: 0..<5, type: MessageTextEntityType.Bold), .init(range: 6..<10, type: MessageTextEntityType.Italic), .init(range: 40..<100, type: MessageTextEntityType.Spoiler), .init(range: 100..<110, type: MessageTextEntityType.Code)]
-         */
         
         if !text.isEmpty {
             let current: Text

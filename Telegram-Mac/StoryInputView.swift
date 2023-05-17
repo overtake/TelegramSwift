@@ -99,6 +99,13 @@ private final class StoryReplyActionButton : View {
                 }
             }, for: .Click)
             
+            current.set(handler: { [weak arguments] _ in
+                if state == .text {
+                } else {
+                    arguments?.startRecording(autohold: false)
+                }
+            }, for: .LongMouseDown)
+            
             current.autohighlight = false
             current.animates = false
             switch state {
@@ -150,6 +157,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         self.reactions.isSelected = state.hasReactions
         self.action.update(state: textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, animated: animated)
         
+        self.updateInputState(animated: animated)
         self.updateRecoringState(state, animated: animated)
     }
     
@@ -348,31 +356,37 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     }
     
     func updateInputState(animated: Bool = true) {
-        self.inputState = self.isFirstResponder || self.arguments?.interaction.presentation.inputRecording != nil ? .focus(isEmpty: self.textView.string().isEmpty) : .none(isEmpty: self.textView.string().isEmpty)
+        self.inputState = self.isFirstResponder ? .focus(isEmpty: self.textView.string().isEmpty) : .none(isEmpty: self.textView.string().isEmpty)
         
         guard let superview = self.superview, let window = self.window, let arguments = self.arguments else {
             return
         }
-        
         let size: NSSize
-        switch self.inputState {
-        case .focus:
+        if self.arguments?.interaction.presentation.inputRecording != nil {
             size = NSMakeSize(min(min(superview.frame.width + 60, window.frame.width - 20), StoryView.size.width + 80), self.textViewSize(self.textView).height + 16)
             textView.inputView.textContainer?.maximumNumberOfLines = 0
             textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
             textView.inputView.isSelectable = true
             textView.inputView.isEditable = true
-        case .none:
-            size = NSMakeSize(superview.frame.width, self.textViewSize(self.textView).height + 16)
-            textView.inputView.textContainer?.maximumNumberOfLines = 1
-            textView.inputView.textContainer?.lineBreakMode = .byTruncatingTail
-            textView.inputView.isSelectable = false
-            textView.inputView.isEditable = false
+        } else {
+            switch self.inputState {
+            case .focus:
+                size = NSMakeSize(min(min(superview.frame.width + 60, window.frame.width - 20), StoryView.size.width + 80), self.textViewSize(self.textView).height + 16)
+                textView.inputView.textContainer?.maximumNumberOfLines = 0
+                textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
+                textView.inputView.isSelectable = true
+                textView.inputView.isEditable = true
+            case .none:
+                size = NSMakeSize(superview.frame.width, self.textViewSize(self.textView).height + 16)
+                textView.inputView.textContainer?.maximumNumberOfLines = 1
+                textView.inputView.textContainer?.lineBreakMode = .byTruncatingTail
+                textView.inputView.isSelectable = false
+                textView.inputView.isEditable = false
+            }
         }
         self.action.update(state: textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, animated: animated)
         reactions.change(opacity: self.inputState.isEmpty ? 1 : 0, animated: animated)
         self.updateInputSize(size: size, animated: animated)
-        
         
     }
     

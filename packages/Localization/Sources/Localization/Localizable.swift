@@ -891,7 +891,7 @@ public final class L10n {
   public static func changeNumberSendDataErrorPhoneNumberOccupied(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChangeNumber.SendData.Error.PhoneNumberOccupied", p1)
   }
-  /// Sorry, changing phone number is now available only from official mobile app. Please use Telegram on your mobile to update your phone number.
+  /// You can only change your phone number using mobile Telegram apps. Please use an official Telegram app on your phone to update your number.
   public static var changePhoneUseMobile: String  { return L10n.tr("Localizable", "ChangePhone.UseMobile") }
   /// All your Telegram contacts will get your new number added to their address book, provided they had your old number and you haven't blocked them in Telegram.
   public static var changePhoneNumberIntroAlert: String  { return L10n.tr("Localizable", "ChangePhoneNumber.Intro.Alert") }
@@ -9429,6 +9429,8 @@ public final class L10n {
   public static var privacyPhoneNumberSettingsDiscoveryHeader: String  { return L10n.tr("Localizable", "PrivacyPhoneNumberSettings.DiscoveryHeader") }
   /// Active Sessions
   public static var privacySettingsActiveSessions: String  { return L10n.tr("Localizable", "PrivacySettings.ActiveSessions") }
+  /// Bio
+  public static var privacySettingsBio: String  { return L10n.tr("Localizable", "PrivacySettings.Bio") }
   /// Blocked Users
   public static var privacySettingsBlockedUsers: String  { return L10n.tr("Localizable", "PrivacySettings.BlockedUsers") }
   /// If Away For

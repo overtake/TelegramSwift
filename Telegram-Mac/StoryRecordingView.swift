@@ -28,7 +28,7 @@ private final class LockControl : View {
         addSubview(head)
         addSubview(arrow)
         addSubview(body)
-        updateLocalizationAndTheme(theme: theme)
+        updateLocalizationAndTheme(theme: storyTheme)
     }
     
     
@@ -105,11 +105,11 @@ private class StoryRecorderOverlayView : Control {
     fileprivate func updateState(_ overlayState: StoryRecordingOverlayState) {
         switch overlayState {
         case .voice:
-            stateView.image = theme.icons.chatOverlayVoiceRecording
+            stateView.image = storyTheme.icons.chatOverlayVoiceRecording
         case .video:
-            stateView.image = theme.icons.chatOverlayVideoRecording
+            stateView.image = storyTheme.icons.chatOverlayVideoRecording
         case .fixed:
-            stateView.image = theme.icons.chatOverlaySendRecording
+            stateView.image = storyTheme.icons.chatOverlaySendRecording
         }
         stateView.sizeToFit()
         stateView.center()
@@ -129,12 +129,12 @@ private class StoryRecorderOverlayView : Control {
     }
     
     func updateInside() {
-        innerContainer.backgroundColor = mouseInside() ? theme.colors.accent : theme.colors.redUI
+        innerContainer.backgroundColor = mouseInside() ? storyTheme.colors.accent : storyTheme.colors.redUI
         let animation = CABasicAnimation(keyPath: "backgroundColor")
         animation.duration = 0.1
         innerContainer.layer?.add(animation, forKey: "backgroundColor")
         
-        self.playbackAudioLevelView.setColor(mouseInside() ? theme.colors.accent : theme.colors.redUI)
+        self.playbackAudioLevelView.setColor(mouseInside() ? storyTheme.colors.accent : storyTheme.colors.redUI)
 
     }
     
@@ -148,7 +148,7 @@ class StoryRecorderOverlayWindowController : NSObject {
     private let parent: Window
     private let disposable = MetaDisposable()
     private var state: StoryRecordingOverlayState
-    private let startMouseLocation: NSPoint
+    private var startMouseLocation: NSPoint = .zero
     private let lockWindow: Window
     private let arguments: StoryArguments
     private let focusView: NSView
@@ -159,14 +159,13 @@ class StoryRecorderOverlayWindowController : NSObject {
         self.focusView = focusView
         let size = NSMakeSize(120, 120)
         
-        window = Window(contentRect: NSMakeRect(parent.frame.maxX - size.width + 25, parent.frame.minY - 35, size.width, size.height), styleMask: [], backing: .buffered, defer: true)
+        window = Window(contentRect: NSMakeRect(0, 0, size.width, size.height), styleMask: [], backing: .buffered, defer: true)
         window.backgroundColor = .clear
         window.contentView = StoryRecorderOverlayView(frame: NSMakeRect(0, 0, size.width, size.height))
         
-        lockWindow = Window(contentRect: NSMakeRect(window.frame.midX - 12.5, parent.frame.minY + 160, 26, 50), styleMask: [], backing: .buffered, defer: true)
+        lockWindow = Window(contentRect: NSMakeRect(0, 0, 26, 50), styleMask: [], backing: .buffered, defer: true)
         lockWindow.contentView?.addSubview(LockControl(frame: NSMakeRect(0, 0, 26, 50)))
         lockWindow.backgroundColor = .clear
-        startMouseLocation = window.mouseLocationOutsideOfEventStream
         super.init()
         self.view.updateState(self.state)
     }
@@ -178,13 +177,12 @@ class StoryRecorderOverlayWindowController : NSObject {
     func stopAndSend() {
         if let recorder = arguments.interaction.presentation.inputRecording {
             recorder.stop()
-            //send
+            _ = (recorder.data |> deliverOnMainQueue).start(next: { [weak self] medias in
+                self?.arguments.chatInteraction.sendMedia(medias)
+            })
+            closeModal(VideoRecorderModalController.self)
         }
-        arguments.interaction.update { current in
-            var current = current
-            current.inputRecording = nil
-            return current
-        }
+        arguments.interaction.resetRecording()
     }
     
     func stopAndCancel() {
@@ -193,12 +191,9 @@ class StoryRecorderOverlayWindowController : NSObject {
             if let recorder = self.arguments.interaction.presentation.inputRecording {
                 recorder.stop()
                 recorder.dispose()
+                closeModal(VideoRecorderModalController.self)
             }
-            self.arguments.interaction.update { current in
-                var current = current
-                current.inputRecording = nil
-                return current
-            }
+            self.arguments.interaction.resetRecording()
         }
         if state == .fixed {
             confirm(for: parent, information: strings().chatRecordingCancel, okTitle: strings().alertDiscard, cancelTitle: strings().alertNO, successHandler: { _ in
@@ -211,13 +206,19 @@ class StoryRecorderOverlayWindowController : NSObject {
     
     var minX: CGFloat {
         let wrect = focusView.convert(self.focusView.bounds, to: nil)
-        let rect = self.window.convertToScreen(wrect)
-        return rect.minX - 328
+        let rect = self.parent.convertToScreen(wrect)
+        return rect.minX - window.frame.width / 2
+    }
+    
+    var minY: CGFloat {
+        let wrect = focusView.convert(self.focusView.bounds, to: nil)
+        let rect = self.parent.convertToScreen(wrect)
+        return rect.minY - window.frame.width / 2 + 1
     }
     
     private func moveWindow() -> Void {
         let location = window.mouseLocationOutsideOfEventStream
-        let defaultY = parent.frame.minY
+        let defaultY = self.minY
         window.setFrameOrigin(NSMakePoint(minX, max(window.frame.minY - (startMouseLocation.y - location.y), defaultY)))
         let dif = window.frame.minY - defaultY
         let maxDif: CGFloat = 100
@@ -240,7 +241,7 @@ class StoryRecorderOverlayWindowController : NSObject {
         
         view.updateInside()
         
-        let defaultY = parent.frame.minY
+        let defaultY = self.minY
         
         self.state = .fixed
         view.updateState(.fixed)
@@ -279,13 +280,18 @@ class StoryRecorderOverlayWindowController : NSObject {
     
     func show(animated: Bool) {
         
-        window.setFrameOrigin(NSMakePoint(minX, window.frame.minY))
         
+        window.setFrameOrigin(NSMakePoint(minX, minY))
+        lockWindow.setFrameOrigin(NSMakePoint(window.frame.midX - 12.5, window.frame.minY + 160))
+
         guard let recorder = arguments.interaction.presentation.inputRecording else { return }
         
+
         
         parent.addChildWindow(lockWindow, ordered: .above)
         parent.addChildWindow(window, ordered: .above)
+        
+        
        
         disposable.set((recorder.micLevel |> deliverOnMainQueue).start(next: { [weak self] value in
             self?.view.updatePeakLevel(value)
@@ -326,7 +332,10 @@ class StoryRecorderOverlayWindowController : NSObject {
         if recorder.autohold {
             hold(animated: false)
         }
-        
+        self.startMouseLocation = window.mouseLocationOutsideOfEventStream
+
+        self.view.updateInside()
+
     }
     
     func hide(animated: Bool) {
@@ -396,6 +405,7 @@ class StoryRecordingView: View {
             }
         }))
         updateLocalizationAndTheme(theme: storyTheme)
+        updateLayout(size: frameRect.size, transition: .immediate)
     }
     
     func updateState(_ state: StoryInteraction.State) {
@@ -477,7 +487,7 @@ class StoryRecordingView: View {
         let max = (frame.width - (statusImage.frame.width + 20 + 50))
         transition.updateFrame(view: descView, frame: descView.centerFrameY(x:60 + floorToScreenPixels(backingScaleFactor, (max - descView.frame.width)/2)))
         
-        transition.updateFrame(view: focusView, frame: focusView.centerFrameY(x: size.width - focusView.frame.width - 30))
+        transition.updateFrame(view: focusView, frame: focusView.centerFrameY(x: size.width - focusView.frame.width - 24))
 
     }
     
