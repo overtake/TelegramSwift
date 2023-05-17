@@ -665,6 +665,9 @@ private final class StoryViewController: Control, Notifable {
         addSubview(prev_button)
         addSubview(next_button)
         
+        next_button.controlOpacityEventIgnored = true
+        prev_button.controlOpacityEventIgnored = true
+
         
         close.set(image: close_image, for: .Normal)
         close.set(image: close_image_hover, for: .Hover)
@@ -987,6 +990,7 @@ private final class StoryViewController: Control, Notifable {
                 }
                 
             } else {
+                self.close.send(event: .Click)
                 //current?.shake(beep: false)
             }
         }

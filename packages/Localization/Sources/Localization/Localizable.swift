@@ -9603,6 +9603,14 @@ public final class L10n {
   public static var privacySettingsControllerVoiceMessagesDescription: String  { return L10n.tr("Localizable", "PrivacySettingsController.VoiceMessagesDescription") }
   /// WHO CAN SEND VOICE AND VIDEO MESSAGES ME
   public static var privacySettingsControllerVoiceMessagesHeader: String  { return L10n.tr("Localizable", "PrivacySettingsController.VoiceMessagesHeader") }
+  /// You can restrict who can see your bio with granular precision.
+  public static var privacySettingsControllerBioCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.CustomHelp") }
+  /// WHO CAN SEE MY BIO
+  public static var privacySettingsControllerBioWhoCanSee: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.WhoCanSee") }
+  /// Always Share With
+  public static var privacySettingsControllerBioAlwaysShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.AlwaysShareWith.Title") }
+  /// Never Share With
+  public static var privacySettingsControllerBioNeverShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.NeverShareWith.Title") }
   /// When forwarded to other chats, messages you send will not link back to your account.
   public static var privacySettingsControllerForwardsCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.CustomHelp") }
   /// WHO CAN FORWARD MY MESSAGES

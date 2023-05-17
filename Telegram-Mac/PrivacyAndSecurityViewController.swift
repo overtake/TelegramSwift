@@ -569,7 +569,10 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
         entries.append(.voiceCallPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.voiceCalls), viewType: .innerItem))
         entries.append(.profilePhotoPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.profilePhoto), viewType: .innerItem))
         entries.append(.forwardPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.forwards), viewType: .innerItem))
-        entries.append(.voiceMessagesPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.voiceMessages), !context.isPremium, viewType: .lastItem))
+        entries.append(.voiceMessagesPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.voiceMessages), !context.isPremium, viewType: .innerItem))
+        entries.append(.bioPrivacy(sectionId: sectionId, stringForSelectiveSettings(settings: privacySettings.bio), viewType: .lastItem))
+
+        
     } else {
         entries.append(.phoneNumberPrivacy(sectionId: sectionId, "", viewType: .firstItem))
         entries.append(.lastSeenPrivacy(sectionId: sectionId, "", viewType: .innerItem))

@@ -289,6 +289,7 @@ class ChatMessageItem: ChatRowItem {
             case let .join(_, joinHash):
                 link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
             }
+            chatInteraction.markAdAction(adAttribute.opaqueId)
             execute(inapp: link)
         } else if let webpage = webpageLayout {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)

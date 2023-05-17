@@ -75,6 +75,10 @@ class StoryView : Control {
     var onStateUpdate:((State)->Void)? = nil
     private var timerTime: TimeInterval?
     
+    private let disposable = MetaDisposable()
+    private var shimmer: ShimmerLayer?
+    fileprivate let overlay = View()
+    
     fileprivate func updateState(_ state: State) {
         if self.state != state, state.shouldBeUpdated(compared: self.state) {
             self.state = state
@@ -98,6 +102,8 @@ class StoryView : Control {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(overlay)
+        overlay.backgroundColor = .random
         self.updateLayout(size: self.frame.size, transition: .immediate)
         self.layer?.cornerRadius = 10
         
@@ -108,18 +114,63 @@ class StoryView : Control {
     }
     
     deinit {
-        var bp = 0
-        bp += 1
+        disposable.dispose()
     }
     
     func animateAppearing(disappear: Bool) {
     
     }
     
+    
     func update(context: AccountContext, peerId: PeerId, story: StoryListContext.Item, peer: Peer?) {
         self.peer = peer
         self.context = context
         self.story = story
+        
+        var statusSignal: Signal<MediaResourceStatus, NoError>?
+        if let media = story.media._asMedia() as? TelegramMediaImage {
+            statusSignal = chatMessagePhotoStatus(account: context.account, photo: media)
+        } else if let media = story.media._asMedia() as? TelegramMediaFile {
+            statusSignal = context.account.postbox.mediaBox.resourceStatus(media.resource)
+        } else {
+            statusSignal = nil
+        }
+        var isFirst: Bool = true
+        if let statusSignal = statusSignal {
+            disposable.set((statusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
+                self?.updateStatus(status, animated: !isFirst)
+                isFirst = false
+            }))
+        }
+    }
+    
+    fileprivate func updateStatus(_ status: MediaResourceStatus, animated: Bool) {
+        let hasLoading: Bool
+        switch status {
+        case .Local:
+            hasLoading = true
+        default:
+            hasLoading = true
+        }
+        if hasLoading {
+            let current: ShimmerLayer
+            if let local = self.shimmer {
+                current = local
+            } else {
+                current = ShimmerLayer()
+                current.frame = bounds
+                self.shimmer = current
+                overlay.layer?.addSublayer(current)
+                if animated {
+                    current.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.update(backgroundColor: nil, data: nil, size: frame.size, imageSize: frame.size)
+            current.updateAbsoluteRect(bounds, within: frame.size)
+        } else if let layer = self.shimmer {
+            performSublayerRemoval(layer, animated: animated)
+            self.shimmer = nil
+        }
     }
     
     override func layout() {
@@ -145,7 +196,10 @@ class StoryView : Control {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        
+        transition.updateFrame(view: overlay, frame: size.bounds)
+        if let shimmer = self.shimmer {
+            transition.updateFrame(layer: shimmer, frame: size.bounds)
+        }
     }
     
     func restart() {
@@ -207,7 +261,7 @@ class StoryImageView : StoryView {
     private let awaitingDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(imageView)
+        addSubview(imageView, positioned: .below, relativeTo: overlay)
     }
     
     deinit {
@@ -222,7 +276,13 @@ class StoryImageView : StoryView {
         
         let updated = self.story?.id != story.id
         
+        
+        
         super.update(context: context, peerId: peerId, story: story, peer: peer)
+        
+        guard let peer = peer, let peerReference = PeerReference(peer) else {
+            return
+        }
         
         var updateImageSignal: Signal<ImageDataTransformation, NoError>?
         
@@ -241,11 +301,12 @@ class StoryImageView : StoryView {
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: .none)
 
         var resource: TelegramMediaResource? = nil
-        if let image = media as? TelegramMediaImage {
-            updateImageSignal = chatMessagePhoto(account: context.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
+        if let image = media as? TelegramMediaImage  {
+            let reference = ImageMediaReference.story(peer: peerReference, id: story.id, media: image)
+            updateImageSignal = chatMessagePhoto(account: context.account, imageReference: reference, scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
             resource = image.representationForDisplayAtSize(.init(NSMakeSize(1280, 1280)))?.resource
         } else if let file = media as? TelegramMediaFile {
-            let fileReference = FileMediaReference.standalone(media: file)
+            let fileReference = FileMediaReference.story(peer: peerReference, id: story.id, media: file)
             updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor)
             resource = nil
         }
@@ -312,8 +373,13 @@ class StoryVideoView : StoryImageView {
         
     override func update(context: AccountContext, peerId: PeerId, story: StoryListContext.Item, peer: Peer?) {
         super.update(context: context, peerId: peerId, story: story, peer: peer)
+        
+        guard let peer = peer, let peerReference = PeerReference(peer) else {
+            return
+        }
+        
         let file = story.media._asMedia() as! TelegramMediaFile
-        let reference = FileMediaReference.standalone(media: file)
+        let reference = FileMediaReference.story(peer: peerReference, id: story.id, media: file)
         let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peerId), userContentType: .video, reference: reference.resourceReference(file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: true, fetchAutomatically: true)
         
         mediaPlayer.attachPlayerView(self.view)
@@ -379,7 +445,7 @@ class StoryVideoView : StoryImageView {
     required init(frame frameRect: NSRect) {
         self.view = MediaPlayerView()
         super.init(frame: frameRect)
-        self.addSubview(view)
+        self.addSubview(view, positioned: .below, relativeTo: overlay)
         self.view.frame = bounds
         self.view.setVideoLayerGravity(.resizeAspectFill)
     }
