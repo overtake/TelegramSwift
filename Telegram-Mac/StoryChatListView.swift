@@ -113,7 +113,7 @@ private final class StoryListEntryRowItem : TableRowItem {
         return entry.stableId
     }
     
-    func callopen(_ takeControl: @escaping(PeerId)->NSView?) {
+    func callopen(_ takeControl: @escaping(PeerId, Int32?)->NSView?) {
         self.open(.init(peerId: entry.id, id: nil, takeControl: takeControl))
     }
     
@@ -165,7 +165,7 @@ private final class StoryListEntryRowView : HorizontalRowView {
         
         overlay.set(handler: { [weak self] _ in
             if let item = self?.item as? StoryListEntryRowItem {
-                item.callopen({ peerId in
+                item.callopen({ peerId, _ in
                     return self?.takeControl(peerId)
                 })
             }

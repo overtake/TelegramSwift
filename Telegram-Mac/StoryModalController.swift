@@ -14,6 +14,83 @@ import SwiftSignalKit
 import ColorPalette
 import TGModernGrowingTextView
 
+
+private final class ReadThrottledProcessingManager {
+    
+    struct Value : Equatable, Hashable {
+        var peerId: PeerId
+        var id: Int32
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(peerId)
+        }
+    }
+    
+    private let queue = Queue()
+    
+    private let delay: Double
+    
+    private var currentIds = Set<Value>()
+    
+    var process: ((Set<Value>) -> Void)?
+    
+    private var timer: SwiftSignalKit.Timer?
+    
+    init(delay: Double = 5) {
+        self.delay = delay
+    }
+    
+    func setProcess(process: @escaping (Set<Value>) -> Void) {
+        self.queue.async {
+            self.process = process
+        }
+    }
+    
+    func flush() {
+        self.queue.async {
+            self.process?(self.currentIds)
+            self.currentIds = Set()
+        }
+    }
+    
+    func addOrUpdate(_ id: Value) {
+        self.queue.async {
+            let previous = self.currentIds
+            
+            let prevValue = self.currentIds.remove(id)
+            if let prevValue = prevValue {
+                if prevValue.id < id.id {
+                    self.currentIds.insert(id)
+                } else {
+                    self.currentIds.insert(prevValue)
+                }
+            } else {
+                self.currentIds.insert(id)
+            }
+            
+            if previous != self.currentIds {
+                if self.timer == nil {
+                    var completionImpl: (() -> Void)?
+                    let timer = SwiftSignalKit.Timer(timeout: self.delay, repeat: false, completion: {
+                        completionImpl?()
+                    }, queue: self.queue)
+                    completionImpl = { [weak self, weak timer] in
+                        if let strongSelf = self {
+                            if let timer = timer, strongSelf.timer === timer {
+                                strongSelf.timer = nil
+                            }
+                            strongSelf.process?(strongSelf.currentIds)
+                            strongSelf.currentIds = Set()
+                        }
+                    }
+                    self.timer = timer
+                    timer.start()
+                }
+            }
+        }
+    }
+}
+
+
 private struct Reaction {
     let item: UpdateMessageReaction
     let fromRect: CGRect?
@@ -22,7 +99,7 @@ private struct Reaction {
 struct StoryInitialIndex {
     let peerId: PeerId
     let id: Int32?
-    let takeControl:((PeerId)->NSView?)?
+    let takeControl:((PeerId, Int32?)->NSView?)?
 }
 
 struct StoryListEntry : Equatable, Comparable, Identifiable {
@@ -200,10 +277,6 @@ final class StoryInteraction : InterfaceObserver {
         var bp = 0
         bp += 1
     }
-//
-//    func appendText(_ text:String, selectedRange:Range<Int>? = nil) -> Range<Int> {
-//        return self.appendText(NSAttributedString(string: text, font: .normal(theme.fontSize)), selectedRange: selectedRange)
-//    }
 
 }
 
@@ -223,7 +296,8 @@ final class StoryArguments {
     let sendMessage:()->Void
     let toggleRecordType:()->Void
     let deleteStory:(Int32)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping()->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(Int32)->Void) {
+    let markAsRead:(PeerId, Int32)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping()->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(Int32)->Void, markAsRead:@escaping(PeerId, Int32)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -239,6 +313,7 @@ final class StoryArguments {
         self.sendMessage = sendMessage
         self.toggleRecordType = toggleRecordType
         self.deleteStory = deleteStory
+        self.markAsRead = markAsRead
     }
     
     func longDown() {
@@ -859,7 +934,7 @@ private final class StoryViewController: Control, Notifable {
                 return current
             })
             
-            if let control = initial?.takeControl?(entryId) {
+            if let control = initial?.takeControl?(entryId, initialId) {
                 storyView.animateAppearing(from: control)
             }
         }
@@ -1186,7 +1261,7 @@ private final class StoryViewController: Control, Notifable {
     }
     
     func animateDisappear(_ initialId: StoryInitialIndex?) {
-        if let current = self.current, let id = current.id, let control = initialId?.takeControl?(id) {
+        if let current = self.current, let id = current.id, let control = initialId?.takeControl?(id, current.storyId) {
             current.animateDisappearing(to: control)
         }
     }
@@ -1339,7 +1414,9 @@ final class StoryModalController : ModalViewController, Notifable {
     private let disposable = MetaDisposable()
     private let updatesDisposable = MetaDisposable()
     private var overlayTimer: SwiftSignalKit.Timer?
+    private let readThrottler = ReadThrottledProcessingManager(delay: 5)
     
+
     init(context: AccountContext, stories: StoryListContext, initialId: StoryInitialIndex?) {
         self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .stories, presentation: storyTheme)
         self.interactions = StoryInteraction()
@@ -1398,6 +1475,14 @@ final class StoryModalController : ModalViewController, Notifable {
         let interactions = self.interactions
         
         let stories = self.stories
+        
+        readThrottler.setProcess(process: { values in
+            let signals = values.map {
+                return context.engine.messages.markStoryAsSeen(peerId: $0.peerId, id: $0.id)
+            }
+            
+            _ = combineLatest(signals).start()
+        })
         
         
         self.chatInteraction.add(observer: self)
@@ -1459,6 +1544,8 @@ final class StoryModalController : ModalViewController, Notifable {
             confirm(for: context.window, information: "Are you sure you want to delete story?", successHandler: { _ in
                 self?.stories.delete(id: storyId)
             }, appearance: storyTheme.appearance)
+        }, markAsRead: { [weak self] peerId, storyId in
+            self?.readThrottler.addOrUpdate(.init(peerId: peerId, id: storyId))
         })
         
         genericView.setArguments(arguments)
@@ -1605,6 +1692,12 @@ final class StoryModalController : ModalViewController, Notifable {
         
     }
     
+    private func openCurrentMedia() {
+        if let peerId = self.interactions.presentation.entryId {
+            self.context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: peerId))
+        }
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         let context = self.context
@@ -1680,6 +1773,13 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.genericView.inputTextView?.italicWord()
             return .invoked
         }, with: self, for: .I, priority: .modal, modifierFlags: [.command])
+        
+        
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.close()
+            self?.openCurrentMedia()
+            return .invoked
+        }, with: self, for: .E, priority: .modal, modifierFlags: [.command])
     }
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -1757,7 +1857,8 @@ final class StoryModalController : ModalViewController, Notifable {
     
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         super.close(animationType: .common)
-        genericView.animateDisappear(initialId)
+        self.readThrottler.flush()
+        self.genericView.animateDisappear(initialId)
     }
 
     override var isVisualEffectBackground: Bool {

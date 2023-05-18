@@ -253,7 +253,7 @@ open class Control: View {
     }
     
     public var controlIsHidden: Bool {
-        return super.isHidden || (layer!.opacity < Float(1.0) && !controlOpacityEventIgnored)
+        return super.isHidden || (layer!.opacity < Float(0.5) && !controlOpacityEventIgnored)
     }
     
     public var controlOpacityEventIgnored: Bool = false

@@ -1142,7 +1142,7 @@ class ChatListRowItem: TableRowItem {
     }
     
     
-    func openPeerStory(_ takeControl: @escaping(PeerId)->NSView?) {
+    func openPeerStory(_ takeControl: @escaping(PeerId, Int32?)->NSView?) {
         if let peerId = peerId {
             self.openStory(.init(peerId: peerId, id: nil, takeControl: takeControl))
         }

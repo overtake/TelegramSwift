@@ -497,7 +497,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     private func openPhoto() {
         if self.storyState != nil {
             
-            chatInteraction.openStories({ [weak self] peerId in
+            chatInteraction.openStories({ [weak self] peerId, _ in
                 if self?.chatInteraction.peerId == peerId {
                     return self?.photoContainer
                 } else {

@@ -566,6 +566,10 @@ final class StoryListView : Control, Notifable {
         
         arguments.interaction.flushPauses()
         
+        if !entry.isSeen(story) {
+            arguments.markAsRead(groupId, story.id)
+        }
+        
         preloadAround()
         
                 
@@ -658,7 +662,7 @@ final class StoryListView : Control, Notifable {
         let aspect = StoryView.size.aspectFitted(size)
 
         for i in 0 ..< stories.count {
-            if abs(i - index) > 5 {
+            if abs(i - index) > 2 {
                 stories[i] = nil
             } else {
                 if stories[i] == nil {

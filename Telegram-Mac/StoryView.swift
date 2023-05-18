@@ -103,7 +103,6 @@ class StoryView : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(overlay)
-        overlay.backgroundColor = .random
         self.updateLayout(size: self.frame.size, transition: .immediate)
         self.layer?.cornerRadius = 10
         
@@ -121,34 +120,43 @@ class StoryView : Control {
     
     }
     
+    var statusSignal: Signal<MediaResourceStatus, NoError> {
+        if let context = self.context {
+            if let media = story?.media._asMedia() as? TelegramMediaImage {
+                return chatMessagePhotoStatus(account: context.account, photo: media)
+            } else if let media = story?.media._asMedia() as? TelegramMediaFile {
+                return context.account.postbox.mediaBox.resourceStatus(media.resource)
+            }
+        }
+        return .single(.Local)
+    }
+    
     
     func update(context: AccountContext, peerId: PeerId, story: StoryListContext.Item, peer: Peer?) {
         self.peer = peer
         self.context = context
         self.story = story
-        
-        var statusSignal: Signal<MediaResourceStatus, NoError>?
-        if let media = story.media._asMedia() as? TelegramMediaImage {
-            statusSignal = chatMessagePhotoStatus(account: context.account, photo: media)
-        } else if let media = story.media._asMedia() as? TelegramMediaFile {
-            statusSignal = context.account.postbox.mediaBox.resourceStatus(media.resource)
-        } else {
-            statusSignal = nil
-        }
+    }
+    
+    func initializeStatus() {
         var isFirst: Bool = true
-        if let statusSignal = statusSignal {
-            disposable.set((statusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
-                self?.updateStatus(status, animated: !isFirst)
-                isFirst = false
-            }))
-        }
+        disposable.set((statusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
+            self?.updateStatus(status, animated: !isFirst)
+            isFirst = false
+        }))
+    }
+    
+    func getStatus(_ status: MediaResourceStatus) -> MediaResourceStatus {
+        return status
     }
     
     fileprivate func updateStatus(_ status: MediaResourceStatus, animated: Bool) {
         let hasLoading: Bool
         switch status {
         case .Local:
-            hasLoading = true
+            hasLoading = false
+        case .Remote(progress: 1.0):
+            hasLoading = false
         default:
             hasLoading = true
         }
@@ -250,6 +258,7 @@ class StoryView : Control {
         }
         view.backgroundColor = NSColor.black
         view.update(context: context, peerId: peerId, story: story, peer: peer)
+        view.initializeStatus()
         return view
     }
 }
@@ -360,6 +369,7 @@ class StoryImageView : StoryView {
     
     
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
         transition.updateFrame(view: imageView, frame: size.bounds)
     }
 }
@@ -400,6 +410,27 @@ class StoryVideoView : StoryImageView {
                 self?.updateState(.loading(status))
             }
         }))
+    }
+    
+    override var statusSignal: Signal<MediaResourceStatus, NoError> {
+        if let context = self.context, let mediaPlayer = mediaPlayer {
+            if let media = story?.media._asMedia() as? TelegramMediaFile {
+                return combineLatest(context.account.postbox.mediaBox.resourceStatus(media.resource), mediaPlayer.status) |> map { resourceStatus, playerStatus in
+                    switch resourceStatus {
+                    case .Local:
+                        return .Local
+                    default:
+                        switch playerStatus.status {
+                        case .buffering:
+                            return .Fetching(isActive: true, progress: 0)
+                        default:
+                            return .Local
+                        }
+                    }
+                }
+            }
+        }
+        return .single(.Local)
     }
     
     deinit {

@@ -118,7 +118,9 @@ final class GeneralViewItemCorners : OptionSet {
     static var all: GeneralViewItemCorners {
         return [.topLeft, .topRight, .bottomLeft, .bottomRight]
     }
-
+    static var allList: [GeneralViewItemCorners] {
+        return [.topLeft, .topRight, .bottomLeft, .bottomRight]
+    }
 }
 
 enum GeneralViewItemPosition : Equatable {
@@ -186,7 +188,7 @@ enum GeneralViewType : Equatable {
         case .legacy:
             return []
         case let .modern(position, insets):
-            return isPlainMode || insets.isEmpty ? [] : position.corners
+            return isPlainMode ? [] : position.corners
         }
     }
     var hasBorder: Bool {

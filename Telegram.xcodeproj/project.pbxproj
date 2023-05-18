@@ -47,6 +47,8 @@
 		2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718FF8127BFB28900196BC4 /* login_airplane.tgs */; };
 		2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718FF8727C3A11F00196BC4 /* DownloadsController.swift */; };
 		2719D8012A139B9D00081079 /* StoryRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D8002A139B9D00081079 /* StoryRecordingView.swift */; };
+		2719D80D2A16013F00081079 /* StoryMediaController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D80C2A16013F00081079 /* StoryMediaController.swift */; };
+		2719D8102A16048D00081079 /* StoryMonthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */; };
 		271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */; };
 		271D4F3427689DF0004FD034 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 271D4F3327689DF0004FD034 /* WebKit.framework */; };
 		271D4F362769D07E004FD034 /* menu_reactions.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 271D4F352769D07D004FD034 /* menu_reactions.tgs */; };
@@ -1494,6 +1496,8 @@
 		2719655325EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallRecorderRowItem.swift; sourceTree = "<group>"; };
 		271999E62683C04B000DE2B7 /* MetalPerformanceShaders.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalPerformanceShaders.framework; path = System/Library/Frameworks/MetalPerformanceShaders.framework; sourceTree = SDKROOT; };
 		2719D8002A139B9D00081079 /* StoryRecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryRecordingView.swift; sourceTree = "<group>"; };
+		2719D80C2A16013F00081079 /* StoryMediaController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMediaController.swift; sourceTree = "<group>"; };
+		2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMonthRowItem.swift; sourceTree = "<group>"; };
 		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		271D4F3327689DF0004FD034 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		271D4F352769D07D004FD034 /* menu_reactions.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_reactions.tgs; sourceTree = "<group>"; };
@@ -3038,6 +3042,7 @@
 		270B7CB829F66638009C994C /* stories */ = {
 			isa = PBXGroup;
 			children = (
+				2719D80E2A16047100081079 /* media-list */,
 				270B7CB929F66649009C994C /* StoryModalController.swift */,
 				270B7CBB29F67361009C994C /* StoryView.swift */,
 				270B7CBD29F7BCCA009C994C /* StoryListView.swift */,
@@ -3050,6 +3055,15 @@
 				2719D8002A139B9D00081079 /* StoryRecordingView.swift */,
 			);
 			name = stories;
+			sourceTree = "<group>";
+		};
+		2719D80E2A16047100081079 /* media-list */ = {
+			isa = PBXGroup;
+			children = (
+				2719D80C2A16013F00081079 /* StoryMediaController.swift */,
+				2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */,
+			);
+			name = "media-list";
 			sourceTree = "<group>";
 		};
 		271F78C42806FC0C0040EE8F /* avatar */ = {
@@ -6945,6 +6959,7 @@
 				C2E40A1B1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift in Sources */,
 				27D6042F29530E8B00588C21 /* StoragePieChartItem.swift in Sources */,
 				C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */,
+				2719D8102A16048D00081079 /* StoryMonthRowItem.swift in Sources */,
 				9FF1DEA6225B699D009512C9 /* SearchUtils.swift in Sources */,
 				A7C1379E23DF21EA00803ED3 /* ChatListRevealItem.swift in Sources */,
 				C22A899F1EBCC2AA005B963D /* CallNavigationHeaderView.swift in Sources */,
@@ -7229,6 +7244,7 @@
 				C20D5AB11DA996480042616A /* EBlockItem.swift in Sources */,
 				9F17E5B9212F173900C25A65 /* AutoNightViewController.swift in Sources */,
 				C2167E531DC220F600F98E03 /* PeerMediaFileRowContent.swift in Sources */,
+				2719D80D2A16013F00081079 /* StoryMediaController.swift in Sources */,
 				C22674451DC20664000BA9ED /* PeerMediaListController.swift in Sources */,
 				D076A07E248A5F890077BC0A /* GifPanelTabRowItem.swift in Sources */,
 				9FB7CB6D221EB22700888EA9 /* CallSettingsModalController.swift in Sources */,
