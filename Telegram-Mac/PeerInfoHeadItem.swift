@@ -28,6 +28,9 @@ fileprivate final class ActionButton : Control {
         textView.isEventLess = true
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        self.controlOpacityEventIgnored = true
+        
         set(handler: { control in
             control.change(opacity: 0.8, animated: true)
         }, for: .Highlight)
@@ -606,7 +609,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         return self.isForum && threadData != nil
     }
     
-    func openPeerStory(_ takeControl: @escaping(PeerId)->NSView?) {
+    func openPeerStory(_ takeControl: @escaping(PeerId, Int32?)->NSView?) {
         if let peerId = self.peer?.id {
             self.arguments.openStory(.init(peerId: peerId, id: nil, takeControl: takeControl))
         }
@@ -909,7 +912,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         photoContainer.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerInfoHeadItem {
                 if let _ = item.lastStory {
-                    item.openPeerStory({ peerId in
+                    item.openPeerStory({ peerId, _ in
                         return self?.takeControl(peerId)
                     })
                 } else {

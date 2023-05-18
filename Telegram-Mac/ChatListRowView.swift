@@ -1224,7 +1224,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         photoContainer.set(handler: { [weak self] _ in
             if let item = self?.item as? ChatListRowItem {
-                item.openPeerStory({ peerId in
+                item.openPeerStory({ peerId, _ in
                     return self?.takeControl(peerId)
                 })
             }
