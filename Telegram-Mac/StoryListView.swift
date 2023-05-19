@@ -155,8 +155,8 @@ final class StoryListView : Control, Notifable {
             
             let cantReveal = state == .concealed && layout.isPerfectSized
             
-            self.container.userInteractionEnabled = state == .concealed || cantReveal
-            self.userInteractionEnabled = state == .revealed && !cantReveal
+            self.container.userInteractionEnabled = state == .concealed && !cantReveal
+            self.userInteractionEnabled = state == .revealed
             self.textView?.userInteractionEnabled = state == .revealed || cantReveal
             
 
