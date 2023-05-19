@@ -9,36 +9,53 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
-class ChaneNumberIntroView : NSScrollView, AppearanceViewProtocol {
-    let imageView:ImageView = ImageView()
+class ChaneNumberIntroView : View {
+    let imageView:LottiePlayerView = LottiePlayerView()
     let textView:TextView = TextView()
     private let containerView:View = View()
-    required override init(frame frameRect: NSRect) {
+    fileprivate let next = TitleButton()
+    required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        documentView = containerView
+        addSubview(containerView)
         wantsLayer = true
-        documentView?.addSubview(imageView)
-        documentView?.addSubview(textView)
+        containerView.addSubview(imageView)
+        containerView.addSubview(textView)
+        addSubview(next)
+        textView.userInteractionEnabled = false
+        textView.userInteractionEnabled = false
+        
+        next.autohighlight = false
+        next.scaleOnClick = true
         
         updateLocalizationAndTheme(theme: theme)
         
     }
-    func updateLocalizationAndTheme(theme: PresentationTheme) {
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let theme = (theme as! TelegramPresentationTheme)
-        imageView.image = theme.icons.changePhoneNumberIntro
-        imageView.sizeToFit()
+        if let data = LocalAnimatedSticker.change_sim.data {
+            self.imageView.setFrameSize(NSMakeSize(120, 120))
+            self.imageView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("change_sim"), size: NSMakeSize(120, 120), backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: []))
+        }
         
         backgroundColor = theme.colors.background
         textView.background = theme.colors.background
-        documentView?.background = theme.colors.background
+        containerView.background = theme.colors.background
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(L10n.changePhoneNumberIntroDescription), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: strings().changePhoneNumberIntroDescription, color: theme.colors.grayText, font: .normal(.text))
         attr.detectBoldColorInString(with: .bold(.text))
         textView.set(layout: TextViewLayout(attr, alignment:.center))
         
+        next.set(color: theme.colors.underSelectedColor, for: .Normal)
+        next.set(background: theme.colors.accent, for: .Normal)
+        next.set(font: .medium(.text), for: .Normal)
+        next.set(text: strings().navigationNext, for: .Normal)
+        next.sizeToFit()
+        next.layer?.cornerRadius = 10
+        
+        needsLayout = true
     }
     
     
@@ -46,11 +63,16 @@ class ChaneNumberIntroView : NSScrollView, AppearanceViewProtocol {
         super.layout()
         containerView.setFrameSize(frame.width, 0)
         
-        textView.layout?.measure(width: 380 - 60)
-        textView.update(textView.layout)
-        imageView.centerX(y:30)
-        textView.centerX(y:imageView.frame.maxY + 30)
+        textView.textLayout?.measure(width: frame.width - 60)
+        textView.update(textView.textLayout)
+        imageView.centerX(y: 0)
+        textView.centerX(y:imageView.frame.maxY + 10)
         containerView.setFrameSize(frame.width, textView.frame.maxY + 30)
+        
+        containerView.centerX(y: 10)
+        
+        next.setFrameSize(NSMakeSize(frame.width - 60, 40))
+        next.centerX(y: frame.height - next.frame.height - 50 - 30)
     }
     
     required init?(coder: NSCoder) {
@@ -61,6 +83,9 @@ class ChaneNumberIntroView : NSScrollView, AppearanceViewProtocol {
 class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIntroView> {
     
     
+    override init(_ context: AccountContext) {
+        super.init(context)
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -70,29 +95,21 @@ class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIn
             }
             return true
         })
-        
-        self.rightBarView.set(handler:{ [weak self] _ in
+        genericView.next.set(handler: { [weak self] _ in
             self?.executeNext()
         }, for: .Click)
-        
     }
     
-    static var assciatedControllerTypes:[ViewController.Type] {
-        return [PhoneNumberIntroController.self, PhoneNumberConfirmController.self, PhoneNumberInputCodeController.self]
-    }
     
     override var enableBack: Bool {
-        return true
+        return false
     }
     
-    override func getRightBarViewOnce() -> BarView {
-        return TextButtonBarView(controller: self, text: L10n.composeNext, style: navigationButtonStyle, alignment:.Right)
-    }
     
     func executeNext() {
-        confirm(for: mainWindow, information: L10n.changePhoneNumberIntroAlert, successHandler: { [weak self] _ in
+        confirm(for: context.window, information: strings().changePhoneNumberIntroAlert, successHandler: { [weak self] _ in
             if let context = self?.context {
-                self?.navigationController?.push(PhoneNumberConfirmController(context))
+                self?.navigationController?.push(PhoneNumberConfirmController(context: context))
             }
         })
     }

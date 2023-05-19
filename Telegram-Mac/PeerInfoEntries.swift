@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 import TGUIKit
@@ -80,18 +80,20 @@ protocol PeerInfoEntry {
 }
 
 
-func peerInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
-    if peerViewMainPeer(view) is TelegramUser {
-        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData)
+func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, source: PeerInfoController.Source) -> [PeerInfoEntry] {
+    if let threadData = threadData {
+        return topicInfoEntries(view: view, threadData: threadData, arguments: arguments, mediaTabsData: mediaTabsData)
+    } else if peerViewMainPeer(view) is TelegramUser {
+        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, source: source)
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
         switch channel.info {
         case .broadcast:
-            return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData)
+            return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions)
         case .group:
-            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData)
+            return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions)
         }
     } else if peerViewMainPeer(view) is TelegramGroup {
-        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, mediaTabsData: mediaTabsData)
+        return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions)
     }
     return []
 }

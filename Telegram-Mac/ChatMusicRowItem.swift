@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import InAppSettings
 import SwiftSignalKit
 import Postbox
 class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
@@ -54,20 +54,16 @@ class ChatMusicRowItem: ChatMediaItem {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
         
 
-        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), autoplayMedia: object.autoplayMedia)
+        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), autoplayMedia: object.autoplayMedia)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        if isForceRightLine {
-            return rightSize.height
-        }
+    override var isForceRightLine: Bool {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
             if parameters.durationLayout.layoutSize.width + 50 + rightSize.width + insetBetweenContentAndDate > contentSize.width {
-                return rightSize.height
+                return true
             }
         }
-        
-        return super.additionalLineForDateInBubbleState
+        return super.isForceRightLine
     }
     
     override var instantlyResize: Bool {
@@ -76,8 +72,19 @@ class ChatMusicRowItem: ChatMediaItem {
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaMusicLayoutParameters {
-            parameters.makeLabelsForWidth(width)
-            return NSMakeSize(max(parameters.nameLayout.layoutSize.width, parameters.durationLayout.layoutSize.width) + 50, 40)
+            
+            
+            let width = min(320, width - 80)
+            
+            for layout in captionLayouts {
+                if layout.layout.layoutSize == .zero {
+                    layout.layout.measure(width: width)
+                }
+            }
+            let captionsWidth = captionLayouts.max(by: { $0.layout.layoutSize.width < $1.layout.layoutSize.width }).map { $0.layout.layoutSize.width }
+            
+            let labelsWidth = parameters.makeLabelsForWidth(width)
+            return NSMakeSize(max(captionsWidth ?? 0, labelsWidth) + 50, 40)
         }
         return NSZeroSize
     }

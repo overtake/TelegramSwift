@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 
@@ -46,12 +46,12 @@ class ContextListRowItem: TableRowItem {
         switch result {
         case let .externalReference(values):
             if let thumbnail = values.thumbnail {
-                representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(50, 50)), resource: thumbnail.resource, progressiveSizes: [])
+                representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(50, 50)), resource: thumbnail.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
             }
             if let content = values.content {
                 if content.mimeType.hasPrefix("audio") {
                     vClass = ContextListAudioView.self
-                    audioWrapper = APSingleWrapper(resource: content.resource, name: values.title, performer: values.description, id: result.maybeId)
+                    audioWrapper = APSingleWrapper(resource: content.resource, name: values.title, performer: values.description, duration: content.duration, id: result.maybeId)
                 } else if content.mimeType == "video/mp4" {
                     vClass = ContextListGIFView.self
                 }
@@ -71,7 +71,7 @@ class ContextListRowItem: TableRowItem {
                 fileResource = file.resource
                 if file.isMusic || file.isVoice {
                     vClass = ContextListAudioView.self
-                    audioWrapper = APSingleWrapper(resource: fileResource!, name: values.title, performer: values.description, id: result.maybeId)
+                    audioWrapper = APSingleWrapper(resource: fileResource!, name: values.title, performer: values.description, duration: file.duration, id: result.maybeId)
                 } else if file.isVideo && file.isAnimated {
                     vClass = ContextListGIFView.self
                 }
@@ -301,12 +301,11 @@ class ContextListAudioView : ContextListRowView, APDelegate {
         
         if let item = item as? ContextListRowItem, let status = fetchStatus {
             switch status {
-            case .Fetching(progress: _):
+            case .Fetching, .Paused:
                 break
             case .Local, .Remote:
                 if let wrapper = item.audioWrapper {
-                    if let controller = globalAudio, let song = controller.currentSong, song.entry.isEqual(to: wrapper) {
-                        controller.playOrPause()
+                    if let controller = item.context.audioPlayer, controller.playOrPause(wrapper) {
                     } else {
                         let controller = APSingleResourceController(context: item.context, wrapper: wrapper, streamable: false)
                         controller.add(listener: self)
@@ -321,29 +320,29 @@ class ContextListAudioView : ContextListRowView, APDelegate {
         }
     }
     
-    func songDidChanged(song: APSongItem, for controller: APController) {
+    func songDidChanged(song: APSongItem, for controller: APController, animated: Bool) {
         checkState()
     }
-    func songDidChangedState(song: APSongItem, for controller: APController) {
+    func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
         checkState()
     }
     
-    func songDidStartPlaying(song:APSongItem, for controller:APController) {
+    func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
-    func songDidStopPlaying(song:APSongItem, for controller:APController) {
+    func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
-    func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
+    func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
     
-    func audioDidCompleteQueue(for controller:APController) {
+    func audioDidCompleteQueue(for controller:APController, animated: Bool) {
         
     }
     
     func checkState() {
-        if let item = item as? ContextListRowItem, let wrapper = item.audioWrapper, let controller = globalAudio, let song = controller.currentSong {
+        if let item = item as? ContextListRowItem, let wrapper = item.audioWrapper, let controller = item.context.audioPlayer, let song = controller.currentSong {
             if song.entry.isEqual(to: wrapper), case .playing = song.state {
                 progressView.theme = RadialProgressTheme(backgroundColor: theme.colors.accent, foregroundColor: .white, icon: theme.icons.chatMusicPause, iconInset:NSEdgeInsets(left:1))
             } else {
@@ -371,7 +370,7 @@ class ContextListAudioView : ContextListRowView, APDelegate {
                 if let strongSelf = self {
                     strongSelf.fetchStatus = status
                     switch status {
-                    case let .Fetching(_, progress):
+                    case let .Fetching(_, progress), let .Paused(progress):
                         strongSelf.progressView.state = .Fetching(progress: progress, force: false)
                     case .Local:
                         strongSelf.progressView.state = .Play
@@ -390,7 +389,9 @@ class ContextListAudioView : ContextListRowView, APDelegate {
     }
     
     deinit {
-        globalAudio?.remove(listener: self)
+        if let item = item as? ContextListRowItem {
+            item.context.audioPlayer?.remove(listener: self)
+        }
         statusDisposable.dispose()
         fetchDisposable.dispose()
     }

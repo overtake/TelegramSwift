@@ -14,7 +14,7 @@
 #define MSACApplication NSApplication
 #endif
 #else
-#import <UIKit/UIKit.h>
+#import <Cocoa/Cocoa.h>
 
 #ifndef MSACApplicationDelegate
 #define MSACApplicationDelegate UIApplicationDelegate

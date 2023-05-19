@@ -1,4 +1,4 @@
-//
+ //
 //  ChatInterfaceStateContextQueries.swift
 //  TelegramMac
 //
@@ -10,8 +10,9 @@ import Cocoa
 
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+import TGModernGrowingTextView
 import Postbox
+import InAppSettings
 
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
     let inputQuery = chatPresentationInterfaceState.inputContext
@@ -48,7 +49,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
         }
         
-        let hashtags: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = recentlyUsedHashtags(postbox: context.account.postbox) |> map { hashtags -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+        let hashtags: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = context.engine.messages.recentlyUsedHashtags() |> map { hashtags -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             let normalizedQuery = query.lowercased()
             var result: [String] = []
             for hashtag in hashtags {
@@ -64,7 +65,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
     case let .stickers(query):
         
         return (inputQuery, context.account.postbox.transaction { transaction -> StickerSettings in
-            let stickerSettings: StickerSettings = (transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.stickerSettings) as? StickerSettings) ?? .defaultSettings
+            let stickerSettings: StickerSettings = transaction.getPreferencesEntry(key: ApplicationSpecificPreferencesKeys.stickerSettings)?.get(StickerSettings.self) ?? .defaultSettings
             return stickerSettings
         }
         |> mapToSignal { stickerSettings -> Signal<[FoundStickerItem], NoError> in
@@ -77,7 +78,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 case .installed:
                     scope = [.installed]
                 }
-                return searchStickers(account: context.account, query: query, scope: scope)
+                return context.engine.stickers.searchStickers(query: query, scope: scope)
         }
         |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             return { _ in
@@ -89,29 +90,94 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
 //            return { _ in return .stickers(stickers) }
 //        })
     case let .emoji(query, firstWord):
+        
+        
+        let boxKey = ValueBoxKey(query)
+        let searchQuery: ItemCollectionSearchQuery = firstWord ? .exact(boxKey) : .matching([boxKey])
+        
+        let find = context.account.postbox.transaction { transaction in
+            return transaction.searchItemCollection(namespace: Namespaces.ItemCollection.CloudEmojiPacks, query: searchQuery)
+        } |> map {
+            $0.compactMap({ $0 as? StickerPackItem }).map { $0.file }
+        }
+        
+        let animated = combineLatest(find, context.account.viewTracker.featuredEmojiPacks()) |> map {
+            $0 + $1.reduce([], { current, value in
+                return current + value.topItems.map { $0.file }
+            })
+        } |> map { files -> [TelegramMediaFile] in
+            var exists: Set<Int64> = Set()
+            return files.filter { file in
+                if exists.contains(file.fileId.id) {
+                    return false
+                } else {
+                    exists.insert(file.fileId.id)
+                    return true
+                }
+            }
+        }
+
+        
         if !query.isEmpty {
-            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
+            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
 
             if firstWord {
-                return (inputQuery, .single({ _ in return nil }) |> then(combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox)) |> map { matches, emojies -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                return (inputQuery, .single({ _ in return nil }) |> then(combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox), animated) |> map { matches, emojies, animated -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                     let sorted = matches.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
                         let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
                         return lhsIndex < rhsIndex
                     })
                     
-                    return { _ in return .emoji(sorted, firstWord) }
+                    var toRemove: [String] = []
+                    
+                    var selected: [TelegramMediaFile] = []
+                    for sort in sorted {
+                        let file = animated.filter({ $0.customEmojiText?.fixed == sort.fixed}).first
+                        if let file = file {
+                            selected.append(file)
+                            toRemove.append(sort)
+                        }
+                    }
+
+                    selected = selected.sorted(by: { lhs, rhs in
+                        let lhsIndex = emojies.animated.firstIndex(of: lhs.fileId) ?? Int.max
+                        let rhsIndex = emojies.animated.firstIndex(of: rhs.fileId) ?? Int.max
+                        return lhsIndex < rhsIndex
+                    })
+                    
+                    return { _ in return .emoji(sorted, selected, firstWord) }
                 }))
             } else {
-                return (inputQuery, combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox)) |> map { matches, emojies -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                return (inputQuery, combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox), animated) |> map { matches, emojies, animated -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                     let sorted = matches.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
                         let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
                         return lhsIndex < rhsIndex
                     })
                     
+                    var toRemove: [String] = []
                     
-                    return { _ in return .emoji(sorted, firstWord) }
+                    var selected: [TelegramMediaFile] = []
+                    for sort in sorted {
+                        let files = animated.prefix(200).filter({ $0.customEmojiText?.fixed == sort.fixed})
+                        for file in files {
+                            selected.append(file)
+                            toRemove.append(sort)
+                        }
+                    }
+                    
+//                    sorted = sorted.filter { value in
+//                        return !toRemove.contains(value)
+//                    }
+                    
+                    selected = selected.sorted(by: { lhs, rhs in
+                        let lhsIndex = emojies.animated.firstIndex(of: lhs.fileId) ?? Int.max
+                        let rhsIndex = emojies.animated.firstIndex(of: rhs.fileId) ?? Int.max
+                        return lhsIndex < rhsIndex
+                    })
+                    
+                    return { _ in return .emoji(sorted, selected, firstWord) }
                 })
             }
            
@@ -120,8 +186,26 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             if firstWord {
                 return (nil, .single({ _ in return nil }))
             } else {
-                return (inputQuery, recentUsedEmoji(postbox: context.account.postbox) |> map { emojis -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                    return { _ in return .emoji(emojis.emojies, firstWord) }
+                return (inputQuery, combineLatest(recentUsedEmoji(postbox: context.account.postbox), animated) |> map { emojis, animated -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                    
+                    
+                    var toRemove: [String] = []
+                    var selected: [TelegramMediaFile] = []
+                    for sort in emojis.animated {
+                        let file = animated.prefix(200).filter({ $0.fileId == sort}).first
+                        if let file = file {
+                            selected.append(file)
+                            if let text = file.customEmojiText {
+                                toRemove.append(text.fixed)
+                            }
+                        }
+                    }
+                    
+                    let emojies = emojis.emojies.filter { value in
+                        return !toRemove.contains(value.fixed)
+                    }
+                    
+                    return { _ in return .emoji(emojies, selected, firstWord) }
                 })
             }
         }
@@ -142,15 +226,19 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             
             var inlineSignal: Signal<[(Peer, Double)], NoError> = .single([])
             if includeRecent {
-                inlineSignal = recentlyUsedInlineBots(postbox: context.account.postbox) |> take(1)
+                inlineSignal = context.engine.peers.recentlyUsedInlineBots() |> take(1) |> map {
+                    $0.map { ($0.0._asPeer(), $0.1) }
+                }
             }
+            
+            let location = chatPresentationInterfaceState.chatLocation
             
             let members: Signal<[Peer], NoError> = searchPeerMembers(context: context, peerId: global.id, chatLocation: chatPresentationInterfaceState.chatLocation, query: query)
             
             let participants = combineLatest(inlineSignal, members |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id, threadId: location.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                        if entry.message.media.first is TelegramMediaAction {
+                        if entry.message.effectiveMedia is TelegramMediaAction {
                             return nil
                         }
                         return entry.message.author?.id
@@ -230,8 +318,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     signal = .single({ _ in return nil })
                 }
             }
-            
-            let participants = peerCommands(account: context.account, id: peer.id)
+            let participants = context.engine.peers.peerCommands(id: peer.id)
                 |> map { commands -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                     let filteredCommands = commands.commands.filter { command in
                         if command.command.text.hasPrefix(normalizedQuery) {
@@ -253,7 +340,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
         }
         
         var delayRequest = true
-        var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .complete()
+        var signal: Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> = .single({ _ in return nil })
         if let currentQuery = currentQuery {
             switch currentQuery {
             case let .contextRequest(currentAddressName, currentContextQuery) where currentAddressName == addressName:
@@ -265,11 +352,10 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 signal = .single({ _ in return nil })
             }
         }
-        
-        let contextBot = resolvePeerByName(account: context.account, name: addressName)
-            |> mapToSignal { peerId -> Signal<Peer?, NoError> in
-                if let peerId = peerId {
-                    return context.account.postbox.loadedPeerWithId(peerId)
+        let contextBot = context.engine.peers.resolvePeerByName(name: addressName)
+            |> mapToSignal { peer -> Signal<Peer?, NoError> in
+                if let peer = peer {
+                    return context.account.postbox.loadedPeerWithId(peer._asPeer().id)
                         |> map { peer -> Peer? in
                             return peer
                         }
@@ -280,7 +366,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
             |> mapToSignal { peer -> Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> in
                 if let user = peer as? TelegramUser, let botInfo = user.botInfo, let _ = botInfo.inlinePlaceholder {
-                    let contextResults = requestChatContextResults(account: context.account, botId: user.id, peerId: chatPeer.id, query: query, offset: "")
+                    let contextResults = context.engine.messages.requestChatContextResults(botId: user.id, peerId: chatPeer.id, query: query, offset: "")
                         |> map { results -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                             return { _ in
                                 return .contextRequestResult(user, results?.results)
@@ -309,16 +395,16 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     return botResult |> then(maybeDelayedContextResults)
                 } else {
                     let inputQuery = inputContextQueryForChatPresentationIntefaceState(chatPresentationInterfaceState, includeContext: false)
-                    
+                    let location = chatPresentationInterfaceState.chatLocation
                     switch inputQuery {
                     case let .mention(query: query, includeRecent: _):
                         let normalizedQuery = query.lowercased()
                         
                         if let global = chatPresentationInterfaceState.peer {
                             return searchPeerMembers(context: context, peerId: global.id, chatLocation: chatPresentationInterfaceState.chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(global.id), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id, threadId: location.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                                        if entry.message.media.first is TelegramMediaAction {
+                                        if entry.message.effectiveMedia is TelegramMediaAction {
                                             return nil
                                         }
                                         return entry.message.author?.id
@@ -395,9 +481,9 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
         
         let participants: Signal<[Peer], NoError> = combineLatest(chatLocations.map { chatLocation in
             searchPeerMembers(context: context, peerId: chatLocation.peerId, chatLocation: chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(chatLocation.peerId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: chatLocation.peerId, threadId: chatLocation.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                        if entry.message.media.first is TelegramMediaAction {
+                        if entry.message.effectiveMedia is TelegramMediaAction {
                             return nil
                         }
                         return entry.message.author?.id
@@ -434,7 +520,18 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
             return uniquePeers(from: result)
         }
         
-        let result = participants |> map { participants -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+        let peers = combineLatest(chatLocations.map { context.account.postbox.loadedPeerWithId($0.peerId) })
+        
+        let result = combineLatest(participants, peers) |> map { participants, peers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+            
+            var participants = participants
+            
+            for peer in peers {
+                if peer.isSupergroup {
+                    participants.append(peer)
+                }
+            }
+            
             let filteredParticipants = participants.filter { peer in
                 
                 switch filter {
@@ -457,7 +554,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                         return false
                     }
                 }
-                if peer.displayTitle == L10n.peerDeletedUser {
+                if peer.displayTitle == strings().peerDeletedUser {
                     return false
                 }
                 if peer.indexName.matchesByTokens(normalizedQuery) {
@@ -475,29 +572,96 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
         
         return (inputQuery, signal |> then(result))
     case let .emoji(query, firstWord):
+        
+        let boxKey = ValueBoxKey(query)
+        let searchQuery: ItemCollectionSearchQuery = firstWord ? .exact(boxKey) : .matching([boxKey])
+        
+        let find = context.account.postbox.transaction { transaction in
+            return transaction.searchItemCollection(namespace: Namespaces.ItemCollection.CloudEmojiPacks, query: searchQuery)
+        } |> map {
+            $0.compactMap({ $0 as? StickerPackItem }).map { $0.file }
+        }
+        
+        let animated: Signal<[TelegramMediaFile], NoError> = combineLatest(find, context.account.viewTracker.featuredEmojiPacks()) |> map {
+            $0 + $1.reduce([], { current, value in
+                return current + value.topItems.map { $0.file }
+            })
+        } |> map { files -> [TelegramMediaFile] in
+            var exists: Set<Int64> = Set()
+            return files.filter { file in
+                if exists.contains(file.fileId.id) {
+                    return false
+                } else {
+                    exists.insert(file.fileId.id)
+                    return true
+                }
+            }
+        }
+
         if !query.isEmpty {
-            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
+            let signal = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: query, completeMatch: query.length < 3, checkPrediction: firstWord) |> delay(firstWord ? 0.3 : 0, queue: .concurrentDefaultQueue())
             
             if firstWord {
-                return (inputQuery, .single({ _ in return nil }) |> then(combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox)) |> map { matches, emojies -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                return (inputQuery, .single({ _ in return nil }) |> then(combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox), animated) |> map { matches, emojies, animated -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
                     let sorted = matches.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
                         let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
                         return lhsIndex < rhsIndex
                     })
                     
-                    return { _ in return .emoji(sorted, firstWord) }
+                    var toRemove: [String] = []
+                    
+                    var selected: [TelegramMediaFile] = []
+                    for sort in sorted {
+                        let file = animated.prefix(200).filter({ $0.customEmojiText?.fixed == sort.fixed}).first
+                        if let file = file {
+                            selected.append(file)
+                            toRemove.append(sort)
+                        }
+                    }
+                    
+//                    sorted = sorted.filter { value in
+//                        return !toRemove.contains(value)
+//                    }
+                    
+                    selected = selected.sorted(by: { lhs, rhs in
+                        let lhsIndex = emojies.animated.firstIndex(of: lhs.fileId) ?? Int.max
+                        let rhsIndex = emojies.animated.firstIndex(of: rhs.fileId) ?? Int.max
+                        return lhsIndex < rhsIndex
+                    })
+                    
+                    return { _ in return .emoji(sorted, selected, firstWord) }
                     }))
             } else {
-                return (inputQuery, combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox)) |> map { matches, emojies -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                    let sorted = matches.sorted(by: { lhs, rhs in
+                return (inputQuery, combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox), animated) |> map { matches, emojies, animated -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                    var sorted = matches.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
                         let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
                         return lhsIndex < rhsIndex
                     })
                     
+                    var toRemove: [String] = []
                     
-                    return { _ in return .emoji(sorted, firstWord) }
+                    var selected: [TelegramMediaFile] = []
+                    for sort in sorted {
+                        let file = animated.prefix(200).filter({ $0.customEmojiText?.fixed == sort.fixed}).first
+                        if let file = file {
+                            selected.append(file)
+                            toRemove.append(sort)
+                        }
+                    }
+                    
+//                    sorted = sorted.filter { value in
+//                        return !toRemove.contains(value)
+//                    }
+                    
+                    selected = selected.sorted(by: { lhs, rhs in
+                        let lhsIndex = emojies.animated.firstIndex(of: lhs.fileId) ?? Int.max
+                        let rhsIndex = emojies.animated.firstIndex(of: rhs.fileId) ?? Int.max
+                        return lhsIndex < rhsIndex
+                    })
+                    
+                    return { _ in return .emoji(sorted, selected, firstWord) }
                     })
             }
             
@@ -506,9 +670,25 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
             if firstWord {
                 return (nil, .single({ _ in return nil }))
             } else {
-                return (inputQuery, recentUsedEmoji(postbox: context.account.postbox) |> map { emojis -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                    return { _ in return .emoji(emojis.emojies, firstWord) }
-                    })
+                return (inputQuery, combineLatest(recentUsedEmoji(postbox: context.account.postbox), animated) |> map { emojis, animated -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
+                    
+                    var toRemove: [String] = []
+                    var selected: [TelegramMediaFile] = []
+                    for sort in emojis.animated {
+                        let file = animated.prefix(200).filter({ $0.fileId == sort}).first
+                        if let file = file {
+                            selected.append(file)
+                            if let text = file.customEmojiText {
+                                toRemove.append(text.fixed)
+                            }
+                        }
+                    }
+                    let emojies = emojis.emojies.filter { value in
+                        return !toRemove.contains(value.fixed)
+                    }
+                    return { _ in return .emoji(emojies, selected, firstWord) }
+                    
+                })
             }
         }
     default:
@@ -519,14 +699,14 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
 
 private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType([.link]).rawValue)
 
-func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: String?) -> Signal<(String?, Signal<(TelegramMediaWebpage?) -> TelegramMediaWebpage?, NoError>)?, NoError> {
+ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: String?, disableEditingPreview: ((String)->Void)? = nil) -> Signal<(String?, Signal<(TelegramMediaWebpage?) -> TelegramMediaWebpage?, NoError>)?, NoError> {
     
     return Signal { subscriber in
         
         var detector = dataDetector
 
         
-        if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.media.first {
+        if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.effectiveMedia {
             if media is TelegramMediaFile || media is TelegramMediaImage {
                 subscriber.putNext((nil, .single({ _ in return nil })))
                 subscriber.putCompletion()
@@ -540,7 +720,7 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
             detector = nil
         }
         
-        if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.media.first {
+        if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.effectiveMedia {
             if let media = media as? TelegramMediaWebpage {
                 let url: String?
                 switch media.content {
@@ -584,6 +764,17 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
                 }
             }
             
+            if let disableEditingPreview = disableEditingPreview {
+                if let editState = chatPresentationInterfaceState.interfaceState.editState {
+                    if editState.message.media.isEmpty, let detectedUrl = detectedUrl  {
+                        disableEditingPreview(detectedUrl)
+                        subscriber.putNext((nil, .single({ _ in return nil })))
+                        subscriber.putCompletion()
+                        return EmptyDisposable
+                    }
+                }
+            }
+            
             if detectedUrl != currentQuery {
                 if let detectedUrl = detectedUrl {
                     let link = inApp(for: detectedUrl.nsstring, context: context, peerId: nil, openInfo: { _, _, _, _ in }, hashtag: { _ in }, command: { _ in }, applyProxy: { _ in }, confirm: false)
@@ -591,7 +782,7 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
                     
                     let invoke:(inAppLink)->Void = { link in
                         switch link {
-                        case let .external(detectedUrl, _):
+                        case let .external(detectedUrl, _), let .joinchat(detectedUrl, _, _, _), let .wallpaper(detectedUrl, _, _), let .theme(detectedUrl, _, _), let .instantView(detectedUrl, _, _):
                             subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
                                 return { _ in return value }
                                 }))
@@ -602,7 +793,7 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
                             } else {
                                 subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
                                     return { _ in return value }
-                                    }))
+                                }))
                             }
                         default:
                             subscriber.putNext((nil, .single({ _ in return nil })))
@@ -636,7 +827,7 @@ func urlPreviewStateForChatInterfacePresentationState(_ chatPresentationInterfac
                             }
                             
                             if canLoad {
-                               confirm(for: context.window, header: L10n.chatSecretChatPreviewHeader, information: L10n.chatSecretChatPreviewText, okTitle: L10n.chatSecretChatPreviewOK, cancelTitle: L10n.chatSecretChatPreviewNO, successHandler: { result in
+                               confirm(for: context.window, header: strings().chatSecretChatPreviewHeader, information: strings().chatSecretChatPreviewText, okTitle: strings().chatSecretChatPreviewOK, cancelTitle: strings().chatSecretChatPreviewNO, successHandler: { result in
                                     FastSettings.setSecretChatWebPreviewAvailable(for: context.account.id.int64, value: true)
                                     invoke(link)
                                }, cancelHandler: {

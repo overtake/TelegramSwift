@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -23,8 +23,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     private(set) var icon:TelegramMediaImage?
     private(set) var iconArguments:TransformImageArguments?
     private(set) var thumb:CGImage? = nil
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
-        super.init(initialSize,interface,object, viewType: viewType)
+    //, gallery: GalleryAppearType = .history
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
+        super.init(initialSize, interface, object, galleryType: galleryType, gallery: gallery, viewType: viewType)
 
         
         var linkLayouts:[TextViewLayout] = []
@@ -68,7 +69,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         }
         
         
-        if let webpage = message.media.first as? TelegramMediaWebpage {
+        if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 
                 var hostName: String = ""
@@ -141,9 +142,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                     var items = items
                     if let layout = self.textLayout, layout.selectedRange.hasSelectText {
                         let text = layout.attributedString.attributedSubstring(from: layout.selectedRange.range)
-                        items.insert(ContextMenuItem(L10n.textCopy, handler: {
+                        items.insert(ContextMenuItem(strings().textCopy, handler: {
                             copyToClipboard(text.string)
-                        }), at: 0)
+                        }, itemImage: MenuAnimation.menu_copy.value), at: 0)
                         items.insert(ContextSeparatorItem(), at: 1)
                     }
                     return items
@@ -153,7 +154,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         
         for linkLayout in linkLayouts {
             linkLayout.interactions = TextViewInteractions(processURL: { [weak self] url in
-                if let webpage = self?.message.media.first as? TelegramMediaWebpage, let `self` = self {
+                if let webpage = self?.message.effectiveMedia as? TelegramMediaWebpage, let `self` = self {
                     if self.hasInstantPage {
                         showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: false))
                         return
@@ -165,7 +166,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 copyToClipboard(linkLayout.attributedString.string)
                 return false
             }, localizeLinkCopy: { link in
-                return L10n.textContextCopyLink
+                return strings().textContextCopyLink
             })
         }
         
@@ -176,7 +177,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     }
     
     var hasInstantPage: Bool {
-        if let webpage = message.media.first as? TelegramMediaWebpage {
+        if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 if let instantPage = content.instantPage {
                     let hasInstantPage:()->Bool = {

@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 class MessageSharedRowItem: GeneralRowItem {
@@ -26,7 +26,7 @@ class MessageSharedRowItem: GeneralRowItem {
         
         let views = Int(message.channelViewsCount ?? 0)
         
-        let viewsString = L10n.channelStatsViewsCountCountable(views).replacingOccurrences(of: "\(views)", with: views.formattedWithSeparator)
+        let viewsString = strings().channelStatsViewsCountCountable(views).replacingOccurrences(of: "\(views)", with: views.formattedWithSeparator)
         
         viewsCountLayout = TextViewLayout(.initialize(string: viewsString, color: theme.colors.grayText, font: .normal(.short)),maximumNumberOfLines: 1)
         
@@ -37,7 +37,7 @@ class MessageSharedRowItem: GeneralRowItem {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
         viewsCountLayout.measure(width: .greatestFiniteMagnitude)
-        let titleAndDateWidth: CGFloat = blockWidth - viewType.innerInset.left - viewType.innerInset.right
+        let titleAndDateWidth: CGFloat = blockWidth - viewType.innerInset.left - viewType.innerInset.right - 34 - 10
         
         titleLayout.measure(width: titleAndDateWidth)
         

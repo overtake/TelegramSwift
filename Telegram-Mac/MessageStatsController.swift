@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-import SyncCore
+
 import GraphCore
 
 
@@ -31,7 +31,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.channelStatsOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelStatsOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         var overviewItems:[ChannelOverviewItem] = []
@@ -39,14 +39,14 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         overviewItems.append(ChannelOverviewItem(title: "Views", value: .initialize(string: stats.views.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
        
         if let search = search, search.0.totalCount > 0 {
-            overviewItems.append(ChannelOverviewItem(title: L10n.statsMessagePublicForwardsTitle, value: .initialize(string: Int(search.0.totalCount).formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
+            overviewItems.append(ChannelOverviewItem(title: strings().statsMessagePublicForwardsTitle, value: .initialize(string: Int(search.0.totalCount).formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
         }
         
         if stats.forwards > 0 {
-            overviewItems.append(ChannelOverviewItem(title: L10n.statsMessagePrivateForwardsTitle, value: .initialize(string: "≈" + stats.forwards.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
+            overviewItems.append(ChannelOverviewItem(title: strings().statsMessagePrivateForwardsTitle, value: .initialize(string: "≈" + stats.forwards.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
         }
     
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
         }))
         index += 1
@@ -76,8 +76,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         }
         
         if !stats.interactionsGraph.isEmpty {
-            graphs.append(Graph(graph: stats.interactionsGraph, title: L10n.statsMessageInteractionsTitle, identifier: InputDataIdentifier("interactionsGraph"), type: chartType, load: { identifier in
-              //  context.loadDetailedGraph(<#T##graph: StatsGraph##StatsGraph#>, x: <#T##Int64#>)
+            graphs.append(Graph(graph: stats.interactionsGraph, title: strings().statsMessageInteractionsTitle, identifier: InputDataIdentifier("interactionsGraph"), type: chartType, load: { identifier in
                 updateIsLoading(identifier, true)
             }))
         }
@@ -91,13 +90,13 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
             switch graph.graph {
             case let .Loaded(_, string):
                 ChartsDataManager.readChart(data: string.data(using: .utf8)!, sync: true, success: { collection in
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                         return StatisticRowItem(initialSize, stableId: stableId, context: accountContext, collection: collection, viewType: .singleItem, type: graph.type, getDetailsData: { date, completion in
 
                         })
                     }))
                 }, failure: { error in
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                         return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error.localizedDescription)
                     }))
                 })
@@ -106,7 +105,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
                 
                 index += 1
             case .OnDemand:
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                     return StatisticLoadingRowItem(initialSize, stableId: stableId, error: nil)
                 }))
                 index += 1
@@ -114,7 +113,7 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
                     graph.load(graph.identifier)
                 }
             case let .Failed(error):
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: graph.identifier, equatable: InputDataEquatable(graph.graph), comparable: nil, item: { initialSize, stableId in
                     return StatisticLoadingRowItem(initialSize, stableId: stableId, error: error)
                 }))
                 index += 1
@@ -128,11 +127,11 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         sectionId += 1
         
         if let messages = search?.0, !messages.messages.isEmpty {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.statsMessagePublicForwardsTitleHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsMessagePublicForwardsTitleHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
             for (i, message) in messages.messages.enumerated() {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_message(message.id), equatable: InputDataEquatable(message), comparable: nil, item: { initialSize, stableId in
                     return MessageSharedRowItem(initialSize, stableId: stableId, context: accountContext, message: message, viewType: bestGeneralViewType(messages.messages, for: i), action: {
                         openMessage(message.id)
                     })
@@ -144,8 +143,8 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
             sectionId += 1
         }
     } else {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, item: { initialSize, stableId in
-            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: L10n.channelStatsLoading)
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return StatisticsLoadingRowItem(initialSize, stableId: stableId, context: accountContext, text: strings().channelStatsLoading)
         }))
     }
     
@@ -179,16 +178,16 @@ func MessageStatsController(_ context: AccountContext, messageId: MessageId, dat
     dataPromise.set(.single(nil) |> then(dataSignal))
     
     let openMessage: (MessageId)->Void = { messageId in
-        context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
     }
     
-    let searchSignal = searchMessages(account: context.account, location: .publicForwards(messageId: messageId, datacenterId: Int(datacenterId)), query: "", state: nil)
+    let searchSignal = context.engine.messages.searchMessages(location: .publicForwards(messageId: messageId, datacenterId: Int(datacenterId)), query: "", state: nil)
         |> map(Optional.init)
         |> afterNext { result in
             if let result = result {
                 for message in result.0.messages {
                     if let peer = message.peers[message.id.peerId], let peerReference = PeerReference(peer) {
-                        let _ = updatedRemotePeer(postbox: context.account.postbox, network: context.account.network, peer: peerReference).start()
+                        let _ = context.engine.peers.updatedRemotePeer(peer: peerReference).start()
                     }
                 }
             }
@@ -217,9 +216,9 @@ func MessageStatsController(_ context: AccountContext, messageId: MessageId, dat
     }
 
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.statsMessageTitle, removeAfterDisappear: false, hasDone: false)
+    let controller = InputDataController(dataSignal: signal, title: strings().statsMessageTitle, removeAfterDisappear: false, hasDone: false)
     
-    controller.contextOject = statsContext
+    controller.contextObject = statsContext
     controller.didLoaded = { controller, _ in
         controller.tableView.alwaysOpenRowsOnMouseUp = true
         controller.tableView.needUpdateVisibleAfterScroll = true

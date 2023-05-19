@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 
@@ -92,37 +92,35 @@ struct EmojiesSoundConfiguration : Equatable {
     
 }
 
-private final class DiceSideDataContext {
+private final class EmojiDataContext {
     var data: [(String, Data?, TelegramMediaFile)] = []
     let subscribers = Bag<([(String, Data?, TelegramMediaFile)]) -> Void>()
 }
 
 class DiceCache {
     private let postbox: Postbox
-    private let network: Network
-    
-    private var dataContexts: [String : DiceSideDataContext] = [:]
-
+    private let engine: TelegramEngine
+    private var dataContexts: [String : EmojiDataContext] = [:]
+    private var dataEffectsContexts: [String : EmojiDataContext] = [:]
     
     private let fetchDisposable = MetaDisposable()
     private let loadDataDisposable = MetaDisposable()
     private let emojiesSoundDisposable = MetaDisposable()
     
-    init(postbox: Postbox, network: Network) {
+    init(postbox: Postbox, engine: TelegramEngine) {
         self.postbox = postbox
-        self.network = network
-        
+        self.engine = engine
         
         
         let availablePacks = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
-            return view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
+            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? .defaultValue
         } |> map {
             return InteractiveEmojiConfiguration.with(appConfiguration: $0)
         } |> distinctUntilChanged
         
         
         let emojiesSound = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
-            return view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
+            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
         } |> map { value -> EmojiesSoundConfiguration in
             return EmojiesSoundConfiguration.with(appConfiguration: value)
         } |> distinctUntilChanged |> mapToSignal { value -> Signal<Never, NoError> in
@@ -138,12 +136,12 @@ class DiceCache {
         let packs = availablePacks |> mapToSignal { config -> Signal<[(String, [StickerPackItem])], NoError> in
             var signals: [Signal<(String, [StickerPackItem]), NoError>] = []
             for emoji in config.emojis {
-                signals.append(loadedStickerPack(postbox: postbox, network: network, reference: .dice(emoji), forceActualized: true)
+                signals.append(engine.stickers.loadedStickerPack(reference: .dice(emoji), forceActualized: true)
                     |> map { result -> (String, [StickerPackItem]) in
                         switch result {
                         case let .result(_, items, _):
                             var dices: [StickerPackItem] = []
-                            for case let item as StickerPackItem in items {
+                            for case let item in items {
                                 dices.append(item)
                             }
                             return (emoji, dices)
@@ -155,11 +153,24 @@ class DiceCache {
             return combineLatest(signals)
         }
         
-        
-        let fetchDices = packs |> map { value in
+        let emojiEffects: Signal<[StickerPackItem], NoError> = engine.stickers.loadedStickerPack(reference: .animatedEmojiAnimations, forceActualized: true)
+            |> map { result -> [StickerPackItem] in
+                switch result {
+                case let .result(_, items, _):
+                    var effects: [StickerPackItem] = []
+                    for case let item in items {
+                        effects.append(item)
+                    }
+                    return effects
+                default:
+                    return []
+                }
+            }
+
+        let fetchDices = combineLatest(packs, emojiEffects) |> map { value, effects in
             return value.map { $0.1 }.reduce([], { current, value in
                 return current + value
-            })
+            }) + effects
         } |> mapToSignal { dices -> Signal<Void, NoError> in
             let signals = dices.map { value -> Signal<FetchResourceSourceType, FetchResourceError> in
                 let reference: MediaResourceReference
@@ -187,7 +198,7 @@ class DiceCache {
                         } else {
                             return .single(nil)
                         }
-                    } |> map { (value.getStringRepresentationsOfIndexKeys().first!.fixed, $0, value.file) }
+                    } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).fixed, $0, value.file) }
                 }
                 signals.append(combineLatest(dices) |> map { (value.0, $0) })
             }
@@ -202,21 +213,125 @@ class DiceCache {
             }
         } |> deliverOnResourceQueue
         
-        loadDataDisposable.set(data.start(next: { [weak self] data in
+        
+        let dataEffects = emojiEffects |> mapToSignal { values -> Signal<[String: [(String, Data?, TelegramMediaFile)]], NoError> in
+            
+                        
+            let effects = values.map { value in
+                return postbox.mediaBox.resourceData(value.file.resource) |> mapToSignal { resourceData -> Signal<Data?, NoError> in
+                    if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+                        return .single(data)
+                    } else {
+                        return .single(nil)
+                    }
+                } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).fixed, $0, value.file) }
+            }
+            return combineLatest(effects) |> map { values in
+                var dict: [String : [(String, Data?, TelegramMediaFile)]] = [:]
+                
+                for value in values {
+                    var list = dict[value.0.fixed] ?? []
+                    list.append(value)
+                    dict[value.0] = list
+                }
+                return dict
+            }
+        } |> deliverOnResourceQueue
+        
+        loadDataDisposable.set(combineLatest(data, dataEffects).start(next: { [weak self] data, dataEffects in
             guard let `self` = self else {
                 return
             }
             for diceData in data {
-                let context = self.dataContexts[diceData.key] ?? DiceSideDataContext()
+                let context = self.dataContexts[diceData.key.fixed] ?? EmojiDataContext()
                 context.data = diceData.value
                 for subscriber in context.subscribers.copyItems() {
                     subscriber(diceData.value)
                 }
-                self.dataContexts[diceData.key] = context
+                self.dataContexts[diceData.key.fixed] = context
+            }
+            for effect in dataEffects {
+                let context = self.dataEffectsContexts[effect.key] ?? EmojiDataContext()
+                context.data = effect.value
+                for subscriber in context.subscribers.copyItems() {
+                    subscriber(effect.value)
+                }
+                self.dataEffectsContexts[effect.key] = context
             }
         }))
         
     }
+    
+    func animationEffect(for emoji: String) -> Signal<[(String, Data?, TelegramMediaFile)], NoError> {
+        return Signal { [weak self] subscriber in
+            guard let `self` = self else {
+                return EmptyDisposable
+            }
+            var cancelled = false
+            let disposable = MetaDisposable()
+            
+            let invoke = {
+                if !cancelled {
+                    var dataContext: EmojiDataContext
+                    if let dc = self.dataEffectsContexts[emoji.fixed] {
+                        dataContext = dc
+                    } else {
+                        dataContext = EmojiDataContext()
+                    }
+                    
+                    self.dataEffectsContexts[emoji.fixed] = dataContext
+                    
+                    let index = dataContext.subscribers.add({ data in
+                        if !cancelled {
+                            subscriber.putNext(data)
+                        }
+                    })
+                    subscriber.putNext(dataContext.data)
+                    disposable.set(ActionDisposable { [weak self] in
+                        resourcesQueue.async {
+                            if let current = self?.dataEffectsContexts[emoji.fixed] {
+                                current.subscribers.remove(index)
+                            }
+                        }
+                    })
+                }
+                
+            }
+            resourcesQueue.sync(invoke)
+
+            return ActionDisposable {
+                disposable.dispose()
+                cancelled = true
+            }
+        }
+    }
+
+    
+    func listOfEmojies(engine: TelegramEngine) -> Signal<[String], NoError> {
+        let availablePacks = engine.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
+            return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? .defaultValue
+        } |> map {
+            return InteractiveEmojiConfiguration.with(appConfiguration: $0)
+        } |> distinctUntilChanged
+        
+        let emojies = engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
+            |> map { result -> [String] in
+                switch result {
+                case let .result(_, items, _):
+                    var stickers: [String] = []
+                    for case let item in items {
+                        if let emoji = item.getStringRepresentationsOfIndexKeys().first {
+                            stickers.append(emoji)
+                        }
+                    }
+                    return stickers
+                default:
+                    return []
+                }
+        }
+        return emojies
+    }
+    
     
     func interactiveSymbolData(baseSymbol: String, synchronous: Bool) -> Signal<[(String, Data?, TelegramMediaFile)], NoError> {
         return Signal { [weak self] subscriber in
@@ -229,11 +344,11 @@ class DiceCache {
             
             let invoke = {
                 if !cancelled {
-                    var dataContext: DiceSideDataContext
+                    var dataContext: EmojiDataContext
                     if let dc = self.dataContexts[baseSymbol] {
                         dataContext = dc
                     } else {
-                        dataContext = DiceSideDataContext()
+                        dataContext = EmojiDataContext()
                     }
                     
                     self.dataContexts[baseSymbol] = dataContext

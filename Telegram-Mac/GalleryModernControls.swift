@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -187,27 +187,31 @@ class GalleryModernControlsView: View {
                 }
             }
         case let .message(message):
-            if let message = message.message, message.containsSecretMedia {
-                
-            }
-            if message.message?.media.first is TelegramMediaImage {
+            let cantSave = message.message?.containsSecretMedia == true || message.message?.isCopyProtected() == true
+            
+            if message.message?.effectiveMedia is TelegramMediaImage {
                 zoomInControl.isHidden = false
                 zoomOutControl.isHidden = false
                 rotateControl.isHidden = false
-                fastSaveControl.isHidden = message.message?.containsSecretMedia == true
-            } else if let file = message.message?.media.first as? TelegramMediaFile {
+                fastSaveControl.isHidden = cantSave
+            } else if let file = message.message?.effectiveMedia as? TelegramMediaFile {
                 if file.isVideo {
                     zoomInControl.isHidden = false
                     zoomOutControl.isHidden = false
                     rotateControl.isHidden = true
-                    fastSaveControl.isHidden = message.message?.containsSecretMedia == true
+                    fastSaveControl.isHidden = cantSave
                 } else if !file.isGraphicFile {
                     zoomInControl.isHidden = false
                     zoomOutControl.isHidden = false
                     rotateControl.isHidden = true
-                    fastSaveControl.isHidden = message.message?.containsSecretMedia == true
+                    fastSaveControl.isHidden = cantSave
+                } else {
+                    zoomInControl.isHidden = false
+                    zoomOutControl.isHidden = false
+                    rotateControl.isHidden = false
+                    fastSaveControl.isHidden = cantSave
                 }
-            } else if let webpage = message.message?.media.first as? TelegramMediaWebpage {
+            } else if let webpage = message.message?.effectiveMedia as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content {
                     if ExternalVideoLoader.isPlayable(content) {
                         zoomInControl.isHidden = false
@@ -265,7 +269,7 @@ class GalleryModernControlsView: View {
             formatter.timeStyle = .short
             formatter.doesRelativeDateFormatting = true
             formatter.timeZone = NSTimeZone.local
-            nameNode = TextNode.layoutText(.initialize(string: currentState.peer?.displayTitle.prefixWithDots(30) ?? L10n.peerDeletedUser, color: NSPointInRect(point, nameRect) ? .white : .grayText, font: .medium(.huge)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
+            nameNode = TextNode.layoutText(.initialize(string: currentState.peer?.displayTitle.prefixWithDots(30) ?? strings().peerDeletedUser, color: NSPointInRect(point, nameRect) ? .white : .grayText, font: .medium(.huge)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
             dateNode = currentState.timestamp == 0 ? nil : TextNode.layoutText(.initialize(string: formatter.string(from: Date(timeIntervalSince1970: currentState.timestamp)), color: NSPointInRect(point, dateRect) ? .white : .grayText, font: .normal(.title)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
         }
         
@@ -361,10 +365,11 @@ class GalleryModernControls: GenericViewController<GalleryModernControlsView> {
     
     
     func animateIn() {
+        genericView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         genericView.change(pos: NSMakePoint(0, 0), animated: true, timingFunction: CAMediaTimingFunctionName.spring)
     }
     
     func animateOut() {
-        genericView.change(pos: NSMakePoint(0, -frame.height), animated: true, timingFunction: CAMediaTimingFunctionName.spring)
+        genericView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false)
     }
 }

@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import InAppSettings
 import Postbox
 import SwiftSignalKit
 import Contacts
@@ -33,7 +33,7 @@ class ChatContactRowItem: ChatRowItem {
             self.appearance = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, object.renderType == .bubble), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType)
 
             
-            if let vCard = contact.vCardData?.data(using: .utf8) {
+            if let _ = contact.vCardData?.data(using: .utf8) {
                 //let contacts = try? CNContactVCardSerialization.contacts(with: vCard)
                 self.vCard = nil
             } else {
@@ -52,7 +52,7 @@ class ChatContactRowItem: ChatRowItem {
                 phoneLayout = TextViewLayout(.initialize(string: formatPhoneNumber(contact.phoneNumber), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
 
             } else {
-                self.contactPeer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: 0), accessHash: nil, firstName: name.components(separatedBy: " ").first ?? name, lastName: name.components(separatedBy: " ").count == 2 ? name.components(separatedBy: " ").last : "", username: nil, phone: contact.phoneNumber, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                self.contactPeer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: name.components(separatedBy: " ").first ?? name, lastName: name.components(separatedBy: " ").count == 2 ? name.components(separatedBy: " ").last : "", username: nil, phone: contact.phoneNumber, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
                 _ = attr.append(string: name, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
                 
                 phoneLayout = TextViewLayout(.initialize(string: formatPhoneNumber(contact.phoneNumber), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
@@ -67,26 +67,12 @@ class ChatContactRowItem: ChatRowItem {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        if vCard != nil {
-            return rightSize.height
-        }
+    override var isForceRightLine: Bool {
         if let line = phoneLayout.lines.last, (line.frame.width + 50) > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-            return rightSize.height
-        }
-        return nil
-    }
-    
-    override var isFixedRightPosition: Bool {
-        if vCard != nil {
-            return super.isForceRightLine
-        }
-        
-        if let line = phoneLayout.lines.last, (line.frame.width + 50) < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
             return true
         }
         return super.isForceRightLine
-    }
+    }   
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         nameLayout.measure(width: width - 50)
@@ -103,15 +89,15 @@ class ChatContactRowItem: ChatRowItem {
 
 class ChatContactRowView : ChatRowView {
     
-    private let photoView:AvatarControl = AvatarControl(font: .avatar(.title))
+    private let contactPhotoView:AvatarControl = AvatarControl(font: .avatar(.title))
     private let nameView: TextView = TextView()
     private let phoneView: TextView = TextView()
     private var actionButton: TitleButton?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(photoView)
-        photoView.setFrameSize(40,40)
+        addSubview(contactPhotoView)
+        contactPhotoView.setFrameSize(40,40)
         nameView.isSelectable = false
         addSubview(nameView)
         
@@ -133,10 +119,10 @@ class ChatContactRowView : ChatRowView {
     
     override func layout() {
         super.layout()
-        nameView.setFrameOrigin(50, photoView.frame.minY + 3)
+        nameView.setFrameOrigin(50, contactPhotoView.frame.minY + 3)
         phoneView.setFrameOrigin(50, nameView.frame.maxY + 1)
         
-        actionButton?.setFrameOrigin(0, photoView.frame.maxY + 6)
+        actionButton?.setFrameOrigin(0, contactPhotoView.frame.maxY + 6)
 
         
     }
@@ -145,10 +131,10 @@ class ChatContactRowView : ChatRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? ChatContactRowItem {
-            photoView.setPeer(account: item.context.account, peer: item.contactPeer)
-            photoView.removeAllHandlers()
+            contactPhotoView.setPeer(account: item.context.account, peer: item.contactPeer)
+            contactPhotoView.removeAllHandlers()
             if let peerId = item.contactPeer?.id {
-                photoView.set(handler: { [weak item] control in
+                contactPhotoView.set(handler: { [weak item] control in
                     item?.chatInteraction.openInfo(peerId, false , nil, nil)
                 }, for: .Click)
             }
@@ -168,12 +154,7 @@ class ChatContactRowView : ChatRowView {
                     addSubview(actionButton!)
                 }
                 actionButton?.removeAllHandlers()
-//                actionButton?.set(handler: { [weak item] _ in
-//                    guard let item = item, let vCard = item.vCard else {return}
-//                    let controller = VCardModalController(item.account, vCard: vCard, contact: item.contact)
-//                    showModal(with: controller, for: mainWindow)
-//                }, for: .Click)
-                actionButton?.set(text: L10n.chatViewContact, for: .Normal)
+                actionButton?.set(text: strings().chatViewContact, for: .Normal)
                 actionButton?.layer?.borderColor = item.appearance.activity.cgColor
                 actionButton?.set(color: item.appearance.activity, for: .Normal)
                 _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.contentSize.width, 30), thatFit: true)

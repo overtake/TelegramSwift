@@ -7,15 +7,15 @@
 //
 
 import Cocoa
-
+import HackUtils
 import TelegramCore
-import SyncCore
+import ObjcUtils
 import Postbox
 import SwiftSignalKit
 import TGUIKit
 import AVFoundation
 import AVKit
-
+import InAppVideoServices
 
 enum AVPlayerState : Equatable {
     case playing(duration: Float64)
@@ -298,26 +298,6 @@ class MGalleryExternalVideoItem: MGalleryItem {
         view.autoresizingMask = []
         view.autoresizesSubviews = false
         
-        let pip:ImageButton = ImageButton()
-        pip.style = ControlStyle(highlightColor: .grayIcon)
-        pip.set(image: #imageLiteral(resourceName: "Icon_PIPVideoEnable").precomposed(NSColor.white.withAlphaComponent(0.9)), for: .Normal)
-        
-        pip.set(handler: { [weak view, weak self] _ in
-            if let view = view, let strongSelf = self, let viewer = viewer {
-                let frame = view.window!.convertToScreen(view.convert(view.bounds, to: nil))
-                if !viewer.pager.isFullScreen {
-                    closeGalleryViewer(false)
-                    showLegacyPipVideo(view, viewer: viewer, item: strongSelf, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
-                }
-            }
-        }, for: .Down)
-        
-        _ = pip.sizeToFit()
-        
-        pipButton = pip
-        
-        
-        
         _cachedView = view
         return view
         
@@ -329,7 +309,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
         
         pausepip()
         
-        if let pauseMusic = globalAudio?.pause() {
+        if let pauseMusic = context.audioPlayer?.pause() {
             isPausedGlobalPlayer = pauseMusic
         }
         
@@ -352,7 +332,7 @@ class MGalleryExternalVideoItem: MGalleryItem {
     override func disappear(for view: NSView?) {
         super.disappear(for: view)
         if isPausedGlobalPlayer {
-            _ = globalAudio?.play()
+            _ = context.audioPlayer?.play()
         }
         if let view = view as? VideoPlayerView, !view.isPip {
             view.player?.pause()

@@ -9,9 +9,12 @@
 import Cocoa
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 import Postbox
+import CoreMediaIO
+import Localization
+
 private let _dQueue = Queue.init(name: "chatListQueue")
 private let _sQueue = Queue.init(name: "ChatQueue")
 
@@ -24,18 +27,7 @@ public let kMediaImageExt = "jpg";
 public let kMediaGifExt = "mov";
 public let kMediaVideoExt = "mp4";
 
-public weak var mw:Window?
 
-var mainWindow:Window {
-    if let window = NSApp.keyWindow as? Window {
-        return window
-    } else if let window = NSApp.mainWindow as? Window {
-        return window
-    } else if let mw = mw {
-        return mw
-    }
-    fatalError("window not found")
-}
 
 var systemAppearance: NSAppearance {
     if #available(OSX 10.14, *) {
@@ -126,14 +118,6 @@ func link(path:String?, ext:String) -> String? {
     return realPath
 }
 
-func delay(_ delay:Double, closure:@escaping ()->()) {
-    let when = DispatchTime.now() + delay
-    DispatchQueue.main.asyncAfter(deadline: when, execute: closure)
-}
-func delay(_ delay:Double, onQueue queue: DispatchQueue, closure:@escaping ()->()) {
-    let when = DispatchTime.now() + delay
-    queue.asyncAfter(deadline: when, execute: closure)
-}
 
 func fs(_ path:String) -> Int32? {
     
@@ -159,3 +143,42 @@ func fs(_ path:String) -> Int32? {
 
 
 
+func DALDevices() -> [AVCaptureDevice] {
+    let video = AVCaptureDevice.devices(for: .video)
+    let muxed:[AVCaptureDevice] = AVCaptureDevice.devices(for: .muxed) //[]//
+    // && $0.hasMediaType(.video)
+    
+    
+    return (video + muxed).filter { $0.isConnected && !$0.isSuspended }
+}
+
+func shouldBeMirrored(_ device: AVCaptureDevice) -> Bool {
+    
+    if !device.hasMediaType(.video) {
+        return false
+    }
+    
+    var latency_pa = CMIOObjectPropertyAddress(
+               mSelector: CMIOObjectPropertySelector(kCMIODevicePropertyLatency),
+               mScope: CMIOObjectPropertyScope(kCMIOObjectPropertyScopeWildcard),
+               mElement: CMIOObjectPropertyElement(kCMIOObjectPropertyElementWildcard)
+           )
+    var dataSize = UInt32(0)
+    
+    let id = device.value(forKey: "_connectionID") as? CMIOObjectID
+
+    if let id = id {
+        if CMIOObjectGetPropertyDataSize(id, &latency_pa, 0, nil, &dataSize) == OSStatus(kCMIOHardwareNoError) {
+            return false
+        } else {
+           return true
+        }
+    }
+    return true
+}
+
+
+
+func strings() -> L10n.Type {
+    return L10n.self
+}

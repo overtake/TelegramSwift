@@ -9,15 +9,13 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
 
 
-let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(updatePeerChatInputState: { interfaceState, inputState -> PeerChatInterfaceState? in
-    return nil
-}, fetchResource: { account, resource, range, _ in
+let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(fetchResource: { account, resource, range, _ in
     return nil
 }, fetchResourceMediaReferenceHash: { resource in
     return .single(nil)

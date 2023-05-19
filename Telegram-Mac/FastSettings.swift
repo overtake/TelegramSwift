@@ -8,9 +8,13 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+import Localization
 import SwiftSignalKit
 import Postbox
+import ObjcUtils
+import InAppSettings
+import TGUIKit
+import WebKit
 
 enum SendingType :String {
     case enter = "enter"
@@ -33,6 +37,7 @@ enum ForceTouchAction: Int32 {
     case reply
     case forward
     case previewMedia
+    case react
 }
 
 enum ContextTextTooltip : Int32 {
@@ -55,17 +60,17 @@ enum AppTooltip {
     fileprivate var localizedString: String {
         switch self {
         case .voiceRecording:
-            return L10n.appTooltipVoiceRecord
+            return strings().appTooltipVoiceRecord
         case .videoRecording:
-            return L10n.appTooltipVideoRecord
+            return strings().appTooltipVideoRecord
         case .mediaPreview_archive:
-            return L10n.previewSenderArchiveTooltip
+            return strings().previewSenderArchiveTooltip
         case .mediaPreview_collage:
-            return L10n.previewSenderCollageTooltip
+            return strings().previewSenderCollageTooltip
         case .mediaPreview_media:
-            return L10n.previewSenderMediaTooltip
+            return strings().previewSenderMediaTooltip
         case .mediaPreview_file:
-            return L10n.previewSenderFileTooltip
+            return strings().previewSenderFileTooltip
         }
     }
     
@@ -120,10 +125,12 @@ class FastSettings {
     private static let kEntertainmentType = "kEntertainmentType"
     private static let kSidebarType = "kSidebarType1"
     private static let kSidebarShownType = "kSidebarShownType2"
+    private static let kDebugWebApp = "kDebugWebApp"
     private static let kRecordingStateType = "kRecordingStateType"
     private static let kInAppSoundsType = "kInAppSoundsType"
     private static let kIsMinimisizeType = "kIsMinimisizeType"
     private static let kAutomaticConvertEmojiesType = "kAutomaticConvertEmojiesType2"
+    private static let kSuggestSwapEmoji = "kSuggestSwapEmoji"
     private static let kForceTouchAction = "kForceTouchAction"
     private static let kNeedCollage = "kNeedCollage"
 	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
@@ -133,8 +140,12 @@ class FastSettings {
     private static let kNeedShowChannelIntro = "kNeedShowChannelIntro"
     
     private static let kNoticeAdChannel = "kNoticeAdChannel"
-    private static let kPlayingRate = "kPlayingRate"
+    private static let kPlayingRate = "kPlayingRate2"
+    private static let kPlayingVideoRate = "kPlayingVideoRate"
 
+    private static let kSVCShareMicro = "kSVCShareMicro"
+
+    private static let kReactionsMode = "kReactionsMode"
 
     private static let kVolumeRate = "kVolumeRate"
     
@@ -143,6 +154,17 @@ class FastSettings {
 
     private static let kLeftColumnWidth = "kLeftColumnWidth"
 
+    private static let kShowEmptyTips = "kShowEmptyTips"
+
+    
+    private static let kConfirmWebApp = "kConfirmWebApp"
+
+    private static let kAnimateInputEmoji = "kAnimateInputEmoji"
+    private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
+
+    
+    
+    
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
         if let type = type {
@@ -177,12 +199,46 @@ class FastSettings {
         UserDefaults.standard.set(!isChannelMessagesMuted(peerId), forKey: "\(peerId)_m_muted")
     }
     
+    static func shouldConfirmWebApp(_ peerId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "\(peerId)_\(kConfirmWebApp)")
+        return value as? Bool ?? true
+    }
+    
+    static func markWebAppAsConfirmed(_ peerId: PeerId) -> Void {
+        UserDefaults.standard.set(false, forKey: "\(peerId)_\(kConfirmWebApp)")
+    }
+    
+    @available(macOS 12.0, *)
+    static func botAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())") as? Bool
+        
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    @available(macOS 12.0, *)
+    static func allowBotAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) {
+        UserDefaults.standard.setValue(true, forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    
+        
     static var playingRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 1.7)
+        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 2.0)
     }
     
     static func setPlayingRate(_ rate: Double) {
         UserDefaults.standard.set(rate, forKey: kPlayingRate)
+    }
+    
+    static var playingVideoRate: Double {
+        return min(max(UserDefaults.standard.double(forKey: kPlayingVideoRate), 1), 2.0)
+    }
+    
+    static func setPlayingVideoRate(_ rate: Double) {
+        UserDefaults.standard.set(rate, forKey: kPlayingVideoRate)
     }
     
     static var volumeRate: Float {
@@ -214,6 +270,15 @@ class FastSettings {
         return !UserDefaults.standard.bool(forKey: kSidebarShownType)
     }
     
+    static var debugWebApp: Bool {
+        return UserDefaults.standard.bool(forKey: kDebugWebApp)
+    }
+    
+    static func toggleDebugWebApp() {
+        UserDefaults.standard.set(!debugWebApp, forKey: kDebugWebApp)
+        
+    }
+    
     static var recordingState: RecordingStateSettings {
         return RecordingStateSettings(rawValue: Int32(UserDefaults.standard.integer(forKey: kRecordingStateType))) ?? .voice
     }
@@ -240,6 +305,29 @@ class FastSettings {
         UserDefaults.standard.synchronize()
     }
     
+    static var vcShareMicro: Bool {
+        if let value = UserDefaults.standard.value(forKey: kSVCShareMicro) as? Bool {
+            return value
+        }
+        return true
+    }
+    static func updateVCShareMicro(_ value: Bool) {
+        UserDefaults.standard.setValue(value, forKey: kSVCShareMicro)
+    }
+    
+    static var emptyTips: Bool {
+        if let value = UserDefaults.standard.value(forKey: kShowEmptyTips) as? Bool {
+            return value
+        }
+        return true
+    }
+    static func updateEmptyTips(_ value: Bool) {
+        UserDefaults.standard.setValue(value, forKey: kShowEmptyTips)
+    }
+    
+    
+    
+    
     static func toggleRecordingState() {
         UserDefaults.standard.set((recordingState == .voice ? RecordingStateSettings.video : RecordingStateSettings.voice).rawValue, forKey: kRecordingStateType)
     }
@@ -253,7 +341,11 @@ class FastSettings {
     }
     
     static var forceTouchAction: ForceTouchAction {
-        return ForceTouchAction(rawValue: Int32(UserDefaults.standard.integer(forKey: kForceTouchAction))) ?? .edit
+        if UserDefaults.standard.value(forKey: kForceTouchAction) != nil {
+            return ForceTouchAction(rawValue: Int32(UserDefaults.standard.integer(forKey: kForceTouchAction))) ?? .react
+        } else {
+            return .react
+        }
     }
     
     static func toggleForceTouchAction(_ action: ForceTouchAction) {
@@ -305,6 +397,15 @@ class FastSettings {
         UserDefaults.standard.synchronize()
     }
     
+    static func toggleReactionMode(_ legacy: Bool) {
+        UserDefaults.standard.set(legacy, forKey: kReactionsMode)
+        UserDefaults.standard.synchronize()
+    }
+    
+    static var legacyReactions: Bool {
+        UserDefaults.standard.bool(forKey: kReactionsMode)
+    }
+    
     static var inAppSounds: Bool {
         return !UserDefaults.standard.bool(forKey: kInAppSoundsType)
     }
@@ -316,6 +417,17 @@ class FastSettings {
     
     static func toggleAutomaticReplaceEmojies(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kAutomaticConvertEmojiesType)
+        UserDefaults.standard.synchronize()
+    }
+    
+    static var suggestSwapEmoji: Bool {
+        if let value = UserDefaults.standard.value(forKey: kSuggestSwapEmoji) as? Bool {
+            return value
+        }
+        return true
+    }
+    static func toggleSwapEmoji(_ value: Bool) -> Void {
+        UserDefaults.standard.setValue(value, forKey: kSuggestSwapEmoji)
         UserDefaults.standard.synchronize()
     }
     
@@ -404,6 +516,48 @@ class FastSettings {
         return round(UserDefaults.standard.value(forKey: kLeftColumnWidth) as? CGFloat ?? 300)
     }
     
+    static func dismissPendingRequests(_ peerIds:[PeerId], for peerId: PeerId) {
+        
+        var peers = UserDefaults.standard.value(forKey: "pendingRequests2_\(peerId)") as? [Int64] ?? []
+        peers.append(contentsOf: peerIds.map { $0.toInt64() })
+        peers = peers.uniqueElements
+        
+        UserDefaults.standard.set(peers, forKey: "pendingRequests2_\(peerId)")
+        UserDefaults.standard.synchronize()
+    }
+    
+    static func dissmissRequestChat(_ peerId: PeerId) -> Void {
+        UserDefaults.standard.set(true, forKey: "dissmissRequestChat_\(peerId)")
+        UserDefaults.standard.synchronize()
+    }
+    static func dissmissedRequestChat(_ peerId: PeerId) -> Bool {
+        return UserDefaults.standard.bool(forKey: "dissmissRequestChat_\(peerId)")
+    }
+    
+    
+    static func canBeShownPendingRequests(_ peerIds:[PeerId], for peerId: PeerId) -> Bool {
+        let peers = UserDefaults.standard.value(forKey: "pendingRequests2_\(peerId)") as? [Int64] ?? []
+        
+        let intersection = Set(peerIds.map { $0.toInt64() }).intersection(peers)
+        return intersection.count != peerIds.count
+    }
+    
+    static var animateInputEmoji: Bool {
+        return UserDefaults.standard.bool(forKey: kAnimateInputEmoji)
+    }
+    static func toggleAnimateInputEmoji() {
+        return UserDefaults.standard.set(!animateInputEmoji, forKey: kAnimateInputEmoji)
+    }
+    static var useNativeGraphicContext: Bool {
+        let value = UserDefaults.standard.value(forKey: kUseNativeGraphicContext) as? Bool
+        return value ?? true
+    }
+    static func toggleNativeGraphicContext() {
+        return UserDefaults.standard.set(!useNativeGraphicContext, forKey: kUseNativeGraphicContext)
+    }
+    
+    
+    
     /*
  
      +(void)requestPermissionWithKey:(NSString *)permissionKey peer_id:(int)peer_id handler:(void (^)(bool success))handler {
@@ -490,51 +644,37 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
 func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bool = false) -> Signal<String?, NoError>  {
     let path = downloadFilePath(file, postbox)
     return combineLatest(queue: resourcesQueue, path, downloadedFilePaths(postbox)) |> map { (expanded, paths) in
-        guard let (boxPath, adopted) = expanded else {
+        guard var (boxPath, adopted) = expanded else {
             return nil
         }
-        if let id = file.id {
-            if let path = paths.path(for: id), !saveAnyway {
-                let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
-                    return path.downloadedPath
-                }
-                
+        let id = file.fileId
+        if let path = paths.path(for: id), !saveAnyway {
+            let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
+            if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
+                return path.downloadedPath
             }
-            
-            var adopted = adopted
-            var i:Int = 1
-            let deletedPathExt = adopted.nsstring.deletingPathExtension
-            while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
-                let ext = adopted.nsstring.pathExtension
-                adopted = "\(deletedPathExt) (\(i)).\(ext)"
-                i += 1
-            }
-            
-            try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-            
-//            let quarantineData = "doesn't matter".data(using: .utf8)!
-//
-//
-//            URL(fileURLWithPath: adopted).withUnsafeFileSystemRepresentation { fileSystemPath in
-//                _ = quarantineData.withUnsafeBytes {
-//                    setxattr(fileSystemPath, "com.apple.quarantine", $0.baseAddress, quarantineData.count, 0, 0)
-//                }
-//            }
-            
-            let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
-            
-            let fs = fileSize(boxPath)
-            let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
-            
-            _ = updateDownloadedFilePaths(postbox, {
-                $0.withAddedPath(path)
-            }).start()
-            
-            return adopted
-        } else {
-            return adopted
         }
+        var i:Int = 1
+        let deletedPathExt = adopted.nsstring.deletingPathExtension
+        while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
+            let ext = adopted.nsstring.pathExtension
+            adopted = "\(deletedPathExt) (\(i)).\(ext)"
+            i += 1
+        }
+        
+        try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+        
+        let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
+        
+        let fs = fileSize(boxPath)
+        let fileSize = fs ?? file.size ?? 0
+        let path = DownloadedPath(id: id, downloadedPath: adopted, size: Int64(fileSize), lastModified: Int32(lastModified))
+        
+        _ = updateDownloadedFilePaths(postbox, {
+            $0.withAddedPath(path)
+        }).start()
+        
+        return adopted
     }
     
 //    return downloadFilePath(file, postbox) |> deliverOn(resourcesQueue) |> map { (boxPath, adopted) in
@@ -558,11 +698,24 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bo
 //
 }
 
+extension String {
+    var fixedFileName: String {
+        var string = self.replacingOccurrences(of: "/", with: "_")
+        
+        var range = string.nsstring.range(of: ".")
+        while range.location == 0 {
+            string = string.nsstring.replacingCharacters(in: range, with: "_")
+            range = string.nsstring.range(of: ".")
+        }
+        return string
+    }
+}
+
 func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String)?, NoError> {
-    return combineLatest(postbox.mediaBox.resourceData(file.resource) |> take(1), automaticDownloadSettings(postbox: postbox) |> take(1)) |> mapToSignal { data, settings -> Signal< (String, String)?, NoError> in
+    return combineLatest(postbox.mediaBox.resourceData(file.resource), automaticDownloadSettings(postbox: postbox)) |> take(1) |> mapToSignal { data, settings -> Signal< (String, String)?, NoError> in
         if data.complete {
             var ext:String = ""
-            let fileName = file.fileName ?? data.path.nsstring.lastPathComponent
+            let fileName = (file.fileName ?? data.path.nsstring.lastPathComponent).fixedFileName
             ext = fileName.nsstring.pathExtension
             if !ext.isEmpty {
                 return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension).\(ext)"))
@@ -591,7 +744,7 @@ func fileFinderPath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<Str
                 
                 if let path = paths.path(for: id) {
                     let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                    if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
                        return path.downloadedPath
                     }
                 }
@@ -617,7 +770,7 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 
                 if let path = paths.path(for: id) {
                     let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                    if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
                         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path.downloadedPath)])
                         return
                     }
@@ -634,24 +787,12 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 }
                 
                 try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-                
-//                let quarantineData = "doesn't matter".data(using: .utf8)!
-//                
-//                URL(fileURLWithPath: adopted).withUnsafeFileSystemRepresentation { fileSystemPath in
-//                    _ = quarantineData.withUnsafeBytes {
-//                        setxattr(fileSystemPath, "com.apple.quarantine", $0.baseAddress, quarantineData.count, 0, 0)
-//                    }
-//                }
-                
-                //setxattr(<#T##path: UnsafePointer<Int8>!##UnsafePointer<Int8>!#>, <#T##name: UnsafePointer<Int8>!##UnsafePointer<Int8>!#>, <#T##value: UnsafeRawPointer!##UnsafeRawPointer!#>, <#T##size: Int##Int#>, <#T##position: UInt32##UInt32#>, <#T##options: Int32##Int32#>)
-                
-            //    setxattr(ordinaryFileURL.path, SUAppleQuarantineIdentifier, quarantineData, quarantineDataLength, 0, XATTR_CREATE)
-                
+           
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
                 
                 let fs = fileSize(boxPath)
-                let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
-                
+                let fileSize = fs ?? file.size ?? 0
+                let path = DownloadedPath(id: id, downloadedPath: adopted, size: Int64(fileSize), lastModified: Int32(lastModified))
                 
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: adopted)])
                 _ = updateDownloadedFilePaths(account.postbox, {

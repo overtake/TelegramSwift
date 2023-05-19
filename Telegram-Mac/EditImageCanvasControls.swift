@@ -8,7 +8,7 @@
 
 import Cocoa
 import TGUIKit
-
+import ColorPalette
 
 
 
@@ -49,10 +49,10 @@ final class EditImageCanvasControlsView : View {
         draw.set(image: NSImage(named: "Icon_EditImageDraw")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         clear.set(image: NSImage(named: "Icon_EditImageEraser")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         
-        undo.appTooltip = "⌘Z"
-        redo.appTooltip = "⌘⇧Z"
-        draw.appTooltip = "L"
-        clear.appTooltip = "E"
+        undo.appTooltip = strings().canvasUndo
+        redo.appTooltip = strings().canvasRedo
+        draw.appTooltip = strings().canvasDraw
+        clear.appTooltip = strings().canvasClear
         
         undo.set(image: NSImage(named: "Icon_EditImageUndo")!.precomposed(.white), for: .Hover)
         redo.set(image: NSImage(named: "Icon_EditImageUndo")!.precomposed(NSColor.white, flipHorizontal: true), for: .Hover)
@@ -71,8 +71,8 @@ final class EditImageCanvasControlsView : View {
         success.set(color: nightAccentPalette.accent, for: .Normal)
         cancel.set(color: .white, for: .Normal)
         
-        cancel.set(text: L10n.modalCancel, for: .Normal)
-        success.set(text: L10n.navigationDone, for: .Normal)
+        cancel.set(text: strings().modalCancel, for: .Normal)
+        success.set(text: strings().navigationDone, for: .Normal)
         
         _ = cancel.sizeToFit(NSZeroSize, NSMakeSize(75, frame.height), thatFit: true)
         _ = success.sizeToFit(NSZeroSize, NSMakeSize(75, frame.height), thatFit: true)
@@ -108,8 +108,8 @@ final class EditImageCanvasControlsView : View {
         super.layout()
         controlsContainer.setFrameSize(draw.frame.width + undo.frame.width + redo.frame.width + clear.frame.width, draw.frame.height)
         undo.setFrameOrigin(NSMakePoint(0, 0))
-        undo.setFrameOrigin(NSMakePoint(draw.frame.maxX, 0))
-        draw.setFrameOrigin(NSMakePoint(undo.frame.maxX, 0))
+        redo.setFrameOrigin(NSMakePoint(undo.frame.maxX, 0))
+        draw.setFrameOrigin(NSMakePoint(redo.frame.maxX, 0))
         clear.setFrameOrigin(NSMakePoint(draw.frame.maxX, 0))
         controlsContainer.center()
         
@@ -122,8 +122,20 @@ final class EditImageCanvasControlsView : View {
         
         undo.isEnabled = !state.actionValues.isEmpty
         redo.isEnabled = !state.removedActions.isEmpty
-        draw.isSelected = state.action == .draw
+        draw.isSelected = state.action == .draw || state.action == .drawArrow
         clear.isSelected = state.action == .clear
+        
+        let drawImage: NSImage
+        switch state.action {
+        case .drawArrow:
+            drawImage = NSImage(named: "Icon_EditImageArrow")!
+        default:
+            drawImage = NSImage(named: "Icon_EditImageDraw")!
+        }
+        
+        draw.set(image: drawImage.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
+        draw.set(image: drawImage.precomposed(.white), for: .Hover)
+
 
     }
     

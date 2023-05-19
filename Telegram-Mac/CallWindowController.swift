@@ -9,11 +9,12 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import ObjcUtils
 import Postbox
 import SwiftSignalKit
 import TgVoipWebrtc
-
+import TelegramVoip
+import ColorPalette
 
 private let defaultWindowSize = NSMakeSize(720, 560)
 
@@ -141,8 +142,9 @@ private class PhoneCallWindowView : View {
         
         addSubview(backgroundView)
         
-        
+        backgroundView.forceMouseDownCanMoveWindow = true
         addSubview(outgoingVideoView)
+        
         
         
         controls.isEventLess = true
@@ -193,8 +195,8 @@ private class PhoneCallWindowView : View {
         imageView.setFrameSize(frameRect.size.width, frameRect.size.height)
         
         
-        acceptControl.updateWithData(CallControlData(text: L10n.callAccept, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(50, 50), backgroundColor: .greenUI), animated: false)
-        declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDecline, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: false)
+        acceptControl.updateWithData(CallControlData(text: strings().callAccept, mode: .normal(.greenUI, theme.icons.callWindowAccept), iconSize: NSMakeSize(50, 50)), animated: false)
+        declineControl.updateWithData(CallControlData(text: strings().callDecline, mode: .normal(.redUI, theme.icons.callWindowDecline), iconSize: NSMakeSize(50, 50)), animated: false)
         
         
         basicControls.addSubview(b_VideoCamera)
@@ -342,7 +344,7 @@ private class PhoneCallWindowView : View {
         imageView.frame = bounds
         
         incomingVideoView.frame = bounds
-        
+                
         if self.outgoingVideoView.videoView == nil {
             self.outgoingVideoView.frame = bounds
         }
@@ -569,7 +571,14 @@ private class PhoneCallWindowView : View {
         default:
             break
         }
-        self.outgoingVideoView.videoView?.0?.setForceMirrored(!state.isScreenCapture)
+        
+        let isMirrored = !state.isScreenCapture
+        self.outgoingVideoView.isMirrored = isMirrored
+        
+//        
+//        self.outgoingVideoView.videoView?.0?.setOnIsMirroredUpdated = { f in
+//            f(isMirrored)
+//        }
         
         let inputCameraIsActive: Bool
         switch state.videoState {
@@ -587,9 +596,22 @@ private class PhoneCallWindowView : View {
             self.b_ScreenShare.updateEnabled(state.videoIsAvailable(session.isVideo), animated: animated)
         }
         
-        self.b_VideoCamera.updateWithData(CallControlData(text: L10n.callCamera, isVisualEffect: !inputCameraIsActive, icon: inputCameraIsActive ? theme.icons.callWindowVideoActive : theme.icons.callWindowVideo, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
+        let vcBg: CallControlData.Mode
+        if !inputCameraIsActive {
+            vcBg = .visualEffect(inputCameraIsActive ? theme.icons.callWindowVideoActive : theme.icons.callWindowVideo)
+        } else {
+            vcBg = .normal(.white, inputCameraIsActive ? theme.icons.callWindowVideoActive : theme.icons.callWindowVideo)
+        }
+        let mBg: CallControlData.Mode
+        if !state.isMuted {
+            mBg = .visualEffect(state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute)
+        } else {
+            mBg = .normal(.white, state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute)
+        }
         
-        self.b_Mute.updateWithData(CallControlData(text: L10n.callMute, isVisualEffect: !state.isMuted, icon: state.isMuted ? theme.icons.callWindowMuteActive : theme.icons.callWindowMute, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
+        self.b_VideoCamera.updateWithData(CallControlData(text: strings().callCamera, mode: vcBg, iconSize: NSMakeSize(50, 50)), animated: false)
+        
+        self.b_Mute.updateWithData(CallControlData(text: strings().callMute, mode: mBg, iconSize: NSMakeSize(50, 50)), animated: false)
         
         self.b_Mute.updateEnabled(state.muteIsAvailable, animated: animated)
         
@@ -597,10 +619,16 @@ private class PhoneCallWindowView : View {
         self.b_VideoCamera.isHidden = !session.isVideoPossible
         
         
-        self.b_ScreenShare.updateWithData(CallControlData(text: L10n.callScreen, isVisualEffect: !state.isScreenCapture, icon: state.isScreenCapture ? theme.icons.call_screen_sharing_active : theme.icons.call_screen_sharing, iconSize: NSMakeSize(50, 50), backgroundColor: .white), animated: false)
+        let ssBg: CallControlData.Mode
+        if !state.isScreenCapture {
+            ssBg = .visualEffect(state.isScreenCapture ? theme.icons.call_screen_sharing_active : theme.icons.call_screen_sharing)
+        } else {
+            ssBg = .normal(.white, state.isScreenCapture ? theme.icons.call_screen_sharing_active : theme.icons.call_screen_sharing)
+        }
+        self.b_ScreenShare.updateWithData(CallControlData(text: strings().callScreen, mode: ssBg, iconSize: NSMakeSize(50, 50)), animated: false)
         self.b_ScreenShare.updateLoading(outgoingCameraInitialized == .initializing && state.isScreenCapture, animated: animated)
         
-        self.b_ScreenShare.isHidden = true//!session.isVideoPossible
+        self.b_ScreenShare.isHidden = !session.isVideoPossible
         
         
         
@@ -613,7 +641,7 @@ private class PhoneCallWindowView : View {
         case let .active(_, _, visual):
             let layout = TextViewLayout(.initialize(string: ObjcUtils.callEmojies(visual), color: .black, font: .normal(16.0)), alignment: .center)
             layout.measure(width: .greatestFiniteMagnitude)
-            let wasEmpty = secureTextView.layout == nil
+            let wasEmpty = secureTextView.textLayout == nil
             secureTextView.update(layout)
             if wasEmpty {
                 secureTextView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -635,10 +663,11 @@ private class PhoneCallWindowView : View {
                 activeView._change(pos: NSMakePoint(x, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
                 x += activeView.size.width + 45
             }
-            declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDeclineSmall, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: animated)
+            
+            declineControl.updateWithData(CallControlData(text: strings().callEnd, mode: .normal(.redUI, theme.icons.callWindowDeclineSmall), iconSize: NSMakeSize(50, 50)), animated: animated)
             
         case .ringing:
-            break
+            declineControl.updateWithData(CallControlData(text: strings().callDecline, mode: .normal(.redUI, theme.icons.callWindowDeclineSmall), iconSize: NSMakeSize(50, 50)), animated: animated)
         case .terminated(_, let reason, _):
             if let reason = reason, reason.recall {
                 self.acceptControl.isHidden = false
@@ -650,9 +679,9 @@ private class PhoneCallWindowView : View {
                     activeView._change(pos: NSMakePoint(x, 0), animated: animated, duration: 0.3, timingFunction: .spring)
                     x += activeView.size.width + 45
                 }
-                acceptControl.updateWithData(CallControlData(text: L10n.callRecall, isVisualEffect: false, icon: theme.icons.callWindowAccept, iconSize: NSMakeSize(50, 50), backgroundColor: .greenUI), animated: animated)
+                acceptControl.updateWithData(CallControlData(text: strings().callRecall, mode: .normal(.greenUI, theme.icons.callWindowAccept), iconSize: NSMakeSize(50, 50)), animated: animated)
                 
-                declineControl.updateWithData(CallControlData(text: L10n.callClose, isVisualEffect: false, icon: theme.icons.callWindowCancel, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: animated)
+                declineControl.updateWithData(CallControlData(text: strings().callClose, mode: .normal(.redUI, theme.icons.callWindowCancel), iconSize: NSMakeSize(50, 50)), animated: animated)
                 
                 
                 acceptControl.change(pos: NSMakePoint(frame.midX + 25, mainControlY(acceptControl)), animated: animated, duration: 0.3, timingFunction: .spring)
@@ -665,7 +694,7 @@ private class PhoneCallWindowView : View {
             } else {
                 self.acceptControl.isHidden = true
                 
-                declineControl.updateWithData(CallControlData(text: L10n.callDecline, isVisualEffect: false, icon: theme.icons.callWindowDeclineSmall, iconSize: NSMakeSize(50, 50), backgroundColor: .redUI), animated: false)
+                declineControl.updateWithData(CallControlData(text: strings().callDecline, mode: .normal(.redUI, theme.icons.callWindowDeclineSmall), iconSize: NSMakeSize(50, 50)), animated: false)
                 
                 let activeViews = self.allActiveControlsViews
                 let restWidth = self.allControlRestWidth
@@ -715,10 +744,7 @@ private class PhoneCallWindowView : View {
             }
         }
         
-        if let peer = peer {
-            updatePeerUI(peer, session: session)
-            self.updateTooltips(state, session: session, peer: peer, animated: animated, updateOutgoingVideo: !wasEventLess && !outgoingVideoView.isEventLess)
-        }
+        
         
         var point = outgoingVideoView.frame.origin
         var size = outgoingVideoView.frame.size
@@ -742,6 +768,11 @@ private class PhoneCallWindowView : View {
         let videoFrame = CGRect(origin: point, size: size)
         if !outgoingVideoView.isViewHidden {
             outgoingVideoView.updateFrame(videoFrame, animated: animated)
+        }
+        
+        if let peer = peer {
+            updatePeerUI(peer, session: session)
+            self.updateTooltips(state, session: session, peer: peer, animated: animated, updateOutgoingVideo: !wasEventLess && !outgoingVideoView.isEventLess)
         }
         
         if videoFrame == bounds {
@@ -864,7 +895,7 @@ private class PhoneCallWindowView : View {
         
         self.tooltips = sorted
         
-        if !outgoingVideoView.isMoved && outgoingVideoView.frame != bounds {
+        if !outgoingVideoView.isMoved && outgoingVideoView.savedFrame != bounds {
             let addition = max(0, CGFloat(tooltips.count) * 40 - 5)
             let size = self.outgoingVideoView.frame.size
             let point = NSMakePoint(frame.width - size.width - 20, frame.height - 140 - size.height - addition)
@@ -948,7 +979,7 @@ class PhoneCallWindowController {
         
         let account = session.account
         
-        let accountPeer: Signal<Peer?, NoError> =  session.sharedContext.activeAccounts |> mapToSignal { accounts in
+        let accountPeer: Signal<Peer?, NoError> =  session.accountContext.sharedContext.activeAccounts |> mapToSignal { accounts in
             if accounts.accounts.count == 1 {
                 return .single(nil)
             } else {
@@ -972,10 +1003,12 @@ class PhoneCallWindowController {
             }
         }))
         
-        //        view.updateIncomingAspectRatio = { [weak self] aspectRatio in
-        //            self?.updateIncomingAspectRatio(max(0.7, aspectRatio))
-        //            self?.updateOutgoingAspectRatio(max(0.7, aspectRatio))
-        //        }
+        let signal = session.canBeRemoved |> deliverOnMainQueue
+        closeDisposable.set(signal.start(next: { value in
+            if value {
+                closeCall()
+            }
+        }))
     }
     private var state:CallState? = nil
     private let disposable:MetaDisposable = MetaDisposable()
@@ -1030,7 +1063,7 @@ class PhoneCallWindowController {
             guard let window = window, let session = session else {
                 return
             }
-            showModal(with: CallSettingsModalController(session.sharedContext), for: window)
+            showModal(with: CallSettingsModalController(session.accountContext.sharedContext), for: window)
             }, for: .SingleClick)
         
         self.view.b_VideoCamera.set(handler: { [weak self] _ in
@@ -1038,13 +1071,13 @@ class PhoneCallWindowController {
                 switch callState.videoState {
                 case let .active(available), let .paused(available), let .inactive(available):
                     if available {
-                        if callState.isOutgoingVideoPaused || callState.isScreenCapture {
+                        if callState.isOutgoingVideoPaused || callState.isScreenCapture || callState.videoState == .inactive(available) {
                             self.session.requestVideo()
                         } else {
                             self.session.disableVideo()
                         }
                     } else {
-                        confirm(for: self.window, information: L10n.callCameraError, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                        confirm(for: self.window, information: strings().callCameraError, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
                             switch result {
                             case .thrid:
                                 openSystemSettings(.camera)
@@ -1068,7 +1101,7 @@ class PhoneCallWindowController {
             if let result = result {
                 switch result {
                 case .permission:
-                    confirm(for: window, information: L10n.callScreenError, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+                    confirm(for: window, information: strings().callScreenError, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
                         switch result {
                         case .thrid:
                             openSystemSettings(.sharing)
@@ -1084,7 +1117,7 @@ class PhoneCallWindowController {
             if let session = self?.session {
                 session.toggleMute()
             }
-            }, for: .Click)
+        }, for: .Click)
         
         
         view.declineControl.set(handler: { [weak self] _ in
@@ -1095,7 +1128,7 @@ class PhoneCallWindowController {
                         self?.session.setToRemovableState()
                     }
                 default:
-                    self?.session.hangUpCurrentCall()
+                    _ = self?.session.hangUpCurrentCall().start()
                 }
             } else {
                 self?.session.setToRemovableState()
@@ -1144,7 +1177,7 @@ class PhoneCallWindowController {
     }
     
     private func recall() {
-        recallDisposable.set((phoneCall(account: session.account, sharedContext: session.sharedContext, peerId: session.peerId, ignoreSame: true) |> deliverOnMainQueue).start(next: { [weak self] result in
+        recallDisposable.set((phoneCall(context: session.accountContext, peerId: session.peerId, ignoreSame: true) |> deliverOnMainQueue).start(next: { [weak self] result in
             switch result {
             case let .success(session):
                 self?.session = session
@@ -1212,7 +1245,6 @@ class PhoneCallWindowController {
     private func applyState(_ state:CallState, session: PCallSession, outgoingCameraInitialized: CameraState, incomingCameraInitialized: CameraState, accountPeer: Peer?, peer: TelegramUser?, animated: Bool) {
         self.state = state
         view.updateState(state, session: session, outgoingCameraInitialized: outgoingCameraInitialized, incomingCameraInitialized: incomingCameraInitialized, accountPeer: accountPeer, peer: peer, animated: animated)
-        session.sharedContext.showCallHeader(with: session)
         switch state.state {
         case .ringing:
             break
@@ -1232,13 +1264,13 @@ class PhoneCallWindowController {
                 disposable.set((session.account.postbox.loadedPeerWithId(session.peerId) |> deliverOnMainQueue).start(next: { peer in
                     switch error {
                     case .privacyRestricted:
-                        alert(for: self.window, info: L10n.callPrivacyErrorMessage(peer.compactDisplayTitle))
+                        alert(for: self.window, info: strings().callPrivacyErrorMessage(peer.compactDisplayTitle))
                     case .notSupportedByPeer:
-                        alert(for: self.window, info: L10n.callParticipantVersionOutdatedError(peer.compactDisplayTitle))
+                        alert(for: self.window, info: strings().callParticipantVersionOutdatedError(peer.compactDisplayTitle))
                     case .serverProvided(let serverError):
                         alert(for: self.window, info: serverError)
                     case .generic:
-                        alert(for: self.window, info: L10n.callUndefinedError)
+                        alert(for: self.window, info: strings().callUndefinedError)
                     default:
                         break
                     }
@@ -1256,6 +1288,11 @@ class PhoneCallWindowController {
         switch state.state {
         case .terminating, .terminated:
             self.window.styleMask.insert(.closable)
+            self.window.closeInterceptor = { [weak self] in
+                self?.session.setToRemovableState()
+                return true
+            }
+        case .waiting, .ringing:
             self.window.closeInterceptor = { [weak self] in
                 self?.session.setToRemovableState()
                 return true
@@ -1281,13 +1318,37 @@ class PhoneCallWindowController {
         updateLocalizationAndThemeDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         self.window.removeAllHandlers(for: self.view)
-        
+        _ = enableScreenSleep()
         _ = self.view.allActiveControlsViews.map {
             $0.updateEnabled(false, animated: true)
         }
     }
     
+    private var assertionID: IOPMAssertionID = 0
+    private var success: IOReturn?
+    
+    private func disableScreenSleep() -> Bool? {
+        guard success == nil else { return nil }
+        success = IOPMAssertionCreateWithName( kIOPMAssertionTypeNoDisplaySleep as CFString,
+                                               IOPMAssertionLevel(kIOPMAssertionLevelOn),
+                                               "Group Call" as CFString,
+                                               &assertionID )
+        return success == kIOReturnSuccess
+    }
+    
+    private func enableScreenSleep() -> Bool {
+        if success != nil {
+            success = IOPMAssertionRelease(assertionID)
+            success = nil
+            return true
+        }
+        return false
+    }
+    
     func show() {
+        
+        _ = self.disableScreenSleep()
+        
         let ready = self.ready.get() |> filter { $0 } |> take(1)
         
         readyDisposable.set(ready.start(next: { [weak self] _ in
@@ -1297,7 +1358,7 @@ class PhoneCallWindowController {
                 self.window.alphaValue = 0
                 
                 let fullReady: Signal<Bool, NoError>
-                if self.session.isVideo {
+                if self.session.isVideo, self.session.isVideoPossible {
                     fullReady = self.view.outgoingVideoView.cameraInitialized
                         |> timeout(5.0, queue: .mainQueue(), alternate: .single(.inited))
                         |> map { $0 == .inited }
@@ -1339,7 +1400,7 @@ func makeKeyAndOrderFrontCallWindow() -> Bool {
 func showCallWindow(_ session:PCallSession) {
     _ = controller.modify { controller in
         if session.peerId != controller?.session.peerId {
-            controller?.session.hangUpCurrentCall()
+            _ = controller?.session.hangUpCurrentCall().start()
             if let controller = controller {
                 controller.session = session
                 return controller
@@ -1351,26 +1412,19 @@ func showCallWindow(_ session:PCallSession) {
     }
     controller.with { $0?.show() }
     
-    let signal = session.canBeRemoved |> deliverOnMainQueue
-    closeDisposable.set(signal.start(next: { value in
-        if value {
-            closeCall()
-        }
-    }))
 }
 
 func closeCall(minimisize: Bool = false) {
     _ = controller.modify { controller in
         if let controller = controller {
             controller.cleanup()
-            let sharedContext = controller.session.sharedContext
-            let account = controller.session.account
+            let accountContext = controller.session.accountContext
             let isVideo = controller.session.isVideo
-            _ = (controller.session.state |> take(1) |> deliverOnMainQueue).start(next: { [weak sharedContext] state in
+            _ = (controller.session.state |> take(1) |> deliverOnMainQueue).start(next: { state in
                 switch state.state {
                 case let .terminated(callId, _, report):
-                    if report, let callId = callId, let window = sharedContext?.bindings.rootNavigation().window {
-                        showModal(with: CallRatingModalViewController(account, callId: callId, userInitiated: false, isVideo: isVideo), for: window)
+                    if report, let callId = callId {
+                        showModal(with: CallRatingModalViewController(accountContext, callId: callId, userInitiated: false, isVideo: isVideo), for: accountContext.window)
                     }
                 default:
                     break
@@ -1384,6 +1438,7 @@ func closeCall(minimisize: Bool = false) {
                     }, completionHandler: {
                         controller.window.orderOut(nil)
                     })
+
                 })
             } else {
                 NSAnimationContext.runAnimationGroup({ ctx in
@@ -1391,6 +1446,7 @@ func closeCall(minimisize: Bool = false) {
                 }, completionHandler: {
                     controller.window.orderOut(nil)
                 })
+
             }
         }
         return nil
@@ -1398,7 +1454,7 @@ func closeCall(minimisize: Bool = false) {
 }
 
 
-func applyUIPCallResult(_ sharedContext: SharedAccountContext, _ result:PCallResult) {
+func applyUIPCallResult(_ context: AccountContext, _ result:PCallResult) {
     assertOnMainThread()
     switch result {
     case let .success(session):
@@ -1406,7 +1462,7 @@ func applyUIPCallResult(_ sharedContext: SharedAccountContext, _ result:PCallRes
     case .fail:
         break
     case let .samePeer(session):
-        if let header = sharedContext.bindings.rootNavigation().callHeader, header.needShown {
+        if let header = context.bindings.rootNavigation().callHeader, header.needShown {
             showCallWindow(session)
         } else {
             controller.with { $0?.window.orderFront(nil) }

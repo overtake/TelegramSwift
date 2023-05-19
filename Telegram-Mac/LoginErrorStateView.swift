@@ -31,7 +31,7 @@ func ==(lhs:LoginAuthErrorState, rhs:LoginAuthErrorState) -> Bool {
 }
 
 class LoginErrorStateView : TextViewLabel {
-    let state:Promise<LoginAuthErrorState> = Promise()
+    let state:ValuePromise<LoginAuthErrorState> = ValuePromise(ignoreRepeated: true)
     private let errorDisposable:MetaDisposable = MetaDisposable()
     
     deinit {

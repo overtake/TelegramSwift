@@ -133,7 +133,7 @@ class TouchBarEmojiPicker: NSTouchBar, NSTouchBarDelegate {
     init(recent: [String], segments: [EmojiSegment : [String]], selectedEmoji: @escaping(String) -> Void) {
         var entries: [TouchBarEmojiPickerEntry] = []
         if !recent.isEmpty {
-            let layout = TextViewLayout(.initialize(string: L10n.touchBarRecentlyUsed, color: .grayText, font: .normal(.header)))
+            let layout = TextViewLayout(.initialize(string: strings().touchBarRecentlyUsed, color: .grayText, font: .normal(.header)))
             layout.measure(width: .greatestFiniteMagnitude)
             entries.append(.header(layout))
             entries.append(contentsOf: recent.map {.emoji($0)})

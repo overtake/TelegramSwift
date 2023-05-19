@@ -26,6 +26,9 @@ private final class MediaPlayerViewLayer: AVSampleBufferDisplayLayer {
     override func action(forKey event: String) -> CAAction? {
         return NSNull()
     }
+    deinit {
+    
+    }
 }
 
 private final class MediaPlayerViewDisplayView: View {
@@ -59,9 +62,7 @@ final class MediaPlayerView: View {
     private var videoNode: MediaPlayerViewDisplayView
     
     private var videoLayer: AVSampleBufferDisplayLayer?
-    
-    private let videoQueue: Queue
-    
+        
     
     func setVideoLayerGravity(_ gravity: AVLayerVideoGravity) {
         videoLayer?.videoGravity = gravity
@@ -82,6 +83,8 @@ final class MediaPlayerView: View {
     
     private let maskLayer = CAShapeLayer()
     
+    var cornerRadius: CGFloat = .cornerRadius
+    
     var positionFlags: LayoutPositionFlags? {
         didSet {
             if let positionFlags = positionFlags {
@@ -92,23 +95,23 @@ final class MediaPlayerView: View {
                 
                 path.move(to: NSMakePoint(minx, midy))
                 
-                var topLeftRadius: CGFloat = .cornerRadius
-                var bottomLeftRadius: CGFloat = .cornerRadius
-                var topRightRadius: CGFloat = .cornerRadius
-                var bottomRightRadius: CGFloat = .cornerRadius
+                var topLeftRadius: CGFloat = cornerRadius
+                var bottomLeftRadius: CGFloat = cornerRadius
+                var topRightRadius: CGFloat = cornerRadius
+                var bottomRightRadius: CGFloat = cornerRadius
                 
                 
                 if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
-                    topLeftRadius = topLeftRadius * 3 + 2
+                    topLeftRadius = .cornerRadius * 3 + 2
                 }
                 if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
-                    topRightRadius = topRightRadius * 3 + 2
+                    topRightRadius = .cornerRadius * 3 + 2
                 }
                 if positionFlags.contains(.top) && positionFlags.contains(.left) {
-                    bottomLeftRadius = bottomLeftRadius * 3 + 2
+                    bottomLeftRadius = .cornerRadius * 3 + 2
                 }
                 if positionFlags.contains(.top) && positionFlags.contains(.right) {
-                    bottomRightRadius = bottomRightRadius * 3 + 2
+                    bottomRightRadius = .cornerRadius * 3 + 2
                 }
                 
                 path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
@@ -127,11 +130,9 @@ final class MediaPlayerView: View {
     private func updateState() {
         if let (timebase, requestFrames, rotationAngle, aspect) = self.state {
             if let videoLayer = self.videoLayer {
-                videoQueue.async {
-                    if videoLayer.controlTimebase !== timebase || videoLayer.status == .failed {
-                        videoLayer.flush()
-                        videoLayer.controlTimebase = timebase
-                    }
+                if videoLayer.controlTimebase !== timebase || videoLayer.status == .failed {
+                    videoLayer.flush()
+                    videoLayer.controlTimebase = timebase
                 }
                 
                 if !self.currentRotationAngle.isEqual(to: rotationAngle) || !self.currentAspect.isEqual(to: aspect) {
@@ -273,11 +274,6 @@ final class MediaPlayerView: View {
     init(backgroundThread: Bool = false) {
         self.videoNode = MediaPlayerViewDisplayView()
         
-        if false && backgroundThread {
-            self.videoQueue = Queue()
-        } else {
-            self.videoQueue = Queue.mainQueue()
-        }
         
         super.init()
         
@@ -294,27 +290,19 @@ final class MediaPlayerView: View {
         }
         self.addSubview(self.videoNode)
         
-        self.videoQueue.async { [weak self] in
-            let videoLayer = MediaPlayerViewLayer()
-            videoLayer.videoGravity = .resize
-            
-            #if arch(x86_64)
-            if let sublayers = videoLayer.sublayers {
-                findContentsLayer(sublayers)?.minificationFilter = .trilinear
-            }
-            #endif
-            
-            
-            //videoLayer.sublayers?.first?.magnificationFilter = .nearest
-            Queue.mainQueue().async {
-                if let strongSelf = self {
-                    strongSelf.videoLayer = videoLayer
-                    strongSelf.updateLayout()
-                    strongSelf.layer?.addSublayer(videoLayer)
-                    strongSelf.updateState()
-                }
-            }
+        let videoLayer = MediaPlayerViewLayer()
+        videoLayer.videoGravity = .resize
+        
+       // #if arch(x86_64)
+        if let sublayers = videoLayer.sublayers {
+            findContentsLayer(sublayers)?.minificationFilter = .linear
         }
+       // #endif
+        
+        self.videoLayer = videoLayer
+        self.updateLayout()
+        self.layer?.addSublayer(videoLayer)
+        self.updateState()
     }
     
     required init?(coder: NSCoder) {
@@ -328,18 +316,7 @@ final class MediaPlayerView: View {
     deinit {
         assert(Queue.mainQueue().isCurrent())
         self.videoLayer?.removeFromSuperlayer()
-        
-        if let (takeFrameQueue, _) = self.takeFrameAndQueue {
-            if let videoLayer = self.videoLayer {
-                takeFrameQueue.async {
-                    videoLayer.flushAndRemoveImage()
-                    
-                    takeFrameQueue.after(1.0, {
-                        videoLayer.flushAndRemoveImage()
-                    })
-                }
-            }
-        }
+        self.videoLayer?.flushAndRemoveImage()
     }
     
     override var frame: CGRect {

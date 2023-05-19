@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private func localizedInactiveDate(_ timestamp: Int32) -> String {
     
@@ -30,12 +30,12 @@ private func localizedInactiveDate(_ timestamp: Int32) -> String {
     if timeinfoNow.tm_year == timeinfo.tm_year && timeinfoNow.tm_mon == timeinfo.tm_mon {
         //weeks
         let dif = Int(roundf(Float(timeinfoNow.tm_mday - timeinfo.tm_mday) / 7))
-        string = L10n.inactiveChannelsInactiveWeekCountable(dif)
+        string = strings().inactiveChannelsInactiveWeekCountable(dif)
 
     } else if timeinfoNow.tm_year == timeinfo.tm_year  {
         //month
         let dif = Int(timeinfoNow.tm_mon - timeinfo.tm_mon)
-        string = L10n.inactiveChannelsInactiveMonthCountable(dif)
+        string = strings().inactiveChannelsInactiveMonthCountable(dif)
     } else {
         //year
         var dif = Int(timeinfoNow.tm_year - timeinfo.tm_year)
@@ -43,7 +43,7 @@ private func localizedInactiveDate(_ timestamp: Int32) -> String {
         if Int(timeinfoNow.tm_mon - timeinfo.tm_mon) > 6 {
             dif += 1
         }
-        string = L10n.inactiveChannelsInactiveYearCountable(dif)
+        string = strings().inactiveChannelsInactiveYearCountable(dif)
     }
     return string
 }
@@ -51,9 +51,11 @@ private func localizedInactiveDate(_ timestamp: Int32) -> String {
 private final class InactiveChannelsArguments  {
     let context: AccountContext
     let select: SelectPeerInteraction
-    init(context: AccountContext, select: SelectPeerInteraction) {
+    let premium:()->Void
+    init(context: AccountContext, select: SelectPeerInteraction, premium:@escaping()->Void) {
         self.context = context
         self.select = select
+        self.premium = premium
     }
 }
 
@@ -78,19 +80,32 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
     sectionId += 1
     
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_text"), equatable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: source.localizedString, font: .normal(.text), header: GeneralBlockTextHeader(text: source.header, icon: theme.icons.sentFailed))
-    }))
-    index += 1
+    if arguments.context.isPremium && !arguments.context.premiumIsBlocked {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_text"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: source.localizedString, font: .normal(.text), header: GeneralBlockTextHeader(text: source.header, icon: theme.icons.sentFailed))
+        }))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    }
+
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+    if !arguments.context.isPremium && !arguments.context.premiumIsBlocked {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_premium"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return PremiumIncreaseLimitItem.init(initialSize, stableId: stableId, context: arguments.context, type: .channels, counts: nil, viewType: .singleItem, callback: arguments.premium)
+        }))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    }
     
   
 //
     if let channels = state.channels {
         if !channels.isEmpty {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
             index += 1
         }
         for channel in channels {
@@ -101,8 +116,8 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
             }
             let equatable = _Equatable(channel: channel, viewType: viewType)
             
-            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_peer_\(channel.peer.id.toInt64())"), equatable: InputDataEquatable(equatable), item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select), viewType: viewType)
+            entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_peer_\(channel.peer.id.toInt64())"), equatable: InputDataEquatable(equatable), comparable: nil, item: { initialSize, stableId in
+                return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select), viewType: viewType)
             }))
             index += 1
         }
@@ -112,9 +127,9 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
         }
         
     } else {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inactiveChannelsHeader), data: .init(color: theme.colors.grayText, viewType: .textTopItem)))
         index += 1
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_loading"), equatable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return LoadingTableItem(initialSize, height: 42, stableId: stableId, viewType: .singleItem)
         }))
         entries.append(.sectionId(sectionId, type: .normal))
@@ -135,27 +150,29 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
     
     let disposable = MetaDisposable()
     
-    disposable.set((inactiveChannelList(network: context.account.network) |> delay(0.5, queue: .mainQueue())).start(next: { channels in
+    disposable.set((context.engine.peers.inactiveChannelList() |> delay(0.5, queue: .mainQueue())).start(next: { channels in
         updateState {
             $0.withUpdatedChannels(channels)
         }
     }))
     
-    let arguments = InactiveChannelsArguments(context: context, select: SelectPeerInteraction())
+    let arguments = InactiveChannelsArguments(context: context, select: SelectPeerInteraction(), premium: {
+        
+    })
     
     let signal = statePromise.get() |> map { state in
         return InputDataSignalValue(entries: inactiveEntries(state: state, arguments: arguments, source: source))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.inactiveChannelsTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().inactiveChannelsTitle)
     
     var close: (()->Void)? = nil
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.inactiveChannelsOK, accept: {
+    let modalInteractions = ModalInteractions(acceptTitle: strings().inactiveChannelsOK, accept: {
         close?()
         
         if !arguments.select.presentation.selected.isEmpty {
-            let removeSignal = combineLatest(arguments.select.presentation.selected.map { removePeerChat(account: context.account, peerId: $0, reportChatSpam: false)})
+            let removeSignal = combineLatest(arguments.select.presentation.selected.map { context.engine.peers.removePeerChat(peerId: $0, reportChatSpam: false)})
             let peers = arguments.select.presentation.peers.map { $0.value }
             let signal = context.account.postbox.transaction { transaction in
                 updatePeers(transaction: transaction, peers: peers, update: { _, updated in
@@ -182,7 +199,7 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
             let state = stateValue.with { $0 }
             if let channels = state.channels {
                 button.isEnabled = channels.isEmpty || !arguments.select.presentation.selected.isEmpty
-                button.set(text: channels.isEmpty ? L10n.modalOK : L10n.inactiveChannelsOK, for: .Normal)
+                button.set(text: channels.isEmpty ? strings().modalOK : strings().inactiveChannelsOK, for: .Normal)
             } else {
                 button.isEnabled = false
             }
@@ -219,17 +236,17 @@ enum InactiveSource {
     var localizedString: String {
         switch self {
         case .join:
-            return L10n.joinChannelsTooMuch
+            return strings().joinChannelsTooMuch
         case .create:
-            return L10n.createChannelsTooMuch
+            return strings().createChannelsTooMuch
         case .upgrade:
-            return L10n.upgradeChannelsTooMuch
+            return strings().upgradeChannelsTooMuch
         case .invite:
-            return L10n.inviteChannelsTooMuch
+            return strings().inviteChannelsTooMuch
         }
     }
     var header: String {
-        return L10n.inactiveChannelsBlockHeader
+        return strings().inactiveChannelsBlockHeader
     }
 }
 

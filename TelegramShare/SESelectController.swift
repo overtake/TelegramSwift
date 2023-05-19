@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+import Localization
 import Postbox
 
 class SelectAccountView: Control {
@@ -233,9 +233,7 @@ class ShareObject {
                 }
             }
         }
-        
-        NSLog("\(entries), \(shareContext.inputItems)")
-        
+                
         for peerId in entries {
             for j in 0 ..< shareContext.inputItems.count {
                 if let item = shareContext.inputItems[j] as? NSExtensionItem {
@@ -253,14 +251,15 @@ class ShareObject {
                                     } else {
                                         signals.append(self.sendMedia(url, to:peerId))
                                     }
+                                    k += 1
                                 } else if let data = coding as? Data, let string = String(data: data, encoding: .utf8), let url = URL(string: string) {
                                     if !url.isFileURL {
                                         signals.append(self.sendText(url.absoluteString, to:peerId))
                                     } else {
                                         signals.append(self.sendMedia(url, to:peerId))
                                     }
+                                    k += 1
                                 }
-                                k += 1
                                 requestIfNeeded()
                             })
                             if k != total {
@@ -432,13 +431,13 @@ func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
 
 
 
-fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeersEntry], account:Account, initialSize:NSSize, animated:Bool, selectInteraction:SelectPeerInteraction) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> {
+fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeersEntry], context: AccountContext, initialSize:NSSize, animated:Bool, selectInteraction:SelectPeerInteraction) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> {
     
     return Signal {subscriber in
         let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
             switch entry {
             case let .plain(peer, _):
-                return  ShortPeerRowItem(initialSize, peer: peer, account:account, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
+                return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
             case .emptySearch:
                 return SearchEmptyRowItem(initialSize, stableId: SelectablePeersEntryStableId.emptySearch)
             }
@@ -533,7 +532,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _):
                                 if let peer = renderedPeer.chatMainPeer {
                                     if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
                                         if peer.canSendMessage(false) {
@@ -560,7 +559,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         }
                         entries.sort(by: <)
                         
-                        return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
+                        return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
                     }
                     return .never()
                 }
@@ -569,7 +568,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                 let signal: Signal<([Peer], Peer), NoError>
                 
                 if search.request.isEmpty {
-                    signal = combineLatest(recentPeers(account: account) |> map { recent -> [Peer] in
+                    signal = combineLatest(context.engine.peers.recentPeers() |> map { recent -> [Peer] in
                         switch recent {
                         case .disabled:
                             return []
@@ -581,7 +580,9 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                 } else {
                     let foundLocalPeers = account.postbox.searchPeers(query: search.request.lowercased()) |> map {$0.compactMap { $0.chatMainPeer} }
                     
-                    let foundRemotePeers:Signal<[Peer], NoError> = .single([]) |> then ( searchPeers(account: account, query: search.request.lowercased()) |> map { $0.map{$0.peer} + $1.map{$0.peer} } )
+                    
+                    
+                    let foundRemotePeers:Signal<[Peer], NoError> = .single([]) |> then ( context.engine.contacts.searchRemotePeers(query: search.request.lowercased()) |> map { $0.map{$0.peer} + $1.map{$0.peer} } )
 
                     signal = combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, account.postbox.loadedPeerWithId(account.peerId))
                     
@@ -618,7 +619,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         
                     }
                     entries.sort(by: <)
-                    return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
+                    return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
                 }
                 
             }

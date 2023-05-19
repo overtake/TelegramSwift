@@ -6,7 +6,7 @@
 #if TARGET_OS_OSX
 #import <IOKit/IOKitLib.h>
 #else
-#import <UIKit/UIKit.h>
+#import <Cocoa/Cocoa.h>
 #endif
 
 #import "MSACAnalyticsInternal.h"

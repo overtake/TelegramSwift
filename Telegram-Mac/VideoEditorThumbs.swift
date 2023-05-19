@@ -9,6 +9,7 @@
 import Cocoa
 import SwiftSignalKit
 import TGUIKit
+import FastBlur
 
 func generateVideoScrubberThumbs(for asset: AVComposition, composition: AVVideoComposition?, size: NSSize, count: Int, gradually: Bool, blur: Bool) -> Signal<([CGImage], Bool), NoError> {
     return Signal { subscriber in

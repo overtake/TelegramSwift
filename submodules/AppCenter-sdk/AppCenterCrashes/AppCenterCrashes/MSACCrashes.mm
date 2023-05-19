@@ -4,7 +4,7 @@
 #import <Foundation/Foundation.h>
 
 #if !TARGET_OS_OSX
-#import <UIKit/UIKit.h>
+#import <Cocoa/Cocoa.h>
 #endif
 
 #import "MSACAbstractErrorLog.h"

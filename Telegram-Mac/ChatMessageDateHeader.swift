@@ -9,8 +9,11 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import CalendarUtils
 import Postbox
+
+
+
 
 private let timezoneOffset: Int32 = {
     let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
@@ -40,11 +43,13 @@ class ChatDateStickItem : TableStickItem {
     fileprivate let chatInteraction:ChatInteraction?
     let isBubbled: Bool
     let layout:TextViewLayout
+    let presentation: TelegramPresentationTheme
     init(_ initialSize:NSSize, _ entry:ChatHistoryEntry, interaction: ChatInteraction, theme: TelegramPresentationTheme) {
         self.entry = entry
         self.isBubbled = entry.renderType == .bubble
         self.chatInteraction = interaction
-        if case let .DateEntry(index, _) = entry {
+        self.presentation = theme
+        if case let .DateEntry(index, _, _) = entry {
             self.timestamp = index.timestamp
         } else {
             fatalError()
@@ -65,9 +70,9 @@ class ChatDateStickItem : TableStickItem {
             
             switch interaction.mode {
             case .scheduled:
-                text = L10n.chatDateScheduledForToday
+                text = strings().chatDateScheduledForToday
             default:
-                text = L10n.dateToday
+                text = strings().dateToday
             }
             
         } else {
@@ -86,9 +91,9 @@ class ChatDateStickItem : TableStickItem {
             switch interaction.mode {
             case .scheduled:
                 if timestamp == 2147457600 {
-                    text = L10n.chatDateScheduledUntilOnline
+                    text = strings().chatDateScheduledUntilOnline
                 } else {
-                    text = L10n.chatDateScheduledFor(dateString)
+                    text = strings().chatDateScheduledFor(dateString)
                 }
             default:
                 text = dateString
@@ -96,7 +101,7 @@ class ChatDateStickItem : TableStickItem {
         }
         
         
-        self.layout = TextViewLayout(.initialize(string: text, color: theme.chatServiceItemTextColor, font: .medium(theme.fontSize)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
+        self.layout = TextViewLayout(.initialize(string: text, color: presentation.chatServiceItemTextColor, font: .medium(presentation.fontSize)), maximumNumberOfLines: 1, truncationType: .end, alignment: .center)
 
         
         super.init(initialSize)
@@ -107,11 +112,12 @@ class ChatDateStickItem : TableStickItem {
     }
     
     required init(_ initialSize: NSSize) {
-        entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list)
+        entry = .DateEntry(MessageIndex.absoluteLowerBound(), .list, theme)
         timestamp = 0
         self.isBubbled = false
         self.layout = TextViewLayout(NSAttributedString())
         self.chatInteraction = nil
+        self.presentation = theme
         super.init(initialSize)
     }
     
@@ -141,14 +147,18 @@ class ChatDateStickView : TableStickView {
     private let containerView: Control = Control()
     private var borderView: View = View()
     required init(frame frameRect: NSRect) {
+        
+        
+        
         self.textView = TextView()
         self.textView.isSelectable = false
        // self.textView.userInteractionEnabled = false
         self.containerView.wantsLayer = true
-        self.textView.disableBackgroundDrawing = true
+//        self.textView.disableBackgroundDrawing = true
        // textView.isEventLess = false
         super.init(frame: frameRect)
         addSubview(textView)
+        
         textView.set(handler: { [weak self] control in
              if let strongSelf = self, let item = strongSelf.item as? ChatDateStickItem, let table = item.table {
                 
@@ -170,7 +180,7 @@ class ChatDateStickView : TableStickView {
                     item.chatInteraction?.jumpToDate(CalendarUtils.monthDay(components.day!, date: date))
                 } else if let chatInteraction = item.chatInteraction, chatInteraction.mode == .history {
                     if !hasPopover(chatInteraction.context.window) {
-                        let controller = CalendarController(NSMakeRect(0, 0, 250, 250), chatInteraction.context.window, current: Date(timeIntervalSince1970: TimeInterval(item.timestamp)), selectHandler: chatInteraction.jumpToDate)
+                        let controller = CalendarController(NSMakeRect(0, 0, 300, 300), chatInteraction.context.window, current: Date(timeIntervalSince1970: TimeInterval(item.timestamp)), selectHandler: chatInteraction.jumpToDate)
                         showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(-84, -40))
                     }
                 }
@@ -222,16 +232,33 @@ class ChatDateStickView : TableStickView {
         }
     }
     
+    
     override func updateColors() {
         super.updateColors()
         
-
-        textView.backgroundColor = theme.chatServiceItemColor
+        if let item = item as? ChatDateStickItem {
+            var presentation = item.presentation
+            if let table = item.table {
+                table.enumerateItems(with: { item in
+                    if let item = item as? ChatRowItem {
+                        presentation = item.presentation
+                        return false
+                    } else if let item = item as? ChatDateStickItem {
+                        presentation = item.presentation
+                        return false
+                    }
+                    return true
+                })
+            }
+            if presentation.shouldBlurService {
+                textView.blurBackground = presentation.blurServiceColor
+                textView.backgroundColor = .clear
+            } else {
+                textView.backgroundColor = presentation.chatServiceItemColor
+                textView.blurBackground = nil
+            }
+        }
         
-        //containerView.layer?.borderColor = theme.colors.border.cgColor
-       // containerView.layer?.borderWidth = header || (theme.wallpaper != .none) ? 1.0 : 0
-        
-
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -248,11 +275,9 @@ class ChatDateStickView : TableStickView {
             textView.update(item.layout)
             textView.setFrameSize(item.layout.layoutSize.width + 16, item.layout.layoutSize.height + 6)
             textView.layer?.cornerRadius = textView.frame.height / 2
-//            if animated {
-//                containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-//            }
-            
             self.needsLayout = true
+
+
         }
         super.set(item: item, animated:animated)
     }

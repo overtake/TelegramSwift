@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import Postbox
 import SwiftSignalKit
-import SyncCore
+
 
 private final class PeerMediaGifsArguments {
     let context: AccountContext

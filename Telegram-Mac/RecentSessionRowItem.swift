@@ -9,7 +9,8 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import DateUtils
+
 class RecentSessionRowItem: GeneralRowItem {
     
     let session:RecentAccountSession
@@ -17,24 +18,19 @@ class RecentSessionRowItem: GeneralRowItem {
     let headerLayout:TextViewLayout
     let descLayout:TextViewLayout
     let dateLayout:TextViewLayout
-    let revoke:()->Void
-
+    let handler:()->Void
+    let icon: (CGImage?, LocalAnimatedSticker?, NSColor?, [String]?)
     
-    init(_ initialSize: NSSize, session:RecentAccountSession, stableId:AnyHashable, viewType: GeneralViewType, revoke: @escaping()->Void) {
+    init(_ initialSize: NSSize, session:RecentAccountSession, stableId:AnyHashable, viewType: GeneralViewType, icon: (CGImage?, LocalAnimatedSticker?, NSColor?, [String]?), handler: @escaping()->Void) {
         self.session = session
-        self.revoke = revoke
-        headerLayout = TextViewLayout(.initialize(string: session.appName + " " + session.appVersion, color: theme.colors.text, font: .normal(.title)))
+        self.handler = handler
+        self.icon = icon
+        headerLayout = TextViewLayout(.initialize(string: session.deviceModel, color: theme.colors.text, font: .normal(.title)), maximumNumberOfLines: 1)
         
         let attr = NSMutableAttributedString()
         
-        
-        var trimmed = session.deviceModel.trimmingCharacters(in: CharacterSet(charactersIn: "1234567890,"))
-        
-        if trimmed.hasSuffix("Pro") || trimmed.hasSuffix("Air") {
-            trimmed = trimmed.nsstring.substring(to: trimmed.length - 3) + " " + trimmed.nsstring.substring(from: trimmed.length - 3)
-        }
-        
-        _ = attr.append(string:trimmed + ", " + session.platform + " " + session.systemVersion, color: theme.colors.text, font: .normal(.text))
+                
+        _ = attr.append(string:session.appName + " " + session.appVersion.prefixWithDots(30) + ", " + session.platform + " " + session.systemVersion, color: theme.colors.text, font: .normal(.text))
         
         _ = attr.append(string: "\n")
         
@@ -42,7 +38,7 @@ class RecentSessionRowItem: GeneralRowItem {
         
         descLayout = TextViewLayout(attr, maximumNumberOfLines: 2, lineSpacing: 2)
     
-        dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? tr(L10n.peerStatusOnline) : DateUtils.string(forMessageListDate: session.activityDate), color: session.isCurrent ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
+        dateLayout = TextViewLayout(.initialize(string: session.isCurrent ? strings().peerStatusOnline : DateUtils.string(forMessageListDate: session.activityDate), color: session.isCurrent ? theme.colors.accent : theme.colors.grayText, font: .normal(.text)))
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
         
@@ -51,8 +47,8 @@ class RecentSessionRowItem: GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        headerLayout.measure(width: blockWidth - 80)
-        descLayout.measure(width: blockWidth - 80)
+        headerLayout.measure(width: blockWidth - 90 - (icon.0 != nil ? 38 : 0))
+        descLayout.measure(width: blockWidth - 40 - (icon.0 != nil ? 38 : 0))
         dateLayout.measure(width: .greatestFiniteMagnitude)
         return success
     }
@@ -66,36 +62,38 @@ class RecentSessionRowItem: GeneralRowItem {
     }
 }
 
-class RecentSessionRowView : TableRowView, ViewDisplayDelegate {
-    private let containerView = GeneralRowContainerView(frame: NSZeroRect)
-    let headerTextView = TextView()
-    let descTextView = TextView()
-    let dateTextView = TextView()
-    let reset:TitleButton = TitleButton()
+class RecentSessionRowView : GeneralContainableRowView {
+    private let headerTextView = TextView()
+    private let descTextView = TextView()
+    private let dateTextView = TextView()
+    private let iconView: ImageView = ImageView()
     required init(frame frameRect: NSRect) {
-        
-        reset.set(font: .normal(.title), for: .Normal)
-  
+          
         super.init(frame: frameRect)
-        containerView.addSubview(headerTextView)
-        containerView.addSubview(descTextView)
-        containerView.addSubview(dateTextView)
-        containerView.addSubview(reset)
+        self.addSubview(headerTextView)
+        self.addSubview(descTextView)
+        self.addSubview(dateTextView)
+        addSubview(iconView)
         
-        addSubview(containerView)
+        headerTextView.userInteractionEnabled = false
+        headerTextView.isSelectable = false
+            
+        dateTextView.userInteractionEnabled = false
+        dateTextView.isSelectable = false
         
-        containerView.displayDelegate = self
-        
-        reset.set(handler: { [weak self] _ in
+        descTextView.userInteractionEnabled = false
+        descTextView.isSelectable = false
+
+
+        containerView.set(handler: { [weak self] _ in
             if let item = self?.item as? RecentSessionRowItem {
-                confirm(for: mainWindow, information: tr(L10n.recentSessionsConfirmRevoke), successHandler: { _ in
-                    item.revoke()
-                })
+                item.handler()
             }
-        }, for: .SingleClick)
+        }, for: .Click)
     }
     
     override func updateColors() {
+        super.updateColors()
         headerTextView.backgroundColor = backdorColor
         descTextView.backgroundColor = backdorColor
         dateTextView.backgroundColor = backdorColor
@@ -109,34 +107,15 @@ class RecentSessionRowView : TableRowView, ViewDisplayDelegate {
         return theme.colors.background
     }
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        
-        if let item = item as? RecentSessionRowItem, layer == containerView.layer {
-            ctx.setFillColor(theme.colors.border.cgColor)
-            switch item.viewType {
-            case .legacy:
-                ctx.fill(NSMakeRect(30, containerView.frame.height - .borderSize, frame.width - 60, .borderSize))
-            case let .modern(position, insets):
-                if position.border {
-                    ctx.fill(NSMakeRect(insets.left, containerView.frame.height - .borderSize, containerView.frame.width - insets.left - insets.right, .borderSize))
-                }
-            }
-        }
-        
-    }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item)
  
-        reset.set(text: tr(L10n.recentSessionsRevoke), for: .Normal)
-        reset.set(color: theme.colors.accent, for: .Normal)
-        reset.set(background: theme.colors.background, for: .Normal)
-        _ = reset.sizeToFit()
+        
         
         if let item = item as? RecentSessionRowItem {
-            reset.isHidden = item.session.isCurrent
-            containerView.setCorners(item.viewType.corners, animated: animated)
+            self.iconView.image = item.icon.0
+            self.iconView.sizeToFit()
         }
         
         self.needsLayout = true
@@ -144,24 +123,16 @@ class RecentSessionRowView : TableRowView, ViewDisplayDelegate {
     
     override func layout() {
         super.layout()
-        if let item = item as? RecentSessionRowItem {
-            switch item.viewType {
-            case .legacy:
-                self.containerView.frame = self.bounds
-                self.containerView.setCorners([])
-                self.headerTextView.update(item.headerLayout, origin: NSMakePoint(30, 10))
-                self.descTextView.update(item.descLayout, origin: NSMakePoint(30, headerTextView.frame.maxY + 4))
-                self.dateTextView.update(item.dateLayout, origin: NSMakePoint(self.containerView.frame.width - 30 - item.dateLayout.layoutSize.width, 10))
-                self.reset.setFrameOrigin(frame.width - 25 - reset.frame.width, self.containerView.frame.height - reset.frame.height - 10)
-            case let .modern(position, insets):
-                self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, frame.height - item.inset.bottom - item.inset.top)
-                self.containerView.setCorners(position.corners)
-                self.headerTextView.update(item.headerLayout, origin: NSMakePoint(insets.left, insets.top))
-                self.descTextView.update(item.descLayout, origin: NSMakePoint(insets.left, headerTextView.frame.maxY + 4))
-                self.dateTextView.update(item.dateLayout, origin: NSMakePoint(self.containerView.frame.width - insets.right - item.dateLayout.layoutSize.width, insets.top))
-                self.reset.setFrameOrigin(self.containerView.frame.width - insets.right + 5 - reset.frame.width, self.containerView.frame.height - reset.frame.height - 7)
-            }
+        guard let item = item as? RecentSessionRowItem  else {
+            return
         }
+        let insets = item.viewType.innerInset
+        self.iconView.setFrameOrigin(NSMakePoint(insets.left, insets.top))
+        let left: CGFloat = (item.icon.0 != nil ? 38 : 0)
+        self.headerTextView.update(item.headerLayout, origin: NSMakePoint(left + insets.left, insets.top - 2))
+        self.descTextView.update(item.descLayout, origin: NSMakePoint(left + insets.left, headerTextView.frame.maxY + 4))
+        self.dateTextView.update(item.dateLayout, origin: NSMakePoint(self.containerView.frame.width - insets.right - item.dateLayout.layoutSize.width, insets.top))
+
     }
     
     required init?(coder: NSCoder) {

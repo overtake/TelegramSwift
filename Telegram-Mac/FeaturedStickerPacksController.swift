@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private final class FeaturedStickerPacksControllerArguments {
     let context: AccountContext
@@ -166,9 +166,9 @@ class FeaturedStickerPacksController: TableViewController {
         actionsDisposable.add(resolveDisposable)
         
         let arguments = FeaturedStickerPacksControllerArguments(context: context, openStickerPack: { info in
-           showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.stickers(.name(info.shortName))]), for: context.window)
         }, addPack: { info in
-            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.stickers(.name(info.shortName))]), for: context.window)
         })
         
         let stickerPacks = Promise<CombinedView>()

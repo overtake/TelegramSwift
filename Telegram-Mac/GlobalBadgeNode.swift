@@ -11,7 +11,7 @@ import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+import InAppSettings
 
 
 
@@ -24,14 +24,13 @@ class GlobalBadgeNode: Node {
     private var textLayout:(TextNodeLayout, TextNode)?
     var customLayout: Bool = false
     var xInset:CGFloat = 0
+    var onUpdate:(()->Void)?
     private var attributedString:NSAttributedString? {
         didSet {
             if let attributedString = attributedString {
                 textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .middle, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .left)
                 size = NSMakeSize(textLayout!.0.size.width + 8, textLayout!.0.size.height + 7)
                 size = NSMakeSize(max(size.height,size.width), size.height)
-                
-                
             } else {
                 textLayout = nil
                 size = NSZeroSize
@@ -54,6 +53,7 @@ class GlobalBadgeNode: Node {
                 }
             }
             view?.superview?.needsLayout = true
+            onUpdate?()
         }
     }
     
@@ -82,7 +82,7 @@ class GlobalBadgeNode: Node {
     
     private let getColor: (Bool) -> NSColor
     
-    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping(Bool) -> NSColor = { _ in return theme.colors.redUI }, fontSize: CGFloat = .small, applyFilter: Bool = true, filter: ChatListFilter? = nil, removeWhenSidebar: Bool = false) {
+    init(_ account: Account, sharedContext: SharedAccountContext, dockTile: Bool = false, collectAllAccounts: Bool = false, excludePeerId:PeerId? = nil, excludeGroupId: PeerGroupId? = nil, view: View? = nil, layoutChanged:(()->Void)? = nil, getColor: @escaping(Bool) -> NSColor = { _ in return theme.colors.redUI }, fontSize: CGFloat = .small, applyFilter: Bool = true, filter: ChatListFilter? = nil, removeWhenSidebar: Bool = false, sync: Bool = false) {
         self.account = account
         self.excludePeerId = excludePeerId
         self.layoutChanged = layoutChanged
@@ -106,7 +106,7 @@ class GlobalBadgeNode: Node {
         
         
         if let peerId = excludePeerId {
-            items.append(.peer(peerId))
+            items.append(.peer(id: peerId, handleThreads: true))
             let notificationKeyView: PostboxViewKey = .peerNotificationSettings(peerIds: Set([peerId]))
             peerSignal = combineLatest(account.postbox.loadedPeerWithId(peerId), account.postbox.combinedView(keys: [notificationKeyView]) |> map { view in
                 return ((view.views[notificationKeyView] as? PeerNotificationSettingsView)?.notificationSettings[peerId])?.isRemovedFromTotalUnreadCount(default: false) ?? false
@@ -126,14 +126,12 @@ class GlobalBadgeNode: Node {
         
         var unreadCountItems: [UnreadMessageCountsItem] = []
         unreadCountItems.append(.total(nil))
-        var keys: [PostboxViewKey] = []
-        let unreadKey: PostboxViewKey
-        unreadKey = .unreadCounts(items: [])
+        let keys: [PostboxViewKey] = []
         
         var s:Signal<Result, NoError>
         
         if let filter = filter {
-            s = chatListFilterItems(account: account, accountManager: sharedContext.accountManager) |> map { value in
+            s = chatListFilterItems(engine: TelegramEngine(account: account), accountManager: sharedContext.accountManager) |> map { value in
                 if let unread = value.count(for: filter) {
                     return Result(dockText: nil, total: Int32(unread.count))
                 } else {
@@ -185,9 +183,12 @@ class GlobalBadgeNode: Node {
             return Result(dockText: $0.dockText, total: $1.sidebar && removeWhenSidebar ? 0 : $0.total)
         } |> deliverOnMainQueue
         
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        
         self.disposable.set(s.start(next: { [weak self] result in
             if let strongSelf = self {
-                
+                                
                 if result.total == 0 {
                     strongSelf.attributedString = nil
                 } else {
@@ -200,7 +201,14 @@ class GlobalBadgeNode: Node {
                     forceUpdateStatusBarIconByDockTile(sharedContext: sharedContext)
                 }
             }
+            if sync {
+                semaphore.signal()
+            }
         }))
+        
+        if sync {
+            semaphore.wait()
+        }
     }
     
     override public func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -273,6 +281,7 @@ private func generateStatusBarIcon(_ unreadCount: Int, color: NSColor) -> NSImag
             ctx.round(size, size.height/2.0)
             ctx.fill(rect)
             
+            ctx.setBlendMode(.clear)
             let focus = NSMakePoint((rect.width - textLayout.0.size.width) / 2, (rect.height - textLayout.0.size.height) / 2)
             textLayout.1.draw(NSMakeRect(focus.x, 2, textLayout.0.size.width, textLayout.0.size.height), in: ctx, backingScaleFactor: 2.0, backgroundColor: .white)
             
@@ -280,17 +289,30 @@ private func generateStatusBarIcon(_ unreadCount: Int, color: NSColor) -> NSImag
     } else {
         generated = nil
     }
-    
+        
     let full = generateImage(NSMakeSize(24, 20), contextGenerator: { size, ctx in
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
         
  
         ctx.draw(icon.precomposed(color), in: NSMakeRect((size.width - icon.size.width) / 2, 2, icon.size.width, icon.size.height))
+        
+        
         if let generated = generated {
+            ctx.setBlendMode(.clear)
+            
+            let cgPath = CGMutablePath()
+            
+            let clearSize = NSMakeSize(generated.size.width + 1, generated.size.height + 1)
+            cgPath.addRoundedRect(in: NSMakeRect(rect.width - clearSize.width / System.backingScale, 0, clearSize.width / System.backingScale, clearSize.height / System.backingScale), cornerWidth: clearSize.height / System.backingScale / 2, cornerHeight: clearSize.height / System.backingScale / 2)
+            
+            ctx.addPath(cgPath)
+            ctx.fillPath()
+            ctx.setBlendMode(.normal)
             ctx.draw(generated, in: NSMakeRect(rect.width - generated.size.width / System.backingScale, 0, generated.size.width / System.backingScale, generated.size.height / System.backingScale))
         }
     })!
     let image = NSImage(cgImage: full, size: full.backingSize)
+    image.isTemplate = true
     return image
 }

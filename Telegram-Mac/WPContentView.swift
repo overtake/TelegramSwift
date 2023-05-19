@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 
 
 class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
@@ -141,13 +141,13 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
                 
              addSubview(instantPageButton!)
             }
-            instantPageButton?.layer?.borderColor = theme.colors.accentIcon.cgColor
+            instantPageButton?.layer?.borderColor = layout.presentation.activity.cgColor
 
-            instantPageButton?.set(color: theme.colors.accentIcon, for: .Normal)
+            instantPageButton?.set(color: layout.presentation.activity, for: .Normal)
          
             instantPageButton?.set(font: .medium(.title), for: .Normal)
             instantPageButton?.set(background: .clear, for: .Normal)
-            instantPageButton?.set(text: layout.isProxyConfig ? L10n.chatApplyProxy : L10n.chatInstantView, for: .Normal)
+            instantPageButton?.set(text: layout.isProxyConfig ? strings().chatApplyProxy : strings().chatInstantView, for: .Normal)
             _ = instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 30), thatFit: false)
             
             instantPageButton?.removeAllHandlers()
@@ -165,7 +165,8 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
             instantPageButton?.removeFromSuperview()
             instantPageButton = nil
         }
-        
+        let color = self.backgroundColor
+        self.backgroundColor = color
         self.needsLayout = true
     }
     

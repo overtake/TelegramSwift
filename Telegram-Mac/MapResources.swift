@@ -1,11 +1,12 @@
 import Foundation
 import Postbox
 import TelegramCore
-import SyncCore
+
 import MapKit
 import SwiftSignalKit
+import TGUIKit
 
-public struct MapSnapshotMediaResourceId: MediaResourceId {
+public struct MapSnapshotMediaResourceId {
     public let latitude: Double
     public let longitude: Double
     public let width: Int32
@@ -18,14 +19,7 @@ public struct MapSnapshotMediaResourceId: MediaResourceId {
     public var hashValue: Int {
         return self.uniqueId.hashValue
     }
-    
-    public func isEqual(to: MediaResourceId) -> Bool {
-        if let to = to as? MapSnapshotMediaResourceId {
-            return self.latitude == to.latitude && self.longitude == to.longitude && self.width == to.width && self.height == to.height && self.zoom == to.zoom
-        } else {
-            return false
-        }
-    }
+
 }
 
 public class MapSnapshotMediaResource: TelegramMediaResource {
@@ -40,6 +34,10 @@ public class MapSnapshotMediaResource: TelegramMediaResource {
         self.width = width
         self.height = height
         self.zoom = zoom
+    }
+    
+    public var size: Int64? {
+        return nil
     }
     
     public required init(decoder: PostboxDecoder) {
@@ -60,7 +58,7 @@ public class MapSnapshotMediaResource: TelegramMediaResource {
     }
     
     public var id: MediaResourceId {
-        return MapSnapshotMediaResourceId(latitude: self.latitude, longitude: self.longitude, width: self.width, height: self.height, zoom: self.zoom)
+        return .init(MapSnapshotMediaResourceId(latitude: self.latitude, longitude: self.longitude, width: self.width, height: self.height, zoom: self.zoom).uniqueId)
     }
     
     public func isEqual(to: MediaResource) -> Bool {
@@ -71,6 +69,26 @@ public class MapSnapshotMediaResource: TelegramMediaResource {
         }
     }
 }
+
+final class MapSnapshotMediaResourceRepresentation: CachedMediaResourceRepresentation {
+    public let keepDuration: CachedMediaRepresentationKeepDuration = .shortLived
+    
+    public var uniqueId: String {
+        return "cached"
+    }
+    
+    public init() {
+    }
+    
+    public func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
+        if let _ = to as? MapSnapshotMediaResourceRepresentation {
+            return true
+        } else {
+            return false
+        }
+    }
+}
+
 
 let TGGoogleMapsOffset: Int = 268435456
 let TGGoogleMapsRadius = Double(TGGoogleMapsOffset) / Double.pi
@@ -88,7 +106,9 @@ private func adjustGMapLatitude(_ latitude: Double, offset: Int, zoom: Int) -> D
     return yToLatitude(latitudeToY(latitude) + t)
 }
 
-func fetchMapSnapshotResource(resource: MapSnapshotMediaResource) -> Signal<MediaResourceDataFetchResult, MediaResourceDataFetchError> {
+
+
+func fetchMapSnapshotResource(resource: MapSnapshotMediaResource) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     return Signal { subscriber in
         let disposable = MetaDisposable()
         
@@ -107,8 +127,12 @@ func fetchMapSnapshotResource(resource: MapSnapshotMediaResource) -> Signal<Medi
                     let imageRep = NSBitmapImageRep(data: data)
                     let compressedData: Data? = imageRep?.representation(using: NSBitmapImageRep.FileType.jpeg, properties: [:])
                     if let data = compressedData {
-                        subscriber.putNext(MediaResourceDataFetchResult.dataPart(resourceOffset: 0, data: data, range: 0 ..< data.count, complete: true))
-                        subscriber.putCompletion()
+                        
+                        let tempFile = TempBox.shared.tempFile(fileName: "image.jpg")
+                        if let _ = try? data.write(to: URL(fileURLWithPath: tempFile.path), options: .atomic) {
+                            subscriber.putNext(.tempFile(tempFile))
+                            subscriber.putCompletion()
+                        }
                     }
                 }
             })
@@ -116,7 +140,6 @@ func fetchMapSnapshotResource(resource: MapSnapshotMediaResource) -> Signal<Medi
                 snapshotter.cancel()
             })
         }
-        
         return disposable
     }
 }

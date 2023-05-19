@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-import SyncCore
+
 
 
 private struct PollResultState : Equatable {
@@ -138,7 +138,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
             
             let text = option.option.text
             let additionText:String = " — \(option.percent)%"
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_header(option.option.opaqueIdentifier), equatable: InputDataEquatable(state), item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_header(option.option.opaqueIdentifier), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
                 
                 let collapse:(()->Void)?
                 if state.expandedOptions[option.option.opaqueIdentifier] != nil {
@@ -149,7 +149,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                     collapse = nil
                 }
                 
-                return PollResultStickItem(initialSize, stableId: stableId, left: text, additionText: additionText, right: poll.isQuiz ? L10n.chatQuizTotalVotesCountable(option.votesCount) : L10n.chatPollTotalVotes1Countable(option.votesCount), collapse: collapse, viewType: .textTopItem)
+                return PollResultStickItem(initialSize, stableId: stableId, left: text, additionText: additionText, right: poll.isQuiz ? strings().chatQuizTotalVotesCountable(option.votesCount) : strings().chatPollTotalVotes1Countable(option.votesCount), collapse: collapse, viewType: .textTopItem)
                 
             }))
             index += 1
@@ -196,10 +196,10 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                                 viewType = .innerItem
                             }
                         }
-                        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.opaqueIdentifier, peer.id), equatable: InputDataEquatable(option), item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), generalType: .none, viewType: viewType, action: {
+                        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.opaqueIdentifier, peer.id), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
+                            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), generalType: .none, viewType: viewType, action: {
                                 openProfile(peer.id)
-                            })
+                            }, highlightVerified: true)
                         }))
                         index += 1
                     }
@@ -211,13 +211,13 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                 
                 if remainingCount > 0 {
                     if optionState.isLoadingMore && state.expandedOptions[option.option.opaqueIdentifier] != nil {
-                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_for(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_for(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
                             return LoadingTableItem(initialSize, height: 41, stableId: stableId, viewType: .lastItem)
                         }))
                         index += 1
                     } else {
-                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
-                            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
+                            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: {
                                 expandOption(option.option.opaqueIdentifier)
                             }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
                         }))
@@ -254,14 +254,14 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
                         }
                     }
                     
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_empty(Int(index)), equatable: nil, item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_empty(Int(index)), equatable: nil, comparable: nil, item: { initialSize, stableId in
                         return PeerEmptyHolderItem(initialSize, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), viewType: viewType)
                     }))
                     index += 1
                 }
                 if let remainingCount = remainingCount {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), item: { initialSize, stableId in
-                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUpDisabled, textInset: 52, thumbInset: 4), enabled: false)
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_load_more(option.option.opaqueIdentifier), equatable: InputDataEquatable(option), comparable: nil, item: { initialSize, stableId in
+                        return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().pollResultsLoadMoreCountable(remainingCount), nameStyle: blueActionButton, type: .none, viewType: .lastItem, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUpDisabled, textInset: 52, thumbInset: 4), enabled: false)
                     }))
                     index += 1
                 }
@@ -285,7 +285,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
     
     var scrollToOption = scrollToOption
     
-    let resultsContext: PollResultsContext = PollResultsContext(account: context.account, messageId: message.id, poll: poll)
+    let resultsContext: PollResultsContext = context.engine.messages.pollResults(messageId: message.id, poll: poll) 
 
     let initialState = PollResultState(results: nil, poll: poll, shouldLoadMore: nil, expandedOptions: [:])
     
@@ -322,13 +322,13 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
         InputDataSignalValue(entries: $0, animated: true)
     }
     
-    let controller = InputDataController(dataSignal: signal, title: !poll.isQuiz ? L10n.pollResultsTitlePoll : L10n.pollResultsTitleQuiz)
+    let controller = InputDataController(dataSignal: signal, title: !poll.isQuiz ? strings().pollResultsTitlePoll : strings().pollResultsTitleQuiz)
     
     controller.getBackgroundColor = {
         theme.colors.background
     }
     
-    controller.contextOject = resultsContext
+    controller.contextObject = resultsContext
     
     let modalController = InputDataModalController(controller)
     
@@ -336,7 +336,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
         modalController?.close()
     })
     
-    controller.centerModalHeader = ModalHeaderData(title: controller.defaultBarTitle, subtitle: poll.isQuiz ? L10n.chatQuizTotalVotesCountable(Int(poll.results.totalVoters ?? 0)) : L10n.chatPollTotalVotes1Countable(Int(poll.results.totalVoters ?? 0)))
+    controller.centerModalHeader = ModalHeaderData(title: controller.defaultBarTitle, subtitle: poll.isQuiz ? strings().chatQuizTotalVotesCountable(Int(poll.results.totalVoters ?? 0)) : strings().chatPollTotalVotes1Countable(Int(poll.results.totalVoters ?? 0)))
     
     controller.getBackgroundColor = {
         theme.colors.listBackground
@@ -345,7 +345,7 @@ func PollResultController(context: AccountContext, message: Message, scrollToOpt
    
     
     openProfile = { [weak modalController] peerId in
-        context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
         modalController?.close()
     }
     controller.afterTransaction = { controller in

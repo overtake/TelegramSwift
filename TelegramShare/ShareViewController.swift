@@ -10,11 +10,12 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+import ApiCredentials
 import SwiftSignalKit
-import SyncCore
+import ThemeSettings
 import OpenSSLEncryption
-
+import BuildConfig
+import Localization
 class ShareViewController: NSViewController {
 
     override var nibName: NSNib.Name? {
@@ -33,34 +34,21 @@ class ShareViewController: NSViewController {
         super.viewDidLoad()
         
         
-        
-        declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
-        declareEncodable(InAppNotificationSettings.self, f: { InAppNotificationSettings(decoder: $0) })
 
-        
-        let appGroupName = ApiEnvironment.group
-        guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName) else {
+        guard let containerUrl = ApiEnvironment.containerURL else {
             return
         }
-        
-        let rootPath = containerUrl.path
-        
-        let deviceSpecificEncryptionParameters = BuildConfig.deviceSpecificEncryptionParameters(rootPath, baseAppBundleId: Bundle.main.bundleIdentifier!)
-        let encryptionParameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
+        initializeAccountManagement()
 
         
         
-        let accountManager = AccountManager(basePath: containerUrl.path + "/accounts-metadata")
-        let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: 90, voipVersions: [], appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
-        
-        let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, displayUpgradeProgress: { _ in })
-        
-        let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/sharelogs")
+        let rootPath = containerUrl.path
+        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false, isReadOnly: true, useCaches: true, removeDatabaseOnError: true)
+
+        let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/logs")
         logger.logToConsole = false
         logger.logToFile = false
         Logger.setSharedLogger(logger)
-        
-        
         
         let themeSemaphore = DispatchSemaphore(value: 0)
         var themeSettings: ThemePaletteSettings = ThemePaletteSettings.defaultTheme
@@ -73,7 +61,7 @@ class ShareViewController: NSViewController {
         var localization: LocalizationSettings? = nil
         let localizationSemaphore = DispatchSemaphore(value: 0)
         _ = (accountManager.transaction { transaction in
-            localization = transaction.getSharedData(SharedDataKeys.localizationSettings) as? LocalizationSettings
+            localization = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self)
             localizationSemaphore.signal()
         }).start()
         localizationSemaphore.wait()
@@ -82,11 +70,57 @@ class ShareViewController: NSViewController {
             applyShareUILocalization(localization)
         }
         
-        updateTheme(with: themeSettings)
+        telegramUpdateTheme(updateTheme(with: themeSettings), window: nil, animated: false)
+
+        
+        let appEncryption = AppEncryptionParameters(path: rootPath)
+        
+        if let deviceSpecificEncryptionParameters = appEncryption.decrypt() {
+            let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: deviceSpecificEncryptionParameters.key)!, salt: ValueBoxEncryptionParameters.Salt(data: deviceSpecificEncryptionParameters.salt)!)
+            launchExtension(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
+        } else {
+            let extensionContext = self.extensionContext!
+            
+            self.passlock = SEPasslockController(checkNextValue: { passcode in
+                appEncryption.applyPasscode(passcode)
+                if let params = appEncryption.decrypt() {
+                    let parameters = ValueBoxEncryptionParameters(forceEncryptionIfNoSet: true, key: ValueBoxEncryptionParameters.Key(data: params.key)!, salt: ValueBoxEncryptionParameters.Salt(data: params.salt)!)
+                    self.launchExtension(accountManager: accountManager, encryptionParameters: parameters, appEncryption: appEncryption)
+                    return true
+                } else {
+                    return false
+                }
+            }, cancelImpl: {
+                let cancelError = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: nil)
+                extensionContext.cancelRequest(withError: cancelError)
+            })
+            
+            self.passlock!.view.frame = self.view.bounds
+            self.view.addSubview(self.passlock!.view)
+        }
+    }
+
+    
+    private func launchExtension(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
         let extensionContext = self.extensionContext!
+
+        let containerUrl = ApiEnvironment.containerURL!
         
-        initializeAccountManagement()
+        let rootPath = containerUrl.path
+
+        let appData: Signal<Data?, NoError> = Signal { subscriber in
+            subscriber.putNext(ApiEnvironment.appData)
+            subscriber.putCompletion()
+            return EmptyDisposable
+        } |> runOn(.concurrentBackgroundQueue())
+        
+        let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: 90, voipVersions: [], appData: appData, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), resolvedDeviceName: ApiEnvironment.resolvedDeviceName)
+        
+        let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: { _ in })
+        
+      
+
         
         let rawAccounts = sharedContext.activeAccounts
             |> map { _, accounts, _ -> [Account] in
@@ -95,45 +129,17 @@ class ShareViewController: NSViewController {
         let _ = (sharedAccountInfos(accountManager: sharedContext.accountManager, accounts: rawAccounts)
             |> deliverOn(Queue())).start(next: { infos in
                 storeAccountsData(rootPath: rootPath, accounts: infos)
-        })
-        
-        
-        var access: PostboxAccessChallengeData = .none
-        let accessSemaphore = DispatchSemaphore(value: 0)
-        _ = (accountManager.transaction { transaction in
-            access = transaction.getAccessChallengeData()
-            accessSemaphore.signal()
-        }).start()
-        accessSemaphore.wait()
-        
-        switch access {
-        case .numericalPassword, .plaintextPassword:
-            let passlock = SEPasslockController(sharedContext, cancelImpl: {
-                let cancelError = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: nil)
-                extensionContext.cancelRequest(withError: cancelError)
             })
-            self.passlock = passlock
-            
-            let passlockView = passlock.view
-            _ = (passlock.doneValue |> filter { $0 } |> take(1)).start(next: { [weak passlockView] _ in
-                passlockView?._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.2, timingFunction: .spring, completion: { _ in
-                    passlockView?.removeFromSuperview()
-                    self.passlock = nil
-                })
-            })
-            passlock.view.frame = self.view.bounds
-            self.view.addSubview(passlock.view)
-        default:
-            break
-        }
+        
+        
         
         let readyDisposable = MetaDisposable()
         _ = (self.context.get() |> mapToSignal { context -> Signal<AuthorizedApplicationContext?, NoError> in
             return .single(context)
             
-        } |> deliverOnMainQueue).start(next: { context in
+            } |> deliverOnMainQueue).start(next: { context in
                 assert(Queue.mainQueue().isCurrent())
-            
+                
                 if let context = context {
                     context.rootController.view.frame = self.view.bounds
                     
@@ -143,6 +149,9 @@ class ShareViewController: NSViewController {
                             contextValue.rootController.view.removeFromSuperview()
                         }
                         self.contextValue = context
+                        if let passlock = self.passlock, passlock.isLoaded() {
+                            self.passlock?.view.removeFromSuperview()
+                        }
                         self.view.addSubview(context.rootController.view, positioned: .below, relativeTo: self.view.subviews.first)
                         
                     }))
@@ -169,7 +178,6 @@ class ShareViewController: NSViewController {
                     return nil
                 }
             })
-        
     }
 
 }

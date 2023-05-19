@@ -8,15 +8,15 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
-import SyncCore
-
-let prod_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 1271266957)
-let test_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 708513)
 
 
-var repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: 1271266957)
+let prod_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(1271266957))
+let test_repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(708513))
+
+
+var repliesPeerId: PeerId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(1271266957))
 
 
 extension ChatListFilterPeerCategories {
@@ -25,20 +25,20 @@ extension ChatListFilterPeerCategories {
     static let excludeMuted = ChatListFilterPeerCategories(rawValue: 1 << 7)
     static let excludeArchived = ChatListFilterPeerCategories(rawValue: 1 << 8)
     
-    static let Namespace: Int32 = 10
+    static let Namespace: Int32 = 7
 }
 
 
 final class TelegramFilterCategory : Peer {
     
-    
+    var timeoutAttribute: UInt32? 
     
     var id: PeerId
     
     var indexName: PeerIndexNameRepresentation
     
     var associatedPeerId: PeerId?
-    
+    var associatedMediaIds: [MediaId]?
     var notificationSettingsPeerId: PeerId?
     
     func isEqual(_ other: Peer) -> Bool {
@@ -51,36 +51,36 @@ final class TelegramFilterCategory : Peer {
     let category: ChatListFilterPeerCategories
     
     init(category: ChatListFilterPeerCategories) {
-        self.id = PeerId(namespace: 10, id: category.rawValue)
-        self.indexName = .title(title: "", addressName: "")
+        self.id = PeerId(namespace: Namespaces.Peer.Empty, id: PeerId.Id._internalFromInt64Value(Int64(category.rawValue)))
+        self.indexName = .title(title: "", addressNames: [""])
         self.notificationSettingsPeerId = nil
         self.category = category
     }
     
     var displayTitle: String? {
         if category == .contacts {
-            return L10n.chatListFilterContacts
+            return strings().chatListFilterContacts
         }
         if category == .nonContacts {
-            return L10n.chatListFilterNonContacts
+            return strings().chatListFilterNonContacts
         }
         if category == .groups {
-            return L10n.chatListFilterGroups
+            return strings().chatListFilterGroups
         }
         if category == .channels {
-            return L10n.chatListFilterChannels
+            return strings().chatListFilterChannels
         }
         if category == .bots {
-            return L10n.chatListFilterBots
+            return strings().chatListFilterBots
         }
         if category == .excludeRead {
-            return L10n.chatListFilterReadChats
+            return strings().chatListFilterReadChats
         }
         if category == .excludeMuted {
-            return L10n.chatListFilterMutedChats
+            return strings().chatListFilterMutedChats
         }
         if category == .excludeArchived {
-            return L10n.chatListFilterArchive
+            return strings().chatListFilterArchive
         }
         return nil
     }
@@ -116,12 +116,27 @@ final class TelegramFilterCategory : Peer {
     
     init(decoder: PostboxDecoder) {
         self.id = PeerId(0)
-        self.indexName = .title(title: "", addressName: "")
+        self.indexName = .title(title: "", addressNames: [""])
         self.notificationSettingsPeerId = nil
         self.category = []
     }
     func encode(_ encoder: PostboxEncoder) {
         
+    }
+}
+
+extension CachedPeerData {
+    var photo: TelegramMediaImage? {
+        if let data = self as? CachedUserData {
+            return data.photo
+        }
+        if let data = self as? CachedChannelData {
+            return data.photo
+        }
+        if let data = self as? CachedGroupData {
+            return data.photo
+        }
+        return nil
     }
 }
 
@@ -143,21 +158,33 @@ extension Peer {
     }
     
     
+    var hasVideo: Bool {
+        if let image = self.profileImageRepresentations.first {
+            return image.hasVideo
+        }
+        return false
+    }
     
-    
-    func canSendMessage(_ isisThreadMode: Bool = false) -> Bool {
+    func canSendMessage(_ isThreadMode: Bool = false, threadData: MessageHistoryThreadData? = nil) -> Bool {
         if self.id == repliesPeerId {
             return false
         }
         if let channel = self as? TelegramChannel {
             if case .broadcast(_) = channel.info {
                 return channel.hasPermission(.sendMessages)
-            } else if case .group = channel.info  {
+            } else if case .group = channel.info {
+                
+                if let data = threadData {
+                    if data.isClosed, channel.adminRights == nil && !channel.flags.contains(.isCreator) && !data.isOwnedByMe {
+                        return false
+                    }
+                }
+                
                 switch channel.participationStatus {
                 case .member:
                     return !channel.hasBannedRights(.banSendMessages)
                 case .left:
-                    if isisThreadMode {
+                    if isThreadMode {
                         return !channel.hasBannedRights(.banSendMessages)
                     }
                     return false
@@ -203,7 +230,7 @@ extension Peer {
         switch self {
         case let user as TelegramUser:
             if user.firstName == nil && user.lastName == nil {
-                return L10n.peerDeletedUser
+                return strings().peerDeletedUser
             } else {
                 var name: String = ""
                 if let firstName = user.firstName {
@@ -264,7 +291,7 @@ extension Peer {
             } else if let lastName = user.lastName {
                 return lastName.replacingOccurrences(of: "􀇻", with: "")
             } else {
-                return tr(L10n.peerDeletedUser)
+                return strings().peerDeletedUser
             }
         case let group as TelegramGroup:
             return group.title.replacingOccurrences(of: "􀇻", with: "")
@@ -287,7 +314,7 @@ extension Peer {
             } else if let lastName = user.lastName, !lastName.isEmpty {
                 return [lastName[lastName.startIndex ..< lastName.index(after: lastName.startIndex)].uppercased()]
             } else {
-                let name = L10n.peerDeletedUser
+                let name = strings().peerDeletedUser
                 if !name.isEmpty {
                     return [name[name.startIndex ..< name.index(after: name.startIndex)].uppercased()]
                 }
@@ -321,4 +348,36 @@ extension Peer {
         }
     }
     
+    
+    var isPremium: Bool {
+        if let peer = self as? TelegramUser {
+            return peer.flags.contains(.isPremium)
+        } else {
+            return false
+        }
+    }
+    
+    var isForum: Bool {
+        if let channel = self as? TelegramChannel {
+            return channel.flags.contains(.isForum)
+        } else {
+            return false
+        }
+    }
+    
+    
+}
+
+extension PeerId {
+    static func _optionalInternalFromInt64Value(_ id: Int64) -> PeerId.Id? {
+        let peerId = PeerId.Id._internalFromInt64Value(id)
+        if id < 0 {
+            if let _ = Int32(exactly: id) {
+                return peerId
+            } else {
+                return nil
+            }
+        }
+        return peerId
+    }
 }

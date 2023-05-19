@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 private class UpdateTableItem : GeneralRowItem {
@@ -118,7 +118,7 @@ class UpdateModalController: ModalViewController {
             #else
             (NSApp.delegate as? AppDelegate)?.checkForUpdates("")
             #endif
-        }, cancelTitle: L10n.modalCancel, cancel: { [weak self] in
+        }, cancelTitle: strings().modalCancel, cancel: { [weak self] in
             self?.close()
         }, drawBorder: true, height: 50, alignCancelLeft: true)
         

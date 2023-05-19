@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -23,7 +23,7 @@ private final class TermsView : View {
         addSubview(tableView)
         headerView.addSubview(titleView)
         headerView.border = [.Bottom]
-        let title: TextViewLayout = TextViewLayout.init(NSAttributedString.initialize(string: L10n.termsOfServiceTitle, color: theme.colors.text, font: .medium(.title)))
+        let title: TextViewLayout = TextViewLayout.init(NSAttributedString.initialize(string: strings().termsOfServiceTitle, color: theme.colors.text, font: .medium(.title)))
         title.measure(width: frameRect.width - 20)
         titleView.update(title)
     }
@@ -84,34 +84,40 @@ class TermsModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         let network = self.context.account.network
         let terms = self.terms
-        let account = self.context.account
+        let context = self.context
         let accept:()->Void = { [weak self] in
             guard let `self` = self else {return}
             
-            _ = showModalProgress(signal: acceptTermsOfService(account: account, id: terms.id) |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] in
+            
+            
+            _ = showModalProgress(signal: context.engine.accountData.acceptTermsOfService(id: terms.id) |> deliverOnMainQueue, for: context.window).start(next: { [weak self] in
                 self?.close()
             })
             if let botname = self.proceedBotAfterAgree {
-                _ = (resolvePeerByName(account: self.context.account, name: botname) |> deliverOnMainQueue).start(next: { [weak self] peerId in
+                _ = (self.context.engine.peers.resolvePeerByName(name: botname) |> deliverOnMainQueue).start(next: { [weak self] peerId in
                     guard let `self` = self else {return}
                     if let peerId = peerId {
-                        self.context.sharedContext.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId)))
+                        self.context.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId._asPeer().id)))
                     }
                 })
             }
         }
-        return ModalInteractions(acceptTitle: L10n.termsOfServiceAccept, accept: {
+        return ModalInteractions(acceptTitle: strings().termsOfServiceAccept, accept: {
             if let age = terms.ageConfirmation {
-                confirm(for: mainWindow, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceConfirmAge("\(age)"), okTitle: L10n.termsOfServiceAcceptConfirmAge, successHandler: { _ in
+                confirm(for: mainWindow, header: strings().termsOfServiceTitle, information: strings().termsOfServiceConfirmAge("\(age)"), okTitle: strings().termsOfServiceAcceptConfirmAge, successHandler: { _ in
                    accept()
                 })
             } else {
                 accept()
             }
-        }, cancelTitle: L10n.termsOfServiceDisagree, cancel: {
-            confirm(for: mainWindow, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceDisagreeText, okTitle: L10n.termsOfServiceDisagreeOK, successHandler: { _ in
-                confirm(for: mainWindow, header: L10n.termsOfServiceTitle, information: L10n.termsOfServiceDisagreeTextLast, okTitle: L10n.termsOfServiceDisagreeTextLastOK, successHandler: { _ in
-                     _ = resetAccountDueTermsOfService(network: network).start()
+        }, cancelTitle: strings().termsOfServiceDisagree, cancel: {
+            confirm(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeText, okTitle: strings().termsOfServiceDisagreeOK, successHandler: { _ in
+                confirm(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeTextLast, okTitle: strings().termsOfServiceDisagreeTextLastOK, successHandler: { _ in
+                    _ = showModalProgress(signal: context.engine.auth.deleteAccount(reason: "GDPR", password: nil), for: context.window).start(error: { _ in
+                        showModalText(for: context.window, text: strings().unknownError)
+                    }, completed: {
+                        _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: true).start()
+                    })
                 })
             })
         }, drawBorder: true, height: 50, alignCancelLeft: true)
@@ -181,7 +187,7 @@ class TermsModalController: ModalViewController {
         genericView.updateText(attributedString, openBot: { [weak self] botname in
             guard let `self` = self else {return}
             self.proceedBotAfterAgree = botname
-            self.show(toaster: ControllerToaster(text: L10n.termsOfServiceProceedBot(botname)))
+            self.show(toaster: ControllerToaster(text: strings().termsOfServiceProceedBot(botname)))
         })
         
         

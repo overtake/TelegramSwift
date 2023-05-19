@@ -11,7 +11,7 @@ import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 enum PopularItemType : Hashable {
     
@@ -53,11 +53,11 @@ enum PopularItemType : Hashable {
 
 private final class PopularPeerItem : TableRowItem {
     fileprivate let type: PopularItemType
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
     fileprivate let actionHandler: (PopularItemType)->Void
-    init(type: PopularItemType, account: Account, action: @escaping(PopularItemType)->Void) {
+    init(type: PopularItemType, context: AccountContext, action: @escaping(PopularItemType)->Void) {
         self.type = type
-        self.account = account
+        self.context = context
         self.actionHandler = action
         super.init(NSZeroSize)
     }
@@ -76,14 +76,12 @@ private final class PopularPeerItem : TableRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
+        let context = self.context
         switch type {
         case let .peer(peer, _, _):
-            items.append(ContextMenuItem(L10n.searchPopularDelete, handler: { [weak self] in
-                guard let `self` = self else {return}
-               // self.table?.remove(at: self.index, redraw: true, animation: .effectFade)
-                _ = removeRecentPeer(account: self.account, peerId: peer.id).start()
-  
-            }))
+            items.append(ContextMenuItem(strings().searchPopularDelete, handler: {
+                _ = context.engine.peers.removeRecentPeer(peerId: peer.id).start()
+            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
         default:
             break
         }
@@ -139,11 +137,11 @@ private final class PopularPeerItemView : HorizontalRowView {
         case .savedMessages:
             let icon = theme.icons.searchSaved
             imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
-            text = L10n.searchPopularSavedMessages
+            text = strings().searchPopularSavedMessages
         case let .articles(unreadCount):
             let icon = theme.icons.searchArticle
             imageView.setSignal(generateEmptyPhoto(imageView.frame.size, type: .icon(colors: theme.colors.peerColors(4), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(imageView.frame.size.width - 20, imageView.frame.size.height - 20)), cornerRadius: nil)) |> map {($0, false)})
-            text = L10n.searchPopularArticles
+            text = strings().searchPopularArticles
             if unreadCount > 0 {
                 let node = BadgeNode(NSAttributedString.initialize(string: "\(unreadCount)", color: .white, font: .medium(11)), theme.chatList.badgeBackgroundColor)
                 node.view = badgeView
@@ -154,7 +152,7 @@ private final class PopularPeerItemView : HorizontalRowView {
                 badgeView.removeFromSuperview()
             }
         case let .peer(peer, unreadBadge, isActive):
-            imageView.setPeer(account: item.account, peer: peer)
+            imageView.setPeer(account: item.context.account, peer: peer)
             text = peer.compactDisplayTitle
             
             activeImage.isHidden = !isActive
@@ -211,16 +209,16 @@ private final class PopularPeerItemView : HorizontalRowView {
 class PopularPeersRowItem: GeneralRowItem {
 
     let peers: [Peer]
-    fileprivate let account: Account
+    fileprivate let context: AccountContext
     fileprivate let unreadArticles: Int32
     fileprivate let selfPeer: Peer
     fileprivate let actionHandler: (PopularItemType)->Void
     fileprivate let articlesEnabled: Bool
     fileprivate let unread: [PeerId : UnreadSearchBadge]
     fileprivate let online: [PeerId: Bool]
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, selfPeer: Peer, articlesEnabled: Bool, unreadArticles: Int32, peers:[Peer], unread: [PeerId : UnreadSearchBadge], online: [PeerId: Bool], action: @escaping(PopularItemType)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, selfPeer: Peer, articlesEnabled: Bool, unreadArticles: Int32, peers:[Peer], unread: [PeerId : UnreadSearchBadge], online: [PeerId: Bool], action: @escaping(PopularItemType)->Void) {
         self.peers = Array(peers.prefix(15))
-        self.account = account
+        self.context = context
         self.unread = unread
         self.online = online
         self.articlesEnabled = articlesEnabled
@@ -264,13 +262,13 @@ private final class PopularPeersRowView : TableRowView {
         tableView.removeAll(animation: .effectFade)
         
         guard let item = item as? PopularPeersRowItem else {return}
-        _ = tableView.addItem(item: PopularPeerItem(type: .savedMessages(item.selfPeer), account: item.account, action: item.actionHandler))
+        _ = tableView.addItem(item: PopularPeerItem(type: .savedMessages(item.selfPeer), context: item.context, action: item.actionHandler))
         if item.articlesEnabled {
-            _ = tableView.addItem(item: PopularPeerItem(type: .articles(item.unreadArticles), account: item.account, action: item.actionHandler))
+            _ = tableView.addItem(item: PopularPeerItem(type: .articles(item.unreadArticles), context: item.context, action: item.actionHandler))
         }
         
         for peer in item.peers {
-            _ = tableView.addItem(item: PopularPeerItem(type: .peer(peer, item.unread[peer.id], item.online[peer.id] ?? false), account: item.account, action: item.actionHandler))
+            _ = tableView.addItem(item: PopularPeerItem(type: .peer(peer, item.unread[peer.id], item.online[peer.id] ?? false), context: item.context, action: item.actionHandler))
         }
         
         tableView.endTableUpdates()

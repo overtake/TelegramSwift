@@ -8,6 +8,7 @@
 
 import Cocoa
 import TGUIKit
+import TGModernGrowingTextView
 
 protocol InputDataRowDataValue {
     var value: InputDataValue { get }
@@ -157,7 +158,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let canMakeTransformations: Bool
     fileprivate let pasteFilter:((String)->(Bool, String))?
     private let maxBlockWidth: CGFloat?
-    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, currentAttributedText: NSAttributedString? = nil, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), maxBlockWidth: CGFloat? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, currentAttributedText: NSAttributedString? = nil, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), maxBlockWidth: CGFloat? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32, customTheme: GeneralRowItem.Theme? = nil) {
         self.filter = filter
         self.limit = limit
         self.updated = updated
@@ -170,17 +171,17 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         let holder = NSMutableAttributedString()
         switch mode {
         case .secure:
-            holder.append(.initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .light(.text)))
+            holder.append(.initialize(string: inputPlaceholder, color: customTheme?.grayTextColor ?? theme.colors.grayText, font: .light(.text)))
         case .plain:
-            holder.append(.initialize(string: inputPlaceholder, color: theme.colors.grayText, font: .normal(.text)))
+            holder.append(.initialize(string: inputPlaceholder, color: customTheme?.grayTextColor ?? theme.colors.grayText, font: .normal(.text)))
         }
         self.inputPlaceholder = holder
-        placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
+        placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: customTheme?.grayTextColor ?? theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
     
         _currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text), coreText: false)
         self.mode = mode
     
-        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, error: error)
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, error: error, customTheme: customTheme)
         
        
         _ = makeSize(initialSize.width, oldWidth: oldWidth)
@@ -218,20 +219,26 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         _ = self.makeSize(self.width, oldWidth: self.width)
     }
     
+    var hasTextLimitation: Bool {
+        if let placeholder = placeholder {
+            return placeholder.hasLimitationText
+        } else {
+            return limit > 30 && defaultText == nil
+        }
+    }
+    
     private(set) fileprivate var additionRightInset: CGFloat = 0
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let currentAttributed: NSMutableAttributedString = NSMutableAttributedString()
-        _ = currentAttributed.append(string: (defaultText ?? ""), font: .normal(.text))
+        _ = currentAttributed.append(string: (defaultText ?? ""), font: .normal(.text), coreText: false)
         currentAttributed.append(currentText)
-        
+                
         if mode == .secure {
             currentAttributed.setAttributedString(.init(string: String(currentText.string.map { _ in return "•" })))
             currentAttributed.addAttribute(.font, value: NSFont.normal(15.0 + 3.22), range: currentAttributed.range)
         }
-        
-        let textStorage = NSTextStorage(attributedString: currentAttributed)
-        
+                
         if let rightItem = self.rightItem {
             switch rightItem {
             case .loading:
@@ -243,28 +250,25 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
             self.additionRightInset = 0
         }
         
+        if hasTextLimitation {
+            self.additionRightInset += 20
+        }
+        
         switch viewType {
         case .legacy:
-            let textContainer = NSTextContainer(size: NSMakeSize(initialSize.width - inset.left - inset.right - textFieldLeftInset - additionRightInset, .greatestFiniteMagnitude))
-            let layoutManager = NSLayoutManager()
-            layoutManager.addTextContainer(textContainer)
-            textStorage.addLayoutManager(layoutManager)
-            layoutManager.ensureLayout(for: textContainer)
-            self.realInputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 6)
-            inputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 6)
+            let height = currentAttributed.sizeFittingWidth(initialSize.width - inset.left - inset.right - textFieldLeftInset - additionRightInset).height
+            self.realInputHeight = max(34, height + 6)
+            inputHeight = max(34, height + 6)
         case let .modern(_, insets):
-            let textContainer = NSTextContainer(size: NSMakeSize(self.blockWidth - insets.left - insets.right - textFieldLeftInset - additionRightInset, .greatestFiniteMagnitude))
-            let layoutManager = NSLayoutManager()
-            layoutManager.addTextContainer(textContainer)
-            textStorage.addLayoutManager(layoutManager)
-            layoutManager.ensureLayout(for: textContainer)
+            let height = currentAttributed.sizeFittingWidth(self.blockWidth - insets.left - insets.right - textFieldLeftInset - additionRightInset).height
+            
             switch self.mode {
             case .plain:
-                self.realInputHeight = max(16, layoutManager.usedRect(for: textContainer).height)
+                self.realInputHeight = max(16, height)
             case .secure:
-                self.realInputHeight = max(22, layoutManager.usedRect(for: textContainer).height)
+                self.realInputHeight = max(22, height)
             }
-            inputHeight = max(34, layoutManager.usedRect(for: textContainer).height + 1)
+            inputHeight = max(34, height + 1)
         }
         
         let success = super.makeSize(width, oldWidth: oldWidth)
@@ -322,14 +326,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         
     //    textView.max_height = 34
       // .isSingleLine = true
-        textView.delegate = self
         placeholderTextView.userInteractionEnabled = false
         placeholderTextView.isSelectable = false
         
         secureField.isBordered = false
         secureField.isBezeled = false
         secureField.focusRingType = .none
-        secureField.delegate = self
         secureField.drawsBackground = true
         secureField.isEditable = true
         secureField.isSelectable = true
@@ -339,7 +341,10 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         secureField.font = .normal(.text)
         secureField.textView?.insertionPointColor = theme.colors.text
         secureField.sizeToFit()
-        
+                
+    }
+    
+    deinit {
     }
     
     override func shakeView() {
@@ -425,7 +430,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                 if placeholder.drawBorderAfterPlaceholder {
                     return NSMakeRect(innerInsets.left + item.textFieldLeftInset + 4, self.containerView.frame.height - .borderSize, self.containerView.frame.width - innerInsets.left - innerInsets.right - item.textFieldLeftInset - 4, .borderSize)
                 } else {
-                    return NSMakeRect(innerInsets.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - item.inset.left - innerInsets.right, .borderSize)
+                    return NSMakeRect(innerInsets.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - innerInsets.left - innerInsets.right, .borderSize)
                 }
             } else {
                 return NSMakeRect(innerInsets.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - innerInsets.left - innerInsets.right, .borderSize)
@@ -513,7 +518,11 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     
     public func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         if let item = item as? InputDataRowItem {
-            return item.limit
+            if item.hasTextLimitation {
+                return 10000
+            } else {
+                return item.limit
+            }
         }
         return 100000
     }
@@ -569,38 +578,9 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             item.inputHeight = height
             
             
-            switch item.viewType {
-            case .legacy:
-                textLimitation.change(pos: NSMakePoint(containerView.frame.width - item.inset.right - textLimitation.frame.width + 4, item.height - textLimitation.frame.height), animated: animated)
-            case let .modern(_, insets):
-                textLimitation.change(pos: NSMakePoint(item.blockWidth - insets.right - textLimitation.frame.width , item.height - textLimitation.frame.height - insets.bottom), animated: animated)
-            }
-            
             item.calculateHeight()
             
-            change(size: NSMakeSize(item.width, item.height), animated: animated)
-
-            let containerRect: NSRect
-            switch item.viewType {
-            case .legacy:
-                containerRect = self.bounds
-            case .modern:
-                containerRect = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), item.inset.top, item.blockWidth, item.height - item.inset.bottom - item.inset.top)
-            }
-            containerView.change(size: containerRect.size, animated: animated, corners: item.viewType.corners)
-            containerView.change(pos: containerRect.origin, animated: animated)
-            
-            if let placeholder = item.placeholder {
-                if placeholder.drawBorderAfterPlaceholder {
-                    separator.change(pos: NSMakePoint(separator.frame.minX, self.containerView.frame.height - .borderSize), animated: animated)
-                } else {
-                    separator.change(pos: NSMakePoint(separator.frame.minX, self.containerView.frame.height - .borderSize), animated: animated)
-                }
-            } else {
-                separator.change(pos: NSMakePoint(separator.frame.minX, self.containerView.frame.height - .borderSize), animated: animated)
-            }
-            
-            table.noteHeightOfRow(item.index, animated)
+            table.reloadData(row: item.index, animated: animated)
         }
         
     }
@@ -628,9 +608,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         if let item = item as? InputDataRowItem {
             let updated = item.filter(string)
             if updated != string {
-                
                 textView.setString(updated, animated: true)
-                NSSound.beep()
             } else {
                 item.currentText = textView.attributedString()
             }
@@ -643,7 +621,6 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             containerView.needsDisplay = true
         }
     }
-    
     
     
     func controlTextDidChange(_ obj: Notification) {
@@ -686,23 +663,64 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
 //    }
     
     override var backdorColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.backgroundColor
+        }
         return theme.colors.background
+    }
+    
+    var textColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.textColor
+        }
+        return theme.colors.text
+    }
+    var linkColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.accentColor
+        }
+        return theme.colors.accent
+    }
+    var grayText: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.grayTextColor
+        }
+        return theme.colors.grayText
+    }
+    var redColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.redColor
+        }
+        return theme.colors.redUI
+    }
+    var borderColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.borderColor
+        }
+        return theme.colors.border
+    }
+    
+    var indicatorColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.indicatorColor
+        }
+        return theme.colors.indicatorColor
     }
     
     override func updateColors() {
         placeholderTextView.backgroundColor = backdorColor
         textView.cursorColor = theme.colors.indicatorColor
         textView.textFont = .normal(.text)
-        textView.textColor = theme.colors.text
-        textView.linkColor = theme.colors.link
+        textView.textColor = textColor
+        textView.linkColor = linkColor
 
         textView.setBackgroundColor(backdorColor)
         secureField.font = .normal(13)
         secureField.backgroundColor = backdorColor
-        secureField.textColor = theme.colors.text
-        separator.backgroundColor = theme.colors.border
+        secureField.textColor = textColor
+        separator.backgroundColor = borderColor
         containerView.backgroundColor = backdorColor
-        loadingView?.progressColor = theme.colors.grayText
+        loadingView?.progressColor = grayText
         guard let item = item as? InputDataRowItem else {
             return
         }
@@ -743,6 +761,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         }
     }
     
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.secureField.delegate = self
+        self.textView.delegate = self
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         
         guard let item = item as? InputDataRowItem else {return}
@@ -750,6 +774,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         self.textView.animates = false
         super.set(item: item, animated: animated)
         self.textView.animates = true
+
         
         placeholderTextView.isHidden = item.placeholderLayout == nil
         placeholderTextView.update(item.placeholderLayout)
@@ -797,7 +822,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             case .loading:
                 if loadingView == nil {
                     loadingView = ProgressIndicator(frame: NSMakeRect(0, 0, 18, 18))
-                    loadingView?.progressColor = theme.colors.grayText
+                    loadingView?.progressColor = self.grayText
                     containerView.addSubview(loadingView!)
                 }
                 rightActionView.isHidden = true
@@ -871,12 +896,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                 }
             }
             
-            if placeholder.hasLimitationText {
-                textLimitation.isHidden = item.currentText.length < item.limit / 3 * 2
-                textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.currentText.length))", color: theme.colors.grayText, font: .normal(.small))
-            } else {
-                textLimitation.isHidden = true
-            }
+            
         } else {
             if animated {
                 if let placeholderAction = placeholderAction {
@@ -892,6 +912,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                 placeholderAction = nil
             }
             
+           
+            
             switch item.viewType {
             case .legacy:
                 textView._change(pos: NSMakePoint(item.inset.left + item.textFieldLeftInset - 3, 6), animated: animated)
@@ -903,6 +925,15 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                     textView._change(pos: NSMakePoint(textX, textView.frame.minY), animated: animated)
                 }
             }
+        }
+        
+        if item.hasTextLimitation {
+            textLimitation.isHidden = item.currentText.length < item.limit / 3 * 2 || item.currentText.length == item.limit
+            let color: NSColor = item.currentText.length > item.limit ? self.redColor : self.grayText
+            textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.currentText.length))", color: color, font: .normal(.small))
+            textLimitation.sizeToFit()
+        } else {
+            textLimitation.isHidden = true
         }
         
         switch item.mode {

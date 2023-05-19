@@ -21,7 +21,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>7.2.4</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -31,12 +31,11 @@
 			<array>
 				<string>tg</string>
 				<string>telegram</string>
-				<string>ton</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>209821</string>
+	<string>238802</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>
@@ -54,12 +53,16 @@
 	<string>Copyright © 2016 Telegram. All rights reserved.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>We need access to your location so that you can send your current locations and setup Auto-Night theme</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need access to your location so that you can send your current locations.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>We need access to your microphone so that you can record voice messages and make calls.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>SOURCE</key>
+	<string>${SOURCE}</string>
 	<key>SUFeedURL</key>
 	<string>${SFEED_URL}</string>
 	<key>SUPublicDSAKeyFile</key>

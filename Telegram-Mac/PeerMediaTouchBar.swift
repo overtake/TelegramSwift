@@ -129,11 +129,11 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             let segment = NSSegmentedControl()
             segment.segmentStyle = .automatic
             segment.segmentCount = 5
-            segment.setLabel(L10n.peerMediaMedia, forSegment: 0)
-            segment.setLabel(L10n.peerMediaFiles, forSegment: 1)
-            segment.setLabel(L10n.peerMediaLinks, forSegment: 2)
-            segment.setLabel(L10n.peerMediaAudio, forSegment: 3)
-            segment.setLabel(L10n.peerMediaVoice, forSegment: 4)
+            segment.setLabel(strings().peerMediaMedia, forSegment: 0)
+            segment.setLabel(strings().peerMediaFiles, forSegment: 1)
+            segment.setLabel(strings().peerMediaLinks, forSegment: 2)
+            segment.setLabel(strings().peerMediaAudio, forSegment: 3)
+            segment.setLabel(strings().peerMediaVoice, forSegment: 4)
 
             segment.setWidth(93, forSegment: 0)
             segment.setWidth(93, forSegment: 1)
@@ -149,7 +149,7 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         case .forward:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let icon = NSImage(named: NSImage.Name("Icon_TouchBar_MessagesForward"))!
-            let button = NSButton(title: L10n.messageActionsPanelForward, image: icon, target: self, action: #selector(forwardMessages))
+            let button = NSButton(title: strings().messageActionsPanelForward, image: icon, target: self, action: #selector(forwardMessages))
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.accent
             button.imageHugsTitle = true
@@ -160,7 +160,7 @@ class PeerMediaTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         case .delete:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let icon = NSImage(named: NSImage.Name("Icon_TouchBar_MessagesDelete"))!
-            let button = NSButton(title: L10n.messageActionsPanelDelete, image: icon, target: self, action: #selector(deleteMessages))
+            let button = NSButton(title: strings().messageActionsPanelDelete, image: icon, target: self, action: #selector(deleteMessages))
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.redUI
             button.imageHugsTitle = true

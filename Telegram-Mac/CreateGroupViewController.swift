@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 import TGUIKit
@@ -99,16 +99,16 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
             
             switch entry.entry {
             case let .info(_, photo, currentText, viewType):
-                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.context.account, placeholder: L10n.createGroupNameHolder, photo: photo, viewType: viewType, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
+                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.context.account, placeholder: strings().createGroupNameHolder, photo: photo, viewType: viewType, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
             case let .peer(_, peer, _, presence, viewType):
                 
                 var color:NSColor = theme.colors.grayText
-                var string:String = L10n.peerStatusRecently
+                var string:String = strings().peerStatusRecently
                 if let presence = presence as? TelegramUserPresence {
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30), viewType: viewType)
+                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30), viewType: viewType)
             case .section:
                 return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
             }
@@ -174,17 +174,53 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         let table = self.genericView
         let pictureValue = self.pictureValue
         let textValue = self.textValue
+        let context = self.context
         
+        if self.defaultText == "" && result.result.count < 5 {
+            let peers: Signal<String, NoError> = context.account.postbox.transaction { transaction in
+                let main = transaction.getPeer(context.peerId)
+                
+                let rest = result.result
+                .map {
+                    transaction.getPeer($0)
+                }
+                .compactMap { $0 }
+                .map { $0.compactDisplayTitle }
+                .joined(separator: ", ")
+                
+                if let main = main, !rest.isEmpty {
+                    return main.compactDisplayTitle + " & " + rest
+                } else {
+                    return ""
+                }
+                
+            } |> deliverOnMainQueue
+            
+            _ = peers.start(next: { [weak self] title in
+                self?.textValue.set(title)
+                delay(0.2, closure: { [weak self] in
+                    self?.genericView.enumerateItems(with: { item in
+                        if let item = item as? GroupNameRowItem {
+                            let textView = item.view?.firstResponder as? NSTextView
+                            textView?.selectAll(nil)
+                            return false
+                        }
+                        return true
+                    })
+                })
+                
+            })
+        }
 
         let entries = self.entries
         let arguments = CreateGroupArguments(context: context, choicePicture: { select in
             if select {
                 
-                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: mainWindow, completion: { paths in
+                filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                             let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                            showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                            showModal(with: controller, for: context.window, animationType: .scaleCenter)
                             pictureValue.set(controller.result |> map {Optional($0.0.path)})
                            
                             

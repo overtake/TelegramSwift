@@ -27,7 +27,7 @@ class PollResultStickItem: TableStickItem {
         self.leftAdditionLayout = TextViewLayout(.initialize(string: additionText, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .end)
 
         if let collapse = collapse {
-            let attrs = parseMarkdownIntoAttributedString(L10n.pollResultsCollapse, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(11.5), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.link), linkAttribute: { contents in
+            let attrs = parseMarkdownIntoAttributedString(strings().pollResultsCollapse, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(11.5), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .normal(11.5), textColor: theme.colors.link), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  { _ in }))
             }))
             

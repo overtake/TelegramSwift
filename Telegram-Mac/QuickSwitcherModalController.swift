@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 private class QuickSwitcherArguments {
@@ -75,16 +75,16 @@ private enum QuickSwitcherEntry : TableItemListNodeEntry {
     func item(_ arguments: QuickSwitcherArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .peer(_, peer, drawSeparator, secretChat):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), drawCustomSeparator: drawSeparator, isLookSavedMessage: true, action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), drawCustomSeparator: drawSeparator, isLookSavedMessage: true, action: {
                 
             })
         case .separator(_, let id):
             let text:String
             switch id {
             case .recently:
-                text = tr(L10n.quickSwitcherRecently)
+                text = strings().quickSwitcherRecently
             case .popular:
-                text = tr(L10n.quickSwitcherPopular)
+                text = strings().quickSwitcherPopular
             }
             return SeparatorRowItem(initialSize, stableId, string: text.uppercased())
         case .empty:
@@ -148,7 +148,7 @@ private class QuickSwitcherView : View {
         separator.backgroundColor = theme.colors.border
         self.backgroundColor = theme.colors.background
         let attributed = NSMutableAttributedString()
-        _ = attributed.append(string: L10n.quickSwitcherDescription, color: theme.colors.grayText, font: .normal(.text))
+        _ = attributed.append(string: strings().quickSwitcherDescription, color: theme.colors.grayText, font: .normal(.text))
         attributed.detectBoldColorInString(with: .medium(.text))
         let descLayout = TextViewLayout(attributed, alignment: .center)
         descLayout.measure(width: frameRect.width - 20)
@@ -234,7 +234,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         return search |> mapToSignal { search -> Signal<([QuickSwitcherEntry], Bool), NoError> in
             
             if search.request.isEmpty {
-                return combineLatest(recentPeers(account: context.account) |> take(1), context.account.postbox.multiplePeersView(recentlyUsed) |> take(1))
+                return combineLatest(context.engine.peers.recentPeers() |> take(1), context.account.postbox.multiplePeersView(recentlyUsed) |> take(1))
                     |> deliverOn(prepareQueue)
                     |> mapToSignal { recentPeers, view -> Signal<([QuickSwitcherEntry], Bool), NoError> in
                         
@@ -293,11 +293,13 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                     return $0.compactMap({$0.chatMainPeer}).filter({!($0 is TelegramSecretChat)})
                 }
                 
-                let foundRemotePeers = Signal<[Peer], NoError>.single([]) |> then( searchPeers(account: context.account, query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} } )
+                
+                
+                let foundRemotePeers = Signal<[Peer], NoError>.single([]) |> then(context.engine.contacts.searchRemotePeers(query: search.request.lowercased()) |> map { $0.0.map({$0.peer}) + $0.1.map{$0.peer} } )
                 
                 return combineLatest(combineLatest(foundLocalPeers, foundRemotePeers) |> map {$0 + $1}, context.account.postbox.loadedPeerWithId(context.peerId)) |> map { values -> ([Peer], Bool) in
                     var peers = values.0
-                    if L10n.peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(search.request.lowercased()) {
+                    if strings().peerSavedMessages.lowercased().hasPrefix(search.request.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(search.request.lowercased()) {
                         peers.insert(values.1, at: 0)
                     }
                     
@@ -377,7 +379,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
         
         let previous:Atomic<[AppearanceWrapperEntry<QuickSwitcherEntry>]> = Atomic(value: [])
         let initialSize = atomicSize
-        disposable.set((combineLatest(start(context: context, recentlyUsed: context.recentlyPeerUsed, search: search.get()), appearanceSignal) |> map { value, appearance -> (TableUpdateTransition, Bool) in
+        disposable.set((combineLatest(start(context: context, recentlyUsed: Array(context.recentlyPeerUsed.prefix(3)), search: search.get()), appearanceSignal) |> map { value, appearance -> (TableUpdateTransition, Bool) in
             let entries = value.0.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify {$0}, arguments: arguments), value.1)
         } |> deliverOnMainQueue).start(next: { [weak self] value in
@@ -409,7 +411,7 @@ class QuickSwitcherModalController: ModalViewController, TableViewDelegate {
                 peerId = effectivePeerId
             }
             
-            context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId: messageId))
+            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), messageId: messageId))
             close()
         }
         return .invoked

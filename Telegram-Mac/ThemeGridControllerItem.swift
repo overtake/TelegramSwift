@@ -9,7 +9,8 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import ThemeSettings
+import InAppSettings
 import SwiftSignalKit
 import Postbox
 
@@ -29,7 +30,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
         label.isEventLess = true
         label.userInteractionEnabled = false
         label.isSelectable = false
-        let layout = TextViewLayout(.initialize(string: L10n.chatWallpaperEmpty, color: theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
+        let layout = TextViewLayout(.initialize(string: strings().chatWallpaperEmpty, color: theme.colors.grayText, font: .normal(.title)), maximumNumberOfLines: 1)
         layout.measure(width: .greatestFiniteMagnitude)
         label.update(layout)
         label.backgroundColor = theme.chatBackground
@@ -39,22 +40,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
     deinit {
         fetchDisposable.dispose()
     }
-    
-    override func menu(for event: NSEvent) -> NSMenu? {
-        let menu = NSMenu(title: "")
-        if let wallpaper = self.wallpaper {
-            switch wallpaper {
-            case .file:
-                menu.addItem(ContextMenuItem(L10n.messageContextDelete, handler: { [weak self] in
-                    self?.delete?()
-                }))
-            default:
-                break
-            }
-        }
-       
-        return menu
-    }
+
     
     override func layout() {
         super.layout()
@@ -93,18 +79,16 @@ final class SettingsThemeWallpaperView: BackgroundView {
             
             self.imageView.set(arguments: arguments)
             
-            
+            self.backgroundMode = TelegramPresentationTheme.defaultBackground(theme.colors)
+
         case let .color(color):
             self.imageView.isHidden = true
             self.label.isHidden = true
             self.backgroundMode = .color(color: NSColor(UInt32(color)))
-          //  backgroundColor = NSColor(UInt32(color))
-        case let .gradient(t, b, r):
+        case let .gradient(_, colors, rotation):
             self.imageView.isHidden = true
             self.label.isHidden = true
-            let top = NSColor(argb: t)
-            let bottom = NSColor(argb: b)
-            self.backgroundMode = .gradient(top: top, bottom: bottom, rotation: r)
+            self.backgroundMode = .gradient(colors: colors.map { NSColor(argb: $0) }, rotation: rotation)
         case let .image(representations, _):
             self.label.isHidden = true
             self.imageView.isHidden = false
@@ -120,9 +104,9 @@ final class SettingsThemeWallpaperView: BackgroundView {
             var representations:[TelegramMediaImageRepresentation] = []
 //            representations.append(contentsOf: file.previewRepresentations)
             if let dimensions = file.dimensions {
-                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: []))
+                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
             } else {
-                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(600, 600)), resource: file.resource, progressiveSizes: []))
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(600, 600)), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
             }
             
             let sz = largestImageRepresentation(representations)?.dimensions.size ?? size
@@ -132,23 +116,17 @@ final class SettingsThemeWallpaperView: BackgroundView {
                 if let intensity = settings.intensity {
                     patternIntensity = CGFloat(intensity) / 100.0
                 }
-                if let color = settings.color, settings.bottomColor == nil {
+                if settings.colors.count == 1, let color = settings.colors.first {
                     patternColor = .color(NSColor(rgb: color, alpha: patternIntensity))
-                } else if let t = settings.color, let b = settings.bottomColor {
-                    let top = NSColor(argb: t)
-                    let bottom = NSColor(argb: b)
-                    patternColor = .gradient(top: top.withAlphaComponent(patternIntensity), bottom: bottom.withAlphaComponent(patternIntensity), rotation: settings.rotation)
+                } else {
+                    patternColor = .gradient(colors: settings.colors.map { NSColor(rgb: $0) }, intensity: patternIntensity, rotation: settings.rotation)
                 }
             }
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sz.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor)
             
 
-            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor))
-            
-            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor), clearInstantly: false, cacheImage: { result in
-                cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-            })
+            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor), clearInstantly: false)
 
 
             self.imageView.set(arguments: arguments)

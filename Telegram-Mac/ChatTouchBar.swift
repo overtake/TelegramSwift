@@ -10,7 +10,8 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+import KeyboardKey
+import InAppSettings
 
 @available(OSX 10.12.2, *)
 extension NSTouchBar.CustomizationIdentifier {
@@ -74,7 +75,7 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
         var items: [NSTouchBarItem.Identifier] = []
         items.append(.chatEditMessageDone)
  
-        if let editState = presentation.interfaceState.editState, let media = editState.message.media.first, media is TelegramMediaFile || media is TelegramMediaImage {
+        if let editState = presentation.interfaceState.editState, let media = editState.message.effectiveMedia, media is TelegramMediaFile || media is TelegramMediaImage {
             items.append(.flexibleSpace)
             items.append(.chatEditMessageUpdateMedia)
             if editState.message.groupingKey == nil {
@@ -140,12 +141,14 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
             }
 
         case .selecting:
-            items.append(.flexibleSpace)
-            items.append(.chatDeleteMessages)
-            items.append(.chatForwardMessages)
-            items.append(.flexibleSpace)
+            if presentation.reportMode == nil {
+                items.append(.flexibleSpace)
+                items.append(.chatDeleteMessages)
+                items.append(.chatForwardMessages)
+                items.append(.flexibleSpace)
+            }
 
-        case let .action(text, _):
+        case let .action(text, _, _):
             if !(presentation.peer is TelegramSecretChat) {
                 items.append(.flexibleSpace)
                 items.append(.chatInputAction(text))
@@ -181,13 +184,13 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         self.textView = textView
         super.init()
         self.delegate = self
-        let result = touchBarChatItems(presentation: chatInteraction.presentation, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: true)
+        let result = touchBarChatItems(presentation: chatInteraction.presentation, layout: chatInteraction.context.layout, isKeyWindow: true)
         self.defaultItemIdentifiers = result.items
         self.escapeKeyReplacementItemIdentifier = result.escapeReplacement
         self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
         self.textView.updateTouchBarItemIdentifiers()
         self.customizationIdentifier = .windowBar
-        layoutStateDisposable.set(chatInteraction.context.sharedContext.layoutHandler.get().start(next: { [weak self] _ in
+        layoutStateDisposable.set(chatInteraction.context.layoutValue.start(next: { [weak self] _ in
             guard let `self` = self, let chatInteraction = self.chatInteraction else {return}
             self.notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: true)
         }))
@@ -225,7 +228,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState, let chatInteraction = self.chatInteraction  {
             if !animated  || oldValue.state != value.state || oldValue.effectiveInput.selectionRange.isEmpty != value.effectiveInput.selectionRange.isEmpty || prevIsKeyWindow != textView.window?.isKeyWindow || oldValue.inputQueryResult != value.inputQueryResult || oldValue.selectionState != value.selectionState || oldValue.canInvokeBasicActions != value.canInvokeBasicActions {
                 self.prevIsKeyWindow = textView.window?.isKeyWindow
-                let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
+                let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
                 self.defaultItemIdentifiers = result.items
                 self.escapeKeyReplacementItemIdentifier = result.escapeReplacement
                 self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
@@ -262,7 +265,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     @objc private func invokeInputAction(_ sender: Any?) {
         if let chatInteraction = self.chatInteraction {
             switch chatInteraction.presentation.state {
-            case .action(_, let action):
+            case .action(_, let action, _):
                 action(chatInteraction)
             case let .channelWithDiscussion(_, leftAction, rightAction):
                 if let sender = sender as? NSButton {
@@ -299,8 +302,8 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         guard let item = self.item(forIdentifier: .chatStickersAndEmojiPicker) as? NSPopoverTouchBarItem, let chatInteraction = self.chatInteraction else {return}
         var stickers: (favorite: [TelegramMediaFile], recent: [TelegramMediaFile], packs: [(StickerPackCollectionInfo, [TelegramMediaFile])]) = (favorite: [], recent: [], packs: [])
 
-        stickers.favorite = Array(itemCollectionView.orderedItemListsViews[0].items.compactMap {($0.contents  as? SavedStickerItem)?.file}.prefix(5))
-        stickers.recent = Array(itemCollectionView.orderedItemListsViews[1].items.compactMap {($0.contents  as? RecentMediaItem)?.media as? TelegramMediaFile}.prefix(20))
+        stickers.favorite = Array(itemCollectionView.orderedItemListsViews[0].items.compactMap { $0.contents.get(SavedStickerItem.self)?.file }.prefix(5))
+        stickers.recent = Array(itemCollectionView.orderedItemListsViews[1].items.compactMap { $0.contents.get(SavedStickerItem.self)?.file }.prefix(20))
 
         var collections: [ItemCollectionId : [TelegramMediaFile]] = [:]
 
@@ -324,13 +327,13 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         
         var entries: [TouchBarStickerEntry] = []
         if !stickers.favorite.isEmpty {
-            let layout = TextViewLayout(.initialize(string: L10n.touchBarFavorite, color: .grayText, font: .normal(.header)))
+            let layout = TextViewLayout(.initialize(string: strings().touchBarFavorite, color: .grayText, font: .normal(.header)))
             layout.measure(width: .greatestFiniteMagnitude)
             entries.append(.header(layout))
             entries.append(contentsOf: stickers.favorite.map {.sticker($0)})
         }
         if !stickers.recent.isEmpty {
-            let layout = TextViewLayout(.initialize(string: L10n.touchBarRecent, color: .grayText, font: .normal(.header)))
+            let layout = TextViewLayout(.initialize(string: strings().touchBarRecent, color: .grayText, font: .normal(.header)))
             layout.measure(width: .greatestFiniteMagnitude)
             entries.append(.header(layout))
             entries.append(contentsOf: stickers.recent.map {.sticker($0)})
@@ -344,7 +347,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
 
         item.popoverTouchBar = ChatStickersTouchBarPopover(chatInteraction: chatInteraction, dismiss: { [weak item, weak self] file in
             if let file = file {
-                self?.chatInteraction?.sendAppFile(file, false)
+                self?.chatInteraction?.sendAppFile(file, false, nil, false, nil)
             }
             item?.dismissPopover(nil)
         }, entries: entries)
@@ -444,7 +447,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             let item = NSCustomTouchBarItem(identifier: identifier)
             let button = NSButton(title: actionKey, target: self, action: #selector(invokeInputAction(_:)))
             button.addWidthConstraint(size: 200)
-            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.accent
+            button.bezelColor = actionKey == strings().chatInputMute || actionKey == strings().chatInputUnmute ? nil : theme.colors.accent
             item.view = button
             item.customizationLabel = button.title
             return item
@@ -497,7 +500,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             segment.trackingMode = .momentary
             item.visibilityPriority = .high
             item.collapsedRepresentation = segment
-            item.customizationLabel = L10n.touchBarLabelEmojiAndStickers;
+            item.customizationLabel = strings().touchBarLabelEmojiAndStickers;
             return item
             
 //            let item = NSPopoverTouchBarItem(identifier: identifier)
@@ -523,7 +526,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             segment.target = self
             segment.action = #selector(infoAndAttach(_:))
             item.collapsedRepresentation = segment
-            item.customizationLabel = L10n.touchBarLabelChatActions;
+            item.customizationLabel = strings().touchBarLabelChatActions;
             return item
         case .markdown:
             let item = NSPopoverTouchBarItem(identifier: identifier)
@@ -545,7 +548,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             return item
         case .chatEditMessageDone:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.navigationDone, target: self, action: #selector(saveEditingMessage))
+            let button = NSButton(title: strings().navigationDone, target: self, action: #selector(saveEditingMessage))
             button.bezelColor = theme.colors.accent
             item.view = button
             item.customizationLabel = button.title
@@ -553,7 +556,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         case .chatEditMessageUpdateMedia:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let icon = NSImage(named: NSImage.Name("Icon_TouchBar_AttachPhotoOrVideo"))!
-            let button = NSButton(title: L10n.touchBarEditMessageReplaceWithMedia, image: icon, target: self, action: #selector(replaceWithMedia))
+            let button = NSButton(title: strings().touchBarEditMessageReplaceWithMedia, image: icon, target: self, action: #selector(replaceWithMedia))
             button.imageHugsTitle = true
             item.view = button
             item.customizationLabel = button.title
@@ -561,21 +564,21 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         case .chatEditMessageUpdateFile:
             let item = NSCustomTouchBarItem(identifier: identifier)
             let icon = NSImage(named: NSImage.Name("Icon_TouchBar_AttachFile"))!
-            let button = NSButton(title: L10n.touchBarEditMessageReplaceWithFile, image: icon, target: self, action: #selector(replaceWithFile))
+            let button = NSButton(title: strings().touchBarEditMessageReplaceWithFile, image: icon, target: self, action: #selector(replaceWithFile))
             button.imageHugsTitle = true
             item.view = button
             item.customizationLabel = button.title
             return item
         case .chatEditMessageDone:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.navigationDone, target: self, action: #selector(attachFile))
+            let button = NSButton(title: strings().navigationDone, target: self, action: #selector(attachFile))
             button.bezelColor = theme.colors.accent
             item.view = button
             item.customizationLabel = button.title
             return item
         case .chatEditMessageCancel:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.navigationCancel, target: self, action: #selector(cancelMessageEditing))
+            let button = NSButton(title: strings().navigationCancel, target: self, action: #selector(cancelMessageEditing))
             item.view = button
             item.customizationLabel = button.title
             return item
@@ -583,13 +586,13 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
 //            let item = NSCustomTouchBarItem(identifier: identifier)
 //            let button = NSButton(title: actionKey, target: self, action: #selector(invokeInputAction))
 //            button.addWidthConstraint(size: 200)
-//            button.bezelColor = actionKey == L10n.chatInputMute || actionKey == L10n.chatInputUnmute ? nil : theme.colors.accent
+//            button.bezelColor = actionKey == strings().chatInputMute || actionKey == strings().chatInputUnmute ? nil : theme.colors.accent
 //            item.view = button
 //            item.customizationLabel = button.title
 //            return item
         case .chatForwardMessages:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.messageActionsPanelForward, target: self, action: #selector(forwardMessages))
+            let button = NSButton(title: strings().messageActionsPanelForward, target: self, action: #selector(forwardMessages))
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.accent
             button.imageHugsTitle = true
@@ -599,7 +602,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
             return item
         case .chatDeleteMessages:
             let item = NSCustomTouchBarItem(identifier: identifier)
-            let button = NSButton(title: L10n.messageActionsPanelDelete, target: self, action: #selector(deleteMessages))
+            let button = NSButton(title: strings().messageActionsPanelDelete, target: self, action: #selector(deleteMessages))
             button.addWidthConstraint(size: 160)
             button.bezelColor = theme.colors.redUI
             button.imageHugsTitle = true
@@ -612,7 +615,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
                 switch result {
                 case let .stickers(stickers):
                     return StickersScrubberBarItem(identifier: identifier, context: chatInteraction.context, animated: false, sendSticker: { [weak self] file in
-                        self?.chatInteraction?.sendAppFile(file, false)
+                        self?.chatInteraction?.sendAppFile(file, false, nil, false, nil)
                         self?.chatInteraction?.clearInput()
                     }, entries: stickers.map({.sticker($0.file)}))
                 default:

@@ -8,10 +8,10 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+import Localization
 import Postbox
 import TGUIKit
-import SyncCore
+
 
 final class InstantPageLayout {
     let origin: CGPoint
@@ -702,7 +702,7 @@ func layoutInstantPageBlock(webpage: TelegramMediaWebpage, rtl: Bool, block: Ins
             if article.author != nil || article.date != nil {
                 if let author = article.author {
                     if let date = article.date {
-                        subtext = L10n.instantPageRelatedArticleAuthorAndDateTitle(author, stringForDate(date))
+                        subtext = strings().instantPageRelatedArticleAuthorAndDateTitle(author, stringForDate(date))
                     } else {
                         subtext = author
                     }

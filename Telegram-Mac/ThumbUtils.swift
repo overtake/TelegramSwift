@@ -366,6 +366,55 @@ private func generateRecordingAnimatedImage(_ animationValue:CGFloat, color:UInt
     
 }
 
+private func generateChoosingStickerAnimatedImage(_ animationValue:CGFloat, color:NSColor) -> CGImage {
+    return generateImage(NSMakeSize(24, 20), contextGenerator: { (size, context) in
+        context.clear(size.bounds)
+        context.setFillColor(color.cgColor)
+        context.setStrokeColor(color.cgColor)
+        var heightProgress: CGFloat = animationValue * 4.0
+        if heightProgress > 3.0 {
+            heightProgress = 4.0 - heightProgress
+        } else if heightProgress > 2.0 {
+            heightProgress = heightProgress - 2.0
+            heightProgress *= heightProgress
+        } else if heightProgress > 1.0 {
+            heightProgress = 2.0 - heightProgress
+        } else {
+            heightProgress *= heightProgress
+        }
+        
+        var pupilProgress: CGFloat = animationValue * 4.0
+        if pupilProgress > 2.0 {
+            pupilProgress = 3.0 - pupilProgress
+        }
+        pupilProgress = min(1.0, max(0.0, pupilProgress))
+        pupilProgress *= pupilProgress
+        
+        var positionProgress: CGFloat = animationValue * 2.0
+        if positionProgress > 1.0 {
+            positionProgress = 2.0 - positionProgress
+        }
+        
+        let eyeWidth: CGFloat = 6.0
+        let eyeHeight: CGFloat = 11.0 - 2.0 * heightProgress
+
+        let eyeOffset: CGFloat = -1.0 + positionProgress * 2.0
+        let leftCenter = CGPoint(x: size.bounds.width / 2.0 - eyeWidth - 1.0 + eyeOffset, y: size.bounds.height / 2.0)
+        let rightCenter = CGPoint(x: size.bounds.width / 2.0 + 1.0 + eyeOffset, y: size.bounds.height / 2.0)
+        
+        let pupilSize: CGFloat = 4.0
+        let pupilCenter = CGPoint(x: -1.0 + pupilProgress * 2.0, y: 0.0)
+        
+        context.strokeEllipse(in: CGRect(x: leftCenter.x - eyeWidth / 2.0, y: leftCenter.y - eyeHeight / 2.0, width: eyeWidth, height: eyeHeight))
+        context.fillEllipse(in: CGRect(x: leftCenter.x - pupilSize / 2.0 + pupilCenter.x * eyeWidth / 4.0, y: leftCenter.y - pupilSize / 2.0, width: pupilSize, height: pupilSize))
+        
+        context.strokeEllipse(in: CGRect(x: rightCenter.x - eyeWidth / 2.0, y: rightCenter.y - eyeHeight / 2.0, width: eyeWidth, height: eyeHeight))
+        context.fillEllipse(in: CGRect(x: rightCenter.x - pupilSize / 2.0 + pupilCenter.x * eyeWidth / 4.0, y: rightCenter.y - pupilSize / 2.0, width: pupilSize, height: pupilSize))
+        
+    })!
+    
+}
+
 private func generateUploadFileAnimatedImage(_ animationValue:CGFloat, backgroundColor:UInt32, foregroundColor: UInt32) -> CGImage {
     return generateImage(NSMakeSize(26, 20), contextGenerator: { (size, context) in
         context.clear(NSMakeRect(0,0,size.width, size.height))
@@ -452,6 +501,14 @@ func recordVoiceActivityAnimation(_ color: NSColor) -> [CGImage] {
     
     for i in 0 ..< 42 {
         steps.append(generateRecordingAnimatedImage( CGFloat(i) / 42, color: color.rgb))
+    }
+    return steps
+}
+
+func choosingStickerActivityAnimation(_ color: NSColor) -> [CGImage] {
+    var steps:[CGImage] = []
+    for i in 0 ..< 120 {
+        steps.append(generateChoosingStickerAnimatedImage( CGFloat(i) / 120, color: color))
     }
     return steps
 }

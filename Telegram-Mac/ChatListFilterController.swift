@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 
 
@@ -28,39 +28,112 @@ enum ChatListFilterType {
 
 func chatListFilterType(_ filter: ChatListFilter) -> ChatListFilterType {
     let filterType: ChatListFilterType
-    if filter.data.includePeers.peers.isEmpty {
-        if filter.data.categories == .all {
-            if filter.data.excludeRead {
-                filterType = .unread
-            } else if filter.data.excludeMuted {
-                filterType = .unmuted
+    switch filter {
+    case .allChats:
+        filterType = .generic
+    case let .filter(_, _, _, data):
+        if data.includePeers.peers.isEmpty {
+            if data.categories == .all {
+                if data.excludeRead {
+                    filterType = .unread
+                } else if data.excludeMuted {
+                    filterType = .unmuted
+                } else {
+                    filterType = .generic
+                }
             } else {
-                filterType = .generic
+                if data.categories == .channels {
+                    filterType = .channels
+                } else if data.categories == .groups {
+                    filterType = .groups
+                } else if data.categories == .bots {
+                    filterType = .bots
+                } else if data.categories == .contacts {
+                    filterType = .contacts
+                } else if data.categories == .nonContacts {
+                    filterType = .nonContacts
+                } else {
+                    filterType = .generic
+                }
             }
         } else {
-            if filter.data.categories == .channels {
-                filterType = .channels
-            } else if filter.data.categories == .groups {
-                filterType = .groups
-            } else if filter.data.categories == .bots {
-                filterType = .bots
-            } else if filter.data.categories == .contacts {
-                filterType = .contacts
-            } else if filter.data.categories == .nonContacts {
-                filterType = .nonContacts
-            } else {
-                filterType = .generic
-            }
+            filterType = .generic
         }
-    } else {
-        filterType = .generic
     }
+    
     return filterType
 }
 
+extension ChatListFilter {
+    var data: ChatListFilterData? {
+        switch self {
+        case .allChats:
+            return nil
+        case let .filter(_, _, _, data):
+            return data
+        }
+    }
+    
+    var isAllChats: Bool {
+        switch self {
+        case .allChats:
+            return true
+        case .filter:
+            return false
+        }
+    }
+    
+    var title: String {
+        switch self {
+        case .allChats:
+            return strings().chatListFilterAllChats
+        case let .filter(_, title, _, _):
+            return title
+        }
+    }
+    var emoticon: String? {
+        switch self {
+        case .allChats:
+            return nil
+        case let .filter(_, _, emoticon, _):
+            return emoticon
+        }
+    }
+    var id: Int32 {
+        switch self {
+        case .allChats:
+            return -1
+        case let .filter(id, _, _, _):
+            return id
+        }
+    }
+    
+    func withUpdatedTitle(_ string: String) -> ChatListFilter {
+        switch self {
+        case .allChats:
+            return self
+        case let .filter(id, _, emoticon, data):
+            return .filter(id: id, title: string, emoticon: emoticon, data: data)
+        }
+    }
+    func withUpdatedEmoticon(_ string: String) -> ChatListFilter {
+        switch self {
+        case .allChats:
+            return self
+        case let .filter(id, title, _, data):
+            return .filter(id: id, title: title, emoticon: string, data: data)
+        }
+    }
+    func withUpdatedData(_ data: ChatListFilterData) -> ChatListFilter {
+        switch self {
+        case .allChats:
+            return self
+        case let .filter(id, title, emoticon, _):
+            return .filter(id: id, title: title, emoticon: emoticon, data: data)
+        }
+    }
+}
 
-
-private let maximumPeers: Int = 100
 
 private extension ChatListFilter {
     var additionIncludeItems: [ShareAdditionItem] {
@@ -76,21 +149,27 @@ private extension ChatListFilter {
     var selectedIncludeItems: [ShareAdditionItem] {
         var items:[ShareAdditionItem] = []
         
-        if self.data.categories.contains(.contacts) {
-            items.append(.init(peer: TelegramFilterCategory(category: .contacts), status: ""))
+        switch self {
+        case .allChats:
+            break
+        case let .filter(_, _, _, data):
+            if data.categories.contains(.contacts) {
+                items.append(.init(peer: TelegramFilterCategory(category: .contacts), status: ""))
+            }
+            if data.categories.contains(.nonContacts) {
+                items.append(.init(peer: TelegramFilterCategory(category: .nonContacts), status: ""))
+            }
+            if data.categories.contains(.groups) {
+                items.append(.init(peer: TelegramFilterCategory(category: .groups), status: ""))
+            }
+            if data.categories.contains(.channels) {
+                items.append(.init(peer: TelegramFilterCategory(category: .channels), status: ""))
+            }
+            if data.categories.contains(.bots) {
+                items.append(.init(peer: TelegramFilterCategory(category: .bots), status: ""))
+            }
         }
-        if self.data.categories.contains(.nonContacts) {
-            items.append(.init(peer: TelegramFilterCategory(category: .nonContacts), status: ""))
-        }
-        if self.data.categories.contains(.groups) {
-            items.append(.init(peer: TelegramFilterCategory(category: .groups), status: ""))
-        }
-        if self.data.categories.contains(.channels) {
-            items.append(.init(peer: TelegramFilterCategory(category: .channels), status: ""))
-        }
-        if self.data.categories.contains(.bots) {
-            items.append(.init(peer: TelegramFilterCategory(category: .bots), status: ""))
-        }
+        
         return items
     }
     var additionExcludeItems: [ShareAdditionItem] {
@@ -100,18 +179,26 @@ private extension ChatListFilter {
         items.append(.init(peer: TelegramFilterCategory(category: .excludeArchived), status: ""))
         return items
     }
+    
+    
     var selectedExcludeItems: [ShareAdditionItem] {
         var items:[ShareAdditionItem] = []
         
-        if self.data.excludeMuted {
-            items.append(.init(peer: TelegramFilterCategory(category: .excludeMuted), status: ""))
+        switch self {
+        case .allChats:
+            break
+        case let .filter(_, _, _, data):
+            if data.excludeMuted {
+                items.append(.init(peer: TelegramFilterCategory(category: .excludeMuted), status: ""))
+            }
+            if data.excludeRead {
+                items.append(.init(peer: TelegramFilterCategory(category: .excludeRead), status: ""))
+            }
+            if data.excludeArchived {
+                items.append(.init(peer: TelegramFilterCategory(category: .excludeArchived), status: ""))
+            }
         }
-        if self.data.excludeRead {
-            items.append(.init(peer: TelegramFilterCategory(category: .excludeRead), status: ""))
-        }
-        if self.data.excludeArchived {
-            items.append(.init(peer: TelegramFilterCategory(category: .excludeArchived), status: ""))
-        }
+        
         return items
     }
 }
@@ -146,18 +233,26 @@ class SelectCallbackObject : ShareObject {
     override var hasCaptionView: Bool {
         return false
     }
+    override var blockCaptionView: Bool {
+        return true
+    }
     
-    override func perform(to peerIds:[PeerId], comment: ChatTextInputState? = nil) -> Signal<Never, String> {
-        return callback(peerIds) |> mapError { _ in return String() }
+    
+    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        return callback(peerIds) |> castError(String.self)
     }
     override func limitReached() {
-        alert(for: context.window, info: limitReachedText)
+        if !context.isPremium {
+            showModal(with: PremiumLimitController(context: context, type: .chatInFolders), for: context.window)
+        } else {
+            alert(for: context.window, info: limitReachedText)
+        }
     }
     override var searchPlaceholderKey: String {
         return "ChatList.Add.Placeholder"
     }
     override var interactionOk: String {
-        return L10n.chatListFilterAddDone
+        return strings().chatListFilterAddDone
     }
     override var alwaysEnableDone: Bool {
         return true
@@ -249,220 +344,233 @@ private func _id_exclude(_ peerId: PeerId) -> InputDataIdentifier {
 private func chatListFilterEntries(state: ChatListFiltersListState, includePeers: [Peer], excludePeers: [Peer], arguments: ChatListPresetArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
+    
+    let maximumPeers = arguments.context.isPremium ? arguments.context.premiumLimits.dialog_filters_chats_limit_premium : arguments.context.premiumLimits.dialog_filters_chats_limit_default
+    
     var includePeers:[Peer] = includePeers
-    
-    if state.filter.data.categories.contains(.groups) {
-        includePeers.insert(TelegramFilterCategory(category: .groups), at: 0)
-    }
-    if state.filter.data.categories.contains(.channels) {
-        includePeers.insert(TelegramFilterCategory(category: .channels), at: 0)
-    }
-    if state.filter.data.categories.contains(.contacts) {
-        includePeers.insert(TelegramFilterCategory(category: .contacts), at: 0)
-    }
-    if state.filter.data.categories.contains(.nonContacts) {
-        includePeers.insert(TelegramFilterCategory(category: .nonContacts), at: 0)
-    }
-    if state.filter.data.categories.contains(.bots) {
-        includePeers.insert(TelegramFilterCategory(category: .bots), at: 0)
-    }
-    
-    
     var excludePeers:[Peer] = excludePeers
-    
-    if state.filter.data.excludeMuted {
-        excludePeers.insert(TelegramFilterCategory(category: .excludeMuted), at: 0)
-    }
-    if state.filter.data.excludeRead {
-        excludePeers.insert(TelegramFilterCategory(category: .excludeRead), at: 0)
-    }
-    if state.filter.data.excludeArchived {
-        excludePeers.insert(TelegramFilterCategory(category: .excludeArchived), at: 0)
-    }
 
-    var sectionId:Int32 = 0
-    var index: Int32 = 0
-    
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    
-    if state.isNew {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, item: { initialSize, stableId in
-            let attributedString = NSMutableAttributedString()
-            return ChatListFiltersHeaderItem(initialSize, context: arguments.context, stableId: stableId, sticker: LocalAnimatedSticker.new_folder, text: attributedString)
-        }))
+    switch state.filter {
+    case .allChats:
+        break
+    case let .filter(id, title, emoticon, data):
+        if data.categories.contains(.groups) {
+            includePeers.insert(TelegramFilterCategory(category: .groups), at: 0)
+        }
+        if data.categories.contains(.channels) {
+            includePeers.insert(TelegramFilterCategory(category: .channels), at: 0)
+        }
+        if data.categories.contains(.contacts) {
+            includePeers.insert(TelegramFilterCategory(category: .contacts), at: 0)
+        }
+        if data.categories.contains(.nonContacts) {
+            includePeers.insert(TelegramFilterCategory(category: .nonContacts), at: 0)
+        }
+        if data.categories.contains(.bots) {
+            includePeers.insert(TelegramFilterCategory(category: .bots), at: 0)
+        }
+        
+        
+        if data.excludeMuted {
+            excludePeers.insert(TelegramFilterCategory(category: .excludeMuted), at: 0)
+        }
+        if data.excludeRead {
+            excludePeers.insert(TelegramFilterCategory(category: .excludeRead), at: 0)
+        }
+        if data.excludeArchived {
+            excludePeers.insert(TelegramFilterCategory(category: .excludeArchived), at: 0)
+        }
+        
+        var sectionId:Int32 = 0
+        var index: Int32 = 0
+        
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        
+        if state.isNew {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
+                let attributedString = NSMutableAttributedString()
+                return ChatListFiltersHeaderItem(initialSize, context: arguments.context, stableId: stableId, sticker: LocalAnimatedSticker.new_folder, text: attributedString)
+            }))
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+        }
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterNameHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        index += 1
+        
+        
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem, rightItem: InputDataRightItem.action(FolderIcon(state.filter).icon(for: .settings), .custom{ item, control in
+            showPopover(for: control, with: ChatListFilterFolderIconController(arguments.context, select: arguments.updateIcon), edge: .minX, inset: NSMakePoint(0,-45))
+        })), placeholder: nil, inputPlaceholder: strings().chatListFilterNamePlaceholder, filter: { $0 }, limit: 12))
+        index += 1
+       
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterIncludeHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        index += 1
+        
+        let hasAddInclude = data.includePeers.peers.count < maximumPeers || data.categories != .all
+        
+        if hasAddInclude  {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_include, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterIncludeAddChat, nameStyle: blueActionButton, type: .none, viewType: includePeers.isEmpty ? .singleItem : .firstItem, action: arguments.addInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 4))
+            }))
+            index += 1
+        }
+       
+        
+        
+        var fake:[Int] = []
+        fake.append(0)
+        for (i, _) in includePeers.enumerated() {
+            if hasAddInclude {
+                fake.append(i + 1)
+            } else {
+                fake.append(i)
+            }
+        }
+        
+        for (i, peer) in includePeers.enumerated() {
+            
+            struct E : Equatable {
+                let viewType: GeneralViewType
+                let peer: PeerEquatable
+            }
+            
+            if i > 10, !state.showAllInclude {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_include, equatable: InputDataEquatable(includePeers.count), comparable: nil, item: { initialSize, stableId in
+                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterShowMoreCountable(includePeers.count - i), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+                }))
+                index += 1
+                break
+            } else {
+                var viewType = bestGeneralViewType(fake, for: hasAddInclude ? i + 1 : i)
+                
+                if excludePeers.count > 10, i == includePeers.count - 1, state.showAllInclude {
+                    viewType = .innerItem
+                }
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_include(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), comparable: nil, item: { initialSize, stableId in
+                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                        arguments.openInfo(peer.id)
+                    }, contextMenuItems: {
+                        return .single([ContextMenuItem(strings().chatListFilterIncludeRemoveChat, handler: {
+                            arguments.removeIncluded(peer.id)
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
+                    })
+                }))
+                index += 1
+            }
+        }
+        
+        if includePeers.count > 10, state.showAllInclude {
+            struct T: Equatable {
+                let a: Bool
+                let b: Int
+            }
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_include, equatable: InputDataEquatable(T(a: state.showAllInclude, b: includePeers.count)), comparable: nil, item: { initialSize, stableId in
+                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterHideCountable(includePeers.count - 11), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchDown, textInset: 52, thumbInset: 4))
+            }))
+            index += 1
+        }
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterIncludeDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterExcludeHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        index += 1
+        
+        let hasAddExclude = data.excludePeers.count < maximumPeers || !data.excludeRead || !data.excludeMuted || !data.excludeArchived
+
+        
+        if hasAddExclude {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_exclude, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterExcludeAddChat, nameStyle: blueActionButton, type: .none, viewType: excludePeers.isEmpty ? .singleItem : .firstItem, action: arguments.addExclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 2))
+            }))
+            index += 1
+        }
+       
+        
+        
+        fake = []
+        fake.append(0)
+        for (i, _) in excludePeers.enumerated() {
+            if hasAddExclude {
+                fake.append(i + 1)
+            } else {
+                fake.append(i)
+            }
+        }
+        
+        for (i, peer) in excludePeers.enumerated() {
+            struct E : Equatable {
+                let viewType: GeneralViewType
+                let peer: PeerEquatable
+            }
+            if i > 10, !state.showAllExclude {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_exclude, equatable: InputDataEquatable(excludePeers.count), comparable: nil, item: { initialSize, stableId in
+                    return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterShowMoreCountable(excludePeers.count - i), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllExclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
+                }))
+                index += 1
+                break
+            } else {
+                var viewType = bestGeneralViewType(fake, for: hasAddExclude ? i + 1 : i)
+                
+                if excludePeers.count > 10, i == excludePeers.count - 1, state.showAllExclude {
+                    viewType = .innerItem
+                }
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_exclude(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), comparable: nil, item: { initialSize, stableId in
+                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                        arguments.openInfo(peer.id)
+                    }, contextMenuItems: {
+                        return .single([ContextMenuItem.init(strings().chatListFilterExcludeRemoveChat, handler: {
+                            arguments.removeExcluded(peer.id)
+                        })])
+                    })
+                }))
+                index += 1
+            }
+            
+        }
+        
+        if excludePeers.count > 10, state.showAllExclude {
+            
+            struct T: Equatable {
+                let a: Bool
+                let b: Int
+            }
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_exclude, equatable: InputDataEquatable(T(a: state.showAllExclude, b: excludePeers.count)), comparable: nil, item: { initialSize, stableId in
+                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chatListFilterHideCountable(excludePeers.count - 11), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllExclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchDown, textInset: 52, thumbInset: 4))
+            }))
+            index += 1
+        }
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterExcludeDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
     }
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterNameHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
-    index += 1
-    
-    
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.filter.title), error: nil, identifier: _id_name_input, mode: .plain, data: .init(viewType: .singleItem, rightItem: InputDataRightItem.action(FolderIcon(state.filter).icon(for: .settings), .custom{ item, control in
-        showPopover(for: control, with: ChatListFilterFolderIconController(arguments.context, select: arguments.updateIcon), edge: .minX, inset: NSMakePoint(0,-45))
-    })), placeholder: nil, inputPlaceholder: L10n.chatListFilterNamePlaceholder, filter: { $0 }, limit: 12))
-    index += 1
-   
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterIncludeHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
-    index += 1
-    
-    let hasAddInclude = state.filter.data.includePeers.peers.count < maximumPeers || state.filter.data.categories != .all
-    
-    if hasAddInclude  {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_include, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterIncludeAddChat, nameStyle: blueActionButton, type: .none, viewType: includePeers.isEmpty ? .singleItem : .firstItem, action: arguments.addInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 4))
-        }))
-        index += 1
-    }
    
     
     
-    var fake:[Int] = []
-    fake.append(0)
-    for (i, _) in includePeers.enumerated() {
-        if hasAddInclude {
-            fake.append(i + 1)
-        } else {
-            fake.append(i)
-        }
-    }
-    
-    for (i, peer) in includePeers.enumerated() {
-        
-        struct E : Equatable {
-            let viewType: GeneralViewType
-            let peer: PeerEquatable
-        }
-        
-        if i > 10, !state.showAllInclude {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_include, equatable: InputDataEquatable(includePeers.count), item: { initialSize, stableId in
-                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterShowMoreCountable(includePeers.count - i), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
-            }))
-            index += 1
-            break
-        } else {
-            var viewType = bestGeneralViewType(fake, for: hasAddInclude ? i + 1 : i)
-            
-            if excludePeers.count > 10, i == includePeers.count - 1, state.showAllInclude {
-                viewType = .innerItem
-            }
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_include(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
-                    arguments.openInfo(peer.id)
-                }, contextMenuItems: {
-                    return .single([ContextMenuItem(L10n.chatListFilterIncludeRemoveChat, handler: {
-                        arguments.removeIncluded(peer.id)
-                    })])
-                })
-            }))
-            index += 1
-        }
-    }
-    
-    if includePeers.count > 10, state.showAllInclude {
-        struct T: Equatable {
-            let a: Bool
-            let b: Int
-        }
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_include, equatable: InputDataEquatable(T(a: state.showAllInclude, b: includePeers.count)), item: { initialSize, stableId in
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterHideCountable(includePeers.count - 11), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllInclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchDown, textInset: 52, thumbInset: 4))
-        }))
-        index += 1
-    }
-    
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterIncludeDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-    index += 1
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterExcludeHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
-    index += 1
-    
-    let hasAddExclude = state.filter.data.excludePeers.count < maximumPeers || !state.filter.data.excludeRead || !state.filter.data.excludeMuted || !state.filter.data.excludeArchived
 
     
-    if hasAddExclude {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_add_exclude, equatable: InputDataEquatable(state), item: { initialSize, stableId in
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterExcludeAddChat, nameStyle: blueActionButton, type: .none, viewType: excludePeers.isEmpty ? .singleItem : .firstItem, action: arguments.addExclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chat_filter_add, textInset: 46, thumbInset: 2))
-        }))
-        index += 1
-    }
-   
-    
-    
-    fake = []
-    fake.append(0)
-    for (i, _) in excludePeers.enumerated() {
-        if hasAddExclude {
-            fake.append(i + 1)
-        } else {
-            fake.append(i)
-        }
-    }
-    
-    for (i, peer) in excludePeers.enumerated() {
-        struct E : Equatable {
-            let viewType: GeneralViewType
-            let peer: PeerEquatable
-        }
-        if i > 10, !state.showAllExclude {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_exclude, equatable: InputDataEquatable(excludePeers.count), item: { initialSize, stableId in
-                return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterShowMoreCountable(excludePeers.count - i), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllExclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
-            }))
-            index += 1
-            break
-        } else {
-            var viewType = bestGeneralViewType(fake, for: hasAddExclude ? i + 1 : i)
-            
-            if excludePeers.count > 10, i == excludePeers.count - 1, state.showAllExclude {
-                viewType = .innerItem
-            }
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_exclude(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
-                    arguments.openInfo(peer.id)
-                }, contextMenuItems: {
-                    return .single([ContextMenuItem.init(L10n.chatListFilterExcludeRemoveChat, handler: {
-                        arguments.removeExcluded(peer.id)
-                    })])
-                })
-            }))
-            index += 1
-        }
-        
-    }
-    
-    if excludePeers.count > 10, state.showAllExclude {
-        
-        struct T: Equatable {
-            let a: Bool
-            let b: Int
-        }
-        
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_show_all_exclude, equatable: InputDataEquatable(T(a: state.showAllExclude, b: excludePeers.count)), item: { initialSize, stableId in
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chatListFilterHideCountable(excludePeers.count - 11), nameStyle: blueActionButton, type: .none, viewType: .lastItem, action: arguments.showAllExclude, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchDown, textInset: 52, thumbInset: 4))
-        }))
-        index += 1
-    }
-    
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.chatListFilterExcludeDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-    index += 1
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
     
     return entries
 }
@@ -478,10 +586,13 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         statePromise.set(stateValue.modify (f))
     }
     
+    let maximumPeers = context.isPremium ? context.premiumLimits.dialog_filters_chats_limit_premium : context.premiumLimits.dialog_filters_chats_limit_default
+    
+    
     let updateDisposable = MetaDisposable()
     
     let save:(Bool)->Void = { replace in
-        _ = updateChatListFiltersInteractively(postbox: context.account.postbox, { filters in
+        _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
             let filter = stateValue.with { $0.filter }
             var filters = filters
             if let index = filters.firstIndex(where: {$0.id == filter.id}) {
@@ -499,11 +610,19 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             var state = state
             state.withUpdatedFilter { filter in
                 var filter = filter
-                if filter.data.categories.contains(option) {
-                    filter.data.categories.remove(option)
-                } else {
-                    filter.data.categories.insert(option)
+                switch filter {
+                case .allChats:
+                    break
+                case let .filter(id, title, emoticon, data):
+                    var data = data
+                    if data.categories.contains(option) {
+                        data.categories.remove(option)
+                    } else {
+                        data.categories.insert(option)
+                    }
+                    filter = .filter(id: id, title: title, emoticon: emoticon, data: data)
                 }
+                
                 return filter
             }
             return state
@@ -514,26 +633,34 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         
         let items = stateValue.with { $0.filter.additionIncludeItems }
         
-        let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: L10n.chatListAddTopSeparator, bottomSeparator: L10n.chatListAddBottomSeparator)
+        let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: strings().chatListAddTopSeparator, bottomSeparator: strings().chatListAddBottomSeparator)
         
-        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data.includePeers.peers + $0.filter.selectedIncludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: maximumPeers, limitReachedText: L10n.chatListFilterIncludeLimitReached, callback: { peerIds in
+        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data!.includePeers.peers + $0.filter.selectedIncludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: Int(maximumPeers), limitReachedText: strings().chatListFilterIncludeLimitReachedNew(Int(maximumPeers)), callback: { peerIds in
             updateState { state in
                 var state = state
                 
                 let categories = peerIds.filter {
-                    $0.namespace == ChatListFilterPeerCategories.Namespace
+                    $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
                 }
                 let peerIds = Set(peerIds).subtracting(categories)
                 
                 state.withUpdatedFilter { filter in
                     var filter = filter
-                    filter.data.includePeers.setPeers(Array(peerIds.uniqueElements.prefix(maximumPeers)))
-                    var updatedCats: ChatListFilterPeerCategories = []
-                    let cats = categories.map { ChatListFilterPeerCategories(rawValue: $0.id) }
-                    for cat in cats {
-                        updatedCats.insert(cat)
+                    switch filter {
+                    case .allChats:
+                        break
+                    case let .filter(id, title, emoticon, data):
+                        var data = data
+                        data.includePeers.setPeers(Array(peerIds.uniqueElements.prefix(Int(maximumPeers))))
+                        var updatedCats: ChatListFilterPeerCategories = []
+                        let cats = categories.map { ChatListFilterPeerCategories(rawValue: Int32($0.id._internalGetInt64Value())) }
+                        for cat in cats {
+                            updatedCats.insert(cat)
+                        }
+                        data.categories = updatedCats
+                        filter = .filter(id: id, title: title, emoticon: emoticon, data: data)
                     }
-                    filter.data.categories = updatedCats
+                    
                     return filter
                 }
                 return state
@@ -544,30 +671,37 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     }, addExclude: {
         
         let items = stateValue.with { $0.filter.additionExcludeItems }
-        let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: L10n.chatListAddTopSeparator, bottomSeparator: L10n.chatListAddBottomSeparator)
+        let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: strings().chatListAddTopSeparator, bottomSeparator: strings().chatListAddBottomSeparator)
         
-        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data.excludePeers + $0.filter.selectedExcludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: maximumPeers, limitReachedText: L10n.chatListFilterExcludeLimitReached, callback: { peerIds in
+        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data!.excludePeers + $0.filter.selectedExcludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: Int(maximumPeers), limitReachedText: strings().chatListFilterExcludeLimitReachedNew(Int(maximumPeers)), callback: { peerIds in
             updateState { state in
                 var state = state
                 state.withUpdatedFilter { filter in
                     var filter = filter
+                    switch filter {
+                    case .allChats:
+                        break
+                    case let .filter(id, title, emoticon, data):
+                        var data = data
+                        let categories = peerIds.filter {
+                            $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
+                        }
+                        let peerIds = Set(peerIds).subtracting(categories)
+                        data.excludePeers = Array(peerIds.uniqueElements.prefix(Int(maximumPeers)))
+                        for cat in categories {
+                            if ChatListFilterPeerCategories(rawValue: Int32(cat.id._internalGetInt64Value())) == .excludeMuted {
+                                data.excludeMuted = true
+                            }
+                            if ChatListFilterPeerCategories(rawValue: Int32(cat.id._internalGetInt64Value())) == .excludeRead {
+                                data.excludeRead = true
+                            }
+                            if ChatListFilterPeerCategories(rawValue: Int32(cat.id._internalGetInt64Value())) == .excludeArchived {
+                                data.excludeArchived = true
+                            }
+                        }
+                        filter = .filter(id: id, title: title, emoticon: emoticon, data: data)
+                    }
                     
-                    let categories = peerIds.filter {
-                        $0.namespace == ChatListFilterPeerCategories.Namespace
-                    }
-                    let peerIds = Set(peerIds).subtracting(categories)
-                    filter.data.excludePeers = Array(peerIds.uniqueElements.prefix(maximumPeers))
-                    for cat in categories {
-                        if ChatListFilterPeerCategories(rawValue: cat.id) == .excludeMuted {
-                            filter.data.excludeMuted = true
-                        }
-                        if ChatListFilterPeerCategories(rawValue: cat.id) == .excludeRead {
-                            filter.data.excludeRead = true
-                        }
-                        if ChatListFilterPeerCategories(rawValue: cat.id) == .excludeArchived {
-                            filter.data.excludeArchived = true
-                        }
-                    }
                     
                     return filter
                 }
@@ -581,12 +715,20 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             var state = state
             state.withUpdatedFilter { filter in
                 var filter = filter
-                var peers = filter.data.includePeers.peers
-                peers.removeAll(where: { $0 == peerId })
-                filter.data.includePeers.setPeers(peers)
-                if peerId.namespace == ChatListFilterPeerCategories.Namespace  {
-                    filter.data.categories.remove(ChatListFilterPeerCategories(rawValue: peerId.id))
+                switch filter {
+                case .allChats:
+                    break
+                case let .filter(id, title, emoticon, data):
+                    var data = data
+                    var peers = data.includePeers.peers
+                    peers.removeAll(where: { $0 == peerId })
+                    data.includePeers.setPeers(peers)
+                    if peerId.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace  {
+                        data.categories.remove(ChatListFilterPeerCategories(rawValue: Int32(peerId.id._internalGetInt64Value())))
+                    }
+                    return .filter(id: id, title: title, emoticon: emoticon, data: data)
                 }
+                
                 return filter
             }
             return state
@@ -597,33 +739,48 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             var state = state
             state.withUpdatedFilter { filter in
                 var filter = filter
-                var peers = filter.data.excludePeers
-                peers.removeAll(where: { $0 == peerId })
-                filter.data.excludePeers = peers
-                if peerId.namespace == ChatListFilterPeerCategories.Namespace  {
-                    if ChatListFilterPeerCategories(rawValue: peerId.id) == .excludeMuted {
-                        filter.data.excludeMuted = false
+                switch filter {
+                case .allChats:
+                    break
+                case let .filter(id, title, emoticon, data):
+                    var data = data
+                    var peers = data.excludePeers
+                    peers.removeAll(where: { $0 == peerId })
+                    data.excludePeers = peers
+                    if peerId.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace  {
+                        if ChatListFilterPeerCategories(rawValue: Int32(peerId.id._internalGetInt64Value())) == .excludeMuted {
+                            data.excludeMuted = false
+                        }
+                        if ChatListFilterPeerCategories(rawValue: Int32(peerId.id._internalGetInt64Value())) == .excludeRead {
+                            data.excludeRead = false
+                        }
+                        if ChatListFilterPeerCategories(rawValue: Int32(peerId.id._internalGetInt64Value())) == .excludeArchived {
+                            data.excludeArchived = false
+                        }
                     }
-                    if ChatListFilterPeerCategories(rawValue: peerId.id) == .excludeRead {
-                        filter.data.excludeRead = false
-                    }
-                    if ChatListFilterPeerCategories(rawValue: peerId.id) == .excludeArchived {
-                        filter.data.excludeArchived = false
-                    }
+                    filter = .filter(id: id, title: title, emoticon: emoticon, data: data)
                 }
+                
                 return filter
             }
             return state
         }
         //save(true)
     }, openInfo: { peerId in
-        context.sharedContext.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
     }, toggleExcludeMuted: { updated in
         updateState { state in
             var state = state
             state.withUpdatedFilter { filter in
                 var filter = filter
-                filter.data.excludeMuted = updated
+                switch filter {
+                case .allChats:
+                    break
+                case let .filter(id, title, emoticon, data):
+                    var data = data
+                    data.excludeMuted = updated
+                    filter = .filter(id: id, title: title, emoticon: emoticon, data: data)
+                }
                 return filter
             }
             return state
@@ -634,7 +791,14 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             var state = state
             state.withUpdatedFilter { filter in
                 var filter = filter
-                filter.data.excludeRead = updated
+                switch filter {
+                case .allChats:
+                    break
+                case let .filter(id, title, emoticon, data):
+                    var data = data
+                    data.excludeRead = updated
+                    filter = .filter(id: id, title: title, emoticon: emoticon, data: data)
+                }
                 return filter
             }
             return state
@@ -657,7 +821,12 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             var state = state
             state.withUpdatedFilter { filter in
                 var filter = filter
-                filter.emoticon = icon.emoticon.emoji
+                switch filter {
+                case .allChats:
+                    break
+                case let .filter(id, title, _, data):
+                    filter = .filter(id: id, title: title, emoticon: icon.emoticon.emoji, data: data)
+                }
                 return filter
             }
             return state
@@ -667,7 +836,12 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     let dataSignal = combineLatest(queue: prepareQueue, appearanceSignal, statePromise.get()) |> mapToSignal { _, state -> Signal<(ChatListFiltersListState, ([Peer], [Peer])), NoError> in
         return context.account.postbox.transaction { transaction -> ([Peer], [Peer]) in
-            return (state.filter.data.includePeers.peers.compactMap { transaction.getPeer($0) }, state.filter.data.excludePeers.compactMap { transaction.getPeer($0) })
+            switch state.filter {
+            case .allChats:
+                return ([], [])
+            case let .filter(_, _, _, data):
+                return (data.includePeers.peers.compactMap { transaction.getPeer($0) }, data.excludePeers.compactMap { transaction.getPeer($0) })
+            }
         } |> map {
             (state, $0)
         }
@@ -677,19 +851,29 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
           return InputDataSignalValue(entries: $0)
     }
     
-    let controller = InputDataController(dataSignal: dataSignal, title: isNew ? L10n.chatListFilterNewTitle : L10n.chatListFilterTitle, removeAfterDisappear: false)
+    let controller = InputDataController(dataSignal: dataSignal, title: isNew ? strings().chatListFilterNewTitle : strings().chatListFilterTitle, removeAfterDisappear: false)
     
     controller.updateDatas = { data in
-        
         if let name = data[_id_name_input]?.stringValue {
             updateState { state in
                 var state = state
-                if state.filter.title != name {
-                    state.changedName = true
+                switch filter {
+                case .allChats:
+                    break
+                case let .filter(_, title, _, _):
+                    if title != name {
+                        state.changedName = true
+                    }
                 }
+               
                 state.withUpdatedFilter { filter in
                     var filter = filter
-                    filter.title = name
+                    switch filter {
+                    case .allChats:
+                        break
+                    case let .filter(id, _, emoticon, data):
+                        filter = .filter(id: id, title: name, emoticon: emoticon, data: data)
+                    }
                     return filter
                 }
                 return state
@@ -701,7 +885,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     controller.backInvocation = { data, f in
         if stateValue.with({ $0.filter != filter }) {
-            confirm(for: context.window, header: L10n.chatListFilterDiscardHeader, information: L10n.chatListFilterDiscardText, okTitle: L10n.chatListFilterDiscardOK, cancelTitle: L10n.chatListFilterDiscardCancel, successHandler: { _ in
+            confirm(for: context.window, header: strings().chatListFilterDiscardHeader, information: strings().chatListFilterDiscardText, okTitle: strings().chatListFilterDiscardOK, cancelTitle: strings().chatListFilterDiscardCancel, successHandler: { _ in
                 f(true)
             })
         } else {
@@ -713,9 +897,9 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     controller.updateDoneValue = { data in
         return { f in
             if isNew {
-                f(.enabled(L10n.chatListFilterDone))
+                f(.enabled(strings().chatListFilterDone))
             } else {
-                f(.enabled(L10n.navigationDone))
+                f(.enabled(strings().navigationDone))
             }
         }
     }
@@ -736,44 +920,44 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 //state.name = presentationData.strings.ChatListFolder_NameNonMuted
                 updateState { state in
                     var state = state
-                    state.filter.title = L10n.chatListFilterTilteDefaultUnmuted
-                  //  state.filter.emoticon = 
+                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultUnmuted)
+                  //  emoticon =
                     return state
                 }
             case .unread:
                 updateState { state in
                     var state = state
-                    state.filter.title = L10n.chatListFilterTilteDefaultUnread
+                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultUnread)
                     return state
                 }
             case .channels:
                 updateState { state in
                     var state = state
-                    state.filter.title = L10n.chatListFilterTilteDefaultChannels
+                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultChannels)
                     return state
                 }
             case .groups:
                 updateState { state in
                     var state = state
-                    state.filter.title = L10n.chatListFilterTilteDefaultGroups
+                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultGroups)
                     return state
                 }
             case .bots:
                 updateState { state in
                     var state = state
-                    state.filter.title = L10n.chatListFilterTilteDefaultBots
+                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultBots)
                     return state
                 }
             case .contacts:
                 updateState { state in
                     var state = state
-                    state.filter.title = L10n.chatListFilterTilteDefaultContacts
+                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultContacts)
                     return state
                 }
             case .nonContacts:
                 updateState { state in
                     var state = state
-                    state.filter.title = L10n.chatListFilterTilteDefaultNonContacts
+                    state.filter = state.filter.withUpdatedTitle(strings().chatListFilterTilteDefaultNonContacts)
                     return state
                 }
             }
@@ -784,7 +968,14 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     controller.validateData = { data in
         
         return .fail(.doSomething(next: { f in
-            let emptyTitle = stateValue.with { $0.filter.title.isEmpty }
+            let emptyTitle = stateValue.with { value -> Bool in
+                switch value.filter {
+                case .allChats:
+                    return true
+                case let .filter(_, title, _, _):
+                    return title.isEmpty
+                }
+            }
             if emptyTitle {
                 f(.fail(.fields([_id_name_input : .shake])))
                 return
@@ -793,15 +984,15 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
             let filter = stateValue.with { $0.filter }
             
             if filter.isFullfilled {
-                alert(for: context.window, info: L10n.chatListFilterErrorLikeChats)
+                alert(for: context.window, info: strings().chatListFilterErrorLikeChats)
             } else if filter.isEmpty {
-                alert(for: context.window, info: L10n.chatListFilterErrorEmpty)
+                alert(for: context.window, info: strings().chatListFilterErrorEmpty)
                 f(.fail(.fields([_id_add_include : .shake])))
             } else {
-                _ = showModalProgress(signal: requestUpdateChatListFilter(postbox: context.account.postbox, network: context.account.network, id: filter.id, filter: filter), for: context.window).start(error: { error in
+                _ = showModalProgress(signal: context.engine.peers.requestUpdateChatListFilter(id: filter.id, filter: filter), for: context.window).start(error: { error in
                     switch error {
                     case .generic:
-                        alert(for: context.window, info: L10n.unknownError)
+                        alert(for: context.window, info: strings().unknownError)
                     }
                 }, completed: {
                     save(false)

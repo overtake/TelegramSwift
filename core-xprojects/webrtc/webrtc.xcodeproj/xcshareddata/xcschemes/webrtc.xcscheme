@@ -23,7 +23,7 @@
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "DebugAppStore"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES">
@@ -31,7 +31,7 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "DebugAppStore"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
@@ -42,7 +42,7 @@
       allowLocationSimulation = "YES">
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "ReleaseAppStore"
+      buildConfiguration = "Release"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
@@ -58,10 +58,10 @@
       </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "DebugAppStore">
+      buildConfiguration = "Release">
    </AnalyzeAction>
    <ArchiveAction
-      buildConfiguration = "ReleaseAppStore"
+      buildConfiguration = "Release"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

@@ -9,7 +9,7 @@
 import Cocoa
 import Postbox
 import TelegramCore
-import SyncCore
+import InAppSettings
 import TGUIKit
 import SwiftSignalKit
 
@@ -86,11 +86,11 @@ class SlotsMediaContentView: ChatMediaContentView {
                 
                 switch media.emoji {
                 case diceSymbol:
-                    text = L10n.chatEmojiDiceResultNew
+                    text = strings().chatEmojiDiceResultNew
                 case dartSymbol:
-                    text = L10n.chatEmojiDartResultNew
+                    text = strings().chatEmojiDartResultNew
                 default:
-                    text = L10n.chatEmojiDefResultNew(media.emoji)
+                    text = strings().chatEmojiDefResultNew(media.emoji)
                 }
                 let view: NSView
                 if !thumbView.isHidden {
@@ -98,7 +98,7 @@ class SlotsMediaContentView: ChatMediaContentView {
                 } else {
                     view = idlePlayer
                 }
-                tooltip(for: view, text: text, interactions: globalLinkExecutor, button: (L10n.chatEmojiSend, { [weak item] in
+                tooltip(for: view, text: text, interactions: globalLinkExecutor, button: (strings().chatEmojiSend, { [weak item] in
                     item?.chatInteraction.sendPlainText(media.emoji)
                 }), offset: NSMakePoint(0, -30))
             }
@@ -224,15 +224,15 @@ class SlotsMediaContentView: ChatMediaContentView {
             
             
             
-            var spinViews:[LottiePlayerView] = [self.spin1Player, self.spin2Player, self.spin3Player]
+            let spinViews:[LottiePlayerView] = [self.spin1Player, self.spin2Player, self.spin3Player]
             
             for (i, index) in indexes.enumerated() {
                 let view = spinViews[i]
                 let spinData = data[index]
                 if let data = spinData.1 {
                     let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(spinData.2.id), size: size), cachePurpose: .none, playPolicy: spinPolicy, maximumFps: 60)
-                    if sent && view.animation != nil {
-                        view.animation?.triggerOn = (.first, { [weak view] in
+                    if sent && view.contextAnimation != nil {
+                        view.contextAnimation?.triggerOn = (.first, { [weak view] in
                             view?.set(animation)
                         }, {})
                     } else {

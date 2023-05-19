@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 
 struct WPLayoutPresentation {
@@ -35,7 +35,7 @@ class WPLayout: Equatable {
     private(set) var contentRect:NSRect = NSZeroRect
     
     private(set) var textLayout:TextViewLayout?
-    
+    private let mayCopyText: Bool
     private(set) var siteName:(TextNodeLayout, TextNode)?
     private var _nameNode:TextNode?
     
@@ -43,7 +43,7 @@ class WPLayout: Equatable {
     
     
     var mediaCount: Int? {
-        if let instantPage = content.instantPage, isGalleryAssemble {
+        if let instantPage = content.instantPage, isGalleryAssemble, content.type == "telegram_album" {
             if let block = instantPage.blocks.filter({ value in
                 if case .slideshow = value {
                     return true
@@ -69,10 +69,10 @@ class WPLayout: Equatable {
     }
     
     var webPage: TelegramMediaWebpage {
-        if let game = parent.media.first as? TelegramMediaGame {
+        if let game = parent.effectiveMedia as? TelegramMediaGame {
             return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, attributes: [], instantPage: nil)))
         }
-        return parent.media.first as! TelegramMediaWebpage
+        return parent.effectiveMedia as! TelegramMediaWebpage
     }
     
     let presentation: WPLayoutPresentation
@@ -86,16 +86,25 @@ class WPLayout: Equatable {
         }
     }
     
-    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool) {
+    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool) {
         self.content = content
         self.context = context
         self.presentation = presentation
+        self.mayCopyText = mayCopyText
         self.parent = parent
         self.fontSize = fontSize
         self._approximateSynchronousValue = approximateSynchronousValue
         if let websiteName = content.websiteName {
-            let websiteName = content.type == "telegram_background" ? L10n.chatWPBackgroundTitle : websiteName
-            _siteNameAttr = .initialize(string: websiteName, color: presentation.activity, font: .medium(.text))
+            let siteName: String
+            switch content.type {
+            case "telegram_background":
+                siteName = strings().chatWPBackgroundTitle
+            case "telegram_voicechat":
+                siteName = strings().chatWPVoiceChatTitle
+            default:
+                siteName = websiteName
+            }
+            _siteNameAttr = .initialize(string: siteName, color: presentation.activity, font: .medium(.text))
             _nameNode = TextNode()
         }
         
@@ -120,7 +129,7 @@ class WPLayout: Equatable {
             }
             
             attributedText.detectLinks(type: p, color: presentation.link, dotInMention: wname == "instagram")
-            textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true)
+            textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true, mayItems: mayCopyText)
             
             let interactions = globalLinkExecutor
             interactions.resolveLink = { link in

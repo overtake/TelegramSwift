@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+import Localization
 import Postbox
 import SwiftSignalKit
 import TGUIKit
@@ -43,6 +43,8 @@ class TelegramGenericViewController<T>: GenericViewController<T> where T:NSView 
         languageDisposable.dispose()
     }
 }
+
+
 
 class TelegramViewController: TelegramGenericViewController<View> {
     

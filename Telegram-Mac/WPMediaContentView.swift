@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 
 class WPMediaContentView: WPContentView {
     
@@ -23,7 +23,7 @@ class WPMediaContentView: WPContentView {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
                     return (.file(reference, StickerPreviewModalView.self), contentNode)
                 }
-            } else if contentNode is ChatGIFContentView {
+            } else if contentNode is VideoStickerContentView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
                     return (.file(reference, GifPreviewModalView.self), contentNode)
@@ -37,7 +37,7 @@ class WPMediaContentView: WPContentView {
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
                     var representations: [TelegramMediaImageRepresentation] = []
                     representations.append(contentsOf: file.previewRepresentations)
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: []))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                     let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
@@ -88,8 +88,9 @@ class WPMediaContentView: WPContentView {
     
     override func layout() {
         super.layout()
-        if let content = content as? WPMediaLayout {
-            self.contentNode?.setFrameOrigin(NSMakePoint(0, containerView.frame.height - content.mediaSize.height))
+        if let contentNode = contentNode, let content = content as? WPMediaLayout {
+            let rect = CGRect(origin: NSMakePoint(0, containerView.frame.height - content.mediaSize.height), size: content.mediaSize)
+            contentNode.frame = rect
         }
     }
     

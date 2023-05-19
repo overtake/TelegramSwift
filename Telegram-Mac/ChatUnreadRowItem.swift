@@ -9,8 +9,9 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import InAppSettings
 import Postbox
+
 class ChatUnreadRowItem: ChatRowItem {
 
     override var height: CGFloat {
@@ -26,7 +27,7 @@ class ChatUnreadRowItem: ChatRowItem {
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry:ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         
         let titleAttr:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleAttr.append(string:tr(L10n.messagesUnreadMark), color: theme.colors.grayText, font: .normal(.text))
+        let _ = titleAttr.append(string: strings().messagesUnreadMark, color: theme.colors.grayText, font: .normal(.text))
         text = titleAttr.copy() as! NSAttributedString
 
         
@@ -35,7 +36,7 @@ class ChatUnreadRowItem: ChatRowItem {
     
     override var messageIndex:MessageIndex? {
         switch entry {
-        case .UnreadEntry(let index, _):
+        case .UnreadEntry(let index, _, _):
             return index
         default:
             break

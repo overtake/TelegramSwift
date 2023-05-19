@@ -10,7 +10,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 
@@ -21,20 +21,30 @@ class ChatCommentsHeaderItem : TableStickItem {
     fileprivate let chatInteraction:ChatInteraction?
     let isBubbled: Bool
     let layout:TextViewLayout
+    let presentation: TelegramPresentationTheme
     init(_ initialSize:NSSize, _ entry:ChatHistoryEntry, interaction: ChatInteraction, theme: TelegramPresentationTheme) {
         self.entry = entry
         self.isBubbled = entry.renderType == .bubble
         self.chatInteraction = interaction
-       
+        self.presentation = theme
         
         let text: String
         switch entry {
         case let .commentsHeader(empty, _, _):
-            if empty {
-                text = L10n.chatCommentsHeaderEmpty
+            if interaction.mode.isTopicMode {
+                if empty {
+                    text = strings().chatTopicHeaderEmpty
+                } else {
+                    text = strings().chatTopicHeaderFull
+                }
             } else {
-                text = L10n.chatCommentsHeaderFull
+                if empty {
+                    text = strings().chatCommentsHeaderEmpty
+                } else {
+                    text = strings().chatCommentsHeaderFull
+                }
             }
+            
         default:
             text = ""
         }
@@ -54,6 +64,7 @@ class ChatCommentsHeaderItem : TableStickItem {
         self.isBubbled = false
         self.layout = TextViewLayout(NSAttributedString())
         self.chatInteraction = nil
+        self.presentation = theme
         super.init(initialSize)
     }
     
@@ -103,7 +114,16 @@ class ChatCommentsHeaderView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        textView.backgroundColor = theme.chatServiceItemColor
+        guard let item = item as? ChatCommentsHeaderItem else {
+            return
+        }
+        if item.presentation.shouldBlurService {
+            textView.blurBackground = theme.blurServiceColor
+            textView.backgroundColor = .clear
+        } else {
+            textView.backgroundColor = theme.chatServiceItemColor
+            textView.blurBackground = nil
+        }
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {

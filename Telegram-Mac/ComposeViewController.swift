@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 struct ComposeTitles {
     let center:String
     let done:String

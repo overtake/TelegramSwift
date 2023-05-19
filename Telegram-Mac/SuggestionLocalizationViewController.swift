@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import Localization
 import Postbox
 import SwiftSignalKit
 
@@ -76,11 +76,12 @@ class SuggestionLocalizationViewController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak self] in
             if let strongSelf = self {
                 strongSelf.close()
-                _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.context.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()
-                _ = showModalProgress(signal: downloadAndApplyLocalization(accountManager: strongSelf.context.sharedContext.accountManager, postbox: strongSelf.context.account.postbox, network: strongSelf.context.account.network, languageCode: strongSelf.languageCode), for: mainWindow).start()
+                let engine = strongSelf.context.engine.localization
+                _ = engine.markSuggestedLocalizationAsSeenInteractively(languageCode: strongSelf.suggestionInfo.languageCode).start()
+                _ = showModalProgress(signal: engine.downloadAndApplyLocalization(accountManager: strongSelf.context.sharedContext.accountManager, languageCode: strongSelf.languageCode), for: strongSelf.context.window).start()
             }
         }, drawBorder: true, height: 40)
     }
@@ -149,8 +150,9 @@ class SuggestionLocalizationViewController: ModalViewController {
         _ = genericView.tableView.addItem(item: LanguageRowItem(initialSize: initialSize, stableId: 10, selected: false, deletable: false, value: otherInfo, action: { [weak self] in
             if let strongSelf = self {
                 strongSelf.close()
-                strongSelf.context.sharedContext.bindings.rootNavigation().push(LanguageViewController(strongSelf.context))
-                _ = markSuggestedLocalizationAsSeenInteractively(postbox: strongSelf.context.account.postbox, languageCode: strongSelf.suggestionInfo.languageCode).start()
+                strongSelf.context.bindings.rootNavigation().push(LanguageViewController(strongSelf.context))
+                let engine = strongSelf.context.engine.localization
+                _ = engine.markSuggestedLocalizationAsSeenInteractively(languageCode: strongSelf.suggestionInfo.languageCode).start()
             }
         }, reversed: true))
     

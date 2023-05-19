@@ -9,14 +9,15 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import ColorPalette
 import SwiftSignalKit
 import Postbox
+import TelegramIconsTheme
 
 final class ChatMediaPresentation : Equatable {
     
-    private let isIncoming: Bool
-    private let isBubble: Bool
+    let isIncoming: Bool
+    let isBubble: Bool
     
     let activityBackground: NSColor
     let activityForeground: NSColor
@@ -25,8 +26,9 @@ final class ChatMediaPresentation : Equatable {
     let text: NSColor
     let grayText: NSColor
     let link: NSColor
-    
-    init(isIncoming: Bool, isBubble: Bool, activityBackground: NSColor, activityForeground: NSColor, text: NSColor, grayText: NSColor, link: NSColor, waveformBackground: NSColor, waveformForeground: NSColor) {
+    let presentation: TelegramPresentationTheme
+    init(presentation: TelegramPresentationTheme, isIncoming: Bool, isBubble: Bool, activityBackground: NSColor, activityForeground: NSColor, text: NSColor, grayText: NSColor, link: NSColor, waveformBackground: NSColor, waveformForeground: NSColor) {
+        self.presentation = presentation
         self.isIncoming = isIncoming
         self.isBubble = isBubble
         self.activityForeground = activityForeground
@@ -38,49 +40,53 @@ final class ChatMediaPresentation : Equatable {
         self.waveformForeground = waveformForeground
     }
     
-    static func make(for message: Message, account: Account, renderType: ChatItemRenderType) -> ChatMediaPresentation {
+    static func make(for message: Message, account: Account, renderType: ChatItemRenderType, theme: TelegramPresentationTheme) -> ChatMediaPresentation {
         let isIncoming: Bool = message.isIncoming(account, renderType == .bubble)
-        return ChatMediaPresentation(isIncoming: isIncoming,
+        
+        
+        let grayText = theme.chat.grayText(isIncoming, renderType == .bubble)
+
+        return ChatMediaPresentation(presentation: theme, isIncoming: isIncoming,
                                      isBubble: renderType == .bubble,
                                      activityBackground: theme.chat.activityBackground(isIncoming, renderType == .bubble),
                                      activityForeground: theme.chat.activityForeground(isIncoming, renderType == .bubble),
                                      text: theme.chat.textColor(isIncoming, renderType == .bubble),
-                                     grayText: theme.chat.grayText(isIncoming, renderType == .bubble),
+                                     grayText: grayText,
                                      link: theme.chat.linkColor(isIncoming, renderType == .bubble),
                                      waveformBackground: theme.chat.waveformBackground(isIncoming, renderType == .bubble),
                                      waveformForeground: theme.chat.waveformForeground(isIncoming, renderType == .bubble))
     }
     
     static var empty: ChatMediaPresentation {
-        return .init(isIncoming: true, isBubble: true, activityBackground: .clear, activityForeground: .clear, text: .clear, grayText: .clear, link: .clear, waveformBackground: .clear, waveformForeground: .clear)
+        return .init(presentation: theme, isIncoming: true, isBubble: true, activityBackground: .clear, activityForeground: .clear, text: .clear, grayText: .clear, link: .clear, waveformBackground: .clear, waveformForeground: .clear)
     }
     
     var fileThumb: CGImage {
         if isBubble {
-            return isIncoming ? theme.icons.chatFileThumbBubble_incoming : theme.icons.chatFileThumbBubble_outgoing
+            return isIncoming ? presentation.icons.chatFileThumbBubble_incoming : presentation.icons.chatFileThumbBubble_outgoing
         } else {
-            return theme.icons.chatFileThumb
+            return presentation.icons.chatFileThumb
         }
     }
     
     
     var pauseThumb: CGImage {
         if isBubble {
-            return isIncoming ? theme.icons.chatMusicPauseBubble_incoming : theme.icons.chatMusicPauseBubble_outgoing
+            return isIncoming ? presentation.icons.chatMusicPauseBubble_incoming : presentation.icons.chatMusicPauseBubble_outgoing
         } else {
-            return theme.icons.chatMusicPause
+            return presentation.icons.chatMusicPause
         }
     }
     var playThumb: CGImage {
         if isBubble {
-            return isIncoming ? theme.icons.chatMusicPlayBubble_incoming : theme.icons.chatMusicPlayBubble_outgoing
+            return isIncoming ? presentation.icons.chatMusicPlayBubble_incoming : presentation.icons.chatMusicPlayBubble_outgoing
         } else {
-            return theme.icons.chatMusicPlay
+            return presentation.icons.chatMusicPlay
         }
     }
     
     static var Empty: ChatMediaPresentation {
-        return ChatMediaPresentation(isIncoming: false, isBubble: false, activityBackground: theme.colors.accent, activityForeground: theme.colors.underSelectedColor, text: theme.colors.text, grayText: theme.colors.grayText, link: theme.colors.link, waveformBackground: theme.colors.waveformBackground, waveformForeground: theme.colors.waveformForeground)
+        return ChatMediaPresentation(presentation: theme, isIncoming: false, isBubble: false, activityBackground: theme.colors.accent, activityForeground: theme.colors.underSelectedColor, text: theme.colors.text, grayText: theme.colors.grayText, link: theme.colors.link, waveformBackground: theme.colors.waveformBackground, waveformForeground: theme.colors.waveformForeground)
     }
     
     static func ==(lhs: ChatMediaPresentation, rhs: ChatMediaPresentation) -> Bool {
@@ -287,6 +293,28 @@ final class TelegramChatColors {
         }
     }
     
+    private var _chatActionWebUrl: CGImage?
+    func chatActionWebUrl(theme: TelegramPresentationTheme) -> CGImage {
+        if let chatActionWebUrl = _chatActionWebUrl {
+            return chatActionWebUrl
+        } else {
+            let image = NSImage.init(named: "Icon_InlineBotWeb")!.precomposed(theme.chatServiceItemTextColor)
+            _chatActionWebUrl = image
+            return image
+        }
+    }
+    
+    private var _chatInvoiceAction: CGImage?
+    func chatInvoiceAction(theme: TelegramPresentationTheme) -> CGImage {
+        if let _chatInvoiceAction = _chatInvoiceAction {
+            return _chatInvoiceAction
+        } else {
+            let image = NSImage(named: "Icon_ChatInvoice")!.precomposed(theme.chatServiceItemTextColor)
+            _chatInvoiceAction = image
+            return image
+        }
+    }
+    
     func pollPercentAnimatedIcons(_ incoming: Bool, _ bubbled: Bool, from fromValue: CGFloat, to toValue: CGFloat, duration: Double) -> [CGImage] {
         let minimumFrameDuration = 1.0 / 60
         let numberOfFrames = max(1, Int(duration / minimumFrameDuration))
@@ -333,7 +361,7 @@ final class TelegramChatColors {
     
     
     func backgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? System.supportsTransparentFontDrawing ? .clear : palette.bubbleBackground_incoming : System.supportsTransparentFontDrawing ?  .clear : palette.bubbleBackgroundTop_outgoing.blended(withFraction: 0.5, of: palette.bubbleBackgroundBottom_outgoing)! : palette.chatBackground
+        return bubbled ? incoming ? System.supportsTransparentFontDrawing ? .clear : palette.bubbleBackground_incoming : System.supportsTransparentFontDrawing ?  .clear : palette.blendedOutgoingColors : palette.chatBackground
     }
     
     func backgoundSelectedColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
@@ -344,7 +372,7 @@ final class TelegramChatColors {
         return incoming ? palette.bubbleBorder_incoming : palette.bubbleBorder_outgoing//.clear//palette.bubbleBorder_outgoing
     }
     func bubbleBackgroundColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? palette.bubbleBackground_incoming : palette.bubbleBackgroundTop_outgoing : .clear//.clear//palette.bubbleBorder_outgoing
+        return bubbled ? incoming ? palette.bubbleBackground_incoming : palette.blendedOutgoingColors : .clear//.clear//palette.bubbleBorder_outgoing
     }
     
     func textColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
@@ -410,13 +438,6 @@ final class TelegramChatColors {
     
     func repliesCountIcon(_ item: ChatRowItem) -> CGImage {
         return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chat_reply_count_overlay_service_bubble : item.presentation.icons.chat_reply_count_overlay : item.hasBubble ? item.isIncoming ? item.presentation.icons.chat_reply_count_bubble_incoming : item.presentation.icons.chat_reply_count_bubble_outgoing : item.presentation.icons.chat_reply_count
-    }
-    func likedIcon(_ item: ChatRowItem) -> CGImage {
-        if item.isLiked {
-            return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chat_like_inside_bubble_service : item.presentation.icons.chat_like_inside_bubble_overlay : item.hasBubble ? item.isIncoming ? item.presentation.icons.chat_like_inside_bubble_incoming : item.presentation.icons.chat_like_inside_bubble_outgoing : item.presentation.icons.chat_like_inside
-        } else {
-            return item.isStateOverlayLayout ? !item.isInteractiveMedia ? item.presentation.chat_like_inside_empty_bubble_service : item.presentation.icons.chat_like_inside_empty_bubble_overlay : item.hasBubble ? item.isIncoming ? item.presentation.icons.chat_like_inside_empty_bubble_incoming : item.presentation.icons.chat_like_inside_empty_bubble_outgoing : item.presentation.icons.chat_like_inside_empty
-        }
     }
 
     func stateStateIcon(_ item: ChatRowItem) -> CGImage {

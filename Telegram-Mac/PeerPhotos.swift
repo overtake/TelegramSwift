@@ -12,7 +12,7 @@ import Postbox
 import SwiftSignalKit
 import TelegramApi
 import TelegramCore
-import SyncCore
+
 
 private struct PeerPhotos {
     let photos: [TelegramPeerPhoto]
@@ -26,14 +26,33 @@ func syncPeerPhotos(peerId: PeerId) -> [TelegramPeerPhoto] {
     return peerAvatars.with { $0[peerId].map { $0.photos } ?? [] }
 }
 
-func peerPhotos(account: Account, peerId: PeerId, force: Bool = false) -> Signal<[TelegramPeerPhoto], NoError> {
+func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) -> Signal<[TelegramPeerPhoto], NoError> {
     let photos = peerAvatars.with { $0[peerId] }
     if let photos = photos, photos.time > Date().timeIntervalSince1970, !force {
         return .single(photos.photos)
     } else {
-        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(requestPeerPhotos(postbox: account.postbox, network: account.network, peerId: peerId) |> delay(0.4, queue: .concurrentDefaultQueue()) |> map { photos in
+        if !force {
+            return context.account.postbox.peerView(id: peerId) |> map { peerView in
+                if let photo = peerView.cachedData?.photo, !force {
+                    let photo = TelegramPeerPhoto(image: photo, reference: nil, date: 0, index: 0, totalCount: 0, messageId: nil)
+                    return [photo]
+                } else {
+                    return []
+                }
+            }
+        }
+        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(combineLatest(context.engine.peers.requestPeerPhotos(peerId: peerId), context.account.postbox.peerView(id: peerId)) |> delay(0.4, queue: .concurrentDefaultQueue()) |> map { photos, peerView in
             return peerAvatars.modify { value in
                 var value = value
+                var photos = photos
+                if let cachedData = peerView.cachedData as? CachedChannelData {
+                    if let photo = cachedData.photo {
+                        if photos.firstIndex(where: { $0.image.id == photo.id }) == nil {
+                            photos.insert(TelegramPeerPhoto(image: photo, reference: nil, date: 0, index: 0, totalCount: photos.first?.totalCount ?? 0, messageId: nil), at: 0)
+                        }
+                    }
+                }
+                
                 value[peerId] = PeerPhotos(photos: photos, time: Date().timeIntervalSince1970 + 5 * 60)
                 return value
             }[peerId]?.photos ?? []
@@ -42,8 +61,8 @@ func peerPhotos(account: Account, peerId: PeerId, force: Bool = false) -> Signal
 }
 
 
-func peerPhotosGalleryEntries(account: Account, peerId: PeerId, firstStableId: AnyHashable) -> Signal<(entries: [GalleryEntry], selected:Int), NoError> {
-    return combineLatest(queue: prepareQueue, peerPhotos(account: account, peerId: peerId, force: true), account.postbox.loadedPeerWithId(peerId)) |> map { photos, peer in
+func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStableId: AnyHashable) -> Signal<(entries: [GalleryEntry], selected:Int), NoError> {
+    return combineLatest(queue: prepareQueue, peerPhotos(context: context, peerId: peerId, force: true), context.account.postbox.loadedPeerWithId(peerId)) |> map { photos, peer in
         
         var entries: [GalleryEntry] = []
         
@@ -62,7 +81,7 @@ func peerPhotosGalleryEntries(account: Account, peerId: PeerId, firstStableId: A
         var image:TelegramMediaImage? = nil
         var msg: Message? = nil
         if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
-            let action = message.media.first as! TelegramMediaAction
+            let action = message.effectiveMedia as! TelegramMediaAction
             switch action.action {
             case let .photoUpdated(updated):
                 image = updated
@@ -87,7 +106,7 @@ func peerPhotosGalleryEntries(account: Account, peerId: PeerId, firstStableId: A
             let photo = photos[i]
             photosDate.append(TimeInterval(photo.date))
             if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
-                let action = message.media.first as! TelegramMediaAction
+                let action = message.effectiveMedia as! TelegramMediaAction
                 switch action.action {
                 case let .photoUpdated(updated):
                     if photo.image.id == updated?.id {

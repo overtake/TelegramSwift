@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 class GroupNameRowItem: InputDataRowItem {
@@ -74,7 +74,7 @@ class GroupNameRowView : InputDataRowView {
         if let path = item.photo, let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
             
             let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
             photoView.setSignal(chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor), clearInstantly: false, animate: true)
             
             let arguments = TransformImageArguments(corners: ImageCorners(radius: photoView.frame.width / 2), imageSize: photoView.frame.size, boundingSize: photoView.frame.size, intrinsicInsets: NSEdgeInsets())
@@ -99,11 +99,16 @@ class GroupNameRowView : InputDataRowView {
                 if item.photo == nil {
                     item.pickPicture?(true)
                 } else {
-                    ContextMenu.show(items: [ContextMenuItem(L10n.peerCreatePeerContextUpdatePhoto, handler: {
+                    
+                    var items:[ContextMenuItem] = []
+                    items.append(ContextMenuItem(strings().peerCreatePeerContextUpdatePhoto, handler: {
                         item.pickPicture?(true)
-                    }), ContextMenuItem(L10n.peerCreatePeerContextRemovePhoto, handler: {
+                    }, itemImage: MenuAnimation.menu_shared_media.value))
+                    items.append(ContextSeparatorItem())
+                    items.append(ContextMenuItem(strings().peerCreatePeerContextRemovePhoto, handler: {
                         item.pickPicture?(false)
-                    })], view: photoView, event: event)
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    ContextMenu.show(items: items, view: photoView, event: event)
                 }
             }
         }
@@ -128,6 +133,9 @@ class GroupNameRowView : InputDataRowView {
 
         }
 
+    }
+    override var firstResponder: NSResponder? {
+        return self.textView.inputView
     }
     
     override func textViewTextDidChange(_ string: String) {

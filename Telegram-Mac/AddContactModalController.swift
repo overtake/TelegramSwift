@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 
@@ -61,13 +61,13 @@ private func addContactEntries(state: AddContactState) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.firstName), error: state.errors[_id_input_first_name], identifier: _id_input_first_name, mode: .plain, data: InputDataRowData(viewType: .firstItem), placeholder: nil, inputPlaceholder: L10n.contactsFirstNamePlaceholder, filter: { $0 }, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.firstName), error: state.errors[_id_input_first_name], identifier: _id_input_first_name, mode: .plain, data: InputDataRowData(viewType: .firstItem), placeholder: nil, inputPlaceholder: strings().contactsFirstNamePlaceholder, filter: { $0 }, limit: 255))
     index += 1
 
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.lastName), error: state.errors[_id_input_last_name], identifier: _id_input_last_name, mode: .plain, data: InputDataRowData(viewType: .innerItem), placeholder: nil, inputPlaceholder: L10n.contactsLastNamePlaceholder, filter: { $0 }, limit: 255))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.lastName), error: state.errors[_id_input_last_name], identifier: _id_input_last_name, mode: .plain, data: InputDataRowData(viewType: .innerItem), placeholder: nil, inputPlaceholder: strings().contactsLastNamePlaceholder, filter: { $0 }, limit: 255))
     index += 1
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.phoneNumber), error: state.errors[_id_input_phone_number], identifier: _id_input_phone_number, mode: .plain, data: InputDataRowData(viewType: .lastItem), placeholder: nil, inputPlaceholder: L10n.contactsPhoneNumberPlaceholder, filter: { text in
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.phoneNumber), error: state.errors[_id_input_phone_number], identifier: _id_input_phone_number, mode: .plain, data: InputDataRowData(viewType: .lastItem), placeholder: nil, inputPlaceholder: strings().contactsPhoneNumberPlaceholder, filter: { text in
         return text.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321+ ").inverted)
     }, limit: 30))
     index += 1
@@ -98,7 +98,7 @@ func AddContactModalController(_ context: AccountContext) -> InputDataModalContr
     
     var shouldMakeNextResponderAfterTransition: InputDataIdentifier? = nil
     
-    let controller = InputDataController(dataSignal: dataSignal |> map { InputDataSignalValue(entries: $0) }, title: L10n.contactsAddContact, validateData: { data in
+    let controller = InputDataController(dataSignal: dataSignal |> map { InputDataSignalValue(entries: $0) }, title: strings().contactsAddContact, validateData: { data in
         
         return .fail(.doSomething { f in
             let state = stateValue.with {$0}
@@ -116,20 +116,20 @@ func AddContactModalController(_ context: AccountContext) -> InputDataModalContr
                     shouldMakeNextResponderAfterTransition = _id_input_phone_number
                 }
                 updateState {
-                    $0.withUpdatedError(InputDataValueError(description: L10n.contactsPhoneNumberInvalid, target: .data), for: _id_input_phone_number)
+                    $0.withUpdatedError(InputDataValueError(description: strings().contactsPhoneNumberInvalid, target: .data), for: _id_input_phone_number)
                 }
             }
             
             if !fields.isEmpty {
                 f(.fail(.fields(fields)))
             } else {
-                _ = (showModalProgress(signal: importContact(account: context.account, firstName: state.firstName, lastName: state.lastName, phoneNumber: state.phoneNumber), for: mainWindow) |> deliverOnMainQueue).start(next: { peerId in
+                _ = (showModalProgress(signal: context.engine.contacts.importContact(firstName: state.firstName, lastName: state.lastName, phoneNumber: state.phoneNumber), for: context.window) |> deliverOnMainQueue).start(next: { peerId in
                     if let peerId = peerId {
-                        context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                        context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
                         close?()
                     } else {
                         updateState {
-                            $0.withUpdatedError(InputDataValueError(description: L10n.contactsPhoneNumberNotRegistred, target: .data), for: _id_input_phone_number)
+                            $0.withUpdatedError(InputDataValueError(description: strings().contactsPhoneNumberNotRegistred, target: .data), for: _id_input_phone_number)
                         }
                     }
                 })
@@ -163,7 +163,7 @@ func AddContactModalController(_ context: AccountContext) -> InputDataModalContr
     })
     
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalOK, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak controller] in
         controller?.validateInputValues()
     }, drawBorder: true, singleButton: true)
     

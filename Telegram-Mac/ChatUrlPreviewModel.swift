@@ -10,17 +10,17 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 class ChatUrlPreviewModel: ChatAccessoryModel {
     private let webpageDisposable = MetaDisposable()
     
     private (set) var webpage: TelegramMediaWebpage
     private let url:String
-    init(account: Account, webpage: TelegramMediaWebpage, url:String) {
+    init(context: AccountContext, webpage: TelegramMediaWebpage, url:String) {
         self.webpage = webpage
         self.url = url
-        super.init()
+        super.init(context: context)
         self.updateWebpage()
     }
     
@@ -34,7 +34,7 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
         var isEmptyText: Bool = false
         switch self.webpage.content {
         case .Pending:
-            authorName = L10n.chatInlineRequestLoading
+            authorName = strings().chatInlineRequestLoading
             text = self.url
         case let .Loaded(content):
             if let title = content.websiteName {
@@ -47,11 +47,11 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
             if content.text == nil && content.title == nil {
                 isEmptyText = true
             }
-            text = content.text ?? content.title ?? L10n.chatEmptyLinkPreview
+            text = content.text ?? content.title ?? strings().chatEmptyLinkPreview
         }
         
-        self.headerAttr = .initialize(string: authorName, color: theme.colors.accent, font: .medium(.text))
-        self.messageAttr = .initialize(string: text, color: isEmptyText ? theme.colors.grayText : theme.colors.text, font: .normal(.text))
+        self.header = .init(.initialize(string: authorName, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.message = .init(.initialize(string: text, color: isEmptyText ? theme.colors.grayText : theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         
         nodeReady.set(.single(true))
         self.setNeedDisplay()

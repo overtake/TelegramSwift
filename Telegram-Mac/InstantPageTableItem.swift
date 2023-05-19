@@ -1,7 +1,7 @@
 
 import Foundation
 import TelegramCore
-import SyncCore
+
 import Postbox
 import TGUIKit
 

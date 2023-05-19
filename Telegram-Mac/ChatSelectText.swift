@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 struct SelectContainer {
@@ -42,7 +42,7 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             for selection in ranges {
                 if let value = selection.1.value {
-                    value.layout?.clearSelect()
+                    value.textLayout?.clearSelect()
                     value.canBeResponder = true
                     value.setNeedsDisplay()
                 }
@@ -87,6 +87,12 @@ class SelectManager : NSResponder {
     }
     
     @objc func copy(_ sender:Any) {
+        
+        if let window = self.chatInteraction?.context.window, let peer = self.chatInteraction?.peer, peer.isCopyProtected {
+            showProtectedCopyAlert(peer, for: window)
+            return
+        }
+        
         let selectedText = self.selectedText
         if !selectedText.string.isEmpty {
             if !globalLinkExecutor.copyAttributedString(selectedText) {
@@ -121,7 +127,7 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             var ranges = ranges
             if let last = ranges.last, let textView = last.1.value {
-                if last.2.range.max < last.2.text.length, let layout = textView.layout {
+                if last.2.range.max < last.2.text.length, let layout = textView.textLayout {
                     
                     var range = last.2.range
                     
@@ -158,7 +164,7 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             var ranges = ranges
             if let first = ranges.first, let textView = first.1.value {
-                if let layout = textView.layout {
+                if let layout = textView.textLayout {
                     
                     var range = first.2.range
                     
@@ -297,22 +303,31 @@ class ChatSelectText : NSObject {
                     }
                 }
                 
-                if row < 0 || (!NSPointInRect(point, table.frame) || hasModals() || (!table.item(at: row).canMultiselectTextIn(event.locationInWindow) && chatInteraction.presentation.state != .selecting)) || !isCurrentTableView(window.contentView?.hitTest(event.locationInWindow)) {       self?.beginInnerLocation = NSZeroPoint
+                if row < 0 || (!NSPointInRect(point, table.frame) || hasModals(window) || (!table.item(at: row).canMultiselectTextIn(event.locationInWindow) && chatInteraction.presentation.state != .selecting)) || !isCurrentTableView(window.contentView?.hitTest(event.locationInWindow)) {
+                    self?.beginInnerLocation = NSZeroPoint
                 } else {
                     self?.beginInnerLocation = documentPoint
                 }
                 
                 
                 if row != -1, let item = table.item(at: row) as? ChatRowItem, let view = item.view as? ChatRowView {
-                    if chatInteraction.presentation.state == .selecting || (theme.bubbled && !NSPointInRect(view.convert(window.mouseLocationOutsideOfEventStream, from: nil), view.bubbleFrame(item))) {
+                    if chatInteraction.presentation.state == .selecting || (theme.bubbled && !NSPointInRect(view.convert(event.locationInWindow, from: nil), view.bubbleFrame(item))) {
                         if self?.startMessageId == nil {
                             self?.startMessageId = item.message?.id
                         }
-                        self?.deselect = !view.isSelectInGroup(window.mouseLocationOutsideOfEventStream)
+                        self?.deselect = !view.isSelectInGroup(event.locationInWindow)
                     }
                 }
                 
                 self?.started = self?.beginInnerLocation != NSZeroPoint
+                if self?.started == true, row != -1 {
+                    if chatInteraction.presentation.state == .selecting, let deselect = self?.deselect {
+                        let item = table.item(at: row) as? ChatRowItem
+                        if let view = item?.view as? ChatRowView {
+                            view.toggleSelected(deselect, in: window.mouseLocationOutsideOfEventStream)
+                        }
+                    }
+                }
             }
             
             return .invokeNext
@@ -342,29 +357,35 @@ class ChatSelectText : NSObject {
                 if let index = self?.table.row(at: point), index > 0, let item = self?.table.item(at: index), let view = item.view as? ChatRowView {
                     
                     if event.clickCount > 1, selectManager.isEmpty {
-                        var set: Bool = false
-                        inner: for view in view.selectableTextViews {
-                            if view == window.firstResponder {
-                                _ = window.makeFirstResponder(view)
-                                set = true
-                                break inner
+                        if !view.isAllowedToDoubleAction(view.convert(event.locationInWindow, from: nil)) {
+                            var set: Bool = false
+                            inner: for view in view.selectableTextViews {
+                                if view == window.firstResponder {
+                                    _ = window.makeFirstResponder(view)
+                                    set = true
+                                    break inner
+                                }
+                            }
+                            if !set {
+                                _ = window.makeFirstResponder(view.selectableTextViews.first)
                             }
                         }
-                        if !set {
-                            _ = window.makeFirstResponder(view.selectableTextViews.first)
+                    }
+
+                    if chatInteraction.presentation.reportMode == nil {
+                        if view.canDropSelection(in: event.locationInWindow) {
+                            if let result = chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
+                                self?.startMessageId = nil
+                                chatInteraction.update({$0.withoutSelectionState()})
+                            }
                         }
                     }
-                    
-                    if view.canDropSelection(in: event.locationInWindow) {
+                } else {
+                    if chatInteraction.presentation.reportMode == nil {
                         if let result = chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
                             self?.startMessageId = nil
                             chatInteraction.update({$0.withoutSelectionState()})
                         }
-                    }
-                } else {
-                    if let result = chatInteraction.presentation.selectionState?.selectedIds.isEmpty, result {
-                        self?.startMessageId = nil
-                        chatInteraction.update({$0.withoutSelectionState()})
                     }
                 }
                 if cleanStartId {
@@ -457,7 +478,7 @@ class ChatSelectText : NSObject {
         if  let view = table.item(at: beginRow).view as? ChatRowView, let item = view.item as? ChatRowItem, selectingText, table._mouseInside() {
             let rowPoint = view.convert(beginInnerLocation, from: table.documentView)
             if (!NSPointInRect(rowPoint, view.bubbleFrame(item)) && theme.bubbled) {
-                if startIndex != endIndex {
+                if startIndex != endIndex || abs(beginInnerLocation.y - endInnerLocation.y) > 10 {
                     for i in max(0,startIndex) ... min(endIndex,table.count - 1)  {
                         let item = table.item(at: i) as? ChatRowItem
                         if let view = item?.view as? ChatRowView {
@@ -504,7 +525,7 @@ class ChatSelectText : NSObject {
                     for j in 0 ..< views.count {
                         let selectableView = views[j]
                         
-                        if let layout = selectableView.layout {
+                        if let layout = selectableView.textLayout {
                             let beginViewLocation = selectableView.convert(beginInnerLocation, from: table.documentView)
                             let endViewLocation = selectableView.convert(endInnerLocation, from: table.documentView)
                             

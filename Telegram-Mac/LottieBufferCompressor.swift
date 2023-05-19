@@ -12,6 +12,11 @@ import Accelerate
 import Postbox
 import SwiftSignalKit
 import TGUIKit
+import ApiCredentials
+
+private let enableDifference = true
+
+private let maxFrameBufferSizeCache = 7200
 
 private enum WriteResult {
     case success
@@ -23,26 +28,45 @@ private enum ReadResult {
     case failed
 }
 
+private var sharedData:Atomic<[LottieAnimationEntryKey:WeakReference<TRLotData>]> = Atomic(value: [:])
+
 private struct FrameDst : Codable {
     let offset: Int
     let length: Int
-    init(offset: Int, length: Int) {
+    let finished: Bool
+    init(offset: Int, length: Int, finished: Bool) {
         self.offset = offset
         self.length = length
+        self.finished = finished
     }
 }
+private struct DstData : Codable {
+    var dest: [Int : FrameDst]
+    var fps: Int32
+    var startFrame: Int32
+    var endFrame: Int32
+}
 
-private var sharedData:Atomic<[LottieAnimationEntryKey:WeakReference<TRLotData>]> = Atomic(value: [:])
 
+private let version = 65
 
 final class TRLotData {
     
     
-    fileprivate var map:[Int : FrameDst]
+    fileprivate var map:DstData
     fileprivate let bufferSize: Int
     
     private let mapPath: String
     private let dataPath: String
+    var isFinished: Bool = false {
+        didSet {
+            assert(queue.isCurrent())
+            let cpy = map
+            for (key, value) in cpy.dest {
+                map.dest[key] = .init(offset: value.offset, length: value.length, finished: isFinished)
+            }
+        }
+    }
     
     private var readHandle: FileHandle?
     private var writeHandle: FileHandle?
@@ -51,7 +75,7 @@ final class TRLotData {
     
     fileprivate func hasAlreadyFrame(_ frame: Int) -> Bool {
         assert(queue.isCurrent())
-        return self.map[frame] != nil
+        return map.dest[frame] != nil
     }
     fileprivate func readFrame(frame: Int) -> ReadResult {
         
@@ -59,7 +83,11 @@ final class TRLotData {
         self.writeHandle = nil
         assert(queue.isCurrent())
         
-        if let dest = map[frame] {
+        if !isFinished {
+            return .failed
+        }
+        
+        if let dest = map.dest[frame] {
             let readHande: FileHandle?
             if let handle = self.readHandle {
                 readHande = handle
@@ -69,7 +97,7 @@ final class TRLotData {
             }
             
             guard let dataHandle = readHande else {
-                self.map.removeAll()
+                self.map.dest.removeAll()
                 return .failed
             }
             
@@ -78,7 +106,7 @@ final class TRLotData {
             if data.count == dest.length {
                 return .success(data)
             } else {
-                self.map.removeValue(forKey: frame)
+                self.map.dest.removeValue(forKey: frame)
                 return .failed
             }
         }
@@ -102,11 +130,11 @@ final class TRLotData {
         }
     }
     
-    fileprivate func writeFrame(frame: Int, data:Data, endFrame: Int) -> WriteResult {
+    fileprivate func writeFrame(frame: Int, data:Data) -> WriteResult {
         self.readHandle?.closeFile()
         self.readHandle = nil
         assert(queue.isCurrent())
-        if map[frame] == nil {
+        if map.dest[frame] == nil {
             let writeHandle: FileHandle?
             if let handle = self.writeHandle {
                 writeHandle = handle
@@ -120,7 +148,9 @@ final class TRLotData {
             }
             let length = dataHandle.seekToEndOfFile()
             dataHandle.write(data)
-            self.map[frame] = FrameDst(offset: Int(length), length: data.count)
+            var frames = self.map.dest
+            frames[frame] = FrameDst(offset: Int(length), length: data.count, finished: isFinished)
+            self.map = DstData(dest: frames, fps: self.map.fps, startFrame: self.map.startFrame, endFrame: self.map.endFrame)
         }
 
         return .success
@@ -128,8 +158,7 @@ final class TRLotData {
     
     
     fileprivate static var directory: String {
-        let appGroupName = ApiEnvironment.group
-        let groupPath = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupName)!.path
+        let groupPath = ApiEnvironment.containerURL!.path
         
         let path = groupPath + "/trlottie-animations/"
         try? FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)
@@ -141,21 +170,22 @@ final class TRLotData {
 
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v4-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
+        return path + "-v\(version)-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
     }
     
     static func dataPath(_ animation: LottieAnimation, bufferSize: Int) -> String {
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v4-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
+        return path + "-v\(version)-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
     }
     
-    init(_ animation: LottieAnimation, endFrame: Int, bufferSize: Int, queue: Queue) {
+    init(_ animation: LottieAnimation, bufferSize: Int, queue: Queue) {
         self.queue = queue
         self.mapPath = TRLotData.mapPath(animation, bufferSize: bufferSize)
         self.dataPath = TRLotData.dataPath(animation, bufferSize: bufferSize)
         self.key = animation.key
         var mapHandle:FileHandle?
+        
         
         let deferr:(TRLotData)->Void = { data in
             if !FileManager.default.fileExists(atPath: data.mapPath) {
@@ -166,17 +196,17 @@ final class TRLotData {
             }
             try? FileManager.default.setAttributes([.modificationDate : Date()], ofItemAtPath: data.mapPath)
             try? FileManager.default.setAttributes([.modificationDate : Date()], ofItemAtPath: data.dataPath)
-            
             _ = sharedData.modify { value in
                 var value = value
                 value[data.key] = WeakReference(value: data)
                 return value
             }
+
             mapHandle?.closeFile()
         }
         
         guard let handle = FileHandle(forReadingAtPath: self.mapPath) else {
-            self.map = [:]
+            self.map = .init(dest: [:], fps: 0, startFrame: 0, endFrame: 0)
             self.bufferSize = bufferSize
             deferr(self)
             return
@@ -184,22 +214,31 @@ final class TRLotData {
         mapHandle = handle
         
         guard let data = NSKeyedUnarchiver.unarchiveObject(withFile: self.mapPath) as? Data else {
-            self.map = [:]
+            self.map = .init(dest: [:], fps: 0, startFrame: 0, endFrame: 0)
             self.bufferSize = bufferSize
             deferr(self)
             return
         }
         do {
-            self.map = try PropertyListDecoder().decode([Int: FrameDst].self, from: data)
+            self.map = try PropertyListDecoder().decode(DstData.self, from: data)
             self.bufferSize = bufferSize
             deferr(self)
         } catch {
-            self.map = [:]
+            self.map = .init(dest: [:], fps: 0, startFrame: 0, endFrame: 0)
             self.bufferSize = bufferSize
             deferr(self)
         }
-        
-        
+        if !self.map.dest.isEmpty {
+            self.isFinished = self.map.dest.filter { $0.value.finished }.count == self.map.dest.count
+        } else {
+            self.isFinished = false
+        }
+    }
+    
+    func initialize(fps: Int32, startFrame: Int32, endFrame: Int32) {
+        self.map.fps = fps
+        self.map.startFrame = startFrame
+        self.map.endFrame = endFrame
     }
     
 }
@@ -211,104 +250,140 @@ final class TRLotFileSupplyment {
     fileprivate let bufferSize: Int
     fileprivate let data:TRLotData
     fileprivate let queue: Queue
-    fileprivate var shouldWaitToRead: [Int:Int] = [:]
     
-    init(_ animation:LottieAnimation, bufferSize: Int, frames: Int, queue: Queue) {
+    init(_ animation:LottieAnimation, bufferSize: Int, queue: Queue) {
         let cached = sharedData.with { $0[animation.key]?.value }
         let queue = cached?.queue ?? queue
-        self.data = cached ?? TRLotData(animation, endFrame: frames, bufferSize: bufferSize, queue: queue)
+        self.data = cached ?? TRLotData(animation, bufferSize: bufferSize, queue: queue)
         self.queue = queue
-        for value in self.data.map {
-            shouldWaitToRead[value.key] = value.key
-        }
         self.bufferSize = bufferSize
     }
-    func addFrame(_ previous: RenderedFrame?, _ current: RenderedFrame, endFrame: Int) {
-        if shouldWaitToRead[Int(current.frame)] == nil {
-            shouldWaitToRead[Int(current.frame)] = Int(current.frame)
-            queue.async {
-                if !self.data.hasAlreadyFrame(Int(current.frame)) {
-                    let address = current.data.assumingMemoryBound(to: UInt8.self)
-                    
+    
+    func initialize(fps: Int32, startFrame: Int32, endFrame: Int32) {
+        queue.sync {
+            self.data.initialize(fps: fps, startFrame: startFrame, endFrame: endFrame)
+        }
+
+    }
+    
+    var fps: Int32 {
+        var fps: Int32 = 0
+        queue.sync {
+            fps = self.data.map.fps
+        }
+        return fps
+    }
+    var endFrame: Int32 {
+        var endFrame: Int32 = 0
+        queue.sync {
+            endFrame = self.data.map.endFrame
+        }
+        return endFrame
+    }
+    var startFrame: Int32 {
+        var startFrame: Int32 = 0
+        queue.sync {
+            startFrame = self.data.map.startFrame
+        }
+        return startFrame
+    }
+
+    func markFinished() {
+        queue.async {
+            self.data.isFinished = true
+        }
+    }
+    var isFinished: Bool {
+        var isFinished: Bool = false
+        queue.sync {
+            isFinished = self.data.isFinished
+        }
+        return isFinished
+    }
+    
+
+    
+    func addFrame(_ previous: Data?, _ current: (Data, Int32)) {
+        queue.async {
+            
+            if !self.data.hasAlreadyFrame(Int(current.1)) {
+                current.0.withUnsafeBytes { pointer in
+                    let address = pointer.baseAddress!.assumingMemoryBound(to: UInt8.self)
+                    let ui64Address = pointer.baseAddress!.assumingMemoryBound(to: UInt64.self)
                     let dst: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
                     var length:Int = self.bufferSize
-                    if let previous = previous {
+                    if let previous = previous, enableDifference {
                         let uint64Bs = self.bufferSize / 8
                         let dstDelta: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
-                        memcpy(dstDelta, previous.data.assumingMemoryBound(to: UInt8.self), self.bufferSize)
                         
-                        
-                        let ui64Dst = dstDelta.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { previousBytes in
-                            return previousBytes
-                        })
-                        
-                        let ui64Address = address.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { address in
-                            return address
-                        })
-                        
-                        
-                        var i: Int = 0
-                        while i < uint64Bs {
-                            ui64Dst[i] = ui64Dst[i] ^ ui64Address[i]
-                            i &+= 1
+                        previous.withUnsafeBytes { pointer in
+                            memcpy(dstDelta, pointer.baseAddress!.assumingMemoryBound(to: UInt8.self), self.bufferSize)
+                            
+                            let ui64Dst = dstDelta.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { previousBytes in
+                                return previousBytes
+                            })
+                            
+                            var i: Int = 0
+                            while i < uint64Bs {
+                                ui64Dst[i] = ui64Dst[i] ^ ui64Address[i]
+                                i &+= 1
+                            }
+                            
+                            let ui8 = ui64Dst.withMemoryRebound(to: UInt8.self, capacity: self.bufferSize, { body in
+                                return body
+                            })
+                            
+                            length = compression_encode_buffer(dst, self.bufferSize, ui8, self.bufferSize, nil, COMPRESSION_LZFSE)
+                            dstDelta.deallocate()
                         }
                         
-                        let ui8 = ui64Dst.withMemoryRebound(to: UInt8.self, capacity: self.bufferSize, { body in
-                            return body
-                        })
                         
-                        length = compression_encode_buffer(dst, self.bufferSize, ui8, self.bufferSize, nil, COMPRESSION_LZ4)
-                        dstDelta.deallocate()
                     } else {
-                        length = compression_encode_buffer(dst, self.bufferSize, address, self.bufferSize, nil, COMPRESSION_LZ4)
+                        length = compression_encode_buffer(dst, self.bufferSize, address, self.bufferSize, nil, COMPRESSION_LZFSE)
                     }
-                    let _ = self.data.writeFrame(frame: Int(current.frame), data: Data(bytesNoCopy: dst, count: length, deallocator: .none), endFrame: endFrame)
+                    let _ = self.data.writeFrame(frame: Int(current.1), data: Data(bytes: dst, count: length))
                     dst.deallocate()
                 }
             }
         }
     }
 
-    func readFrame(previous: RenderedFrame?, frame: Int) -> UnsafeRawPointer? {
-        var rendered: UnsafeRawPointer? = nil
-        if shouldWaitToRead[frame] != nil {
-            queue.sync {
+
+    func readFrame(previous: Data?, frame: Int) -> Data? {
+        var rendered: Data? = nil
+        queue.sync {
+            
+            if self.data.isFinished {
                 switch self.data.readFrame(frame: frame) {
                 case let .success(data):
                     let address = malloc(bufferSize)!.assumingMemoryBound(to: UInt8.self)
-                    
-                    
-                    rendered = data.withUnsafeBytes { dataBytes -> UnsafeRawPointer in
-
+                    data.withUnsafeBytes { dataBytes in
                         let unsafeBufferPointer = dataBytes.bindMemory(to: UInt8.self)
                         let unsafePointer = unsafeBufferPointer.baseAddress!
 
-                        let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZ4)
+                        let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZFSE)
 
-                        if let previous = previous {
-
-                            let previousBytes = previous.data.assumingMemoryBound(to: UInt64.self)
-
-                            let uint64Bs = self.bufferSize / 8
-
-                            address.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { address in
-                                var i = 0
-                                while i < uint64Bs {
-                                    address[i] = previousBytes[i] ^ address[i]
-                                    i &+= 1
-                                }
-                            })
-
+                        if let previous = previous, enableDifference {
+                            previous.withUnsafeBytes { pointer in
+                                let previousBytes = pointer.baseAddress!.assumingMemoryBound(to: UInt64.self)
+                                let uint64Bs = self.bufferSize / 8
+                                address.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { address in
+                                    var i = 0
+                                    while i < uint64Bs {
+                                        address[i] = previousBytes[i] ^ address[i]
+                                        i &+= 1
+                                    }
+                                })
+                            }
                         }
-                        return UnsafeRawPointer(address)
                     }
-                    
+                    rendered = Data(bytes: address, count: bufferSize)
+                    address.deallocate()
                 default:
                     rendered = nil
                 }
             }
         }
-        
         return rendered
     }
     

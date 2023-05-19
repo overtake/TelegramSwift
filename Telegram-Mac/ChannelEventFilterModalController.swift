@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 
@@ -111,11 +111,11 @@ private enum ChannelEventFilterEntry : TableItemListNodeEntry {
         case .header(_, _, let text):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
         case .allAdmins(_, _, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chanelEventFilterAllAdmins, type: .switchable (enabled), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chanelEventFilterAllAdmins, type: .switchable (enabled), action: {
                 arguments.toggleAllAdmins()
             })
         case .allEvents(_, _, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.chanelEventFilterAllEvents, type: .switchable (enabled), action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chanelEventFilterAllEvents, type: .switchable (enabled), action: {
                 arguments.toggleAllEvents()
             })
         case let .filter(_, _, flag, name, enabled):
@@ -129,11 +129,11 @@ private enum ChannelEventFilterEntry : TableItemListNodeEntry {
             let status:String
             switch participant.participant {
             case .creator:
-                status = L10n.adminsOwner
+                status = strings().adminsOwner
             case .member:
-                status = L10n.adminsAdmin
+                status = strings().adminsAdmin
             }
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(enabled), action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(enabled), action: {
                 arguments.toggleAdmin(participant.peer.id)
             })
         }
@@ -227,57 +227,72 @@ private enum FilterEvents {
     case groupInfo
     case deletedMessages
     case editedMessages
+    case voiceChats
+    case sendMessages
     case pinnedMessages
     case leavingMembers
-    
+    case invites
     var flags:AdminLogEventsFlags {
         switch self {
         case .newMembers:
-            return [AdminLogEventsFlags.join, AdminLogEventsFlags.unban]
+            return [.join, .unban]
         case .newAdmins:
-            return [AdminLogEventsFlags.promote]
+            return [.promote]
         case .leavingMembers:
-            return  [AdminLogEventsFlags.leave, AdminLogEventsFlags.kick]
+            return  [.leave, .kick]
         case .restrictions:
-            return [AdminLogEventsFlags.unban, AdminLogEventsFlags.ban]
+            return [.unban, .ban]
         case .groupInfo:
-            return [AdminLogEventsFlags.info, AdminLogEventsFlags.settings]
+            return [.info, .settings]
         case .pinnedMessages:
-            return [AdminLogEventsFlags.pinnedMessages]
+            return [.pinnedMessages]
         case .editedMessages:
-            return [AdminLogEventsFlags.editMessages]
+            return [.editMessages]
         case .deletedMessages:
-            return [AdminLogEventsFlags.deleteMessages]
+            return [.deleteMessages]
+        case .voiceChats:
+            return [.calls]
+        case .invites:
+            return [.invites]
+        case .sendMessages:
+            return [.sendMessages]
         }
     }
     
     func localizedString(_ broadcast:Bool) -> String {
         switch self {
         case .newMembers:
-            return tr(L10n.channelEventFilterNewMembers)
+            return strings().channelEventFilterNewMembers
         case .newAdmins:
-            return tr(L10n.channelEventFilterNewAdmins)
+            return strings().channelEventFilterNewAdmins
         case .leavingMembers:
-            return  tr(L10n.channelEventFilterLeavingMembers)
+            return  strings().channelEventFilterLeavingMembers
         case .restrictions:
-            return tr(L10n.channelEventFilterNewRestrictions)
+            return strings().channelEventFilterNewRestrictions
         case .groupInfo:
-            return broadcast ? tr(L10n.channelEventFilterChannelInfo) : tr(L10n.channelEventFilterGroupInfo)
+            return broadcast ? strings().channelEventFilterChannelInfo : strings().channelEventFilterGroupInfo
         case .pinnedMessages:
-            return tr(L10n.channelEventFilterPinnedMessages)
+            return strings().channelEventFilterPinnedMessages
         case .editedMessages:
-            return tr(L10n.channelEventFilterEditedMessages)
+            return strings().channelEventFilterEditedMessages
         case .deletedMessages:
-            return tr(L10n.channelEventFilterDeletedMessages)
+            return strings().channelEventFilterDeletedMessages
+        case .voiceChats:
+            return strings().channelEventFilterVoiceChats
+        case .invites:
+            return strings().channelEventFilterInvites
+        case .sendMessages:
+            return strings().channelEventFilterSendMessages
+
         }
     }
 }
 
 private func eventFilters(_ channel: Bool) -> [FilterEvents] {
     if channel {
-        return [.newMembers, .newAdmins, .groupInfo, .deletedMessages, .editedMessages, .leavingMembers]
+        return [.newMembers, .newAdmins, .groupInfo, .sendMessages, .deletedMessages, .editedMessages, .leavingMembers]
     } else {
-        return [.restrictions, .newMembers, .newAdmins, .groupInfo, .deletedMessages, .editedMessages, .pinnedMessages, .leavingMembers]
+        return [.restrictions, .newMembers, .newAdmins, .groupInfo, .invites, .sendMessages, .deletedMessages, .editedMessages, .voiceChats, .pinnedMessages, .leavingMembers]
     }
 }
 
@@ -291,7 +306,7 @@ private func channelEventFilterEntries(state: ChannelEventFilterState, peer:Peer
     entries.append(.section(section))
     section += 1
     
-    entries.append(.header(section, index, text: tr(L10n.channelEventFilterEventsHeader)))
+    entries.append(.header(section, index, text: strings().channelEventFilterEventsHeader))
     index += 1
     entries.append(.allEvents(section, index, enabled: state.eventsException.isEmpty))
     index += 1
@@ -304,7 +319,7 @@ private func channelEventFilterEntries(state: ChannelEventFilterState, peer:Peer
     entries.append(.section(section))
     section += 1
     
-    entries.append(.header(section, index, text: tr(L10n.channelEventFilterAdminsHeader)))
+    entries.append(.header(section, index, text: strings().channelEventFilterAdminsHeader))
     index += 1
     
     entries.append(.allAdmins(section, index, enabled: state.adminsException.isEmpty))
@@ -377,9 +392,9 @@ class ChannelEventFilterModalController: ModalViewController {
         super.viewDidLoad()
         
         let stateValue = self.stateValue
-        let statePromise = ValuePromise(stateValue.modify({$0}), ignoreRepeated: true)
+        let statePromise = ValuePromise(stateValue.with { $0 }, ignoreRepeated: true)
         let updateState: ((ChannelEventFilterState) -> ChannelEventFilterState) -> Void = { f in
-            statePromise.set(stateValue.modify { f($0) })
+            statePromise.set(stateValue.modify(f))
         }
         
         let arguments = ChannelFilterArguments(context: context, toggleFlags: { flags in
@@ -428,9 +443,9 @@ class ChannelEventFilterModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak self] in
             self?.noticeUpdated()
-        }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 40)
+        }, cancelTitle: strings().modalCancel, drawBorder: true, height: 40)
     }
     
     deinit {

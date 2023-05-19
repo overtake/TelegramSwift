@@ -158,12 +158,12 @@ private final class PeerMediaBlockRowView : TableRowView {
                     }
                     NotificationCenter.default.post(name: NSView.boundsDidChangeNotification, object: mediaTable.clipView)
                     
+                    let previousY = item.controller.view.frame.minY
+
                     if item.temporaryHeight != mediaTable.documentSize.height {
                         item.temporaryHeight = max(mediaTable.documentSize.height, table.frame.height)
                         table.noteHeightOfRow(item.index, false)
                     }
-                    
-                    let previousY = item.controller.view.frame.minY
                     
                     item.controller.view.frame = NSMakeRect(0, max(0, self.frame.minY - table.documentOffset.y), self.frame.width, table.frame.height)
                     

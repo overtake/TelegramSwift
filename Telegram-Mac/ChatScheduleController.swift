@@ -8,12 +8,12 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
 class ChatScheduleController: ChatController {
-    public override init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .scheduled, messageId:MessageId? = nil, initialAction:ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?> = Atomic<ChatLocationContextHolder?>(value: nil)) {
+    public override init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .scheduled, messageId:MessageId? = nil, initialAction:ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil) {
         super.init(context: context, chatLocation: chatLocation, mode: mode, messageId: messageId, initialAction: initialAction, chatLocationContextHolder: chatLocationContextHolder)
     }
 
@@ -30,11 +30,11 @@ class ChatScheduleController: ChatController {
         let context = self.context
         
         chatInteraction.requestMessageActionCallback = { _, _, _ in
-            alert(for: context.window, info: L10n.chatScheduledInlineButtonError)
+            alert(for: context.window, info: strings().chatScheduledInlineButtonError)
         }
         
         chatInteraction.vote = { _, _, _ in
-            alert(for: context.window, info: L10n.chatScheduledInlineButtonError)
+            alert(for: context.window, info: strings().chatScheduledInlineButtonError)
         }
     }
     

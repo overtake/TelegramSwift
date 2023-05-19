@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 import TGUIKit
@@ -27,8 +27,9 @@ class ChatMusicContentView: ChatAudioContentView {
         didSet {
             if let fetchStatus = fetchStatus {
                 switch fetchStatus {
-                case let .Fetching(_, progress):
-                    if progress == 1.0, parent?.groupingKey != nil {
+                case let .Fetching(_, progress), let .Paused(progress):
+                    let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
+                    if progress == 1.0, sentGrouped {
                         progressView.state = .Success
                     } else {
                         progressView.state = .Fetching(progress: progress, force: false)
@@ -75,33 +76,40 @@ class ChatMusicContentView: ChatAudioContentView {
         
         let file = media as! TelegramMediaFile
         
-        let resource: TelegramMediaResource
+        let resource: TelegramMediaResource?
         if file.previewRepresentations.isEmpty {
-            resource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
+            if !file.mimeType.contains("ogg") {
+                resource = ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
+            } else {
+                resource = nil
+            }
         } else {
             resource = file.previewRepresentations.first!.resource
         }
         imageView.layer?.contents = theme.icons.chatMusicPlaceholder
 
-        
-        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(iconSize), resource: resource, progressiveSizes: [])], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-        
-        imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
-        
-        if !imageView.isFullyLoaded {
-            imageView.setSignal( chatMessagePhotoThumbnail(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)), animate: true, cacheImage: { [weak media] result in
-                if let media = media {
-                    cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
-                }
-            })
+        if let resource = resource {
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(iconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            
+            imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: positionFlags), clearInstantly: false)
+            
+            if !imageView.isFullyLoaded {
+                imageView.setSignal( chatMessagePhotoThumbnail(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)), animate: true, cacheImage: { [weak media] result in
+                    if let media = media {
+                        cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: positionFlags)
+                    }
+                })
+            }
+            
+            imageView.set(arguments: arguments)
         }
         
-        imageView.set(arguments: arguments)
+
       //  imageView.layer?.cornerRadius = 20
     }
     
-    override func checkState() {
-        if let parent = parent, let controller = globalAudio, let song = controller.currentSong {
+    override func checkState(animated: Bool) {
+        if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
             if song.entry.isEqual(to: parent) {
                 if playAnimationView == nil {
                     playAnimationView = PeerMediaPlayerAnimationView()

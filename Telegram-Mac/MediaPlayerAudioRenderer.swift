@@ -3,7 +3,7 @@ import SwiftSignalKit
 import CoreMedia
 import AVFoundation
 import TelegramCore
-import SyncCore
+
 
 private enum AudioPlayerRendererState {
     case paused
@@ -69,7 +69,7 @@ private func withPlayerRendererBuffer(_ id: Int32, _ f: (Atomic<AudioPlayerRende
 private let kOutputBus: UInt32 = 0
 private let kInputBus: UInt32 = 1
 
-private func rendererInputProc(refCon: UnsafeMutableRawPointer, ioActionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, inTimeStamp: UnsafePointer<AudioTimeStamp>, inBusNumber: UInt32, inNumberFrames: UInt32, ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
+private func rendererInputProcPlayer(refCon: UnsafeMutableRawPointer, ioActionFlags: UnsafeMutablePointer<AudioUnitRenderActionFlags>, inTimeStamp: UnsafePointer<AudioTimeStamp>, inBusNumber: UInt32, inNumberFrames: UInt32, ioData: UnsafeMutablePointer<AudioBufferList>?) -> OSStatus {
     guard let ioData = ioData else {
         return noErr
     }
@@ -400,7 +400,7 @@ private final class AudioPlayerRendererContext {
             AudioUnitSetProperty(converterAudioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0, &streamFormat, UInt32(MemoryLayout<AudioStreamBasicDescription>.size))
             
             var callbackStruct = AURenderCallbackStruct()
-            callbackStruct.inputProc = rendererInputProc
+            callbackStruct.inputProc = rendererInputProcPlayer
             callbackStruct.inputProcRefCon = UnsafeMutableRawPointer(bitPattern: intptr_t(self.bufferContextId))
             
             guard AUGraphSetNodeInputCallback(audioGraph, converterNode, 0, &callbackStruct) == noErr else {
@@ -648,12 +648,23 @@ struct AudioAddress {
     static var outputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultOutputDevice,
                                                          mScope: kAudioObjectPropertyScopeGlobal,
                                                          mElement: kAudioObjectPropertyElementMaster)
+    
+    static var nominalSampleRates = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyStreamFormat,
+                                                         mScope: kAudioObjectPropertyScopeOutput,
+                                                         mElement: kAudioObjectPropertyElementMaster)
+
+    
+    static var inputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultInputDevice,
+                                                         mScope: kAudioObjectPropertyScopeGlobal,
+                                                         mElement: kAudioObjectPropertyElementMaster)
+
 }
 
 enum AudioNotification: String {
     case audioDevicesDidChange
     case audioInputDeviceDidChange
     case audioOutputDeviceDidChange
+    case mixStereo
     
     var stringValue: String {
         return "Audio" + rawValue
@@ -669,6 +680,10 @@ struct AudioListener {
         NotificationCenter.default.post(name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
         return 0
     }
+    static var input: AudioObjectPropertyListenerProc = { _, _, _, _ in
+        NotificationCenter.default.post(name: AudioNotification.audioInputDeviceDidChange.notificationName, object: nil)
+        return 0
+    }
 }
 
 
@@ -678,6 +693,13 @@ final class MediaPlayerAudioRenderer {
     let audioTimebase: CMTimebase
     
     init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, volume: Float, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
+        
+        // Here we are probably running inside of playerQueue.
+        // For some reason deadlock may occure in case of intensive MediaPlayerAudioRenderer object creation.
+        // Let's wait until `audioPlayerRendererQueue` finish all scheduled jobs,
+        // including "garabage" collection of previous object.
+        audioPlayerRendererQueue.sync{}
+
         var audioClock: CMClock?
         
         var deviceId:AudioDeviceID = AudioDeviceID()
@@ -695,12 +717,12 @@ final class MediaPlayerAudioRenderer {
         
         var audioTimebase: CMTimebase?
         if let audioClock = audioClock {
-            CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: audioClock, timebaseOut: &audioTimebase)
+            CMTimebaseCreateWithSourceClock(allocator: nil, sourceClock: audioClock, timebaseOut: &audioTimebase)
         }
         
         
         if audioTimebase == nil {
-            CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: CMClockGetHostTimeClock(), timebaseOut: &audioTimebase)
+            CMTimebaseCreateWithSourceClock(allocator: nil, sourceClock: CMClockGetHostTimeClock(), timebaseOut: &audioTimebase)
         }
         
         let timebase = audioTimebase!
@@ -717,7 +739,13 @@ final class MediaPlayerAudioRenderer {
         }
         
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
+        
+        
         NotificationCenter.default.addObserver(self, selector: #selector(handleNotification(_:)), name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
+        
+
+        NotificationCenter.default.addObserver(self, selector: #selector(handleNotification(_:)), name: AudioNotification.mixStereo.notificationName, object: nil)
+
     }
     
     @objc private func handleNotification(_ notification: Notification) {

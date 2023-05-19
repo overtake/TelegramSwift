@@ -8,7 +8,7 @@
 
 import TGUIKit
 import SwiftSignalKit
-
+import ColorPalette
 
 private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> CGImage {
     return generateImage(CGSize(width: 42.0, height: 42.0), scale: System.backingScale, rotatedContext: { size, context in
@@ -24,16 +24,21 @@ private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> 
                 let rect = NSMakeRect(0, 0, size.width, size.height)
                 ctx.clear(rect)
                 ctx.round(size, size.height / 2)
-                let colors = [messages.top, messages.bottom].reversed()
-                let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
-                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                var locations: [CGFloat] = []
-                for i in 0 ..< colors.count {
-                    locations.append(delta * CGFloat(i))
+                let colors = messages.reversed()
+                if colors.count > 1 {
+                    let gradientColors = colors.reversed().map { $0.cgColor } as CFArray
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = CGColorSpaceCreateDeviceRGB()
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                } else if let color = messages.first {
+                    ctx.setFillColor(color.cgColor)
+                    ctx.fill(rect)
                 }
-                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: rect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
             })!
             
             context.draw(image, in: bounds.focus(imageSize))
@@ -150,6 +155,28 @@ final class AccentColorRowView : TableRowView {
         containerView.addSubview(borderView)
         documentView.backgroundColor = .clear
         addSubview(containerView)
+        
+        containerView.contextMenu = { [weak self] in
+            guard let item = self?.item as? AccentColorRowItem, let documentView = self?.documentView else {
+                return nil
+            }
+            guard let event = NSApp.currentEvent else {
+                return nil
+            }
+            let documentPoint = documentView.convert(event.locationInWindow, from: nil)
+            
+            for (_, subview) in documentView.subviews.enumerated() {
+                if NSPointInRect(documentPoint, subview.frame), let accent = (subview as? Button)?.contextObject as? AppearanceAccentColor {
+                    let items = item.menuItems(accent)
+                    let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    return menu
+                }
+            }
+            return nil
+        }
     }
 
     override var backdorColor: NSColor {
@@ -184,25 +211,6 @@ final class AccentColorRowView : TableRowView {
         scrollView.frame = NSMakeRect(0, innerInset.top, item.blockWidth, containerView.frame.height - innerInset.top - innerInset.bottom)
     }
     
-    override func menu(for event: NSEvent) -> NSMenu? {
-        guard let item = item as? AccentColorRowItem else {
-            return nil
-        }
-        
-        let documentPoint = documentView.convert(event.locationInWindow, from: nil)
-        
-        for (_, subview) in documentView.subviews.enumerated() {
-            if NSPointInRect(documentPoint, subview.frame), let accent = (subview as? Button)?.contextObject as? AppearanceAccentColor {
-                let items = item.menuItems(accent)
-                let menu = ContextMenu()
-                menu.items = items
-                
-                return menu
-            }
-        }
-        
-        return nil
-    }
     
     private let selectedImageView = ImageView()
     
@@ -232,6 +240,7 @@ final class AccentColorRowView : TableRowView {
         if item.isNative {
             let custom = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             custom.autohighlight = false
+            custom.animates = false
             custom.set(image: generateCustomSwatchImage(), for: .Normal)
             custom.setImageContentGravity(.resize)
             custom.set(handler: { _ in
@@ -245,6 +254,7 @@ final class AccentColorRowView : TableRowView {
         if !colorList.contains(where: { $0.accent.accent == theme.colors.accent && $0.cloudTheme?.id == theme.cloudTheme?.id }) {
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
+            button.animates = false
             button.layer?.cornerRadius = button.frame.height / 2
             button.set(background: theme.colors.accent, for: .Normal)
             button.addSubview(selectedImageView)
@@ -259,8 +269,8 @@ final class AccentColorRowView : TableRowView {
             
             var accent = colorList[i]
             
-            if let cloudTheme = accent.cloudTheme, let settings = cloudTheme.settings {
-                let signal = themeAppearanceThumbAndData(context: item.context, bubbled: false, source: .local(settings.palette, cloudTheme)) |> deliverOnMainQueue
+            if let cloudTheme = accent.cloudTheme, let settings = cloudTheme.effectiveSettings(for: item.theme.colors) {
+                let signal = themeAppearanceThumbAndData(context: item.context, bubbled: false, parent: settings.palette, source: .local(settings.palette, cloudTheme)) |> deliverOnMainQueue
                 disposableSet.add(signal.start(next: { result in
                     switch result.1 {
                     case let .cloud(_, cachedData):
@@ -273,6 +283,7 @@ final class AccentColorRowView : TableRowView {
             
             let button = ImageButton(frame: NSMakeRect(x, 0, 36, 36))
             button.autohighlight = false
+            button.animates = false
            // button.layer?.cornerRadius = button.frame.height / 2
             let icon = generateAccentColor(accent.accent, bubbled: theme.bubbled)
             button.contextObject = colorList[i]

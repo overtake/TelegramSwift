@@ -9,9 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
+
 class PeerInfoHeaderItem: GeneralRowItem {
 
     fileprivate var firstTextEdited:String?
@@ -51,6 +52,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
     let peer:Peer?
     let isVerified: Bool
     let isScam: Bool
+    let isFake: Bool
     let peerView:PeerView
     let result:PeerStatusStringResult
     let editable:Bool
@@ -72,6 +74,7 @@ class PeerInfoHeaderItem: GeneralRowItem {
         
         self.isVerified = peer?.isVerified ?? false
         self.isScam = peer?.isScam ?? false
+        self.isFake = peer?.isFake ?? false
         if let peer = peer {
             photo = peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions:NSMakeSize(photoDimension, photoDimension))
         }
@@ -152,12 +155,14 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
     private let image:AvatarControl = AvatarControl(font: .avatar(26.0))
     private let nameTextView = TextView()
     private let statusTextView = TextView()
-    private let imageView = ImageView()
     private let firstNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 0, 34), unscrollable: true)
     private let lastNameTextView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 0, 34), unscrollable: true)
     private let editableContainer:View = View()
     private let firstNameSeparator:View = View()
     private let separatorView:View = View()
+    
+    private var statusControl: PremiumStatusControl? = nil
+    
     private let progressView:RadialProgressContainerView = RadialProgressContainerView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, icon: nil))
     private let callButton:ImageButton = ImageButton()
     private let callDisposable = MetaDisposable()
@@ -189,7 +194,6 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
         editableContainer.addSubview(firstNameTextView)
         editableContainer.addSubview(lastNameTextView)
 
-        containerView.addSubview(imageView)
 
         editableContainer.addSubview(firstNameSeparator)
         
@@ -203,8 +207,8 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
         callButton.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerInfoHeaderItem, let peerId = item.peer?.id  {
                 let context = item.context
-                self?.callDisposable.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                    applyUIPCallResult(context.sharedContext, result)
+                self?.callDisposable.set((phoneCall(context: context, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                    applyUIPCallResult(context, result)
                 }))
             }
             }, for: .SingleClick)
@@ -234,7 +238,7 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
             }
 
             table.noteHeightOfRow(item.index, animated)
-            change(size: NSMakeSize(frame.width, item.height), animated: animated)
+            
         }
     }
     
@@ -322,6 +326,8 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
             editableContainer.backgroundColor = backdorColor
             firstNameTextView.textColor = theme.colors.text
             lastNameTextView.textColor = theme.colors.text
+            firstNameTextView.selectedTextColor = theme.colors.selectText
+            lastNameTextView.selectedTextColor = theme.colors.selectText
             firstNameTextView.setBackgroundColor(backdorColor)
             lastNameTextView.setBackgroundColor(backdorColor)
             firstNameSeparator.backgroundColor = theme.colors.border
@@ -372,19 +378,19 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
             
             firstNameSeparator.isHidden = item.secondHeight == 0
             
-            
-            
-            
-            if item.isVerified {
-                imageView.image = theme.icons.peerInfoVerifyProfile
-            } else if item.isScam {
-                imageView.image = theme.icons.chatScam
-            } else {
-                imageView.image = nil
+            if let peer = item.peer, !item.editable {
+                let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+                if let control = control {
+                    self.statusControl = control
+                    self.containerView.addSubview(control)
+                } else if let view = self.statusControl {
+                    performSubviewRemoval(view, animated: animated)
+                    self.statusControl = nil
+                }
+            } else if let view = self.statusControl {
+                performSubviewRemoval(view, animated: animated)
+                self.statusControl = nil
             }
-            imageView.sizeToFit()
-            
-            imageView.isHidden = imageView.image == nil || item.editable
             
             let containerRect: NSRect
             switch item.viewType {
@@ -418,8 +424,8 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
                 if let peer = peer as? TelegramUser {
                     firstNameTextView.setString(item.firstTextEdited ?? peer.firstName ?? "", animated: false)
                     lastNameTextView.setString(item.lastTextEdited ?? peer.lastName ?? "", animated: false)
-                    firstNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
-                    lastNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoLastNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                    firstNameTextView.setPlaceholderAttributedString(.initialize(string: strings().peerInfoFirstNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                    lastNameTextView.setPlaceholderAttributedString(.initialize(string: strings().peerInfoLastNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     lastNameTextView.isHidden = false
                 } else {
                     let titleText = item.firstTextEdited ?? peer.displayTitle
@@ -427,9 +433,9 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
                         firstNameTextView.setString(titleText, animated: false)
                     }
                     if peer.isChannel {
-                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: L10n.peerInfoChannelNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: strings().peerInfoChannelNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     } else {
-                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: L10n.peerInfoGroupNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: strings().peerInfoGroupNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     }
 
                     lastNameTextView.isHidden = true
@@ -499,8 +505,9 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
 
                 nameTextView.setFrameOrigin(NSMakePoint(item.textInset, nameY))
                 statusTextView.setFrameOrigin(NSMakePoint(item.textInset, nameTextView.frame.maxY + 2))
-                imageView.setFrameOrigin(NSMakePoint(item.textInset + item.nameLayout.layoutSize.width + 3, nameY + 3))
-
+                if let statusControl = statusControl {
+                    statusControl.setFrameOrigin(NSMakePoint(item.textInset + item.nameLayout.layoutSize.width + 3, nameY + 3))
+                }
             }
         }
     }

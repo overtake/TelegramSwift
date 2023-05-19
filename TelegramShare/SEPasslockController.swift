@@ -8,19 +8,8 @@
 
 import Cocoa
 import TGUIKit
-
-//
-//  PasscodeLockController.swift
-//  TelegramMac
-//
-//  Created by keepcoder on 10/01/2017.
-//  Copyright © 2017 Telegram. All rights reserved.
-//
-
-import Cocoa
-import TGUIKit
 import TelegramCore
-import SyncCore
+import Localization
 import Postbox
 import SwiftSignalKit
 
@@ -42,7 +31,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         self.backgroundColor = theme.colors.background
         nextButton.set(color: theme.colors.accent, for: .Normal)
         nextButton.set(font: .normal(.title), for: .Normal)
-        nextButton.set(text: tr(L10n.shareExtensionPasscodeNext), for: .Normal)
+        nextButton.set(text: L10n.shareExtensionPasscodeNext, for: .Normal)
         _ = nextButton.sizeToFit()
         
         cancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
@@ -62,7 +51,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.delegate = self
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(L10n.shareExtensionPasscodePlaceholder), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+        _ = attr.append(string: L10n.shareExtensionPasscodePlaceholder, color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
         attr.setAlignment(.center, range: attr.range)
         input.placeholderAttributedString = attr
         input.backgroundColor = theme.colors.background
@@ -126,21 +115,13 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
 }
 
 class SEPasslockController: ModalViewController {
-    private let context: SharedAccountContext
 
-    private let disposable:MetaDisposable = MetaDisposable()
     private let valueDisposable = MetaDisposable()
-    private let logoutDisposable = MetaDisposable()
-    private var passcodeValues:[String] = []
-    private let _doneValue:Promise<Bool> = Promise()
-    
-    var doneValue:Signal<Bool, NoError> {
-        return _doneValue.get()
-    }
     private let cancelImpl:()->Void
-    init(_ context: SharedAccountContext, cancelImpl:@escaping()->Void) {
-        self.context = context
+    private let checkNextValue: (String)->Bool
+    init(checkNextValue: @escaping(String)->Bool, cancelImpl:@escaping()->Void) {
         self.cancelImpl = cancelImpl
+        self.checkNextValue = checkNextValue
         super.init(frame: NSMakeRect(0, 0, 340, 310))
     }
     
@@ -152,37 +133,20 @@ class SEPasslockController: ModalViewController {
         return self.view as! PasscodeLockView
     }
     
-    private func checkNextValue(_ passcode: String, _ current:String?) {
-        if current == passcode {
-            _doneValue.set(.single(true))
-            close()
-        } else {
-            genericView.input.shake()
-        }
-    }
-    
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         genericView.cancel.set(handler: { [weak self] _ in
             self?.cancelImpl()
         }, for: .Click)
         
-        valueDisposable.set((genericView.value.get() |> mapToSignal { [weak self] value in
-            if let strongSelf = self {
-                return strongSelf.context.accountManager.transaction { transaction -> (String, String?) in
-                    switch transaction.getAccessChallengeData() {
-                    case .none:
-                        return (value, nil)
-                    case let .plaintextPassword(passcode), let .numericalPassword(passcode):
-                        return (value, passcode)
-                    }
-                }
+        valueDisposable.set((genericView.value.get() |> deliverOnMainQueue).start(next: { [weak self] value in
+            guard let `self` = self else {
+                return
             }
-            return .single(("", nil))
-            } |> deliverOnMainQueue).start(next: { [weak self] value, current in
-                self?.checkNextValue(value, current)
-            }))
+            if !self.checkNextValue(value) {
+                self.genericView.input.shake()
+            }
+        }))
         
         genericView.update()
         readyOnce()
@@ -211,8 +175,6 @@ class SEPasslockController: ModalViewController {
     }
     
     deinit {
-        disposable.dispose()
-        logoutDisposable.dispose()
         valueDisposable.dispose()
         self.window?.removeAllHandlers(for: self)
     }

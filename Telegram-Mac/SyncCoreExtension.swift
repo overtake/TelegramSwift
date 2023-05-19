@@ -7,7 +7,8 @@
 //
 
 import Cocoa
-import SyncCore
+import TelegramCore
+import TGUIKit
 
 extension PixelDimensions {
     var size: CGSize {
@@ -29,3 +30,4 @@ extension CGSize {
 enum AppLogEvents : String {
     case imageEditor = "image_editor_used"
 }
+

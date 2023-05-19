@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -204,7 +204,7 @@ private func groupStickersEntries(state: GroupStickerSetControllerState, view: C
     
     applyBlock(inputBlock)
     
-    entries.append(.description(sectionId, descriptionId, text: L10n.groupStickersCreateDescription, viewType: .textBottomItem))
+    entries.append(.description(sectionId, descriptionId, text: strings().groupStickersCreateDescription, viewType: .textBottomItem))
     descriptionId += 1
 
     
@@ -213,7 +213,7 @@ private func groupStickersEntries(state: GroupStickerSetControllerState, view: C
     
     
     
-    entries.append(.description(sectionId, descriptionId, text: L10n.groupStickersChooseHeader, viewType: .textTopItem))
+    entries.append(.description(sectionId, descriptionId, text: strings().groupStickersChooseHeader, viewType: .textTopItem))
     descriptionId += 1
     if let stickerPacksView = view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView {
         if let packsEntries = stickerPacksView.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
@@ -329,7 +329,7 @@ class GroupStickerSetController: TableViewController {
             if updated.isEmpty {
                 resolveDisposable.set(nil)
             } else {
-                resolveDisposable.set((loadedStickerPack(postbox: context.account.postbox, network: context.account.network, reference: .name(updated), forceActualized: false) |> deliverOnMainQueue).start(next: { result in
+                resolveDisposable.set((context.engine.stickers.loadedStickerPack(reference: .name(updated), forceActualized: false) |> deliverOnMainQueue).start(next: { result in
                     switch result {
                     case .fetching:
                         updateState({$0.withUpdatedLoadedPack(nil).withUpdatedLoading(true)})
@@ -345,10 +345,9 @@ class GroupStickerSetController: TableViewController {
         }, openChat: { [weak self] peerId in
             self?.navigationController?.push(ChatController(context: context, chatLocation: .peer(peerId)))
         })
-        
         saveGroupStickerSet = { [weak self] in
             if let strongSelf = self {
-                actionsDisposable.add(showModalProgress(signal: updateGroupSpecificStickerset(postbox: context.account.postbox, network: context.account.network, peerId: peerId, info: stateValue.modify{$0}.loadedPack?.0), for: mainWindow).start(next: { [weak strongSelf] _ in
+                actionsDisposable.add(showModalProgress(signal: context.engine.peers.updateGroupSpecificStickerset(peerId: peerId, info: stateValue.modify{$0}.loadedPack?.0), for: context.window).start(next: { [weak strongSelf] _ in
                     strongSelf?.navigationController?.back()
                 }, error: { [weak strongSelf] _ in
                     strongSelf?.navigationController?.back()
@@ -366,7 +365,7 @@ class GroupStickerSetController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<GroupStickersetEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
-        let signal = combineLatest(queue: prepareQueue,statePromise.get(), stickerPacks.get(), peerSpecificStickerPack(postbox: context.account.postbox, network: context.account.network, peerId: peerId), appearanceSignal)
+        let signal = combineLatest(queue: prepareQueue,statePromise.get(), stickerPacks.get(), context.engine.peers.peerSpecificStickerPack(peerId: peerId), appearanceSignal)
             |> map { state, view, specificPack, appearance -> TableUpdateTransition in
                 let entries = groupStickersEntries(state: state, view: view, peerId: peerId, specificPack: specificPack.packInfo).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
@@ -399,7 +398,7 @@ class GroupStickerSetController: TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: tr(L10n.navigationDone))
+        let button = TextButtonBarView(controller: self, text: strings().navigationDone)
         
         button.set(handler: { [weak self] _ in
             self?.saveGroupStickerSet?()

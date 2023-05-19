@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import ObjcUtils
 import SwiftSignalKit
 
 private enum ChatRecordingOverlayState {
@@ -210,7 +210,7 @@ class ChatRecorderOverlayWindowController : NSObject {
             self.chatInteraction.update({$0.withoutRecordingState()})
         }
         if state == .fixed {
-            confirm(for: parent, information: L10n.chatRecordingCancel, okTitle: L10n.alertDiscard, cancelTitle: L10n.alertNO, successHandler: { _ in
+            confirm(for: parent, information: strings().chatRecordingCancel, okTitle: strings().alertDiscard, cancelTitle: strings().alertNO, successHandler: { _ in
                 proccess()
             })
         } else {
@@ -219,7 +219,7 @@ class ChatRecorderOverlayWindowController : NSObject {
     }
     
     var minX: CGFloat {
-        let navigation = chatInteraction.context.sharedContext.bindings.rootNavigation()
+        let navigation = chatInteraction.context.bindings.rootNavigation()
         if navigation.genericView.state == .dual, let sidebar = navigation.sidebar {
             return parent.frame.maxX - window.frame.width - sidebar.frame.width + 35
         }

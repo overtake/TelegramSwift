@@ -35,6 +35,8 @@ class GeneralInteractedRowItem: GeneralRowItem {
     let switchAppearance: SwitchViewAppearance
     let autoswitch: Bool
     
+    let badgeNode:BadgeNode?
+    
     let disabledAction:()->Void
     
     var nameWidth:CGFloat {
@@ -75,13 +77,15 @@ class GeneralInteractedRowItem: GeneralRowItem {
     }
     
     private let menuItems:(()->[ContextMenuItem])?
-    
-    let customTheme: InputDataGeneralData.Theme?
-    
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: @escaping()-> Void = {}, menuItems:(()->[ContextMenuItem])? = nil, theme: InputDataGeneralData.Theme? = nil) {
+    let disableBorder: Bool
+    let rightIcon: CGImage?
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: @escaping()-> Void = {}, menuItems:(()->[ContextMenuItem])? = nil, customTheme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, rightIcon: CGImage? = nil) {
+        
+        
         self.name = name
+        self.rightIcon = rightIcon
         self.menuItems = menuItems
-        self.customTheme = theme
+        self.disableBorder = disableBorder
         if let description = description {
             descLayout = TextViewLayout(.initialize(string: description, color: descTextColor, font: .normal(.text)))
         } else {
@@ -93,11 +97,16 @@ class GeneralInteractedRowItem: GeneralRowItem {
         } else {
             self.thumb = thumb
         }
+        if case let .badge(text, color) = type {
+            self.badgeNode = .init(.initialize(string: text, color: .white, font: .medium(.short)), color)
+        } else {
+            self.badgeNode = nil
+        }
         self.disabledAction = disabledAction
         self.autoswitch = autoswitch
         self.activeThumb = activeIcon != nil ? GeneralThumbAdditional(thumb: activeIcon!, textInset: nil) : self.thumb
-        self.switchAppearance = switchAppearance
-        super.init(initialSize, height: 0, stableId:stableId, type:type, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:border, inset:inset, enabled: enabled, error: error)
+        self.switchAppearance = customTheme?.switchAppearance ?? switchAppearance
+        super.init(initialSize, height: 0, stableId:stableId, type:type, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:border, inset:inset, enabled: enabled, error: error, customTheme: customTheme)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
     
@@ -120,9 +129,13 @@ class GeneralInteractedRowItem: GeneralRowItem {
     }
     
     
+    override var instantlyResize: Bool {
+        return true
+    }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
+                
         nameLayout = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: enabled ? nameStyle.foregroundColor : theme.colors.grayText, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, .greatestFiniteMagnitude), nil, isSelected, .left)
         nameLayoutSelected = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: theme.colors.underSelectedColor, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, .greatestFiniteMagnitude), nil, isSelected, .left)
         descLayout?.measure(width: nameWidth)

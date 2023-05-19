@@ -44,7 +44,7 @@ kernel vec4 alphaFrame(__sample s, __sample m) {
 
 let sampleBufferQueue = DispatchQueue.init(label: "sampleBufferQueue", qos: DispatchQoS.background, attributes: [])
 
-private let veryLongTimeInterval = CFTimeInterval(256.0 * 365.0 * 24.0 * 60.0 * 60.0)
+private let veryLongTimeInterval = CFTimeInterval(8073216000)
 
 struct AVGifData : Equatable {
     let asset: AVURLAsset

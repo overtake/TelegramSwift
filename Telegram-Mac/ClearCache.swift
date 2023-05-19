@@ -15,7 +15,7 @@ private let cacheQueue = Queue(name: "org.telegram.clearCacheQueue")
 private let cleanQueue = Queue(name: "org.telegram.cleanupQueue")
 
 
-private func scanFiles(at path: String, anyway: ((String, Int)) -> Void) {
+func scanFiles(at path: String, anyway: ((String, Int)) -> Void) {
     guard let enumerator = FileManager.default.enumerator(at: URL(fileURLWithPath: path), includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey], options: [.skipsSubdirectoryDescendants], errorHandler: nil) else {
         return
     }
@@ -30,7 +30,10 @@ private func scanFiles(at path: String, anyway: ((String, Int)) -> Void) {
             continue
         }
         if let file = url.path {
-            anyway((file, (resourceValues[.fileSizeKey] as? NSNumber)?.intValue ?? 0))
+            let size = (resourceValues[.fileSizeKey] as? NSNumber)?.intValue ?? 0
+            if size > 0 {
+                anyway((file, size))
+            }
         }
     }
 }
@@ -41,6 +44,9 @@ private func clearCache(_ files: [(String, Int)], excludes: [(partial: String, c
         var cancelled = false
         
         let files = files.filter { file in
+            if let fileSize = fs(file.0), fileSize == 0 {
+                return true
+            }
             return !excludes.contains(where: {
                 $0.partial == file.0 || $0.complete == file.0
             })
@@ -60,7 +66,7 @@ private func clearCache(_ files: [(String, Int)], excludes: [(partial: String, c
                 }
                 let date = resourceValues.contentModificationDate?.timeIntervalSince1970 ?? start
                 if date <= start {
-                    unlink(file.0)
+                    try? FileManager.default.removeItem(atPath: file.0)
                 }
                 cleaned += file.1
                 subscriber.putNext(Float(cleaned) / Float(total))
@@ -88,9 +94,9 @@ private final class CCTask : Equatable {
     private var progress: Atomic<Float> = Atomic(value: 0)
 
     init(_ account: Account, completion: @escaping()->Void) {
-        let signal: Signal<Float, NoError> = account.postbox.mediaBox.allFileContexts()
+        let signal: Signal<Float, NoError> = combineLatest(account.postbox.mediaBox.allFileContextResourceIds(), account.postbox.mediaBox.allFileContexts())
             |> deliverOn(cacheQueue)
-            |> mapToSignal { excludes in
+            |> mapToSignal { ids, excludes in
                 var files:[(String, Int)] = []
                 scanFiles(at: account.postbox.mediaBox.basePath, anyway: { value in
                     files.append(value)
@@ -98,7 +104,7 @@ private final class CCTask : Equatable {
                 scanFiles(at: account.postbox.mediaBox.basePath + "/cache", anyway: { value in
                     files.append(value)
                 })
-                return clearCache(files, excludes: excludes, start: Date().timeIntervalSince1970)
+                return account.postbox.mediaBox.removeCachedResources(ids) |> then(clearCache(files, excludes: excludes, start: Date().timeIntervalSince1970))
             } |> deliverOn(cacheQueue)
         
         self.disposable.set(signal.start(next: { [weak self] value in

@@ -11,19 +11,17 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 class ForwardPanelModel: ChatAccessoryModel {
     
     
     
-    private var account:Account
-    private var forwardMessages:[Message] = []
-    
-    init(forwardMessages:[Message], account:Account) {
-        
-        self.account = account
+    private let forwardMessages:[Message]
+    private let hideNames: Bool
+    init(forwardMessages:[Message], hideNames: Bool, context: AccountContext) {
         self.forwardMessages = forwardMessages
-        super.init()
+        self.hideNames = hideNames
+        super.init(context: context)
         self.make()
     }
     deinit {
@@ -51,7 +49,7 @@ class ForwardPanelModel: ChatAccessoryModel {
         
         
         for message in forwardMessages {
-            if let author = message.chatPeer(account.peerId) {
+            if let author = message.chatPeer(context.peerId) {
                 if !used.contains(author.id) {
                     used.insert(author.id)
                     if author.isChannel {
@@ -63,8 +61,28 @@ class ForwardPanelModel: ChatAccessoryModel {
             }
         }
         
-        self.headerAttr = NSAttributedString.initialize(string: names.joined(separator: ", "), color: theme.colors.accent, font: .medium(.text))
-        self.messageAttr = NSAttributedString.initialize(string: tr(L10n.messageAccessoryPanelForwardedCountable(forwardMessages.count)), color: theme.colors.text, font: .normal(.text))
+        //hideNames ? strings().chatInputForwardHidden :  names.joined(separator: ", ")
+        
+        let text = hideNames ? strings().chatAccessoryHiddenCountable(forwardMessages.count) : strings().chatAccessoryForwardCountable(forwardMessages.count)
+        self.header = .init(.initialize(string: text, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
+        if forwardMessages.count == 1, !forwardMessages[0].text.isEmpty, forwardMessages[0].media.isEmpty {
+            let messageText = chatListText(account: context.account, for: forwardMessages[0], isPremium: context.isPremium, isReplied: true).mutableCopy() as! NSMutableAttributedString
+            
+            let author = forwardMessages[0].forwardInfo?.author ?? forwardMessages[0].effectiveAuthor
+            
+            if author?.id == context.peerId {
+                messageText.insert(.initialize(string: "\(strings().chatAccessoryForwardYou): ", color: theme.colors.grayText, font: .normal(.text)), at: 0)
+            } else if let author = author {
+                messageText.insert(.initialize(string: "\(author.displayTitle): ", color: theme.colors.grayText, font: .normal(.text)), at: 0)
+            }
+            self.message = .init(messageText, maximumNumberOfLines: 1)
+        } else {
+            let authors = uniquePeers(from: forwardMessages.compactMap { $0.forwardInfo?.author ?? $0.effectiveAuthor })
+            let messageText = authors.map { $0.compactDisplayTitle }.joined(separator: ", ")
+            let text = "\(strings().chatAccessoryForwardFrom): \(messageText)"
+
+            self.message = .init(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        }
 
         nodeReady.set(.single(true))
         self.setNeedDisplay()

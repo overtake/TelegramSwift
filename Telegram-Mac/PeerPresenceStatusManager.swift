@@ -10,7 +10,7 @@ import Cocoa
 
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+
 
 final class PeerPresenceStatusManager {
     private let update: () -> Void

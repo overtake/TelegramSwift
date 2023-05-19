@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+import InAppVideoServices
 import SwiftSignalKit
 
 
@@ -93,25 +93,8 @@ class WPArticleContentView: WPContentView {
                 return
             }
             
-            if ExternalVideoLoader.isPlayable(content) {
-                openExternalDisposable.set((sharedVideoLoader.status(for: content) |> deliverOnMainQueue).start(next: { (status) in
-                    if let status = status {
-                        switch status {
-                        case .fail:
-                            execute(inapp: .external(link: content.url, false))
-                        case .loaded:
-                            showChatGallery(context: layout.context, message: layout.parent, layout.table)
-                        default:
-                            break
-                        }
-                    }
-                }))
-                
-                _ = sharedVideoLoader.fetch(for: content).start()
-                return
-            }
-            if content.embedType == "iframe" {
-                showModal(with: WebpageModalController(content:content, context: layout.context), for: window)
+            if content.embedType == "iframe", content.type != "video", let url = content.embedUrl {
+                showModal(with: WebpageModalController(context: layout.context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size), for: window)
             } else if layout.isGalleryAssemble {
                 showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
             } else if let wallpaper = layout.wallpaper {
@@ -258,7 +241,7 @@ class WPArticleContentView: WPContentView {
             if layout.content.image == nil, let file = layout.content.file, let dimension = layout.imageSize {
                 var representations: [TelegramMediaImageRepresentation] = []
                 representations.append(contentsOf: file.previewRepresentations)
-                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimension), resource: file.resource, progressiveSizes: []))
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimension), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                 image = TelegramMediaImage(imageId: file.id ?? MediaId(namespace: 0, id: arc4random64()), representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                 
             }
@@ -268,8 +251,8 @@ class WPArticleContentView: WPContentView {
                     let isPattern: Bool
                     if let settings = layout.content.themeSettings, let wallpaper = settings.wallpaper {
                         switch wallpaper {
-                        case let .file(_, _, _, _, pattern, _, _, _, _):
-                            isPattern = pattern
+                        case let .file(file):
+                            isPattern = file.isPattern
                         default:
                             isPattern = false
                         }
@@ -296,7 +279,7 @@ class WPArticleContentView: WPContentView {
                         var initProgress: Bool = false
                         var state: RadialProgressState = .None
                         switch status {
-                        case .Fetching:
+                        case .Fetching, .Paused:
                             state = .Fetching(progress: 0.3, force: false)
                             initProgress = true
                         case .Local:
@@ -351,7 +334,7 @@ class WPArticleContentView: WPContentView {
                             switch status {
                             case .Remote:
                                 self?.fetch()
-                            case .Fetching:
+                            case .Fetching, .Paused:
                                 self?.cancelFetching()
                             case .Local:
                                 self?.open()
@@ -387,6 +370,10 @@ class WPArticleContentView: WPContentView {
                 updateImageSignal = crossplatformPreview(account: layout.context.account, palette: palette, wallpaper: wallpaper, mode: .thumbnail)
                 
                 
+                self.playIcon?.removeFromSuperview()
+                self.playIcon = nil
+
+                
                 if imageView == nil {
                     imageView = TransformImageView()
                     self.addSubview(imageView!)
@@ -418,13 +405,13 @@ class WPArticleContentView: WPContentView {
                             imageView?.layer?.cornerRadius = .cornerRadius
                             imageView?.background = color
                             removeImageView = false
-                        case let .gradient(top, bottom, gradient):
+                        case let .gradient(_, colors, settings):
                             if gradientView == nil {
                                 gradientView = BackgroundView(frame: NSZeroRect)
                                 self.addSubview(gradientView!)
                             }
                             gradientView?.layer?.cornerRadius = .cornerRadius
-                            gradientView?.backgroundMode = .gradient(top: top, bottom: bottom, rotation: gradient)
+                            gradientView?.backgroundMode = .gradient(colors: colors, rotation: settings.rotation)
                             removeImageView = true
                             removeGradientView = false
                         default:
@@ -465,7 +452,7 @@ class WPArticleContentView: WPContentView {
                     countAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
                     imageView?.addSubview(countAccessoryView!)
                 }
-                countAccessoryView?.updateText(L10n.chatWebpageMediaCount1(1, mediaCount), maxWidth: 40, status: nil, isStreamable: false)
+                countAccessoryView?.updateText(strings().chatWebpageMediaCount1(1, mediaCount), maxWidth: 40, status: nil, isStreamable: false)
             } else {
                 countAccessoryView?.removeFromSuperview()
                 countAccessoryView = nil

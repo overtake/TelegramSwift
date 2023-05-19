@@ -10,9 +10,10 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+import ColorPalette
+import ThemeSettings
 import Postbox
-import SyncCore
+import InAppSettings
 import CoreGraphics
 
 enum WallpaperPreviewMode : Equatable {
@@ -84,165 +85,8 @@ extension Wallpaper {
 
 let WallpaperDimensions: NSSize = NSMakeSize(1040, 1580)
 
-private final class blurCheckbox : View {
-    
-    var isFullFilled: Bool = false {
-        didSet {
-            needsDisplay = true
-        }
-    }
-    
-    private(set) var isSelected: Bool = false
-    private var timer: SwiftSignalKit.Timer?
-    func set(isSelected: Bool, animated: Bool) {
-        self.isSelected = isSelected
-        if animated {
-            timer?.invalidate()
-            
-            let fps: CGFloat = 60
 
-            let tick = isSelected ? ((1 - animationProgress) / (fps * 0.2)) : -(animationProgress / (fps * 0.2))
-            timer = SwiftSignalKit.Timer(timeout: 0.016, repeat: true, completion: { [weak self] in
-                guard let `self` = self else {return}
-                self.animationProgress += tick
-                
-                if self.animationProgress <= 0 || self.animationProgress >= 1 {
-                    self.timer?.invalidate()
-                    self.timer = nil
-                }
-                
-            }, queue: .mainQueue())
-            
-            timer?.start()
-        } else {
-            animationProgress = isSelected ? 1.0 : 0.0
-        }
-    }
-    
-    deinit {
-        timer?.invalidate()
-    }
-    
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-    }
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private var animationProgress: CGFloat = 0.0 {
-        didSet {
-            needsDisplay = true
-        }
-    }
-    
-    override func draw(_ layer: CALayer, in context: CGContext) {
-        super.draw(layer, in: context)
-        
-        let borderWidth: CGFloat = 2.0
-        
-        context.setStrokeColor(.white)
-        context.setLineWidth(borderWidth)
-        context.strokeEllipse(in: bounds.insetBy(dx: borderWidth / 2.0, dy: borderWidth / 2.0))
-        
-        let progress: CGFloat = animationProgress
-        let diameter = bounds.width
-        let center = CGPoint(x: diameter / 2.0, y: diameter / 2.0)
 
-        
-        context.setFillColor(.white)
-        context.fillEllipse(in: bounds.insetBy(dx: (diameter - borderWidth) * (1.0 - animationProgress), dy: (diameter - borderWidth) * (1.0 - animationProgress)))
-        if !isFullFilled {
-            let firstSegment: CGFloat = max(0.0, min(1.0, progress * 3.0))
-            let s = CGPoint(x: center.x - 4.0, y: center.y + 1.0)
-            let p1 = CGPoint(x: 3.0, y: 3.0)
-            let p2 = CGPoint(x: 5.0, y: -6.0)
-            
-            if !firstSegment.isZero {
-                if firstSegment < 1.0 {
-                    context.move(to: CGPoint(x: s.x + p1.x * firstSegment, y: s.y + p1.y * firstSegment))
-                    context.addLine(to: s)
-                } else {
-                    let secondSegment = (progress - 0.33) * 1.5
-                    context.move(to: CGPoint(x: s.x + p1.x + p2.x * secondSegment, y: s.y + p1.y + p2.y * secondSegment))
-                    context.addLine(to: CGPoint(x: s.x + p1.x, y: s.y + p1.y))
-                    context.addLine(to: s)
-                }
-            }
-            
-
-            context.setBlendMode(.clear)
-            context.setLineWidth(borderWidth)
-            context.setLineCap(.round)
-            context.setLineJoin(.round)
-            context.setMiterLimit(10.0)
-            
-            
-            context.strokePath()
-        }
-        
-    }
-}
-
-final class ApplyblurCheckbox : View {
-    private let title:(TextNodeLayout,TextNode)
-    fileprivate let checkbox: blurCheckbox = blurCheckbox(frame: NSMakeRect(0, 0, 16, 16))
-    
-    var isSelected: Bool {
-        get {
-            return checkbox.isSelected
-        }
-        set {
-            checkbox.set(isSelected: newValue, animated: false)
-        }
-    }
-    
-    required init(frame frameRect: NSRect, title: String) {
-        self.title = TextNode.layoutText(.initialize(string: title, color: .white, font: .medium(.text)), nil, 1, .end, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .left)
-        super.init(frame: frameRect)
-        addSubview(checkbox)
-        layer?.cornerRadius = .cornerRadius
-        setFrameSize(self.title.0.size.width + 10 + checkbox.frame.width + 10 + 10, frameRect.height)
-    }
-    
-    override func mouseDown(with event: NSEvent) {
-        checkbox.set(isSelected: !checkbox.isSelected, animated: false)
-        onChangedValue?(checkbox.isSelected)
-    }
-    var onChangedValue:((Bool)->Void)?
-    
-    override func layout() {
-        super.layout()
-        checkbox.centerY(x: 10)
-    }
-    
-    func update(by image: CGImage?) -> Void {
-        if let image = image {
-            let color = getAverageColor(NSImage(cgImage: image, size: image.backingSize))
-            backgroundColor = color
-        } else {
-            backgroundColor = .blackTransparent
-        }
-    }
-    
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        let rect = focus(title.0.size)
-        title.1.draw(NSMakeRect(frame.width - rect.width - 10, rect.minY, rect.width, rect.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)
-    }
-    
-    deinit {
-    }
-    
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
-    }
-}
 
 private enum WallpaperPreviewState  {
     case color
@@ -250,332 +94,111 @@ private enum WallpaperPreviewState  {
     case normal
 }
 
-private final class WallpaperAdditionColorView : View, TGModernGrowingDelegate {
-    func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
-        
-    }
-    
-    func textViewEnterPressed(_ event: NSEvent) -> Bool {
-        return true
-    }
-    
-    func textViewTextDidChange(_ string: String) {
-        var filtered = String(string.unicodeScalars.filter {CharacterSet(charactersIn: "#0123456789abcdefABCDEF").contains($0)}).uppercased()
-        if string != filtered {
-            if filtered.isEmpty {
-                filtered = "#"
-            } else if filtered.first != "#" {
-                filtered = "#" + filtered
-            }
-            textView.setString(filtered)
-        }
-        if filtered.length == maxCharactersLimit(textView) {
-            let color = NSColor(hexString: filtered)
-            if let color = color {
-                colorChanged?(color)
-            }
-        }
-    }
-    
-    override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        background = theme.colors.background
-        textView.background = theme.colors.background
-        textView.textColor = theme.colors.text
-    }
-    
-    func textViewTextDidChangeSelectedRange(_ range: NSRange) {
-        
-    }
-    
-    func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
-        
-        let text = pasteboard.string(forType: .string)
-        if let text = text, let color = NSColor(hexString: text) {
-            defaultColor = color
-        }
-        return true
-    }
-    
-    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
-        return textView.frame.size
-    }
-    
-    func textViewIsTypingEnabled() -> Bool {
-        return true
-    }
-    
-    func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return 7
-    }
-    
-    var defaultColor: NSColor = NSColor(hexString: "#FFFFFF")! {
-        didSet {
-            textView.setString(defaultColor.hexString)
-            colorBulb.backgroundColor = defaultColor
-        }
-    }
-    
-    var colorChanged: ((NSColor) -> Void)? = nil
-    
-    fileprivate let resetButton = ImageButton()
-    private let colorBulb: View = View(frame: NSMakeRect(0, 0, 14, 14))
-
-    let textView: TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect, unscrollable: true)
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        addSubview(textView)
-        
-        layer?.cornerRadius = frameRect.height / 2
-        layer?.borderWidth = .borderSize
-        layer?.borderColor = theme.colors.border.cgColor
-        colorBulb.layer?.cornerRadius = 7
-        textView.delegate = self
-        textView.setString("#")
-        textView.textFont = .normal(.text)
-        backgroundColor = theme.colors.background
-        textView.cursorColor = theme.colors.indicatorColor
-        resetButton.set(image: theme.icons.wallpaper_color_close, for: .Normal)
-        _ = resetButton.sizeToFit()
-        addSubview(resetButton)
-        addSubview(colorBulb)
-        
-        colorBulb.backgroundColor = defaultColor
-        textView.setBackgroundColor(theme.colors.background)
-        layout()
-    }
-    
-    override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, completion: ((Bool) -> Void)? = nil) {
-        super.change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
-        resetButton.change(pos: NSMakePoint(frame.width - resetButton.frame.width - 5, resetButton.frame.minY), animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction)
-    }
-    
-    override func layout() {
-        super.layout()
-        
-        colorBulb.centerY(x: 10)
-        textView.frame = NSMakeRect(colorBulb.frame.maxX + 3, 0, frame.width - resetButton.frame.width - 26, frame.height)
-        resetButton.centerY(x: frame.width - resetButton.frame.width - 5)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
 
 enum WallpaperColorSelectMode : Equatable {
     case single(NSColor)
-    case gradient(top: NSColor, bottom: NSColor, rotation: Int32?)
-}
-enum WallpaperResponder : Equatable {
-    case first
-    case second
-}
-
-final class WallpaperColorPickerContainerView : View {
-    fileprivate let firstView:WallpaperAdditionColorView = WallpaperAdditionColorView(frame: NSMakeRect(0, 4, 200, 30))
-    fileprivate var secondView:WallpaperAdditionColorView?
-    let colorPicker = WallpaperColorPickerView()
-    private let colorsContainer: View
-    fileprivate let addColorButton: ImageButton = ImageButton()
-    fileprivate let swapColors: ImageButton = ImageButton()
-    private(set) var mode: WallpaperColorSelectMode = .single(NSColor(hexString: "#ffffff")!)
+    case gradient([NSColor], Int, Int32?)
     
-    
-    required init(frame frameRect: NSRect) {
-        colorsContainer = View(frame: NSMakeRect(0, 0, frameRect.width, 38))
-        super.init(frame: frameRect)
-        colorsContainer.addSubview(firstView)
-        colorsContainer.addSubview(addColorButton)
-        colorsContainer.addSubview(swapColors)
-        addSubview(colorPicker)
-        addSubview(colorsContainer)
-        swapColors.hideAnimated = true
-        updateLocalizationAndTheme(theme: theme)
-        
-        firstView.colorChanged = { [weak self] color in
-            guard let `self` = self else { return }
-            switch self.mode {
-            case .single:
-                self.colorChanged?(.single(color))
-            case let .gradient(_, bottom, rotation):
-                self.colorChanged?(.gradient(top: color, bottom: bottom, rotation: rotation))
-            }
-        }
-        firstView.resetButton.set(handler: { [weak self] _ in
-            if let secondView = self?.secondView {
-                self?.colorChanged?(.single(secondView.defaultColor))
-                self?.colorPicker.colorChanged?(secondView.defaultColor)
-            }
-        }, for: .Click)
-        
-        swapColors.set(handler: { [weak self] _ in
-            guard let `self` = self, let secondView = self.secondView else {
-                return
-            }
-            let rotation: Int32?
-            switch self.mode {
-            case let .gradient(_, _, r):
-                if let r = r {
-                    if r + 45 == 360 {
-                        rotation = nil
-                    } else {
-                        rotation = r + 45
-                    }
-                } else {
-                    rotation = 45
-                }
-            default:
-                rotation = nil
-            }
-            
-            
-            self.colorChanged?(.gradient(top: self.firstView.defaultColor, bottom: secondView.defaultColor, rotation: rotation))
-            switch self.currentResponder {
-            case .first:
-                self.colorPicker.colorChanged?(self.firstView.defaultColor)
-            case .second:
-                self.colorPicker.colorChanged?(secondView.defaultColor)
-            }
-            
-        }, for: .Click)
-    }
-    
-    
-    override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        let theme = theme as! TelegramPresentationTheme
-        colorsContainer.backgroundColor = theme.colors.grayBackground
-        colorsContainer.border = [.Top, .Bottom]
-        colorsContainer.borderColor = theme.colors.border
-        backgroundColor = theme.colors.background
-        
-        swapColors.set(image: theme.icons.wallpaper_color_rotate, for: .Normal)
-        _ = swapColors.sizeToFit()
-        
-        addColorButton.set(image: theme.icons.wallpaper_color_add, for: .Normal)
-        _ = addColorButton.sizeToFit()
-    }
-    
-    func updateMode(_ mode: WallpaperColorSelectMode, animated: Bool) {
-        if self.mode != mode {
-            self.mode = mode
-            switch mode {
-            case let .single(color):
-                firstView.defaultColor = color
-                firstView.resetButton.isHidden = true
-                self.swapColors.isHidden = true
-                if let secondView = secondView {
-                    self.secondView = nil
-                    if animated {
-                        secondView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak secondView] _ in
-                            secondView?.removeFromSuperview()
-                        })
-                        secondView.layer?.animatePosition(from: secondView.frame.origin, to: NSMakePoint(colorsContainer.frame.width, secondView.frame.minY), removeOnCompletion: false)
-                    } else {
-                        secondView.removeFromSuperview()
-                    }
-                }
-            case let .gradient(top, bottom, rotation):
-                firstView.defaultColor = top
-                firstView.resetButton.isHidden = false
-                self.swapColors.isHidden = false
-                if secondView == nil {
-                    secondView = WallpaperAdditionColorView(frame: NSMakeRect(colorsContainer.frame.width, 4, 200, 30))
-                    secondView?.resetButton.isHidden = false
-                    secondView?.resetButton.set(handler: { [weak self] _ in
-                        guard let `self` = self else {
-                            return
-                        }
-                        self.colorChanged?(.single(self.firstView.defaultColor))
-                        self.colorPicker.colorChanged?(self.firstView.defaultColor)
-                    }, for: .Click)
-                    
-                    colorsContainer.addSubview(secondView!)
-                    window?.makeFirstResponder(secondView?.textView.inputView)
-                    secondView!.colorChanged = { [weak self] color in
-                        guard let `self` = self else { return }
-                        switch self.mode {
-                        case .single:
-                            fatalError()
-                        case let .gradient(top, _, rotation):
-                            self.colorChanged?(.gradient(top: top, bottom: color, rotation: rotation))
-                        }
-                    }
-                }
-                secondView?.defaultColor = bottom
-            }
-            updateFrame(animated: animated)
+    var colors: [NSColor] {
+        switch self {
+        case let .single(color):
+            return [color]
+        case let .gradient(colors, _, _):
+            return colors
         }
     }
-    
-    var canUseGradient: Bool = false {
-        didSet {
-            addColorButton.isHidden = !self.canUseGradient
-            updateFrame(animated: false)
-        }
-    }
-    
-    var currentResponder: WallpaperResponder {
-        if window?.firstResponder == firstView.textView.inputView {
-            return .first
-        }
-        if window?.firstResponder == secondView?.textView.inputView {
-            return .second
-        }
-        return .first
-    }
-    
-    var colorChanged: ((WallpaperColorSelectMode) -> Void)? = nil
-
-    private func updateFrame(animated: Bool) {
-        switch self.mode {
-        case .gradient:
-            firstView.change(size: NSMakeSize(floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.width - (30 + swapColors.frame.width)) / 2) , firstView.frame.height), animated: animated)
-            secondView!.change(size: NSMakeSize(floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.width - (30 + swapColors.frame.width)) / 2), secondView!.frame.height), animated: animated)
-            firstView.change(pos: NSMakePoint(10, floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - firstView.frame.height) / 2)), animated: animated)
-            secondView!.change(pos: NSMakePoint(firstView.frame.maxX + 10 + swapColors.frame.width, floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - secondView!.frame.height) / 2)), animated: animated)
-            addColorButton.isHidden = true
-            swapColors.change(pos: NSMakePoint(floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.width - swapColors.frame.width) / 2), floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - swapColors.frame.height) / 2)), animated: animated)
+    var rotation: Int32? {
+        switch self {
         case .single:
-            addColorButton.centerY(x: colorsContainer.frame.width - addColorButton.frame.width - 10)
-            firstView.change(size: NSMakeSize(colorsContainer.frame.width - 20 - (canUseGradient ? addColorButton.frame.width + 10 : 0), firstView.frame.height), animated: animated)
-            firstView.change(pos: NSMakePoint(10, floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - firstView.frame.height) / 2)), animated: animated)
-            swapColors.change(pos: NSMakePoint(colorsContainer.frame.width, floorToScreenPixels(backingScaleFactor, (colorsContainer.frame.height - swapColors.frame.height) / 2)), animated: animated)
-            addColorButton.isHidden = !canUseGradient
+            return nil
+        case let .gradient(_, _, rotation):
+            return rotation
         }
     }
     
-    override func layout() {
-        colorPicker.frame = NSMakeRect(0, 38, frame.width, frame.height - 38)
-        colorsContainer.frame = NSMakeRect(0, 0, frame.width, 38)
-        self.updateFrame(animated: false)
+    func withRemovedColor(_ index: Int) -> WallpaperColorSelectMode {
+        switch self {
+        case .single:
+            return self
+        case let .gradient(colors, selected, rotation):
+            var colors = colors
+            if colors.count == 1 {
+                return .gradient(colors, 0, rotation)
+            }
+            colors.remove(at: index)
+            return .gradient(colors, min(selected, colors.count - 1), rotation)
+        }
+    }
+    func withAddedColor(_ color: NSColor, at index: Int) -> WallpaperColorSelectMode {
+        switch self {
+        case let .single(current):
+            return .gradient([current, color], 1, nil)
+        case let .gradient(colors, _, rotation):
+            var colors = colors
+            colors.insert(color, at: index)
+            return .gradient(colors, index + 1, rotation)
+        }
+    }
+    func withUpdatedRotatation(_ rotation: Int32?) -> WallpaperColorSelectMode {
+        switch self {
+        case .single:
+            return self
+        case let .gradient(colors, index, _):
+            return .gradient(colors, index, rotation)
+        }
     }
     
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    func withUpdatedColor(_ color: NSColor) -> WallpaperColorSelectMode {
+        switch self {
+        case .single:
+            return .single(color)
+        case let .gradient(colors, index, rotation):
+            var colors = colors
+            colors[index] = color
+            return .gradient(colors, index, rotation)
+        }
     }
-}
+    func withUpdatedIndex(_ index: Int) -> WallpaperColorSelectMode {
+        switch self {
+        case let .single(current):
+            return .single(current)
+        case let .gradient(colors, _, rotation):
+            return .gradient(colors, index, rotation)
+        }
+    }
 
+}
 
 
 private final class WallpaperPreviewView: View {
     private let updateStateDisposable = MetaDisposable()
     private let backgroundView: BackgroundView = BackgroundView(frame: NSZeroRect)
-    private let imageView: TransformImageView = TransformImageView()
-    let magnifyView: MagnifyView
+    private var image: CGImage?
     private let disposable = MetaDisposable()
+    private let loadImageDisposable = MetaDisposable()
+
     private var progressView: RadialProgressView?
     private let tableView: TableView
     private let documentView: NSView
-    let colorPicker = WallpaperColorPickerContainerView(frame: NSZeroRect)
-    let blurCheckbox: ApplyblurCheckbox = ApplyblurCheckbox(frame: NSMakeRect(0, 0, 70, 28), title: L10n.wallpaperPreviewBlurred)
-    let patternCheckbox: ApplyblurCheckbox = ApplyblurCheckbox(frame: NSMakeRect(0, 0, 70, 28), title: L10n.chatWPPattern)
-    let colorCheckbox: ApplyblurCheckbox = ApplyblurCheckbox(frame: NSMakeRect(0, 0, 70, 28), title: L10n.chatWPColor)
+    
+    let blurCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: strings().wallpaperPreviewBlurred)
+    let patternCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: strings().chatWPPattern)
+    let colorCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: strings().chatWPColor)
+    
+    private let rotateColors: WallpaperPlayRotateView = WallpaperPlayRotateView(frame: NSMakeRect(0, 0, 40, 40))
+    
     let checkboxContainer: View = View()
+    
     let patternsController: WallpaperPatternPreviewController
+    let colorPicker = WallpaperColorPickerContainerView(frame: NSZeroRect)
+    private let controlsBg = View()
+    
     private var previewState: WallpaperPreviewState = .normal
     private var imageSize: NSSize = NSZeroSize
     private let context: AccountContext
+    
+    fileprivate var ready:(()->Void)? = nil
+    
     private(set) var wallpaper: Wallpaper {
         didSet {
             if oldValue != wallpaper {
@@ -587,66 +210,69 @@ private final class WallpaperPreviewView: View {
         }
     }
     
-    override func smartMagnify(with event: NSEvent) {
-        magnifyView.smartMagnify(with: event)
-    }
     
-    override func magnify(with event: NSEvent) {
-        magnifyView.magnify(with: event)
-    }
     
     required init(frame frameRect: NSRect, context: AccountContext, wallpaper: Wallpaper) {
         self.context = context
         self.wallpaper = wallpaper
         self.tableView = TableView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height), isFlipped: false, drawBorder: false)
-        self.magnifyView = MagnifyView(imageView, contentSize: frameRect.size)
         self.documentView = tableView.documentView!
         self.patternsController = WallpaperPatternPreviewController(context: context)
         super.init(frame: frameRect)
+        backgroundView.useSharedAnimationPhase = false
         addSubview(backgroundView)
-        addSubview(patternsController.view)
-        addSubview(magnifyView)
-        documentView.removeFromSuperview()
-        addSubview(documentView)
+//        documentView.removeFromSuperview()
+        addSubview(tableView)
         checkboxContainer.addSubview(blurCheckbox)
         checkboxContainer.addSubview(patternCheckbox)
         checkboxContainer.addSubview(colorCheckbox)
+        checkboxContainer.addSubview(rotateColors)
         addSubview(checkboxContainer)
+        
+        addSubview(controlsBg)
         addSubview(colorPicker)
         addSubview(patternsController.view)
-        imageView.layer?.contentsGravity = .resizeAspectFill
         
+        
+        controlsBg.backgroundColor = theme.colors.background
         colorPicker.canUseGradient = true
         
-        colorPicker.addColorButton.set(handler: { [weak self] _ in
-            guard let `self` = self else { return }
-            switch self.colorPicker.mode {
-            case let .single(color):
-                switch self.wallpaper {
-                case let .file(_, _, settings, _):
-                    self.wallpaper = self.wallpaper.withUpdatedSettings(WallpaperSettings(blur: settings.blur, motion: settings.motion, color: color.argb, bottomColor: color.darker(amount: 0.3).argb, intensity: settings.intensity, rotation: settings.rotation))
-                default:
-                    self.wallpaper = .gradient(color.argb, color.darker(amount: 0.3).argb, nil)
-                }
-                self.colorPicker.updateMode(.gradient(top: color, bottom: color.darker(amount: 0.5), rotation: nil), animated: true)
-            case .gradient:
-                fatalError()
+        colorPicker.modeDidUpdate = { [weak self] mode in
+            guard let strongSelf = self else {
+                return
             }
-        }, for: .Click)
-        
-        patternCheckbox.checkbox.isFullFilled = true
-        colorCheckbox.checkbox.isFullFilled = true
-        
+            let wallpaper = strongSelf.wallpaper
+            switch mode {
+            case let .single(color):
+                switch wallpaper {
+                case let .file(_, _, settings, _):
+                    strongSelf.wallpaper = wallpaper.withUpdatedSettings(settings.withUpdatedColor(color.argb))
+                default:
+                    strongSelf.wallpaper = .color(color.argb)
+                }
+            case let .gradient(colors, _, rotation):
+                switch wallpaper {
+                case let .file(_, _, settings, _):
+                    let updated = WallpaperSettings(blur: settings.blur, motion: settings.motion, colors: colors.map { $0.argb }, intensity: settings.intensity, rotation: rotation)
+                    strongSelf.wallpaper = wallpaper.withUpdatedSettings(updated)
+                default:
+                    strongSelf.wallpaper = .gradient(nil, colors.map { $0.argb }, rotation)
+                }
+            }
+            strongSelf.updateMode(mode, animated: true)
+        }
+                
         tableView.backgroundColor = .clear
         tableView.layer?.backgroundColor = .clear
+//
+        tableView.getBackgroundColor = {
+            .clear
+        }
         
         addTableItems(context)
         
-        imageView.imageUpdated = { [weak self] image in
-            self?.blurCheckbox.update(by: image != nil ? (image as! CGImage) : nil)
-            self?.colorCheckbox.update(by: image != nil ? (image as! CGImage) : nil)
-            self?.patternCheckbox.update(by: image != nil ? (image as! CGImage) : nil)
-        }
+        self.layout()
+
         
         blurCheckbox.onChangedValue = { [weak self] isSelected in
             guard let `self` = self else { return }
@@ -673,99 +299,79 @@ private final class WallpaperPreviewView: View {
             }
         }
         
+        rotateColors.onClick = { [weak self] in
+            guard let `self` = self else { return }
+            
+            let mode = self.colorPicker.mode
+            let rotation: Int32?
+
+            if mode.colors.count > 2 {
+                rotation = nil
+                self.backgroundView.doAction()
+            } else {
+                switch mode {
+                case let .gradient(_, _, r):
+                    if let r = r {
+                        if r + 45 == 360 {
+                            rotation = nil
+                        } else {
+                            rotation = r + 45
+                        }
+                    } else {
+                        rotation = 45
+                    }
+                default:
+                    rotation = nil
+                }
+            }
+            
+            self.colorPicker.modeDidUpdate?(mode.withUpdatedRotatation(rotation))
+            
+        }
+        
         switch wallpaper {
         case let .color(color):
-            colorPicker.colorPicker.color = NSColor(UInt32(color))
-            colorPicker.updateMode(.single(colorPicker.colorPicker.color), animated: false)
-            patternsController.color = ([colorPicker.colorPicker.color], nil)
+            self.updateMode(.single(NSColor(argb: color)), animated: false)
         case let .file(_, _, settings, _):
-            colorPicker.colorPicker.color = settings.color != nil ? NSColor(UInt32(settings.color!)) :  NSColor(hexString: "#ffffff")!
-            colorPicker.updateMode(.single(colorPicker.colorPicker.color), animated: false)
-        case let .gradient(t, b, r):
-            let top = NSColor(UInt32(t))
-            let bottom = NSColor(UInt32(b))
-            colorPicker.colorPicker.color = top
-            colorPicker.updateMode(.gradient(top: top, bottom: bottom, rotation: r), animated: false)
-            patternsController.color = ([top, bottom], r)
-
+            let colors:[NSColor] = settings.colors.map { .init(argb: $0) }
+            if !colors.isEmpty {
+                if colors.count == 1 {
+                    self.updateMode(.single(colors[0]), animated: false)
+                } else {
+                    self.updateMode(.gradient(colors, colors.count - 1, settings.rotation), animated: false)
+                }
+            }
+        case let .gradient(_, colors, rotation):
+            let colors = colors.map { NSColor(argb: $0) }
+            self.updateMode(.gradient(colors, 0, rotation), animated: false)
         default:
             break
         }
 
-        colorPicker.colorPicker.colorChanged = { [weak self] color in
-            guard let `self` = self else {return}
-            switch self.colorPicker.mode {
-            case .single:
-                switch self.wallpaper {
-                case let .file(_, _, settings, _):
-                    self.wallpaper = self.wallpaper.withUpdatedSettings(settings.withUpdatedColor(color.argb))
-                    self.colorPicker.updateMode(.single(color), animated: true)
-                default:
-                    self.wallpaper = .color(color.rgb)
-                    self.colorPicker.updateMode(.single(color), animated: true)
-                }
-                self.patternsController.color = ([color], nil)
-            case let .gradient(top, bottom, rotation):
-                switch self.colorPicker.currentResponder {
-                case .first:
-                    switch self.wallpaper {
-                    case let .file(_, _, settings, _):
-                        self.wallpaper = self.wallpaper.withUpdatedSettings(WallpaperSettings(blur: settings.blur, motion: settings.motion, color: color.argb, bottomColor: bottom.argb, intensity: settings.intensity, rotation: rotation))
-                    default:
-                        self.wallpaper = .gradient(color.argb, bottom.argb, rotation)
-                    }
-                    self.colorPicker.updateMode(.gradient(top: color, bottom: bottom, rotation: rotation), animated: true)
-                    self.patternsController.color = ([color, bottom], rotation)
-                case .second:
-                    switch self.wallpaper {
-                    case let .file(_, _, settings, _):
-                        self.wallpaper = self.wallpaper.withUpdatedSettings(WallpaperSettings(blur: settings.blur, motion: settings.motion, color: top.argb, bottomColor: color.argb, intensity: settings.intensity, rotation: rotation))
-                    default:
-                        self.wallpaper = .gradient(top.argb, color.argb, rotation)
-                    }
-                    self.colorPicker.updateMode(.gradient(top: top, bottom: color, rotation: rotation), animated: true)
-                    self.patternsController.color = ([top, color], rotation)
-                }
-                if let rotation = rotation {
-                    if let layer = self.colorPicker.swapColors.layer, let animatorLayer = self.colorPicker.swapColors.animator().layer {
-                        layer.position = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
-                        layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-                        
-                        NSAnimationContext.beginGrouping()
-                        NSAnimationContext.current.allowsImplicitAnimation = true
-                        animatorLayer.transform = CATransform3DMakeRotation(CGFloat.pi * CGFloat(rotation) / 180.0, 0, 0, 1)
-                        NSAnimationContext.endGrouping()
-                        
-                    }
-                }
-            }
-           
-        }
 
         colorPicker.colorChanged = { [weak self] mode in
             guard let `self` = self else {return}
             switch mode {
             case let .single(color):
-                self.patternsController.color = ([color], nil)
-            case let .gradient(top, bottom, rotation):
-                self.patternsController.color = ([top, bottom], rotation)
+                self.patternsController.colors = ([color], nil)
+            case let .gradient(colors, _, rotation):
+                self.patternsController.colors = (colors, rotation)
             }
-            
-            self.colorPicker.updateMode(mode, animated: true)
+            self.updateMode(mode, animated: true)
         }
-        
-        
         
         patternsController.selected = { [weak self] wallpaper in
             guard let `self` = self else {return}
             if let wallpaper = wallpaper {
                 switch self.wallpaper {
                 case let .color(color):
-                     self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: color, intensity: self.patternsController.intensity))
-                case let .gradient(t, b, r):
-                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: NSColor(argb: t).withAlphaComponent(1.0).argb, bottomColor: NSColor(argb: b).withAlphaComponent(1.0).argb, intensity: self.patternsController.intensity, rotation: r))
+                     self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(colors: [color], intensity: self.patternsController.intensity))
+                case let .gradient(_, colors, r):
+                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(colors: colors.map {
+                        NSColor(argb: $0).withAlphaComponent(1.0).argb
+                    }, intensity: self.patternsController.intensity, rotation: r))
                 case let .file(_, _, settings, _):
-                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(color: settings.color, bottomColor: settings.bottomColor, intensity: self.patternsController.intensity, rotation: settings.rotation))
+                    self.wallpaper = wallpaper.withUpdatedSettings(WallpaperSettings(colors: settings.colors, intensity: self.patternsController.intensity, rotation: settings.rotation))
                 default:
                     break
                 }
@@ -774,10 +380,12 @@ private final class WallpaperPreviewView: View {
                 case .color:
                     break
                 case let .file(_, _, settings, _):
-                    if let color = settings.color, settings.bottomColor == nil {
-                        self.wallpaper = Wallpaper.color(color)
-                    } else if let t = settings.color, let b = settings.bottomColor {
-                        self.wallpaper = Wallpaper.gradient(t, b, nil)
+                    if settings.colors.count == 1 {
+                        self.wallpaper = .color(settings.colors.first!)
+                    } else if settings.colors.count > 1 {
+                        self.wallpaper = .gradient(nil, settings.colors, nil)
+                    } else {
+                        self.wallpaper = .none
                     }
                 default:
                     break
@@ -792,13 +400,11 @@ private final class WallpaperPreviewView: View {
             }
             self.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(animated: false)
+                    view.updateBackground(animated: false, item: view.item)
                 }
             })
         }))
         
-        self.layout()
-        updateState(synchronousLoad: true)
     }
     
     private func addTableItems(_ context: AccountContext) {
@@ -806,11 +412,11 @@ private final class WallpaperPreviewView: View {
         
         switch wallpaper {
         case .color:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
         case .file(_, _, _, _):
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
         default:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
         }
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
@@ -823,8 +429,8 @@ private final class WallpaperPreviewView: View {
         }
         
         
-        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
-        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
         
 
         let firstText: String
@@ -832,27 +438,27 @@ private final class WallpaperPreviewView: View {
         switch wallpaper {
         case let .file(_, _, _, isPattern):
             if isPattern {
-                firstText = L10n.chatWPColorFirstMessage
-                secondText = L10n.chatWPColorSecondMessage
+                firstText = strings().chatWPColorFirstMessage
+                secondText = strings().chatWPColorSecondMessage
             } else {
-                firstText = L10n.chatWPFirstMessage
-                secondText = L10n.chatWPSecondMessage
+                firstText = strings().chatWPFirstMessage
+                secondText = strings().chatWPSecondMessage
             }
         case .image:
-            firstText = L10n.chatWPFirstMessage
-            secondText = L10n.chatWPSecondMessage
+            firstText = strings().chatWPFirstMessage
+            secondText = strings().chatWPSecondMessage
         default:
-            firstText = L10n.chatWPColorFirstMessage
-            secondText = L10n.chatWPColorSecondMessage
+            firstText = strings().chatWPColorFirstMessage
+            secondText = strings().chatWPColorSecondMessage
         }
 
-        let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+        let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
         
-        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, .bubble, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
+        let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, .bubble, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
 
-        let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: secondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
+        let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: secondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
         
-        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, .bubble, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
+        let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, .bubble, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
         
         
         let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction, theme: theme)
@@ -866,217 +472,229 @@ private final class WallpaperPreviewView: View {
     }
     
     var croppedRect: NSRect {
-        
         let fittedSize = WallpaperDimensions.aspectFitted(imageSize)
-        let multiplier = NSMakeSize( imageSize.width / magnifyView.contentFrame.width, imageSize.height / magnifyView.contentFrame.height)
-        let magnifyRect = magnifyView.contentFrame.apply(multiplier: multiplier)
-        let fittedRect = NSMakeRect(abs(magnifyRect.minX), abs(magnifyRect.minY), fittedSize.width, fittedSize.height)
-    
-        return fittedRect.offsetBy(dx:(magnifyView.contentFrame.minX - magnifyView.contentFrameMagnified.minX) * multiplier.width, dy: (magnifyView.contentFrame.minY - magnifyView.contentFrameMagnified.minY) * multiplier.height)
+        return fittedSize.bounds
     }
     
     deinit {
         updateStateDisposable.dispose()
         disposable.dispose()
+        loadImageDisposable.dispose()
     }
     
     override func layout() {
         super.layout()
-        
-        var checkboxWidth: CGFloat = blurCheckbox.isHidden ? 0 : blurCheckbox.frame.width
-        if !patternCheckbox.isHidden {
-            checkboxWidth += (checkboxWidth != 0 ? 10 + patternCheckbox.frame.width : patternCheckbox.frame.width)
-        }
-        if !colorCheckbox.isHidden {
-            checkboxWidth += (checkboxWidth != 0 ? 10 + colorCheckbox.frame.width : colorCheckbox.frame.width)
-        }
-                
-        checkboxContainer.setFrameSize(NSMakeSize(checkboxWidth, 28))
-        
-        var point: NSPoint = NSZeroPoint
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
     
-        blurCheckbox.setFrameOrigin(point)
+    
+    private func updateMode(_ mode: WallpaperColorSelectMode, animated: Bool) {
+        self.colorPicker.updateMode(mode, animated: animated)
+        patternsController.colors = (mode.colors, mode.rotation)
+        self.rotateColors.set(rotation: mode.rotation, animated: animated)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        
+        var checkboxViews:[NSView] = []
+        
+        if !patternCheckbox.isHidden {
+            checkboxViews.append(patternCheckbox)
+        }
+        if !rotateColors.isHidden {
+            checkboxViews.append(rotateColors)
+        }
         if !colorCheckbox.isHidden {
-            colorCheckbox.setFrameOrigin(point)
-            point.x += colorCheckbox.frame.width
+            checkboxViews.append(colorCheckbox)
         }
-        if point.x != 0 {
-            point.x += 10
-        }
-        patternCheckbox.setFrameOrigin(point)
-        switch self.wallpaper  {
-        case .color, .gradient, .file:
-            backgroundView.frame = NSMakeRect(0, 0, frame.width, frame.height - colorPicker.frame.height)
-        default:
-            backgroundView.frame = bounds
+        if !blurCheckbox.isHidden {
+            checkboxViews.append(blurCheckbox)
         }
         
-        magnifyView.frame = bounds
-        switch wallpaper {
-        case let .file(_, _, _, isPattern):
-            if isPattern {
-                magnifyView.contentSize = frame.size
-            } else {
-                magnifyView.contentSize = imageSize.aspectFilled(frame.size)
-            }
-        default:
-            magnifyView.contentSize = imageSize.aspectFilled(frame.size)
+        let checkboxWidth: CGFloat = checkboxViews.reduce(0, { current, value in
+            return current + value.frame.width
+        }) + CGFloat(max(0, checkboxViews.count - 1)) * 10
+
+        
+        let colorPickerSize = NSMakeSize(frame.width, 168)
+        let patternsSize = NSMakeSize(frame.width, 168)
+        let controlsSize = NSMakeSize(frame.width, 168)
+
+        let checkboxSize = NSMakeSize(checkboxWidth, 50)
+        let documentSize = NSMakeSize(frame.width, documentView.frame.height)
+        
+      
+
+        
+        transition.updateFrame(view: tableView, frame: bounds)
+        
+        if let progressView = progressView {
+            transition.updateFrame(view: progressView, frame: progressView.centerFrame())
         }
-        tableView.frame = bounds
-        documentView.setFrameSize(NSMakeSize(frame.width, documentView.frame.height))
-        
-        self.progressView?.center()
-        colorPicker.setFrameSize(NSMakeSize(frame.width, 168))
-        patternsController.view.setFrameSize(NSMakeSize(frame.width, 168))
-        
         
         self.tableView.enumerateVisibleViews(with: { view in
             if let view = view as? ChatRowView {
-                view.updateBackground(animated: false)
+                view.updateBackground(animated: transition.isAnimated, item: view.item)
             }
         })
         
+       
         
+        let backgroundSize: NSSize
         switch self.previewState  {
         case .color:
-            backgroundView.setFrameSize(NSMakeSize(frame.width, frame.height - colorPicker.frame.height))
+            backgroundSize = NSMakeSize(frame.width, frame.height - colorPickerSize.height)
+        case .pattern:
+            backgroundSize = NSMakeSize(frame.width, frame.height - patternsSize.height)
         default:
-            backgroundView.setFrameSize(NSMakeSize(frame.width, frame.height))
+            backgroundSize = frame.size
+        }
+        transition.updateFrame(view: backgroundView, frame: backgroundSize.bounds)
+        backgroundView.updateLayout(size: backgroundSize, transition: transition)
+        
+        switch previewState {
+        case .color, .pattern:
+            transition.updateFrame(view: documentView, frame: .init(origin: .init(x: 0, y: frame.height - colorPicker.frame.height - tableView.listHeight - 10), size: documentSize))
+            
+            let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, frame.height - colorPicker.frame.height - checkboxSize.height - 10), size: checkboxSize)
+            
+            transition.updateFrame(view: checkboxContainer, frame: checkboxRect)
+        case .normal:
+            let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, frame.height - checkboxSize.height - 10), size: checkboxSize)
+            
+            transition.updateFrame(view: checkboxContainer, frame: checkboxRect)
+            transition.updateFrame(view: documentView, frame: .init(origin: .init(x: 0, y: frame.height - tableView.listHeight - 10), size: documentSize))
+
+            transition.updateFrame(view: colorPicker, frame: CGRect(origin: NSMakePoint(0, frame.height), size: colorPickerSize))
+            
+            transition.updateFrame(view: patternsController.view, frame: .init(origin: NSMakePoint(0, frame.height), size: patternsSize))
+            
+            transition.updateFrame(view: controlsBg, frame: .init(origin: NSMakePoint(0, frame.height), size: controlsSize))
+
         }
         
         switch previewState {
         case .color:
-            colorPicker.setFrameOrigin(NSMakePoint(0, frame.height - colorPicker.frame.height))
-            documentView.setFrameOrigin(NSMakePoint(0, frame.height - colorPicker.frame.height - tableView.listHeight))
-            checkboxContainer.setFrameOrigin(NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - colorPicker.frame.height - checkboxContainer.frame.height - 10))
-            patternsController.view.setFrameOrigin(NSMakePoint(0, frame.height))
-        case .normal:
-            checkboxContainer.setFrameOrigin(NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - checkboxContainer.frame.height - 10))
-            documentView.setFrameOrigin(NSMakePoint(0, frame.height - tableView.listHeight))
-            colorPicker.setFrameOrigin(NSMakePoint(0, frame.height))
-            patternsController.view.setFrameOrigin(NSMakePoint(0, frame.height))
+            let pickerRect = CGRect(origin: .init(x: 0, y: frame.height - colorPickerSize.height), size: colorPickerSize)
+            transition.updateFrame(view: colorPicker, frame: pickerRect)
+            
+            transition.updateFrame(view: patternsController.view, frame: .init(origin: NSMakePoint(0, frame.height), size: patternsSize))
+
+            transition.updateFrame(view: controlsBg, frame: pickerRect)
         case .pattern:
-            colorPicker.setFrameOrigin(NSMakePoint(0, frame.height))
-            documentView.setFrameOrigin(NSMakePoint(0, frame.height - patternsController.view.frame.height - tableView.listHeight))
-            checkboxContainer.setFrameOrigin(NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - patternsController.view.frame.height - checkboxContainer.frame.height - 10))
-            patternsController.view.setFrameOrigin(NSMakePoint(0, frame.height - patternsController.view.frame.height))
+            transition.updateFrame(view: colorPicker, frame: CGRect.init(origin: .init(x: 0, y: frame.height), size: colorPickerSize))
+            
+            let patternsRect: CGRect = .init(origin: NSMakePoint(0, frame.height - patternsSize.height), size: patternsSize)
+            
+            transition.updateFrame(view: patternsController.view, frame: patternsRect)
+            transition.updateFrame(view: controlsBg, frame: patternsRect)
+
+        default:
+            break
         }
         
+        patternsController.genericView.updateLayout(size: patternsSize, transition: transition)
+        colorPicker.updateLayout(size: colorPickerSize, transition: transition)
+        
+      
+        var x: CGFloat = 0
+        for view in checkboxViews {
+            transition.updateFrame(view: view, frame: view.centerFrameY(x: x))
+            x += view.frame.width + 10
+        }
+
     }
     
-    
     func updateModifyState(_ state: WallpaperPreviewState, animated: Bool) {
-        
-        switch state  {
-        case .color:
-            backgroundView.change(size: NSMakeSize(frame.width, frame.height - colorPicker.frame.height), animated: animated)
-        default:
-            backgroundView.change(size: NSMakeSize(frame.width, frame.height), animated: animated)
-        }
         
         self.previewState = state
         switch state {
         case .color:
             patternCheckbox.isSelected = false
             colorCheckbox.isSelected = true
-            colorPicker.change(pos: NSMakePoint(0, frame.height - colorPicker.frame.height), animated: animated)
-            documentView._change(pos: NSMakePoint(0, frame.height - colorPicker.frame.height - tableView.listHeight), animated: animated)
-            checkboxContainer.change(pos: NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - colorPicker.frame.height - checkboxContainer.frame.height - 10), animated: animated)
-            patternsController.view._change(pos: NSMakePoint(0, frame.height), animated: animated)
-            var rotation:Int32? = nil
-            
-            switch self.wallpaper {
-            case let .gradient(t, b, r):
-                colorPicker.updateMode(.gradient(top: NSColor(argb: t), bottom: NSColor(argb: b), rotation: r), animated: false)
-                rotation = r
-            case let .file(_, _, settings, _):
-                if let t = settings.color, let b = settings.bottomColor {
-                    colorPicker.updateMode(.gradient(top: NSColor(argb: t), bottom: NSColor(argb: b), rotation: settings.rotation), animated: false)
-                    rotation = settings.rotation
-                } else if let c = settings.color {
-                    colorPicker.updateMode(.single(NSColor(argb: c)), animated: false)
-                }
-            case let .color(c):
-                colorPicker.updateMode(.single(NSColor(argb: c)), animated: false)
-            default:
-                break
-            }
-            
-            if let rotation = rotation {
-                if let layer = self.colorPicker.swapColors.layer {
-                    layer.position = CGPoint(x: layer.frame.midX, y: layer.frame.midY)
-                    layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-                    layer.transform = CATransform3DMakeRotation(CGFloat.pi * CGFloat(rotation) / 180.0, 0, 0, 1)
-                }
-            }
-          
-            
-            updateBackground(wallpaper)
+            updateBackground(wallpaper, image: self.image)
         case .normal:
             patternCheckbox.isSelected = false
             colorCheckbox.isSelected = false
-            checkboxContainer.change(pos: NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - checkboxContainer.frame.height - 10), animated: animated)
-            documentView._change(pos: NSMakePoint(0, frame.height - tableView.listHeight), animated: animated)
-            colorPicker.change(pos: NSMakePoint(0, frame.height), animated: animated)
-            patternsController.view._change(pos: NSMakePoint(0, frame.height), animated: animated)
-            updateBackground(wallpaper)
+            updateBackground(wallpaper, image: self.image)
         case .pattern:
-            
             if let selected = patternsController.pattern {
                 self.wallpaper = selected.withUpdatedSettings(self.wallpaper.settings)
             }
-            
-//            if let pattern = patternsController.pattern {
-//                patternsController.pattern?.withUpdatedSettings(wallpaper.s)
-//            } else {
-//                patternsController.pattern = wallpaper
-//            }
             patternCheckbox.isSelected = true
             colorCheckbox.isSelected = false
-            colorPicker.change(pos: NSMakePoint(0, frame.height), animated: animated)
-            documentView._change(pos: NSMakePoint(0, frame.height - patternsController.view.frame.height - tableView.listHeight), animated: animated)
-            checkboxContainer.change(pos: NSMakePoint(focus(checkboxContainer.frame.size).minX, frame.height - patternsController.view.frame.height - checkboxContainer.frame.height - 10), animated: animated)
-            patternsController.view._change(pos: NSMakePoint(0, frame.height - patternsController.view.frame.height), animated: animated)
             
-            
-            updateBackground(wallpaper)
-
+            updateBackground(wallpaper, image: self.image)
         }
-        
-        self.tableView.enumerateVisibleViews(with: { view in
-            if let view = view as? ChatRowView {
-                view.updateBackground(animated: animated)
-            }
-        })
+        rotateColors.set(rotation: wallpaper.settings.rotation, animated: animated)
+        updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeInOut) : .immediate)
     }
     
-    private func updateBackground(_ wallpaper: Wallpaper) {
+    private func updateBackground(_ wallpaper: Wallpaper, image: CGImage?) {
         switch wallpaper {
         case .builtin:
             backgroundView.backgroundMode = .plain
         case let .color(color):
             backgroundView.backgroundMode = .color(color: NSColor(UInt32(color)))
-        case let .gradient(t, b, r):
-            let top = NSColor(argb: t)
-            let bottom = NSColor(argb: b)
-            backgroundView.backgroundMode = .gradient(top: top, bottom: bottom, rotation: r)
+        case let .gradient(_, colors, rotation):
+            backgroundView.backgroundMode = .gradient(colors: colors.map { NSColor(argb: $0) }, rotation: rotation)
         case .image:
-            backgroundView.backgroundMode = .plain
-        case let .file(_, _, settings, isPattern):
-            if isPattern {
-                if let color = settings.color, settings.bottomColor == nil {
-                    backgroundView.backgroundMode = .color(color: NSColor(UInt32(color)))
-                } else if let t = settings.color, let b = settings.bottomColor {
-                    let top = NSColor(UInt32(t))
-                    let bottom = NSColor(UInt32(b))
-                    backgroundView.backgroundMode = .gradient(top: top, bottom: bottom, rotation: settings.rotation)
-                }
+            if let image = image {
+                backgroundView.backgroundMode = .background(image: NSImage(cgImage: image, size: image.size), intensity: nil, colors: nil, rotation: nil)
             } else {
                 backgroundView.backgroundMode = .plain
+            }
+        case let .file(_, _, settings, isPattern):
+            if isPattern, settings.colors.count > 2 {
+                if let image = image {
+                    backgroundView.backgroundMode = .background(image: NSImage(cgImage: image, size: image.size), intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
+                } else {
+                    backgroundView.backgroundMode = .gradient(colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
+                }
+            } else {
+                if let image = image {
+                    backgroundView.backgroundMode = .background(image: NSImage(cgImage: image, size: image.size), intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
+                } else {
+                    backgroundView.backgroundMode = .gradient(colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
+                }
             }
         default:
             backgroundView.backgroundMode = .plain
         }
+    }
+    
+    private func loadImage(_ signal:Signal<ImageDataTransformation, NoError>, palette: ColorPalette, boundingSize: NSSize, isPattern: Bool) {
+        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets())
+        
+        
+        let intense = CGFloat(abs(wallpaper.settings.intensity ?? 0)) / 100.0
+        let signal: Signal<CGImage?, NoError> = signal |> map { result in
+            var image = result.execute(arguments, result.data)?.generateImage()
+            if palette.isDark, let img = image, isPattern {
+                image = generateImage(img.size, contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(NSColor.black.cgColor)
+                    ctx.fill(size.bounds)
+                    ctx.clip(to: size.bounds, mask: img)
+                    
+                    ctx.clear(size.bounds)
+                    
+                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
+                    ctx.fill(size.bounds)
+                })
+            }
+            return image
+        } |> deliverOnMainQueue
+        
+        loadImageDisposable.set(signal.start(next: { [weak self] image in
+            guard let strongSelf = self else {
+                return
+            }
+            strongSelf.image = image
+            strongSelf.updateBackground(strongSelf.wallpaper, image: image)
+            strongSelf.ready?()
+        }))
     }
     
     func updateState(synchronousLoad: Bool) {
@@ -1084,117 +702,87 @@ private final class WallpaperPreviewView: View {
         var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
         
         switch wallpaper {
-        case .builtin:
-            self.imageView.isHidden = false
-            blurCheckbox.isHidden = false
-            colorCheckbox.isHidden = true
-            patternCheckbox.isHidden = true
-            let media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: -1), representations: [], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(), boundingSize: CGSize(), intrinsicInsets: NSEdgeInsets())
-            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor))
-            self.imageView.setSignal(settingsBuiltinWallpaperImage(account: context.account, scale: backingScaleFactor))
-            self.imageView.set(arguments: arguments)
         case let .color(color):
-            self.imageView.isHidden = true
+            self.image = nil
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
             patternCheckbox.isHidden = false
-            let image = generateImage(NSMakeSize(1, 1), contextGenerator: { size, ctx in
-                ctx.setFillColor(NSColor(UInt32(color)).cgColor)
-                ctx.fill(NSMakeRect(0, 0, size.width, size.height))
-            })
-            self.blurCheckbox.update(by: image)
-            self.colorCheckbox.update(by: image)
-            self.patternCheckbox.update(by: image)
-        case let .gradient(t, b, _):
-            self.imageView.isHidden = true
+            self.patternCheckbox.hasPattern = false
+            rotateColors.isHidden = true
+            self.colorCheckbox.colorsValue = [color].map { NSColor($0) }
+            self.ready?()
+        case let .gradient(_, colors, _):
+            self.image = nil
             blurCheckbox.isHidden = true
             colorCheckbox.isHidden = false
             patternCheckbox.isHidden = false
-            let top = NSColor(argb: t)
-            let bottom = NSColor(argb: b)
-            let middle = top.blended(withFraction: 0.5, of: bottom)!
-
-            let image = generateImage(NSMakeSize(1, 1), contextGenerator: { size, ctx in
-                ctx.setFillColor(middle.cgColor)
-                ctx.fill(NSMakeRect(0, 0, size.width, size.height))
-            })
-            self.blurCheckbox.update(by: image)
-            self.colorCheckbox.update(by: image)
-            self.patternCheckbox.update(by: image)
-            
+            rotateColors.isHidden = false
+            self.patternCheckbox.hasPattern = false
+            self.colorCheckbox.colorsValue = colors.map { NSColor($0) }
+            self.rotateColors.update(colors.count > 2 ? theme.icons.wallpaper_color_play : theme.icons.wallpaper_color_rotate)
+            self.ready?()
         case let .image(representations, settings):
-            self.imageView.isHidden = false
+            self.patternCheckbox.hasPattern = false
             blurCheckbox.isHidden = false
             colorCheckbox.isHidden = true
             patternCheckbox.isHidden = true
+            rotateColors.isHidden = true
             let dimensions = largestImageRepresentation(representations)!.dimensions.size
             let boundingSize = dimensions.fitted(maximumSize)
             self.imageSize = dimensions
+            
+            loadImage(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize, isPattern: false)
 
-            self.imageView.setSignal(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad), animate: true, synchronousLoad: synchronousLoad)
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: WallpaperDimensions.aspectFilled(NSMakeSize(600, 600)), intrinsicInsets: NSEdgeInsets()))
             
             updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(largestImageRepresentation(representations)!.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue
-            magnifyView.maxMagnify = 3.0
 
         case let .file(_, file, settings, isPattern):
-            self.imageView.isHidden = false
             blurCheckbox.isHidden = isPattern
 
             colorCheckbox.isHidden = !isPattern
             patternCheckbox.isHidden = !isPattern
-            var patternColor: TransformImageEmptyColor? = nil
+            rotateColors.isHidden = !isPattern
+            
+            if isPattern {
+                self.colorCheckbox.colorsValue = settings.colors.map { NSColor($0) }
+            }
+
+            self.patternCheckbox.hasPattern = isPattern
             
             var representations:[TelegramMediaImageRepresentation] = []
             representations.append(contentsOf: file.previewRepresentations)
             if let dimensions = file.dimensions {
-                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: []))
+                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
             } else {
-                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(maximumSize), resource: file.resource, progressiveSizes: []))
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(maximumSize), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
             }
             
             if isPattern {
-                var patternIntensity: CGFloat = 0.5
-                if let intensity = settings.intensity {
-                    patternIntensity = CGFloat(intensity) / 100.0
-                }
-                if let color = settings.color, settings.bottomColor == nil {
-                    patternColor = .color(NSColor(rgb: color, alpha: patternIntensity))
-                } else if let t = settings.color, let b = settings.bottomColor {
-                    let top = NSColor(argb: t)
-                    let bottom = NSColor(argb: b)
-                    patternColor = .gradient(top: top.withAlphaComponent(patternIntensity), bottom: bottom.withAlphaComponent(patternIntensity), rotation: settings.rotation)
-                } else {
-                    patternColor = .color(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
-                }
+                self.rotateColors.update(settings.colors.count > 2 ? theme.icons.wallpaper_color_play : theme.icons.wallpaper_color_rotate)
             }
-            
-            self.imageView.setSignal(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad), animate: true, synchronousLoad: synchronousLoad)
-
-            
-            magnifyView.maxMagnify = !isPattern ? 3.0 : 1.0
-            
-           
             
             let dimensions = largestImageRepresentation(representations)!.dimensions.size
             let boundingSize = dimensions.aspectFilled(frame.size)
+
+            
+            loadImage(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize, isPattern: isPattern)
+
+                        
             self.imageSize = dimensions
 
             updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(largestImageRepresentation(representations)!.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue
-            self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor))
         default:
             break
         }
         
-        updateBackground(self.wallpaper)
+        updateBackground(self.wallpaper, image: self.image)
 
         
         if let updatedStatusSignal = updatedStatusSignal {
             disposable.set(updatedStatusSignal.start(next: { [weak self] status in
                 guard let `self` = self else { return }
                 switch status {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     if self.progressView == nil {
                         self.progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white), twist: true, size: NSMakeSize(40, 40))
                         self.addSubview(self.progressView!)
@@ -1221,7 +809,50 @@ private final class WallpaperPreviewView: View {
             progressView?.removeFromSuperview()
             progressView = nil
         }
+        
+        let serviceColor = self.serviceColor
+        
+        self.blurCheckbox.update(by: serviceColor)
+        self.colorCheckbox.update(by: serviceColor)
+        self.patternCheckbox.update(by: serviceColor)
+        self.rotateColors.update(by: serviceColor)
+        
         needsLayout = true
+    }
+    
+    var serviceColor: NSColor {
+        switch wallpaper {
+        case .builtin, .file, .color, .gradient:
+            switch backgroundView.backgroundMode {
+            case let .background(image, _, colors, _):
+                if let colors = colors, let first = colors.first {
+                    let blended = colors.reduce(first, { color, with in
+                        return color.blended(withFraction: 0.5, of: with)!
+                    })
+                    return getAverageColor(blended)
+                } else {
+                    return getAverageColor(image)
+                }
+            case let .color(color):
+                return getAverageColor(color)
+            case let .gradient(colors, _):
+                if !colors.isEmpty {
+                    let blended = colors.reduce(colors.first!, { color, with in
+                        return color.blended(withFraction: 0.5, of: with)!
+                    })
+                    return getAverageColor(blended)
+                } else {
+                    return getAverageColor(theme.colors.chatBackground)
+                }
+                
+            case let .tiled(image):
+                return getAverageColor(image)
+            case .plain:
+                return getAverageColor(theme.colors.chatBackground)
+            }
+        default:
+            return getAverageColor(theme.colors.chatBackground)
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -1260,7 +891,7 @@ private func cropWallpaperImage(_ image: CGImage, dimensions: NSSize, rect: NSRe
           var _patternColor: NSColor = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
             
             var patternIntensity: CGFloat = 0.5
-            if let color = settings.color {
+            if let color = settings.colors.first {
                 if let intensity = settings.intensity {
                     patternIntensity = CGFloat(intensity) / 100.0
                 }
@@ -1283,8 +914,6 @@ private func cropWallpaperImage(_ image: CGImage, dimensions: NSSize, rect: NSRe
         } else {
             ctx.draw(image, in: imageRect)
         }
-        
-        //ctx.draw(image, in: imageRect)
     }, opaque: false, scale: 1.0)!
     
 }
@@ -1312,7 +941,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                         if CGImageDestinationFinalize(colorDestination) {
                             let thumdResource = LocalFileMediaResource(fileId: arc4random64())
                             account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: []))
+                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                         }
                     }
                     
@@ -1321,7 +950,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                      disposable.set(putToTemp(image: NSImage(cgImage: fittedImage, size: fittedDimensions), compress: false).start(next: { path in
                         copyToClipboard(path)
                         let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-                        result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedDimensions), resource: resource, progressiveSizes: []))
+                        result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedDimensions), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                         
                         let wallpaper: Wallpaper = .image(result, settings: wallpaper.settings)
                         subscriber.putNext(wallpaper)
@@ -1336,57 +965,51 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                 
                 let path = account.postbox.mediaBox.cachedRepresentationCompletePath(file.resource.id, representation: CachedPatternWallpaperMaskRepresentation(size: nil))
                 
-                if let image = NSImage.init(contentsOf: URL(fileURLWithPath: path)) {
+                if let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
                     let size = image.size.aspectFilled(WallpaperDimensions)
                     
                     let image = generateImage(size, contextGenerator: { size, ctx in
                         let imageRect = NSMakeRect(0, 0, size.width, size.height)
                         
                         let colors:[NSColor]
-                        let color: NSColor
                         var intensity: CGFloat = 0.5
                         
-                        if let combinedColor = settings.color, settings.bottomColor == nil {
-                            let combinedColor = NSColor(combinedColor)
+                        if settings.colors.count == 1 {
+                            let combinedColor = NSColor(settings.colors.first!)
                             if let i = settings.intensity {
                                 intensity = CGFloat(i) / 100.0
                             }
-                            color = combinedColor.withAlphaComponent(1.0)
                             intensity = combinedColor.alpha
-                            colors = [color]
-                        } else if let t = settings.color, let b = settings.bottomColor {
-                            let top = NSColor(argb: t)
-                            let bottom = NSColor(argb: b)
-                            color = top.withAlphaComponent(1.0)
+                            colors = [combinedColor.withAlphaComponent(1.0)]
+                        } else if settings.colors.count > 1 {
                             if let i = settings.intensity {
                                 intensity = CGFloat(i) / 100.0
                             }
-                            colors = [top, bottom].reversed().map { $0.withAlphaComponent(1.0) }
+                            colors = settings.colors.map { NSColor(argb: $0) }.reversed().map { $0.withAlphaComponent(1.0) }
                         } else {
                             colors = [NSColor(rgb: 0xd6e2ee, alpha: 0.5)]
-                            color = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
                         }
                         
                         ctx.setBlendMode(.copy)
-                        if colors.count == 1 {
+                        if colors.count == 1, let color = colors.first {
                             ctx.setFillColor(color.cgColor)
                             ctx.fill(imageRect)
                         } else {
                             let gradientColors = colors.map { $0.cgColor } as CFArray
                             let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                            
+
                             var locations: [CGFloat] = []
                             for i in 0 ..< colors.count {
                                 locations.append(delta * CGFloat(i))
                             }
                             let colorSpace = CGColorSpaceCreateDeviceRGB()
                             let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
-                            
+
                             ctx.saveGState()
                             ctx.translateBy(x: imageRect.width / 2.0, y: imageRect.height / 2.0)
                             ctx.rotate(by: CGFloat(settings.rotation ?? 0) * CGFloat.pi / -180.0)
                             ctx.translateBy(x: -imageRect.width / 2.0, y: -imageRect.height / 2.0)
-                            
+
                             ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
                             ctx.restoreGState()
                         }
@@ -1396,7 +1019,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                         ctx.interpolationQuality = .medium
                         ctx.clip(to: imageRect, mask: image.cgImage(forProposedRect: nil, context: nil, hints: nil)!)
                         
-                        if colors.count == 1 {
+                        if colors.count == 1, let color = colors.first {
                             ctx.setFillColor(patternColor(for: color, intensity: intensity).cgColor)
                             ctx.fill(imageRect)
                         } else {
@@ -1456,7 +1079,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                         if CGImageDestinationFinalize(colorDestination) {
                             let thumdResource = LocalFileMediaResource(fileId: arc4random64())
                             account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: []))
+                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                         }
                     }
                     
@@ -1505,12 +1128,7 @@ class WallpaperPreviewController: ModalViewController {
     }
     
     override func firstResponder() -> NSResponder? {
-        switch genericView.colorPicker.currentResponder {
-        case .first:
-            return genericView.colorPicker.firstView.textView.inputView
-        case .second:
-            return genericView.colorPicker.secondView?.textView.inputView
-        }
+        return genericView.colorPicker.colorEditor.textView.inputView
     }
     
     private let wallpaper: Wallpaper
@@ -1536,7 +1154,7 @@ class WallpaperPreviewController: ModalViewController {
         
         return (left: ModalHeaderData.init(image: theme.icons.modalClose, handler: { [weak self] in
             self?.close()
-        }), center: ModalHeaderData(title: L10n.wallpaperPreviewHeader), right: !hasShare ? nil : ModalHeaderData(image: theme.icons.modalShare, handler: { [weak self] in
+        }), center: ModalHeaderData(title: strings().wallpaperPreviewHeader), right: !hasShare ? nil : ModalHeaderData(image: theme.icons.modalShare, handler: { [weak self] in
             self?.share()
         }))
     }
@@ -1552,15 +1170,16 @@ class WallpaperPreviewController: ModalViewController {
             }
             
             if isPattern {
-                if let pattern = settings.color {
-                    var color = NSColor(argb: pattern).hexString.lowercased()
-                    color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
-                    var bg = "bg_color=\(color)"
-                    if let bottomColor = settings.bottomColor {
-                        var color = NSColor(argb: bottomColor).hexString.lowercased()
-                        color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
-                        bg = "\(bg)-\(color)"
+                
+               
+
+                
+                if !settings.colors.isEmpty {
+                    let colors:[String] = settings.colors.map { value in
+                        let color = NSColor(argb: value).hexString.lowercased()
+                        return String(color[color.index(after: color.startIndex) ..< color.endIndex])
                     }
+                    let bg = "bg_color=\(colors.joined(separator: "~"))"
                     options.append(bg)
                 }
                 if let intensity = settings.intensity {
@@ -1583,19 +1202,21 @@ class WallpaperPreviewController: ModalViewController {
             var color = NSColor(argb: color).hexString.lowercased()
             color = String(color[color.index(after: color.startIndex) ..< color.endIndex])
             showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/bg/\(color)")), for: context.window)
-        case let .gradient(t, b, r):
-            let top = NSColor(argb: t).hexString.lowercased()
-            let bottom = NSColor(argb: b).hexString.lowercased()
+        case let .gradient(_, colors, r):
             
-            let tcut = String(top[top.index(after: top.startIndex) ..< top.endIndex])
-            let bcut = String(bottom[bottom.index(after: bottom.startIndex) ..< bottom.endIndex])
+            let colors:[String] = colors.map { value in
+                let color = NSColor(argb: value).hexString.lowercased()
+                return String(color[color.index(after: color.startIndex) ..< color.endIndex])
+            }
             
             var rotation: String = ""
             if let r = r {
                 rotation = "&rotation=\(r)"
             }
             
-            showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/bg/\(tcut)-\(bcut)" + rotation)), for: context.window)
+            let t = colors.joined(separator: "~")
+            
+            showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/bg/\(t)" + rotation)), for: context.window)
 
             
         default:
@@ -1606,32 +1227,33 @@ class WallpaperPreviewController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.ready = { [weak self] in
+            self?.readyOnce()
+        }
+        
+        genericView.updateState(synchronousLoad: true)
+
+        
         genericView.blurCheckbox.isSelected = wallpaper.isBlurred
        
         switch wallpaper {
         case let .color(color):
-            genericView.patternsController.color = ([NSColor(argb: color)], nil)
-        case let .gradient(t, b, r):
-            genericView.patternsController.color = ([NSColor(argb: t), NSColor(argb: b)], r)
+            genericView.patternsController.colors = ([NSColor(argb: color)], nil)
+        case let .gradient(_, colors, rotation):
+            genericView.patternsController.colors = (colors.map { NSColor(argb: $0) }, rotation)
         case let .file(_, _, settings, isPattern):
             if isPattern {
-                var colors:[NSColor] = []
-                if let t = settings.color {
-                    colors.append(NSColor(argb: t))
-                }
-                if let b = settings.bottomColor {
-                    colors.append(NSColor(argb: b))
-                }
+                var colors:[NSColor] = settings.colors.map { NSColor(argb: $0) }
                 if colors.isEmpty {
                     colors.append(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
                 }
-                genericView.patternsController.color = (colors, settings.rotation)
+                genericView.patternsController.colors = (colors, settings.rotation)
             }
         default:
             break
         }
-        
-        readyOnce()
+       
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -1641,15 +1263,7 @@ class WallpaperPreviewController: ModalViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.magnifyView.zoomOut()
-            return .invoked
-        }, with: self, for: .Minus, priority: .modal)
-        
-        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.magnifyView.zoomIn()
-            return .invoked
-        }, with: self, for: .Equal, priority: .modal)
+       
     }
     
 
@@ -1657,7 +1271,7 @@ class WallpaperPreviewController: ModalViewController {
         let context = self.context
         closeAllModals()
         
-        let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect, magnify: genericView.magnifyView.magnify) |> mapToSignal { wallpaper in
+        let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect) |> mapToSignal { wallpaper in
             return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper)
         }
         
@@ -1681,7 +1295,7 @@ class WallpaperPreviewController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.wallpaperPreviewApply, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().wallpaperPreviewApply, accept: { [weak self] in
             self?.applyAndClose()
         }, drawBorder: true, height: 50, singleButton: true)
     }
@@ -1694,7 +1308,7 @@ class WallpaperPreviewController: ModalViewController {
     }
     
     override func measure(size: NSSize) {
-        let chatSize = NSMakeSize(context.sharedContext.bindings.rootNavigation().frame.width, min(500, size.height - 150))
+        let chatSize = NSMakeSize(context.bindings.rootNavigation().frame.width, min(500, size.height - 150))
         let contentSize = WallpaperDimensions.aspectFitted(chatSize)
         
         self.modal?.resize(with: contentSize, animated: false)

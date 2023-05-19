@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -80,7 +80,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
             self?.updateScrolled()
         })
         controller.add(listener: self)
-        context.sharedContext.bindings.rootNavigation().add(listener: WeakReference(value: self))
+        context.bindings.rootNavigation().add(listener: WeakReference(value: self))
     }
     
     override var window:Window? {
@@ -95,7 +95,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     }
     
     override func navigationWillChangeController() {
-        if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController {
+        if let controller = context.bindings.rootNavigation().controller as? ChatController {
             updateTableView(controller.genericView.tableView, context: context, controller: self.controller)
         } else {
             updateTableView(nil, context: context, controller: self.controller)
@@ -114,8 +114,17 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
                     if let view = view as? ChatRowView, let item = view.item as? ChatRowItem {
                         if let stableId = item.stableId.base as? ChatHistoryEntryId {
                             if case .message(let message) = stableId {
-                                if message.id == currentMessage.id {
-                                    needShow = false
+                                if message.id == currentMessage.id, view.visibleRect.size == view.frame.size {
+                                    if let state = item.entry.additionalData.transribeState {
+                                        loop: switch state {
+                                        case .collapsed:
+                                            needShow = false
+                                        default:
+                                            break loop
+                                        }
+                                    } else {
+                                        needShow = false
+                                    }
                                 }
                             }
                         }
@@ -149,7 +158,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         loadViewIfNeeded()
         isShown = true
         genericView.animatesAlphaOnFirstTransition = false
-        if let message = currentMessage, let media = message.media.first as? TelegramMediaFile {
+        if let message = currentMessage, let media = message.effectiveMedia as? TelegramMediaFile {
             let signal:Signal<ImageDataTransformation, NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
             
             let resource = FileMediaReference.message(message: MessageReference(message), media: media)
@@ -195,17 +204,19 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
             alignToCorner(alignment)
         }
         
+        let context = self.context
+        
         var startDragPosition:NSPoint? = nil
         var startViewPosition:NSPoint = view.frame.origin
         window?.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
             if let strongSelf = self, let _ = startDragPosition {
                 if startViewPosition.x == strongSelf.view.frame.origin.x && startViewPosition.y == strongSelf.view.frame.origin.y {
-                    globalAudio?.playOrPause()
+                    context.audioPlayer?.playOrPause()
                 }
                 startDragPosition = nil
                 if let opacity = strongSelf.view.layer?.opacity, opacity < 0.5 {
-                    globalAudio?.notifyCompleteQueue()
-                    globalAudio?.cleanup()
+                    context.audioPlayer?.notifyCompleteQueue(animated: true)
+                    context.audioPlayer?.cleanup()
                 } else {
                     strongSelf.findCorner()
                 }
@@ -323,11 +334,11 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
     
     
     
-    func songDidChanged(song:APSongItem, for controller:APController) {
+    func songDidChanged(song:APSongItem, for controller:APController, animated: Bool) {
         var msg:Message? = nil
         switch song.entry {
         case let .song(message):
-            if let md = (message.media.first as? TelegramMediaFile), md.isInstantVideo {
+            if let md = (message.effectiveMedia as? TelegramMediaFile), md.isInstantVideo {
                 msg = message
             }
         default:
@@ -350,31 +361,31 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         }
         updateScrolled()
     }
-    func songDidChangedState(song: APSongItem, for controller: APController) {
+    func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
         switch song.state {
-        case let .playing(data):
-            genericView.playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: false)
+        case let .playing(_, _, progress):
+            genericView.playingProgressView.state = .ImpossibleFetching(progress: Float(progress), force: false)
         case .stoped, .waiting, .fetching:
             genericView.playingProgressView.state = .None
-        case let .paused(data):
-            genericView.playingProgressView.state = .ImpossibleFetching(progress: Float(data.progress), force: true)
+        case let .paused(_, _, progress):
+            genericView.playingProgressView.state = .ImpossibleFetching(progress: Float(progress), force: true)
         }
     }
-    func songDidStartPlaying(song:APSongItem, for controller:APController) {
+    func songDidStartPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         
     }
-    func songDidStopPlaying(song:APSongItem, for controller:APController) {
+    func songDidStopPlaying(song:APSongItem, for controller:APController, animated: Bool) {
         if song.stableId == currentMessage?.chatStableId {
             //self.timebase = nil
         }
     }
-    func playerDidChangedTimebase(song:APSongItem, for controller:APController) {
+    func playerDidChangedTimebase(song:APSongItem, for controller:APController, animated: Bool) {
         if song.stableId == currentMessage?.chatStableId {
             self.timebase = controller.timebase
         }
     }
 
-    func audioDidCompleteQueue(for controller:APController) {
+    func audioDidCompleteQueue(for controller:APController, animated: Bool) {
         hide()
     }
     

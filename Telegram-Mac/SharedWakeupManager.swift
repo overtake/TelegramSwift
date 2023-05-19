@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 
 private struct AccountTasks {
@@ -113,15 +113,31 @@ class SharedWakeupManager {
     private func updateRindingsStatuses(_ accounts:[Account]) {
         
         self.ringingStatesActivated = ringingStatesActivated.intersection(accounts.map { $0.id })
-        
+        let accountManager = sharedContext.accountManager
         for account in accounts {
             if !ringingStatesActivated.contains(account.id) {
-                _ = (account.callSessionManager.ringingStates() |> deliverOnMainQueue).start(next: { states in
+                
+                let combine = combineLatest(account.stateManager.isUpdating, account.callSessionManager.ringingStates()) |> mapToSignal { loading, states -> Signal<(Bool, CallSessionRingingState, PCallSession.InitialData)?, NoError> in
                     if let state = states.first {
-                        if self.sharedContext.bindings.callSession() != nil {
-                            account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
-                        } else {
-                            showCallWindow(PCallSession(account: account, sharedContext: self.sharedContext, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible))
+                        return getPrivateCallSessionData(account, accountManager: accountManager, peerId: state.peerId) |> map {
+                            (loading, state, $0)
+                        }
+                    } else {
+                        return .single(nil)
+                    }
+                }
+                |> filter { $0 != nil && !$0!.0 }
+                |> map { $0! }
+                |> deliverOnMainQueue
+                _ = combine.start(next: { data in
+                    let state = data.1
+                    let initialData = data.2
+                    
+                    if self.sharedContext.hasActiveCall {
+                        account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
+                    } else {
+                        if let accountContext = appDelegate?.activeContext(for: account.id) {
+                            showCallWindow(PCallSession(accountContext: accountContext, account: account, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible, data: initialData))
                         }
                     }
                 })
@@ -136,7 +152,10 @@ class SharedWakeupManager {
         for (account, primary, tasks) in self.accountsAndTasks {
             account.shouldBeServiceTaskMaster.set(.single(.always))
             account.shouldExplicitelyKeepWorkerConnections.set(.single(tasks.backgroundAudio))
-            account.shouldKeepOnlinePresence.set(.single(primary && self.inForeground))
+            
+            let based = appDelegate?.supportAccountContextValue?.find(account.id)
+            
+            account.shouldKeepOnlinePresence.set(.single((primary || based != nil) && self.inForeground))
             account.shouldKeepBackgroundDownloadConnections.set(.single(tasks.backgroundDownloads))
             
             if !stateManagmentReseted.contains(account.id) {

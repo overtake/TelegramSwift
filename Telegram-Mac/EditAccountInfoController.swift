@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -36,7 +36,10 @@ enum EditSettingsEntryTag: ItemListItemTag {
 private func valuesRequiringUpdate(state: EditInfoState, view: PeerView) -> ((fn: String, ln: String)?, about: String?) {
     if let peer = view.peers[view.peerId] as? TelegramUser {
         var names:(String, String)? = nil
-        if state.firstName != peer.firstName || state.lastName != peer.lastName {
+        let pf = peer.firstName ?? ""
+        let pl = peer.lastName ?? ""
+
+        if state.firstName != pf || state.lastName != pl {
             names = (state.firstName, state.lastName)
         }
         var about: String? = nil
@@ -54,12 +57,12 @@ private func valuesRequiringUpdate(state: EditInfoState, view: PeerView) -> ((fn
 
 private final class EditInfoControllerArguments {
     let context: AccountContext
-    let uploadNewPhoto:()->Void
+    let uploadNewPhoto:(Control)->Void
     let logout:()->Void
     let username:()->Void
     let changeNumber:()->Void
     let addAccount: ()->Void
-    init(context: AccountContext, uploadNewPhoto:@escaping()->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void, addAccount: @escaping() -> Void) {
+    init(context: AccountContext, uploadNewPhoto:@escaping(Control)->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void, addAccount: @escaping() -> Void) {
         self.context = context
         self.logout = logout
         self.username = username
@@ -171,55 +174,57 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_info, equatable: InputDataEquatable(state), item: { size, stableId -> TableRowItem in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_info, equatable: InputDataEquatable(state), comparable: nil, item: { size, stableId -> TableRowItem in
         return EditAccountInfoItem(size, stableId: stableId, account: arguments.context.account, state: state, viewType: .singleItem, updateText: { firstName, lastName in
             updateState { current in
                 return current.withUpdatedFirstName(firstName).withUpdatedLastName(lastName).withUpdatedInited(true)
             }
-        }, uploadNewPhoto: {
-            arguments.uploadNewPhoto()
+        }, uploadNewPhoto: { control in
+            arguments.uploadNewPhoto(control)
         })
     }))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editAccountNameDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editAccountNameDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
 
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.bioHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().bioHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
 
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.bioPlaceholder, filter: {$0}, limit: 70))
+    let limit = arguments.context.isPremium ? arguments.context.premiumLimits.about_length_limit_premium : arguments.context.premiumLimits.about_length_limit_default
+    
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().bioPlaceholder, filter: {$0}, limit: Int32(limit)))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.bioDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().bioDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: L10n.editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : ""), viewType: .firstItem, action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: strings().editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : ""), viewType: .firstItem, action: nil)))
     index += 1
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: L10n.editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), viewType: .lastItem, action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: strings().editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), viewType: .lastItem, action: nil)))
     index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     if activeAccounts.count < 3 {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.editAccountAddAccount, color: theme.colors.accent, icon: nil, type: .none, viewType: .firstItem, action: {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: strings().editAccountAddAccount, color: theme.colors.accent, icon: nil, type: .none, viewType: .firstItem, action: {
             arguments.addAccount()
         })))
         index += 1
     }
    
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, data: InputDataGeneralData(name: L10n.editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none, viewType: activeAccounts.count < 3 ? .lastItem : .singleItem, action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, data: InputDataGeneralData(name: strings().editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none, viewType: activeAccounts.count < 3 ? .lastItem : .singleItem, action: nil)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -258,6 +263,8 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     
     let peerId = context.peerId
     
+    
+    
     let cancel = {
         photoDisposable.set(nil)
         updateState { state -> EditInfoState in
@@ -267,9 +274,11 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
 
     var close:(()->Void)? = nil
     
-    let updatePhoto:(NSImage)->Void = { image in
-       
-        _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+    let updatePhoto:(Signal<NSImage, NoError>)->Void = { image in
+        let signal = image |> mapToSignal {
+            putToTemp(image: $0, compress: true)
+        } |> deliverOnMainQueue
+        _ = signal.start(next: { path in
             let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
             showModal(with: controller, for: context.window, animationType: .scaleCenter)
             
@@ -281,13 +290,11 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                             return PeerInfoUpdatingPhotoState(progress: 0, cancel: cancel)
                         }
                     }
-                } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                    return updateAccountPhoto(account: context.account, resource: resource, videoResource: nil, videoStartTimestamp: nil, mapResourceToAvatarSizes: { resource, representations in
+                } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
+                    return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, mapResourceToAvatarSizes: { resource, representations in
                         return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                     })
                 } |> deliverOnMainQueue
-            
-            
             
             photoDisposable.set(updateSignal.start(next: { status in
                 updateState { state -> EditInfoState in
@@ -316,9 +323,12 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         })
     }
     
+    
+        
     let updateVideo:(Signal<VideoAvatarGeneratorState, NoError>) -> Void = { signal in
+                        
         let updateSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
-        |> mapError { _ in return UploadPeerPhotoError.generic }
+        |> castError(UploadPeerPhotoError.self)
         |> mapToSignal { state in
             switch state {
             case .error:
@@ -335,8 +345,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             case let .complete(thumb, video, keyFrame):
                 let (thumbResource, videoResource) = (LocalFileReferenceMediaResource(localFilePath: thumb, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true),
                                                       LocalFileReferenceMediaResource(localFilePath: video, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true))
-                
-                return updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: thumbResource), video: uploadedPeerVideo(postbox: context.account.postbox, network: context.account.network, messageMediaPreuploadManager: nil, resource: videoResource) |> map(Optional.init), videoStartTimestamp: keyFrame, mapResourceToAvatarSizes: { resource, representations in
+                return context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: thumbResource), video: context.engine.peers.uploadedPeerVideo(resource: videoResource) |> map(Optional.init), videoStartTimestamp: keyFrame, mapResourceToAvatarSizes: { resource, representations in
                     return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                 }) |> map { result in
                     switch result {
@@ -370,29 +379,93 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         }))
     }
     
-    let arguments = EditInfoControllerArguments(context: context, uploadNewPhoto: {
+    let makeVideo:(MediaObjectToAvatar)->Void = { object in
         
-        filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
-            if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                updatePhoto(image)
-            } else if let path = paths?.first {
-                selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescProfile, signal: { signal in
-                    updateVideo(signal)
-                })
+        
+        switch object.object.foreground.type {
+        case .emoji, .sticker:
+            updatePhoto(object.start() |> mapToSignal { value in
+                if let result = value.result {
+                    switch result {
+                    case let .image(image):
+                        return .single(image)
+                    default:
+                        return .never()
+                    }
+                } else {
+                    return .never()
+                }
+            })
+        default:
+            let signal:Signal<VideoAvatarGeneratorState, NoError> = object.start() |> map { value in
+                if let result = value.result {
+                    switch result {
+                    case let .video(path, thumb):
+                        return .complete(thumb: thumb, video: path, keyFrame: nil)
+                    default:
+                        return .error
+                    }
+                } else if let status = value.status {
+                    switch status {
+                    case let .initializing(thumb):
+                        return .start(thumb: thumb)
+                    case let .converting(progress):
+                        return .progress(progress)
+                    default:
+                        return .error
+                    }
+                } else {
+                    return .error
+                }
             }
-        })
+            updateVideo(signal)
+        }
+    }
+    
+    let arguments = EditInfoControllerArguments(context: context, uploadNewPhoto: { control in
+        
+        var items:[ContextMenuItem] = []
+        
+        items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
+            filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+                if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                    updatePhoto(.single(image))
+                } else if let path = paths?.first {
+                    selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescProfile, signal: { signal in
+                        updateVideo(signal)
+                    })
+                }
+            })
+        }, itemImage: MenuAnimation.menu_shared_media.value))
+        
+        items.append(.init(strings().editAvatarCustomize, handler: {
+            showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo), for: context.window)
+        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+        
+        if let event = NSApp.currentEvent {
+            let menu = ContextMenu()
+            for item in items {
+                menu.addItem(item)
+            }
+            let value = AppMenu(menu: menu)
+            value.show(event: event, view: control)
+        }       
     }, logout: {
         showModal(with: LogoutViewController(context: context, f: f), for: context.window)
     }, username: {
-        f(UsernameSettingsViewController(context))
+        f(UsernameController(context))
     }, changeNumber: {
-        f(PhoneNumberIntroController(context))
+        let navigation = MajorNavigationController(PhoneNumberIntroController.self, PhoneNumberIntroController(context), context.window)
+        navigation.alwaysAnimate = true
+        navigation._frameRect = NSMakeRect(0, 0, 350, 400)
+        navigation.readyOnce()
+        showModal(with: navigation, for: context.window)
     }, addAccount: {
         let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
     })
     
-    let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.editAccountTitle, validateData: { data -> InputDataValidation in
+    let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: strings().editAccountTitle, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()
@@ -407,6 +480,16 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             return .fail(.none)
         }
         
+        if let about = data[_id_about]?.stringValue {
+            if context.isPremium {
+                
+            } else {
+                if about.length > context.premiumLimits.about_length_limit_default {
+                    showPremiumLimit(context: context, type: .caption(about.length))
+                }
+            }
+        }
+        
         return .fail(.doSomething { f in
             let current = stateValue.modify {$0}
             if current.firstName.isEmpty {
@@ -416,14 +499,16 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             if let peerView = peerView {
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
                 if let names = updates.0 {
-                    signals.append(updateAccountPeerName(account: context.account, firstName: names.fn, lastName: names.ln))
+                    
+                    signals.append(context.engine.accountData.updateAccountPeerName(firstName: names.fn, lastName: names.ln))
                 }
                 if let about = updates.1 {
-                    signals.append(updateAbout(account: context.account, about: about) |> `catch` { _ in .complete()})
+                    signals.append(context.engine.accountData.updateAbout(about: about) |> `catch` { _ in .complete()})
                 }
                 updateNameDisposable.set(showModalProgress(signal: combineLatest(signals) |> deliverOnMainQueue, for: context.window).start(completed: {
                     updateState { $0 }
                     close?()
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
                 }))
             }
             })
@@ -439,9 +524,9 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             let current = stateValue.modify {$0}
             if let peerView = peerView {
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
-                f((updates.0 != nil || updates.1 != nil) ? .enabled(L10n.navigationDone) : .disabled(L10n.navigationDone))
+                f((updates.0 != nil || updates.1 != nil) ? .enabled(strings().navigationDone) : .disabled(strings().navigationDone))
             } else {
-                f(.disabled(L10n.navigationDone))
+                f(.disabled(strings().navigationDone))
             }
         }
     }, removeAfterDisappear: false, identifier: "account")
@@ -452,8 +537,18 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         }
     }
     
+    controller.inputLimitReached = { limit in
+        if !context.isPremium {
+            showPremiumLimit(context: context, type: .about(context.premiumLimits.about_length_limit_default + limit))
+        }
+    }
+    
     close = { [weak controller] in
         controller?.navigationController?.back()
+    }
+    
+    controller.onDeinit = {
+       // cancel()
     }
     
     f(controller)

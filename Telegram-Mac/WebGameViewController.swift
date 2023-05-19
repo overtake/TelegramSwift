@@ -11,7 +11,7 @@ import WebKit
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+import TelegramIconsTheme
 import Postbox
 
 private class WeakGameScriptMessageHandler: NSObject, WKScriptMessageHandler {
@@ -87,7 +87,7 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         super.viewDidLoad()
         genericView.wantsLayer = true
         loadMessageDisposable.set((context.account.postbox.messageAtId(messageId) |> deliverOnMainQueue).start(next: { [weak self] message in
-            if let message = message, let game = message.media.first as? TelegramMediaGame, let peer = message.inlinePeer {
+            if let message = message, let game = message.effectiveMedia as? TelegramMediaGame, let peer = message.inlinePeer {
                self?.start(with: game, peer: peer)
             }
         }))
@@ -177,7 +177,7 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         let messageId = self.messageId
         
         showModal(with: ShareModalController(ShareCallbackObject(context, callback: { peerIds in
-            let signals = peerIds.map { forwardGameWithScore(account: context.account, messageId: messageId, to: $0) }
+            let signals = peerIds.map { context.engine.messages.forwardGameWithScore(messageId: messageId, to: $0, as: nil) }
             return combineLatest(signals) |> map { _ in return } |> ignoreValues
         })), for: context.window)
     }

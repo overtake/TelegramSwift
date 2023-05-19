@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+import InAppSettings
 
 final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
     let map:TelegramMediaMap
@@ -31,7 +31,8 @@ final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
         self.execute = execute
         self.defaultImageSize = isVenue ? NSMakeSize(60, 60) : NSMakeSize(320, 120)
         self.url = "https://maps.google.com/maps?q=\(String(format:"%f", map.latitude)),\(String(format:"%f", map.longitude))"
-        let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(defaultImageSize), resource: resource, progressiveSizes: [])
+        let representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(defaultImageSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
+        
         self.image = TelegramMediaImage(imageId: map.id ?? MediaId(namespace: 0, id: arc4random64()), representations: [representation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         
         self.arguments = TransformImageArguments(corners: ImageCorners(radius: 8), imageSize: defaultImageSize, boundingSize: defaultImageSize, intrinsicInsets: NSEdgeInsets())
@@ -61,7 +62,7 @@ class ChatMapRowItem: ChatMediaItem {
       //  let isVenue = map.venue != nil
         let resource =  MapSnapshotMediaResource(latitude: map.latitude, longitude: map.longitude, width: 320 * 2, height: 120 * 2, zoom: 15)
         //let resource = HttpReferenceMediaResource(url: "https://maps.googleapis.com/maps/api/staticmap?center=\(map.latitude),\(map.longitude)&zoom=15&size=\(isVenue ? 60 * Int(2.0) : 320 * Int(2.0))x\(isVenue ? 60 * Int(2.0) : 120 * Int(2.0))&sensor=true", size: 0)
-        self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType), automaticDownload: downloadSettings.isDownloable(object.message!), execute: {
+        self.parameters = ChatMediaMapLayoutParameters(map: map, resource: resource, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), execute: {
             
             if #available(OSX 10.13, *) {
                 showModal(with: LocationModalPreview(context, map: map, peer: object.message!.effectiveAuthor, messageId: object.message!.id), for: context.window)
@@ -71,7 +72,7 @@ class ChatMapRowItem: ChatMediaItem {
         })
         
         if isLiveLocationView {
-            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .bold(.text)), maximumNumberOfLines: 1, truncationType: .end)
+            liveText = TextViewLayout(.initialize(string: strings().chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .bold(.text)), maximumNumberOfLines: 1, truncationType: .end)
             
             var editedDate:Int32 = object.message!.timestamp
             for attr in object.message!.attributes {
@@ -84,22 +85,21 @@ class ChatMapRowItem: ChatMediaItem {
             time -= context.timeDifference
             let timeUpdated = Int32(time) - editedDate
                 
-            updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? L10n.chatLiveLocationUpdatedNow : L10n.chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
+            updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? strings().chatLiveLocationUpdatedNow : strings().chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
         }
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
+    override var isForceRightLine: Bool {
         if let parameters = parameters as? ChatMediaMapLayoutParameters {
             if parameters.isVenue {
-                return rightSize.width > (_contentSize.width - 70) ? rightSize.height : nil
+                if rightSize.width > (_contentSize.width - 70) {
+                    return true
+                }
             }
         }
-        return nil
+        return super.isForceRightLine
     }
     
-    override var isFixedRightPosition: Bool {
-        return true
-    }
     
     override var instantlyResize:Bool {
         if let parameters = parameters as? ChatMediaMapLayoutParameters {

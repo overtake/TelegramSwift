@@ -21,7 +21,7 @@ class SendingClockProgress: View {
     private let clockHour:CALayer
     private let clockMin:CALayer
     
-    override init() {
+    required init(frame frameRect: NSRect) {
         
         clockFrame = CALayer()
         clockFrame.contents = theme.icons.chatSendingOutFrame
@@ -35,7 +35,7 @@ class SendingClockProgress: View {
         clockMin.contents = theme.icons.chatSendingOutMin
         clockMin.frame = theme.icons.chatSendingOutMin.backingBounds
         
-        super.init(frame:NSMakeRect(0, 0, 12, 12))
+        super.init(frame: frameRect)
         self.backgroundColor = .clear
 
         self.layer?.addSublayer(clockFrame)
@@ -52,10 +52,10 @@ class SendingClockProgress: View {
     }
     
     
-    func set(item: ChatRowItem) {
-        clockFrame.contents = item.presentation.chat.sendingFrameIcon(item)
-        clockHour.contents = item.presentation.chat.sendingHourIcon(item)
-        clockMin.contents = item.presentation.chat.sendingMinIcon(item)
+    func set(frame: CGImage, hour: CGImage, minute: CGImage) {
+        clockFrame.contents = frame
+        clockHour.contents = hour
+        clockMin.contents = minute
         viewDidMoveToWindow()
     }
     
@@ -68,10 +68,6 @@ class SendingClockProgress: View {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-    
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
     }
     
     

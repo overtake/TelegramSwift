@@ -23,57 +23,24 @@ private func generateValueImage(_ color: NSColor, height: CGFloat) -> CGImage {
 }
 
 class MicrophonePreviewRowItem: GeneralRowItem {
-    fileprivate let device: AVCaptureDevice
-    fileprivate let session: AVCaptureSession
-    private let peakDisposable = MetaDisposable()
-    fileprivate var powerLevel: Int {
+    fileprivate let controller: MicroListenerContext
+    fileprivate var powerLevel: Int = 0 {
         didSet {
             if powerLevel != oldValue {
                 self.redraw(animated: true, presentAsNew: false)
             }
         }
     }
-    fileprivate let customTheme: InputDataGeneralData.Theme?
-    init(_ initialSize: NSSize, stableId: AnyHashable, device: AVCaptureDevice, viewType: GeneralViewType, theme: InputDataGeneralData.Theme? = nil) {
-        self.device = device
-        self.customTheme = theme
-        self.session = AVCaptureSession()
-        let input = try? AVCaptureDeviceInput(device: device)
-        if let input = input {
-            self.session.addInput(input)
-        }
-        let output = AVCaptureAudioDataOutput()
-        self.session.addOutput(output)
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: SharedAccountContext, viewType: GeneralViewType, customTheme: GeneralRowItem.Theme? = nil) {
+        controller = MicroListenerContext(devices: context.devicesContext, accountManager: context.accountManager)
         
-        let connection = output.connection(with: .audio)
-        
-        let channel = connection?.audioChannels.first
-        
-        if let channel = channel {
-            let value = Int(floor(max(0, 36 - abs(channel.averagePowerLevel))))
-            self.powerLevel = value
-        } else {
-            self.powerLevel = 0
-        }
-        
-        super.init(initialSize, height: 40, stableId: stableId, viewType: viewType)
-        
-        if let channel = channel {
-            let signal: Signal<Void, NoError> = .single(Void()) |> delay(0.1, queue: .mainQueue()) |> restart
-            peakDisposable.set(signal.start(next: { [weak channel, weak self] in
-                if let channel = channel {
-                    let value = Int(floor(max(0, 36 - abs(channel.averagePowerLevel))))
-                    self?.powerLevel = value
-                }
-            }))
-        }
-        
-        self.session.startRunning()
-        
+        super.init(initialSize, height: 40, stableId: stableId, viewType: viewType, customTheme: customTheme)
+       
+        controller.resume (onSpeaking: { [weak self] value in
+            self?.powerLevel = max(min(Int(36 * value), 36), 0)
+        }, always: true)
     }
-    deinit {
-        peakDisposable.dispose()
-    }
+
     
     override func viewClass() -> AnyClass {
         return MicrophonePreviewRowView.self
@@ -82,7 +49,7 @@ class MicrophonePreviewRowItem: GeneralRowItem {
 
 private final class PreviewView : View {
     
-    fileprivate var customTheme: InputDataGeneralData.Theme?
+    fileprivate var customTheme: GeneralRowItem.Theme?
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         super.draw(layer, in: ctx)
@@ -154,7 +121,7 @@ private final class MicrophonePreviewRowView : GeneralContainableRowView {
         view.powerLevel = item.powerLevel
         needsLayout = true
         
-        let layout = TextViewLayout(.initialize(string: L10n.callSettingsInputLevel, color: item.customTheme?.textColor ?? theme.colors.text, font: .normal(.title)))
+        let layout = TextViewLayout(.initialize(string: strings().callSettingsInputLevel, color: item.customTheme?.textColor ?? theme.colors.text, font: .normal(.title)))
         layout.measure(width: 200)
         title.update(layout)
     }
@@ -165,7 +132,7 @@ private final class MicrophonePreviewRowView : GeneralContainableRowView {
         guard let item = item as? MicrophonePreviewRowItem else {
             return
         }
-        view.setFrameSize(NSMakeSize(200, 20))
+        view.setFrameSize(NSMakeSize(160, 20))
         view.centerY(x: containerView.frame.width - view.frame.width - item.viewType.innerInset.right)
         
         title.centerY(x: item.viewType.innerInset.left)

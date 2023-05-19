@@ -9,9 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
+import KeyboardKey
 
 class EditAccountInfoItem: GeneralRowItem {
 
@@ -19,13 +20,13 @@ class EditAccountInfoItem: GeneralRowItem {
     fileprivate let state: EditInfoState
     fileprivate let photo: AvatarNodeState
     fileprivate let updateText: (String, String)->Void
-    fileprivate let uploadNewPhoto: (()->Void)?
-    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: EditInfoState, viewType: GeneralViewType = .legacy, updateText:@escaping(String, String)->Void, uploadNewPhoto: (()->Void)? = nil) {
+    fileprivate let uploadNewPhoto: ((Control)->Void)?
+    init(_ initialSize: NSSize, stableId: AnyHashable, account: Account, state: EditInfoState, viewType: GeneralViewType = .legacy, updateText:@escaping(String, String)->Void, uploadNewPhoto: ((Control)->Void)? = nil) {
         self.account = account
         self.updateText = updateText
         self.state = state
         self.uploadNewPhoto = uploadNewPhoto
-        self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil) : .Empty
+        self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil, nil, state.peer!.isForum) : .Empty
         
         let height: CGFloat
         switch viewType {
@@ -82,9 +83,9 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         updoadPhotoCap.set(image: ControlStyle(highlightColor: theme.colors.accentIcon).highlight(image: theme.icons.chatAttachCamera), for: .Highlight)
         
         
-        updoadPhotoCap.set(handler: { [weak self] _ in
+        updoadPhotoCap.set(handler: { [weak self] control in
             guard let item = self?.item as? EditAccountInfoItem else {return}
-            item.uploadNewPhoto?()
+            item.uploadNewPhoto?(control)
         }, for: .Click)
         
         avatar.addSubview(updoadPhotoCap)
@@ -154,8 +155,8 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         firstNameTextView.animates = false
         lastNameTextView.animates = false
         
-        firstNameTextView.placeholderAttributedString = .initialize(string: L10n.peerInfoFirstNamePlaceholder, color: theme.colors.grayText, font: .normal(.text))
-        lastNameTextView.placeholderAttributedString = .initialize(string: L10n.peerInfoLastNamePlaceholder, color: theme.colors.grayText, font: .normal(.text))
+        firstNameTextView.placeholderAttributedString = .initialize(string: strings().peerInfoFirstNamePlaceholder, color: theme.colors.grayText, font: .normal(.text))
+        lastNameTextView.placeholderAttributedString = .initialize(string: strings().peerInfoLastNamePlaceholder, color: theme.colors.grayText, font: .normal(.text))
         
         firstNameTextView.setString(item.state.firstName)
         lastNameTextView.setString(item.state.lastName)
@@ -218,6 +219,10 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     override func updateColors() {
         firstNameTextView.textColor = theme.colors.text
         lastNameTextView.textColor = theme.colors.text
+        
+        firstNameTextView.selectedTextColor = theme.colors.selectText
+        lastNameTextView.selectedTextColor = theme.colors.selectText
+
         
         firstNameTextView.setBackgroundColor(backdorColor)
         lastNameTextView.setBackgroundColor(backdorColor)

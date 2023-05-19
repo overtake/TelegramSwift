@@ -11,7 +11,118 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+import InAppSettings
+
+private let modernSoundsNamePaths: [String] = [
+    strings().notificationsSoundNote,
+    strings().notificationsSoundAurora,
+    strings().notificationsSoundBamboo,
+    strings().notificationsSoundChord,
+    strings().notificationsSoundCircles,
+    strings().notificationsSoundComplete,
+    strings().notificationsSoundHello,
+    strings().notificationsSoundInput,
+    strings().notificationsSoundKeys,
+    strings().notificationsSoundPopcorn,
+    strings().notificationsSoundPulse,
+    strings().notificationsSoundSynth
+]
+
+private let classicSoundNamePaths: [String] = [
+    strings().notificationsSoundTritone,
+    strings().notificationsSoundTremolo,
+    strings().notificationsSoundAlert,
+    strings().notificationsSoundBell,
+    strings().notificationsSoundCalypso,
+    strings().notificationsSoundChime,
+    strings().notificationsSoundGlass,
+    strings().notificationsSoundTelegraph
+]
+
+private func soundName(sound: PeerMessageSound) -> String {
+    switch sound {
+        case .none:
+            return strings().notificationsSoundNone
+        case .default:
+            return ""
+        case let .bundledModern(id):
+            if id >= 0 && Int(id) < modernSoundsNamePaths.count {
+                return modernSoundsNamePaths[Int(id)]
+            }
+            return "Sound \(id)"
+        case let .bundledClassic(id):
+            if id >= 0 && Int(id) < classicSoundNamePaths.count {
+                return classicSoundNamePaths[Int(id)]
+            }
+            return "Sound \(id)"
+    case let .cloud(fileId):
+        return "Sound \(fileId)"
+    }
+}
+
+public func localizedPeerNotificationSoundString(sound: PeerMessageSound, default: PeerMessageSound? = nil, list: NotificationSoundList? = nil) -> String {
+    switch sound {
+    case .`default`:
+        if let defaultSound = `default` {
+            let name = soundName(sound: defaultSound)
+            let actualName: String
+            if name.isEmpty {
+                actualName = soundName(sound: .bundledModern(id: 0))
+            } else {
+                actualName = name
+            }
+            return strings().peerInfoNotificationsDefaultSound(actualName)
+        } else {
+            return strings().peerInfoNotificationsDefault
+        }
+    case let .cloud(fileId):
+        if let list = list, let sound = list.sounds.first(where: { $0.file.fileId.id == fileId }) {
+            if sound.file.fileName == nil || sound.file.fileName!.isEmpty, sound.file.isVoice {
+                return strings().notificationSoundToneVoice
+            }
+            return (sound.file.fileName ?? "#").nsstring.deletingPathExtension
+        } else {
+            return strings().peerInfoNotificationsDefault
+        }
+    default:
+        return soundName(sound: sound)
+    }
+}
+
+func fileNameForNotificationSound(postbox: Postbox, sound: PeerMessageSound, defaultSound: PeerMessageSound?, list: NotificationSoundList? = nil) -> Signal<TelegramMediaResource?, NoError> {
+    switch sound {
+    case .none:
+        return .single(nil)
+    case .`default`:
+        if let defaultSound = defaultSound {
+            if case .default = defaultSound {
+                return .single(SoundEffectPlay.resource(name: "100", type: "m4a"))
+            } else {
+                return fileNameForNotificationSound(postbox: postbox, sound: defaultSound, defaultSound: nil, list: list)
+            }
+        } else {
+            return .single(LocalFileReferenceMediaResource(localFilePath: "default", randomId: arc4random64()))
+        }
+    case let .bundledModern(id):
+        return .single(SoundEffectPlay.resource(name: "\(id + 100)", type: "m4a"))
+    case let .bundledClassic(id):
+        return .single(SoundEffectPlay.resource(name: "\(id + 2)", type: "m4a"))
+    case let .cloud(fileId):
+        if let list = list {
+            if let file = list.sounds.first(where: { $0.file.fileId.id == fileId})?.file {
+                _ = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: .standalone(resource: file.resource), ranges: nil, statsCategory: .audio, reportResultStatus: true).start()
+                return postbox.mediaBox.resourceData(id: file.resource.id) |> filter { $0.complete } |> take(1) |> map { _ in
+                    return file.resource
+                }
+            }
+        }
+        return .single(nil)
+    }
+}
+
+
+
+
 
 enum NotificationsAndSoundsEntryTag: ItemListItemTag {
     case allAccounts
@@ -51,7 +162,7 @@ private final class NotificationArguments {
     let resetAllNotifications:() -> Void
     let toggleMessagesPreview:() -> Void
     let toggleNotifications:() -> Void
-    let notificationTone:(String) -> Void
+    let notificationTone:() -> Void
     let toggleIncludeUnreadChats:(Bool) -> Void
     let toggleCountUnreadMessages:(Bool) -> Void
     let toggleIncludeGroups:(Bool) -> Void
@@ -62,7 +173,7 @@ private final class NotificationArguments {
     let toggleBadge: (Bool)->Void
     let toggleRequestUserAttention: ()->Void
     let toggleInAppSounds:(Bool)->Void
-    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(String) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
+    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping() -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
         self.resetAllNotifications = resetAllNotifications
         self.toggleMessagesPreview = toggleMessagesPreview
         self.toggleNotifications = toggleNotifications
@@ -95,9 +206,12 @@ private let _id_snoof = InputDataIdentifier("_id_snoof")
 private let _id_tone = InputDataIdentifier("_id_tone")
 private let _id_bounce = InputDataIdentifier("_id_bounce")
 
+private let _id_turnon_notifications = InputDataIdentifier("_id_turnon_notifications")
+private let _id_turnon_notifications_title = InputDataIdentifier("_id_turnon_notifications_title")
+
 private let _id_message_effect = InputDataIdentifier("_id_message_effect")
 
-private func notificationEntries(settings:InAppNotificationSettings, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], arguments: NotificationArguments) -> [InputDataEntry] {
+private func notificationEntries(settings:InAppNotificationSettings, soundList: NotificationSoundList?, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], unAuthStatus: UNUserNotifications.AuthorizationStatus, arguments: NotificationArguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     
@@ -107,16 +221,35 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    if accounts.count > 1 {
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsShowNotificationsFrom), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    switch unAuthStatus {
+    case .denied:
+        
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_turnon_notifications_title, equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return TurnOnNotificationsRowItem(initialSize, stableId: stableId, viewType: .firstItem)
+        }))
         index += 1
         
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_all_accounts, data: InputDataGeneralData(name: L10n.notificationSettingsAllAccounts, color: theme.colors.text, type: .switchable(settings.notifyAllAccounts), viewType: .singleItem, action: {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_turnon_notifications, data: InputDataGeneralData(name: strings().notificationSettingsTurnOn, color: theme.colors.text, type: .none, viewType: .lastItem, action: {
+            openSystemSettings(.notifications)
+        })))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    default:
+        break
+    }
+    
+    if accounts.count > 1 {
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSettingsShowNotificationsFrom), data: InputDataGeneralTextData(viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_all_accounts, data: InputDataGeneralData(name: strings().notificationSettingsAllAccounts, color: theme.colors.text, type: .switchable(settings.notifyAllAccounts), viewType: .singleItem, action: {
             arguments.allAcounts()
         })))
         index += 1
         
-        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(settings.notifyAllAccounts ? L10n.notificationSettingsShowNotificationsFromOn : L10n.notificationSettingsShowNotificationsFromOff), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+        entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(settings.notifyAllAccounts ? strings().notificationSettingsShowNotificationsFromOn : strings().notificationSettingsShowNotificationsFromOff), data: InputDataGeneralTextData(viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -124,37 +257,29 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
         
     }
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsToggleNotificationsHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSettingsToggleNotificationsHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_notifications, data: InputDataGeneralData(name: L10n.notificationSettingsToggleNotifications, color: theme.colors.text, type: .switchable(settings.enabled), viewType: .firstItem, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_notifications, data: InputDataGeneralData(name: strings().notificationSettingsToggleNotifications, color: theme.colors.text, type: .switchable(settings.enabled), viewType: .firstItem, action: {
         arguments.toggleNotifications()
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message_preview, data: InputDataGeneralData(name: L10n.notificationSettingsMessagesPreview, color: theme.colors.text, type: .switchable(settings.displayPreviews), viewType: .innerItem, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message_preview, data: InputDataGeneralData(name: strings().notificationSettingsMessagesPreview, color: theme.colors.text, type: .switchable(settings.displayPreviews), viewType: .innerItem, action: {
         arguments.toggleMessagesPreview()
     })))
     index += 1
     
     
-    let tones = ObjcUtils.notificationTones("Default")
-    var tonesItems:[SPopoverItem] = []
-    for tone in tones {
-        tonesItems.append(SPopoverItem(localizedString(tone), {
-            arguments.notificationTone(tone)
-        }))
-    }
- 
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: L10n.notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(settings.tone.isEmpty ? L10n.notificationSettingsToneDefault : localizedString(settings.tone), tonesItems), viewType: .innerItem)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: strings().notificationSettingsNotificationTone, color: theme.colors.text, type: .nextContext(localizedPeerNotificationSoundString(sound: settings.tone, list: soundList)), viewType: .innerItem, action: arguments.notificationTone)))
     index += 1
-    
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_bounce, data: InputDataGeneralData(name: L10n.notificationSettingsBounceDockIcon, color: theme.colors.text, type: .switchable(settings.requestUserAttention), viewType: .innerItem, action: {
+
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_bounce, data: InputDataGeneralData(name: strings().notificationSettingsBounceDockIcon, color: theme.colors.text, type: .switchable(settings.requestUserAttention), viewType: .innerItem, action: {
         arguments.toggleRequestUserAttention()
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset, data: InputDataGeneralData(name: L10n.notificationSettingsResetNotifications, color: theme.colors.text, type: .none, viewType: .lastItem, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset, data: InputDataGeneralData(name: strings().notificationSettingsResetNotifications, color: theme.colors.text, type: .none, viewType: .lastItem, action: {
         arguments.resetAllNotifications()
     })))
     index += 1
@@ -167,10 +292,10 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     
     
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsSoundEffects), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSettingsSoundEffects), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
 
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message_effect, data: InputDataGeneralData(name: L10n.notificationSettingsSendMessageEffect, color: theme.colors.text, type: .switchable(FastSettings.inAppSounds), viewType: .singleItem, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message_effect, data: InputDataGeneralData(name: strings().notificationSettingsSendMessageEffect, color: theme.colors.text, type: .switchable(FastSettings.inAppSounds), viewType: .singleItem, action: {
         arguments.toggleInAppSounds(!FastSettings.inAppSounds)
     })))
     index += 1
@@ -179,58 +304,58 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsBadgeHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSettingsBadgeHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_badge_enabled, data: InputDataGeneralData(name: L10n.notificationSettingsBadgeEnabled, color: theme.colors.text, type: .switchable(settings.badgeEnabled), viewType: .firstItem, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_badge_enabled, data: InputDataGeneralData(name: strings().notificationSettingsBadgeEnabled, color: theme.colors.text, type: .switchable(settings.badgeEnabled), viewType: .firstItem, action: {
         arguments.toggleBadge(!settings.badgeEnabled)
     })))
     index += 1
     
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.group)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_public_group, data: InputDataGeneralData(name: strings().notificationSettingsIncludeGroups, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.group)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
         arguments.toggleIncludeGroups(!settings.totalUnreadCountIncludeTags.contains(.group))
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_channels, data: InputDataGeneralData(name: L10n.notificationSettingsIncludeChannels, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.channel)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_include_channels, data: InputDataGeneralData(name: strings().notificationSettingsIncludeChannels, color: theme.colors.text, type: .switchable(settings.totalUnreadCountIncludeTags.contains(.channel)), viewType: .innerItem, enabled: settings.badgeEnabled, action: {
         arguments.toggleIncludeChannels(!settings.totalUnreadCountIncludeTags.contains(.channel))
     })))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_count_unred_messages, data: InputDataGeneralData(name: L10n.notificationSettingsCountUnreadMessages, color: theme.colors.text, type: .switchable(settings.totalUnreadCountDisplayCategory == .messages), viewType: .lastItem, enabled: settings.badgeEnabled, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_count_unred_messages, data: InputDataGeneralData(name: strings().notificationSettingsCountUnreadMessages, color: theme.colors.text, type: .switchable(settings.totalUnreadCountDisplayCategory == .messages), viewType: .lastItem, enabled: settings.badgeEnabled, action: {
         arguments.toggleCountUnreadMessages(settings.totalUnreadCountDisplayCategory != .messages)
     })))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsBadgeDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSettingsBadgeDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
 
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_new_contacts, data: InputDataGeneralData(name: L10n.notificationSettingsContactJoined, color: theme.colors.text, type: .switchable(globalSettings.contactsJoined), viewType: .singleItem, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_new_contacts, data: InputDataGeneralData(name: strings().notificationSettingsContactJoined, color: theme.colors.text, type: .switchable(globalSettings.contactsJoined), viewType: .singleItem, action: {
         arguments.updateJoinedNotifications(!globalSettings.contactsJoined)
     })))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsContactJoinedInfo), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSettingsContactJoinedInfo), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
 
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(L10n.notificationSettingsSnoofHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSettingsSnoofHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_snoof, data: InputDataGeneralData(name: L10n.notificationSettingsSnoof, color: theme.colors.text, type: .switchable(!settings.showNotificationsOutOfFocus), viewType: .singleItem, action: {
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_snoof, data: InputDataGeneralData(name: strings().notificationSettingsSnoof, color: theme.colors.text, type: .switchable(!settings.showNotificationsOutOfFocus), viewType: .singleItem, action: {
         arguments.snoof()
     })))
     index += 1
     
-    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(!settings.showNotificationsOutOfFocus ? L10n.notificationSettingsSnoofOn : L10n.notificationSettingsSnoofOff), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+    entries.append(InputDataEntry.desc(sectionId: sectionId, index: index, text: .plain(!settings.showNotificationsOutOfFocus ? strings().notificationSettingsSnoofOn : strings().notificationSettingsSnoofOff), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
     
     
@@ -243,16 +368,15 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
 
 func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag: NotificationsAndSoundsEntryTag? = nil) -> ViewController {
     let arguments = NotificationArguments(resetAllNotifications: {
-        confirm(for: context.window, header: L10n.notificationSettingsConfirmReset, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
+        confirm(for: context.window, header: strings().notificationSettingsConfirmReset, information: strings().chatConfirmActionUndonable, successHandler: { _ in
             _ = resetPeerNotificationSettings(network: context.account.network).start()
         })
     }, toggleMessagesPreview: {
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedDisplayPreviews(!$0.displayPreviews)}).start()
     }, toggleNotifications: {
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedEnables(!$0.enabled)}).start()
-    }, notificationTone: { tone in
-        _ = NSSound(named: tone)?.play()
-        _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTone(tone)}).start()
+    }, notificationTone: {
+        context.bindings.rootNavigation().push(NotificationSoundController(context: context))
     }, toggleIncludeUnreadChats: { enable in
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTotalUnreadCountDisplayStyle(enable ? .raw : .filtered)}).start()
     }, toggleCountUnreadMessages: { enable in
@@ -303,12 +427,15 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         FastSettings.toggleInAppSouds(value)
     })
     
-    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }) |> map { inAppSettings, globalSettings, accounts -> [InputDataEntry] in
-            return notificationEntries(settings: inAppSettings, globalSettings: globalSettings, accounts: accounts, arguments: arguments)
+    
+    
+    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }, UNUserNotifications.recurrentAuthorizationStatus(context), context.engine.peers.notificationSoundList()) |> map { inAppSettings, globalSettings, accounts, unAuthStatus, soundList -> [InputDataEntry] in
+        return notificationEntries(settings: inAppSettings, soundList: soundList, globalSettings: globalSettings, accounts: accounts, unAuthStatus: unAuthStatus, arguments: arguments)
     }
 
     
-    let controller = InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: L10n.telegramNotificationSettingsViewController, hasDone: false, identifier: "notification-settings")
+    let controller = InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: strings().telegramNotificationSettingsViewController, removeAfterDisappear: false, hasDone: false, identifier: "notification-settings")
+    
     
     
     controller.didLoaded = { controller, _ in

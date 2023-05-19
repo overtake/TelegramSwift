@@ -8,20 +8,23 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
 class PreUploadManager {
     let path: String
     let id: Int64
-    private var previousSize: Int? = nil
+    private var previousSize: Int64? = nil
     private let resource:Promise<MediaResourceData> = Promise()
     private let queue: Queue = Queue()
-    init(_ path: String, account: Account, id: Int64) {
+    init(_ path: String, context: AccountContext, id: Int64) {
         self.path = path
         self.id = id
-        account.messageMediaPreuploadManager.add(network: account.network, postbox: account.postbox, id: id, encrypt: false, tag: nil, source: resource.get())
+        
+        context.engine.resources.preUpload(id: id, encrypt: false, tag: nil, source: resource.get(), onComplete: {
+            unlink(path)
+        })
     }
     
     

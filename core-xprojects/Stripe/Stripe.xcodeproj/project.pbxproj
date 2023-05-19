@@ -1,0 +1,921 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		278FA3B825E8D47400280629 /* StripeError.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA39F25E8D47400280629 /* StripeError.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3BA25E8D47400280629 /* STPFormEncodable.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3A125E8D47400280629 /* STPFormEncodable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3BB25E8D47400280629 /* STPBankAccount.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3A225E8D47400280629 /* STPBankAccount.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3BC25E8D47400280629 /* STPAPIResponseDecodable.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3A325E8D47400280629 /* STPAPIResponseDecodable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3BD25E8D47400280629 /* STPCardValidationState.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3A425E8D47400280629 /* STPCardValidationState.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3BE25E8D47400280629 /* STPSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3A525E8D47400280629 /* STPSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3BF25E8D47400280629 /* STPCardBrand.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3A625E8D47400280629 /* STPCardBrand.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3C125E8D47400280629 /* STPBankAccountParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3A825E8D47400280629 /* STPBankAccountParams.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3C225E8D47400280629 /* STPCardParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3A925E8D47400280629 /* STPCardParams.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3C425E8D47400280629 /* STPCard.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3AB25E8D47400280629 /* STPCard.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3C525E8D47400280629 /* STPPhoneNumberValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3AC25E8D47400280629 /* STPPhoneNumberValidator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3C625E8D47400280629 /* STPCustomer.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3AD25E8D47400280629 /* STPCustomer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3C725E8D47400280629 /* STPBlocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3AE25E8D47400280629 /* STPBlocks.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3C825E8D47400280629 /* STPBINRange.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3AF25E8D47400280629 /* STPBINRange.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3C925E8D47400280629 /* STPPaymentMethod.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3B025E8D47400280629 /* STPPaymentMethod.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3CA25E8D47400280629 /* Stripe.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3B125E8D47400280629 /* Stripe.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3CB25E8D47400280629 /* STPPostalCodeValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3B225E8D47400280629 /* STPPostalCodeValidator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3CC25E8D47400280629 /* STPCardValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3B325E8D47400280629 /* STPCardValidator.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3CD25E8D47400280629 /* STPToken.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3B425E8D47400280629 /* STPToken.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3CE25E8D47400280629 /* STPAPIClient.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3B525E8D47400280629 /* STPAPIClient.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3CF25E8D47400280629 /* STPPaymentConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3B625E8D47400280629 /* STPPaymentConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3D025E8D47400280629 /* STPBackendAPIAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3B725E8D47400280629 /* STPBackendAPIAdapter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA3FD25E8D49C00280629 /* STPPaymentCardTextFieldViewModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3D325E8D49C00280629 /* STPPaymentCardTextFieldViewModel.h */; };
+		278FA3FE25E8D49C00280629 /* STPCustomer.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3D425E8D49C00280629 /* STPCustomer.m */; };
+		278FA3FF25E8D49C00280629 /* STPAPIPostRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3D525E8D49C00280629 /* STPAPIPostRequest.m */; };
+		278FA40025E8D49C00280629 /* NSString+Stripe_CardBrands.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3D625E8D49C00280629 /* NSString+Stripe_CardBrands.h */; };
+		278FA40125E8D49C00280629 /* STPBINRange.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3D725E8D49C00280629 /* STPBINRange.m */; };
+		278FA40225E8D49C00280629 /* NSString+Stripe.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3D825E8D49C00280629 /* NSString+Stripe.h */; };
+		278FA40325E8D49C00280629 /* STPImageLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3D925E8D49C00280629 /* STPImageLibrary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		278FA40425E8D49C00280629 /* STPFormEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3DA25E8D49C00280629 /* STPFormEncoder.h */; };
+		278FA40525E8D49C00280629 /* STPAPIClient.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3DB25E8D49C00280629 /* STPAPIClient.m */; };
+		278FA40625E8D49C00280629 /* STPToken.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3DC25E8D49C00280629 /* STPToken.m */; };
+		278FA40725E8D49C00280629 /* STPCardValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3DD25E8D49C00280629 /* STPCardValidator.m */; };
+		278FA40825E8D49C00280629 /* NSDictionary+Stripe.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3DE25E8D49C00280629 /* NSDictionary+Stripe.h */; };
+		278FA40925E8D49C00280629 /* STPPostalCodeValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3DF25E8D49C00280629 /* STPPostalCodeValidator.m */; };
+		278FA40A25E8D49C00280629 /* STPDispatchFunctions.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3E025E8D49C00280629 /* STPDispatchFunctions.h */; };
+		278FA40B25E8D49C00280629 /* STPPaymentConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3E125E8D49C00280629 /* STPPaymentConfiguration.m */; };
+		278FA40C25E8D49C00280629 /* PKPayment+Stripe.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3E225E8D49C00280629 /* PKPayment+Stripe.m */; };
+		278FA40D25E8D49C00280629 /* STPDelegateProxy.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3E325E8D49C00280629 /* STPDelegateProxy.m */; };
+		278FA40F25E8D49C00280629 /* STPPaymentCardTextFieldViewModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3E525E8D49C00280629 /* STPPaymentCardTextFieldViewModel.m */; };
+		278FA41025E8D49C00280629 /* STPBankAccount.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3E625E8D49C00280629 /* STPBankAccount.m */; };
+		278FA41125E8D49C00280629 /* StripeError.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3E725E8D49C00280629 /* StripeError.m */; };
+		278FA41325E8D49C00280629 /* STPFormEncoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3E925E8D49C00280629 /* STPFormEncoder.m */; };
+		278FA41425E8D49C00280629 /* NSString+Stripe.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3EA25E8D49C00280629 /* NSString+Stripe.m */; };
+		278FA41525E8D49C00280629 /* STPImageLibrary.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3EB25E8D49C00280629 /* STPImageLibrary.m */; };
+		278FA41625E8D49C00280629 /* STPWeakStrongMacros.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3EC25E8D49C00280629 /* STPWeakStrongMacros.h */; };
+		278FA41725E8D49C00280629 /* NSString+Stripe_CardBrands.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3ED25E8D49C00280629 /* NSString+Stripe_CardBrands.m */; };
+		278FA41825E8D49C00280629 /* STPAPIClient+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3EE25E8D49C00280629 /* STPAPIClient+Private.h */; };
+		278FA41925E8D49C00280629 /* STPAPIPostRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3EF25E8D49C00280629 /* STPAPIPostRequest.h */; };
+		278FA41A25E8D49C00280629 /* STPDispatchFunctions.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3F025E8D49C00280629 /* STPDispatchFunctions.m */; };
+		278FA41B25E8D49C00280629 /* STPCardParams.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3F125E8D49C00280629 /* STPCardParams.m */; };
+		278FA41D25E8D49C00280629 /* STPBankAccountParams.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3F325E8D49C00280629 /* STPBankAccountParams.m */; };
+		278FA41E25E8D49C00280629 /* NSDictionary+Stripe.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3F425E8D49C00280629 /* NSDictionary+Stripe.m */; };
+		278FA42025E8D49C00280629 /* STPPaymentConfiguration+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3F625E8D49C00280629 /* STPPaymentConfiguration+Private.h */; };
+		278FA42125E8D49C00280629 /* STPImageLibrary+Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3F725E8D49C00280629 /* STPImageLibrary+Private.h */; };
+		278FA42325E8D49C00280629 /* STPDelegateProxy.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3F925E8D49C00280629 /* STPDelegateProxy.h */; };
+		278FA42425E8D49C00280629 /* STPPhoneNumberValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3FA25E8D49C00280629 /* STPPhoneNumberValidator.m */; };
+		278FA42525E8D49C00280629 /* STPCard.m in Sources */ = {isa = PBXBuildFile; fileRef = 278FA3FB25E8D49C00280629 /* STPCard.m */; };
+		278FA42625E8D49C00280629 /* PKPayment+Stripe.h in Headers */ = {isa = PBXBuildFile; fileRef = 278FA3FC25E8D49C00280629 /* PKPayment+Stripe.h */; };
+		279A1DFA25E8E327007D48E7 /* STPAddress.m in Sources */ = {isa = PBXBuildFile; fileRef = 279A1DF925E8E327007D48E7 /* STPAddress.m */; };
+		279A1DFE25E8E38A007D48E7 /* STPAddress.h in Headers */ = {isa = PBXBuildFile; fileRef = 279A1DFD25E8E38A007D48E7 /* STPAddress.h */; settings = {ATTRIBUTES = (Public, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		278FA2F525E8CF9F00280629 /* Stripe.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Stripe.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		278FA39F25E8D47400280629 /* StripeError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StripeError.h; sourceTree = "<group>"; };
+		278FA3A125E8D47400280629 /* STPFormEncodable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPFormEncodable.h; sourceTree = "<group>"; };
+		278FA3A225E8D47400280629 /* STPBankAccount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPBankAccount.h; sourceTree = "<group>"; };
+		278FA3A325E8D47400280629 /* STPAPIResponseDecodable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPAPIResponseDecodable.h; sourceTree = "<group>"; };
+		278FA3A425E8D47400280629 /* STPCardValidationState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPCardValidationState.h; sourceTree = "<group>"; };
+		278FA3A525E8D47400280629 /* STPSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPSource.h; sourceTree = "<group>"; };
+		278FA3A625E8D47400280629 /* STPCardBrand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPCardBrand.h; sourceTree = "<group>"; };
+		278FA3A825E8D47400280629 /* STPBankAccountParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPBankAccountParams.h; sourceTree = "<group>"; };
+		278FA3A925E8D47400280629 /* STPCardParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPCardParams.h; sourceTree = "<group>"; };
+		278FA3AB25E8D47400280629 /* STPCard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPCard.h; sourceTree = "<group>"; };
+		278FA3AC25E8D47400280629 /* STPPhoneNumberValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPPhoneNumberValidator.h; sourceTree = "<group>"; };
+		278FA3AD25E8D47400280629 /* STPCustomer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPCustomer.h; sourceTree = "<group>"; };
+		278FA3AE25E8D47400280629 /* STPBlocks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPBlocks.h; sourceTree = "<group>"; };
+		278FA3AF25E8D47400280629 /* STPBINRange.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPBINRange.h; sourceTree = "<group>"; };
+		278FA3B025E8D47400280629 /* STPPaymentMethod.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPPaymentMethod.h; sourceTree = "<group>"; };
+		278FA3B125E8D47400280629 /* Stripe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Stripe.h; sourceTree = "<group>"; };
+		278FA3B225E8D47400280629 /* STPPostalCodeValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPPostalCodeValidator.h; sourceTree = "<group>"; };
+		278FA3B325E8D47400280629 /* STPCardValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPCardValidator.h; sourceTree = "<group>"; };
+		278FA3B425E8D47400280629 /* STPToken.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPToken.h; sourceTree = "<group>"; };
+		278FA3B525E8D47400280629 /* STPAPIClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPAPIClient.h; sourceTree = "<group>"; };
+		278FA3B625E8D47400280629 /* STPPaymentConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPPaymentConfiguration.h; sourceTree = "<group>"; };
+		278FA3B725E8D47400280629 /* STPBackendAPIAdapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPBackendAPIAdapter.h; sourceTree = "<group>"; };
+		278FA3D325E8D49C00280629 /* STPPaymentCardTextFieldViewModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPPaymentCardTextFieldViewModel.h; sourceTree = "<group>"; };
+		278FA3D425E8D49C00280629 /* STPCustomer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPCustomer.m; sourceTree = "<group>"; };
+		278FA3D525E8D49C00280629 /* STPAPIPostRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPAPIPostRequest.m; sourceTree = "<group>"; };
+		278FA3D625E8D49C00280629 /* NSString+Stripe_CardBrands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Stripe_CardBrands.h"; sourceTree = "<group>"; };
+		278FA3D725E8D49C00280629 /* STPBINRange.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPBINRange.m; sourceTree = "<group>"; };
+		278FA3D825E8D49C00280629 /* NSString+Stripe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Stripe.h"; sourceTree = "<group>"; };
+		278FA3D925E8D49C00280629 /* STPImageLibrary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPImageLibrary.h; sourceTree = "<group>"; };
+		278FA3DA25E8D49C00280629 /* STPFormEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPFormEncoder.h; sourceTree = "<group>"; };
+		278FA3DB25E8D49C00280629 /* STPAPIClient.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPAPIClient.m; sourceTree = "<group>"; };
+		278FA3DC25E8D49C00280629 /* STPToken.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPToken.m; sourceTree = "<group>"; };
+		278FA3DD25E8D49C00280629 /* STPCardValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPCardValidator.m; sourceTree = "<group>"; };
+		278FA3DE25E8D49C00280629 /* NSDictionary+Stripe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDictionary+Stripe.h"; sourceTree = "<group>"; };
+		278FA3DF25E8D49C00280629 /* STPPostalCodeValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPPostalCodeValidator.m; sourceTree = "<group>"; };
+		278FA3E025E8D49C00280629 /* STPDispatchFunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPDispatchFunctions.h; sourceTree = "<group>"; };
+		278FA3E125E8D49C00280629 /* STPPaymentConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPPaymentConfiguration.m; sourceTree = "<group>"; };
+		278FA3E225E8D49C00280629 /* PKPayment+Stripe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "PKPayment+Stripe.m"; sourceTree = "<group>"; };
+		278FA3E325E8D49C00280629 /* STPDelegateProxy.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPDelegateProxy.m; sourceTree = "<group>"; };
+		278FA3E525E8D49C00280629 /* STPPaymentCardTextFieldViewModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPPaymentCardTextFieldViewModel.m; sourceTree = "<group>"; };
+		278FA3E625E8D49C00280629 /* STPBankAccount.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPBankAccount.m; sourceTree = "<group>"; };
+		278FA3E725E8D49C00280629 /* StripeError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StripeError.m; sourceTree = "<group>"; };
+		278FA3E925E8D49C00280629 /* STPFormEncoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPFormEncoder.m; sourceTree = "<group>"; };
+		278FA3EA25E8D49C00280629 /* NSString+Stripe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Stripe.m"; sourceTree = "<group>"; };
+		278FA3EB25E8D49C00280629 /* STPImageLibrary.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPImageLibrary.m; sourceTree = "<group>"; };
+		278FA3EC25E8D49C00280629 /* STPWeakStrongMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPWeakStrongMacros.h; sourceTree = "<group>"; };
+		278FA3ED25E8D49C00280629 /* NSString+Stripe_CardBrands.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Stripe_CardBrands.m"; sourceTree = "<group>"; };
+		278FA3EE25E8D49C00280629 /* STPAPIClient+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "STPAPIClient+Private.h"; sourceTree = "<group>"; };
+		278FA3EF25E8D49C00280629 /* STPAPIPostRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPAPIPostRequest.h; sourceTree = "<group>"; };
+		278FA3F025E8D49C00280629 /* STPDispatchFunctions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPDispatchFunctions.m; sourceTree = "<group>"; };
+		278FA3F125E8D49C00280629 /* STPCardParams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPCardParams.m; sourceTree = "<group>"; };
+		278FA3F325E8D49C00280629 /* STPBankAccountParams.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPBankAccountParams.m; sourceTree = "<group>"; };
+		278FA3F425E8D49C00280629 /* NSDictionary+Stripe.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDictionary+Stripe.m"; sourceTree = "<group>"; };
+		278FA3F625E8D49C00280629 /* STPPaymentConfiguration+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "STPPaymentConfiguration+Private.h"; sourceTree = "<group>"; };
+		278FA3F725E8D49C00280629 /* STPImageLibrary+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "STPImageLibrary+Private.h"; sourceTree = "<group>"; };
+		278FA3F925E8D49C00280629 /* STPDelegateProxy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPDelegateProxy.h; sourceTree = "<group>"; };
+		278FA3FA25E8D49C00280629 /* STPPhoneNumberValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPPhoneNumberValidator.m; sourceTree = "<group>"; };
+		278FA3FB25E8D49C00280629 /* STPCard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = STPCard.m; sourceTree = "<group>"; };
+		278FA3FC25E8D49C00280629 /* PKPayment+Stripe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "PKPayment+Stripe.h"; sourceTree = "<group>"; };
+		279A1DF325E8E307007D48E7 /* STPAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = STPAddress.h; path = ../../../../../../../.Trash/STPAddress.h; sourceTree = "<group>"; };
+		279A1DF925E8E327007D48E7 /* STPAddress.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = STPAddress.m; sourceTree = "<group>"; };
+		279A1DFD25E8E38A007D48E7 /* STPAddress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = STPAddress.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		278FA2F225E8CF9F00280629 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		278FA2EB25E8CF9F00280629 = {
+			isa = PBXGroup;
+			children = (
+				278FA3D225E8D49C00280629 /* Sources */,
+				278FA39D25E8D47400280629 /* PublicHeaders */,
+				278FA2F625E8CF9F00280629 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		278FA2F625E8CF9F00280629 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				278FA2F525E8CF9F00280629 /* Stripe.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		278FA39D25E8D47400280629 /* PublicHeaders */ = {
+			isa = PBXGroup;
+			children = (
+				278FA39E25E8D47400280629 /* Stripe */,
+			);
+			path = PublicHeaders;
+			sourceTree = "<group>";
+		};
+		278FA39E25E8D47400280629 /* Stripe */ = {
+			isa = PBXGroup;
+			children = (
+				278FA39F25E8D47400280629 /* StripeError.h */,
+				278FA3D925E8D49C00280629 /* STPImageLibrary.h */,
+				278FA3A125E8D47400280629 /* STPFormEncodable.h */,
+				278FA3A225E8D47400280629 /* STPBankAccount.h */,
+				278FA3A325E8D47400280629 /* STPAPIResponseDecodable.h */,
+				278FA3A425E8D47400280629 /* STPCardValidationState.h */,
+				278FA3A525E8D47400280629 /* STPSource.h */,
+				278FA3A625E8D47400280629 /* STPCardBrand.h */,
+				278FA3A825E8D47400280629 /* STPBankAccountParams.h */,
+				278FA3A925E8D47400280629 /* STPCardParams.h */,
+				279A1DF325E8E307007D48E7 /* STPAddress.h */,
+				278FA3AB25E8D47400280629 /* STPCard.h */,
+				278FA3AC25E8D47400280629 /* STPPhoneNumberValidator.h */,
+				278FA3AD25E8D47400280629 /* STPCustomer.h */,
+				278FA3AE25E8D47400280629 /* STPBlocks.h */,
+				278FA3AF25E8D47400280629 /* STPBINRange.h */,
+				278FA3B025E8D47400280629 /* STPPaymentMethod.h */,
+				278FA3B125E8D47400280629 /* Stripe.h */,
+				278FA3B225E8D47400280629 /* STPPostalCodeValidator.h */,
+				278FA3B325E8D47400280629 /* STPCardValidator.h */,
+				278FA3B425E8D47400280629 /* STPToken.h */,
+				278FA3B525E8D47400280629 /* STPAPIClient.h */,
+				278FA3B625E8D47400280629 /* STPPaymentConfiguration.h */,
+				278FA3B725E8D47400280629 /* STPBackendAPIAdapter.h */,
+				279A1DFD25E8E38A007D48E7 /* STPAddress.h */,
+			);
+			path = Stripe;
+			sourceTree = "<group>";
+		};
+		278FA3D225E8D49C00280629 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				278FA3D325E8D49C00280629 /* STPPaymentCardTextFieldViewModel.h */,
+				278FA3D425E8D49C00280629 /* STPCustomer.m */,
+				278FA3D525E8D49C00280629 /* STPAPIPostRequest.m */,
+				278FA3D625E8D49C00280629 /* NSString+Stripe_CardBrands.h */,
+				278FA3D725E8D49C00280629 /* STPBINRange.m */,
+				278FA3D825E8D49C00280629 /* NSString+Stripe.h */,
+				278FA3DA25E8D49C00280629 /* STPFormEncoder.h */,
+				278FA3DB25E8D49C00280629 /* STPAPIClient.m */,
+				278FA3DC25E8D49C00280629 /* STPToken.m */,
+				278FA3DD25E8D49C00280629 /* STPCardValidator.m */,
+				278FA3DE25E8D49C00280629 /* NSDictionary+Stripe.h */,
+				278FA3DF25E8D49C00280629 /* STPPostalCodeValidator.m */,
+				278FA3E025E8D49C00280629 /* STPDispatchFunctions.h */,
+				278FA3E125E8D49C00280629 /* STPPaymentConfiguration.m */,
+				278FA3E225E8D49C00280629 /* PKPayment+Stripe.m */,
+				278FA3E325E8D49C00280629 /* STPDelegateProxy.m */,
+				278FA3E525E8D49C00280629 /* STPPaymentCardTextFieldViewModel.m */,
+				278FA3E625E8D49C00280629 /* STPBankAccount.m */,
+				278FA3E725E8D49C00280629 /* StripeError.m */,
+				278FA3E925E8D49C00280629 /* STPFormEncoder.m */,
+				278FA3EA25E8D49C00280629 /* NSString+Stripe.m */,
+				278FA3EB25E8D49C00280629 /* STPImageLibrary.m */,
+				278FA3EC25E8D49C00280629 /* STPWeakStrongMacros.h */,
+				278FA3ED25E8D49C00280629 /* NSString+Stripe_CardBrands.m */,
+				278FA3EE25E8D49C00280629 /* STPAPIClient+Private.h */,
+				278FA3EF25E8D49C00280629 /* STPAPIPostRequest.h */,
+				278FA3F025E8D49C00280629 /* STPDispatchFunctions.m */,
+				278FA3F125E8D49C00280629 /* STPCardParams.m */,
+				278FA3F325E8D49C00280629 /* STPBankAccountParams.m */,
+				278FA3F425E8D49C00280629 /* NSDictionary+Stripe.m */,
+				278FA3F625E8D49C00280629 /* STPPaymentConfiguration+Private.h */,
+				278FA3F725E8D49C00280629 /* STPImageLibrary+Private.h */,
+				278FA3F925E8D49C00280629 /* STPDelegateProxy.h */,
+				278FA3FA25E8D49C00280629 /* STPPhoneNumberValidator.m */,
+				278FA3FB25E8D49C00280629 /* STPCard.m */,
+				279A1DF925E8E327007D48E7 /* STPAddress.m */,
+				278FA3FC25E8D49C00280629 /* PKPayment+Stripe.h */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		278FA2F025E8CF9F00280629 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				278FA3C925E8D47400280629 /* STPPaymentMethod.h in Headers */,
+				278FA42025E8D49C00280629 /* STPPaymentConfiguration+Private.h in Headers */,
+				278FA3CA25E8D47400280629 /* Stripe.h in Headers */,
+				278FA41625E8D49C00280629 /* STPWeakStrongMacros.h in Headers */,
+				278FA3C825E8D47400280629 /* STPBINRange.h in Headers */,
+				278FA3CF25E8D47400280629 /* STPPaymentConfiguration.h in Headers */,
+				278FA40825E8D49C00280629 /* NSDictionary+Stripe.h in Headers */,
+				278FA40225E8D49C00280629 /* NSString+Stripe.h in Headers */,
+				278FA3BE25E8D47400280629 /* STPSource.h in Headers */,
+				278FA41925E8D49C00280629 /* STPAPIPostRequest.h in Headers */,
+				278FA42625E8D49C00280629 /* PKPayment+Stripe.h in Headers */,
+				278FA3CE25E8D47400280629 /* STPAPIClient.h in Headers */,
+				278FA3B825E8D47400280629 /* StripeError.h in Headers */,
+				278FA3CD25E8D47400280629 /* STPToken.h in Headers */,
+				278FA3BD25E8D47400280629 /* STPCardValidationState.h in Headers */,
+				278FA42325E8D49C00280629 /* STPDelegateProxy.h in Headers */,
+				278FA40A25E8D49C00280629 /* STPDispatchFunctions.h in Headers */,
+				278FA3C625E8D47400280629 /* STPCustomer.h in Headers */,
+				278FA3CC25E8D47400280629 /* STPCardValidator.h in Headers */,
+				278FA3FD25E8D49C00280629 /* STPPaymentCardTextFieldViewModel.h in Headers */,
+				278FA3D025E8D47400280629 /* STPBackendAPIAdapter.h in Headers */,
+				279A1DFE25E8E38A007D48E7 /* STPAddress.h in Headers */,
+				278FA3CB25E8D47400280629 /* STPPostalCodeValidator.h in Headers */,
+				278FA40325E8D49C00280629 /* STPImageLibrary.h in Headers */,
+				278FA40425E8D49C00280629 /* STPFormEncoder.h in Headers */,
+				278FA3C725E8D47400280629 /* STPBlocks.h in Headers */,
+				278FA41825E8D49C00280629 /* STPAPIClient+Private.h in Headers */,
+				278FA40025E8D49C00280629 /* NSString+Stripe_CardBrands.h in Headers */,
+				278FA42125E8D49C00280629 /* STPImageLibrary+Private.h in Headers */,
+				278FA3BF25E8D47400280629 /* STPCardBrand.h in Headers */,
+				278FA3C125E8D47400280629 /* STPBankAccountParams.h in Headers */,
+				278FA3C425E8D47400280629 /* STPCard.h in Headers */,
+				278FA3C525E8D47400280629 /* STPPhoneNumberValidator.h in Headers */,
+				278FA3BB25E8D47400280629 /* STPBankAccount.h in Headers */,
+				278FA3C225E8D47400280629 /* STPCardParams.h in Headers */,
+				278FA3BA25E8D47400280629 /* STPFormEncodable.h in Headers */,
+				278FA3BC25E8D47400280629 /* STPAPIResponseDecodable.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		278FA2F425E8CF9F00280629 /* Stripe */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 278FA2FD25E8CF9F00280629 /* Build configuration list for PBXNativeTarget "Stripe" */;
+			buildPhases = (
+				278FA2F025E8CF9F00280629 /* Headers */,
+				278FA2F125E8CF9F00280629 /* Sources */,
+				278FA2F225E8CF9F00280629 /* Frameworks */,
+				278FA2F325E8CF9F00280629 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Stripe;
+			productName = Stripe;
+			productReference = 278FA2F525E8CF9F00280629 /* Stripe.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		278FA2EC25E8CF9F00280629 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1220;
+				TargetAttributes = {
+					278FA2F425E8CF9F00280629 = {
+						CreatedOnToolsVersion = 12.2;
+					};
+				};
+			};
+			buildConfigurationList = 278FA2EF25E8CF9F00280629 /* Build configuration list for PBXProject "Stripe" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 278FA2EB25E8CF9F00280629;
+			productRefGroup = 278FA2F625E8CF9F00280629 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				278FA2F425E8CF9F00280629 /* Stripe */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		278FA2F325E8CF9F00280629 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		278FA2F125E8CF9F00280629 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				278FA40725E8D49C00280629 /* STPCardValidator.m in Sources */,
+				278FA42425E8D49C00280629 /* STPPhoneNumberValidator.m in Sources */,
+				278FA40B25E8D49C00280629 /* STPPaymentConfiguration.m in Sources */,
+				278FA42525E8D49C00280629 /* STPCard.m in Sources */,
+				278FA41125E8D49C00280629 /* StripeError.m in Sources */,
+				278FA40C25E8D49C00280629 /* PKPayment+Stripe.m in Sources */,
+				278FA41B25E8D49C00280629 /* STPCardParams.m in Sources */,
+				278FA41325E8D49C00280629 /* STPFormEncoder.m in Sources */,
+				278FA40D25E8D49C00280629 /* STPDelegateProxy.m in Sources */,
+				278FA3FF25E8D49C00280629 /* STPAPIPostRequest.m in Sources */,
+				278FA41525E8D49C00280629 /* STPImageLibrary.m in Sources */,
+				278FA40525E8D49C00280629 /* STPAPIClient.m in Sources */,
+				278FA41725E8D49C00280629 /* NSString+Stripe_CardBrands.m in Sources */,
+				278FA41025E8D49C00280629 /* STPBankAccount.m in Sources */,
+				278FA40625E8D49C00280629 /* STPToken.m in Sources */,
+				278FA40125E8D49C00280629 /* STPBINRange.m in Sources */,
+				278FA41E25E8D49C00280629 /* NSDictionary+Stripe.m in Sources */,
+				278FA41425E8D49C00280629 /* NSString+Stripe.m in Sources */,
+				278FA40F25E8D49C00280629 /* STPPaymentCardTextFieldViewModel.m in Sources */,
+				278FA41A25E8D49C00280629 /* STPDispatchFunctions.m in Sources */,
+				278FA3FE25E8D49C00280629 /* STPCustomer.m in Sources */,
+				279A1DFA25E8E327007D48E7 /* STPAddress.m in Sources */,
+				278FA40925E8D49C00280629 /* STPPostalCodeValidator.m in Sources */,
+				278FA41D25E8D49C00280629 /* STPBankAccountParams.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		278FA2FB25E8CF9F00280629 /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugAppStore;
+		};
+		278FA2FC25E8CF9F00280629 /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseAppStore;
+		};
+		278FA2FE25E8CF9F00280629 /* DebugAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = Stripe/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.Stripe;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = DebugAppStore;
+		};
+		278FA2FF25E8CF9F00280629 /* ReleaseAppStore */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = Stripe/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.Stripe;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = ReleaseAppStore;
+		};
+		278FA42D25E8D57800280629 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = DebugHockeyapp;
+		};
+		278FA42E25E8D57800280629 /* DebugHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = Stripe/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.Stripe;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = DebugHockeyapp;
+		};
+		278FA42F25E8D58000280629 /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = ReleaseHockeyapp;
+		};
+		278FA43025E8D58000280629 /* ReleaseHockeyapp */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = Stripe/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.Stripe;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = ReleaseHockeyapp;
+		};
+		278FA43125E8D59200280629 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = HockeyappMacAlpha;
+		};
+		278FA43225E8D59200280629 /* HockeyappMacAlpha */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = Stripe/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.Stripe;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = HockeyappMacAlpha;
+		};
+		278FA43325E8D59900280629 /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				VERSIONING_SYSTEM = "apple-generic";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Github;
+		};
+		278FA43425E8D59900280629 /* Github */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				INFOPLIST_FILE = Stripe/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MACH_O_TYPE = staticlib;
+				PRODUCT_BUNDLE_IDENTIFIER = org.Telegram.Stripe;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+			};
+			name = Github;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		278FA2EF25E8CF9F00280629 /* Build configuration list for PBXProject "Stripe" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				278FA2FB25E8CF9F00280629 /* DebugAppStore */,
+				278FA43325E8D59900280629 /* Github */,
+				278FA2FC25E8CF9F00280629 /* ReleaseAppStore */,
+				278FA42D25E8D57800280629 /* DebugHockeyapp */,
+				278FA42F25E8D58000280629 /* ReleaseHockeyapp */,
+				278FA43125E8D59200280629 /* HockeyappMacAlpha */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseAppStore;
+		};
+		278FA2FD25E8CF9F00280629 /* Build configuration list for PBXNativeTarget "Stripe" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				278FA2FE25E8CF9F00280629 /* DebugAppStore */,
+				278FA43425E8D59900280629 /* Github */,
+				278FA2FF25E8CF9F00280629 /* ReleaseAppStore */,
+				278FA42E25E8D57800280629 /* DebugHockeyapp */,
+				278FA43025E8D58000280629 /* ReleaseHockeyapp */,
+				278FA43225E8D59200280629 /* HockeyappMacAlpha */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ReleaseAppStore;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 278FA2EC25E8CF9F00280629 /* Project object */;
+}

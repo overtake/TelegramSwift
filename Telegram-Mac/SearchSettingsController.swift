@@ -10,7 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 
 private func searchSettingsEntries(context: AccountContext, items:[SettingsSearchableItem], recent: Bool) -> [InputDataEntry] {
@@ -22,8 +22,8 @@ private func searchSettingsEntries(context: AccountContext, items:[SettingsSearc
     var previousIcon: SettingsSearchableItemIcon?
 
     if recent, !items.isEmpty {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("separator"), equatable: InputDataEquatable(true), item: { initialSize, stableId in
-            return SeparatorRowItem(initialSize, stableId, string: L10n.settingsSearchRecent, right: L10n.settingsSearchRecentClear, state: .clear, height: 20, action: {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("separator"), equatable: InputDataEquatable(true), comparable: nil, item: { initialSize, stableId in
+            return SeparatorRowItem(initialSize, stableId, string: strings().settingsSearchRecent, right: strings().settingsSearchRecentClear, state: .clear, height: 20, action: {
                 clearRecentSettingsSearchItems(postbox: context.account.postbox)
             })
         }))
@@ -42,7 +42,7 @@ private func searchSettingsEntries(context: AccountContext, items:[SettingsSearc
         
         let desc = item.breadcrumbs.joined(separator: " ")
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("search_\(item.id.index)"), equatable: InputDataEquatable(item.id), item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("search_\(item.id.index)"), equatable: InputDataEquatable(item.id), comparable: nil, item: { initialSize, stableId in
             
             let icon:GeneralThumbAdditional?
             if let image = image {
@@ -55,11 +55,11 @@ private func searchSettingsEntries(context: AccountContext, items:[SettingsSearc
                 
                 addRecentSettingsSearchItem(postbox: context.account.postbox, item: item.id)
                 
-                item.present(context, context.sharedContext.bindings.rootNavigation(), { presentation, controller in
+                item.present(context, context.bindings.rootNavigation(), { presentation, controller in
                     switch presentation {
                     case .push:
                         if let controller = controller {
-                            context.sharedContext.bindings.rootNavigation().push(controller)
+                            context.bindings.rootNavigation().push(controller)
                         }
                     default:
                         break

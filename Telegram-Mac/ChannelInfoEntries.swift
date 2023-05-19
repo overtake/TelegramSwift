@@ -9,7 +9,7 @@
 import Cocoa
 import Postbox
 import TelegramCore
-import SyncCore
+
 import TGUIKit
 import SwiftSignalKit
 
@@ -120,6 +120,30 @@ private func valuesRequiringUpdate(state: ChannelInfoState, view: PeerView) -> (
 
 class ChannelInfoArguments : PeerInfoArguments {
     
+    
+    private var _linksManager:InviteLinkPeerManager?
+    var linksManager: InviteLinkPeerManager {
+        if let _linksManager = _linksManager {
+            return _linksManager
+        } else {
+            _linksManager = InviteLinkPeerManager(context: context, peerId: peerId)
+            _linksManager!.loadNext()
+            return _linksManager!
+        }
+    }
+    
+    private var _requestManager:PeerInvitationImportersContext?
+    var requestManager: PeerInvitationImportersContext {
+        if let _requestManager = _requestManager {
+            return _requestManager
+        } else {
+            let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
+            _requestManager = importersContext
+            _requestManager!.loadMore()
+            return _requestManager!
+        }
+    }
+    
     private let reportPeerDisposable = MetaDisposable()
     private let updatePeerNameDisposable = MetaDisposable()
     private let toggleSignaturesDisposable = MetaDisposable()
@@ -158,7 +182,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
             
             if let titleValue = updateValues.title, titleValue.isEmpty {
-                controller.genericView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
+                controller.genericView.tableView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
                 return false
             }
             
@@ -171,7 +195,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
             let updateTitle: Signal<Void, NoError>
             if let titleValue = updateValues.title {
-                updateTitle = updatePeerTitle(account: context.account, peerId: peerId, title: titleValue)
+                updateTitle = context.engine.peers.updatePeerTitle(peerId: peerId, title: titleValue)
                     |> `catch` { _ in return .complete() }
             } else {
                 updateTitle = .complete()
@@ -179,7 +203,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             
             let updateDescription: Signal<Void, NoError>
             if let descriptionValue = updateValues.description {
-                updateDescription = updatePeerDescription(account: context.account, peerId: peerId, description: descriptionValue.isEmpty ? nil : descriptionValue)
+                updateDescription = context.engine.peers.updatePeerDescription(peerId: peerId, description: descriptionValue.isEmpty ? nil : descriptionValue)
                     |> `catch` { _ in return .complete() }
             } else {
                 updateDescription = .complete()
@@ -207,6 +231,19 @@ class ChannelInfoArguments : PeerInfoArguments {
         })
         pushViewController(setup)
     }
+    func openInviteLinks() {
+        pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
+    }
+    
+    func openRequests() {
+        pushViewController(RequestJoinMemberListController(context: context, peerId: peerId, manager: requestManager, openInviteLinks: { [weak self] in
+            self?.openInviteLinks()
+        }))
+    }
+    func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) {
+        pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: false)))
+    }
+
     
     func setupDiscussion() {
         _ = (self.context.account.postbox.loadedPeerWithId(self.peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
@@ -217,7 +254,7 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func toggleSignatures( _ enabled: Bool) -> Void {
-        toggleSignaturesDisposable.set(toggleShouldChannelMessagesSignatures(account: context.account, peerId: peerId, enabled: enabled).start())
+        toggleSignaturesDisposable.set(context.engine.peers.toggleShouldChannelMessagesSignatures(peerId: peerId, enabled: enabled).start())
     }
     
     func members() -> Void {
@@ -227,19 +264,48 @@ class ChannelInfoArguments : PeerInfoArguments {
     func admins() -> Void {
         pushViewController(ChannelAdminsViewController(context, peerId: peerId))
     }
+    func makeVoiceChat(_ current: CachedChannelData.ActiveCall?, callJoinPeerId: PeerId?) {
+        let context = self.context
+        let peerId = self.peerId
+        if let activeCall = current {
+            let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
+                _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: nil, joinHash: nil), for: context.window).start(next: { result in
+                    switch result {
+                    case let .samePeer(callContext):
+                        applyGroupCallResult(context.sharedContext, callContext)
+                    case let .success(callContext):
+                        applyGroupCallResult(context.sharedContext, callContext)
+                    default:
+                        alert(for: context.window, info: strings().errorAnError)
+                    }
+                })
+            }
+            if let callJoinPeerId = callJoinPeerId {
+                join(callJoinPeerId, nil, false)
+            } else {
+                selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
+            }
+        } else {
+            createVoiceChat(context: context, peerId: peerId, canBeScheduled: true)
+        }
+    }
+
     
     func blocked() -> Void {
         pushViewController(ChannelBlacklistViewController(context, peerId: peerId))
     }
     
-    func updateChannelPhoto(_ custom: NSImage?) {
+    func updateChannelPhoto(_ custom: NSImage?, control: Control?) {
         
         let context = self.context
         
-        let invoke:(NSImage) -> Void = { image in
-            _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { image in
+            let signal = image |> mapToSignal { image in
+                return putToTemp(image: image, compress: true)
+            } |> deliverOnMainQueue
+            _ = signal.start(next: { path in
                 let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
                     self?.updatePhoto(url.path)
                 })
@@ -249,17 +315,91 @@ class ChannelInfoArguments : PeerInfoArguments {
             })
         }
         if let image = custom {
-            invoke(image)
+            updatePhoto(.single(image))
         } else {
-            filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { [weak self] paths in
-                if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                    invoke(image)
-                } else if let path = paths?.first {
-                    selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescChannel, signal: { [weak self] signal in
-                        self?.updateVideo(signal)
+            let context = self.context
+            let updateVideo = self.updateVideo
+            
+            
+            let makeVideo:(MediaObjectToAvatar)->Void = { object in
+                
+                switch object.object.foreground.type {
+                case .emoji:
+                    updatePhoto(object.start() |> mapToSignal { value in
+                        if let result = value.result {
+                            switch result {
+                            case let .image(image):
+                                return .single(image)
+                            default:
+                                return .never()
+                            }
+                        } else {
+                            return .never()
+                        }
                     })
+                default:
+                    let signal:Signal<VideoAvatarGeneratorState, NoError> = object.start() |> map { value in
+                        if let result = value.result {
+                            switch result {
+                            case let .video(path, thumb):
+                                return .complete(thumb: thumb, video: path, keyFrame: nil)
+                            default:
+                                return .error
+                            }
+                        } else if let status = value.status {
+                            switch status {
+                            case let .initializing(thumb):
+                                return .start(thumb: thumb)
+                            case let .converting(progress):
+                                return .progress(progress)
+                            default:
+                                return .error
+                            }
+                        } else {
+                            return .error
+                        }
+                    }
+                    updateVideo(signal)
                 }
-            })
+            }
+            
+            var items:[ContextMenuItem] = []
+            
+            items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
+                filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                        updatePhoto(.single(image))
+                    } else if let path = paths?.first {
+                        selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, signal: { signal in
+                            updateVideo(signal)
+                        })
+                    }
+                })
+            }, itemImage: MenuAnimation.menu_shared_media.value))
+            
+            items.append(.init(strings().editAvatarCustomize, handler: {
+                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo), for: context.window)
+            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+            
+            
+            if let control = control, let event = NSApp.currentEvent {
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                let value = AppMenu(menu: menu)
+                value.show(event: event, view: control)
+            } else {
+                filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
+                    if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
+                        updatePhoto(.single(image))
+                    } else if let path = paths?.first {
+                        selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, signal: { signal in
+                            updateVideo(signal)
+                        })
+                    }
+                })
+            }
         }
     }
     
@@ -281,7 +421,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         
         let updateSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
-            |> mapError { _ in return UploadPeerPhotoError.generic }
+        |> castError(UploadPeerPhotoError.self)
             |> mapToSignal { state in
                 switch state {
                 case .error:
@@ -299,7 +439,7 @@ class ChannelInfoArguments : PeerInfoArguments {
                     let (thumbResource, videoResource) = (LocalFileReferenceMediaResource(localFilePath: thumb, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true),
                                                           LocalFileReferenceMediaResource(localFilePath: video, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true))
                     
-                    return updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: thumbResource), video: uploadedPeerVideo(postbox: context.account.postbox, network: context.account.network, messageMediaPreuploadManager: nil, resource: videoResource) |> map(Optional.init), videoStartTimestamp: keyFrame, mapResourceToAvatarSizes: { resource, representations in
+                    return context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: thumbResource), video: context.engine.peers.uploadedPeerVideo(resource: videoResource) |> map(Optional.init), videoStartTimestamp: keyFrame, mapResourceToAvatarSizes: { resource, representations in
                         return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                     }) |> map { result in
                         switch result {
@@ -362,8 +502,8 @@ class ChannelInfoArguments : PeerInfoArguments {
                 }
             }
             
-        } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-            return  updatePeerPhoto(postbox: context.account.postbox, network: context.account.network, stateManager: context.account.stateManager, accountPeerId: context.account.peerId, peerId: peerId, photo: uploadedPeerPhoto(postbox: context.account.postbox, network: context.account.network, resource: resource), mapResourceToAvatarSizes: { resource, representations in
+        } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
+            return context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
                 return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
             })
         }
@@ -402,10 +542,10 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         _ = peer.start(next: { peerView in
             if let peer = peerViewMainPeer(peerView) {
-                var link: String = "https://t.me/\(peer.id.id)"
+                var link: String = "https://t.me/c/\(peer.id.id)"
                 if let address = peer.addressName, !address.isEmpty {
                     link = "https://t.me/\(address)"
-                } else if let cachedData = peerView.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation {
+                } else if let cachedData = peerView.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation?._invitation {
                     link = invitation.link
                 }
                 showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
@@ -418,13 +558,26 @@ class ChannelInfoArguments : PeerInfoArguments {
     func report() -> Void {
         let context = self.context
         let peerId = self.peerId
-        
-        let report = reportReasonSelector(context: context) |> mapToSignal { reason -> Signal<Void, NoError> in
-            return showModalProgress(signal: reportPeer(account: context.account, peerId: peerId, reason: reason), for: context.window)
+
+        let report = reportReasonSelector(context: context) |> map { value -> (ChatController?, ReportReasonValue) in
+            switch value.reason {
+            case .fake:
+                return (nil, value)
+            default:
+                return (ChatController(context: context, chatLocation: .peer(peerId), initialAction: .selectToReport(reason: value)), value)
+            }
         } |> deliverOnMainQueue
-        
-        reportPeerDisposable.set(report.start(next: { [weak self] in
-            self?.pullNavigation()?.controller.show(toaster: ControllerToaster(text: L10n.peerInfoChannelReported))
+
+        reportPeerDisposable.set(report.start(next: { [weak self] controller, value in
+            if let controller = controller {
+                self?.pullNavigation()?.push(controller)
+            } else {
+                showModal(with: ReportDetailsController(context: context, reason: value, updated: { value in
+                    _ = showModalProgress(signal: context.engine.peers.reportPeer(peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
+                        showModalText(for: context.window, text: strings().peerInfoChannelReported)
+                    })
+                }), for: context.window)
+            }
         }))
     }
     
@@ -458,14 +611,17 @@ class ChannelInfoArguments : PeerInfoArguments {
 
 enum ChannelInfoEntry: PeerInfoEntry {
     case info(sectionId: ChannelInfoSection, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, viewType: GeneralViewType)
-    case scam(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
+    case scam(sectionId: ChannelInfoSection, title: String, text: String, viewType: GeneralViewType)
     case about(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
-    case userName(sectionId: ChannelInfoSection, value: String, viewType: GeneralViewType)
+    case userName(sectionId: ChannelInfoSection, value: [String], viewType: GeneralViewType)
     case setTitle(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case admins(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case blocked(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case members(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
+    case inviteLinks(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
+    case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
+    case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -481,7 +637,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     func withUpdatedViewType(_ viewType: GeneralViewType) -> ChannelInfoEntry {
         switch self {
         case let .info(sectionId, peerView, editable, updatingPhotoState, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, updatingPhotoState: updatingPhotoState, viewType: viewType)
-        case let .scam(sectionId, text, _): return .scam(sectionId: sectionId, text: text, viewType: viewType)
+        case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
         case let .setTitle(sectionId, text, _): return .setTitle(sectionId: sectionId, text: text, viewType: viewType)
@@ -489,7 +645,10 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .blocked(sectionId, count, _): return .blocked(sectionId: sectionId, count: count, viewType: viewType)
         case let .members(sectionId, count, _): return .members(sectionId: sectionId, count: count, viewType: viewType)
         case let .link(sectionId, addressName, _): return .link(sectionId: sectionId, addressName: addressName, viewType: viewType)
+        case let .inviteLinks(section, count, _): return .inviteLinks(section: section, count: count, viewType: viewType)
+        case let .requests(section, count, _): return .requests(section: section, count: count, viewType: viewType)
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
+        case let .reactions(section, text, allowedReactions, availableReactions, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
         case let .aboutInput(sectionId, description, _): return .aboutInput(sectionId: sectionId, description: description, viewType: viewType)
         case let .aboutDesc(sectionId, _): return .aboutDesc(sectionId: sectionId, viewType: viewType)
@@ -548,9 +707,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case  let .scam(sectionId, text, viewType):
+        case  let .scam(sectionId, title, text, viewType):
             switch entry {
-            case .scam(sectionId, text, viewType):
+            case .scam(sectionId, title, text, viewType):
                 return true
             default:
                 return false
@@ -607,6 +766,18 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .inviteLinks(sectionId, count, viewType):
+            if case .inviteLinks(sectionId, count, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .requests(sectionId, count, viewType):
+            if case .requests(sectionId, count, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .discussion(sectionId, lhsGroup, participantsCount, viewType):
             if case .discussion(sectionId, let rhsGroup, participantsCount, viewType) = entry {
                 if let lhsGroup = lhsGroup, let rhsGroup = rhsGroup {
@@ -614,6 +785,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 } else if (lhsGroup != nil) != (rhsGroup != nil) {
                     return false
                 }
+                return true
+            } else {
+                return false
+            }
+        case let .reactions(sectionId, text, allowedReactions, availableReactions, viewType):
+            if case .reactions(sectionId, text, allowedReactions, availableReactions, viewType) = entry {
                 return true
             } else {
                 return false
@@ -692,24 +869,30 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 10
         case .link:
             return 11
-        case .discussion:
+        case .inviteLinks:
             return 12
-        case .discussionDesc:
+        case .requests:
             return 13
-        case .aboutInput:
+        case .reactions:
             return 14
-        case .aboutDesc:
+        case .discussion:
             return 15
-        case .signMessages:
+        case .discussionDesc:
             return 16
-        case .signDesc:
+        case .aboutInput:
             return 17
-        case .report:
+        case .aboutDesc:
             return 18
-        case .leave:
+        case .signMessages:
             return 19
-        case .media:
+        case .signDesc:
             return 20
+        case .report:
+            return 21
+        case .leave:
+            return 22
+        case .media:
+            return 23
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -721,7 +904,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .setTitle(sectionId, _, _):
             return sectionId.rawValue
-        case let .scam(sectionId, _, _):
+        case let .scam(sectionId, _, _, _):
             return sectionId.rawValue
         case let .about(sectionId, _, _):
             return sectionId.rawValue
@@ -735,7 +918,13 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .link(sectionId, _, _):
             return sectionId.rawValue
+        case let .inviteLinks(sectionId, _, _):
+            return sectionId.rawValue
+        case let .requests(sectionId, _, _):
+            return sectionId.rawValue
         case let .discussion(sectionId, _, _, _):
+            return sectionId.rawValue
+        case let .reactions(sectionId, _, _, _, _):
             return sectionId.rawValue
         case let .discussionDesc(sectionId, _):
             return sectionId.rawValue
@@ -764,7 +953,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .setTitle(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
-        case let .scam(sectionId, _, _):
+        case let .scam(sectionId, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .about(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -778,7 +967,13 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .link(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
+        case let .inviteLinks(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .requests(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
         case let .discussion(sectionId, _, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .reactions(sectionId, _, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .discussionDesc(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -812,31 +1007,54 @@ enum ChannelInfoEntry: PeerInfoEntry {
         let arguments = arguments as! ChannelInfoArguments
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
-            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView:peerView, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
-        case let .scam(_, text, viewType):
-            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoScam, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
+            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
+        case let .scam(_, title, text, viewType):
+            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
-            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, copyMenuText: L10n.textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoInfo, copyMenuText: strings().textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }
-            }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
+            }, hashtag: arguments.context.bindings.globalSearch)
         case let .userName(_, value, viewType):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, copyMenuText: L10n.textCopyLabelShareLink, text: value, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true)
+            let link = "https://t.me/\(value[0])"
+            
+            let text: String
+            if value.count > 1 {
+                text = strings().peerInfoUsernamesList("https://t.me/\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+            } else {
+                text = "@\(value[0])"
+            }
+            let interactions = TextViewInteractions()
+            interactions.processURL = { value in
+                if let value = value as? inAppLink {
+                    arguments.copy(value.link)
+                }
+            }
+            interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
+
+            
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, labelColor: theme.colors.text, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
+                arguments.copy(link)
+            }, linkInteractions: interactions)
         case let .report(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoReport, type: .none, viewType: viewType, action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReport, type: .none, viewType: viewType, action: { () in
                 arguments.report()
             })
         case let .members(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSubscribers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.members)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSubscribers, icon: theme.icons.peerInfoMembers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.members)
         case let .admins(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.admins)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.admins)
         case let .blocked(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoRemovedUsers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoRemovedUsers, icon: theme.icons.profile_removed, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
         case let .link(_, addressName: addressName, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoChannelType, type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), viewType: viewType, action: arguments.visibilitySetup)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelType, icon: theme.icons.profile_channel_type, type: .context(addressName.isEmpty ? strings().channelPrivate : strings().channelPublic), viewType: viewType, action: arguments.visibilitySetup)
+        case let .inviteLinks(_, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoInviteLinks, icon: theme.icons.profile_links, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
+        case let .requests(_, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoMembersRequest, icon: theme.icons.profile_requests, type: .badge(count > 0 ? "\(count)" : "", theme.colors.redUI), viewType: viewType, action: arguments.openRequests)
         case let .discussion(_, group, _, viewType):
             let title: String
             if let group = group {
@@ -846,25 +1064,29 @@ enum ChannelInfoEntry: PeerInfoEntry {
                     title = group.displayTitle
                 }
             } else {
-                title = L10n.peerInfoDiscussionAdd
+                title = strings().peerInfoDiscussionAdd
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDiscussion, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoDiscussion, icon: theme.icons.profile_group_discussion, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
         case let .discussionDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoDiscussionDesc, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoDiscussionDesc, viewType: viewType)
+        case let .reactions(_, text, allowedReactions, availableReactions, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_reactions, type: .nextContext(text), viewType: viewType, action: {
+                arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
+            })
         case let .setTitle(_, text, viewType):
-            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
+            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .aboutInput(_, text, viewType):
-            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
+            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
         case let .aboutDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSetAboutDescription, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().channelDescriptionHolderDescrpiton, viewType: viewType)
         case let .signMessages(_, sign, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSignMessages, type: .switchable(sign), viewType: viewType, action: {
-                arguments.toggleSignatures(!sign)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSignMessages, icon: theme.icons.profile_channel_sign, type: .switchable(sign), viewType: viewType, action: { [weak arguments] in
+                arguments?.toggleSignatures(!sign)
             })
         case let .signDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSignMessagesDesc, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoSignMessagesDesc, viewType: viewType)
         case let .leave(_, isCreator, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? L10n.peerInfoDeleteChannel : L10n.peerInfoLeaveChannel, nameStyle:redActionButton, type: .none, viewType: viewType, action: arguments.delete)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? strings().peerInfoDeleteChannel : strings().peerInfoLeaveChannel, nameStyle:redActionButton, type: .none, viewType: viewType, action: arguments.delete)
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section(_):
@@ -885,7 +1107,7 @@ enum ChannelInfoSection : Int {
     case media = 9
 }
 
-func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
+func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! ChannelInfoArguments
     var state:ChannelInfoState {
@@ -916,24 +1138,61 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 infoBlock.append(.setTitle(sectionId: .header, text: editingState.editingName ?? "", viewType: .singleItem))
             }
             
-            if channel.hasPermission(.changeInfo) && !channel.isScam {
+            if channel.hasPermission(.changeInfo) && !channel.isScam && !channel.isFake {
                 infoBlock.append(.aboutInput(sectionId: .header, description: editingState.editingDescriptionText, viewType: .singleItem))
             }
             applyBlock(infoBlock)
             entries.append(.aboutDesc(sectionId: .header, viewType: .textBottomItem))
 
-            if channel.adminRights?.flags.contains(.canChangeInfo) == true || channel.flags.contains(.isCreator) {
+            if channel.adminRights != nil || channel.flags.contains(.isCreator) {
+                var block: [ChannelInfoEntry] = []
                 if channel.flags.contains(.isCreator) {
-                    entries.append(.link(sectionId: .type, addressName: channel.username ?? "", viewType: .firstItem))
+                    block.append(.link(sectionId: .type, addressName: channel.username ?? "", viewType: .singleItem))
                 }
+               
                 let group: Peer?
                 if let cachedData = view.cachedData as? CachedChannelData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId.peerId {
                     group = view.peers[linkedDiscussionPeerId]
                 } else {
                     group = nil
                 }
-                entries.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: channel.flags.contains(.isCreator) ? .lastItem : .singleItem))
-                entries.append(.discussionDesc(sectionId: .type, viewType: .textBottomItem))
+                if channel.canInviteUsers {
+                    block.append(.inviteLinks(section: .type, count: inviteLinksCount, viewType: .singleItem))
+                    if joinRequestsCount > 0 {
+                        block.append(.requests(section: .type, count: joinRequestsCount, viewType: .singleItem))
+                    }
+                }
+                if channel.groupAccess.canEditGroupInfo {
+                    let cachedData = view.cachedData as? CachedChannelData
+                                        
+                    let text: String
+                    if let allowed = cachedData?.allowedReactions.knownValue, let availableReactions = availableReactions {
+                        switch allowed {
+                        case .all:
+                            text = strings().peerInfoReactionsAll
+                        case let .limited(count):
+                            if count.count != availableReactions.enabled.count {
+                                text = strings().peerInfoReactionsPart("\(count.count)", "\(availableReactions.enabled.count)")
+                            } else {
+                                text = strings().peerInfoReactionsAll
+                            }
+                        case .empty:
+                            text = strings().peerInfoReactionsDisabled
+                        }
+                    } else {
+                        text = strings().peerInfoReactionsAll
+                    }
+                    
+                    block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
+                    
+                    block.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: .singleItem))
+                }
+                applyBlock(block)
+                
+                if channel.adminRights?.rights.contains(.canChangeInfo) == true {
+                    entries.append(.discussionDesc(sectionId: .type, viewType: .textBottomItem))
+                }
+
             }
             
             let messagesShouldHaveSignatures:Bool
@@ -958,39 +1217,44 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             
             var aboutBlock:[ChannelInfoEntry] = []
             if channel.isScam {
-                aboutBlock.append(.scam(sectionId: .desc, text: L10n.channelInfoScamWarning, viewType: .singleItem))
+                aboutBlock.append(.scam(sectionId: .desc, title: strings().peerInfoScam, text: strings().channelInfoScamWarning, viewType: .singleItem))
+            } else if channel.isFake {
+                aboutBlock.append(.scam(sectionId: .desc, title: strings().peerInfoFake, text: strings().channelInfoFakeWarning, viewType: .singleItem))
             }
             if let cachedData = view.cachedData as? CachedChannelData {
-                if let about = cachedData.about, !about.isEmpty, !channel.isScam {
+                if let about = cachedData.about, !about.isEmpty, !channel.isScam && !channel.isFake {
                     aboutBlock.append(.about(sectionId: .desc, text: about, viewType: .singleItem))
                 }
             }
             
-            if let username = channel.username, !username.isEmpty {
-                aboutBlock.append(.userName(sectionId: .desc, value: "https://t.me/\(username)", viewType: .singleItem))
-            } else if let cachedData = view.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation {
-                aboutBlock.append(.userName(sectionId: .desc, value: invitation.link, viewType: .singleItem))
+            var usernames = channel.usernames.filter { $0.isActive }.map {
+                $0.username
+            }
+            if usernames.isEmpty, let address = channel.addressName {
+                usernames.append(address)
+            }
+            if !usernames.isEmpty {
+                aboutBlock.append(.userName(sectionId: .desc, value: usernames, viewType: .singleItem))
             }
             
             applyBlock(aboutBlock)
-            
-            
-            if channel.flags.contains(.isCreator) || (channel.adminRights != nil && !channel.adminRights!.isEmpty) {
-                var membersCount:Int32? = nil
-                var adminsCount:Int32? = nil
-                var blockedCount:Int32? = nil
-                
-                if let cachedData = view.cachedData as? CachedChannelData {
-                    membersCount = cachedData.participantsSummary.memberCount
-                    adminsCount = cachedData.participantsSummary.adminCount
-                    blockedCount = cachedData.participantsSummary.kickedCount
-                }
-                entries.append(.admins(sectionId: .manage, count: adminsCount, viewType: .firstItem))
-                entries.append(.members(sectionId: .manage, count: membersCount, viewType: .innerItem))
-              
-                entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .lastItem))
-                
+
+        }
+
+        if channel.flags.contains(.isCreator) || channel.adminRights != nil {
+            var membersCount:Int32? = nil
+            var adminsCount:Int32? = nil
+            var blockedCount:Int32? = nil
+
+            if let cachedData = view.cachedData as? CachedChannelData {
+                membersCount = cachedData.participantsSummary.memberCount
+                adminsCount = cachedData.participantsSummary.adminCount
+                blockedCount = cachedData.participantsSummary.kickedCount
             }
+            entries.append(.admins(sectionId: .manage, count: adminsCount, viewType: .firstItem))
+            entries.append(.members(sectionId: .manage, count: membersCount, viewType: .innerItem))
+            entries.append(.blocked(sectionId: .manage, count: blockedCount, viewType: .lastItem))
+
         }
     }
     
@@ -1000,7 +1264,10 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
     
     var items:[ChannelInfoEntry] = []
     var sectionId:Int = 0
-    for entry in entries {
+    let sorted = entries.sorted(by: { (p1, p2) -> Bool in
+        return p1.isOrderedBefore(p2)
+    })
+    for entry in sorted {
         if entry.sectionId != sectionId {
             if entry.sectionId == ChannelInfoSection.media.rawValue {
                 sectionId = entry.sectionId
@@ -1013,13 +1280,5 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
     }
     sectionId += 1
     items.append(.section(sectionId))
-    
-    
-   
-    
-    entries = items
-    
-    return entries.sorted(by: { (p1, p2) -> Bool in
-        return p1.isOrderedBefore(p2)
-    })
+    return items
 }

@@ -10,10 +10,10 @@ import Cocoa
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+import InAppSettings
 import Postbox
 import SwiftSignalKit
-import SyncCore
+import ColorPalette
 
 
 
@@ -45,22 +45,22 @@ func isPollEffectivelyClosed(message: Message, poll: TelegramMediaPoll) -> Bool 
 extension TelegramMediaPoll {
     var title: String {
         if isClosed {
-            return L10n.chatPollTypeClosed
+            return strings().chatPollTypeClosed
         } else {
             switch self.kind {
             case .quiz:
                 switch self.publicity {
                 case .anonymous:
-                    return L10n.chatPollTypeAnonymousQuiz
+                    return strings().chatPollTypeAnonymousQuiz
                 case .public:
-                    return L10n.chatPollTypeQuiz
+                    return strings().chatPollTypeQuiz
                 }
             default:
                 switch self.publicity {
                 case .anonymous:
-                    return L10n.chatPollTypeAnonymous
+                    return strings().chatPollTypeAnonymous
                 case .public:
-                    return L10n.chatPollTypePublic
+                    return strings().chatPollTypePublic
                 }
             }
         }
@@ -228,9 +228,9 @@ private final class PollOption : Equatable {
     }
     
     var tooltip: String {
-        var totalOptionVotes = self.isQuiz ? L10n.chatQuizTooltipVotesCountable(Int(self.voteCount)) : L10n.chatPollTooltipVotesCountable(Int(self.voteCount))
+        var totalOptionVotes = self.isQuiz ? strings().chatQuizTooltipVotesCountable(Int(self.voteCount)) : strings().chatPollTooltipVotesCountable(Int(self.voteCount))
         totalOptionVotes = totalOptionVotes.replacingOccurrences(of: "\(self.voteCount)", with: Int(self.voteCount).separatedNumber)
-        return self.voteCount == 0 ? (self.isQuiz ? L10n.chatQuizTooltipNoVotes : L10n.chatPollTooltipNoVotes) : totalOptionVotes
+        return self.voteCount == 0 ? (self.isQuiz ? strings().chatQuizTooltipNoVotes : strings().chatPollTooltipNoVotes) : totalOptionVotes
     }
     
     func measure(width: CGFloat) -> NSSize {
@@ -258,7 +258,7 @@ class ChatPollItem: ChatRowItem {
                 return nil
             }
             if poll.publicity != .anonymous {
-                return L10n.chatPollViewResults
+                return strings().chatPollViewResults
             } else {
                 return nil
             }
@@ -266,18 +266,18 @@ class ChatPollItem: ChatRowItem {
         let hasSelected = options.contains(where: { $0.isSelected })
         if poll.isMultiple {
             if !hasSelected {
-                return L10n.chatPollSubmitVote
+                return strings().chatPollSubmitVote
             } else {
                 if poll.publicity != .anonymous {
                     if hasSelected {
-                        return L10n.chatPollViewResults
+                        return strings().chatPollViewResults
                     }
                 }
             }
         } else {
             if poll.publicity != .anonymous {
                 if hasSelected {
-                    return L10n.chatPollViewResults
+                    return strings().chatPollViewResults
                 }
             }
         }
@@ -305,7 +305,7 @@ class ChatPollItem: ChatRowItem {
     var isBotQuiz: Bool {
         if let message = message {
             if self.poll.isQuiz {
-                return messageMainPeer(message)?.isBot == true
+                return coreMessageMainPeer(message)?.isBot == true
             }
         }
         return false
@@ -377,7 +377,7 @@ class ChatPollItem: ChatRowItem {
 
         let totalCount = poll.results.totalVoters ?? 0
         
-        var totalText = poll.isQuiz ? L10n.chatQuizTotalVotesCountable(Int(totalCount)) : L10n.chatPollTotalVotes1Countable(Int(totalCount))
+        var totalText = poll.isQuiz ? strings().chatQuizTotalVotesCountable(Int(totalCount)) : strings().chatPollTotalVotes1Countable(Int(totalCount))
         totalText = totalText.replacingOccurrences(of: "\(totalCount)", with: Int(totalCount).separatedNumber)
         
         if actionButtonText == nil && !isBotQuiz {
@@ -386,9 +386,9 @@ class ChatPollItem: ChatRowItem {
                 text = totalText
             } else {
                 if poll.isQuiz {
-                    text = self.isClosed ? L10n.chatQuizTotalVotesResultEmpty : L10n.chatQuizTotalVotesEmpty
+                    text = self.isClosed ? strings().chatQuizTotalVotesResultEmpty : strings().chatQuizTotalVotesEmpty
                 } else {
-                    text = self.isClosed ? L10n.chatPollTotalVotesResultEmpty : L10n.chatPollTotalVotesEmpty
+                    text = self.isClosed ? strings().chatPollTotalVotesResultEmpty : strings().chatPollTotalVotesEmpty
                 }
             }
             self.totalVotesText = TextViewLayout(.initialize(string: text, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
@@ -400,12 +400,12 @@ class ChatPollItem: ChatRowItem {
         
         self.titleText = TextViewLayout(.initialize(string: poll.text, color: self.presentation.chat.textColor(isIncoming, renderType == .bubble), font: .medium(.text)), alwaysStaticItems: true)
         
-        let typeText: String = self.isBotQuiz ? L10n.chatQuizTextType : poll.title
+        let typeText: String = self.isBotQuiz ? strings().chatQuizTextType : poll.title
         
         self.titleTypeText = TextViewLayout(.initialize(string: typeText, color: self.presentation.chat.grayText(isIncoming, renderType == .bubble), font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
+    override var isForceRightLine: Bool {
         var size: NSSize = .zero
         if let action = self.actionButtonText {
             size = TitleButton.size(with: action, font: .normal(.text))
@@ -416,61 +416,18 @@ class ChatPollItem: ChatRowItem {
         if size.width > 0 {
             let dif = contentSize.width - (contentSize.width / 2 + size.width / 2)
             if dif < (rightSize.width + insetBetweenContentAndDate) {
-                return 20
+                return true
             }
             
         }
         
         if isBotQuiz {
-            return 10
+            return true
         }
+        return super.isForceRightLine
+    }
+    
         
-        return super.additionalLineForDateInBubbleState
-    }
-
-    
-    override var isFixedRightPosition: Bool {
-        return true
-    }
-    
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        return super.menuItems(in: location) |> map { [weak self] items in
-            guard let `self` = self, let message = self.message else { return items }
-            var items = items
-            if let poll = message.media.first as? TelegramMediaPoll {
-                if !self.isClosed && !message.flags.contains(.Unsent) && !message.flags.contains(.Failed) {
-                    var index: Int = 0
-                    if let _ = poll.results.voters?.first(where: {$0.selected}), poll.kind != .quiz {
-                        items.insert(ContextMenuItem(L10n.chatPollUnvote, handler: { [weak self] in
-                            self?.unvote()
-                        }), at: index)
-                        index += 1
-                    }
-                    if message.forwardInfo == nil {
-                        var canClose: Bool = message.author?.id == self.context.peerId
-                        if let peer = self.peer as? TelegramChannel {
-                            canClose = peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
-                        }
-                        if canClose {
-                            
-                            items.insert(ContextMenuItem(poll.kind == .quiz ? L10n.chatQuizStop : L10n.chatPollStop, handler: { [weak self] in
-                                confirm(for: mainWindow, header: poll.kind == .quiz ? L10n.chatQuizStopConfirmHeader : L10n.chatPollStopConfirmHeader, information: poll.kind == .quiz ? L10n.chatQuizStopConfirmText : L10n.chatPollStopConfirmText, okTitle: L10n.alertConfirmStop, successHandler: { [weak self] _ in
-                                    self?.stop()
-                                })
-                            }), at: index)
-                            index += 1
-                        }
-                    }
-                    if index != 0 {
-                        items.insert(ContextSeparatorItem(), at: index)
-                    }
-                }
-                
-            }
-            return items
-        }
-    }
-    
     private func stop() {
         if let message = message {
             chatInteraction.closePoll(message.id)
@@ -1146,7 +1103,7 @@ private final class PollView : Control {
             self.mergedAvatarsView?.removeAllHandlers()
             
             self.mergedAvatarsView?.set(handler: { [weak item] _ in
-                if item?.actionButtonText == L10n.chatPollViewResults, item?.actionButtonIsEnabled == true {
+                if item?.actionButtonText == strings().chatPollViewResults, item?.actionButtonIsEnabled == true {
                     item?.invokeAction()
                 }
             }, for: .Click)
@@ -1180,7 +1137,7 @@ private final class PollView : Control {
                 guard let item = item else {
                     return
                 }
-                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil)
+                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, message: item.message, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil)
                 
                 tooltip(for: control, text: solution.text, attributedText: text, interactions: globalLinkExecutor, timeout: 10.0)
             }, for: .Click)

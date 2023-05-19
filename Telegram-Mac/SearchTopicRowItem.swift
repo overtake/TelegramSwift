@@ -1,0 +1,171 @@
+//
+//  SearchTopicRowItem.swift
+//  Telegram
+//
+//  Created by Mike Renoir on 14.10.2022.
+//  Copyright © 2022 Telegram. All rights reserved.
+//
+
+import Foundation
+import TelegramCore
+import TGUIKit
+
+final class SearchTopicRowItem: GeneralRowItem {
+    let item: EngineChatList.Item
+    fileprivate let context: AccountContext
+    fileprivate let nameLayout: TextViewLayout
+    fileprivate let nameSelectedLayout: TextViewLayout
+
+    init(_ initialSize: NSSize, stableId: AnyHashable, item: EngineChatList.Item, context: AccountContext, action: @escaping()->Void = {}) {
+        self.item = item
+        self.context = context
+        self.nameLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.nameSelectedLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.underSelectedColor, font: .medium(.text)), maximumNumberOfLines: 1)
+        super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: .legacy, action: action, border: [.Bottom])
+        _ = makeSize(initialSize.width)
+    }
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        self.nameLayout.measure(width: width - 50 - 10)
+        self.nameSelectedLayout.measure(width: width - 50 - 10)
+
+        return true
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
+    }
+    
+    override func viewClass() -> AnyClass {
+        return SearchTopicRowView.self
+    }
+}
+
+private class SearchTopicRowView : TableRowView {
+    private var inlineTopicPhotoLayer: InlineStickerItemLayer?
+    private let nameView = TextView()
+    private let borderView = View()
+    private let containerView = Control()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(containerView)
+        self.addSubview(nameView)
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
+        self.addSubview(borderView)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.invokeIfNeededDown()
+        }, for: .Down)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.invokeIfNeededUp()
+        }, for: .Up)
+    }
+    
+    private func invokeIfNeededUp() {
+        if let event = NSApp.currentEvent {
+            super.mouseUp(with: event)
+            if let item = item as? GeneralRowItem, let table = item.table, table.alwaysOpenRowsOnMouseUp, mouseInside() {
+                invokeAction(item, clickCount: event.clickCount)
+            }
+        }
+    }
+    
+    func invokeAction(_ item: GeneralRowItem, clickCount: Int) {
+        if clickCount <= 1 {
+            item.action()
+        }
+    }
+    
+    private func invokeIfNeededDown() {
+        if let event = NSApp.currentEvent {
+            super.mouseDown(with: event)
+            if let item = item as? GeneralRowItem, let table = item.table, !table.alwaysOpenRowsOnMouseUp, let event = NSApp.currentEvent, mouseInside() {
+                if item.enabled {
+                    invokeAction(item, clickCount: event.clickCount)
+                }
+            }
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func updateColors() {
+        super.updateColors()
+        borderView.backgroundColor = theme.colors.border
+    }
+    
+    override var backdorColor: NSColor {
+        return isSelect ? theme.colors.accentSelect : theme.colors.background
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? SearchTopicRowItem else {
+            return
+        }
+        
+        
+        self.nameView.update(item.isSelected ? item.nameSelectedLayout : item.nameLayout)
+        
+        borderView.isHidden = isSelect
+        
+        if let info = item.item.threadData?.info {
+            let size = NSMakeSize(30, 30)
+            let current: InlineStickerItemLayer
+            if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == info.icon {
+                current = layer
+            } else {
+                if let layer = inlineTopicPhotoLayer {
+                    performSublayerRemoval(layer, animated: animated)
+                    self.inlineTopicPhotoLayer = nil
+                }
+                if let fileId = info.icon {
+                    current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
+                } else {
+                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+                    current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
+                }
+                current.superview = containerView
+                self.layer?.addSublayer(current)
+                self.inlineTopicPhotoLayer = current
+                
+                current.frame = CGRect(origin: CGPoint(x: 10, y: 10), size: size)
+            }
+        }
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        containerView.frame = bounds
+        nameView.centerY(x: 50)
+        borderView.frame = NSMakeRect(50, frame.height - .borderSize, frame.width - 50, .borderSize)
+    }
+    
+    override func updateAnimatableContent() -> Void {
+        let checkValue:(InlineStickerItemLayer)->Void = { value in
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = superview.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                value.isPlayable = superview.visibleRect != .zero && isKeyWindow
+            }
+        }
+        if let value = inlineTopicPhotoLayer {
+            checkValue(value)
+        }
+    }
+}

@@ -3,7 +3,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 
@@ -121,20 +121,20 @@ private enum BlockedPeerEntry: Identifiable, Comparable {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: enabled, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: enabled, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 arguments.openPeer(peer.id)
             }, contextMenuItems: {
                 if case .plain = interactionType {
-                    return .single([ContextMenuItem(tr(L10n.chatInputUnblock), handler: {
+                    return .single([ContextMenuItem(strings().chatInputUnblock, handler: {
                         arguments.removePeer(peer.id)
-                    })])
+                    }, itemImage: MenuAnimation.menu_unblock.value)])
                 } else {
                     return .single([])
                 }
                 
             })
         case let .empty(progress):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: L10n.blockedPeersEmptyDescrpition, viewType: .singleItem)
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: progress, text: strings().blockedPeersEmptyDescrpition, viewType: .singleItem)
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         }
@@ -202,7 +202,7 @@ private func blockedPeersControllerEntries(state: BlockedPeerControllerState, bl
     }
     
     if blockedState.peers.isEmpty {
-        entries.append(.empty(blockedState.peers.isEmpty))
+        entries.append(.empty(blockedState.isLoadingMore))
     } else {
         entries.append(.section(sectionId))
         sectionId += 1
@@ -252,7 +252,7 @@ class BlockedPeersViewController: EditableViewController<TableView> {
             self?.removePeerDisposable.set((context.blockedPeersContext.remove(peerId: memberId) |> deliverOnMainQueue).start(error: { error in
                 switch error {
                 case .generic:
-                    alert(for: context.window, info: L10n.unknownError)
+                    alert(for: context.window, info: strings().unknownError)
                 }
                 updateState {
                     return $0.withUpdatedRemovingPeerId(nil)

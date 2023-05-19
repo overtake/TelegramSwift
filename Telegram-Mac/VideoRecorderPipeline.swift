@@ -10,9 +10,9 @@ import Cocoa
 import SwiftSignalKit
 import Accelerate
 import TelegramCore
-import SyncCore
+import ObjcUtils
 import TGUIKit
-
+import TGVideoCameraMovie
 
 private let videoCameraRetainedBufferCount:Int = 16;
 
@@ -58,6 +58,8 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     
     let session: AVCaptureSession = AVCaptureSession()
     
+    let config: VideoMessageConfig
+    
     private var status: VideoCameraRecordingStatus = .idle {
         didSet {
             statePromise.set(status)
@@ -85,9 +87,10 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     static let videoMessageMaxDuration: Double = 60
 
     private let liveUploading: PreUploadManager?
-    init(url:URL, liveUploading: PreUploadManager?) {
+    init(url:URL, config: VideoMessageConfig, liveUploading: PreUploadManager?) {
         self.url = url
         self.liveUploading = liveUploading
+        self.config = config
         super.init()
         
         recorder = TGVideoCameraMovieRecorder(url: url, delegate: self, callbackQueue: VideoRecorderPipeline.queue.queue)
@@ -95,8 +98,8 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         renderer.orientation = .portrait
         renderer.mirror = true
         
-        if session.canSetSessionPreset(.vga640x480) {
-            session.sessionPreset = .vga640x480
+        if session.canSetSessionPreset(.hd1280x720) {
+            session.sessionPreset = .hd1280x720
         } else {
             session.sessionPreset = .medium
         }
@@ -106,7 +109,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         let defVideoDevice = AVCaptureDevice.default(for: .video)
         
         
-        var videoDevices = AVCaptureDevice.devices(for: .video)
+        var videoDevices = AVCaptureDevice.devices(for: .video).filter({ $0.isConnected && !$0.isSuspended })
         var audioDevices = AVCaptureDevice.devices(for: .audio)
 
         if !videoDevices.isEmpty, let device = defVideoDevice {
@@ -138,8 +141,6 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         session.addOutput(videoOutput)
 
         audioOutput.setSampleBufferDelegate(self, queue: VideoRecorderPipeline.queue.queue)
-
-        //averagePowerForChannel
         
         
         session.addOutput(audioOutput)
@@ -147,9 +148,7 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         
         videoConnection = videoOutput.connection(with: .video)
         audioConnection = audioOutput.connection(with: .audio)
-        
-       
-        
+
         
         _configureFps()
     }
@@ -224,9 +223,11 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         
+        
+        
         let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer);
         
-        if self.skip.modify({min($0 + 1, 3)}) < 3 {
+        if self.skip.modify({ $0 + 1 }) < 10 {
             return
         }
         
@@ -298,10 +299,10 @@ class VideoRecorderPipeline : NSObject, AVCaptureVideoDataOutputSampleBufferDele
         status = .recording
         startTimeInterval = Date().timeIntervalSince1970
 
-        let audioSettings = TGMediaVideoConversionPresetSettings.audioSettings(for: TGMediaVideoConversionPresetVideoMessage)
+        let audioSettings = TGMediaVideoConversionPresetSettings.audioSettings(for: TGMediaVideoConversionPresetVideoMessage, bitrate: Int32(config.audioBitrate))
         recorder.addAudioTrack(withSourceFormatDescription: outputAudioFormatDescription, settings: audioSettings)
         let size: CGSize = TGMediaVideoConversionPresetSettings.maximumSize(for: TGMediaVideoConversionPresetVideoMessage)
-        let videoSettings = TGMediaVideoConversionPresetSettings.videoSettings(for: TGMediaVideoConversionPresetVideoMessage, dimensions: size)
+        let videoSettings = TGMediaVideoConversionPresetSettings.videoSettings(for: TGMediaVideoConversionPresetVideoMessage, dimensions: size, bitrate: Int32(config.videoBitrate))
         recorder.addVideoTrack(withSourceFormatDescription: outputVideoFormatDescription, transform: CGAffineTransform.identity, settings: videoSettings)
         
         recorder.prepareToRecord()

@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 
 private final class ArchivedStickerPacksControllerArguments {
     let context: AccountContext
@@ -110,7 +110,7 @@ private enum ArchivedStickerPacksEntry: TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case .loading(let loading):
-            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: L10n.archivedStickersEmpty)
+            return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().archivedStickersEmpty)
         }
     }
 }
@@ -165,7 +165,7 @@ private func archivedStickerPacksControllerEntries(state: ArchivedStickerPacksCo
             entries.append(.section(sectionId: sectionId))
             sectionId += 1
             
-            entries.append(.info(sectionId: sectionId, L10n.archivedStickersDescription, .textTopItem))
+            entries.append(.info(sectionId: sectionId, strings().archivedStickersDescription, .textTopItem))
                         
             var installedIds = Set<ItemCollectionId>()
             if let view = installedView.views[.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionIdsView, let ids = view.idsByNamespace[Namespaces.ItemCollection.CloudStickerPacks] {
@@ -234,8 +234,10 @@ class ArchivedStickerPacksController: TableViewController {
         let removePackDisposables = DisposableDict<ItemCollectionId>()
         actionsDisposable.add(removePackDisposables)
         
+        
+        
         let stickerPacks = Promise<[ArchivedStickerPackItem]?>()
-        stickerPacks.set(.single(archived) |> then(archivedStickerPacks(account: context.account) |> map { Optional($0) }))
+        stickerPacks.set(.single(archived) |> then(context.engine.stickers.archivedStickerPacks() |> map { Optional($0) }))
         
         let installedStickerPacks = Promise<CombinedView>()
         installedStickerPacks.set(context.account.postbox.combinedView(keys: [.itemCollectionIds(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]))
@@ -247,9 +249,9 @@ class ArchivedStickerPacksController: TableViewController {
         
         
         let arguments = ArchivedStickerPacksControllerArguments(context: context, openStickerPack: { info in
-          showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .name(info.shortName)), for: mainWindow)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.stickers(.name(info.shortName))]), for: context.window)
         }, removePack: { info in
-            confirm(for: context.window, information: tr(L10n.chatConfirmActionUndonable), successHandler: { _ in
+            confirm(for: context.window, information: strings().chatConfirmActionUndonable, successHandler: { _ in
                 var remove = false
                 updateState { state in
                     var removingPackIds = state.removingPackIds
@@ -278,7 +280,8 @@ class ArchivedStickerPacksController: TableViewController {
                             
                             return .complete()
                     }
-                    removePackDisposables.set((removeArchivedStickerPack(account: context.account, info: info) |> then(applyPacks) |> deliverOnMainQueue).start(completed: {
+                    
+                    removePackDisposables.set((context.engine.stickers.removeArchivedStickerPack(info: info) |> then(applyPacks) |> deliverOnMainQueue).start(completed: {
                         updateState { state in
                             var removingPackIds = state.removingPackIds
                             removingPackIds.remove(info.id)

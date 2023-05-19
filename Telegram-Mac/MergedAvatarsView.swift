@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import SwiftSignalKit
 import Postbox
-import SyncCore
+
 
 private enum PeerAvatarReference : Equatable {
     static func == (lhs: PeerAvatarReference, rhs: PeerAvatarReference) -> Bool {

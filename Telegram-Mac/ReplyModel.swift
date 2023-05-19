@@ -9,12 +9,11 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 class ReplyModel: ChatAccessoryModel {
 
-    private let account:Account
     private(set) var replyMessage:Message?
     private var disposable:MetaDisposable = MetaDisposable()
     private let isPinned:Bool
@@ -25,45 +24,40 @@ class ReplyModel: ChatAccessoryModel {
     private let autodownload: Bool
     private let headerAsName: Bool
     private let customHeader: String?
-    init(replyMessageId:MessageId, account:Account, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil) {
+    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil) {
         self.isPinned = isPinned
-        self.account = account
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
         self.replyMessage = replyMessage
         self.headerAsName = headerAsName
         self.customHeader = customHeader
-        super.init(presentation: presentation, drawLine: drawLine)
+        super.init(context: context, presentation: presentation, drawLine: drawLine)
         
-        let messageViewSignal = account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
-            if let message = view.message {
-                return .single(message)
-            }
-            return getMessagesLoadIfNecessary([view.messageId], postbox: account.postbox, network: account.network, accountPeerId: account.peerId) |> map {$0.first}
-        }
+      
+        let messageViewSignal: Signal<Message?, NoError> = context.account.postbox.messageView(replyMessageId)
+        |> map {
+            $0.message
+        } |> deliverOnMainQueue
         
         if let replyMessage = replyMessage {
             make(with :replyMessage, display: false)
-            if isPinned {
-                nodeReady.set(.single(true) |> then(messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
-                    self?.make(with: message, isLoading: false, display: true)
-                    return message != nil
-                }))
-            } else {
-                nodeReady.set(.single(true))
-            }
-            
+            self.nodeReady.set(.single(true))
         } else {
-            
             make(with: nil, display: false)
-            nodeReady.set( messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
-                 self?.make(with: message, isLoading: false, display: true)
-                 return message != nil
+        }
+        if replyMessage == nil {
+            nodeReady.set(messageViewSignal |> map { [weak self] message -> Bool in
+                self?.make(with: message, isLoading: false, display: true)
+                if message == nil {
+                    dismissReply?()
+                }
+                return message != nil
              })
         }
+       
     }
     
-    override var view: ChatAccessoryView? {
+    override weak var view:ChatAccessoryView? {
         didSet {
             updateImageIfNeeded()
         }
@@ -85,7 +79,7 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions.size
                         }
                         break
-                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
+                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
                         if let dimensions = file.dimensions {
                             imageDimensions = dimensions.size
                         } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
@@ -129,7 +123,7 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions.size
                         }
                         break
-                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
+                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
                         updatedMedia = file
                         
                         if let dimensions = file.dimensions?.size {
@@ -169,17 +163,17 @@ class ReplyModel: ChatAccessoryModel {
                 var updateImageSignal: Signal<ImageDataTransformation, NoError>?
                 if mediaUpdated {
                     if let image = updatedMedia as? TelegramMediaImage {
-                        updateImageSignal = chatMessagePhotoThumbnail(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor, synchronousLoad: true)
+                        updateImageSignal = chatMessagePhotoThumbnail(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor, synchronousLoad: true)
                     } else if let file = updatedMedia as? TelegramMediaFile {
                         if file.isVideo {
-                            updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: false)
+                            updateImageSignal = chatMessageVideoThumbnail(account: self.context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: false)
                         } else if file.isAnimatedSticker {
-                            updateImageSignal = chatMessageAnimatedSticker(postbox: self.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize), fetched: true)
+                            updateImageSignal = chatMessageAnimatedSticker(postbox: self.context.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize), fetched: true, isVideo: file.isVideoSticker)
                         } else if file.isSticker {
-                            updateImageSignal = chatMessageSticker(postbox: self.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, fetched: true)
+                            updateImageSignal = chatMessageSticker(postbox: self.context.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, fetched: true)
                         } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
                             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-                            updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true, synchronousLoad: true)
+                            updateImageSignal = chatWebpageSnippetPhoto(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true, synchronousLoad: true)
                         }
                     }
                 }
@@ -197,7 +191,7 @@ class ReplyModel: ChatAccessoryModel {
                     })
                     
                     if let media = media as? TelegramMediaImage {
-                        self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
+                        self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                     }
                     
                     view.imageView?.set(arguments: arguments)
@@ -217,6 +211,7 @@ class ReplyModel: ChatAccessoryModel {
             self.view?.imageView?.removeFromSuperview()
             self.view?.imageView = nil
         }
+        self.view?.updateModel(self, animated: false)
     }
     
     func make(with message:Message?, isLoading: Bool = true, display: Bool) -> Void {
@@ -229,7 +224,9 @@ class ReplyModel: ChatAccessoryModel {
         if let message = message {
             
             var title: String? = message.effectiveAuthor?.displayTitle
-        
+            if let info = message.forwardInfo {
+                title = info.authorTitle
+            }
             for attr in message.attributes {
                 if let _ = attr as? SourceReferenceMessageAttribute {
                     if let info = message.forwardInfo {
@@ -240,38 +237,32 @@ class ReplyModel: ChatAccessoryModel {
             }
             
             
-            var text = pullText(from:message, mediaViewType: .text) as String
-            if text.isEmpty {
-                text = serviceMessageText(message, account: account, isReplied: true)
-            }
+            let text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
             if let header = customHeader {
-                self.headerAttr = .initialize(string: header, color: presentation.title, font: .medium(.text))
+                self.header = .init(.initialize(string: header, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
             } else {
-                self.headerAttr = .initialize(string: !isPinned || headerAsName ? title : L10n.chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
+                self.header = .init(.initialize(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
             }
-            self.messageAttr = .initialize(string: text, color: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, font: .normal(.text))
+            let attr = NSMutableAttributedString()
+            attr.append(text)
+            attr.addAttribute(.foregroundColor, value: message.media.isEmpty || message.effectiveMedia is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, range: attr.range)
+            attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
+            
+            attr.fixUndefinedEmojies()
+            self.message = .init(attr, maximumNumberOfLines: 1)
         } else {
-            self.headerAttr = nil
-            self.messageAttr = .initialize(string: isLoading ? tr(L10n.messagesReplyLoadingLoading) : tr(L10n.messagesDeletedMessage), color: presentation.disabledText, font: .normal(.text))
+            self.header = nil
+            self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.disabledText, font: .normal(.text)), maximumNumberOfLines: 1)
             display = true
         }
         
         if !isLoading {
-            if let makesizeCallback = makesizeCallback {
-                messagesViewQueue.async {
-                    makesizeCallback()
-                }
-                return
-            } else {
-                measureSize(width, sizeToFit: sizeToFit)
-                display = true
-            }
+            measureSize(width, sizeToFit: sizeToFit)
+            display = true
         }
         if display {
-            Queue.mainQueue().async {
-                self.view?.setFrameSize(self.size)
-                self.setNeedDisplay()
-            }
+            self.view?.setFrameSize(self.size)
+            self.setNeedDisplay()
         }
     }
 

@@ -10,7 +10,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -159,14 +159,14 @@ private enum RestrictedEntry: TableItemListNodeEntry {
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case let .info(_, peer, presence, viewType):
-            var string:String = peer.isBot ? L10n.presenceBot : L10n.peerStatusRecently
+            var string:String = peer.isBot ? strings().presenceBot : strings().peerStatusRecently
             var color:NSColor = theme.colors.grayText
             
             if let presence = presence {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string,_, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
             }
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, viewType: viewType, action: {})
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, viewType: viewType, action: {})
         case let .rightItem(_, _, name, right, value, enabled, viewType):
             //ControlStyle(font: NSFont.)
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), viewType: viewType, action: {
@@ -236,7 +236,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.description(sectionId, index, L10n.groupPermissionSectionTitle, .textTopItem))
+        entries.append(.description(sectionId, index, strings().groupPermissionSectionTitle, .textTopItem))
         index += 1
 
         let currentRightsFlags: TelegramChatBannedRightsFlags
@@ -259,7 +259,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         
         let currentTimeoutString: String
         if currentTimeout == 0 || currentTimeout == Int32.max {
-            currentTimeoutString = L10n.timerForever
+            currentTimeoutString = strings().timerForever
         } else {
             let remainingTimeout = currentTimeout - state.referenceTimestamp
             currentTimeoutString = timeIntervalString(Int(remainingTimeout))
@@ -268,7 +268,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         
         for right in allGroupPermissionList {
             let defaultEnabled = !defaultBannedRights.flags.contains(right)
-            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
+            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: peer), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
             index += 1
         }
         
@@ -278,14 +278,14 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
       
         
         if let initialParticipant = initialParticipant, case let .member(member) = initialParticipant, let banInfo = member.banInfo, let initialBannedBy = initialBannedBy {
-            entries.append(.timeout(sectionId, index, L10n.groupPermissionDuration, currentTimeoutString, .firstItem))
+            entries.append(.timeout(sectionId, index, strings().groupPermissionDuration, currentTimeoutString, .firstItem))
             index += 1
-            entries.append(.delete(sectionId, index, L10n.groupPermissionDelete, .lastItem))
+            entries.append(.delete(sectionId, index, strings().groupPermissionDelete, .lastItem))
             index += 1
-            entries.append(.exceptionInfo(sectionId, index, L10n.groupPermissionAddedInfo(initialBannedBy.displayTitle, stringForRelativeSymbolicTimestamp(relativeTimestamp: banInfo.timestamp, relativeTo: state.referenceTimestamp)), .textBottomItem))
+            entries.append(.exceptionInfo(sectionId, index, strings().groupPermissionAddedInfo(initialBannedBy.displayTitle, stringForRelativeSymbolicTimestamp(relativeTimestamp: banInfo.timestamp, relativeTo: state.referenceTimestamp)), .textBottomItem))
             index += 1
         } else {
-            entries.append(.timeout(sectionId, index, L10n.groupPermissionDuration, currentTimeoutString, .singleItem))
+            entries.append(.timeout(sectionId, index, strings().groupPermissionDuration, currentTimeoutString, .singleItem))
             index += 1
         }
 
@@ -296,7 +296,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         entries.append(.section(sectionId))
         sectionId += 1
 
-        entries.append(.description(sectionId, index, L10n.groupPermissionSectionTitle, .textTopItem))
+        entries.append(.description(sectionId, index, strings().groupPermissionSectionTitle, .textTopItem))
         index += 1
         
         let currentRightsFlags: TelegramChatBannedRightsFlags
@@ -319,7 +319,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         
         let currentTimeoutString: String
         if currentTimeout == 0 || currentTimeout == Int32.max {
-            currentTimeoutString = L10n.timerForever
+            currentTimeoutString = strings().timerForever
         } else {
             let remainingTimeout = currentTimeout - state.referenceTimestamp
             currentTimeoutString = timeIntervalString(Int(remainingTimeout))
@@ -328,25 +328,25 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         
         for right in allGroupPermissionList {
             let defaultEnabled = !defaultBannedRights.flags.contains(right)
-            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
+            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: nil), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
             index += 1
         }
         
         entries.append(.section(sectionId))
         sectionId += 1
         
-        entries.append(.timeout(sectionId, index, L10n.groupPermissionDuration, currentTimeoutString, .singleItem))
+        entries.append(.timeout(sectionId, index, strings().groupPermissionDuration, currentTimeoutString, .singleItem))
         index += 1
         
         if let initialParticipant = initialParticipant, case let .member(member) = initialParticipant, let banInfo = member.banInfo, let initialBannedBy = initialBannedBy {
-            entries.append(.timeout(sectionId, index, L10n.groupPermissionDuration, currentTimeoutString, .firstItem))
+            entries.append(.timeout(sectionId, index, strings().groupPermissionDuration, currentTimeoutString, .firstItem))
             index += 1
-            entries.append(.delete(sectionId, index, L10n.groupPermissionDelete, .lastItem))
+            entries.append(.delete(sectionId, index, strings().groupPermissionDelete, .lastItem))
             index += 1
-            entries.append(.exceptionInfo(sectionId, index, L10n.groupPermissionAddedInfo(initialBannedBy.displayTitle, stringForRelativeSymbolicTimestamp(relativeTimestamp: banInfo.timestamp, relativeTo: state.referenceTimestamp)), .textBottomItem))
+            entries.append(.exceptionInfo(sectionId, index, strings().groupPermissionAddedInfo(initialBannedBy.displayTitle, stringForRelativeSymbolicTimestamp(relativeTimestamp: banInfo.timestamp, relativeTo: state.referenceTimestamp)), .textBottomItem))
             index += 1
         } else {
-            entries.append(.timeout(sectionId, index, L10n.groupPermissionDuration, currentTimeoutString, .singleItem))
+            entries.append(.timeout(sectionId, index, strings().groupPermissionDuration, currentTimeoutString, .singleItem))
             index += 1
         }
     }
@@ -482,16 +482,25 @@ class RestrictedModalViewController: TableModalViewController {
                     30 * 60 * 60 * 24
                 ]
                 if let view = (self.genericView.viewNecessary(at: index) as? GeneralInteractedRowView)?.textView {
-                    var items:[SPopoverItem] = []
+                    var items:[ContextMenuItem] = []
                     for interval in intervals {
-                        items.append(SPopoverItem(timeIntervalString(Int(interval)), {
+                        items.append(ContextMenuItem(timeIntervalString(Int(interval)), handler: {
                             applyValue(initialState.referenceTimestamp + interval)
                         }))
                     }
-                    items.append(SPopoverItem(tr(L10n.channelBanForever), {
+                    items.append(ContextMenuItem(strings().channelBanForever, handler: {
                         applyValue(Int32.max)
                     }))
-                    showPopover(for: view, with: SPopoverViewController(items: items), edge: .maxX, inset: NSMakePoint(view.frame.width,-10))
+                    
+                    let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    
+                    if let event = NSApp.currentEvent {
+                        let value = AppMenu(menu: menu)
+                        value.show(event: event, view: view)
+                    }
                 }
             }
         }, alertError: { [weak self] in
@@ -499,7 +508,7 @@ class RestrictedModalViewController: TableModalViewController {
                 |> take(1)
                 |> deliverOnMainQueue).start(next: { [weak self] view in
                     if let peer = peerViewMainPeer(view) {
-                        self?.show(toaster: ControllerToaster(text: peer.isSupergroup || peer.isGroup ? L10n.channelExceptionDisabledOptionGroup : L10n.channelExceptionDisabledOptionChannel))
+                        self?.show(toaster: ControllerToaster(text: peer.isSupergroup || peer.isGroup ? strings().channelExceptionDisabledOptionGroup : strings().channelExceptionDisabledOptionChannel))
                     }
                 })
         }, deleteException: { [weak self] in
@@ -546,7 +555,7 @@ class RestrictedModalViewController: TableModalViewController {
             })
             self?.modal?.interactions?.updateCancel({ [weak self] button in
                 if self?.genericView.item(stableId: RestrictedEntryStableId.exceptionInfo) != nil {
-                    button.set(text: L10n.groupPermissionDelete, for: .Normal)
+                    button.set(text: strings().groupPermissionDelete, for: .Normal)
                     button.set(color: theme.colors.redUI, for: .Normal)
                 } else {
                     button.set(text: "", for: .Normal)
@@ -665,11 +674,11 @@ class RestrictedModalViewController: TableModalViewController {
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
         return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
             self?.close()
-        }), center: ModalHeaderData(title: L10n.groupPermissionTitle), right: nil)
+        }), center: ModalHeaderData(title: strings().groupPermissionTitle), right: nil)
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.modalApply, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().modalApply, accept: { [weak self] in
             self?.close()
             self?.okClicked?()
         }, drawBorder: true, height: 50, singleButton: true)

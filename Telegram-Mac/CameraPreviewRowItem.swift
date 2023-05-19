@@ -27,6 +27,7 @@ class CameraPreviewRowItem: GeneralRowItem {
 
     }
     deinit {
+        self.session.stopRunning()
     }
     
     override func viewClass() -> AnyClass {

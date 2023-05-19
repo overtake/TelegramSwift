@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+import ApiCredentials
 import SwiftSignalKit
 
 private final class StorageUsageControllerArguments {
@@ -47,7 +47,7 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
     case peer(Int32, Int32, Peer, String, GeneralViewType)
     case section(Int32)
 
-    var stableId: Int32 {
+    var stableId: Int64 {
         switch self {
         case .keepMedia:
             return 0
@@ -70,9 +70,9 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case .peersHeader:
             return 9
         case let .peer(_, _, peer, _, _):
-            return Int32(peer.id.hashValue)
+            return peer.id.toInt64()
         case .section(let sectionId):
-            return (sectionId + 1) * 1000 - sectionId
+            return Int64((sectionId + 1) * 1000 - sectionId)
         }
     }
     
@@ -242,12 +242,12 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .keepMediaLimitHeader(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .keepMediaLimit(_, value, viewType):
-            let values = [5, 16, 36, Int32.max]
+            let values = [5, 16, 32, Int32.max]
             var value = value
             if !values.contains(value) {
                 value = Int32.max
             }
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: value, sizes: values, hasMarkers: false, titles: ["5GB", "16GB", "32GB", L10n.storageUsageLimitNoLimit], viewType: viewType, selectAction: { selected in
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: value, sizes: values, hasMarkers: false, titles: ["5GB", "16GB", "32GB", strings().storageUsageLimitNoLimit], viewType: viewType, selectAction: { selected in
                 arguments.updateMediaLimit(values[selected])
             })
         case let .keepMediaLimitInfo(_, text, viewType):
@@ -259,13 +259,13 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
         case let .ccTaskValueDesc(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .clearAll(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: tr(L10n.storageClearAll), type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().storageClearAll, type: .next, viewType: viewType, action: {
                 arguments.clearAll()
             }, enabled: enabled)
         case let .peersHeader(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .peer(_, _, peer, value, viewType):
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(value), viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(value), viewType: viewType, action: {
                 arguments.openPeerMedia(peer.id)
             })
         case .section:
@@ -276,11 +276,11 @@ private enum StorageUsageEntry: TableItemListNodeEntry {
 
 private func stringForKeepMediaTimeout(_ timeout: Int32) -> String {
     if timeout <= 7 * 24 * 60 * 60 {
-        return tr(L10n.timerWeeksCountable(1))
+        return strings().timerWeeksCountable(1)
     } else if timeout <= 1 * 31 * 24 * 60 * 60 {
-        return tr(L10n.timerMonthsCountable(1))
+        return strings().timerMonthsCountable(1)
     } else {
-        return tr(L10n.timerForever)
+        return strings().timerForever
     }
 }
 
@@ -292,18 +292,18 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     entries.append(.section(sectionId))
     sectionId += 1
     
-    entries.append(.keepMedia(sectionId, L10n.storageUsageKeepMedia, stringForKeepMediaTimeout(cacheSettings.defaultCacheStorageTimeout), .singleItem))
+    entries.append(.keepMedia(sectionId, strings().storageUsageKeepMedia, stringForKeepMediaTimeout(cacheSettings.defaultCacheStorageTimeout), .singleItem))
     
-    entries.append(.keepMediaInfo(sectionId, L10n.storageUsageKeepMediaDescription1, .textBottomItem))
+    entries.append(.keepMediaInfo(sectionId, strings().storageUsageKeepMediaDescription1, .textBottomItem))
     
     entries.append(.section(sectionId))
     sectionId += 1
     
     
     //
-    entries.append(.keepMediaLimitHeader(sectionId, L10n.storageUsageLimitHeader, .textTopItem))
+    entries.append(.keepMediaLimitHeader(sectionId, strings().storageUsageLimitHeader, .textTopItem))
     entries.append(.keepMediaLimit(sectionId, cacheSettings.defaultCacheStorageLimitGigabytes, .singleItem))
-    entries.append(.keepMediaLimitInfo(sectionId, L10n.storageUsageLimitDesc, .textBottomItem))
+    entries.append(.keepMediaLimitInfo(sectionId, strings().storageUsageLimitDesc, .textBottomItem))
 
     
     entries.append(.section(sectionId))
@@ -312,7 +312,7 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
     
     if let ccTask = ccTask {
         entries.append(.ccTaskValue(sectionId, ccTask, .singleItem))
-        entries.append(.ccTaskValueDesc(sectionId, L10n.storageUsageCleaningProcess, .singleItem))
+        entries.append(.ccTaskValueDesc(sectionId, strings().storageUsageCleaningProcess, .textBottomItem))
     } else {
         
         var exists:[PeerId:PeerId] = [:]
@@ -344,12 +344,12 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
             }
             
             if !filtered.isEmpty {
-                entries.append(.peersHeader(sectionId, L10n.storageUsageChatsHeader, .textTopItem))
+                entries.append(.peersHeader(sectionId, strings().storageUsageChatsHeader, .textTopItem))
             }
             
             for (i, value) in filtered.enumerated() {
                 let peer = stats.peers[value.0]!
-                entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1)), bestGeneralViewType(filtered, for: i)))
+                entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1), formatting: DataSizeStringFormatting.current), bestGeneralViewType(filtered, for: i)))
                 index += 1
             }
         } else {
@@ -359,7 +359,7 @@ private func storageUsageControllerEntries(cacheSettings: CacheStorageSettings, 
             entries.append(.section(sectionId))
             sectionId += 1
             
-            entries.append(.collecting(sectionId, L10n.storageUsageCalculating, .singleItem))
+            entries.append(.collecting(sectionId, strings().storageUsageCalculating, .singleItem))
         }
     }
     
@@ -392,11 +392,10 @@ class StorageUsageController: TableViewController {
         let cacheSettingsPromise = Promise<CacheStorageSettings>()
         cacheSettingsPromise.set(context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.cacheStorageSettings])
             |> map { view -> CacheStorageSettings in
-                return view.entries[SharedDataKeys.cacheStorageSettings] as? CacheStorageSettings ?? CacheStorageSettings.defaultSettings
+                return view.entries[SharedDataKeys.cacheStorageSettings]?.get(CacheStorageSettings.self) ?? CacheStorageSettings.defaultSettings
             })
-        
         let statsPromise = Promise<CacheUsageStatsResult?>()
-        statsPromise.set(.single(nil) |> then(collectCacheUsageStats(account: context.account, additionalCachePaths: [], logFilesPath: "~/Library/Group Containers/\(ApiEnvironment.group)/logs".nsstring.expandingTildeInPath) |> map { Optional($0) }))
+        statsPromise.set(.single(nil) |> then(context.engine.resources.collectCacheUsageStats(additionalCachePaths: [], logFilesPath: ApiEnvironment.containerURL!.appendingPathComponent("logs").path) |> map { Optional($0) }))
         
         let actionDisposables = DisposableSet()
         
@@ -410,16 +409,25 @@ class StorageUsageController: TableViewController {
                         return current.withUpdatedDefaultCacheStorageTimeout(timeout)
                     }).start()
                 }
-                
-                if let item = strongSelf.genericView.item(stableId: StorageUsageEntry.keepMedia(0, "", "", .singleItem).stableId), let view = (strongSelf.genericView.viewNecessary(at: item.index) as? GeneralInteractedRowView)?.textView {
+                let stableId = StorageUsageEntry.keepMedia(0, "", "", .singleItem).stableId
+                if let item = strongSelf.genericView.item(stableId: stableId), let view = (strongSelf.genericView.viewNecessary(at: item.index) as? GeneralInteractedRowView)?.textView {
                     
-                    showPopover(for: view, with: SPopoverViewController(items: [SPopoverItem(tr(L10n.timerWeeksCountable(1)), {
+                    let items = [ContextMenuItem(strings().timerWeeksCountable(1), handler: {
                         timeoutAction(7 * 24 * 60 * 60)
-                    }), SPopoverItem(tr(L10n.timerMonthsCountable(1)), {
+                    }), ContextMenuItem(strings().timerMonthsCountable(1), handler: {
                         timeoutAction(1 * 31 * 24 * 60 * 60)
-                    }), SPopoverItem(tr(L10n.timerForever), {
+                    }), ContextMenuItem(strings().timerForever, handler: {
                         timeoutAction(Int32.max)
-                    })]), edge: .minX, inset: NSMakePoint(0,-30))
+                    })]
+                    
+                    if let event = NSApp.currentEvent {
+                        let menu = ContextMenu()
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                        let value = AppMenu(menu: menu)
+                        value.show(event: event, view: view)
+                    }
                 }
             }
            
@@ -452,25 +460,25 @@ class StorageUsageController: TableViewController {
                                     media[peerId] = categories
                                 }
                                 
-                                var clearResourceIds = Set<WrappedMediaResourceId>()
+                                var clearResourceIds = Set<MediaResourceId>()
                                 for id in clearMediaIds {
                                     if let ids = stats.mediaResourceIds[id] {
                                         for resourceId in ids {
-                                            clearResourceIds.insert(WrappedMediaResourceId(resourceId))
+                                            clearResourceIds.insert(resourceId)
                                         }
                                     }
                                 }
                                 statsPromise.set(.single(.result(CacheUsageStats(media: media, mediaResourceIds: stats.mediaResourceIds, peers: stats.peers, otherSize: stats.otherSize, otherPaths: stats.otherPaths, cacheSize: stats.cacheSize, tempPaths: stats.tempPaths, tempSize: stats.tempSize, immutableSize: stats.immutableSize))))
                                 
-                                clearDisposable.set(clearCachedMediaResources(account: context.account, mediaResourceIds: clearResourceIds).start())
+                                clearDisposable.set(context.engine.resources.clearCachedMediaResources(mediaResourceIds: clearResourceIds).start())
                             }
 
-                        }), for: mainWindow)
+                        }), for: context.window)
                     }
                 }
             })
         }, clearAll: {
-            confirm(for: context.window, information: L10n.storageClearAllConfirmDescription, okTitle: L10n.storageClearAll, successHandler: { _ in
+            confirm(for: context.window, information: strings().storageClearAllConfirmDescription, okTitle: strings().storageClearAll, successHandler: { _ in
                 context.cacheCleaner.run()
                 statsPromise.set(.single(CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0, tempPaths: [], tempSize: 0, immutableSize: 0))))
             })

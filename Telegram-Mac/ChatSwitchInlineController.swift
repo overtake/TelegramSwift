@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 
 
@@ -29,11 +29,11 @@ class ChatSwitchInlineController: ChatController {
     }
     
     override open func backSettings() -> (String,CGImage?) {
-        return (L10n.navigationCancel,nil)
+        return (strings().navigationCancel,nil)
     }
     
-    override func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData, isLoading: Bool) {
-        super.applyTransition(transition, initialData: initialData, isLoading: isLoading)
+    override func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData, isLoading: Bool, processedView: ChatHistoryView) {
+        super.applyTransition(transition, initialData: initialData, isLoading: isLoading, processedView: processedView)
         
         if case let .none(interface) = transition.state, let _ = interface {
             for (_, item) in transition.inserted {
@@ -48,8 +48,8 @@ class ChatSwitchInlineController: ChatController {
                                         switch self.fallbackMode {
                                         case .history, .pinned:
                                             controller = ChatController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
-                                        case let .replyThread(data, mode):
-                                            controller = ChatController.init(context: context, chatLocation: .replyThread(data), mode: .replyThread(data: data, mode: mode), messageId: nil, initialAction: .inputText(text: text, behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
+                                        case let .thread(data, mode):
+                                            controller = ChatController.init(context: context, chatLocation: .thread(data), mode: .thread(data: data, mode: mode), messageId: nil, initialAction: .inputText(text: text, behavior: .automatic), chatLocationContextHolder: Atomic<ChatLocationContextHolder?>(value: nil))
                                         case .scheduled:
                                             controller = ChatScheduleController(context: context, chatLocation: .peer(fallbackId), initialAction: .inputText(text: text, behavior: .automatic))
                                         }

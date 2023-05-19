@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import Postbox
 import SwiftSignalKit
 
@@ -47,8 +47,8 @@ private func commonGroupsEntries(state: GroupsInCommonState, arguments: GroupsIn
                 viewType = .innerItem
             }
         }
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer.id), equatable: InputDataEquatable(PeerEquatable(peer)), item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsetsZero, viewType: viewType, action: {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer.id), equatable: InputDataEquatable(PeerEquatable(peer)), comparable: nil, item: { initialSize, stableId in
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsetsZero, viewType: viewType, action: {
                 arguments.open(peer.id)
             })
         }))
@@ -68,7 +68,7 @@ func GroupsInCommonViewController(context: AccountContext, peerId: PeerId) -> Vi
     let actionsDisposable = DisposableSet()
     
     let arguments = GroupsInCommonArguments(context: context, open: { peerId in
-        context.sharedContext.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
     })
     
     let contextValue: Promise<GroupsInCommonContext> = Promise()
@@ -88,7 +88,7 @@ func GroupsInCommonViewController(context: AccountContext, peerId: PeerId) -> Vi
     let controller = InputDataController(dataSignal: dataSignal, title: "")
     controller.bar = .init(height: 0)
     
-    controller.contextOject = contextValue
+    controller.contextObject = contextValue
     
     controller.onDeinit = {
         actionsDisposable.dispose()

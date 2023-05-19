@@ -8,11 +8,11 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 import TGUIKit
 import SwiftSignalKit
-import SyncCore
+
 
 private class AvatarNodeParameters: NSObject {
     let account: Account
@@ -32,17 +32,16 @@ private class AvatarNodeParameters: NSObject {
 
 enum AvatarNodeState: Equatable {
     case Empty
-    case PeerAvatar(Peer, [String], TelegramMediaImageRepresentation?, Message?)
+    case PeerAvatar(Peer, [String], TelegramMediaImageRepresentation?, Message?, NSSize?, Bool)
     case ArchivedChats
-
 }
 
 func ==(lhs: AvatarNodeState, rhs: AvatarNodeState) -> Bool {
     switch (lhs, rhs) {
     case (.Empty, .Empty):
         return true
-    case let (.PeerAvatar(lhsPeer, lhsLetters, lhsPhotoRepresentations, _), .PeerAvatar(rhsPeer, rhsLetters, rhsPhotoRepresentations, _)):
-        return lhsPeer.isEqual(rhsPeer) && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations
+    case let (.PeerAvatar(lhsPeer, lhsLetters, lhsPhotoRepresentations, _, lhsSize, lhsForum), .PeerAvatar(rhsPeer, rhsLetters, rhsPhotoRepresentations, _, rhsSize, rhsForum)):
+        return lhsPeer.isEqual(rhsPeer) && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations && lhsSize == rhsSize && lhsForum == rhsForum
     case (.ArchivedChats, .ArchivedChats):
         return true
     default:
@@ -91,7 +90,6 @@ class AvatarControl: NSView {
         self.font = font
         super.init(frame: NSZeroRect)
         wantsLayer = true
-        layerContentsRedrawPolicy = .never
     }
     
 
@@ -124,15 +122,15 @@ class AvatarControl: NSView {
         }
     }
     
-    public func setPeer(account: Account, peer: Peer?, message: Message? = nil) {
+    public func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil) {
         self.account = account
         let state: AvatarNodeState
         if let peer = peer {
-            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message)
+            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, size, peer.isForum)
         } else {
             state = .Empty
         }
-        if self.state != state {
+        if self.state != state || self.layer?.contents == nil {
             self.state = state
             contentScale = 0
             self.viewDidChangeBackingProperties()
@@ -197,7 +195,7 @@ class AvatarControl: NSView {
     override func viewDidChangeBackingProperties() {
         
         layer?.contentsScale = backingScaleFactor
-        
+        layer?.contentsGravity = .resizeAspectFill
         
         if let account = account, self.state != .Empty {
             if contentScale != backingScaleFactor {
@@ -205,24 +203,26 @@ class AvatarControl: NSView {
                 self.displaySuspended = true
                 self.layer?.contents = nil
                 let photo: PeerPhoto?
+                var updatedSize: NSSize = self.frame.size
                 switch state {
-                case let .PeerAvatar(peer, letters, representation, message):
+                case let .PeerAvatar(peer, letters, representation, message, size, _):
                     if let peer = peer as? TelegramUser, peer.firstName == nil && peer.lastName == nil {
                         photo = nil
                         self.setState(account: account, state: .Empty)
                         let icon = theme.icons.deletedAccount
-                        self.setSignal(generateEmptyPhoto(frame.size, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(min(50, frame.size.width - 20), min(frame.size.height - 20, 50))), cornerRadius: nil)) |> map {($0, false)})
+                        self.setSignal(generateEmptyPhoto(updatedSize, type: .icon(colors: theme.colors.peerColors(Int(peer.id.id._internalGetInt64Value() % 7)), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(min(50, updatedSize.width - 20), min(updatedSize.height - 20, 50))), cornerRadius: nil)) |> map {($0, false)})
                         return
                     } else {
                         photo = .peer(peer, representation, letters, message)
                     }
+                    updatedSize = size ?? frame.size
                 case .Empty:
                     photo = nil
                 default:
                     photo = nil
                 }
                 if let photo = photo {
-                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: frame.size, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous), force: false)
+                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: updatedSize, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous), force: false)
                 } else {
                     let content = self.layer?.contents
                     self.displaySuspended = false

@@ -10,7 +10,9 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-import SyncCore
+import InAppSettings
+import ThemeSettings
+import ColorPalette
 import Postbox
 
 private let _id_no_preview1 = InputDataIdentifier("_id_no_preview1")
@@ -75,14 +77,14 @@ private func editThemeEntries(state: EditThemeState, chatInteraction: ChatIntera
     var index:Int32 = 0
     
     
-    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.errors[_id_input_title], identifier: _id_input_title, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.editThemeNamePlaceholder, filter: { $0 }, limit: 128))
+    entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.errors[_id_input_title], identifier: _id_input_title, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: strings().editThemeNamePlaceholder, filter: { $0 }, limit: 128))
     index += 1
 
     
     entries.append(.input(sectionId: sectionId, index: index, value: .string(state.slug), error: state.errors[_id_input_slug], identifier: _id_input_slug, mode: .plain, data: InputDataRowData(viewType: .legacy, defaultText: "https://t.me/addtheme/"), placeholder: nil, inputPlaceholder: "", filter: { $0 }, limit: 64))
     
     
-    let slugDesc = L10n.editThemeSlugDesc
+    let slugDesc = strings().editThemeSlugDesc
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(slugDesc), data: InputDataGeneralTextData()))
     index += 1
@@ -95,25 +97,25 @@ private func editThemeEntries(state: EditThemeState, chatInteraction: ChatIntera
     let timestamp3:Int32 = 60 * 22 + 60 * 60 * 18
 
     
-    let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
-    let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
-    let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp1, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewZeroText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
-    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp2, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: tr(L10n.appearanceSettingsChatPreviewFirstText), attributes: [ReplyMessageAttribute(messageId: replyMessage.id, threadMessageId: nil)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [])
-    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
-    let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp3, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: L10n.appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
-    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
+    let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
+    let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
+    let replyMessage = Message(stableId: 2, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp1, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: strings().appearanceSettingsChatPreviewZeroText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
+    let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp2, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: strings().appearanceSettingsChatPreviewFirstText, attributes: [ReplyMessageAttribute(messageId: replyMessage.id, threadMessageId: nil)], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary([replyMessage.id : replyMessage]), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
+    let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
+    let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp3, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: strings().appearanceSettingsChatPreviewSecondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
+    let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, previewTheme.bubbled ? .bubble : .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
     
     entries.append(.sectionId(sectionId, type: .custom(10)))
     sectionId += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview1, equatable: InputDataEquatable(state.presentation), item: { size, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview1, equatable: InputDataEquatable(state.presentation), comparable: nil, item: { size, stableId in
         let item = ChatRowItem.item(size, from: firstEntry, interaction: chatInteraction, theme: previewTheme)
         _ = item.makeSize(size.width, oldWidth: 0)
         return item
     }))
     index += 1
     
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview2, equatable: InputDataEquatable(state.presentation), item: { size, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_no_preview2, equatable: InputDataEquatable(state.presentation), comparable: nil, item: { size, stableId in
         let item = ChatRowItem.item(size, from: secondEntry, interaction: chatInteraction, theme: previewTheme)
         _ = item.makeSize(size.width, oldWidth: 0)
         return item
@@ -127,11 +129,11 @@ private func editThemeEntries(state: EditThemeState, chatInteraction: ChatIntera
     let selectFileDesc: String
 
     if state.current.file == nil {
-        selectFileText = L10n.editThemeSelectFile
-        selectFileDesc = L10n.editThemeSelectFileDesc
+        selectFileText = strings().editThemeSelectFile
+        selectFileDesc = strings().editThemeSelectFileDesc
     } else {
-        selectFileText = L10n.editThemeSelectUpdatedFile
-        selectFileDesc = L10n.editThemeSelectUpdatedFileDesc
+        selectFileText = strings().editThemeSelectUpdatedFile
+        selectFileDesc = strings().editThemeSelectUpdatedFileDesc
     }
     
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_uploadFile, data: .init(name: selectFileText, color: theme.colors.accent, type: .context(state.path ?? ""), action: {
@@ -175,13 +177,13 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             let signal = getTheme(account: context.account, slug: slug) |> deliverOnMainQueue |> delay(0.2, queue: .mainQueue())
             slugDisposable.set(signal.start(next: { value in
                 updateState {
-                    $0.withUpdatedError(InputDataValueError(description: L10n.editThemeSlugErrorAlreadyExists, target: .data), for: _id_input_slug)
+                    $0.withUpdatedError(InputDataValueError(description: strings().editThemeSlugErrorAlreadyExists, target: .data), for: _id_input_slug)
                 }
             }, error: { error in
                 switch error {
                 case .slugInvalid:
                     updateState {
-                        $0.withUpdatedError(InputDataValueError(description: L10n.editThemeSlugErrorFormat, target: .data), for: _id_input_slug)
+                        $0.withUpdatedError(InputDataValueError(description: strings().editThemeSlugErrorFormat, target: .data), for: _id_input_slug)
                     }
                 default:
                     updateState {
@@ -245,7 +247,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             
 
         } else {
-            alert(for: context.window, info: L10n.unknownError)
+            alert(for: context.window, info: strings().unknownError)
         }
         
     }, updateSlug: { slug in
@@ -296,7 +298,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             if newTheme.colors != presentation.colors || state.current.file == nil {
                 let temp = NSTemporaryDirectory() + "\(arc4random()).palette"
                 try? newTheme.colors.withUpdatedName(state.name).toString.write(to: URL(fileURLWithPath: temp), atomically: true, encoding: .utf8)
-                mediaResource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fs(temp))
+                mediaResource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fileSize(temp))
             }
         
             if let _ = mediaResource {
@@ -347,15 +349,15 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             }, error: { error in
                 switch error {
                 case .generic:
-                    alert(for: context.window, info: L10n.unknownError)
+                    alert(for: context.window, info: strings().unknownError)
                 case .slugOccupied:
                     updateState {
-                        $0.withUpdatedError(InputDataValueError(description: L10n.editThameNameAlreadyTaken, target: .data), for: _id_input_slug)
+                        $0.withUpdatedError(InputDataValueError(description: strings().editThameNameAlreadyTaken, target: .data), for: _id_input_slug)
                     }
                     f(.fail(.fields([_id_input_slug : .shake])))
                 case .slugInvalid:
                     updateState {
-                        $0.withUpdatedError(InputDataValueError(description: L10n.editThemeSlugErrorFormat, target: .data), for: _id_input_slug)
+                        $0.withUpdatedError(InputDataValueError(description: strings().editThemeSlugErrorFormat, target: .data), for: _id_input_slug)
                     }
                     f(.fail(.fields([_id_input_slug : .shake])))
                 }
@@ -363,7 +365,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
         }))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.editThemeTitle, validateData: { data in
+    let controller = InputDataController(dataSignal: signal, title: strings().editThemeTitle, validateData: { data in
         
         return save()
         
@@ -413,7 +415,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
         return CGRect(origin: offset, size: controller.tableView.frame.size)
     }
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.editThemeEdit, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().editThemeEdit, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     
@@ -430,7 +432,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             }
             controller.tableView.enumerateVisibleViews(with: { view in
                 if let view = view as? ChatRowView {
-                    view.updateBackground(animated: false)
+                    view.updateBackground(animated: false, item: view.item)
                 }
             })
         }))
@@ -441,7 +443,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             }
             if let view = view as? ChatRowView {
                 let offset = controller.tableView.scrollPosition().current.rect.origin
-                view.updateBackground(animated: false)
+                view.updateBackground(animated: false, item: view.item)
             }
         }
         
@@ -468,7 +470,7 @@ func showEditThemeModalController(context: AccountContext, theme telegramTheme: 
                 let newTheme = theme.withUpdatedColors(palette).withUpdatedWallpaper(ThemeWallpaper(wallpaper: wallpaper, associated: AssociatedWallpaper(cloud: cloudWallpaper, wallpaper: wallpaper)))
                 showModal(with: EditThemeController(context: context, telegramTheme: telegramTheme, presentation: newTheme), for: context.window)
             } else {
-                alert(for: context.window, info: L10n.unknownError)
+                alert(for: context.window, info: strings().unknownError)
             }
         })
     } else {

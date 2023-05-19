@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import InAppSettings
 import Foundation
 import Postbox
 

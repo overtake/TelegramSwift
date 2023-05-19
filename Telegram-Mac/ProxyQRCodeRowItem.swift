@@ -19,7 +19,7 @@ class ProxyQRCodeRowItem: GeneralRowItem {
     
     init(_ initialSize: NSSize, stableId: AnyHashable, link: String) {
         self.link = link
-        textLayout = TextViewLayout(.initialize(string: L10n.proxySettingsQRText, color: theme.colors.grayText, font: .normal(.text)), alignment: .center, alwaysStaticItems: true)
+        textLayout = TextViewLayout(.initialize(string: strings().proxySettingsQRText, color: theme.colors.grayText, font: .normal(.text)), alignment: .center, alwaysStaticItems: true)
         textLayout.measure(width: 256)
         super.init(initialSize, stableId: stableId, viewType: .singleItem)
     }

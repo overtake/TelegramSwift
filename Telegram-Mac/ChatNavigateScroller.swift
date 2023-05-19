@@ -9,69 +9,88 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
-import SwiftSignalKit
+
 import Postbox
 
 
-class ChatNavigateScroller: ImageButton {
+class ChatNavigationScroller: ImageButton {
+    
+    enum Source {
+        case mentions
+        case failed
+        case reactions
+        case scroller
+        var image: CGImage {
+            switch self {
+            case .mentions:
+                return theme.icons.chatMention
+            case .failed:
+                return theme.icons.chat_failed_scroller
+            case .reactions:
+                return theme.icons.chat_reactions_badge
+            case .scroller:
+                return theme.icons.chatScrollUp
+            }
+        }
+        var active: CGImage {
+            switch self {
+            case .mentions:
+                return theme.icons.chatMentionActive
+            case .failed:
+                return theme.icons.chat_failed_scroller_active
+            case .reactions:
+                return theme.icons.chat_reactions_badge_active
+            case .scroller:
+                return theme.icons.chatScrollUpActive
+            }
+        }
+    }
 
-    private let disposable:MetaDisposable = MetaDisposable()
     private var badge:BadgeNode?
     private var badgeView:View = View()
-    private let context:AccountContext
-    init(_ context: AccountContext, chatLocation: ChatLocation, mode: ChatMode) {
-        self.context = context
+    private let source: Source
+    private var count: Int32 = 0
+    init(_ source: Source) {
+        self.source = source
         super.init()
         autohighlight = false
-        set(image: theme.icons.chatScrollUp, for: .Normal)
-        set(image: theme.icons.chatScrollUpActive, for: .Highlight)
+        set(image: source.image, for: .Normal)
+        set(image: source.active, for: .Highlight)
         self.setFrameSize(60,60)
-        switch mode {
-        case .history:
-            self.disposable.set((context.account.postbox.unreadMessageCountsView(items: [chatLocation.unreadMessageCountsItem]) |> deliverOnMainQueue).start(next: { [weak self] unreadView in
-                if let strongSelf = self {
-                    let count = unreadView.count(for: chatLocation.unreadMessageCountsItem) ?? 0
-                    if count > 0 {
-                        strongSelf.badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: theme.colors.underSelectedColor, font: .bold(.small)), theme.colors.accent)
-                        strongSelf.badge!.view = strongSelf.badgeView
-                        strongSelf.badgeView.setFrameSize(strongSelf.badge!.size)
-                        strongSelf.addSubview(strongSelf.badgeView)
-                    } else {
-                        strongSelf.badgeView.removeFromSuperview()
-                    }
-                    strongSelf.needsLayout = true
-                    
-                }
-            }))
-        default:
-            break
-        }
         
-        
-       updateLocalizationAndTheme(theme: theme)
-    }
-    
-    override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        let theme = (theme as! TelegramPresentationTheme)
-        set(image: theme.icons.chatScrollUp, for: .Normal)
-        set(image: theme.icons.chatScrollUpActive, for: .Highlight)
-        badge?.fillColor = theme.colors.accent
-        
-        if theme.colors.chatBackground == theme.colors.background && theme.colors.isDark {
-          
-
-        }
         let shadow = NSShadow()
         shadow.shadowBlurRadius = 5
         shadow.shadowColor = NSColor.black.withAlphaComponent(0.1)
         shadow.shadowOffset = NSMakeSize(0, 2)
         self.shadow = shadow
+        
+    }
+    
+    func updateCount(_ count: Int32) {
+        self.count = count
+        if count > 0 {
+            badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: .white, font: .bold(.small)), theme.colors.accent)
+            badge!.view = badgeView
+            badgeView.setFrameSize(badge!.size)
+            addSubview(badgeView)
+        } else {
+            badgeView.removeFromSuperview()
+        }
+        needsLayout = true
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        set(image: source.image, for: .Normal)
+        set(image: source.active, for: .Highlight)
     }
     
     override func scrollWheel(with event: NSEvent) {
         
+    }
+    
+    var hasBadge: Bool {
+        return count > 0
     }
     
     override func layout() {
@@ -79,9 +98,6 @@ class ChatNavigateScroller: ImageButton {
         badgeView.centerX(y:0)
     }
     
-    deinit {
-        disposable.dispose()
-    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -90,5 +106,8 @@ class ChatNavigateScroller: ImageButton {
     required init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
+
     
 }
+
+

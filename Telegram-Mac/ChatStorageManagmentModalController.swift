@@ -10,7 +10,6 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-import SyncCore
 import SwiftSignalKit
 
 
@@ -80,9 +79,9 @@ class ChatStorageManagmentModalController: ModalViewController {
                         let filteredSize = strongSelf.sizeIndex.values.reduce(0, { $0 + ($1.0 ? $1.1 : 0) })
                         
                         if filteredSize == 0 {
-                            title = L10n.storageUsageClear
+                            title = strings().storageUsageClear
                         } else {
-                            title = "\(L10n.storageUsageClear) (\(dataSizeString(Int(filteredSize))))"
+                            title = "\(strings().storageUsageClear) (\(dataSizeString(Int(filteredSize), formatting: DataSizeStringFormatting.current)))"
                         }
                         strongSelf.modal?.interactions?.updateDone( { button in
                             button.set(text: title, for: .Normal)
@@ -91,7 +90,7 @@ class ChatStorageManagmentModalController: ModalViewController {
                     }
                     
                 }
-                _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: index, name: stringForCategory(categoryId) + " (\(dataSizeString(Int(categorySize))))" , type: .selectable(sizeIndex[categoryId]?.0 ?? false), viewType: bestGeneralViewType(validCategories, for: i), action: {
+                _ = genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: index, name: stringForCategory(categoryId) + " (\(dataSizeString(Int(categorySize), formatting: DataSizeStringFormatting.current)))" , type: .selectable(sizeIndex[categoryId]?.0 ?? false), viewType: bestGeneralViewType(validCategories, for: i), action: {
                     toggleCheck(categoryId, index)
                 }))
                 
@@ -107,18 +106,18 @@ class ChatStorageManagmentModalController: ModalViewController {
     private func stringForCategory(_ category: PeerCacheUsageCategory) -> String {
         switch category {
         case .image:
-            return L10n.storageClearPhotos
+            return strings().storageClearPhotos
         case .video:
-            return L10n.storageClearVideos
+            return strings().storageClearVideos
         case .audio:
-            return L10n.storageClearAudio
+            return strings().storageClearAudio
         case .file:
-            return L10n.storageClearDocuments
+            return strings().storageClearDocuments
         }
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData.init(title: L10n.telegramStorageUsageController), right: nil)
+        return (left: nil, center: ModalHeaderData.init(title: strings().telegramStorageUsageController), right: nil)
     }
     
     override var modalInteractions: ModalInteractions? {
@@ -133,12 +132,14 @@ class ChatStorageManagmentModalController: ModalViewController {
             totalSize += categorySize
         }
 
-        return ModalInteractions(acceptTitle: tr(L10n.storageClear(dataSizeString(Int(totalSize)))), accept: { [weak self] in
+        
+        
+        return ModalInteractions(acceptTitle: strings().storageClear(dataSizeString(Int(totalSize), formatting: DataSizeStringFormatting.current)), accept: { [weak self] in
             if let strongSelf = self {
                 self?.clear(strongSelf.sizeIndex)
             }
             self?.close()
-        }, cancelTitle: L10n.modalCancel, drawBorder: true, height: 50)
+        }, cancelTitle: strings().modalCancel, drawBorder: true, height: 50)
     }
     
     private var genericView:TableView {

@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-import SyncCore
+
 import Postbox
 
 struct GroupAccess {
@@ -34,10 +34,12 @@ extension Peer {
         var isCreator = false
         var canReport = true
         var canMakeVoiceChat = false
+        var canPin: Bool
         if let group = self as? TelegramGroup {
             if case .creator = group.role {
                 isCreator = true
                 canReport = false
+                canMakeVoiceChat = true
             }
             highlightAdmins = true
             switch group.role {
@@ -46,6 +48,7 @@ extension Peer {
                 canEditMembers = true
                 canAddMembers = true
                 canReport = false
+                canMakeVoiceChat = true
             case .member:
                 break
             }
@@ -66,7 +69,7 @@ extension Peer {
             if channel.hasPermission(.banMembers) {
                 canEditMembers = true
             }
-            if channel.hasPermission(.inviteMembers) {
+            if channel.hasPermission(.inviteMembers) || isCreator || channel.adminRights?.rights.contains(.canInviteUsers) == true {
                 canAddMembers = true
             }
         }
@@ -77,7 +80,7 @@ extension Peer {
                 canCreateInviteLink = true
             }
         } else if let channel = self as? TelegramChannel {
-            if channel.hasPermission(.inviteMembers) && channel.adminRights != nil {
+            if let adminRights = channel.adminRights, adminRights.rights.contains(.canInviteUsers) {
                 canCreateInviteLink = true
             }
             if channel.hasPermission(.manageCalls) {

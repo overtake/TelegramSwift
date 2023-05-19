@@ -4,8 +4,8 @@ set -e
 
 
 #if [ "$1" = "alpha" ] || [ "$1" = "beta" ] ; then
-MACOS_VERSION="10.16"
-XCODE_VERSION="12.2"
+MACOS_VERSION="10.17"
+XCODE_VERSION="13.1"
 #else
 #MACOS_VERSION="10.15"
 #XCODE_VERSION="10.3"

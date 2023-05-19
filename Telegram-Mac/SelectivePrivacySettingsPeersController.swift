@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-import SyncCore
+
 import SwiftSignalKit
 import Postbox
 
@@ -97,21 +97,21 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
             let count = peer.participantCount
             if let count = count {
                 let count = Int(count)
-                let countValue = L10n.privacySettingsGroupMembersCountCountable(count)
+                let countValue = strings().privacySettingsGroupMembersCountCountable(count)
                 status = countValue.replacingOccurrences(of: "\(count)", with: count.separatedNumber)
             }
 
 
-            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(30, 30), status: status, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(30, 30), status: status, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 arguments.openInfo(peer.peer)
             }, contextMenuItems: {
-                return .single([ContextMenuItem(L10n.confirmDelete, handler: {
+                return .single([ContextMenuItem(strings().confirmDelete, handler: {
                     arguments.removePeer(peer.peer.id)
-                })])
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
             })
 
         case let .addItem(_, _, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.privacySettingsPeerSelectAddUserOrGroup, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().privacySettingsPeerSelectAddUserOrGroup, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.addPeer()
             })
         case .section:
@@ -261,7 +261,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
 
         }, addPeer: {
 
-            addPeerDisposable.set(selectModalPeers(context: context, title: title, excludePeerIds: currentPeerIds, limit: 0, behavior: SelectUsersAndGroupsBehavior(), confirmation: {_ in return .single(true)}).start(next: { peerIds in
+            addPeerDisposable.set(selectModalPeers(window: context.window, context: context, title: title, excludePeerIds: currentPeerIds, limit: 0, behavior: SelectUsersAndGroupsBehavior(), confirmation: {_ in return .single(true)}).start(next: { peerIds in
                 let applyPeers: Signal<Void, NoError> = peersPromise.get()
                     |> take(1)
                     |> mapToSignal { peers -> Signal<[SelectivePrivacyPeer], NoError> in
