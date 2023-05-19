@@ -47,15 +47,18 @@ final class StoryListChatListRowItem : TableRowItem {
 private final class StoryListChatListRowView: TableRowView {
     
     private let tableView: HorizontalTableView
+    private let borderView = View()
     required init(frame frameRect: NSRect) {
         tableView = HorizontalTableView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
         addSubview(tableView)
+        addSubview(borderView)
     }
 
     override func layout() {
         super.layout()
         tableView.frame = bounds
+        borderView.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }
     
     required init?(coder: NSCoder) {
@@ -70,6 +73,8 @@ private final class StoryListChatListRowView: TableRowView {
         guard let item = item as? StoryListChatListRowItem else {
             return
         }
+        
+        borderView.backgroundColor = theme.colors.border
         
         CATransaction.begin()
         
@@ -202,7 +207,7 @@ private final class StoryListEntryRowView : HorizontalRowView {
             stateView.isHidden = false
         }
         
-        let layout = TextViewLayout.init(.initialize(string: name, color: theme.colors.text, font: .normal(12)), truncationType: .middle)
+        let layout = TextViewLayout.init(.initialize(string: name, color: theme.colors.text, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .middle)
         layout.measure(width: item.height - 4)
         textView.update(layout)
         

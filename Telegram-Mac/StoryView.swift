@@ -155,8 +155,6 @@ class StoryView : Control {
         switch status {
         case .Local:
             hasLoading = false
-        case .Remote(progress: 1.0):
-            hasLoading = false
         default:
             hasLoading = true
         }
@@ -343,7 +341,7 @@ class StoryImageView : StoryView {
     
     private var mediaStatus: MediaResourceStatus? {
         didSet {
-            if mediaStatus == .Local || mediaStatus == .Remote(progress: 1) {
+            if mediaStatus == .Local {
                 let awaiting = self.awaitPlaying
                 self.awaitPlaying = false
                 self.mediaStatus = nil
@@ -447,7 +445,7 @@ class StoryVideoView : StoryImageView {
     
     override var duration: Double {
         let file = self.story?.media._asMedia() as? TelegramMediaFile
-        return max(Double(file?.videoDuration ?? 5), 1.0)
+        return max(Double(self.state.status?.duration ?? Double(file?.videoDuration ?? 5)), 1.0)
     }
     
     override func restart() {

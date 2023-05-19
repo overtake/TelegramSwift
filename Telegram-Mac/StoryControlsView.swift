@@ -26,6 +26,8 @@ final class StoryControlsView : Control {
     private let more = ImageButton()
     private let muted = ImageButton()
     
+    private let avatarAndText = Control()
+    
     private var arguments: StoryArguments?
     private var groupId: PeerId?
     
@@ -34,9 +36,10 @@ final class StoryControlsView : Control {
         super.init(frame: frameRect)
         addSubview(shadowView)
         avatar.setFrameSize(NSMakeSize(28, 28))
-        userContainer.addSubview(avatar)
-        userContainer.addSubview(dateView)
-        userContainer.addSubview(textView)
+        userContainer.addSubview(avatarAndText)
+        avatarAndText.addSubview(avatar)
+        avatarAndText.addSubview(dateView)
+        avatarAndText.addSubview(textView)
         userContainer.addSubview(more)
         userContainer.addSubview(muted)
         addSubview(userContainer)
@@ -77,18 +80,17 @@ final class StoryControlsView : Control {
             return menu
         }
         
-        avatar.set(handler: { [weak self] _ in
+        avatarAndText.scaleOnClick = true
+        
+        avatarAndText.set(handler: { [weak self] _ in
             if let groupId = self?.groupId {
                 self?.arguments?.openPeerInfo(groupId)
             }
         }, for: .Click)
         
-        textView.set(handler: { [weak self] _ in
-            if let groupId = self?.groupId {
-                self?.arguments?.openPeerInfo(groupId)
-            }
-        }, for: .Click)
-
+        avatar.userInteractionEnabled = false
+        textView.userInteractionEnabled = false
+        
     }
     
     func updateMuted(isMuted: Bool) {
@@ -117,15 +119,28 @@ final class StoryControlsView : Control {
         dateLayout.measure(width: .greatestFiniteMagnitude)
 
         
-        let authorLayout = TextViewLayout(authorName, maximumNumberOfLines: 1)
-        authorLayout.measure(width: frame.width - dateLayout.layoutSize.width - more.frame.width - muted.frame.width - avatar.frame.width - 20)
+        muted.set(image: arguments.interaction.presentation.isMuted ? muted_image : unmuted_image, for: .Normal)
+        muted.isHidden = !arguments.interaction.canBeMuted(story)
+        more.isHidden = context.peerId == groupId
+
+        
+        let authorLayout = TextViewLayout(authorName, maximumNumberOfLines: 1, truncationType: .middle)
+        authorLayout.measure(width: frame.width - dateLayout.layoutSize.width - more.frame.width - muted.frame.width - avatar.frame.width - 10 - (muted.isHidden ? 0 : 12) - (more.isHidden ? 0 : 12))
         
         textView.update(authorLayout)
         dateView.update(dateLayout)
         
-        muted.set(image: arguments.interaction.presentation.isMuted ? muted_image : unmuted_image, for: .Normal)
-        muted.isHidden = !arguments.interaction.canBeMuted(story)
-        more.isHidden = context.peerId == groupId
+        
+        avatarAndText.setFrameSize(NSMakeSize(textView.frame.width + dateView.frame.width + avatar.frame.width + 8, avatar.frame.height))
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        
+        self.updateLayout(size: frame.size, transition: transition)
 
     }
     
@@ -137,7 +152,9 @@ final class StoryControlsView : Control {
         transition.updateFrame(view: shadowView, frame: NSMakeRect(0, 0, size.width, 74))
         transition.updateFrame(view: userContainer, frame: NSMakeRect(0, 0, size.width, 56))
         
-        transition.updateFrame(view: avatar, frame: avatar.centerFrameY(x: 14))
+        transition.updateFrame(view: avatarAndText, frame: avatarAndText.centerFrameY(x: 14))
+        
+        transition.updateFrame(view: avatar, frame: avatar.centerFrameY(x: 0))
         transition.updateFrame(view: textView, frame: textView.centerFrameY(x: avatar.frame.maxX + 8))
         transition.updateFrame(view: dateView, frame: dateView.centerFrameY(x: textView.frame.maxX))
 

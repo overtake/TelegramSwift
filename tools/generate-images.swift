@@ -228,6 +228,7 @@ func initialize() -> [String] {
     array.append("groupStickerNotFound")
     array.append("settingsAskQuestion")
     array.append("settingsFaq")
+    array.append("settingsStories")
     array.append("settingsGeneral")
     array.append("settingsLanguage")
     array.append("settingsNotifications")
@@ -244,6 +245,7 @@ func initialize() -> [String] {
     array.append("settingsPremium")
     array.append("settingsAskQuestionActive")
     array.append("settingsFaqActive")
+    array.append("settingsStoriesActive")
     array.append("settingsGeneralActive")
     array.append("settingsLanguageActive")
     array.append("settingsNotificationsActive")
@@ -866,6 +868,9 @@ func initialize() -> [String] {
     array.append("story_seen_profile")
 
     
+    array.append("story_view_read")
+    array.append("story_view_reaction")
+
     return array
 }
 //swift ./tools/generate-images.swift

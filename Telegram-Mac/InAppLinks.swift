@@ -1372,7 +1372,7 @@ private let _private_ = "_private_"
 
 let legacyPassportUsername = "telegrampassport"
 
-func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
+func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = nil, messageId: MessageId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
     
     var value = url
     let subdomainRange = url.range(of: ".t.me")
@@ -1617,6 +1617,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         action = .joinVoiceChat(nil)
                     }
                 }
+                 if action == nil, let messageId = messageId {
+                     action = .source(messageId)
+                 }
                  
                 if let openInfo = openInfo {
                     if username == "iv" || username.isEmpty {
@@ -1716,6 +1719,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                     appname = String(userAndPost[1][..<range.lowerBound])
                                 }
                                 action = .makeWebview(appname: appname, command: params[keyURLStartapp])
+                            }
+                            
+                            if action == nil, let messageId = messageId {
+                                action = .source(messageId)
                             }
                             
                             if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {

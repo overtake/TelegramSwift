@@ -49,6 +49,8 @@
 		2719D8012A139B9D00081079 /* StoryRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D8002A139B9D00081079 /* StoryRecordingView.swift */; };
 		2719D80D2A16013F00081079 /* StoryMediaController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D80C2A16013F00081079 /* StoryMediaController.swift */; };
 		2719D8102A16048D00081079 /* StoryMonthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */; };
+		2719D8122A166BC100081079 /* StoryMyEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D8112A166BC100081079 /* StoryMyEmptyRowItem.swift */; };
+		2719D8142A1774BC00081079 /* StoryViewersModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D8132A1774BC00081079 /* StoryViewersModalController.swift */; };
 		271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */; };
 		271D4F3427689DF0004FD034 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 271D4F3327689DF0004FD034 /* WebKit.framework */; };
 		271D4F362769D07E004FD034 /* menu_reactions.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 271D4F352769D07D004FD034 /* menu_reactions.tgs */; };
@@ -1498,6 +1500,8 @@
 		2719D8002A139B9D00081079 /* StoryRecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryRecordingView.swift; sourceTree = "<group>"; };
 		2719D80C2A16013F00081079 /* StoryMediaController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMediaController.swift; sourceTree = "<group>"; };
 		2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMonthRowItem.swift; sourceTree = "<group>"; };
+		2719D8112A166BC100081079 /* StoryMyEmptyRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMyEmptyRowItem.swift; sourceTree = "<group>"; };
+		2719D8132A1774BC00081079 /* StoryViewersModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewersModalController.swift; sourceTree = "<group>"; };
 		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		271D4F3327689DF0004FD034 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		271D4F352769D07D004FD034 /* menu_reactions.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_reactions.tgs; sourceTree = "<group>"; };
@@ -3053,6 +3057,7 @@
 				2718244E2A05413000AFBD4C /* StoryMyInputView.swift */,
 				271824502A08C60400AFBD4C /* StoryChatListView.swift */,
 				2719D8002A139B9D00081079 /* StoryRecordingView.swift */,
+				2719D8132A1774BC00081079 /* StoryViewersModalController.swift */,
 			);
 			name = stories;
 			sourceTree = "<group>";
@@ -3062,6 +3067,7 @@
 			children = (
 				2719D80C2A16013F00081079 /* StoryMediaController.swift */,
 				2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */,
+				2719D8112A166BC100081079 /* StoryMyEmptyRowItem.swift */,
 			);
 			name = "media-list";
 			sourceTree = "<group>";
@@ -6937,6 +6943,7 @@
 				D076F86D22959958004F895A /* InlineLoginController.swift in Sources */,
 				C21B24611ED9C39F00FC6CDA /* SuggestionLocalizationViewController.swift in Sources */,
 				27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */,
+				2719D8122A166BC100081079 /* StoryMyEmptyRowItem.swift in Sources */,
 				276957A92746C07400297991 /* SessionModalController.swift in Sources */,
 				C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */,
 				9FC8ADA02062D5E70094F7B4 /* PassportAcceptRowItem.swift in Sources */,
@@ -7135,6 +7142,7 @@
 				C250B0231DB6927C004E9FBE /* WPArticleContentView.swift in Sources */,
 				273274E826A8190F00E04289 /* WallpaperAdditionColorView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
+				2719D8142A1774BC00081079 /* StoryViewersModalController.swift in Sources */,
 				2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */,
 				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
 				D01E1F0422B39A4800AD6DAE /* LottiePlayer.swift in Sources */,

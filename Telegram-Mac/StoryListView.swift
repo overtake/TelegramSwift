@@ -54,7 +54,7 @@ final class StoryListView : Control, Notifable {
         var state: State = .concealed
         
         private let scrollView = ScrollView()
-        private let textView = TextView()
+        private var textView: TextView?
         private let documentView = View()
         private let container = Control()
         
@@ -66,7 +66,6 @@ final class StoryListView : Control, Notifable {
             addSubview(container)
             container.addSubview(self.scrollView)
             self.scrollView.documentView = documentView
-            self.documentView.addSubview(self.textView)
             
             
             self.layer?.cornerRadius = 10
@@ -128,7 +127,21 @@ final class StoryListView : Control, Notifable {
                 container.set(cursor: NSCursor.arrow, for: .Highlight)
             }
             
-            self.textView.update(layout)
+            if self.textView?.textLayout?.attributedString != layout.attributedString || self.textView?.textLayout?.lines.count != layout.lines.count {
+                let textView = TextView(frame: CGRect(origin: NSMakePoint(10, 5), size: layout.layoutSize))
+                textView.update(layout)
+                
+                if let current = self.textView {
+                    performSubviewRemoval(current, animated: transition.isAnimated)
+                    self.textView = nil
+                }
+                self.documentView.addSubview(textView)
+                if transition.isAnimated {
+                    textView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                self.textView = textView
+            }
+            
             
             self.removeAllHandlers()
             self.set(handler: { control in
@@ -140,16 +153,20 @@ final class StoryListView : Control, Notifable {
                 toggleState(.revealed)
             }, for: .Click)
             
-            self.container.userInteractionEnabled = state == .concealed
-            self.userInteractionEnabled = state == .revealed
-            self.textView.userInteractionEnabled = state == .revealed
+            let cantReveal = state == .concealed && layout.isPerfectSized
+            
+            self.container.userInteractionEnabled = state == .concealed || cantReveal
+            self.userInteractionEnabled = state == .revealed && !cantReveal
+            self.textView?.userInteractionEnabled = state == .revealed || cantReveal
             
 
 //            self.container.isEventLess = !self.container.userInteractionEnabled
             self.isEventLess = !self.userInteractionEnabled
 //            self.textView.isEventLess = !self.container.userInteractionEnabled
             
-            self.updateInlineStickers(context: context, view: textView, textLayout: layout)
+            if let textView = self.textView {
+                self.updateInlineStickers(context: context, view: textView, textLayout: layout)
+            }
             
             self.updateLayout(size: frame.size, transition: transition)
             
@@ -157,16 +174,19 @@ final class StoryListView : Control, Notifable {
         }
         
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-            let containerSize = NSMakeSize(frame.width, min(textView.frame.height + 10, 208 + 10))
-            let rect = CGRect(origin: NSMakePoint(0, size.height - containerSize.height), size: containerSize)
-            transition.updateFrame(view: container, frame: rect)
 
-            transition.updateFrame(view: scrollView, frame: container.bounds)
-            transition.updateFrame(view: documentView, frame: NSMakeRect(0, 0, container.frame.width, textView.frame.height + 10))
+            if let textView = textView {
+                let containerSize = NSMakeSize(frame.width, min(textView.frame.height + 10, 208 + 10))
+                let rect = CGRect(origin: NSMakePoint(0, size.height - containerSize.height), size: containerSize)
+                transition.updateFrame(view: container, frame: rect)
 
-            textView.resize(size.width - 20)
-            transition.updateFrame(view: textView, frame: CGRect.init(origin: NSMakePoint(10, 5), size: textView.frame.size))
-            
+                transition.updateFrame(view: documentView, frame: NSMakeRect(0, 0, container.frame.width, textView.frame.height + 10))
+                transition.updateFrame(view: scrollView.contentView, frame: documentView.bounds)
+                transition.updateFrame(view: scrollView, frame: container.bounds)
+
+                textView.resize(size.width - 20)
+                transition.updateFrame(view: textView, frame: CGRect.init(origin: NSMakePoint(10, 5), size: textView.frame.size))
+            }
         }
         
         func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
@@ -653,6 +673,12 @@ final class StoryListView : Control, Notifable {
     var contentRect: CGRect {
         return self.container.frame
     }
+    var storyRect: CGRect {
+        if let current = self.current {
+            return NSMakeRect(self.container.frame.minX, 20, current.frame.width, current.frame.height)
+        }
+        return self.container.frame
+    }
     
     private func preloadAround() {
         guard let index = self.selectedIndex, let context = self.context, let entry = self.entry else {
@@ -822,7 +848,7 @@ extension StoryListView {
         
         if finish, progress != 1 {
             
-            let duration = 0.35 
+            let duration = 0.25
             
             let rotation:CABasicAnimation
             let translation:CABasicAnimation

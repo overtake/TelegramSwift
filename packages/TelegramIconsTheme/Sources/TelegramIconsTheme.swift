@@ -2943,6 +2943,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var settingsStories: CGImage {
+      if let image = cached.with({ $0["settingsStories"] }) {
+          return image
+      } else {
+          let image = _settingsStories()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsStories"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var settingsGeneral: CGImage {
       if let image = cached.with({ $0["settingsGeneral"] }) {
           return image
@@ -3146,6 +3159,19 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["settingsFaqActive"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var settingsStoriesActive: CGImage {
+      if let image = cached.with({ $0["settingsStoriesActive"] }) {
+          return image
+      } else {
+          let image = _settingsStoriesActive()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsStoriesActive"] = image
               return current
           }
           return image
@@ -9664,6 +9690,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var story_view_read: CGImage {
+      if let image = cached.with({ $0["story_view_read"] }) {
+          return image
+      } else {
+          let image = _story_view_read()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_view_read"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_view_reaction: CGImage {
+      if let image = cached.with({ $0["story_view_reaction"] }) {
+          return image
+      } else {
+          let image = _story_view_reaction()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_view_reaction"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9891,6 +9943,7 @@ public final class TelegramIconsTheme {
   private let _groupStickerNotFound: ()->CGImage
   private let _settingsAskQuestion: ()->CGImage
   private let _settingsFaq: ()->CGImage
+  private let _settingsStories: ()->CGImage
   private let _settingsGeneral: ()->CGImage
   private let _settingsLanguage: ()->CGImage
   private let _settingsNotifications: ()->CGImage
@@ -9907,6 +9960,7 @@ public final class TelegramIconsTheme {
   private let _settingsPremium: ()->CGImage
   private let _settingsAskQuestionActive: ()->CGImage
   private let _settingsFaqActive: ()->CGImage
+  private let _settingsStoriesActive: ()->CGImage
   private let _settingsGeneralActive: ()->CGImage
   private let _settingsLanguageActive: ()->CGImage
   private let _settingsNotificationsActive: ()->CGImage
@@ -10408,6 +10462,8 @@ public final class TelegramIconsTheme {
   private let _story_seen_chat: ()->CGImage
   private let _story_unseen_profile: ()->CGImage
   private let _story_seen_profile: ()->CGImage
+  private let _story_view_read: ()->CGImage
+  private let _story_view_reaction: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10636,6 +10692,7 @@ public final class TelegramIconsTheme {
       groupStickerNotFound: @escaping()->CGImage,
       settingsAskQuestion: @escaping()->CGImage,
       settingsFaq: @escaping()->CGImage,
+      settingsStories: @escaping()->CGImage,
       settingsGeneral: @escaping()->CGImage,
       settingsLanguage: @escaping()->CGImage,
       settingsNotifications: @escaping()->CGImage,
@@ -10652,6 +10709,7 @@ public final class TelegramIconsTheme {
       settingsPremium: @escaping()->CGImage,
       settingsAskQuestionActive: @escaping()->CGImage,
       settingsFaqActive: @escaping()->CGImage,
+      settingsStoriesActive: @escaping()->CGImage,
       settingsGeneralActive: @escaping()->CGImage,
       settingsLanguageActive: @escaping()->CGImage,
       settingsNotificationsActive: @escaping()->CGImage,
@@ -11152,7 +11210,9 @@ public final class TelegramIconsTheme {
       story_unseen_chat: @escaping()->CGImage,
       story_seen_chat: @escaping()->CGImage,
       story_unseen_profile: @escaping()->CGImage,
-      story_seen_profile: @escaping()->CGImage
+      story_seen_profile: @escaping()->CGImage,
+      story_view_read: @escaping()->CGImage,
+      story_view_reaction: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11380,6 +11440,7 @@ public final class TelegramIconsTheme {
       self._groupStickerNotFound = groupStickerNotFound
       self._settingsAskQuestion = settingsAskQuestion
       self._settingsFaq = settingsFaq
+      self._settingsStories = settingsStories
       self._settingsGeneral = settingsGeneral
       self._settingsLanguage = settingsLanguage
       self._settingsNotifications = settingsNotifications
@@ -11396,6 +11457,7 @@ public final class TelegramIconsTheme {
       self._settingsPremium = settingsPremium
       self._settingsAskQuestionActive = settingsAskQuestionActive
       self._settingsFaqActive = settingsFaqActive
+      self._settingsStoriesActive = settingsStoriesActive
       self._settingsGeneralActive = settingsGeneralActive
       self._settingsLanguageActive = settingsLanguageActive
       self._settingsNotificationsActive = settingsNotificationsActive
@@ -11897,5 +11959,7 @@ public final class TelegramIconsTheme {
       self._story_seen_chat = story_seen_chat
       self._story_unseen_profile = story_unseen_profile
       self._story_seen_profile = story_seen_profile
+      self._story_view_read = story_view_read
+      self._story_view_reaction = story_view_reaction
   }
 }

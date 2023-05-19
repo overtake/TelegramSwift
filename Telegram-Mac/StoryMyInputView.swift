@@ -135,7 +135,7 @@ final class StoryMyInputView : Control, StoryInput {
         viewsText.userInteractionEnabled = false
         viewsText.isSelectable = false
         
-        views.scaleOnClick = true
+//        views.scaleOnClick = true
         
         more.scaleOnClick = true
         more.autohighlight = false
@@ -182,13 +182,18 @@ final class StoryMyInputView : Control, StoryInput {
         
         views.contextMenu = { [weak self] in
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
-            if let story = self?.story, let arguments = self?.arguments {
+            if let story = self?.story, let arguments = self?.arguments, let entryId = arguments.interaction.presentation.entryId {
                 if let views = story.views {
-                    for peer in views.seenPeers {
-                        menu.addItem(makeItem(peer._asPeer(), context: arguments.context, callback: { peerId in
-                            arguments.openPeerInfo(peerId)
-                        }))
+                    if views.seenCount > 3 {
+                        arguments.showViewers(entryId, story)
+                    } else {
+                        for peer in views.seenPeers {
+                            menu.addItem(makeItem(peer._asPeer(), context: arguments.context, callback: { peerId in
+                                arguments.openPeerInfo(peerId)
+                            }))
+                        }
                     }
+                    
                 }
             }
             return menu
