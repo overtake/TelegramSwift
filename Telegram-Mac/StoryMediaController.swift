@@ -265,7 +265,7 @@ final class StoryMediaController : TableViewController {
         let previous: Atomic<[AppearanceWrapperEntry<Entry>]> = Atomic(value: [])
         let first = Atomic(value: true)
         
-        let transition = combineLatest(signal, appearanceSignal) |> map { entries, appearance in
+        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(signal, appearanceSignal) |> map { entries, appearance -> TableUpdateTransition in
             let entries = entries.map { AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, animated: !first.swap(false), initialSize: initialSize.with { $0 }, arguments: arguments)
         } |> deliverOnMainQueue
