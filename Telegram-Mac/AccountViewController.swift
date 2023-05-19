@@ -127,6 +127,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case accountRecord(index: Int, viewType: GeneralViewType, info: AccountWithInfo)
     case addAccount(index: Int, [AccountWithInfo], viewType: GeneralViewType)
     case proxy(index: Int, viewType: GeneralViewType, status: String?)
+    case stories(index: Int, viewType: GeneralViewType)
     case general(index: Int, viewType: GeneralViewType)
     case stickers(index: Int, viewType: GeneralViewType)
     case notifications(index: Int, viewType: GeneralViewType, status: UNUserNotifications.AuthorizationStatus)
@@ -159,38 +160,40 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .account(info)
         case .addAccount:
             return .index(4)
-        case .general:
+        case .stories:
             return .index(5)
-        case .proxy:
+        case .general:
             return .index(6)
-        case .notifications:
+        case .proxy:
             return .index(7)
-        case .dataAndStorage:
+        case .notifications:
             return .index(8)
-        case .activeSessions:
+        case .dataAndStorage:
             return .index(9)
-        case .privacy:
+        case .activeSessions:
             return .index(10)
-        case .language:
+        case .privacy:
             return .index(11)
-        case .stickers:
+        case .language:
             return .index(12)
-        case .filters:
+        case .stickers:
             return .index(13)
-        case .update:
+        case .filters:
             return .index(14)
-        case .appearance:
+        case .update:
             return .index(15)
-        case .passport:
+        case .appearance:
             return .index(16)
-        case .premium:
+        case .passport:
             return .index(17)
-        case .faq:
+        case .premium:
             return .index(18)
-        case .ask:
+        case .faq:
             return .index(19)
-        case .about:
+        case .ask:
             return .index(20)
+        case .about:
+            return .index(21)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -209,6 +212,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .accountRecord(index, _, _):
             return index
         case let .addAccount(index, _, _):
+            return index
+        case let  .stories(index, _):
             return index
         case let  .general(index, _):
             return index
@@ -300,6 +305,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .general(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .stories(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "My Stories", icon: theme.icons.settingsStories, activeIcon: theme.icons.settingsStoriesActive, type: .next, viewType: viewType, action: {
+                arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, standalone: true), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .proxy(_, viewType, status):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), viewType: viewType, action: {
@@ -489,9 +498,14 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     entries.append(.whiteSpace(index: index, height: 10))
     index += 1
     
-   
+    
+    entries.append(.stories(index: index, viewType: .singleItem))
+    index += 1
     
     if !proxySettings.0.servers.isEmpty {
+        entries.append(.whiteSpace(index: index, height: 10))
+        index += 1
+        
         let status: String
         switch proxySettings.1 {
         case .online:
@@ -502,9 +516,10 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         entries.append(.proxy(index: index, viewType: .singleItem, status: status))
         index += 1
         
-        entries.append(.whiteSpace(index: index, height: 20))
-        index += 1
     }
+    
+    entries.append(.whiteSpace(index: index, height: 10))
+    index += 1
     
     entries.append(.general(index: index, viewType: .singleItem))
     index += 1
@@ -859,38 +874,42 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     override func navigationWillChangeController() {
         if let navigation = navigation as? ExMajorNavigationController {
             if navigation.controller is DataAndStorageViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(8))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
                     _ = tableView.select(item: item)
                 }
             } else if navigation.controller is PrivacyAndSecurityViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
                     _ = tableView.select(item: item)
                 }
             } else if navigation.controller is InstalledStickerPacksController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
                     _ = tableView.select(item: item)
                 }
                 
             } else if navigation.controller is GeneralSettingsViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(5))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
                     _ = tableView.select(item: item)
                 }
             }  else if navigation.controller is RecentSessionsController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                    _ = tableView.select(item: item)
+                }
+            } else if navigation.controller is StoryMediaController {
+                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(5))) {
                     _ = tableView.select(item: item)
                 }
             } else if navigation.controller is PassportController {
-                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(16))) {
+                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(17))) {
                     _ = tableView.select(item: item)
                 }
             } else if let controller = navigation.controller as? InputDataController {
                 switch true {
                 case controller.identifier == "proxy":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "language":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "account":
@@ -898,23 +917,23 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "passport":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(16))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(17))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "app_update":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(14))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(15))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "filters":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(14))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "notification-settings":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(8))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "app_appearance":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(15))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(16))) {
                         _ = tableView.select(item: item)
                     }
                 default:

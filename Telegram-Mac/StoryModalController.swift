@@ -297,7 +297,8 @@ final class StoryArguments {
     let toggleRecordType:()->Void
     let deleteStory:(Int32)->Void
     let markAsRead:(PeerId, Int32)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping()->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(Int32)->Void, markAsRead:@escaping(PeerId, Int32)->Void) {
+    let showViewers:(PeerId, StoryListContext.Item)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping()->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(Int32)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(PeerId, StoryListContext.Item)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -314,6 +315,7 @@ final class StoryArguments {
         self.toggleRecordType = toggleRecordType
         self.deleteStory = deleteStory
         self.markAsRead = markAsRead
+        self.showViewers = showViewers
     }
     
     func longDown() {
@@ -1293,7 +1295,7 @@ private final class StoryViewController: Control, Notifable {
         })
         
         self.addSubview(tooltip)
-        tooltip.centerX(y: current.contentRect.maxY - 50 - 10 - tooltip.frame.height - 40)
+        tooltip.centerX(y: current.storyRect.maxY - tooltip.frame.height - 10)
         
         tooltip.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         tooltip.layer?.animatePosition(from: tooltip.frame.origin.offsetBy(dx: 0, dy: 20), to: tooltip.frame.origin)
@@ -1484,6 +1486,23 @@ final class StoryModalController : ModalViewController, Notifable {
             _ = combineLatest(signals).start()
         })
         
+        let openPeerInfo:(PeerId)->Void = { [weak self] peerId in
+            let controller = context.bindings.rootNavigation().controller as? PeerInfoController
+            if peerId != context.peerId {
+                if controller?.peerId != peerId {
+                    context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+                }
+                self?.close()
+            }
+        }
+        let openChat:(PeerId, MessageId?, ChatInitialAction?)->Void = { [weak self] peerId, messageId, initial in
+            let controller = context.bindings.rootNavigation().controller as? ChatController
+            if controller?.chatLocation.peerId != peerId {
+                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initial))
+            }
+            self?.close()
+        }
+        
         
         self.chatInteraction.add(observer: self)
         interactions.add(observer: self)
@@ -1516,23 +1535,19 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.previous()
         }, close: { [weak self] in
             self?.close()
-        }, openPeerInfo: { [weak self] peerId in
-            let controller = context.bindings.rootNavigation().controller as? PeerInfoController
-            if peerId != context.peerId {
-                if controller?.peerId != peerId {
-                    context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
-                }
-                self?.close()
-            }
-        }, openChat: { [weak self] peerId, messageId, initial in
-            let controller = context.bindings.rootNavigation().controller as? ChatController
-            if controller?.chatLocation.peerId != peerId {
-                context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initial))
-            }
-            self?.close()
+        }, openPeerInfo: { peerId in
+            openPeerInfo(peerId)
+        }, openChat: { peerId, messageId, initial in
+            openChat(peerId, messageId, initial)
         }, sendMessage: { [weak self] in
-            self?.interactions.updateInput(with: "")
-            self?.genericView.showTooltip(.text)
+            _ = self?.interactions.appendText(.initialize(string: "\n\n~[This is reply to Story]~"))
+            let input = self?.interactions.presentation.input
+            let entryId = self?.interactions.presentation.entryId
+            if let input = input, let entryId = entryId {
+                self?.interactions.updateInput(with: "")
+                self?.genericView.showTooltip(.text)
+                _ = Sender.enqueue(input: input, context: context, peerId: entryId, replyId: nil, sendAsPeerId: nil).start()
+            }
         }, toggleRecordType: { [weak self] in
             FastSettings.toggleRecordingState()
             self?.interactions.update { current in
@@ -1546,6 +1561,8 @@ final class StoryModalController : ModalViewController, Notifable {
             }, appearance: storyTheme.appearance)
         }, markAsRead: { [weak self] peerId, storyId in
             self?.readThrottler.addOrUpdate(.init(peerId: peerId, id: storyId))
+        }, showViewers: { peerId, story in
+            showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story, presentation: storyTheme, callback: openPeerInfo), for: context.window)
         })
         
         genericView.setArguments(arguments)

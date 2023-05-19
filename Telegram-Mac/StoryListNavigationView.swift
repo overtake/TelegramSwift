@@ -58,7 +58,7 @@ final class StoryListNavigationView : View {
                     var rect = part.frame
                     rect.size.width = part.frame.width * min(current / duration, 1)
                     selector.frame = rect
-                    selector.animateBounds(from: NSMakeSize(rect.size.width, 2).bounds, to: part.frame.size.bounds, duration: duration - current, timingFunction: .linear)
+                    selector.animateBounds(from: NSMakeSize(rect.size.width, 2).bounds, to: part.frame.size.bounds, duration: duration - current, timingFunction: .linear, removeOnCompletion: false)
                 } else {
                     selector.removeAnimation(forKey: "bounds")
                     var rect = part.frame

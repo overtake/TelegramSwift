@@ -88,16 +88,18 @@ final class StoryMonthRowItem : GeneralRowItem {
 
     fileprivate private(set) var layoutItems:[StoryCellLayoutItem] = []
     fileprivate private(set) var itemSize: NSSize = NSZeroSize
+    fileprivate let standalone: Bool
 
     fileprivate let openStory:(StoryInitialIndex?)->Void
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peerId: PeerId, peerReference: PeerReference, items: [StoryListContext.Item], viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [StoryListContext.Item], viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void) {
         self.items = items
+        self.standalone = standalone
         self.peerReference = peerReference
         self.context = context
         self.peerId = peerId
         self.openStory = openStory
-        super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 30, right: 30) : NSEdgeInsets())
     }
     
     func openPeerStory(peerId: PeerId, storyId: Int32, _ takeControl: @escaping(PeerId, Int32?)->NSView?) {
@@ -307,15 +309,16 @@ private final class StoryMonthRowView : GeneralContainableRowView, Notifable {
         guard let item = self.item as? StoryMonthRowItem, let window = window else {
             return
         }
-        let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-
-        for contentView in contentViews {
-            if let contentView = contentView, let layoutItem = contentView.layoutItem {
-                if NSPointInRect(point, contentView.frame) {
-                    item.openPeerStory(peerId: layoutItem.peerId, storyId: layoutItem.id.id, { [weak self] peerId, storyId in
-                        return self?.takeControl(peerId, storyId: storyId)
-                    })
-                    return
+        if event == .Click {
+            let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+            for contentView in contentViews {
+                if let contentView = contentView, let layoutItem = contentView.layoutItem {
+                    if NSPointInRect(point, contentView.frame) {
+                        item.openPeerStory(peerId: layoutItem.peerId, storyId: layoutItem.id.id, { [weak self] peerId, storyId in
+                            return self?.takeControl(peerId, storyId: storyId)
+                        })
+                        return
+                    }
                 }
             }
         }

@@ -808,7 +808,7 @@ private func generateTriangle(_ size: NSSize, color: NSColor) -> CGImage {
     })!
 }
 
-private func generateStoryState(_ color: NSColor, size: NSSize) -> CGImage {
+private func generateStoryState(_ color: NSColor, size: NSSize, wide: CGFloat) -> CGImage {
     return generateImage(size, contextGenerator: { size, ctx in
         let rect = CGRect(origin: CGPoint(), size: size)
         ctx.clear(rect)
@@ -817,7 +817,7 @@ private func generateStoryState(_ color: NSColor, size: NSSize) -> CGImage {
         ctx.fillEllipse(in: size.bounds)
         
         ctx.setBlendMode(.clear)
-        ctx.fillEllipse(in: size.bounds.insetBy(dx: 1.5, dy: 1.5))
+        ctx.fillEllipse(in: size.bounds.insetBy(dx: wide, dy: wide))
     })!
 }
 
@@ -2160,6 +2160,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                groupStickerNotFound: { #imageLiteral(resourceName: "Icon_GroupStickerNotFound").precomposed(palette.grayIcon) },
                                                settingsAskQuestion: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(flipVertical: true)) },
                                                settingsFaq: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(flipVertical: true)) },
+                                               settingsStories: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStories").precomposed(flipVertical: true)) },
                                                settingsGeneral: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(flipVertical: true)) },
                                                settingsLanguage: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(flipVertical: true)) },
                                                settingsNotifications: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(flipVertical: true)) },
@@ -2176,6 +2177,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsPremium: { generatePremiumIcon(NSImage(named: "Icon_Premium_Settings")!.precomposed(flipVertical: true)) },
                                                settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsStoriesActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStories").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsLanguageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsNotificationsActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
@@ -2676,13 +2678,15 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 folder_invite_link_revoked: { generateFolderLinkIcon(palette: palette, revoked: true) },
                               folders_sidebar_edit: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon, flipVertical: true) },
                               folders_sidebar_edit_active: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon.withAlphaComponent(0.8), flipVertical: true) },
-                              story_unseen: { generateStoryState(palette.accent, size: NSMakeSize(50, 50)) },
-                              story_seen: { generateStoryState(palette.grayIcon.withAlphaComponent(0.5), size: NSMakeSize(50, 50)) },
-                              story_selected: { generateStoryState(palette.underSelectedColor, size: NSMakeSize(50, 50)) },
-                              story_unseen_chat: { generateStoryState(palette.accent, size: NSMakeSize(36, 36)) },
-                              story_seen_chat: { generateStoryState(palette.grayIcon, size: NSMakeSize(36, 36)) },
-                              story_unseen_profile: { generateStoryState(palette.accent, size: NSMakeSize(120, 120)) },
-                              story_seen_profile: { generateStoryState(palette.grayIcon, size: NSMakeSize(120, 120)) }
+                              story_unseen: { generateStoryState(palette.accent, size: NSMakeSize(50, 50), wide: 1.5) },
+                              story_seen: { generateStoryState(palette.grayIcon.withAlphaComponent(0.5), size: NSMakeSize(50, 50), wide: 1.0) },
+                              story_selected: { generateStoryState(palette.underSelectedColor, size: NSMakeSize(50, 50), wide: 1.0) },
+                              story_unseen_chat: { generateStoryState(palette.accent, size: NSMakeSize(36, 36), wide: 1.5) },
+                              story_seen_chat: { generateStoryState(palette.grayIcon, size: NSMakeSize(36, 36), wide: 1.0) },
+                              story_unseen_profile: { generateStoryState(palette.accent, size: NSMakeSize(120, 120), wide: 1.5) },
+                              story_seen_profile: { generateStoryState(palette.grayIcon, size: NSMakeSize(120, 120), wide: 1.0) },
+                              story_view_read: { NSImage(named: "Icon_StoryViewRead")!.precomposed(palette.grayIcon) },
+                              story_view_reaction: { NSImage(named: "Icon_StoryViewReaction")!.precomposed(palette.grayIcon) }
 
 
     )

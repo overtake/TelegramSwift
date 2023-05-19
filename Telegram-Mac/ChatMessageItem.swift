@@ -215,7 +215,7 @@ class ChatMessageItem: ChatRowItem {
         }
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let content = webpage.content
-            let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
+            let link = inApp(for: webpage.content.url.nsstring, context: context, messageId: message?.id, openInfo: chatInteraction.openInfo)
             switch link {
             case let .followResolvedName(_, _, postId, _, action, _):
                 if let action = action {
@@ -292,7 +292,7 @@ class ChatMessageItem: ChatRowItem {
             chatInteraction.markAdAction(adAttribute.opaqueId)
             execute(inapp: link)
         } else if let webpage = webpageLayout {
-            let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
+            let link = inApp(for: webpage.content.url.nsstring, context: context, messageId: message?.id, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
         } else if unsupported {
             #if APP_STORE
@@ -832,7 +832,7 @@ class ChatMessageItem: ChatRowItem {
                 if nsString == nil {
                     nsString = text as NSString
                 }
-                let link = inApp(for:nsString!.substring(with: range) as NSString, context:context, openInfo:openInfo, applyProxy: applyProxy)
+                let link = inApp(for:nsString!.substring(with: range) as NSString, context:context, messageId: message?.id, openInfo:openInfo, applyProxy: applyProxy)
                 string.addAttribute(NSAttributedString.Key.link, value: link, range: range)
             case .Email:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
@@ -845,7 +845,7 @@ class ChatMessageItem: ChatRowItem {
                 if nsString == nil {
                     nsString = text as NSString
                 }
-                string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: nsString?.substring(with: range).trimmed != url), range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, messageId: message?.id, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: nsString?.substring(with: range).trimmed != url), range: range)
             case .Bold:
                 fontAttributes.append((range, .bold))
             case .Italic:
