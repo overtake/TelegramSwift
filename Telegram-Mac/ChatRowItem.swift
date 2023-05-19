@@ -3042,11 +3042,11 @@ class ChatRowItem: TableRowItem {
                 }
                 
                 if accessToAll {
-                    available = Array(available.prefix(6))
+                    available = Array(available.prefix(7))
                 }
                 
                 
-                let width = ContextAddReactionsListView.width(for: available.count, maxCount: 6, allowToAll: accessToAll)
+                let width = ContextAddReactionsListView.width(for: available.count, maxCount: 7, allowToAll: accessToAll)
                 
                 
                 let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 20), 40 + 20)
