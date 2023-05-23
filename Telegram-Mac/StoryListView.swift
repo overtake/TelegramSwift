@@ -186,7 +186,7 @@ final class StoryListView : Control, Notifable {
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
 
             if let textView = textView {
-                let containerSize = NSMakeSize(frame.width, min(textView.frame.height + 10, 208 + 10))
+                let containerSize = NSMakeSize(frame.width, min(textView.frame.height + 20, 208 + 20))
                 let rect = CGRect(origin: NSMakePoint(0, size.height - containerSize.height), size: containerSize)
                 transition.updateFrame(view: container, frame: rect)
 
@@ -198,7 +198,7 @@ final class StoryListView : Control, Notifable {
 
                 
                 textView.resize(size.width - 20)
-                transition.updateFrame(view: textView, frame: CGRect.init(origin: NSMakePoint(10, 5), size: textView.frame.size))
+                transition.updateFrame(view: textView, frame: CGRect.init(origin: NSMakePoint(10, 10), size: textView.frame.size))
             }
         }
         
@@ -549,6 +549,9 @@ final class StoryListView : Control, Notifable {
 //            self?.layer?.mask = nil
 //        })
 //        mask.add(maskAnim, forKey: "path")
+    }
+    var contentView: NSView {
+        return container
     }
     
     func animateDisappearing(to control: NSView) {
