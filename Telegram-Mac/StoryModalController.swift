@@ -865,18 +865,26 @@ private final class StoryViewController: Control, Notifable {
 
         let point = self.convert(event.locationInWindow, from: nil)
         
-        if point.x < current.contentRect.minX {
+        if point.x < current.contentRect.minX, point.y > leftTop.frame.maxY, point.y < leftBottom.frame.minY {
             self.prev_button.change(opacity: hasPrevGroup ? 1 : 0, animated: animated)
             self.next_button.change(opacity: 0, animated: animated)
         } else {
             self.prev_button.change(opacity: 0, animated: animated)
         }
         
-        if point.x > current.contentRect.maxX {
+        if point.x > current.contentRect.maxX, point.y > rightTop.frame.maxY, point.y < rightBottom.frame.minY {
             self.next_button.change(opacity: hasNextGroup ? 1 : 0, animated: animated)
             self.prev_button.change(opacity: 0, animated: animated)
         } else {
             self.next_button.change(opacity: 0, animated: animated)
+        }
+        
+        let close_rects = [leftTop.frame, leftBottom.frame, rightTop.frame, rightBottom.frame]
+        
+        if close_rects.contains(where: { NSPointInRect(point, $0) }) {
+            close.set(image: close_image_hover, for: .Normal)
+        } else {
+            close.set(image: close_image, for: .Normal)
         }
     }
     
@@ -1641,7 +1649,6 @@ final class StoryModalController : ModalViewController, Notifable {
                         self?.genericView.showReactions(view, control: control)
                     }
                 })
-
             }
         }, attachPhotoOrVideo: { type in
             chatInteraction.attachPhotoOrVideo(type)
