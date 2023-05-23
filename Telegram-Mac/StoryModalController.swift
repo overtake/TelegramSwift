@@ -1178,7 +1178,7 @@ private final class StoryViewController: Control, Notifable {
         
         let play:(NSView, TelegramMediaFile)->Void = { container, icon in
             
-            let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: icon.fileId.id, file: icon, emoji: ""), size: NSMakeSize(30, 30), playPolicy: .once)
+            let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: icon.fileId.id, file: icon, emoji: ""), size: NSMakeSize(100, 100), playPolicy: .once)
             layer.isPlayable = true
             
             layer.frame = NSMakeRect((container.frame.width - layer.frame.width) / 2, (container.frame.height - layer.frame.height) / 2, layer.frame.width, layer.frame.height)
@@ -1196,9 +1196,10 @@ private final class StoryViewController: Control, Notifable {
                 player.frame = rect
                 container.addSubview(player)
             } else if let effectFile = effectFile {
-                let player = InlineStickerItemLayer(account: context.account, file: effectFile, size: NSMakeSize(150, 150), playPolicy: .playCount(1))
+                let player = InlineStickerItemLayer(account: context.account, file: effectFile, size: NSMakeSize(300, 300), playPolicy: .playCount(1))
                 player.isPlayable = true
-                player.frame = NSMakeRect(75, 75, 150, 150)
+                player.frame = NSMakeRect(0, 0, player.frame.width, player.frame.height)
+                
                 container.layer?.addSublayer(player)
                 player.triggerOnState = (.finished, { [weak player] state in
                     player?.removeFromSuperlayer()
@@ -1208,9 +1209,9 @@ private final class StoryViewController: Control, Notifable {
             
         }
         
-        let layer = InlineStickerItemLayer(account: context.account, file: icon, size: NSMakeSize(30, 30))
+        let layer = InlineStickerItemLayer(account: context.account, file: icon, size: NSMakeSize(100, 100))
 
-            let completed: (Bool)->Void = { [weak overlay] _ in
+        let completed: (Bool)->Void = { [weak overlay] _ in
             NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
             DispatchQueue.main.async {
                 if let container = overlay {
@@ -1237,7 +1238,11 @@ private final class StoryViewController: Control, Notifable {
         }
         
         let reactionsOverlay = Control(frame: bounds)
-        reactionsOverlay.backgroundColor = NSColor.black.withAlphaComponent(0.2)
+        if self.isInputFocused {
+            reactionsOverlay.backgroundColor = NSColor.black.withAlphaComponent(0.0)
+        } else {
+            reactionsOverlay.backgroundColor = NSColor.black.withAlphaComponent(0.2)
+        }
         reactionsOverlay.addSubview(view)
         addSubview(reactionsOverlay)
         
@@ -1359,9 +1364,14 @@ private final class StoryViewController: Control, Notifable {
             }
             
             if scrollDeltaX > 0 {
-                previousIndex = self.processGroupResult(.moveBack, animated: true, bySwipe: true)
+                if hasPrevGroup {
+                    previousIndex = self.processGroupResult(.moveBack, animated: true, bySwipe: true)
+                }
             } else if scrollDeltaX < 0 {
-                previousIndex = self.processGroupResult(.moveNext, animated: true, bySwipe: true)
+                if hasNextGroup {
+                    previousIndex = self.processGroupResult(.moveNext, animated: true, bySwipe: true)
+                }
+
             }
         } else if theEvent.phase == .changed {
             let previous = self.scrollDeltaX
@@ -1369,34 +1379,70 @@ private final class StoryViewController: Control, Notifable {
                 scrollDeltaX = 1
             } else if scrollDeltaX < 0, scrollDeltaX + theEvent.scrollingDeltaX >= 0 {
                 scrollDeltaX = -1
-            } else {
+            } else if scrollDeltaX != 0 {
                 scrollDeltaX += theEvent.scrollingDeltaX
             }
 
-            if scrollDeltaY != 0 {
-                scrollDeltaY += theEvent.scrollingDeltaY
+            if scrollDeltaX == 0 {
+                if scrollDeltaY > 0, scrollDeltaY + theEvent.scrollingDeltaY <= 0 {
+                    scrollDeltaY = 1
+                } else if scrollDeltaY < 0, scrollDeltaY + theEvent.scrollingDeltaY >= 0 {
+                    scrollDeltaY = -1
+                } else if scrollDeltaY != 0 {
+                    scrollDeltaY += theEvent.scrollingDeltaY
+                }
             }
+           
             scrollDeltaX = min(max(scrollDeltaX, -300), 300)
             
             let autofinish = abs(abs(previous) - abs(scrollDeltaX)) > 60
             
-            
             self.current?.translate(progress: min(abs(scrollDeltaX / 300), 1), finish: autofinish, completion: completeTransition)
-        } else if theEvent.phase == .ended {
+            
+           
+            if scrollDeltaY != 0, let current = self.current {
+                let dest: CGFloat = log(25)
+                var delta: CGFloat = log(abs(scrollDeltaY)) / dest * 25
+                if scrollDeltaY < 0 {
+                    delta = -delta
+                }
+                current.setFrameOrigin(NSMakePoint(current.frame.minX, delta))
+            }
+        } else if theEvent.phase == .ended || theEvent.phase == .cancelled {
+            if let current = current {
+                current.change(pos: NSMakePoint(current.frame.minX, 0), animated: true)
+                
+                if scrollDeltaY > 50 {
+                    if inputView == self.window?.firstResponder {
+                        self.resetInputView()
+                    } else {
+                        self.close.send(event: .Click)
+                    }
+                } else if scrollDeltaY < -50 {
+                    if let peerId = current.id, peerId == arguments?.context.peerId, let story = current.story {
+                        if let views = story.views, views.seenCount > 0 {
+                            arguments?.showViewers(peerId, story)
+                        }
+                    } else {
+                        self.window?.makeFirstResponder(self.inputView)
+                        if let reactions = current.inputReactionsControl {
+                            self.arguments?.showReactionsPanel(reactions)
+                        }
+                    }
+                }
+            }
+            
             let progress = min(abs(scrollDeltaX / 300), 1)
             self.current?.translate(progress: progress, finish: true, cancel: progress < 0.5, completion: completeTransition)
-            if scrollDeltaY > 50 || scrollDeltaY < -50 {
-                self.close.send(event: .Click)
-            }
-            scrollDeltaX = 0
-            scrollDeltaY = 0
-        } else if theEvent.phase == .cancelled {
-            let progress = min(abs(scrollDeltaX / 300), 1)
-            let cancel = progress < 0.5
-            self.current?.translate(progress: cancel ? 0 : 1, finish: true, cancel: progress < 0.5, completion: completeTransition)
-            scrollDeltaX = 0
-            scrollDeltaY = 0
+            resetDelta()
+            
         }
+    }
+    
+
+    private func resetDelta() {
+        scrollDeltaX = 0
+        scrollDeltaY = 0
     }
     
     override func layout() {
@@ -1458,10 +1504,14 @@ final class StoryModalController : ModalViewController, Notifable {
                 return current
             })
         }
-        if let value = value as? StoryInteraction.State {
+        if let value = value as? StoryInteraction.State, let oldValue = oldValue as? StoryInteraction.State {
             self.chatInteraction.update({
                 $0.withUpdatedEffectiveInputState(value.input)
             })
+            
+            if value.input != oldValue.input {
+                self.genericView.closeReactions()
+            }
         }
     }
     

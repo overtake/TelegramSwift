@@ -40,6 +40,12 @@ final class StoryListView : Control, Notifable {
         }
         return nil
     }
+    var story: StoryListContext.Item? {
+        if let selectedIndex = self.selectedIndex, let entry = entry {
+            return entry.item.items[selectedIndex]
+        }
+        return nil
+    }
     var id: PeerId? {
         return self.entry?.id
     }
@@ -57,16 +63,20 @@ final class StoryListView : Control, Notifable {
         private var textView: TextView?
         private let documentView = View()
         private let container = Control()
+        private let shadowView = ShadowView()
         
         private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
         
         required init(frame frameRect: NSRect) {
-            scrollView.background = NSColor.blackTransparent
+            scrollView.background = .clear
             super.init(frame: frameRect)
+            self.addSubview(shadowView)
             addSubview(container)
             container.addSubview(self.scrollView)
             self.scrollView.documentView = documentView
             
+            shadowView.direction = .vertical(true)
+            shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.6)
             
             self.layer?.cornerRadius = 10
         }
@@ -184,6 +194,9 @@ final class StoryListView : Control, Notifable {
                 transition.updateFrame(view: scrollView.contentView, frame: documentView.bounds)
                 transition.updateFrame(view: scrollView, frame: container.bounds)
 
+                transition.updateFrame(view: shadowView, frame: container.frame)
+
+                
                 textView.resize(size.width - 20)
                 transition.updateFrame(view: textView, frame: CGRect.init(origin: NSMakePoint(10, 5), size: textView.frame.size))
             }
@@ -245,8 +258,57 @@ final class StoryListView : Control, Notifable {
             for key in removeKeys {
                 self.inlineStickerItemViews.removeValue(forKey: key)
             }
+            
+            updateAnimatableContent()
         }
 
+        
+        @objc func updateAnimatableContent() -> Void {
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
+            }
+            for layer in inlineStickerItemViews.values {
+                layer.isPlayable = isKeyWindow
+            }
+        }
+        
+        
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            self.updateListeners()
+            self.updateAnimatableContent()
+        }
+        
+        override func viewDidMoveToSuperview() {
+            super.viewDidMoveToSuperview()
+            self.updateListeners()
+            self.updateAnimatableContent()
+        }
+        
+        deinit {
+            NotificationCenter.default.removeObserver(self)
+        }
+        
+        private func updateListeners() {
+            let center = NotificationCenter.default
+            if let window = window {
+                center.removeObserver(self)
+                center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+                center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+                center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+                center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+                center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+            } else {
+                center.removeObserver(self)
+            }
+        }
+        
+        
         
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
@@ -294,6 +356,7 @@ final class StoryListView : Control, Notifable {
         container.addSubview(self.navigator)
 
         
+        controls.controlOpacityEventIgnored = true
         
         addSubview(container)
         controls.layer?.cornerRadius = 10
@@ -403,6 +466,10 @@ final class StoryListView : Control, Notifable {
             self.pauseOverlay = nil
         }
         
+        if value.mouseDown != oldValue.mouseDown {
+            self.controls.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
+            self.navigator.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
+        }
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -731,6 +798,10 @@ final class StoryListView : Control, Notifable {
     }
     func pause() {
         self.current?.pause()
+    }
+    
+    var inputReactionsControl: Control? {
+        return (self.inputView as? StoryInputView)?.inputReactionsControl
     }
     
     deinit {

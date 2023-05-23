@@ -31,7 +31,7 @@ final class StoryListChatListRowItem : TableRowItem {
     }
     
     override var height: CGFloat {
-        return 74
+        return 86
     }
     
     override func viewClass() -> AnyClass {
@@ -131,11 +131,11 @@ private final class StoryListEntryRowItem : TableRowItem {
     }
     
     override var height: CGFloat {
-        return 66
+        return 70
     }
 
     override var width: CGFloat {
-        return 74
+        return 86
     }
 }
 
@@ -144,7 +144,7 @@ private final class StoryListEntryRowView : HorizontalRowView {
     private let imageView = AvatarControl(font: .avatar(15))
     private let textView = TextView()
     private let view = View(frame: NSMakeRect(0, 0, 50, 50))
-    private let overlay = Control(frame: NSMakeRect(0, 0, 66, 74))
+    private let overlay = Control(frame: NSMakeRect(0, 0, 70, 86))
     private let stateView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -219,10 +219,10 @@ private final class StoryListEntryRowView : HorizontalRowView {
     
     override func layout() {
         super.layout()
-        imageView.center()
-        view.centerX(y: 4)
+        imageView.centerX(y: 3)
+        view.centerX(y: 10)
         stateView.frame = imageView.frame.insetBy(dx: -3, dy: -3)
-        textView.centerX(y: view.frame.maxY)
+        textView.centerX(y: view.frame.maxY + 4)
     }
     
 }
