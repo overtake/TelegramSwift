@@ -521,6 +521,10 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         return self.textView
     }
     
+    var inputReactionsControl: Control? {
+        return self.reactions
+    }
+    
     func resetInputView() {
         window?.makeFirstResponder(nil)
     }

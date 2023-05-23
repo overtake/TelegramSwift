@@ -191,7 +191,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     } else if let views = state.item.views {
         var items: [Tuple] = []
         for item in views.seenPeers {
-            items.append(.init(peer: .init(item._asPeer()), timestamp: 0, viewType: .legacy))
+            items.append(.init(peer: .init(item._asPeer()), timestamp: Int32(Date().timeIntervalSince1970), viewType: .legacy))
         }
         
         for item in items {

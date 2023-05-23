@@ -2472,7 +2472,7 @@ func mediaResourceName(from media:Media?, ext:String?) -> String {
 }
 
 
-func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: Int64? = nil, userId: PeerId? = nil, deleteGroup: Bool = false) -> Signal<Bool, NoError> {
+func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: Int64? = nil, userId: PeerId? = nil, deleteGroup: Bool = false, forceRemoveGlobally: Bool = false) -> Signal<Bool, NoError> {
     return context.account.postbox.peerView(id: peerId)
         |> take(1)
         |> map { peerViewMainPeer($0) }
@@ -2538,6 +2538,10 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
                 }
             }
             
+            if forceRemoveGlobally {
+                canRemoveGlobally = false
+                thridTitle = nil
+            }
             
 
             
@@ -2546,7 +2550,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
                 if let threadId = threadId {
                     _ = context.engine.peers.removeForumChannelThread(id: peerId, threadId: threadId).start()
                 } else {
-                    _ = context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: result == .thrid).start()
+                    _ = context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: result == .thrid || forceRemoveGlobally).start()
                     if peer.isBot && result == .thrid {
                         _ = context.blockedPeersContext.add(peerId: peerId).start()
                     }
