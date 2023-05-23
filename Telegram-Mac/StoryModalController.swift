@@ -1161,22 +1161,26 @@ private final class StoryViewController: Control, Notifable {
             return
         }
        
+        guard let current = self.current else {
+            return
+        }
         
         arguments.interaction.update { current in
             var current = current
             current.playingReaction = true
-            current.inTransition = true
+          //  current.inTransition = true
             return current
         }
         let overlay = View(frame: NSMakeRect(0, 0, 300, 300))
-        addSubview(overlay)
+        current.contentView.addSubview(overlay)
         overlay.center()
+        overlay.setFrameOrigin(NSMakePoint(overlay.frame.minX, overlay.frame.minY - 50))
         
         let finish:()->Void = { [weak arguments, weak overlay] in
             arguments?.interaction.update { current in
                 var current = current
                 current.playingReaction = false
-                current.inTransition = false
+             //   current.inTransition = false
                 return current
             }
             if let overlay = overlay {
@@ -1241,7 +1245,7 @@ private final class StoryViewController: Control, Notifable {
     
     func showReactions(_ view: NSView, control: Control) {
         
-        guard let superview = control.superview else {
+        guard let superview = control.superview, self.reactionsOverlay == nil else {
             return
         }
         
@@ -1436,9 +1440,17 @@ private final class StoryViewController: Control, Notifable {
                             arguments?.showViewers(peerId, story)
                         }
                     } else {
-                        self.window?.makeFirstResponder(self.inputView)
-                        if let reactions = current.inputReactionsControl, reactions.layer?.opacity == 1 {
-                            self.arguments?.showReactionsPanel(reactions)
+                        if self.reactionsOverlay != nil {
+                            self.closeReactions()
+                        } else {
+                            if self.isInputFocused {
+                                self.resetInputView()
+                            } else {
+                                self.window?.makeFirstResponder(self.inputView)
+                                if let reactions = current.inputReactionsControl, reactions.layer?.opacity == 1 {
+                                    self.arguments?.showReactionsPanel(reactions)
+                                }
+                            }
                         }
                     }
                 }
