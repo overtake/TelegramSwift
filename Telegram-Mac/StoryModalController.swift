@@ -1120,10 +1120,18 @@ private final class StoryViewController: Control, Notifable {
             performSubviewRemoval(view, animated: true)
             self.reactionsOverlay = nil
         }
+        var resetInput = false
+        if self.arguments?.interaction.presentation.input.inputText.isEmpty == true {
+            self.resetInputView()
+            resetInput = true
+        }
         
         self.arguments?.interaction.update { current in
             var current = current
             current.hasReactions = false
+            if resetInput {
+                current.inputInFocus = false
+            }
             return current
         }
     }
@@ -1414,7 +1422,11 @@ private final class StoryViewController: Control, Notifable {
                 
                 if scrollDeltaY > 50 {
                     if inputView == self.window?.firstResponder {
-                        self.resetInputView()
+                        if self.reactionsOverlay != nil {
+                            self.closeReactions()
+                        } else {
+                            self.resetInputView()
+                        }
                     } else {
                         self.close.send(event: .Click)
                     }
@@ -1425,7 +1437,7 @@ private final class StoryViewController: Control, Notifable {
                         }
                     } else {
                         self.window?.makeFirstResponder(self.inputView)
-                        if let reactions = current.inputReactionsControl {
+                        if let reactions = current.inputReactionsControl, reactions.layer?.opacity == 1 {
                             self.arguments?.showReactionsPanel(reactions)
                         }
                     }
@@ -1876,7 +1888,11 @@ final class StoryModalController : ModalViewController, Notifable {
             }
             return .invoked
         } else if self.genericView.inputView == window?.firstResponder {
-            self.genericView.resetInputView()
+            if interactions.presentation.hasReactions {
+                genericView.closeReactions()
+            } else {
+                self.genericView.resetInputView()
+            }
             return .invoked
         } else if interactions.presentation.hasReactions {
             self.genericView.closeReactions()
