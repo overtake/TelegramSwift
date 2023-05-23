@@ -727,6 +727,11 @@ private final class StoryViewController: Control, Notifable {
     private let prev_button: NavigationButton = NavigationButton(frame: .zero)
     private let close: ImageButton = ImageButton()
 
+    private let leftTop = Control()
+    private let leftBottom = Control()
+    private let rightTop = Control()
+    private let rightBottom = Control()
+    
     private var entries:[StoryListEntry] = []
     
     
@@ -742,6 +747,11 @@ private final class StoryViewController: Control, Notifable {
         addSubview(prev_button)
         addSubview(next_button)
         
+        addSubview(leftTop)
+        addSubview(leftBottom)
+        addSubview(rightTop)
+        addSubview(rightBottom)
+
         next_button.controlOpacityEventIgnored = true
         prev_button.controlOpacityEventIgnored = true
 
@@ -755,6 +765,22 @@ private final class StoryViewController: Control, Notifable {
         
         close.set(handler: { [weak self] _ in
             self?.arguments?.close()
+        }, for: .Click)
+        
+        leftTop.set(handler: { [weak self] _ in
+            self?.close.send(event: .Click)
+        }, for: .Click)
+        
+        leftBottom.set(handler: { [weak self] _ in
+            self?.close.send(event: .Click)
+        }, for: .Click)
+        
+        rightTop.set(handler: { [weak self] _ in
+            self?.close.send(event: .Click)
+        }, for: .Click)
+        
+        rightBottom.set(handler: { [weak self] _ in
+            self?.close.send(event: .Click)
         }, for: .Click)
         
         
@@ -1085,9 +1111,17 @@ private final class StoryViewController: Control, Notifable {
             transition.updateFrame(view: current, frame: size.bounds)
             current.updateLayout(size: size, transition: transition)
 
-            transition.updateFrame(view: prev_button, frame: NSMakeRect(0, 0, (size.width - current.contentRect.width) / 2, size.height))
-            transition.updateFrame(view: next_button, frame: NSMakeRect((size.width - current.contentRect.width) / 2 + current.contentRect.width, 0, (size.width - current.contentRect.width) / 2, size.height))
+            let halfSize = (size.width - current.contentRect.width) / 2
             
+            transition.updateFrame(view: prev_button, frame: NSMakeRect(0, 0, halfSize, size.height))
+            transition.updateFrame(view: next_button, frame: NSMakeRect(halfSize + current.contentRect.width, 0, halfSize, size.height))
+            
+            transition.updateFrame(view: leftTop, frame: NSMakeRect(0, 0, halfSize, 50))
+            transition.updateFrame(view: leftBottom, frame: NSMakeRect(0, frame.height - 50, halfSize, 50))
+            
+            transition.updateFrame(view: rightTop, frame: NSMakeRect(size.width - halfSize, 0, halfSize, 50))
+            transition.updateFrame(view: rightBottom, frame: NSMakeRect(size.width - halfSize, size.height - 50, halfSize, 50))
+
         }
         if let overlay = self.reactionsOverlay {
             transition.updateFrame(view: overlay, frame: size.bounds)
@@ -1167,11 +1201,12 @@ private final class StoryViewController: Control, Notifable {
         
         arguments.interaction.update { current in
             var current = current
-            current.playingReaction = true
+          //  current.playingReaction = true
           //  current.inTransition = true
             return current
         }
         let overlay = View(frame: NSMakeRect(0, 0, 300, 300))
+        overlay.isEventLess = true 
         current.contentView.addSubview(overlay)
         overlay.center()
         overlay.setFrameOrigin(NSMakePoint(overlay.frame.minX, overlay.frame.minY - 50))
@@ -1179,7 +1214,7 @@ private final class StoryViewController: Control, Notifable {
         let finish:()->Void = { [weak arguments, weak overlay] in
             arguments?.interaction.update { current in
                 var current = current
-                current.playingReaction = false
+              //  current.playingReaction = false
              //   current.inTransition = false
                 return current
             }
@@ -1241,6 +1276,12 @@ private final class StoryViewController: Control, Notifable {
             completed(true)
         }
         
+    }
+    
+    func showReactions() {
+        if let reactions = current?.inputReactionsControl, reactions.layer?.opacity == 1 {
+            self.arguments?.showReactionsPanel(reactions)
+        }
     }
     
     func showReactions(_ view: NSView, control: Control) {
@@ -1447,9 +1488,7 @@ private final class StoryViewController: Control, Notifable {
                                 self.resetInputView()
                             } else {
                                 self.window?.makeFirstResponder(self.inputView)
-                                if let reactions = current.inputReactionsControl, reactions.layer?.opacity == 1 {
-                                    self.arguments?.showReactionsPanel(reactions)
-                                }
+                                self.showReactions()
                             }
                         }
                     }
@@ -1535,6 +1574,11 @@ final class StoryModalController : ModalViewController, Notifable {
             
             if value.input != oldValue.input {
                 self.genericView.closeReactions()
+            }
+            if value.inputInFocus != oldValue.inputInFocus, value.input.inputText.isEmpty {
+                if value.inputInFocus {
+                    genericView.showReactions()
+                }
             }
         }
     }
