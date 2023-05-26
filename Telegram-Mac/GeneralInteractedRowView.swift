@@ -239,7 +239,7 @@ class GeneralInteractedRowView: GeneralRowView {
         return theme.colors.grayHighlight
     }
     
-    var borderColor: NSColor {
+    override var borderColor: NSColor {
         guard let item = item as? GeneralInteractedRowItem else {
             return theme.colors.border
         }

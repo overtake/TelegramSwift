@@ -53,7 +53,7 @@ class TextAndLabelItem: GeneralRowItem {
     let accentColor: NSColor
     let hideText: Bool?
     let toggleHide:(()->Void)?
-    let borderColor: NSColor
+    let _borderColor: NSColor
     private let added_contextItems: [ContextMenuItem]
     init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border, linkInteractions: TextViewInteractions = globalLinkExecutor, contextItems:[ContextMenuItem] = []) {
         self.callback = callback
@@ -63,7 +63,7 @@ class TextAndLabelItem: GeneralRowItem {
         self.toggleHide = toggleHide
         self.isTextSelectable = isTextSelectable
         self.copyMenuText = copyMenuText
-        self.borderColor = borderColor
+        self._borderColor = borderColor
         self.label = NSAttributedString.initialize(string: label, color: labelColor, font: .normal(FontSize.text))
         let attr = NSMutableAttributedString()
         var text = text.trimmed.fullTrimmed
@@ -108,6 +108,10 @@ class TextAndLabelItem: GeneralRowItem {
         showFull = { [weak self] in
             self?.hasMore = nil
         }
+    }
+    
+    override var borderColor: NSColor {
+        return _borderColor
     }
     
     override func viewClass() -> AnyClass {

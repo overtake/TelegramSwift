@@ -20,11 +20,13 @@ class ChatListRevealItem: TableStickItem {
     fileprivate let selected: ChatListFilter
     fileprivate let openSettings: (()->Void)?
     fileprivate let counters: ChatListFilterBadges
+    fileprivate let presentation: TelegramPresentationTheme
     fileprivate let _menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])?
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])? = nil) {
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])? = nil, presentation: TelegramPresentationTheme = theme) {
         self.action = action
         self.context = context
         self.tabs = tabs
+        self.presentation = presentation
         self.selected = selected
         self.openSettings = openSettings
         self.counters = counters
@@ -36,11 +38,20 @@ class ChatListRevealItem: TableStickItem {
         self.action = nil
         self.context = nil
         self.tabs = []
+        self.presentation = theme
         self.selected = .allChats
         self.openSettings = nil
         self._menuItems = nil
         self.counters = ChatListFilterBadges(total: 0, filters: [])
         super.init(initialSize)
+    }
+    
+    override var backdorColor: NSColor {
+        return self.presentation.colors.background
+    }
+    
+    override var borderColor: NSColor {
+        return self.presentation.colors.border
     }
 
     override var singletonItem: Bool {
@@ -137,6 +148,7 @@ final class ChatListRevealView : TableStickView {
     }
     
     
+    
     override func mouseUp(with event: NSEvent) {
        
     }
@@ -157,13 +169,15 @@ final class ChatListRevealView : TableStickView {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        return .clear
     }
     
     override func updateColors() {
         super.updateColors()
-        backgroundColor = backdorColor
-        segmentView.updateLocalizationAndTheme(theme: theme)
+        //backgroundColor = backdorColor
+        if let item = item as? ChatListRevealItem {
+            segmentView.updateLocalizationAndTheme(theme: item.presentation)
+        }
         needsDisplay = true
     }
     
@@ -190,7 +204,7 @@ final class ChatListRevealView : TableStickView {
             let unreadCount:ChatListFilterBadge? = item.counters.count(for: tab)
             let icon: CGImage?
             if let unreadCount = unreadCount, unreadCount.count > 0 {
-                let attributedString = NSAttributedString.initialize(string: "\(unreadCount.count.prettyNumber)", color: theme.colors.background, font: .medium(.short), coreText: true)
+                let attributedString = NSAttributedString.initialize(string: "\(unreadCount.count.prettyNumber)", color: item.presentation.colors.background, font: .medium(.short), coreText: true)
                 let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
                 var size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 5)
                 size = NSMakeSize(max(size.height,size.width), size.height)
@@ -199,9 +213,9 @@ final class ChatListRevealView : TableStickView {
                     let rect = NSMakeRect(0, 0, size.width, size.height)
                     ctx.clear(rect)
                     if item.selected == tab || unreadCount.hasUnmutedUnread {
-                        ctx.setFillColor(theme.colors.accent.cgColor)
+                        ctx.setFillColor(item.presentation.colors.accent.cgColor)
                     } else {
-                        ctx.setFillColor(theme.colors.badgeMuted.cgColor)
+                        ctx.setFillColor(item.presentation.colors.badgeMuted.cgColor)
                     }
                     
                     
@@ -223,7 +237,7 @@ final class ChatListRevealView : TableStickView {
         animated = animated && splitViewState == context.layout
         self.splitViewState = context.layout
         
-        let segmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
+        let segmentTheme = ScrollableSegmentTheme(background: item.presentation.colors.background, border: item.presentation.colors.border, selector: item.presentation.colors.accent, inactiveText: item.presentation.colors.grayText, activeText: item.presentation.colors.accent, textFont: .normal(.title))
         var index: Int = 0
         let insets = NSEdgeInsets(left: 10, right: 10, bottom: 6)
         var items:[ScrollableSegmentItem] = []

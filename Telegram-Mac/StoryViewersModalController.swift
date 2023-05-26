@@ -150,7 +150,7 @@ extension StoryViewList: Equatable {
 }
 
 private struct State : Equatable {
-    var item: StoryListContext.Item
+    var item: EngineStoryItem
     var views: StoryViewList?
     var isLoadingMore: Bool = false
 }
@@ -174,6 +174,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let viewType: GeneralViewType
     }
   
+    var needToLoad: Bool = true
+    
     if let list = state.views {
         var items: [Tuple] = []
         for item in list.items {
@@ -200,9 +202,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
             index += 1
         }
+        if views.seenCount == views.seenPeers.count {
+            needToLoad = false
+        }
     }
     
-    if state.isLoadingMore {
+    if state.isLoadingMore && needToLoad {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_more, equatable: nil, comparable: nil, item: { initialSize, stableId in
             return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .legacy, color: arguments.presentation.colors.text)
         }))
@@ -213,7 +218,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func StoryViewersModalController(context: AccountContext, peerId: PeerId, story: StoryListContext.Item, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
+func StoryViewersModalController(context: AccountContext, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
     
 
     let actionsDisposable = DisposableSet()

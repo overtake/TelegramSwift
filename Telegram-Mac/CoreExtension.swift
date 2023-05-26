@@ -161,7 +161,7 @@ extension RenderedPeer {
 extension TelegramMediaFile {
     var videoSize:NSSize {
         for attr in attributes {
-            if case let .Video(_,size, _) = attr {
+            if case let .Video(_,size, _, _) = attr {
                 return size.size
             }
         }
@@ -170,7 +170,7 @@ extension TelegramMediaFile {
     
     var isStreamable: Bool {
         for attr in attributes {
-            if case let .Video(_, _, flags) = attr {
+            if case let .Video(_, _, flags, _) = attr {
                 return flags.contains(.supportsStreaming)
             }
         }
@@ -202,7 +202,7 @@ extension TelegramMediaFile {
     
     var videoDuration:Int {
         for attr in attributes {
-            if case let .Video(duration,_, _) = attr {
+            if case let .Video(duration,_, _, _) = attr {
                 return duration
             }
         }

@@ -13,18 +13,41 @@ import SwiftSignalKit
 import Postbox
 
 
+private struct StoryChatListEntry : Equatable, Comparable, Identifiable {
+    let item: EngineStorySubscriptions.Item
+    let index: Int
+    let appearance: Appearance
+    static func <(lhs: StoryChatListEntry, rhs: StoryChatListEntry) -> Bool {
+        return lhs.index < rhs.index
+    }
+    var stableId: AnyHashable {
+        return item.peer.id
+    }
+    var id: PeerId {
+        return item.peer.id
+    }
+    var hasUnseen: Bool {
+        return self.item.hasUnseen
+    }
+}
+
+
+
 final class StoryListChatListRowItem : TableRowItem {
     private let _stableId: AnyHashable
     let context: AccountContext
-    let state: StoryListContext.State
+    let state: EngineStorySubscriptions
     let open: (StoryInitialIndex?)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: StoryListContext.State, open:@escaping(StoryInitialIndex?)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?)->Void) {
         self._stableId = stableId
         self.context = context
         self.state = state
+        
         self.open = open
         super.init(initialSize)
     }
+    
+    
     
     override var stableId: AnyHashable {
         return _stableId
@@ -53,6 +76,27 @@ private final class StoryListChatListRowView: TableRowView {
         super.init(frame: frameRect)
         addSubview(tableView)
         addSubview(borderView)
+        
+        tableView.getBackgroundColor = {
+            .clear
+        }
+        
+        tableView.setScrollHandler({ [weak self] position in
+            switch position.direction {
+            case .bottom:
+                if let item = self?.item as? StoryListChatListRowItem {
+                    if let _ = item.state.hasMoreToken {
+                        item.context.account.storySubscriptionsContext?.loadMore()
+                    }
+                }
+            default:
+                break
+            }
+        })
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
     }
 
     override func layout() {
@@ -65,7 +109,7 @@ private final class StoryListChatListRowView: TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private var current: [StoryListEntry] = []
+    private var current: [StoryChatListEntry] = []
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
@@ -77,38 +121,44 @@ private final class StoryListChatListRowView: TableRowView {
         borderView.backgroundColor = theme.colors.border
         
         CATransaction.begin()
-        
-        
-        var entries:[StoryListEntry] = []
+
+
+        var entries:[StoryChatListEntry] = []
         var index: Int = 0
-        for itemSet in item.state.itemSets {
-            if !itemSet.items.isEmpty {
-                entries.append(.init(item: itemSet, index: index))
+        
+        if let item = item.state.accountItem, item.storyCount > 0 {
+            entries.append(.init(item: item, index: index, appearance: appAppearance))
+            index += 1
+        }
+        
+        for item in item.state.items {
+            if item.storyCount > 0 {
+                entries.append(.init(item: item, index: index, appearance: appAppearance))
                 index += 1
             }
         }
-        
+
         let initialSize = NSMakeSize(item.height, item.height)
         let context = item.context
-        
+
         let (deleted, inserted, updated) = proccessEntriesWithoutReverse(self.current, right: entries, { entry in
             return StoryListEntryRowItem(initialSize, entry: entry, context: context, open: item.open)
         })
         let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: true)
-        
+
         self.tableView.merge(with: transition)
-        
+
         self.current = entries
-        
+
         CATransaction.commit()
     }
 }
 
 private final class StoryListEntryRowItem : TableRowItem {
-    let entry: StoryListEntry
+    let entry: StoryChatListEntry
     let context: AccountContext
     let open:(StoryInitialIndex?)->Void
-    init(_ initialSize: NSSize, entry: StoryListEntry, context: AccountContext, open: @escaping(StoryInitialIndex?)->Void) {
+    init(_ initialSize: NSSize, entry: StoryChatListEntry, context: AccountContext, open: @escaping(StoryInitialIndex?)->Void) {
         self.entry = entry
         self.context = context
         self.open = open
@@ -118,8 +168,15 @@ private final class StoryListEntryRowItem : TableRowItem {
         return entry.stableId
     }
     
-    func callopen(_ takeControl: @escaping(PeerId, Int32?)->NSView?) {
-        self.open(.init(peerId: entry.id, id: nil, takeControl: takeControl))
+    func callopenStory() {
+        //_ takeControl: @escaping(PeerId, Int32?)->NSView?
+        self.open(.init(peerId: entry.id, id: nil, takeControl: { [weak self] peerId, storyId in
+            self?.takeControl(peerId, storyId)
+        }))
+    }
+    
+    private func takeControl(_ peerId: PeerId, _ storyId: Int32?) -> NSView? {
+        (self.view as? StoryListEntryRowView)?.takeControl(peerId)
     }
     
     override var instantlyResize: Bool {
@@ -170,14 +227,16 @@ private final class StoryListEntryRowView : HorizontalRowView {
         
         overlay.set(handler: { [weak self] _ in
             if let item = self?.item as? StoryListEntryRowItem {
-                item.callopen({ peerId, _ in
-                    return self?.takeControl(peerId)
-                })
+                item.callopenStory()
             }
         }, for: .Click)
     }
     
-    private func takeControl(_ peerId: PeerId) -> NSView? {
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
+    func takeControl(_ peerId: PeerId) -> NSView? {
         if let tableView = self.item?.table {
             let view = tableView.item(stableId: AnyHashable(peerId))?.view as? StoryListEntryRowView
             return view?.imageView
@@ -196,14 +255,14 @@ private final class StoryListEntryRowView : HorizontalRowView {
         guard let item = item as? StoryListEntryRowItem else {
             return
         }
-        imageView.setPeer(account: item.context.account, peer: item.entry.item.peer?._asPeer())
+        imageView.setPeer(account: item.context.account, peer: item.entry.item.peer._asPeer())
         
         let name: String
-        if item.entry.item.peerId == item.context.peerId {
+        if item.entry.id == item.context.peerId {
             name = "My Story"
             stateView.isHidden = true
         } else {
-            name = item.entry.item.peer?._asPeer().compactDisplayTitle ?? ""
+            name = item.entry.item.peer._asPeer().compactDisplayTitle
             stateView.isHidden = false
         }
         

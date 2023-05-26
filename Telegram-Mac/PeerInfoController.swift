@@ -75,7 +75,7 @@ class PeerInfoArguments {
     }
     
     func openStory(_ initialId: StoryInitialIndex?) {
-        StoryModalController.ShowStories(context: context, stories: context.stories, initialId: initialId)
+     //   StoryModalController.ShowStories(context: context, stories: context.stories, initialId: initialId)
     }
     
     func toggleNotifications(_ currentlyMuted: Bool) {
@@ -287,22 +287,14 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     let threadInfo: ThreadInfo?
     
     let source: Source
-    let stories: StoryListContext?
     
     
     
-    init(context: AccountContext, peerId:PeerId, stories: StoryListContext? = nil, threadInfo: ThreadInfo? = nil, isAd: Bool = false, source: Source = .none) {
+    init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isAd: Bool = false, source: Source = .none) {
         self.peerId = peerId
         self.source = source
         self.threadInfo = threadInfo
         
-        if let current = stories {
-            self.stories = current
-        } else if peerId.namespace == Namespaces.Peer.CloudUser {
-            self.stories = context.engine.messages.peerStories(id: peerId)
-        } else {
-            self.stories = nil
-        }
         
         self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true)
         super.init(context)
@@ -460,14 +452,6 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         let source = self.source
         
-        let storiesSignal: Signal<StoryListContext.State?, NoError>
-        if let stories = self.stories {
-            storiesSignal = stories.state
-            |> map(Optional.init)
-        } else {
-            storiesSignal = .single(nil)
-        }
-      
         
         
         let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> = arguments.get() |> mapToSignal { arguments in
@@ -544,10 +528,10 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 threadData = .single(nil)
             }
             
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal)
-                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storyState -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData)
+                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
                     
-                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, storyState: storyState).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
                     return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0, threadData) }
                     

@@ -331,17 +331,16 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }))
         }
     }
-    func update(_ peerView: PeerView?, stories: StoryListContext.State?, animated: Bool) {
+    func update(_ peerView: PeerView?, story: EngineStorySubscriptions.Item?, animated: Bool) {
         self.updatePeerView(peerView, animated: animated)
-        self.updateStoryState(stories, animated: animated)
+        self.updateStoryState(story, animated: animated)
     }
     
-    private func updateStoryState(_ stories: StoryListContext.State?, animated: Bool) {
-        self.stories = stories
+    private func updateStoryState(_ story: EngineStorySubscriptions.Item?, animated: Bool) {
+        self.story = story
         let peerId = self.chatInteraction.peerId
-        let item = stories?.itemSets.first(where: { $0.peerId == peerId })
-        if let item = item {
-            let hasUnseen = item.items.contains(where: { item.maxReadId < $0.id })
+        if let item = story {
+            let hasUnseen = item.hasUnseen
 
             let current: ImageView
             let isNew: Bool
@@ -376,7 +375,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
    
     private var peerView:PeerView?
-    private var stories: StoryListContext.State?
+    private var story: EngineStorySubscriptions.Item?
     
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {

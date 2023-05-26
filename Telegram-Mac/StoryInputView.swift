@@ -37,7 +37,7 @@ protocol StoryInput {
     func makeUrl()
     func resetInputView()
     
-    func update(_ story: StoryListContext.Item, animated: Bool)
+    func update(_ story: StoryContentItem, animated: Bool)
     
     var isFirstResponder: Bool { get }
     var text: TGModernGrowingTextView? { get }
@@ -185,7 +185,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         }
     }
     
-    func update(_ story: StoryListContext.Item, animated: Bool) {
+    func update(_ story: StoryContentItem, animated: Bool) {
         
     }
     

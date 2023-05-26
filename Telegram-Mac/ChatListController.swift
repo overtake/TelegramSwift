@@ -89,13 +89,13 @@ extension EngineChatList.Item {
 
 
 enum UIChatListEntry : Identifiable, Comparable {
-    case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter, generalStatus: ItemHideStatus?, selectedForum: PeerId?, appearMode: PeerListState.AppearMode, hideContent: Bool, stories: StoryListContext.PeerItemSet?)
+    case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter, generalStatus: ItemHideStatus?, selectedForum: PeerId?, appearMode: PeerListState.AppearMode, hideContent: Bool, stories: EngineStorySubscriptions.Item?)
     case group(Int, EngineChatList.GroupItem, Bool, ItemHideStatus, PeerListState.AppearMode, Bool)
     case reveal([ChatListFilter], ChatListFilter, ChatListFilterBadges)
     case empty(ChatListFilter, PeerListMode, SplitViewState, PeerEquatable?)
     case systemDeprecated(ChatListFilter)
     case sharedFolderUpdated(ChatFolderUpdates)
-    case stories(StoryListContext.State)
+    case stories(EngineStorySubscriptions)
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
@@ -433,12 +433,15 @@ class ChatListController : PeersListController {
     private let animateGroupNextTransition:Atomic<EngineChatList.Group?> = Atomic(value: nil)
     
     private let downloadsSummary: DownloadsSummary
-    private var storyList: StoryListContext?
+    private var storyList: Signal<EngineStorySubscriptions, NoError>?
     
     private let suggestAutoarchiveDisposable = MetaDisposable()
     
     private var didSuggestAutoarchive: Bool = false
     
+    private var preloadStorySubscriptionsDisposable: Disposable?
+    private var preloadStoryResourceDisposables: [MediaResourceId: Disposable] = [:]
+
 
     
     private let filterDisposable = MetaDisposable()
@@ -467,13 +470,45 @@ class ChatListController : PeersListController {
         var scroll:TableScrollState? = nil
         
         let storyList = self.storyList
-        let storyState: Signal<StoryListContext.State?, NoError>
+        let storyState: Signal<EngineStorySubscriptions?, NoError>
         if let storyList = storyList {
-            storyState = storyList.state |> map(Optional.init)
+            storyState = storyList |> map(Optional.init)
         } else {
             storyState = .single(nil)
         }
         
+
+        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions()
+        |> deliverOnMainQueue).start(next: { [weak self] resources in
+            
+            guard let `self` = self else {
+                return
+            }
+            
+            var validIds: [MediaResourceId] = []
+            for (_, info) in resources.sorted(by: { $0.value.priority < $1.value.priority }) {
+                let resource = info.resource
+                validIds.append(resource.resource.id)
+                if self.preloadStoryResourceDisposables[resource.resource.id] == nil {
+                    var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
+                    if let size = info.size {
+                        fetchRange = (0 ..< Int64(size), .default)
+                    }
+                    self.preloadStoryResourceDisposables[resource.resource.id] = fetchedMediaResource(mediaBox: self.context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: resource, range: fetchRange).start()
+                }
+            }
+            
+            var removeIds: [MediaResourceId] = []
+            for (id, disposable) in self.preloadStoryResourceDisposables {
+                if !validIds.contains(id) {
+                    removeIds.append(id)
+                    disposable.dispose()
+                }
+            }
+            for id in removeIds {
+                self.preloadStoryResourceDisposables.removeValue(forKey: id)
+            }
+        })
 
 
         let arguments = Arguments(context: context, setupFilter: { [weak self] filter in
@@ -517,10 +552,8 @@ class ChatListController : PeersListController {
             if let filter = self?.filterValue?.filter {
                 _ = context.engine.peers.hideChatFolderUpdates(folderId: filter.id).start()
             }
-        }, openStory: { [weak self] initialId in
-            if let stories = self?.storyList {
-                StoryModalController.ShowStories(context: context, stories: stories, initialId: initialId)
-            }
+        }, openStory: { initialId in
+            StoryModalController.ShowStories(context: context, initialId: initialId)
         })
         
         
@@ -590,7 +623,7 @@ class ChatListController : PeersListController {
             var mapped: [UIChatListEntry] = prepare.map { item in
                 let space: PeerActivitySpace
                 var generalStatus: ItemHideStatus? = nil
-                let stories: StoryListContext.PeerItemSet?
+                let stories: EngineStorySubscriptions.Item?
                 switch item.0.id {
                 case let .forum(threadId):
                     space = .init(peerId: item.0.renderedPeer.peerId, category: .thread(threadId))
@@ -600,7 +633,7 @@ class ChatListController : PeersListController {
                     stories = nil
                 case let .chatList(peerId):
                     space = .init(peerId: peerId, category: .global)
-                    stories = storyState?.itemSets.first(where: { $0.peerId == peerId })
+                    stories = storyState?.items.first(where: { $0.peer.id == peerId && $0.hasUnseen })
                 }
                 return .chat(item.0, state?.activities.activities[space] ?? [], item.1, filter: filterData.filter, generalStatus: generalStatus, selectedForum: state?.selectedForum, appearMode: state?.controllerAppear ?? .normal, hideContent: state?.appear == .short, stories: stories)
             }
@@ -663,9 +696,8 @@ class ChatListController : PeersListController {
                 animated = false
             }
             
-            if let storyState = storyState, !storyState.itemSets.isEmpty {
-                let items = storyState.itemSets.reduce([], { $0 + $1.items })
-                if !items.isEmpty {
+            if let storyState = storyState {
+                if !storyState.items.isEmpty {
                     mapped.append(.stories(storyState))
                 }
             }
@@ -1429,6 +1461,10 @@ class ChatListController : PeersListController {
         suggestAutoarchiveDisposable.dispose()
         downloadsDisposable.dispose()
         folderUpdatesDisposable.dispose()
+        preloadStorySubscriptionsDisposable?.dispose()
+        for (_, disposable) in preloadStoryResourceDisposables {
+            disposable.dispose()
+        }
     }
     
     
@@ -1470,7 +1506,7 @@ class ChatListController : PeersListController {
 
         self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
         if mode == .plain {
-            self.storyList = context.engine.messages.allStories()
+            self.storyList = context.engine.messages.storySubscriptions()
         } else {
             self.storyList = nil
         }

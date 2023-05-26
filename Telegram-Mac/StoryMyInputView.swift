@@ -122,7 +122,7 @@ final class StoryMyInputView : Control, StoryInput {
     private let viewsText = TextView()
     
     private var arguments: StoryArguments?
-    private var story: StoryListContext.Item?
+    private var story: StoryContentItem?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -153,7 +153,11 @@ final class StoryMyInputView : Control, StoryInput {
             
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
             
-            menu.addItem(ContextMenuItem("Share", itemImage: MenuAnimation.menu_share.value))
+            menu.addItem(ContextMenuItem("Share", handler: { [weak self] in
+                if let story = self?.story {
+                    self?.arguments?.share(story.storyItem)
+                }
+            }, itemImage: MenuAnimation.menu_share.value))
             menu.addItem(ContextMenuItem("Hide", itemImage: MenuAnimation.menu_hide.value))
 
             menu.addItem(ContextSeparatorItem())
@@ -183,9 +187,9 @@ final class StoryMyInputView : Control, StoryInput {
         views.contextMenu = { [weak self] in
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
             if let story = self?.story, let arguments = self?.arguments, let entryId = arguments.interaction.presentation.entryId {
-                if let views = story.views {
+                if let views = story.storyItem.views {
                     if views.seenCount > 3 {
-                        arguments.showViewers(entryId, story)
+                        arguments.showViewers(story)
                     } else {
                         for peer in views.seenPeers {
                             menu.addItem(makeItem(peer._asPeer(), context: arguments.context, callback: { peerId in
@@ -201,10 +205,10 @@ final class StoryMyInputView : Control, StoryInput {
     }
     
     private func deleteAction() {
-        guard let arguments = self.arguments, let storyId = arguments.interaction.presentation.storyId else {
+        guard let arguments = self.arguments, let story = self.story else {
             return
         }
-        arguments.deleteStory(storyId)
+        arguments.deleteStory(story)
     }
     
     required init?(coder: NSCoder) {
@@ -216,12 +220,12 @@ final class StoryMyInputView : Control, StoryInput {
         
     }
     
-    func update(_ story: StoryListContext.Item, animated: Bool) {
+    func update(_ story: StoryContentItem, animated: Bool) {
         guard let arguments = self.arguments else {
             return
         }
         self.story = story
-        let storyViews = story.views
+        let storyViews = story.storyItem.views
         
         let text: NSAttributedString = .initialize(string: storyViews == nil ? "No Views yet" : "\(storyViews!.seenCount) views", color: storyTheme.colors.text, font: .normal(.short))
         let layout = TextViewLayout(text)

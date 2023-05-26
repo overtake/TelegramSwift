@@ -18,7 +18,7 @@ struct StoryCellLayoutItem : Equatable, MediaCellLayoutable {
     static func == (lhs: StoryCellLayoutItem, rhs: StoryCellLayoutItem) -> Bool {
         return lhs.item == rhs.item && lhs.corners == rhs.corners && lhs.frame == rhs.frame
     }
-    let item: StoryListContext.Item
+    let item: EngineStoryItem
     let peerReference: PeerReference
     let peerId: PeerId
     let frame: NSRect
@@ -81,7 +81,7 @@ struct StoryCellLayoutItem : Equatable, MediaCellLayoutable {
 
 final class StoryMonthRowItem : GeneralRowItem {
     private var contentHeight: CGFloat = 0
-    fileprivate let items:[StoryListContext.Item]
+    fileprivate let items:[EngineStoryItem]
     fileprivate let context: AccountContext
     fileprivate let peerReference: PeerReference
     fileprivate let peerId: PeerId
@@ -92,7 +92,7 @@ final class StoryMonthRowItem : GeneralRowItem {
 
     fileprivate let openStory:(StoryInitialIndex?)->Void
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [StoryListContext.Item], viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void) {
         self.items = items
         self.standalone = standalone
         self.peerReference = peerReference

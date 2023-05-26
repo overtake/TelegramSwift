@@ -1628,9 +1628,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private let uiState: Atomic<State> = Atomic(value: State())
     private let stateValue: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
-    
-    private var stories: StoryListContext?
-    
+        
     
     private struct State : Equatable {
         var transribe: [MessageId: TranscribeAudioState] = [:]
@@ -1639,7 +1637,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var threadLoading: MessageId?
         var mediaRevealed: Set<MessageId> = Set()
         var translate: ChatLiveTranslateContext.State?
-        var storyState: StoryListContext.State?
+        var storyState: EngineStorySubscriptions.Item?
         var presentation:TelegramPresentationTheme = theme
         var presentation_genuie:TelegramPresentationTheme = theme
         var bespoke_wallpaper: ThemeWallpaper?
@@ -2395,14 +2393,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.liveTranslate = nil
         }
         
-        
-        if chatLocation.peerId.namespace == Namespaces.Peer.CloudUser, chatLocation.peerId != context.peerId, mode == .history {
-            self.stories = context.stories
-        } else {
-            self.stories = nil
-        }
-        
-        
+
         
         let translateSignal: Signal<ChatLiveTranslateContext.State?, NoError>
         if let liveTranslate = self.liveTranslate {
@@ -2412,9 +2403,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             translateSignal = .single(nil)
         }
         
-        let storiesSignal: Signal<StoryListContext.State?, NoError>
-        if let stories = self.stories {
-            storiesSignal = stories.state
+        let storiesSignal: Signal<EngineStorySubscriptions?, NoError>
+        
+        if chatLocation.peerId.namespace == Namespaces.Peer.CloudUser, chatLocation.peerId != context.peerId, mode == .history {
+            storiesSignal = context.engine.messages.storySubscriptions()
             |> map(Optional.init)
         } else {
             storiesSignal = .single(nil)
@@ -2429,7 +2421,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 current.presentation_emoticon = emoticon
                 current.presentation_genuie = genuie
                 current.translate = translate
-                current.storyState = storyState
+                current.storyState = storyState?.items.first(where: { $0.peer.id == peerId})
                 switch wallpaper {
                 case let .result(result):
                     current.presentation = theme
@@ -3391,14 +3383,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     } else {
                         threadInfo = nil
                     }
-                    let stories: StoryListContext?
-                    if peerId == strongSelf.chatInteraction.peerId {
-                        stories = strongSelf.stories
-                    } else {
-                        stories = nil
-                    }
-                    
-                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, stories: stories, threadInfo: threadInfo))
+                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, threadInfo: threadInfo))
                 }
             }
         }
@@ -3984,8 +3969,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         chatInteraction.openStories = { [weak self] f in
-            if let stories = self?.stories {
-                StoryModalController.ShowStories(context: context, stories: stories, initialId: .init(peerId: peerId, id: nil, takeControl: f))
+            let story = self?.uiState.with ({ $0.storyState })
+            if let story = story {
+                StoryModalController.ShowStories(context: context, initialId: .init(peerId: story.peer.id, id: nil, takeControl: f))
             }
         }
         
@@ -5130,7 +5116,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
             guard let `self` = self else {return}
             let title = (self.centerBarView as? ChatTitleBarView)
-            title?.update(postboxView as? PeerView, stories: uiState.storyState, animated: !isFirst.swap(false))
+            title?.update(postboxView as? PeerView, story: uiState.storyState, animated: !isFirst.swap(false))
             let peerView = postboxView as? PeerView
             self.currentPeerView = peerView
             switch self.chatInteraction.mode {
