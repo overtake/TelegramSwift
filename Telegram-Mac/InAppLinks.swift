@@ -1184,9 +1184,9 @@ func urlVars(with url:String) -> ([String:String], Set<String>) {
                         value += "=\(p)"
                     }
                 }
-                vars[param[0]] = value
+                vars[param[0].lowercased()] = value
             } else {
-                vars[param[0]] = param[1]
+                vars[param[0].lowercased()] = param[1]
             }
         } else if param.count == 1 {
             emptyVars.insert(param[0])

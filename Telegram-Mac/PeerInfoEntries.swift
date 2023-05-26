@@ -80,11 +80,11 @@ protocol PeerInfoEntry {
 }
 
 
-func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, source: PeerInfoController.Source, storyState: StoryListContext.State?) -> [PeerInfoEntry] {
+func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, source: PeerInfoController.Source) -> [PeerInfoEntry] {
     if let threadData = threadData {
         return topicInfoEntries(view: view, threadData: threadData, arguments: arguments, mediaTabsData: mediaTabsData)
     } else if peerViewMainPeer(view) is TelegramUser {
-        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, source: source, storyState: storyState)
+        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, source: source)
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
         switch channel.info {
         case .broadcast:

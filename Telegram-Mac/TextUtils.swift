@@ -13,7 +13,7 @@ import Postbox
 import TGUIKit
 import SwiftSignalKit
 import CurrencyFormat
-
+import ColorPalette
 enum MessageTextMediaViewType {
     case emoji
     case text
@@ -845,6 +845,15 @@ struct PeerStatusStringTheme {
         self.statusFont = statusFont
         self.statusColor = statusColor
         self.highlightColor = highlightColor
+        self.highlightIfActivity = highlightIfActivity
+    }
+    
+    init(_ colors: ColorPalette, titleFont:NSFont = .normal(.title), statusFont:NSFont = .normal(.short), highlightIfActivity:Bool = true) {
+        self.titleFont = .normal(.title)
+        self.titleColor = colors.text
+        self.statusFont = statusFont
+        self.statusColor = colors.grayText
+        self.highlightColor = colors.accent
         self.highlightIfActivity = highlightIfActivity
     }
 }

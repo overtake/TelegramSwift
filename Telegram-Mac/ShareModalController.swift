@@ -79,6 +79,12 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     fileprivate var sendWithoutSound: (()->Void)? = nil
     fileprivate var scheduleMessage: (()->Void)? = nil
     fileprivate var scheduleWhenOnline: (()->Void)? = nil
+    
+    fileprivate var presentation: TelegramPresentationTheme? {
+        didSet {
+            updateLocalizationAndTheme(theme: presentation ?? theme)
+        }
+    }
 
     private let topSeparator = View()
     fileprivate var hasShareMenu: Bool = true {
@@ -89,26 +95,25 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     }
     
     
-    required init(frame frameRect: NSRect, shareObject: ShareObject) {
+    required init(frame frameRect: NSRect, shareObject: ShareObject, presentation: TelegramPresentationTheme? = nil) {
         tokenizedView = TokenizedView(frame: NSMakeRect(0, 0, 300, 30), localizationFunc: { key in
             return translate(key: key, [])
-        }, placeholderKey: shareObject.searchPlaceholderKey)
+        }, placeholderKey: shareObject.searchPlaceholderKey, customTheme: {
+            return .init(presentation?.colors ?? theme.colors)
+        })
+        self.presentation = presentation
         super.init(frame: frameRect)
         
-        backgroundColor = theme.colors.background
-        textContainerView.backgroundColor = theme.colors.background
-        actionsContainerView.backgroundColor = theme.colors.background
-        textView.setBackgroundColor(theme.colors.background)
-        
+
         addSubview(tokenizedView)
         addSubview(basicSearchView)
         addSubview(tableView)
         addSubview(topSeparator)
         tokenizedView.delegate = self
-        bottomSeparator.backgroundColor = theme.colors.border
-        topSeparator.backgroundColor = theme.colors.border
         
-        self.backgroundColor = theme.colors.background
+        tableView.getBackgroundColor = {
+            return presentation?.colors.background ?? theme.colors.background
+        }
         
         dismiss.disableActions()
         share.disableActions()
@@ -133,7 +138,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             
             
             if !items.isEmpty {
-                let menu = ContextMenu()
+                let menu = ContextMenu(presentation: .current(presentation?.colors ?? theme.colors))
                 for item in items {
                     menu.addItem(item)
                 }
@@ -142,12 +147,9 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             return nil
         }
         
-        sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
         sendButton.autohighlight = false
-        _ = sendButton.sizeToFit()
+
         
-        emojiButton.set(image: theme.icons.chatEntertainment, for: .Normal)
-        _ = emojiButton.sizeToFit()
         
         actionsContainerView.addSubview(sendButton)
         actionsContainerView.addSubview(emojiButton)
@@ -158,15 +160,12 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         emojiButton.centerY(x: 0)
         sendButton.centerY(x: emojiButton.frame.maxX + 20)
         
-        backgroundColor = theme.colors.background
-        textView.background = theme.colors.background
+    
+
         textView.textFont = .normal(.text)
-        textView.textColor = theme.colors.text
-        textView.linkColor = theme.colors.link
         textView.max_height = 120
         
         textView.setFrameSize(NSMakeSize(0, 34))
-        textView.setPlaceholderAttributedString(.initialize(string:  strings().previewSenderCommentPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
 
         
         textContainerView.addSubview(textView)
@@ -175,7 +174,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         addSubview(actionsContainerView)
         addSubview(bottomSeparator)
         
-        updateLocalizationAndTheme(theme: theme)
+        updateLocalizationAndTheme(theme: presentation ?? theme)
 
     }
     
@@ -184,6 +183,30 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         let theme = theme as! TelegramPresentationTheme
         share.set(image: theme.icons.modalShare, for: .Normal)
         _ = share.sizeToFit()
+        
+        backgroundColor = theme.colors.background
+        textContainerView.backgroundColor = theme.colors.background
+        actionsContainerView.backgroundColor = theme.colors.background
+        textView.setBackgroundColor(theme.colors.background)
+        bottomSeparator.backgroundColor = theme.colors.border
+        topSeparator.backgroundColor = theme.colors.border
+        
+        self.backgroundColor = theme.colors.background
+
+        
+        textView.setPlaceholderAttributedString(.initialize(string:  strings().previewSenderCommentPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
+        
+        
+        sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
+        _ = sendButton.sizeToFit()
+        
+        emojiButton.set(image: theme.icons.chatEntertainment, for: .Normal)
+        _ = emojiButton.sizeToFit()
+        
+        backgroundColor = theme.colors.background
+        textView.background = theme.colors.background
+        textView.textColor = theme.colors.text
+        textView.linkColor = theme.colors.link
 
         if inForumMode {
             dismiss.set(image: theme.icons.chatNavigationBack, for: .Normal)
@@ -260,10 +283,12 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     
     private class ForumTopicArguments {
         let context: AccountContext
+        let presentation: TelegramPresentationTheme
         let select:(Int64)->Void
-        init(context: AccountContext, select:@escaping(Int64)->Void) {
+        init(context: AccountContext, presentation: TelegramPresentationTheme, select:@escaping(Int64)->Void) {
             self.context = context
             self.select = select
+            self.presentation = presentation
         }
     }
     
@@ -292,13 +317,13 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
                 if let threadId = threadId {
                     arguments.select(threadId)
                 }
-            })
+            }, presentation: arguments.presentation)
         }
     }
     
     func appearForumTopics(_ items: [EngineChatList.Item], peerId: PeerId, interactions: SelectPeerInteraction, delegate: TableViewDelegate?, context: AccountContext, animated: Bool) {
         
-        let arguments = ForumTopicArguments(context: context, select: { threadId in
+        let arguments = ForumTopicArguments(context: context, presentation: presentation ?? theme, select: { threadId in
             interactions.action(peerId, threadId)
         })
         
@@ -312,6 +337,10 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             tableView.frame = self.tableView.frame
             addSubview(tableView)
             self.forumTopicsView = tableView
+            
+            tableView.getBackgroundColor = { [weak self] in
+                return self?.presentation?.colors.background ?? theme.colors.background
+            }
         }
         
         tableView.delegate = delegate
@@ -344,7 +373,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             self.tableView.layer?.animatePosition(from: tableView.frame.origin, to: NSMakePoint(-oneOfThrid, tableView.frame.minY), duration: 0.35, timingFunction: .spring)
         }
         
-        updateLocalizationAndTheme(theme: theme)
+        updateLocalizationAndTheme(theme: presentation ?? theme)
         needsLayout = true
     }
     
@@ -364,7 +393,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         self.forumTopicsView = nil
         self.forumTopicItems = []
         self.tableView.cancelSelection()
-        self.updateLocalizationAndTheme(theme: theme)
+//        self.updateLocalizationAndTheme(theme: theme)
         self.needsLayout = true
     }
         
@@ -460,7 +489,7 @@ final class ShareAdditionItems {
 class ShareObject {
     
     let additionTopItems:ShareAdditionItems?
-    
+    var presentation: TelegramPresentationTheme?
     let context: AccountContext
     let emptyPerformOnClose: Bool
     let excludePeerIds: Set<PeerId>
@@ -529,6 +558,10 @@ class ShareObject {
         
     }
     
+    var successText: String {
+        return "Success!"
+    }
+    
     var hasLink: Bool {
         return false
     }
@@ -545,7 +578,8 @@ class ShareObject {
     }
     func statusStyle(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> ControlStyle {
         let color = presence?.status.string.isEmpty == false ? presence?.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor : nil
-        return ControlStyle(font: .normal(.text), foregroundColor: peer.id == context.peerId ? theme.colors.grayText : color ?? theme.colors.grayText, highlightColor:.white)
+        let theme = presentation ?? theme
+        return ControlStyle(font: .normal(.text), foregroundColor: peer.id == context.peerId ? theme.colors.grayText : color ?? theme.colors.grayText)
     }
 }
 
@@ -1189,7 +1223,8 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         
         switch entry {
         case let .plain(peer, _, presence, autoDeletion, drawSeparator, multiple):
-            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
+            let theme = share.presentation ?? theme
+            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
                 if peer.isForum && share.selectTopics {
                     selectInteraction.openForum(peer.id)
                 } else {
@@ -1203,17 +1238,18 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
                         }
                     }, itemImage: MenuAnimation.menu_select_messages.value)
                 ])
-            }, highlightVerified: true)
+            }, highlightVerified: true, customTheme: .initialize(theme))
         case let .secretChat(peer, peerId, _, _, drawSeparator, multiple):
-            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: strings().composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
+            let theme = share.presentation ?? theme
+            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText), status: strings().composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
                 selectInteraction.action(peerId, nil)
-            })
+            }, customTheme: .initialize(theme))
         case let .separator(text, _):
             return SeparatorRowItem(initialSize, entry.stableId, string: text)
         case .emptySearch:
             return SearchEmptyRowItem(initialSize, stableId: entry.stableId)
         case let .folders(filters, current):
-            return ChatListRevealItem(initialSize, context: context, tabs: filters, selected: current, counters: ChatListFilterBadges(total: 0, filters: []), action: selectInteraction.updateFolder)
+            return ChatListRevealItem(initialSize, context: context, tabs: filters, selected: current, counters: ChatListFilterBadges(total: 0, filters: []), action: selectInteraction.updateFolder, presentation: share.presentation ?? theme)
         }
         
         
@@ -1400,7 +1436,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     
     override func initializer() -> NSView {
         let vz = viewClass() as! ShareModalView.Type
-        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), shareObject: share);
+        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), shareObject: share, presentation: self.presentation);
     }
 
     
@@ -1594,8 +1630,14 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
     }
     
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: self.presentation ?? theme)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.presentation = presentation
         
         
         let initialSize = self.atomicSize.modify({$0})
@@ -1637,7 +1679,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         genericView.textView.delegate = self
         genericView.hasShareMenu = self.share.hasLink
-        
+        let presentation = self.presentation
         
         
         genericView.dismiss.set(handler: { [weak self] _ in
@@ -1681,7 +1723,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         }
         
         genericView.share.contextMenu = { [weak self] in
-            let menu = ContextMenu()
+            let menu = ContextMenu(presentation: .current(presentation?.colors ?? theme.colors))
             menu.addItem(ContextMenuItem(strings().modalCopyLink, handler: {
                 if share.hasLink {
                     share.shareLink()
@@ -1883,7 +1925,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var presences:[PeerId: PeerStatusStringResult] = [:]
                         for value in values.views {
                             if let view = value.value as? PeerView {
-                                presences[view.peerId] = stringStatus(for: view, context: context)
+                                presences[view.peerId] = stringStatus(for: view, context: context, theme: .init(presentation?.colors ?? theme.colors))
                             }
                         }
                         return (chatList.0, chatList.1, presences, selfPeer)
@@ -1973,7 +2015,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var presences:[PeerId: PeerStatusStringResult] = [:]
                         for value in values.views {
                             if let view = value.value as? PeerView {
-                                presences[view.peerId] = stringStatus(for: view, context: context)
+                                presences[view.peerId] = stringStatus(for: view, context: context, theme: .init(presentation?.colors ?? theme.colors))
                             }
                         }
                         
@@ -2163,6 +2205,9 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     _ = share.perform(to: Array(ids), threadId: nil, comment: self.contextChatInteraction.presentation.interfaceState.inputState).start()
                     self.emoji.popover?.hide()
                     self.close()
+                    if !ids.isEmpty {
+                        self.showSuccess()
+                    }
                 } else {
                     self.genericView.tokenizedView.markAsFailed(failed.map {
                         $0.peerId.toInt64()
@@ -2222,10 +2267,13 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     }
 
     private let emoji: EmojiesController
+    private let presentation: TelegramPresentationTheme?
     
-    init(_ share:ShareObject) {
+    init(_ share:ShareObject, presentation: TelegramPresentationTheme? = nil) {
         self.share = share
-        emoji = EmojiesController(share.context)
+        self.presentation = presentation
+        self.share.presentation = presentation
+        emoji = EmojiesController(share.context, presentation: presentation)
         self.contextChatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: share.context)
         inputContextHelper = InputContextHelper(chatInteraction: contextChatInteraction)
         super.init(frame: NSMakeRect(0, 0, 360, 400))
@@ -2358,10 +2406,15 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         super.viewDidDisappear(animated)
     }
     
+    func showSuccess() {
+        showModalText(for: share.context.window, text: share.successText)
+    }
+    
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         if self.share.emptyPerformOnClose {
             _ = self.share.perform(to: [], threadId: nil).start()
         }
+        
         super.close(animationType: animationType)
     }
     

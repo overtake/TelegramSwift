@@ -51,6 +51,7 @@
 		2719D8102A16048D00081079 /* StoryMonthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */; };
 		2719D8122A166BC100081079 /* StoryMyEmptyRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D8112A166BC100081079 /* StoryMyEmptyRowItem.swift */; };
 		2719D8142A1774BC00081079 /* StoryViewersModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D8132A1774BC00081079 /* StoryViewersModalController.swift */; };
+		2719D8162A1F555500081079 /* StoryChatContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D8152A1F555500081079 /* StoryChatContent.swift */; };
 		271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */; };
 		271D4F3427689DF0004FD034 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 271D4F3327689DF0004FD034 /* WebKit.framework */; };
 		271D4F362769D07E004FD034 /* menu_reactions.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 271D4F352769D07D004FD034 /* menu_reactions.tgs */; };
@@ -1502,6 +1503,7 @@
 		2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMonthRowItem.swift; sourceTree = "<group>"; };
 		2719D8112A166BC100081079 /* StoryMyEmptyRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMyEmptyRowItem.swift; sourceTree = "<group>"; };
 		2719D8132A1774BC00081079 /* StoryViewersModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewersModalController.swift; sourceTree = "<group>"; };
+		2719D8152A1F555500081079 /* StoryChatContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChatContent.swift; sourceTree = "<group>"; };
 		271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PamentsSelectMethodController.swift; sourceTree = "<group>"; };
 		271D4F3327689DF0004FD034 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		271D4F352769D07D004FD034 /* menu_reactions.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_reactions.tgs; sourceTree = "<group>"; };
@@ -3058,6 +3060,7 @@
 				271824502A08C60400AFBD4C /* StoryChatListView.swift */,
 				2719D8002A139B9D00081079 /* StoryRecordingView.swift */,
 				2719D8132A1774BC00081079 /* StoryViewersModalController.swift */,
+				2719D8152A1F555500081079 /* StoryChatContent.swift */,
 			);
 			name = stories;
 			sourceTree = "<group>";
@@ -6762,6 +6765,7 @@
 				D0BEB9952166AF270055B718 /* PeerMediaTouchBar.swift in Sources */,
 				C25BB1691F867FEE0089ED02 /* ChatMessageAccessoryView.swift in Sources */,
 				C21BE3AF1FD099AA00C1C849 /* DeveloperViewController.swift in Sources */,
+				2719D8162A1F555500081079 /* StoryChatContent.swift in Sources */,
 				D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
 				278E86D7265D49100006685D /* MicroListenerController.swift in Sources */,

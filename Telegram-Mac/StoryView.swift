@@ -18,6 +18,12 @@ import Postbox
 class StoryView : Control {
     
     
+    fileprivate let ready: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
+    
+    var getReady: Signal<Bool, NoError> {
+        return self.ready.get() |> filter { $0 } |> take(1)
+    }
+    
     enum State : Equatable {
         case waiting
         case playing(MediaPlayerStatus)
@@ -61,7 +67,7 @@ class StoryView : Control {
         }
     }
     
-    fileprivate(set) var story: StoryListContext.Item?
+    fileprivate(set) var story: EngineStoryItem?
     fileprivate var peer: Peer?
     fileprivate var context: AccountContext?
     
@@ -132,7 +138,7 @@ class StoryView : Control {
     }
     
     
-    func update(context: AccountContext, peerId: PeerId, story: StoryListContext.Item, peer: Peer?) {
+    func update(context: AccountContext, peerId: PeerId, story: EngineStoryItem, peer: Peer?) {
         self.peer = peer
         self.context = context
         self.story = story
@@ -247,7 +253,7 @@ class StoryView : Control {
     
     static public var size: NSSize = NSMakeSize(9 * 40, 16 * 40)
     
-    static func makeView(for story: StoryListContext.Item, peerId: PeerId, peer: Peer?, context: AccountContext, frame: NSRect) -> StoryView {
+    static func makeView(for story: EngineStoryItem, peerId: PeerId, peer: Peer?, context: AccountContext, frame: NSRect) -> StoryView {
         let view: StoryView
         if story.media._asMedia() is TelegramMediaImage {
             view = StoryImageView(frame: frame)
@@ -279,7 +285,7 @@ class StoryImageView : StoryView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func update(context: AccountContext, peerId: PeerId, story: StoryListContext.Item, peer: Peer?) {
+    override func update(context: AccountContext, peerId: PeerId, story: EngineStoryItem, peer: Peer?) {
         
         let updated = self.story?.id != story.id
         
@@ -318,18 +324,21 @@ class StoryImageView : StoryView {
             resource = nil
         }
         
-        self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: nil), clearInstantly: updated)
+        self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: nil), clearInstantly: false)
 
-        if let updateImageSignal = updateImageSignal {
-            self.imageView.ignoreFullyLoad = updated
-            self.imageView.setSignal(updateImageSignal, animate: updated, cacheImage: { [weak media] result in
+        if let updateImageSignal = updateImageSignal, !self.imageView.isFullyLoaded {
+            self.imageView.setSignal(updateImageSignal, animate: updated, cacheImage: { [weak media, weak self] result in
                 if let media = media {
                     cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: nil)
                 }
+                if result.image != nil {
+                    self?.ready.set(true)
+                }
             })
+        } else {
+            self.ready.set(true)
         }
         self.imageView.set(arguments: arguments)
-        
         
         if let resource = resource {
             let signal = context.account.postbox.mediaBox.resourceStatus(resource) |> deliverOnMainQueue
@@ -337,6 +346,9 @@ class StoryImageView : StoryView {
                 self?.mediaStatus = status
             }))
         }
+        delay(0.2, closure: { [weak self] in
+            self?.ready.set(true)
+        })
     }
     
     private var mediaStatus: MediaResourceStatus? {
@@ -379,7 +391,7 @@ class StoryVideoView : StoryImageView {
     
     private let statusDisposable = MetaDisposable()
         
-    override func update(context: AccountContext, peerId: PeerId, story: StoryListContext.Item, peer: Peer?) {
+    override func update(context: AccountContext, peerId: PeerId, story: EngineStoryItem, peer: Peer?) {
         super.update(context: context, peerId: peerId, story: story, peer: peer)
         
         guard let peer = peer, let peerReference = PeerReference(peer) else {

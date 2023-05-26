@@ -39,7 +39,7 @@ class GeneralContainableRowView : TableRowView {
         return false
     }
     
-    var borderColor: NSColor {
+    override var borderColor: NSColor {
         return theme.colors.border
     }
     

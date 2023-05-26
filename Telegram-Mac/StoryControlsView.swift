@@ -30,6 +30,7 @@ final class StoryControlsView : Control {
     
     private var arguments: StoryArguments?
     private var groupId: PeerId?
+    private var story: EngineStoryItem?
     
     private let shadowView = ShadowView()
     required init(frame frameRect: NSRect) {
@@ -67,11 +68,15 @@ final class StoryControlsView : Control {
             self?.arguments?.interaction.toggleMuted()
         }, for: .Click)
         
-        more.contextMenu = {
+        more.contextMenu = { [weak self] in
             
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
             
-            menu.addItem(ContextMenuItem("Share", itemImage: MenuAnimation.menu_share.value))
+            menu.addItem(ContextMenuItem("Share", handler: { [weak self] in
+                if let story = self?.story {
+                    self?.arguments?.share(story)
+                }
+            }, itemImage: MenuAnimation.menu_share.value))
             menu.addItem(ContextMenuItem("Hide", itemImage: MenuAnimation.menu_hide.value))
 
             menu.addItem(ContextSeparatorItem())
@@ -97,10 +102,11 @@ final class StoryControlsView : Control {
         muted.set(image: isMuted ? muted_image : unmuted_image, for: .Normal)
     }
     
-    func update(context: AccountContext, arguments: StoryArguments, groupId: PeerId, peer: Peer?, story: StoryListContext.Item, animated: Bool) {
+    func update(context: AccountContext, arguments: StoryArguments, groupId: PeerId, peer: Peer?, story: EngineStoryItem, animated: Bool) {
         guard let peer = peer else {
             return
         }
+        self.story = story
         self.groupId = groupId
         self.arguments = arguments
         avatar.setPeer(account: context.account, peer: peer)

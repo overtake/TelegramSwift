@@ -832,16 +832,18 @@
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
         }
         
-        storiesTab = context.stories.state |> map { state -> (exist: Bool, loaded: Bool) in
-            
-            if let itemSet = state.itemSets.first(where: { $0.peerId == peerId }) {
-                return (exist: itemSet.items.count > 0, loaded: true)
-            } else {
-                return (exist: false, loaded: true)
-            }
-        } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
-            return (tag: .stories, exists: data.exist, hasLoaded: data.loaded)
-        }
+        storiesTab = .single((tag: .stories, exists: false, hasLoaded: true))
+//
+//        storiesTab = context.stories.state |> map { state -> (exist: Bool, loaded: Bool) in
+//
+//            if let itemSet = state.itemSets.first(where: { $0.peerId == peerId }) {
+//                return (exist: itemSet.items.count > 0, loaded: true)
+//            } else {
+//                return (exist: false, loaded: true)
+//            }
+//        } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+//            return (tag: .stories, exists: data.exist, hasLoaded: data.loaded)
+//        }
         
         let location: ChatLocationInput
         if let threadInfo = threadInfo {

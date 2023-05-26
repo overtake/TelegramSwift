@@ -15,10 +15,13 @@ final class SearchTopicRowItem: GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let nameLayout: TextViewLayout
     fileprivate let nameSelectedLayout: TextViewLayout
-
-    init(_ initialSize: NSSize, stableId: AnyHashable, item: EngineChatList.Item, context: AccountContext, action: @escaping()->Void = {}) {
+    fileprivate let presentation: TelegramPresentationTheme?
+    init(_ initialSize: NSSize, stableId: AnyHashable, item: EngineChatList.Item, context: AccountContext, action: @escaping()->Void = {}, presentation: TelegramPresentationTheme? = nil) {
         self.item = item
         self.context = context
+        self.presentation = presentation
+        
+        let theme = presentation ?? theme
         self.nameLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         self.nameSelectedLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.underSelectedColor, font: .medium(.text)), maximumNumberOfLines: 1)
         super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: .legacy, action: action, border: [.Bottom])
@@ -107,10 +110,18 @@ private class SearchTopicRowView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
+        guard let item = self.item as? SearchTopicRowItem else {
+            return
+        }
+        let theme = item.presentation ?? theme
         borderView.backgroundColor = theme.colors.border
     }
     
     override var backdorColor: NSColor {
+        guard let item = self.item as? SearchTopicRowItem else {
+            return isSelect ? theme.colors.accentSelect : theme.colors.background
+        }
+        let theme = item.presentation ?? theme
         return isSelect ? theme.colors.accentSelect : theme.colors.background
     }
     

@@ -102,38 +102,15 @@ struct StoryInitialIndex {
     let takeControl:((PeerId, Int32?)->NSView?)?
 }
 
-struct StoryListEntry : Equatable, Comparable, Identifiable {
-    let item: StoryListContext.PeerItemSet
-    let index: Int
-    
-    static func <(lhs: StoryListEntry, rhs: StoryListEntry) -> Bool {
-        return lhs.index < rhs.index
-    }
-    var stableId: AnyHashable {
-        return item.peerId
-    }
-    var id: PeerId {
-        return item.peerId
-    }
-    var count: Int {
-        return item.items.count
-    }
-    var hasUnseen: Bool {
-        return self.item.items.contains(where: { !isSeen($0) })
-    }
-    
-    func isSeen(_ item: StoryListContext.Item) -> Bool {
-        if self.item.maxReadId >= item.id {
-            return true
-        } else {
-            return false
-        }
+private let storedTheme = generateTheme(palette: nightAccentPalette, cloudTheme: nil, bubbled: false, fontSize: 13, wallpaper: .init())
+
+var storyTheme: TelegramPresentationTheme {
+    if theme.colors.isDark {
+        return theme
+    } else {
+        return storedTheme
     }
 }
-
-
-
-let storyTheme = generateTheme(palette: nightAccentPalette, cloudTheme: nil, bubbled: false, fontSize: 13, wallpaper: .init())
 
 
 final class StoryInteraction : InterfaceObserver {
@@ -179,7 +156,7 @@ final class StoryInteraction : InterfaceObserver {
         self.presentation = presentation
     }
     
-    func startRecording(context: AccountContext, autohold: Bool) {
+    func startRecording(context: AccountContext, autohold: Bool, sendMedia:@escaping([MediaSenderContainer])->Void) {
         let state: ChatRecordingState
         if self.presentation.recordType == .voice {
             state = ChatRecordingAudioState(context: context, liveUpload: false, autohold: autohold)
@@ -187,18 +164,20 @@ final class StoryInteraction : InterfaceObserver {
             let videoState = ChatRecordingVideoState(context: context, liveUpload: false, autohold: autohold)
             state = videoState
             showModal(with: VideoRecorderModalController(state: state, pipeline: videoState.pipeline, sendMedia: { medias in
-                
+                sendMedia(medias)
             }, resetState: { [weak self] in
                 self?.resetRecording()
             }), for: context.window)
         }
         state.start()
+        
 
         self.update { current in
             var current = current
             current.inputRecording = state
             return current
         }
+        
     }
     
     func update(animated:Bool = true, _ f:(State)->State)->Void {
@@ -224,7 +203,7 @@ final class StoryInteraction : InterfaceObserver {
         }
     }
     
-    func canBeMuted(_ story: StoryListContext.Item) -> Bool {
+    func canBeMuted(_ story: EngineStoryItem) -> Bool {
         return story.media._asMedia() is TelegramMediaFile
     }
     
@@ -295,10 +274,11 @@ final class StoryArguments {
     let openChat:(PeerId, MessageId?, ChatInitialAction?)->Void
     let sendMessage:()->Void
     let toggleRecordType:()->Void
-    let deleteStory:(Int32)->Void
+    let deleteStory:(StoryContentItem)->Void
     let markAsRead:(PeerId, Int32)->Void
-    let showViewers:(PeerId, StoryListContext.Item)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping()->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(Int32)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(PeerId, StoryListContext.Item)->Void) {
+    let showViewers:(StoryContentItem)->Void
+    let share:(EngineStoryItem)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping()->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(EngineStoryItem)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -316,6 +296,7 @@ final class StoryArguments {
         self.deleteStory = deleteStory
         self.markAsRead = markAsRead
         self.showViewers = showViewers
+        self.share = share
     }
     
     func longDown() {
@@ -350,7 +331,8 @@ final class StoryArguments {
     }
     
     func startRecording(autohold: Bool) {
-        self.interaction.startRecording(context: context, autohold: autohold)
+        let state = self.interaction.startRecording(context: context, autohold: autohold, sendMedia: self.chatInteraction.sendMedia)
+        
     }
     
     deinit {
@@ -719,6 +701,12 @@ private final class StoryViewController: Control, Notifable {
         }
     }
     
+    fileprivate let ready: Promise<Bool> = Promise(false)
+    
+    var getReady: Signal<Bool, NoError> {
+        return self.ready.get()
+    }
+    
    
     private var current: StoryListView?
     private var arguments:StoryArguments?
@@ -732,10 +720,8 @@ private final class StoryViewController: Control, Notifable {
     private let rightTop = Control()
     private let rightBottom = Control()
     
-    private var entries:[StoryListEntry] = []
+    private var storyContext: StoryContentContext?
     
-    
-    private var currentIndex: Int? = nil
     
     private let container = View()
     
@@ -840,28 +826,22 @@ private final class StoryViewController: Control, Notifable {
     }
     
     var hasNextGroup: Bool {
-        guard let currentIndex = self.currentIndex, !isPaused else {
-            return false
-        }
-        return currentIndex < entries.count - 1
+        return self.storyContext?.stateValue?.nextSlice != nil
     }
     var hasPrevGroup: Bool {
-        guard let currentIndex = self.currentIndex, !isPaused else {
-            return false
-        }
-        return currentIndex > 0
+        return self.storyContext?.stateValue?.previousSlice != nil
     }
     
     private func updatePrevNextControls(_ event: NSEvent, animated: Bool = true) {
-        guard let current = self.current, let index = self.currentIndex, let arguments = self.arguments else {
+        guard let current = self.current, let arguments = self.arguments else {
             return
         }
         
-        let nextEntry = self.entries[min(index + 1, entries.count - 1)]
-        let prevEntry = self.entries[max(index - 1, 0)]
+        let nextEntry = self.storyContext?.stateValue?.nextSlice
+        let prevEntry = self.storyContext?.stateValue?.previousSlice
         
-        self.prev_button.update(with: prevEntry.item.peer?._asPeer(), context: arguments.context, isNext: false, animated: animated)
-        self.next_button.update(with: nextEntry.item.peer?._asPeer(), context: arguments.context, isNext: true, animated: animated)
+        self.prev_button.update(with: prevEntry?.peer._asPeer(), context: arguments.context, isNext: false, animated: animated)
+        self.next_button.update(with: nextEntry?.peer._asPeer(), context: arguments.context, isNext: true, animated: animated)
 
         let point = self.convert(event.locationInWindow, from: nil)
         
@@ -891,88 +871,58 @@ private final class StoryViewController: Control, Notifable {
     
     
     
-    func update(context: AccountContext, items: [StoryListContext.PeerItemSet], initial: StoryInitialIndex?) {
+    func update(context: AccountContext, storyContext: StoryContentContext, initial: StoryInitialIndex?) {
                 
         
-        if items.isEmpty {
+        guard let state = storyContext.stateValue else {
             return
         }
         
-        var initial = initial
-
         
-        var entries:[StoryListEntry] = []
-        var index: Int = 0
-        for itemSet in items {
-            entries.append(.init(item: itemSet, index: index))
-            index += 1
-        }
-                
-        
-        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.entries, rightList: entries)
-        
-        
-        let previous = self.entries
-        
-        for rdx in deleteIndices.reversed() {
-            self.entries.remove(at: rdx)
-        }
-        
-        
-        for (idx, item, _) in indicesAndItems {
-            self.entries.insert(item, at: idx)
-        }
-        for (idx, item, _) in updateIndices {
-            let item =  item
-            self.entries[idx] = item
-        }
-        
+        self.storyContext = storyContext
+       
         if let current = self.current {
-            let entry = self.entries.first(where: { $0.id == current.id })
-            
-            if let entry = entry  {
-                current.update(context: context, entry: entry, selected: nil)
-            } else  {
-                let prevIndex = previous.firstIndex(where: { $0.id == current.id })
-                if let prevIndex = prevIndex {
-                    let index = min(prevIndex, entries.count - 1)
-                    self.current?.removeFromSuperview()
-                    self.current = nil
-                    initial = .init(peerId: entries[index].id, id: nil, takeControl: initial?.takeControl)
-                }
+            let slice: StoryContentContextState.FocusedSlice?
+            if state.slice?.peer.id == current.id {
+                slice = state.slice
+            } else if state.nextSlice?.peer.id == current.id {
+                slice = state.nextSlice
+            } else if state.previousSlice?.peer.id == current.id {
+                slice = state.previousSlice
+            } else {
+                slice = nil
+            }
+            if let entry = slice {
+                current.update(context: context, entry: entry)
             }
         }
         
-        if self.current == nil {
+        if self.current == nil, let entry = state.slice {
             let storyView = StoryListView(frame: bounds)
             storyView.setArguments(self.arguments)
-            
-            
-            
-            let initialEntryIndex = entries.firstIndex(where: { $0.id == initial?.peerId }) ?? 0
-            let entry = self.entries[initialEntryIndex]
-            let entryId = entry.item.peerId
-            
-            self.currentIndex = initialEntryIndex
-                        
-            let initialId = self.arguments?.interaction.presentation.entryState[entryId] ?? initial?.id
-            let initialIndex = entry.item.items.firstIndex(where: { $0.id == initialId }) ?? entry.item.items.firstIndex(where: { !entry.isSeen($0) }) ?? 0
-            
-            storyView.update(context: context, entry: entry, selected: initialIndex)
+            let entryId = entry.peer.id
+            storyView.update(context: context, entry: entry)
             self.current = storyView
-            
-            
+
+
             container.addSubview(storyView)
-          
+            
+            self.ready.set(storyView.getReady)
+
             arguments?.interaction.update(animated: false, { current in
                 var current = current
                 current.entryId = entryId
                 return current
             })
+
+            _ = (self.getReady |> filter { $0 } |> take(1)).start(next: { [weak storyView] _ in
+                if let control = initial?.takeControl?(entryId, entry.item.storyItem.id) {
+                    storyView?.animateAppearing(from: control)
+                }
+            })
             
-            if let control = initial?.takeControl?(entryId, initialId) {
-                storyView.animateAppearing(from: control)
-            }
+        } else if state.slice == nil {
+            self.close.send(event: .Click)
         }
         
         if let event = NSApp.currentEvent {
@@ -981,9 +931,9 @@ private final class StoryViewController: Control, Notifable {
     }
     
     func delete() -> KeyHandlerResult {
-        if let storyId = self.arguments?.interaction.presentation.storyId, arguments?.interaction.presentation.inputInFocus == false {
+        if let story = self.current?.story, arguments?.interaction.presentation.inputInFocus == false {
             if self.arguments?.interaction.presentation.entryId == self.arguments?.context.peerId {
-                self.arguments?.deleteStory(storyId)
+                self.arguments?.deleteStory(story)
                 return .invoked
             }
         }
@@ -997,7 +947,12 @@ private final class StoryViewController: Control, Notifable {
         guard !inTransition, let result = self.current?.previous() else {
             return .invokeNext
         }
-        self.processGroupResult(result, animated: true)
+        
+        if result == .invoked {
+            self.storyContext?.navigate(navigation: .item(.previous))
+        } else if result == .moveBack {
+            self.processGroupResult(result, animated: true)
+        }
 
         return .invoked
     }
@@ -1008,10 +963,16 @@ private final class StoryViewController: Control, Notifable {
         guard !inTransition, let result = self.current?.next() else {
             return .invokeNext
         }
-        let previousIndex = self.processGroupResult(result, animated: true)
-        if previousIndex == self.currentIndex, result == .moveNext {
-            self.close.send(event: .Click)
+        if result == .invoked {
+            self.storyContext?.navigate(navigation: .item(.next))
+        } else if result == .moveNext {
+            if storyContext?.stateValue?.nextSlice == nil, result == .moveNext {
+                self.close.send(event: .Click)
+            } else {
+                self.processGroupResult(result, animated: true)
+            }
         }
+       
         return .invoked
     }
     
@@ -1028,88 +989,75 @@ private final class StoryViewController: Control, Notifable {
         }
     }
     
-    @discardableResult private func processGroupResult(_ result: StoryListView.UpdateIndexResult, animated: Bool, bySwipe: Bool = false) -> Int? {
-        
-        let previousIndex = self.currentIndex
-
-        
-        guard let currentIndex = self.currentIndex, let context = self.arguments?.context, !inTransition else {
-            return previousIndex
+    private func processGroupResult(_ result: StoryListView.UpdateIndexResult, animated: Bool, bySwipe: Bool = false) {
+                
+        guard let context = self.arguments?.context, !inTransition else {
+            return
         }
         
         
         if self.isInputFocused {
-            self.resetInputView()
-            return previousIndex
+            if self.reactionsOverlay != nil {
+                self.closeReactions()
+            } else {
+                self.resetInputView()
+            }
+            return
         }
         
-        let nextGroupIndex: Int?
+        let nextGroup: StoryContentContextState.FocusedSlice?
         switch result {
         case .invoked:
-            nextGroupIndex = nil
+            nextGroup = nil
         case .moveNext:
-            nextGroupIndex = currentIndex + 1
+            nextGroup = self.storyContext?.stateValue?.nextSlice
         case .moveBack:
-            nextGroupIndex = currentIndex - 1
+            nextGroup = self.storyContext?.stateValue?.previousSlice
         }
-        
-        if let nextGroupIndex = nextGroupIndex {
-            if nextGroupIndex >= 0 && nextGroupIndex < self.entries.count {
-                
-                inTransition = true
-                
-                self.arguments?.interaction.flushPauses()
-                
-                let entry = entries[nextGroupIndex]
-                let entryId = entry.id
-                
-                
-                let isNext = currentIndex < nextGroupIndex
-                
-                let initial = arguments?.interaction.presentation.entryState[entryId]
-                
-                let initialIndex = entry.item.items.firstIndex(where: { $0.id == initial }) ?? entry.item.items.firstIndex(where: { !entry.isSeen($0) }) ?? (!isNext ? entry.count - 1 : 0)
-                self.currentIndex = nextGroupIndex
-                
-                self.arguments?.interaction.update { current in
-                    var current = current
-                    current.entryId = entryId
-                    return current
-                }
-                
-                let storyView = StoryListView(frame: bounds)
-                storyView.setArguments(self.arguments)
-                
-                storyView.update(context: context, entry: entry, selected: initialIndex)
-                
-                
-                let previous = self.current
-                self.current = storyView
-                if isNext {
-                    container.addSubview(storyView, positioned: .above, relativeTo: previous)
-                } else {
-                    container.addSubview(storyView, positioned: .below, relativeTo: previous)
-                }
-                
-                if let previous = previous {
-                    storyView.initAnimateTranslate(previous: previous, direction: isNext ? .left : .right)
-                    if !bySwipe {
-                        storyView.translate(progress: 0, finish: true, completion: { [weak self] completion, _ in
-                            self?.inTransition = false
-                        })
-                    }
-                }
-                
+        let isNext = result == .moveNext
+
+        if nextGroup != nil || bySwipe {
+            inTransition = true
+            self.arguments?.interaction.flushPauses()
+
+            let entryId = nextGroup?.peer.id
+
+
+            self.arguments?.interaction.update { current in
+                var current = current
+                current.entryId = entryId
+                return current
+            }
+
+            let storyView = StoryListView(frame: bounds)
+            storyView.setArguments(self.arguments)
+
+            storyView.update(context: context, entry: nextGroup)
+
+            let previous = self.current
+            self.current = storyView
+            if isNext {
+                container.addSubview(storyView, positioned: .above, relativeTo: previous)
             } else {
-                self.close.send(event: .Click)
-                //current?.shake(beep: false)
+                container.addSubview(storyView, positioned: .below, relativeTo: previous)
+            }
+
+            if let previous = previous {
+                storyView.initAnimateTranslate(previous: previous, direction: isNext ? .left : .right)
+                if !bySwipe {
+                    storyView.translate(progress: 0, finish: true, completion: { [weak self] completion, _ in
+                        self?.storyContext?.navigate(navigation: .peer(result == .moveNext ? .next : .previous))
+                        self?.inTransition = false
+                    })
+                }
             }
         }
+        
+        
+        
         if let event = NSApp.currentEvent {
             self.updatePrevNextControls(event)
         }
-        
-        return previousIndex
     }
 
     
@@ -1207,25 +1155,13 @@ private final class StoryViewController: Control, Notifable {
             return
         }
         
-        arguments.interaction.update { current in
-            var current = current
-          //  current.playingReaction = true
-          //  current.inTransition = true
-            return current
-        }
         let overlay = View(frame: NSMakeRect(0, 0, 300, 300))
         overlay.isEventLess = true 
         current.contentView.addSubview(overlay)
         overlay.center()
         overlay.setFrameOrigin(NSMakePoint(overlay.frame.minX, overlay.frame.minY - 50))
         
-        let finish:()->Void = { [weak arguments, weak overlay] in
-            arguments?.interaction.update { current in
-                var current = current
-              //  current.playingReaction = false
-             //   current.inTransition = false
-                return current
-            }
+        let finish:()->Void = { [weak overlay] in
             if let overlay = overlay {
                 performSubviewRemoval(overlay, animated: true)
             }
@@ -1329,7 +1265,7 @@ private final class StoryViewController: Control, Notifable {
     }
     
     func animateDisappear(_ initialId: StoryInitialIndex?) {
-        if let current = self.current, let id = current.id, let control = initialId?.takeControl?(id, current.storyId) {
+        if let current = self.current, let id = current.id, let control = initialId?.takeControl?(id, current.storyId?.base as? Int32) {
             current.animateDisappearing(to: control)
         }
     }
@@ -1379,18 +1315,15 @@ private final class StoryViewController: Control, Notifable {
     private var scrollDeltaX: CGFloat = 0
     private var scrollDeltaY: CGFloat = 0
 
-    private var previousIndex: Int? = nil
     
-    private func returnGroupIndex(_ index: Int, previous: StoryListView) {
-        self.currentIndex = index
-        let entryId = self.entries[index].id
-        
+    private func returnGroupIndex(previous: StoryListView) {
         let cur = self.current
         self.current?.removeFromSuperview()
-        
+
         self.current = previous
-        
-        let storyId = previous.storyId
+
+        let story = previous.story
+        let entryId = previous.id
         
         container.addSubview(previous, positioned: .above, relativeTo: cur)
 
@@ -1398,7 +1331,7 @@ private final class StoryViewController: Control, Notifable {
             var current = current
             current.entryId = entryId
             current.inTransition = false
-            current.storyId = storyId
+            current.storyId = story?.storyItem.id
             return current
         }
     }
@@ -1406,11 +1339,35 @@ private final class StoryViewController: Control, Notifable {
     override func scrollWheel(with theEvent: NSEvent) {
         
         
+        let result: StoryListView.UpdateIndexResult = self.scrollDeltaX > 0 ? .moveBack : .moveNext
+        let value = min(abs(scrollDeltaX / 300), 1)
+
         let completeTransition:(Bool, StoryListView)->Void = { [weak self] completed, previous in
-            if !completed, let previousIndex = self?.previousIndex {
-                self?.returnGroupIndex(previousIndex, previous: previous)
+            if !completed {
+                self?.returnGroupIndex(previous: previous)
+                switch result {
+                case .moveBack:
+                    if self?.hasPrevGroup == false, value > 0.5 {
+                        self?.close.send(event: .Click)
+                    }
+                case .moveNext:
+                    if self?.hasNextGroup == false, value > 0.5 {
+                        self?.close.send(event: .Click)
+                    }
+                default:
+                    break
+                }
             } else {
                 self?.inTransition = false
+                switch result {
+                case .moveBack:
+                    self?.storyContext?.navigate(navigation: .peer(.previous))
+                case .moveNext:
+                    self?.storyContext?.navigate(navigation: .peer(.next))
+                default:
+                    break
+                }
+                
             }
         }
         
@@ -1425,14 +1382,9 @@ private final class StoryViewController: Control, Notifable {
             }
             
             if scrollDeltaX > 0 {
-                if hasPrevGroup {
-                    previousIndex = self.processGroupResult(.moveBack, animated: true, bySwipe: true)
-                }
+                self.processGroupResult(.moveBack, animated: true, bySwipe: true)
             } else if scrollDeltaX < 0 {
-                if hasNextGroup {
-                    previousIndex = self.processGroupResult(.moveNext, animated: true, bySwipe: true)
-                }
-
+                self.processGroupResult(.moveNext, animated: true, bySwipe: true)
             }
         } else if theEvent.phase == .changed {
             let previous = self.scrollDeltaX
@@ -1456,9 +1408,27 @@ private final class StoryViewController: Control, Notifable {
            
             scrollDeltaX = min(max(scrollDeltaX, -300), 300)
             
-            let autofinish = abs(abs(previous) - abs(scrollDeltaX)) > 60
+            var autofinish = abs(abs(previous) - abs(scrollDeltaX)) > 60
             
-            self.current?.translate(progress: min(abs(scrollDeltaX / 300), 1), finish: autofinish, completion: completeTransition)
+            let delta: CGFloat
+            let maxDelta: CGFloat = log(25.0)
+            if scrollDeltaX > 0 {
+                if !hasPrevGroup {
+                    delta = log(scrollDeltaX) / maxDelta * 25
+                    autofinish = false
+                } else {
+                    delta = scrollDeltaX
+                }
+            } else {
+                if !hasNextGroup {
+                    delta = -(log(abs(scrollDeltaX)) / maxDelta * 25)
+                    autofinish = false
+                } else {
+                    delta = scrollDeltaX
+                }
+            }
+            
+            self.current?.translate(progress: min(abs(delta / 300), 1), finish: autofinish, completion: completeTransition)
             
            
             if scrollDeltaY != 0, let current = self.current {
@@ -1485,8 +1455,8 @@ private final class StoryViewController: Control, Notifable {
                     }
                 } else if scrollDeltaY < -50 {
                     if let peerId = current.id, peerId == arguments?.context.peerId, let story = current.story {
-                        if let views = story.views, views.seenCount > 0 {
-                            arguments?.showViewers(peerId, story)
+                        if let views = story.storyItem.views, views.seenCount > 0 {
+                            arguments?.showViewers(story)
                         }
                     } else {
                         if self.reactionsOverlay != nil {
@@ -1503,8 +1473,24 @@ private final class StoryViewController: Control, Notifable {
                 }
             }
             
-            let progress = min(abs(scrollDeltaX / 300), 1)
-            self.current?.translate(progress: progress, finish: true, cancel: progress < 0.5, completion: completeTransition)
+            var progress = value
+            var cancelAnyway = false
+            switch result {
+            case .moveBack:
+                if !self.hasPrevGroup, value > 0.5 {
+//                    progress = 1.0
+                    cancelAnyway = true
+                }
+            case .moveNext:
+                if !self.hasNextGroup, value > 0.5 {
+//                    progress = 1.0
+                    cancelAnyway = true
+                }
+            default:
+                break
+            }
+            
+            self.current?.translate(progress: progress, finish: true, cancel: value < 0.5 || cancelAnyway, completion: completeTransition)
             resetDelta()
             
         }
@@ -1525,7 +1511,7 @@ private final class StoryViewController: Control, Notifable {
 final class StoryModalController : ModalViewController, Notifable {
     private let context: AccountContext
     private var initialId: StoryInitialIndex?
-    private let stories: StoryListContext
+    private let stories: StoryContentContext
     private let entertainment: EntertainmentViewController
     private let interactions: StoryInteraction
     private let chatInteraction: ChatInteraction
@@ -1536,7 +1522,7 @@ final class StoryModalController : ModalViewController, Notifable {
     private let readThrottler = ReadThrottledProcessingManager(delay: 5)
     
 
-    init(context: AccountContext, stories: StoryListContext, initialId: StoryInitialIndex?) {
+    init(context: AccountContext, stories: StoryContentContext, initialId: StoryInitialIndex?) {
         self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .stories, presentation: storyTheme)
         self.interactions = StoryInteraction()
         self.context = context
@@ -1680,14 +1666,18 @@ final class StoryModalController : ModalViewController, Notifable {
                 current.recordType = FastSettings.recordingState
                 return current
             }
-        }, deleteStory: { [weak self] storyId in
+        }, deleteStory: { story in
             confirm(for: context.window, information: "Are you sure you want to delete story?", successHandler: { _ in
-                self?.stories.delete(id: storyId)
+                story.delete?()
             }, appearance: storyTheme.appearance)
         }, markAsRead: { [weak self] peerId, storyId in
             self?.readThrottler.addOrUpdate(.init(peerId: peerId, id: storyId))
-        }, showViewers: { peerId, story in
-            showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story, presentation: storyTheme, callback: openPeerInfo), for: context.window)
+        }, showViewers: { story in
+            if let peerId = story.peer?.id {
+                showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: openPeerInfo), for: context.window)
+            }
+        }, share: { story in
+            showModal(with: ShareModalController(ShareLinkObject(context, link: "link to story"), presentation: storyTheme), for: context.window)
         })
         
         genericView.setArguments(arguments)
@@ -1732,6 +1722,11 @@ final class StoryModalController : ModalViewController, Notifable {
         chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate, isSpoiler in
             self?.genericView.showTooltip(.media(medias))
         }
+        
+        chatInteraction.sendMedia = { [weak self] container in
+            self?.genericView.showTooltip(.media([]))
+        }
+        
         chatInteraction.attachFile = { value in
             filePanel(canChooseDirectories: true, for: context.window, appearance: storyTheme.appearance, completion:{ result in
                 if let result = result {
@@ -1798,14 +1793,15 @@ final class StoryModalController : ModalViewController, Notifable {
         
         let signal = stories.state |> deliverOnMainQueue
 
-        disposable.set(signal.start(next: { [weak self] state in
-            let items = state.itemSets.filter { !$0.items.isEmpty }
-            if items.isEmpty {
+        disposable.set(combineLatest(signal, genericView.getReady).start(next: { [weak self] state, ready in
+            if state.slice == nil {
                 self?.initialId = nil
                 self?.close()
-            } else {
-                self?.genericView.update(context: context, items: items, initial: initialId)
-                self?.readyOnce()
+            } else if let stories = self?.stories {
+                self?.genericView.update(context: context, storyContext: stories, initial: initialId)
+                if ready {
+                    self?.readyOnce()
+                }
             }
         }))
         
@@ -1816,7 +1812,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     var current = current
                     current.hasPopover = hasPopover(context.window)
                     current.hasMenu = contextMenuOnScreen()
-                    current.hasModal = findModal(PreviewSenderController.self) != nil || findModal(InputDataModalController.self) != nil
+                    current.hasModal = findModal(PreviewSenderController.self) != nil || findModal(InputDataModalController.self) != nil || findModal(ShareModalController.self) != nil
                     return current
                 }
             }
@@ -1874,10 +1870,10 @@ final class StoryModalController : ModalViewController, Notifable {
         
         
         window?.set(handler: { [weak self] _ in
-            guard self?.genericView.isTextEmpty == true else {
+            guard let `self` = self, self.genericView.isTextEmpty else {
                 return .rejected
             }
-            self?.interactions.startRecording(context: context, autohold: true)
+            self.interactions.startRecording(context: context, autohold: true, sendMedia: self.chatInteraction.sendMedia)
             return .invoked
         }, with: self, for: .R, priority: .modal, modifierFlags: [.command])
         
@@ -2011,8 +2007,15 @@ final class StoryModalController : ModalViewController, Notifable {
         return true
     }
     
-    static func ShowStories(context: AccountContext, stories: StoryListContext, initialId: StoryInitialIndex?) {
-        showModal(with: StoryModalController(context: context, stories: stories, initialId: initialId), for: context.window, animationType: .animateBackground)
+    static func ShowStories(context: AccountContext, initialId: StoryInitialIndex?) {
+        let storyContent = StoryContentContextImpl(context: context, focusedPeerId: initialId?.peerId)
+        let _ = (storyContent.state
+        |> filter { $0.slice != nil }
+        |> take(1)
+        |> deliverOnMainQueue).start(next: { _ in
+            showModal(with: StoryModalController(context: context, stories: storyContent, initialId: initialId), for: context.window, animationType: .animateBackground)
+        
+        })
     }
 }
 

@@ -283,7 +283,11 @@ final class ChatReactionsLayout {
                         width += presentation.insetInner
                         if recentPeers.count == 1 {
                             width += presentation.reactionSize.width
-                            width -= 2
+                            if case .builtin = value.value {
+                                width -= 2
+                            } else {
+                                width += 1
+                            }
                         } else if !recentPeers.isEmpty {
                             width += 12 * CGFloat(recentPeers.count)
                             width += 4
