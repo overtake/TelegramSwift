@@ -224,7 +224,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 }
             }
             |> deliverOnMainQueue).start(next: { [weak self] currentFocusedId, views, peers in
-                guard let self else {
+                guard let `self` = self else {
                     return
                 }
                 guard let peerView = views.views[PostboxViewKey.basicPeer(peerId)] as? BasicPeerView else {
@@ -370,7 +370,7 @@ final class StoryContentContextImpl: StoryContentContext {
             
             self.centralDisposable = (centralPeerContext.updated.get()
             |> deliverOnMainQueue).start(next: { [weak self] _ in
-                guard let self else {
+                guard let `self` = self else {
                     return
                 }
                 self.updated.set(.single(Void()))
@@ -379,7 +379,7 @@ final class StoryContentContextImpl: StoryContentContext {
             if let previousPeerContext {
                 self.previousDisposable = (previousPeerContext.updated.get()
                 |> deliverOnMainQueue).start(next: { [weak self] _ in
-                    guard let self else {
+                    guard let `self` = self else {
                         return
                     }
                     self.updated.set(.single(Void()))
@@ -389,7 +389,7 @@ final class StoryContentContextImpl: StoryContentContext {
             if let nextPeerContext {
                 self.nextDisposable = (nextPeerContext.updated.get()
                 |> deliverOnMainQueue).start(next: { [weak self] _ in
-                    guard let self else {
+                    guard let `self` = self else {
                         return
                     }
                     self.updated.set(.single(Void()))
@@ -455,7 +455,7 @@ final class StoryContentContextImpl: StoryContentContext {
         
         self.storySubscriptionsDisposable = (context.engine.messages.storySubscriptions()
         |> deliverOnMainQueue).start(next: { [weak self] storySubscriptions in
-            guard let self else {
+            guard let `self` = self else {
                 return
             }
             self.storySubscriptions = storySubscriptions
@@ -480,7 +480,7 @@ final class StoryContentContextImpl: StoryContentContext {
         if let storySubscriptions = self.storySubscriptions {
             if self.pendingState == nil {
                 let loadIds: ([StoryKey]) -> Void = { [weak self] keys in
-                    guard let self else {
+                    guard let `self` = self else {
                         return
                     }
                     let missingKeys = Set(keys).subtracting(self.requestedStoryKeys)
@@ -510,7 +510,7 @@ final class StoryContentContextImpl: StoryContentContext {
                     self.pendingState = pendingState
                     self.pendingStateReadyDisposable = (pendingState.updated.get()
                     |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                        guard let self, let pendingState, self.pendingState === pendingState, pendingState.isReady else {
+                        guard let `self` = self, let pendingState, self.pendingState === pendingState, pendingState.isReady else {
                             return
                         }
                         self.pendingState = nil
@@ -524,7 +524,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         self.currentStateUpdatedDisposable?.dispose()
                         self.currentStateUpdatedDisposable = (pendingState.updated.get()
                         |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                            guard let self, let pendingState, self.currentState === pendingState else {
+                            guard let `self` = self, let pendingState, self.currentState === pendingState else {
                                 return
                             }
                             self.updateState()
@@ -577,7 +577,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         self.pendingState = pendingState
                         self.pendingStateReadyDisposable = (pendingState.updated.get()
                         |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                            guard let self, let pendingState, self.pendingState === pendingState, pendingState.isReady else {
+                            guard let `self` = self, let pendingState, self.pendingState === pendingState, pendingState.isReady else {
                                 return
                             }
                             self.pendingState = nil
@@ -591,7 +591,7 @@ final class StoryContentContextImpl: StoryContentContext {
                             self.currentStateUpdatedDisposable?.dispose()
                             self.currentStateUpdatedDisposable = (pendingState.updated.get()
                             |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                                guard let self, let pendingState, self.currentState === pendingState else {
+                                guard let `self` = self, let pendingState, self.currentState === pendingState else {
                                     return
                                 }
                                 self.updateState()
