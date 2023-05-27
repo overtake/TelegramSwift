@@ -1423,7 +1423,8 @@ private final class ChatAdData {
                     associatedMessages: initialMessage.associatedMessages,
                     associatedMessageIds: initialMessage.associatedMessageIds,
                     associatedMedia: initialMessage.associatedMedia,
-                    associatedThreadInfo: initialMessage.associatedThreadInfo
+                    associatedThreadInfo: initialMessage.associatedThreadInfo,
+                    associatedStories: [:]
                 )
                 self.nextPendingDynamicMessageId += 1
 
@@ -4213,7 +4214,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     let media = TelegramMediaContact(firstName: myPeer.firstName ?? "", lastName: myPeer.lastName ?? "", phoneNumber: myPeer.phone ?? "", peerId: myPeer.id, vCardData: nil)
                     let canSend = peer.canSendMessage(strongSelf.mode.isThreadMode, media: media, threadData: strongSelf.chatInteraction.presentation.threadInfo)
                     if canSend {
-                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
+                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
                         strongSelf.nextTransaction.set(handler: afterSentTransition)
                     }
                 }
