@@ -307,13 +307,13 @@ final class StoryContentContextImpl: StoryContentContext {
                                 storyItem: mappedItem,
                                 preload: nil,
                                 delete: { [weak context] in
-                                    guard let context else {
+                                    guard let context = context else {
                                         return
                                     }
                                     let _ = context
                                 },
                                 markAsSeen: { [weak context] in
-                                    guard let context else {
+                                    guard let context = context else {
                                         return
                                     }
                                     let _ = context.engine.messages.markStoryAsSeen(peerId: peerId, id: item.id).start()
@@ -510,7 +510,7 @@ final class StoryContentContextImpl: StoryContentContext {
                     self.pendingState = pendingState
                     self.pendingStateReadyDisposable = (pendingState.updated.get()
                     |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                        guard let `self` = self, let pendingState, self.pendingState === pendingState, pendingState.isReady else {
+                        guard let `self` = self, let pendingState = pendingState, self.pendingState === pendingState, pendingState.isReady else {
                             return
                         }
                         self.pendingState = nil
@@ -524,7 +524,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         self.currentStateUpdatedDisposable?.dispose()
                         self.currentStateUpdatedDisposable = (pendingState.updated.get()
                         |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                            guard let `self` = self, let pendingState, self.currentState === pendingState else {
+                            guard let `self` = self, let pendingState = pendingState, self.currentState === pendingState else {
                                 return
                             }
                             self.updateState()
@@ -577,7 +577,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         self.pendingState = pendingState
                         self.pendingStateReadyDisposable = (pendingState.updated.get()
                         |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                            guard let `self` = self, let pendingState, self.pendingState === pendingState, pendingState.isReady else {
+                            guard let `self` = self, let pendingState = pendingState, self.pendingState === pendingState, pendingState.isReady else {
                                 return
                             }
                             self.pendingState = nil
@@ -591,7 +591,7 @@ final class StoryContentContextImpl: StoryContentContext {
                             self.currentStateUpdatedDisposable?.dispose()
                             self.currentStateUpdatedDisposable = (pendingState.updated.get()
                             |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                                guard let `self` = self, let pendingState, self.currentState === pendingState else {
+                                guard let `self` = self, let pendingState = pendingState, self.currentState === pendingState else {
                                     return
                                 }
                                 self.updateState()
