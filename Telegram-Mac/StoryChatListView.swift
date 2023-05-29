@@ -149,6 +149,12 @@ private final class StoryListChatListRowView: TableRowView {
         self.tableView.merge(with: transition)
 
         self.current = entries
+        
+        if tableView.documentSize.height < tableView.frame.width * 2 {
+            if let _ = item.state.hasMoreToken {
+                item.context.account.storySubscriptionsContext?.loadMore()
+            }
+        }
 
         CATransaction.commit()
     }
