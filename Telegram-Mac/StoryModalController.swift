@@ -134,7 +134,8 @@ final class StoryInteraction : InterfaceObserver {
         var hasMenu: Bool = false
         var hasModal: Bool = false
         var windowIsKey: Bool = false
-        var inTransition: Bool = false
+        var _inTransition: Bool = false
+        var lock: Bool = false
         var isRecording: Bool = false
         var hasReactions: Bool = false
         var isSpacePaused: Bool = false
@@ -147,7 +148,11 @@ final class StoryInteraction : InterfaceObserver {
         var recordType: RecordingStateSettings = FastSettings.recordingState
         
         var isPaused: Bool {
-            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil
+            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock
+        }
+        
+        var inTransition: Bool {
+            return _inTransition || lock
         }
         
     }
@@ -272,13 +277,13 @@ final class StoryArguments {
     let close:()->Void
     let openPeerInfo:(PeerId)->Void
     let openChat:(PeerId, MessageId?, ChatInitialAction?)->Void
-    let sendMessage:()->Void
+    let sendMessage:(PeerId, Int32)->Void
     let toggleRecordType:()->Void
     let deleteStory:(StoryContentItem)->Void
     let markAsRead:(PeerId, Int32)->Void
     let showViewers:(StoryContentItem)->Void
     let share:(EngineStoryItem)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping()->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(EngineStoryItem)->Void) {
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(EngineStoryItem)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -909,12 +914,6 @@ private final class StoryViewController: Control, Notifable {
             
             self.ready.set(storyView.getReady)
 
-            arguments?.interaction.update(animated: false, { current in
-                var current = current
-                current.entryId = entryId
-                return current
-            })
-
             _ = (self.getReady |> filter { $0 } |> take(1)).start(next: { [weak storyView] _ in
                 if let control = initial?.takeControl?(entryId, entry.item.storyItem.id) {
                     storyView?.animateAppearing(from: control)
@@ -928,6 +927,13 @@ private final class StoryViewController: Control, Notifable {
         if let event = NSApp.currentEvent {
             self.updatePrevNextControls(event)
         }
+        
+        arguments?.interaction.update(animated: false, { current in
+            var current = current
+            current.entryId = state.slice?.peer.id
+            current.storyId = state.slice?.item.storyItem.id
+            return current
+        })
     }
     
     func delete() -> KeyHandlerResult {
@@ -983,7 +989,7 @@ private final class StoryViewController: Control, Notifable {
         set {
             self.arguments?.interaction.update { current in
                 var current = current
-                current.inTransition = newValue
+                current._inTransition = newValue
                 return current
             }
         }
@@ -1023,11 +1029,6 @@ private final class StoryViewController: Control, Notifable {
             let entryId = nextGroup?.peer.id
 
 
-            self.arguments?.interaction.update { current in
-                var current = current
-                current.entryId = entryId
-                return current
-            }
 
             let storyView = StoryListView(frame: bounds)
             storyView.setArguments(self.arguments)
@@ -1177,13 +1178,13 @@ private final class StoryViewController: Control, Notifable {
 
             
             if let effectFileId = effectFileId {
-                let player = CustomReactionEffectView(frame: NSMakeSize(300, 300).bounds, context: context, fileId: effectFileId)
+                let player = CustomReactionEffectView(frame: NSMakeSize(600, 600).bounds, context: context, fileId: effectFileId)
                 player.isEventLess = true
                 player.triggerOnFinish = { [weak player] in
                     player?.removeFromSuperview()
                     finish()
                 }
-                let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: player.frame.size)
+                let rect = CGRect(origin: CGPoint(x: (container.frame.width - player.frame.width) / 2, y: (container.frame.height - player.frame.height) / 2), size: player.frame.size)
                 player.frame = rect
                 container.addSubview(player)
             } else if let effectFile = effectFile {
@@ -1330,8 +1331,7 @@ private final class StoryViewController: Control, Notifable {
         self.arguments?.interaction.update { current in
             var current = current
             current.entryId = entryId
-            current.inTransition = false
-            current.storyId = story?.storyItem.id
+            current._inTransition = false
             return current
         }
     }
@@ -1615,6 +1615,32 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.close()
         }
         
+        let beforeCompletion:()->Void = { [weak interactions] in
+            interactions?.update({ current in
+                var current = current
+                current.lock = true
+                return current
+            })
+        }
+        
+        let afterCompletion:()->Void = { [weak interactions] in
+            interactions?.update({ current in
+                var current = current
+                current.lock = false
+                return current
+            })
+        }
+        
+        
+        
+        let sendText: (ChatTextInputState, PeerId, Int32, StoryViewController.TooptipView.Source)->Void = { [weak self] input, peerId, id, source in
+            beforeCompletion()
+            _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil).start(completed: {
+                self?.genericView.showTooltip(source)
+                self?.interactions.updateInput(with: "")
+                afterCompletion()
+            })
+        }
         
         self.chatInteraction.add(observer: self)
         interactions.add(observer: self)
@@ -1624,10 +1650,19 @@ final class StoryModalController : ModalViewController, Notifable {
                 showPopover(for: control, with: panel, edge: .maxX, inset:NSMakePoint(0 + 38, 10), delayBeforeShown: 0.1)
             }
         }, showReactionsPanel: { [weak interactions, weak self] control in
-            if let entryId = interactions?.presentation.entryId {
+            if let entryId = interactions?.presentation.entryId, let id = interactions?.presentation.storyId {
                 _ = storyReactions(context: context, peerId: entryId, react: { [weak self] reaction in
+                    
+                    switch reaction.item {
+                    case let .builtin(value):
+                        sendText(.init(inputText: value.normalizedEmoji), entryId, id, .reaction(reaction))
+                    case let .custom(fileId, file):
+                        if let file = file, let text = file.customEmojiText {
+                            sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil, nil)]), entryId, id, .reaction(reaction))
+                        }
+                    }
                     self?.genericView.playReaction(reaction)
-                    self?.genericView.showTooltip(.reaction(reaction))
+
                 }, onClose: {
                     self?.genericView.closeReactions()
                 }).start(next: { view in
@@ -1650,14 +1685,10 @@ final class StoryModalController : ModalViewController, Notifable {
             openPeerInfo(peerId)
         }, openChat: { peerId, messageId, initial in
             openChat(peerId, messageId, initial)
-        }, sendMessage: { [weak self] in
-            _ = self?.interactions.appendText(.initialize(string: "\n\n~[This is reply to Story]~"))
+        }, sendMessage: { [weak self] peerId, id in
             let input = self?.interactions.presentation.input
-            let entryId = self?.interactions.presentation.entryId
-            if let input = input, let entryId = entryId {
-                self?.interactions.updateInput(with: "")
-                self?.genericView.showTooltip(.text)
-                _ = Sender.enqueue(input: input, context: context, peerId: entryId, replyId: nil, sendAsPeerId: nil).start()
+            if let input = input {
+                sendText(input, peerId, id, .text)
             }
         }, toggleRecordType: { [weak self] in
             FastSettings.toggleRecordingState()
@@ -1720,11 +1751,26 @@ final class StoryModalController : ModalViewController, Notifable {
         }
         
         chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate, isSpoiler in
-            self?.genericView.showTooltip(.media(medias))
+            guard let interactions = self?.interactions else {
+                return
+            }
+            if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
+                beforeCompletion()
+                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler).start(completed: {
+                    self?.genericView.showTooltip(.media(medias))
+                    afterCompletion()
+                })
+            }
         }
         
         chatInteraction.sendMedia = { [weak self] container in
-            self?.genericView.showTooltip(.media([]))
+            if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
+                beforeCompletion()
+                _ = Sender.enqueue(media: container, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
+                    self?.genericView.showTooltip(.media([]))
+                    afterCompletion()
+                })
+            }
         }
         
         chatInteraction.attachFile = { value in
