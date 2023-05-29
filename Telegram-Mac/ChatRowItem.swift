@@ -686,7 +686,13 @@ class ChatRowItem: TableRowItem {
                 }
             }
         }
-        
+    }
+    func openStory() {
+        if let message = message {
+            if let replyAttribute = message.storyAttribute {
+                chatInteraction.openStory(replyAttribute.storyId)
+            }
+        }
     }
     
     func gotoSourceMessage() {

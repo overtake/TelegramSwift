@@ -3429,6 +3429,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.closeChatThemesSelector()
         }
         
+        chatInteraction.openStory = { [weak self ] storyId in
+            StoryModalController.ShowSingleStory(context: context, storyId: storyId, initialId: .init(peerId: peerId, id: nil, takeControl: { peerId, storyId in
+                return self?.findStoryControl(storyId)
+            }))
+        }
+        
         
         chatInteraction.openProxySettings = { [weak self] in
             let controller = proxyListController(accountManager: context.sharedContext.accountManager, network: context.account.network, pushController: { [weak self] controller in
@@ -7735,6 +7741,25 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     func closeChatThemesSelector() {
         self.themeSelector?.close(true)
     }
+    
+    func findStoryControl(_ storyId: Int32?) -> NSView? {
+        var control: NSView? = nil
+        genericView.tableView.enumerateVisibleItems(with: { item in
+            if let item = item as? ChatRowItem {
+                if let attr = item.message?.storyAttribute {
+                    if attr.storyId.id == storyId {
+                        if let view = item.view as? ChatRowView {
+                            control = view.storyControl
+                            return false
+                        }
+                    }
+                }
+            }
+            return true
+        })
+        return control
+    }
+    
     func showChatThemeSelector() {
         
         guard themeSelector == nil else {

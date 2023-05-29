@@ -11,7 +11,10 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 
-
+private struct StoryKey: Hashable {
+    var peerId: EnginePeer.Id
+    var id: Int32
+}
 
 final class StoryContentItem {
     
@@ -242,7 +245,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 let state = stateView.value?.get(Stories.PeerState.self)
                 
                 var focusedIndex: Int?
-                if let currentFocusedId {
+                if let currentFocusedId = currentFocusedId {
                     focusedIndex = itemsView.items.firstIndex(where: { $0.id == currentFocusedId })
                 }
                 if focusedIndex == nil, let state = state {
@@ -258,7 +261,7 @@ final class StoryContentContextImpl: StoryContentContext {
                     }
                 }
                 
-                if let focusedIndex {
+                if let focusedIndex = focusedIndex {
                     self.storedFocusedId = itemsView.items[focusedIndex].id
                     
                     var previousItemId: Int32?
@@ -386,7 +389,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 })
             }
             
-            if let nextPeerContext {
+            if let nextPeerContext = nextPeerContext {
                 self.nextDisposable = (nextPeerContext.updated.get()
                 |> deliverOnMainQueue).start(next: { [weak self] _ in
                     guard let `self` = self else {
@@ -449,7 +452,7 @@ final class StoryContentContextImpl: StoryContentContext {
         focusedPeerId: EnginePeer.Id?
     ) {
         self.context = context
-        if let focusedPeerId {
+        if let focusedPeerId = focusedPeerId {
             self.focusedItem = (focusedPeerId, nil)
         }
         
@@ -543,7 +546,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         }
                     }
                     
-                    if let centralIndex {
+                    if let centralIndex = centralIndex {
                         let centralPeerContext: PeerContext
                         if let currentState = self.currentState, let existingContext = currentState.findPeerContext(id: storySubscriptions.items[centralIndex].peer.id) {
                             centralPeerContext = existingContext
@@ -669,3 +672,125 @@ final class StoryContentContextImpl: StoryContentContext {
         }
     }
 }
+
+
+
+final class SingleStoryContentContextImpl: StoryContentContext {
+    private let context: AccountContext
+    
+    private(set) var stateValue: StoryContentContextState?
+    var state: Signal<StoryContentContextState, NoError> {
+        return self.statePromise.get()
+    }
+    private let statePromise = Promise<StoryContentContextState>()
+    
+    private let updatedPromise = Promise<Void>()
+    var updated: Signal<Void, NoError> {
+        return self.updatedPromise.get()
+    }
+    
+    private var storyDisposable: Disposable?
+    
+    private var requestedStoryKeys = Set<StoryKey>()
+    private var requestStoryDisposables = DisposableSet()
+    
+    init(
+        context: AccountContext,
+        storyId: StoryId
+    ) {
+        self.context = context
+        
+        self.storyDisposable = (combineLatest(queue: .mainQueue(),
+            context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: storyId.peerId)),
+            context.account.postbox.transaction { transaction -> Stories.StoredItem? in
+                return transaction.getStory(id: storyId)?.get(Stories.StoredItem.self)
+            }
+        )
+        |> deliverOnMainQueue).start(next: { [weak self] peer, item in
+            guard let `self` = self else {
+                return
+            }
+            if let item = item, case let .item(itemValue) = item, let media = itemValue.media, let peer = peer {
+                let mappedItem = EngineStoryItem(
+                    id: itemValue.id,
+                    timestamp: itemValue.timestamp,
+                    media: EngineMedia(media),
+                    text: itemValue.text,
+                    entities: itemValue.entities,
+                    views: itemValue.views.flatMap { views in
+                        return EngineStoryItem.Views(
+                            seenCount: views.seenCount,
+                            seenPeers: views.seenPeerIds.compactMap { id -> EnginePeer? in
+                                return nil
+                            }
+                        )
+                    },
+                    privacy: nil
+                )
+                
+                let stateValue = StoryContentContextState(
+                    slice: StoryContentContextState.FocusedSlice(
+                        peer: peer,
+                        item: StoryContentItem(
+                            id: AnyHashable(item.id),
+                            position: 0,
+                            peer: peer,
+                            storyItem: mappedItem,
+                            preload: nil,
+                            delete: { [weak context] in
+                                guard let context = context else {
+                                    return
+                                }
+                                let _ = context
+                            },
+                            markAsSeen: { [weak context] in
+                                guard let context = context else {
+                                    return
+                                }
+                                let _ = context.engine.messages.markStoryAsSeen(peerId: peer.id, id: item.id).start()
+                            },
+                            hasLike: false,
+                            isMy: peer.id == context.account.peerId
+                        ),
+                        totalCount: 1,
+                        previousItemId: nil,
+                        nextItemId: nil
+                    ),
+                    previousSlice: nil,
+                    nextSlice: nil
+                )
+                
+                if self.stateValue == nil || self.stateValue?.slice != stateValue.slice {
+                    self.stateValue = stateValue
+                    self.statePromise.set(.single(stateValue))
+                    self.updatedPromise.set(.single(Void()))
+                }
+            } else {
+                let stateValue = StoryContentContextState(
+                    slice: nil,
+                    previousSlice: nil,
+                    nextSlice: nil
+                )
+                
+                if self.stateValue == nil || self.stateValue?.slice != stateValue.slice {
+                    self.stateValue = stateValue
+                    self.statePromise.set(.single(stateValue))
+                    self.updatedPromise.set(.single(Void()))
+                }
+            }
+        })
+    }
+    
+    deinit {
+        self.storyDisposable?.dispose()
+        self.requestStoryDisposables.dispose()
+    }
+    
+    func resetSideStates() {
+    }
+    
+    func navigate(navigation: StoryContentContextNavigation) {
+    }
+}
+
+

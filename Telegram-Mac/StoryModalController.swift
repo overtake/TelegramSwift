@@ -1107,12 +1107,13 @@ private final class StoryViewController: Control, Notifable {
     private var reactionsOverlay: Control? = nil
    
     func closeReactions() {
+        let hasReactions: Bool = self.reactionsOverlay != nil
         if let view = self.reactionsOverlay {
             performSubviewRemoval(view, animated: true)
             self.reactionsOverlay = nil
         }
         var resetInput = false
-        if self.arguments?.interaction.presentation.input.inputText.isEmpty == true {
+        if self.arguments?.interaction.presentation.input.inputText.isEmpty == true, hasReactions {
             self.resetInputView()
             resetInput = true
         }
@@ -1636,9 +1637,9 @@ final class StoryModalController : ModalViewController, Notifable {
         let sendText: (ChatTextInputState, PeerId, Int32, StoryViewController.TooptipView.Source)->Void = { [weak self] input, peerId, id, source in
             beforeCompletion()
             _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil).start(completed: {
-                self?.genericView.showTooltip(source)
-                self?.interactions.updateInput(with: "")
                 afterCompletion()
+                self?.interactions.updateInput(with: "")
+                self?.genericView.showTooltip(source)
             })
         }
         
@@ -1757,8 +1758,8 @@ final class StoryModalController : ModalViewController, Notifable {
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
                 _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler).start(completed: {
-                    self?.genericView.showTooltip(.media(medias))
                     afterCompletion()
+                    self?.genericView.showTooltip(.media(medias))
                 })
             }
         }
@@ -1767,8 +1768,8 @@ final class StoryModalController : ModalViewController, Notifable {
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
                 _ = Sender.enqueue(media: container, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
-                    self?.genericView.showTooltip(.media([]))
                     afterCompletion()
+                    self?.genericView.showTooltip(.media([]))
                 })
             }
         }
@@ -2055,6 +2056,16 @@ final class StoryModalController : ModalViewController, Notifable {
     
     static func ShowStories(context: AccountContext, initialId: StoryInitialIndex?) {
         let storyContent = StoryContentContextImpl(context: context, focusedPeerId: initialId?.peerId)
+        let _ = (storyContent.state
+        |> filter { $0.slice != nil }
+        |> take(1)
+        |> deliverOnMainQueue).start(next: { _ in
+            showModal(with: StoryModalController(context: context, stories: storyContent, initialId: initialId), for: context.window, animationType: .animateBackground)
+        
+        })
+    }
+    static func ShowSingleStory(context: AccountContext, storyId: StoryId, initialId: StoryInitialIndex?) {
+        let storyContent = SingleStoryContentContextImpl(context: context, storyId: storyId)
         let _ = (storyContent.state
         |> filter { $0.slice != nil }
         |> take(1)

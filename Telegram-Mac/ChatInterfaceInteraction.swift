@@ -201,6 +201,9 @@ final class ChatInteraction : InterfaceObserver  {
     var setupChatThemes:()->Void = { }
     var closeChatThemes:()->Void = { }
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
+    
+    var openStory:(StoryId)->Void = { _ in }
+    
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())

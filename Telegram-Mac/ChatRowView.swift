@@ -486,9 +486,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 replyView?.layer?.cornerRadius = 0
             }
             replyView?.removeAllHandlers()
-            replyView?.set(handler: { [weak item] _ in
-                item?.chatInteraction.focusInputField()
-                item?.openReplyMessage()
+            replyView?.set(handler: { [weak item, weak reply] _ in
+                if reply is StoryReplyModel {
+                    item?.openStory()
+                } else {
+                    item?.chatInteraction.focusInputField()
+                    item?.openReplyMessage()
+                }
             }, for: .Click)
             
             reply.animates = animated
@@ -2126,5 +2130,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.rowView.layer?.animateAlpha(from: 0, to: 1, duration: 0.35)
             }
         }
+    }
+    
+    var storyControl: NSView? {
+        return replyView?.imageView
     }
 }
