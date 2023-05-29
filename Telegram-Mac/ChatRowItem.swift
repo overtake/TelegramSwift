@@ -169,7 +169,7 @@ class ChatRowItem: TableRowItem {
     
     
 
-    var replyModel:ReplyModel?
+    var replyModel:ChatAccessoryModel?
     var replyMarkupModel:ReplyMarkupNode?
 
     var messageIndex:MessageIndex? {
@@ -2048,7 +2048,8 @@ class ChatRowItem: TableRowItem {
                 let formatterEdited = DateSelectorUtil.chatFullDateFormatter
                 fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date)))))"
             }
-            
+            let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
+
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
@@ -2057,10 +2058,17 @@ class ChatRowItem: TableRowItem {
                         ignore = true
                     }
                     if !ignore {
-                        let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
                         
                         self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, translate: entry.additionalData.replyTranslate)
                         replyModel?.isSideAccessory = isBubbled && !hasBubble
+                    }
+                }
+                for attribute in message.attributes {
+                    if let attribute = attribute as? ReplyStoryAttribute, let story = message.associatedStories[attribute.storyId]?.get(Stories.StoredItem.self) {
+                        
+                        self.replyModel = StoryReplyModel(message: message, storyId: attribute.storyId, story: story, context: context, presentation: replyPresentation)
+                        replyModel?.isSideAccessory = isBubbled && !hasBubble
+                        
                     }
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {

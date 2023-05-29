@@ -245,7 +245,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 if let currentFocusedId {
                     focusedIndex = itemsView.items.firstIndex(where: { $0.id == currentFocusedId })
                 }
-                if focusedIndex == nil, let state {
+                if focusedIndex == nil, let state = state {
                     if let storedFocusedId = self.storedFocusedId {
                         focusedIndex = itemsView.items.firstIndex(where: { $0.id >= storedFocusedId })
                     } else {

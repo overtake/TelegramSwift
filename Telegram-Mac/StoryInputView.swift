@@ -82,8 +82,10 @@ private final class StoryReplyActionButton : View {
         fatalError("init(coder:) has not been implemented")
     }
     private var state: State?
-    func update(state: State, arguments: StoryArguments, animated: Bool) {
+    private var story: StoryContentItem?
+    func update(state: State, arguments: StoryArguments, story: StoryContentItem?, animated: Bool) {
         let previous = self.state
+        self.story = story
         if previous != state {
             if let view = self.current {
                 performSubviewRemoval(view, animated: animated, scale: true)
@@ -91,9 +93,11 @@ private final class StoryReplyActionButton : View {
             }
             let current: ImageButton = ImageButton()
             
-            current.set(handler: { [weak arguments] _ in
+            current.set(handler: { [weak arguments, weak self] _ in
                 if state == .text {
-                    arguments?.sendMessage()
+                    if let story = self?.story, let peerId = story.peerId {
+                        arguments?.sendMessage(peerId, story.storyItem.id)
+                    }
                 } else {
                     arguments?.toggleRecordType()
                 }
@@ -132,6 +136,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     
     private let rtfAttachmentsDisposable = MetaDisposable()
     private var recordingView: StoryRecordingView?
+    private var story: StoryContentItem?
 
     func updateInputText(_ state: ChatTextInputState, prevState: ChatTextInputState, animated: Bool) {
         if textView.string() != state.inputText || state.attributes != prevState.attributes {
@@ -155,7 +160,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             return
         }
         self.reactions.isSelected = state.hasReactions
-        self.action.update(state: textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, animated: animated)
+        self.action.update(state: textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
         
         self.updateInputState(animated: animated)
         self.updateRecoringState(state, animated: animated)
@@ -186,7 +191,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     }
     
     func update(_ story: StoryContentItem, animated: Bool) {
-        
+        self.story = story
     }
     
     func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
@@ -218,7 +223,9 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         if FastSettings.checkSendingAbility(for: event) {
             let text = textView.string().trimmed
             if !text.isEmpty {
-                self.arguments?.sendMessage()
+                if let story = self.story, let peerId = story.peerId {
+                    self.arguments?.sendMessage(peerId, story.storyItem.id)
+                }
             }
             return true
         }
@@ -384,7 +391,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 textView.inputView.isEditable = false
             }
         }
-        self.action.update(state: textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, animated: animated)
+        self.action.update(state: textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
         reactions.change(opacity: self.inputState.isEmpty ? 1 : 0, animated: animated)
         self.updateInputSize(size: size, animated: animated)
         
