@@ -771,6 +771,15 @@ public extension Message {
         return nil
     }
     
+    var storyAttribute: ReplyStoryAttribute? {
+        for attr in attributes {
+            if let attr = attr as? ReplyStoryAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var editedAttribute: EditedMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? EditedMessageAttribute, !attr.isHidden {
