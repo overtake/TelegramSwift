@@ -379,7 +379,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 self.updated.set(.single(Void()))
             })
             
-            if let previousPeerContext {
+            if let previousPeerContext = previousPeerContext {
                 self.previousDisposable = (previousPeerContext.updated.get()
                 |> deliverOnMainQueue).start(next: { [weak self] _ in
                     guard let `self` = self else {
