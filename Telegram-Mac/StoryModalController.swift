@@ -99,7 +99,8 @@ private struct Reaction {
 struct StoryInitialIndex {
     let peerId: PeerId
     let id: Int32?
-    let takeControl:((PeerId, Int32?)->NSView?)?
+    let messageId: MessageId?
+    let takeControl:((PeerId, MessageId?, Int32?)->NSView?)?
 }
 
 private let storedTheme = generateTheme(palette: nightAccentPalette, cloudTheme: nil, bubbled: false, fontSize: 13, wallpaper: .init())
@@ -120,6 +121,15 @@ final class StoryInteraction : InterfaceObserver {
         var inputs: [PeerId : ChatTextInputState] = [:]
         var entryState:[PeerId : Int32] = [:]
         var input: ChatTextInputState {
+            if let entryId = entryId {
+                if let input = inputs[entryId] {
+                    return input
+                }
+            }
+            return ChatTextInputState()
+        }
+        
+        func findInput(_ entryId: PeerId?) -> ChatTextInputState {
             if let entryId = entryId {
                 if let input = inputs[entryId] {
                     return input
@@ -336,8 +346,7 @@ final class StoryArguments {
     }
     
     func startRecording(autohold: Bool) {
-        let state = self.interaction.startRecording(context: context, autohold: autohold, sendMedia: self.chatInteraction.sendMedia)
-        
+        self.interaction.startRecording(context: context, autohold: autohold, sendMedia: self.chatInteraction.sendMedia)
     }
     
     deinit {
@@ -915,7 +924,7 @@ private final class StoryViewController: Control, Notifable {
             self.ready.set(storyView.getReady)
 
             _ = (self.getReady |> filter { $0 } |> take(1)).start(next: { [weak storyView] _ in
-                if let control = initial?.takeControl?(entryId, entry.item.storyItem.id) {
+                if let control = initial?.takeControl?(entryId, initial?.messageId, entry.item.storyItem.id) {
                     storyView?.animateAppearing(from: control)
                 }
             })
@@ -1205,10 +1214,12 @@ private final class StoryViewController: Control, Notifable {
         let layer = InlineStickerItemLayer(account: context.account, file: icon, size: NSMakeSize(100, 100))
 
         let completed: (Bool)->Void = { [weak overlay] _ in
-            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
             DispatchQueue.main.async {
-                if let container = overlay {
-                    play(container, icon)
+                NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                DispatchQueue.main.async {
+                    if let container = overlay {
+                        play(container, icon)
+                    }
                 }
             }
         }
@@ -1267,7 +1278,7 @@ private final class StoryViewController: Control, Notifable {
     }
     
     func animateDisappear(_ initialId: StoryInitialIndex?) {
-        if let current = self.current, let id = current.id, let control = initialId?.takeControl?(id, current.storyId?.base as? Int32) {
+        if let current = self.current, let id = current.id, let control = initialId?.takeControl?(id, initialId?.messageId, current.storyId?.base as? Int32) {
             current.animateDisappearing(to: control)
         }
     }
@@ -1324,7 +1335,6 @@ private final class StoryViewController: Control, Notifable {
 
         self.current = previous
 
-        let story = previous.story
         let entryId = previous.id
         
         container.addSubview(previous, positioned: .above, relativeTo: cur)
@@ -1439,11 +1449,16 @@ private final class StoryViewController: Control, Notifable {
                     delta = -delta
                 }
                 current.setFrameOrigin(NSMakePoint(current.frame.minX, delta))
+                if let overlay = self.reactionsOverlay {
+                    overlay.setFrameOrigin(NSMakePoint(overlay.frame.minX, delta))
+                }
             }
         } else if theEvent.phase == .ended || theEvent.phase == .cancelled {
             if let current = current {
                 current.change(pos: NSMakePoint(current.frame.minX, 0), animated: true)
-                
+                if let overlay = self.reactionsOverlay {
+                    overlay.change(pos: NSMakePoint(overlay.frame.minX, 0), animated: true)
+                }
                 if scrollDeltaY > 50 {
                     if inputView == self.window?.firstResponder {
                         if self.reactionsOverlay != nil {
@@ -1717,8 +1732,18 @@ final class StoryModalController : ModalViewController, Notifable {
         
         entertainment.update(with: chatInteraction)
         
-        chatInteraction.sendAppFile = { [weak self] file, silent, query, schedule, collectionId in
-            self?.genericView.showTooltip(.media([file]))
+        chatInteraction.sendAppFile = { [weak self] file, _, _, _, _ in
+            guard let interactions = self?.interactions else {
+                return
+            }
+            if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
+                beforeCompletion()
+                _ = Sender.enqueue(media: file, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
+                    afterCompletion()
+                    self?.genericView.showTooltip(.media([file]))
+                })
+            }
+            
         }
         chatInteraction.sendPlainText = { [weak self] text in
             _ = self?.interactions.appendText(.makeEmojiHolder(text, fromRect: nil))

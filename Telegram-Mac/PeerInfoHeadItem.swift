@@ -596,9 +596,9 @@ class PeerInfoHeadItem: GeneralRowItem {
         return self.isForum && threadData != nil
     }
     
-    func openPeerStory(_ takeControl: @escaping(PeerId, Int32?)->NSView?) {
+    func openPeerStory(_ takeControl: @escaping(PeerId, MessageId?, Int32?)->NSView?) {
         if let peerId = self.peer?.id {
-            self.arguments.openStory(.init(peerId: peerId, id: nil, takeControl: takeControl))
+            self.arguments.openStory(.init(peerId: peerId, id: nil, messageId: nil, takeControl: takeControl))
         }
     }
     

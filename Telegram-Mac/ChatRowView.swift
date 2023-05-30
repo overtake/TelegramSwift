@@ -128,20 +128,20 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     func updateBackground(animated: Bool, item: TableRowItem?, rotated: Bool = false, clean: Bool = false) -> Void {
         
-        guard let item = item as? ChatRowItem else {
-            return
-        }
-        
-        let gradientRect = item.chatInteraction.getGradientOffsetRect()
-        let size = NSMakeSize(gradientRect.width, gradientRect.height + 60)
-        
-        let inset = size.height - gradientRect.minY + (frame.height - self.bubbleView.frame.maxY) - 30
-        let animated = animated && visibleRect.height > 0 && !clean && self.layer?.animation(forKey: "position") == nil
-        let rect = self.frame
-        
-        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
-        
-        bubbleView.update(rect: rect.offsetBy(dx: self.bubbleView.frame.minX, dy: inset), within: size, transition: transition, rotated: rotated)
+//        guard let item = item as? ChatRowItem else {
+//            return
+//        }
+//
+//        let gradientRect = item.chatInteraction.getGradientOffsetRect()
+//        let size = NSMakeSize(gradientRect.width, gradientRect.height + 60)
+//
+//        let inset = size.height - gradientRect.minY + (frame.height - self.bubbleView.frame.maxY) - 30
+//        let animated = animated && visibleRect.height > 0 && !clean && self.layer?.animation(forKey: "position") == nil
+//        let rect = self.frame
+//
+//        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+//        
+//        bubbleView.update(rect: rect.offsetBy(dx: self.bubbleView.frame.minX, dy: inset), within: size, transition: transition, rotated: rotated)
     }
       
     var selectableTextViews: [TextView] {
@@ -1667,10 +1667,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             return
         }
         
-        if previousItem == nil {
-            bubbleView.frame = bubbleFrame(item)
-            rowView.frame = CGRect(origin: rowPoint(item), size: frame.size)
-        }
+        //if previousItem == nil {
+          //  bubbleView.frame = bubbleFrame(item)
+          //  rowView.frame = CGRect(origin: rowPoint(item), size: frame.size)
+       // }
 
         
         if self.animatedView != nil && self.animatedView?.stableId != item.stableId {

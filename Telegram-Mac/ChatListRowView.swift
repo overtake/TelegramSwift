@@ -858,6 +858,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var dateTextView: TextView? = nil
     private var displayNameView: TextView? = nil
     
+    private var storyReplyImageView : ImageView?
+    
     
     private var forumTopicTextView: TextView? = nil
     private var forumTopicNameIcon: ForumTopicArrow?
@@ -1483,6 +1485,24 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.statusControl = nil
              }
              
+             if item.isReplyToStory, !hiddenMessage {
+                 let current: ImageView
+                 if let view = self.storyReplyImageView {
+                     current = view
+                 } else {
+                     current = ImageView()
+                     current.isEventLess = true
+                     self.storyReplyImageView = current
+                     self.contentView.addSubview(current)
+                 }
+                 current.image = isSelect ? theme.icons.story_chatlist_reply_active : theme.icons.story_chatlist_reply
+                 current.sizeToFit()
+                 
+             } else if let view = self.storyReplyImageView {
+                 self.storyReplyImageView = nil
+                 performSubviewRemoval(view, animated: false)
+             }
+             
              if let messageText = item.ctxMessageText, !hiddenMessage {
                  let current: TextView
                  if let view = self.messageTextView {
@@ -1568,6 +1588,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.topicsView = nil
              }
              
+             
+            
              
              if !item.photos.isEmpty {
                  
@@ -2795,6 +2817,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     dateTextView.setFrameOrigin(NSMakePoint(dateX, item.margin))
                 }
                 
+                
                 var addition:CGFloat = 0
                 if item.isSecret {
                     addition += theme.icons.secretImage.backingSize.height
@@ -2817,7 +2840,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     statusControl.setFrameOrigin(NSMakePoint(addition + item.leftInset + displayNameView.frame.width + 2, displayNameView.frame.height - 8))
                 }
                 
-                var mediaPreviewOffset = NSMakePoint(item.leftInset, displayNameView.frame.height + item.margin + 2 + offset)
+                var inset: CGFloat = item.leftInset
+                if let view = self.storyReplyImageView {
+                    view.setFrameOrigin(NSMakePoint(inset, displayNameView.frame.height + item.margin + 2 + offset))
+                    inset += view.frame.width + 2
+                }
+                
+                var mediaPreviewOffset = NSMakePoint(inset, displayNameView.frame.height + item.margin + 2 + offset)
                 let contentImageSpacing: CGFloat = 2.0
                 
                 for (message, _, mediaSize) in self.currentMediaPreviewSpecs {

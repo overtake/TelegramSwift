@@ -15,17 +15,8 @@ import TelegramCore
 import ColorPalette
 
 enum StoryInputState : Equatable {
-    case focus(isEmpty: Bool)
-    case none(isEmpty: Bool)
-    
-    var isEmpty: Bool {
-        switch self {
-        case let .focus(isEmpty):
-            return isEmpty
-        case let .none(isEmpty):
-            return isEmpty
-        }
-    }
+    case focus
+    case none
 }
 
 protocol StoryInput {
@@ -351,8 +342,10 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     }
     
     func responderDidUpdate() {
+        
+        self.inputState = self.isFirstResponder ? .focus : .none
         self.updateInputState()
-        self.textView.update(true)
+       // self.textView.update(true)
         DispatchQueue.main.async {
             self.textView.setSelectedRange(NSMakeRange(self.textView.string().length, 0))
         }
@@ -362,8 +355,9 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         return true
     }
     
+    
+    
     func updateInputState(animated: Bool = true) {
-        self.inputState = self.isFirstResponder ? .focus(isEmpty: self.textView.string().isEmpty) : .none(isEmpty: self.textView.string().isEmpty)
         
         guard let superview = self.superview, let window = self.window, let arguments = self.arguments else {
             return
@@ -388,11 +382,11 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 textView.inputView.textContainer?.maximumNumberOfLines = 1
                 textView.inputView.textContainer?.lineBreakMode = .byTruncatingTail
                 textView.inputView.isSelectable = false
-                textView.inputView.isEditable = false
+                textView.inputView.isEditable = true
             }
         }
         self.action.update(state: textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
-        reactions.change(opacity: self.inputState.isEmpty ? 1 : 0, animated: animated)
+        reactions.change(opacity: textView.string().isEmpty ? 1 : 0, animated: animated)
         self.updateInputSize(size: size, animated: animated)
         
     }
@@ -400,7 +394,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     
 
     
-    private(set) var inputState: StoryInputState = .none(isEmpty: true) {
+    private(set) var inputState: StoryInputState = .none {
         didSet {
             if oldValue != inputState {
                 inputStateDidUpdate?(inputState)
@@ -546,7 +540,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         self.updateInputState()
         
-        let attributedString = arguments?.interaction.presentation.input.attributedString(storyTheme)
+        let attributedString = arguments?.interaction.presentation.findInput(groupId).attributedString(storyTheme)
         if let attributedString = attributedString, !attributedString.string.isEmpty {
             self.textView.setAttributedString(attributedString, animated: false)
         }
@@ -570,7 +564,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         transition.updateFrame(view: visualEffect, frame: focus(window.frame.size))
         
        
-        var textRect = focus(NSMakeSize(size.width - 150 - (inputState.isEmpty ? 50 : 0), textView.frame.height))
+        var textRect = focus(NSMakeSize(size.width - 150 - (textView.string().isEmpty ? 50 : 0), textView.frame.height))
         textRect.origin.x = 50
         transition.updateFrame(view: textView, frame: textRect)
     }

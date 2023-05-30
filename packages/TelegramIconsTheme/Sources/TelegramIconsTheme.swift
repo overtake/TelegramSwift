@@ -9716,6 +9716,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var story_chatlist_reply: CGImage {
+      if let image = cached.with({ $0["story_chatlist_reply"] }) {
+          return image
+      } else {
+          let image = _story_chatlist_reply()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_chatlist_reply"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var story_chatlist_reply_active: CGImage {
+      if let image = cached.with({ $0["story_chatlist_reply_active"] }) {
+          return image
+      } else {
+          let image = _story_chatlist_reply_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["story_chatlist_reply_active"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10464,6 +10490,8 @@ public final class TelegramIconsTheme {
   private let _story_seen_profile: ()->CGImage
   private let _story_view_read: ()->CGImage
   private let _story_view_reaction: ()->CGImage
+  private let _story_chatlist_reply: ()->CGImage
+  private let _story_chatlist_reply_active: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11212,7 +11240,9 @@ public final class TelegramIconsTheme {
       story_unseen_profile: @escaping()->CGImage,
       story_seen_profile: @escaping()->CGImage,
       story_view_read: @escaping()->CGImage,
-      story_view_reaction: @escaping()->CGImage
+      story_view_reaction: @escaping()->CGImage,
+      story_chatlist_reply: @escaping()->CGImage,
+      story_chatlist_reply_active: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11961,5 +11991,7 @@ public final class TelegramIconsTheme {
       self._story_seen_profile = story_seen_profile
       self._story_view_read = story_view_read
       self._story_view_reaction = story_view_reaction
+      self._story_chatlist_reply = story_chatlist_reply
+      self._story_chatlist_reply_active = story_chatlist_reply_active
   }
 }

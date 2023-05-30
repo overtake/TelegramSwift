@@ -192,7 +192,7 @@ final class ChatInteraction : InterfaceObserver  {
     var revealMedia:(MessageId)->Void = { _ in }
     var toggleTranslate:()->Void = { }
     var hideTranslation:()->Void = { }
-    var openStories: (_ f:@escaping(PeerId, Int32?)-> NSView?)->Void = { _ in }
+    var openStories: (_ f:@escaping(PeerId, MessageId?, Int32?)-> NSView?)->Void = { _ in }
     var doNotTranslate:(String)->Void = { _ in }
     var translateTo:(String)->Void = { _ in }
     var enableTranslatePaywall:()->Void = { }
@@ -202,7 +202,7 @@ final class ChatInteraction : InterfaceObserver  {
     var closeChatThemes:()->Void = { }
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
     
-    var openStory:(StoryId)->Void = { _ in }
+    var openStory:(MessageId, StoryId)->Void = { _, _ in }
     
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
