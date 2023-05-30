@@ -435,14 +435,10 @@ final class StoryListView : Control, Notifable {
 
         if let current = current, current.isEqual(to: value.storyId) {
             if value.isPaused {
-                if value.isPaused != oldValue.isPaused {
-                    current.pause()
-                }
+                current.pause()
                 isPaused = true
             } else {
-                if value.isPaused != oldValue.isPaused {
-                    current.play()
-                }
+                current.play()
                 isPaused = false
             }
         } else {
