@@ -177,7 +177,7 @@ class StoryView : Control {
                     current.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-            current.update(backgroundColor: nil, data: nil, size: frame.size, imageSize: frame.size)
+            current.update(backgroundColor: nil, shimmeringColor: NSColor(0xffffff, 0.3), data: nil, size: frame.size, imageSize: frame.size)
             current.updateAbsoluteRect(bounds, within: frame.size)
         } else if let layer = self.shimmer {
             performSublayerRemoval(layer, animated: animated)

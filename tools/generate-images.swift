@@ -870,6 +870,10 @@ func initialize() -> [String] {
     
     array.append("story_view_read")
     array.append("story_view_reaction")
+    
+    array.append("story_chatlist_reply")
+    array.append("story_chatlist_reply_active")
+
 
     return array
 }

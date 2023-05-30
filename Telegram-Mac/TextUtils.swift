@@ -183,6 +183,10 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             break
         }
     }
+    if message.storyAttribute != nil, notifications, message.flags.contains(.Incoming) {
+        return (string: strings().notificationStoryReply(messageText).nsstring, justSpoiled: justSpoiled)
+    }
+    
     return (string: messageText.nsstring, justSpoiled: justSpoiled)
     
 }

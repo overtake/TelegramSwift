@@ -690,7 +690,7 @@ class ChatRowItem: TableRowItem {
     func openStory() {
         if let message = message {
             if let replyAttribute = message.storyAttribute {
-                chatInteraction.openStory(replyAttribute.storyId)
+                chatInteraction.openStory(message.id, replyAttribute.storyId)
             }
         }
     }
@@ -2069,12 +2069,10 @@ class ChatRowItem: TableRowItem {
                         replyModel?.isSideAccessory = isBubbled && !hasBubble
                     }
                 }
-                for attribute in message.attributes {
-                    if let attribute = attribute as? ReplyStoryAttribute, let story = message.associatedStories[attribute.storyId]?.get(Stories.StoredItem.self) {
-                        
+                if let attribute = attribute as? ReplyStoryAttribute {
+                    if let story = message.associatedStories[attribute.storyId]?.get(Stories.StoredItem.self) {
                         self.replyModel = StoryReplyModel(message: message, storyId: attribute.storyId, story: story, context: context, presentation: replyPresentation)
                         replyModel?.isSideAccessory = isBubbled && !hasBubble
-                        
                     }
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {

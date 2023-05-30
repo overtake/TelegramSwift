@@ -7543,6 +7543,10 @@ public final class L10n {
   public static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
   /// Reply
   public static var notificationReply: String  { return L10n.tr("Localizable", "Notification.Reply") }
+  /// Replied to your story: %@
+  public static func notificationStoryReply(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StoryReply", p1)
+  }
   /// %1$@ to your "%2$@"
   public static func notificationContactReacted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Notification.Contact.Reacted", p1, p2)

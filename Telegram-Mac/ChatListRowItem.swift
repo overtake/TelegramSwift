@@ -834,7 +834,12 @@ class ChatListRowItem: TableRowItem {
                 textLeftCutout += contentImageTrailingSpace
             }
         }
-        
+        if let message = messages.first(where: { $0.storyAttribute != nil }) {
+            if message.effectivelyIncoming(context.peerId) {
+                textLeftCutout += 20
+            }
+        }
+
         if hasUnreadMentions {
             self.mentionsCount = 1
         } else {
@@ -1142,7 +1147,7 @@ class ChatListRowItem: TableRowItem {
     
     func openPeerStory() {
         if let peerId = peerId {
-            self.openStory(.init(peerId: peerId, id: nil, takeControl: { [weak self] peerId, storyId in
+            self.openStory(.init(peerId: peerId, id: nil, messageId: nil, takeControl: { [weak self] peerId, _, storyId in
                 self?.takeControl(peerId, storyId)
             }))
         }
@@ -1301,6 +1306,7 @@ class ChatListRowItem: TableRowItem {
             default:
                 _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .root).start()
             }
+            _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 2.0).start()
         }
     }
     
@@ -1438,7 +1444,7 @@ class ChatListRowItem: TableRowItem {
                     firstGroup.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
                 }
                 
-                if groupId == .root, (canArchive || associatedGroupId != .root), filter == .allChats {
+                if groupId == .root, (canArchive || associatedGroupId != .root) {
                     secondGroup.append(ContextMenuItem(associatedGroupId == .root ? strings().chatListSwipingArchive : strings().chatListSwipingUnarchive, handler: toggleArchive, itemImage: associatedGroupId == .root ? MenuAnimation.menu_archive.value : MenuAnimation.menu_unarchive.value))
                 }
                 
@@ -1725,6 +1731,15 @@ class ChatListRowItem: TableRowItem {
     
     var isActiveSelected: Bool {
         return isSelected && context.layout != .single && !(isForum && !isTopic)
+    }
+    
+    var isReplyToStory: Bool {
+        if let message = self.messages.first(where: { $0.storyAttribute != nil }) {
+            if message.effectivelyIncoming(context.peerId) {
+                return true
+            }
+        }
+        return false
     }
     
     var ctxChatNameLayout:TextViewLayout? {

@@ -174,10 +174,34 @@ private final class StoryListEntryRowItem : TableRowItem {
         return entry.stableId
     }
     
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        var items: [ContextMenuItem] = []
+        items.append(.init("View Profile", handler: {
+            
+        }, itemImage: MenuAnimation.menu_open_profile.value))
+        
+        items.append(.init("Mute", handler: {
+            
+        }, itemImage: MenuAnimation.menu_mute.value))
+        
+        items.append(.init("Hide", handler: {
+            
+        }, itemImage: MenuAnimation.menu_hide.value))
+
+        return .single(items)
+    }
+    
     func callopenStory() {
-        //_ takeControl: @escaping(PeerId, Int32?)->NSView?
-        self.open(.init(peerId: entry.id, id: nil, takeControl: { [weak self] peerId, storyId in
-            self?.takeControl(peerId, storyId)
+        let table = self.table
+        self.open(.init(peerId: entry.id, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, storyId in
+            var view: NSView?
+            table?.enumerateItems(with: { item in
+                if let item = item as? StoryListEntryRowItem {
+                    view = item.takeControl(peerId, storyId)
+                }
+                return view == nil
+            })
+            return view
         }))
     }
     

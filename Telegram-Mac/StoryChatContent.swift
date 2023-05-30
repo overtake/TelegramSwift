@@ -277,10 +277,13 @@ final class StoryContentContextImpl: StoryContentContext {
                     var loadKeys: [StoryKey] = []
                     for index in (focusedIndex - 2) ... (focusedIndex + 2) {
                         if index >= 0 && index < itemsView.items.count {
-                            if let item = itemsView.items[focusedIndex].value.get(Stories.StoredItem.self), case .placeholder = item {
+                            if let item = itemsView.items[index].value.get(Stories.StoredItem.self), case .placeholder = item {
                                 loadKeys.append(StoryKey(peerId: peerId, id: item.id))
                             }
                         }
+                    }
+                    if !loadKeys.isEmpty {
+                        loadIds(loadKeys)
                     }
                     
                     if let item = itemsView.items[focusedIndex].value.get(Stories.StoredItem.self), case let .item(item) = item, let media = item.media {

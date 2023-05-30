@@ -93,14 +93,14 @@ final class ChatMessageBubbleBackdrop: NSView {
     
     func update(rect: CGRect, within containerSize: CGSize, transition: ContainedViewLayoutTransition, rotated: Bool = false) {
         
-        if let backgroundContent = backgroundContent {
-            transition.updateFrame(view: backgroundContent, frame: CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: containerSize))
-        }
-        
-        if rotated {
-            backgroundContent?.rotate(byDegrees: 180)
-        } else {
-            backgroundContent?.rotate(byDegrees: 0)
-        }
+//        if let backgroundContent = backgroundContent {
+//            transition.updateFrame(view: backgroundContent, frame: CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: containerSize))
+//        }
+//
+//        if rotated {
+//            backgroundContent?.rotate(byDegrees: 180)
+//        } else {
+//            backgroundContent?.rotate(byDegrees: 0)
+//        }
     }
 }

@@ -84,8 +84,30 @@ final class StoryListView : Control, Notifable {
             shadowView.direction = .vertical(true)
             shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.6)
             
+            
+            NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: scrollView.clipView, queue: nil, using: { [weak self] _ in
+                self?.updateScroll()
+            })
+            
+            
             self.layer?.cornerRadius = 10
         }
+        
+        
+        private func updateScroll() {
+            switch state {
+            case .concealed:
+                if container.userInteractionEnabled, scrollView.clipView.bounds.minY > 5 {
+                    self.container.send(event: .Click)
+                }
+            case .revealed:
+                if self.userInteractionEnabled, scrollView.clipView.bounds.minY < -5 {
+                    self.send(event: .Click)
+                }
+            }
+        }
+        
+
         
         override func layout() {
             super.layout()
@@ -329,6 +351,7 @@ final class StoryListView : Control, Notifable {
     private let navigator = StoryListNavigationView(frame: .zero)
     private var text: Text?
     private let container = View()
+    private var animationMask: SimpleLayer?
     
     private var pauseOverlay: Control? = nil
         
@@ -412,10 +435,14 @@ final class StoryListView : Control, Notifable {
 
         if let current = current, current.isEqual(to: value.storyId) {
             if value.isPaused {
-                current.pause()
+                if value.isPaused != oldValue.isPaused {
+                    current.pause()
+                }
                 isPaused = true
             } else {
-                current.play()
+                if value.isPaused != oldValue.isPaused {
+                    current.play()
+                }
                 isPaused = false
             }
         } else {
@@ -445,6 +472,8 @@ final class StoryListView : Control, Notifable {
             }
             inputView.updateState(value, animated: animated)
         }
+        
+        NSLog("value.inputInFocus: \(value.inputInFocus)")
         
         if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.inputInFocus || value.inputRecording != nil {
             let current: Control
@@ -546,15 +575,40 @@ final class StoryListView : Control, Notifable {
         }
         
         let oldRect = container.frame
+        
+        let aspectSize = control.frame.size//oldRect.size.aspectFilled(control.frame.size)
+
+        
         let origin = self.convert(control.frame.origin, from: superview)
-        let newRect = CGRect(origin: origin, size: control.frame.size)
+        let newRect = CGRect(origin: NSMakePoint(origin.x + (control.frame.width - aspectSize.width) / 2, origin.y + (control.frame.height - aspectSize.height) / 2), size: aspectSize)
                 
+        
         current?.animateAppearing(disappear: true)
         
-        container.layer?.animatePosition(from: oldRect.origin, to: newRect.origin, duration: 0.2, timingFunction: .default, removeOnCompletion: false)
-        container.layer?.animateScaleX(from: 1, to: newRect.width / oldRect.width, duration: 0.2, timingFunction: .default, removeOnCompletion: false)
-        container.layer?.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: 0.2, timingFunction: .default, removeOnCompletion: false)
+        let duration: Double = 0.2
         
+        guard let layer = container.layer else {
+            return
+        }
+        
+        layer.animatePosition(from: oldRect.origin, to: newRect.origin, duration: duration, timingFunction: .default, removeOnCompletion: false)
+        layer.animateScaleX(from: 1, to: newRect.width / oldRect.width, duration: duration, timingFunction: .default, removeOnCompletion: false)
+        layer.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: duration, timingFunction: .default, removeOnCompletion: false)
+        
+        
+       // layer.add(cornerRadium, forKey: "cornerRadius")
+        
+        let animationMask = SimpleLayer()
+        animationMask.frame = self.layer!.bounds
+        animationMask.backgroundColor = NSColor.red.cgColor
+        
+        //self.layer?.mask = animationMask
+//
+//
+//
+//
+//
+//        self.animationMask = animationMask
     }
 
     func update(context: AccountContext, entry: StoryContentContextState.FocusedSlice?) {

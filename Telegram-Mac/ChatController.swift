@@ -401,11 +401,11 @@ class ChatControllerView : View, ChatInputDelegate {
             guard let `self` = self else {
                 return
             }
-            self.tableView.enumerateVisibleViews(with: { view in
-                if let view = view as? ChatRowView {
-                    view.updateBackground(animated: false, item: view.item)
-                }
-            })
+//            self.tableView.enumerateVisibleViews(with: { view in
+//                if let view = view as? ChatRowView {
+//                    view.updateBackground(animated: false, item: view.item)
+//                }
+//            })
         }))
        
     }
@@ -1424,7 +1424,7 @@ private final class ChatAdData {
                     associatedMessageIds: initialMessage.associatedMessageIds,
                     associatedMedia: initialMessage.associatedMedia,
                     associatedThreadInfo: initialMessage.associatedThreadInfo,
-                    associatedStories: [:]
+                    associatedStories: initialMessage.associatedStories
                 )
                 self.nextPendingDynamicMessageId += 1
 
@@ -3429,9 +3429,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.closeChatThemesSelector()
         }
         
-        chatInteraction.openStory = { [weak self ] storyId in
-            StoryModalController.ShowSingleStory(context: context, storyId: storyId, initialId: .init(peerId: peerId, id: nil, takeControl: { peerId, storyId in
-                return self?.findStoryControl(storyId)
+        chatInteraction.openStory = { [weak self ] messageId, storyId in
+            StoryModalController.ShowSingleStory(context: context, storyId: storyId, initialId: .init(peerId: peerId, id: nil, messageId: messageId, takeControl: { peerId, messageId, storyId in
+                return self?.findStoryControl(messageId, storyId)
             }))
         }
         
@@ -3978,7 +3978,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.openStories = { [weak self] f in
             let story = self?.uiState.with ({ $0.storyState })
             if let story = story {
-                StoryModalController.ShowStories(context: context, initialId: .init(peerId: story.peer.id, id: nil, takeControl: f))
+                StoryModalController.ShowStories(context: context, initialId: .init(peerId: story.peer.id, id: nil, messageId: nil, takeControl: f))
             }
         }
         
@@ -7742,11 +7742,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.themeSelector?.close(true)
     }
     
-    func findStoryControl(_ storyId: Int32?) -> NSView? {
+    func findStoryControl(_ messageId: MessageId?, _ storyId: Int32?) -> NSView? {
         var control: NSView? = nil
         genericView.tableView.enumerateVisibleItems(with: { item in
             if let item = item as? ChatRowItem {
-                if let attr = item.message?.storyAttribute {
+                if let attr = item.message?.storyAttribute, item.message?.id == messageId {
                     if attr.storyId.id == storyId {
                         if let view = item.view as? ChatRowView {
                             control = view.storyControl

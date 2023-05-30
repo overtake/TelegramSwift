@@ -102,8 +102,8 @@ final class StoryMonthRowItem : GeneralRowItem {
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 30, right: 30) : NSEdgeInsets())
     }
     
-    func openPeerStory(peerId: PeerId, storyId: Int32, _ takeControl: @escaping(PeerId, Int32?)->NSView?) {
-        self.openStory(.init(peerId: peerId, id: storyId, takeControl: takeControl))
+    func openPeerStory(peerId: PeerId, storyId: Int32, _ takeControl: @escaping(PeerId, MessageId?, Int32?)->NSView?) {
+        self.openStory(.init(peerId: peerId, id: storyId, messageId: nil, takeControl: takeControl))
     }
     
     override func viewClass() -> AnyClass {
@@ -314,7 +314,7 @@ private final class StoryMonthRowView : GeneralContainableRowView, Notifable {
             for contentView in contentViews {
                 if let contentView = contentView, let layoutItem = contentView.layoutItem {
                     if NSPointInRect(point, contentView.frame) {
-                        item.openPeerStory(peerId: layoutItem.peerId, storyId: layoutItem.id.id, { [weak self] peerId, storyId in
+                        item.openPeerStory(peerId: layoutItem.peerId, storyId: layoutItem.id.id, { [weak self] peerId, _, storyId in
                             return self?.takeControl(peerId, storyId: storyId)
                         })
                         return

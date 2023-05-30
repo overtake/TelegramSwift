@@ -2686,7 +2686,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               story_unseen_profile: { generateStoryState(palette.accent, size: NSMakeSize(120, 120), wide: 1.5) },
                               story_seen_profile: { generateStoryState(palette.grayIcon, size: NSMakeSize(120, 120), wide: 1.0) },
                               story_view_read: { NSImage(named: "Icon_StoryViewRead")!.precomposed(palette.grayIcon) },
-                              story_view_reaction: { NSImage(named: "Icon_StoryViewReaction")!.precomposed(palette.grayIcon) }
+                              story_view_reaction: { NSImage(named: "Icon_StoryViewReaction")!.precomposed(palette.grayIcon) },
+                              story_chatlist_reply: { NSImage(named: "Icon_StoryReply")!.precomposed(palette.grayIcon) },
+                              story_chatlist_reply_active: { NSImage(named: "Icon_StoryReply")!.precomposed(palette.underSelectedColor) }
 
 
     )
