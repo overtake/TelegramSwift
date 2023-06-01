@@ -119,7 +119,7 @@ final class StoryInteraction : InterfaceObserver {
         
         
         var inputs: [PeerId : ChatTextInputState] = [:]
-        var entryState:[PeerId : Int32] = [:]
+        
         var input: ChatTextInputState {
             if let entryId = entryId {
                 if let input = inputs[entryId] {
@@ -650,8 +650,30 @@ private final class StoryViewController: Control, Notifable {
             let title: String
             var mediaFile: TelegramMediaFile
             switch source {
-            case .media:
-                title = "Media Sent."
+            case let .media(medias):
+                if medias.count > 1 {
+                    title = "Media Sent."
+                } else if let media = medias.first {
+                    if let file = media as? TelegramMediaFile {
+                        if file.isVideo && file.isAnimated {
+                            title = "GIF Sent."
+                        } else if file.isVideo {
+                            title = "Video Sent."
+                        } else if file.isSticker || file.isAnimatedSticker || file.isVideoSticker {
+                            title = "Sticker Sent.";
+                        } else if file.isMusic || file.isMusicFile {
+                            title = "Audio Sent.";
+                        } else {
+                            title = "Media Sent."
+                        }
+                    } else if let _ = media as? TelegramMediaImage {
+                        title = "Picture Sent."
+                    } else {
+                        title = "Media Sent."
+                    }
+                } else {
+                    title = "Media Sent."
+                }
                 mediaFile = MenuAnimation.menu_success.file
             case let .reaction(reaction):
                 title = "Reaction Sent."
@@ -966,7 +988,11 @@ private final class StoryViewController: Control, Notifable {
         if result == .invoked {
             self.storyContext?.navigate(navigation: .item(.previous))
         } else if result == .moveBack {
-            self.processGroupResult(result, animated: true)
+            if self.storyContext?.stateValue?.previousSlice == nil {
+                self.current?.restart()
+            } else {
+                self.processGroupResult(result, animated: true)
+            }
         }
 
         return .invoked
@@ -1114,8 +1140,18 @@ private final class StoryViewController: Control, Notifable {
     }
     
     private var reactionsOverlay: Control? = nil
-   
-    func closeReactions() {
+    private var makeParabollic: Bool = true
+    
+    func closeReactions(reactByFirst: Bool = false) {
+        
+        if reactByFirst {
+            if let overlay = reactionsOverlay, let view = overlay.subviews.first as? ContextAddReactionsListView {
+                self.makeParabollic = false
+                view.invokeFirst()
+                return
+            }
+        }
+        
         let hasReactions: Bool = self.reactionsOverlay != nil
         if let view = self.reactionsOverlay {
             performSubviewRemoval(view, animated: true)
@@ -1178,6 +1214,8 @@ private final class StoryViewController: Control, Notifable {
             }
         }
         
+        let parabollic: Bool = self.makeParabollic
+        
         let play:(NSView, TelegramMediaFile)->Void = { container, icon in
             
             let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: icon.fileId.id, file: icon, emoji: ""), size: NSMakeSize(100, 100), playPolicy: .once)
@@ -1197,6 +1235,7 @@ private final class StoryViewController: Control, Notifable {
                 let rect = CGRect(origin: CGPoint(x: (container.frame.width - player.frame.width) / 2, y: (container.frame.height - player.frame.height) / 2), size: player.frame.size)
                 player.frame = rect
                 container.addSubview(player)
+                
             } else if let effectFile = effectFile {
                 let player = InlineStickerItemLayer(account: context.account, file: effectFile, size: NSMakeSize(300, 300), playPolicy: .playCount(1))
                 player.isPlayable = true
@@ -1208,10 +1247,12 @@ private final class StoryViewController: Control, Notifable {
                     finish()
                 })
             }
-            
+            if !parabollic {
+                layer.animateScale(from: 0.1, to: 1, duration: 0.25)
+            }
         }
         
-        let layer = InlineStickerItemLayer(account: context.account, file: icon, size: NSMakeSize(100, 100))
+        let layer = InlineStickerItemLayer(account: context.account, file: icon, size: NSMakeSize(50, 50))
 
         let completed: (Bool)->Void = { [weak overlay] _ in
             DispatchQueue.main.async {
@@ -1223,7 +1264,8 @@ private final class StoryViewController: Control, Notifable {
                 }
             }
         }
-        if let fromRect = reaction.fromRect {
+        if let fromRect = reaction.fromRect, makeParabollic {
+            
             let toRect = overlay.convert(overlay.frame.size.bounds, to: nil)
             
             let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
@@ -1232,7 +1274,7 @@ private final class StoryViewController: Control, Notifable {
         } else {
             completed(true)
         }
-        
+        makeParabollic = true
     }
     
     func showReactions() {
@@ -1334,14 +1376,11 @@ private final class StoryViewController: Control, Notifable {
         self.current?.removeFromSuperview()
 
         self.current = previous
-
-        let entryId = previous.id
         
         container.addSubview(previous, positioned: .above, relativeTo: cur)
 
         self.arguments?.interaction.update { current in
             var current = current
-            current.entryId = entryId
             current._inTransition = false
             return current
         }
@@ -1476,7 +1515,7 @@ private final class StoryViewController: Control, Notifable {
                         }
                     } else {
                         if self.reactionsOverlay != nil {
-                            self.closeReactions()
+                            self.closeReactions(reactByFirst: true)
                         } else {
                             if self.isInputFocused {
                                 self.resetInputView()

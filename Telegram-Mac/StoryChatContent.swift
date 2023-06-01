@@ -301,7 +301,10 @@ final class StoryContentContextImpl: StoryContentContext {
                                     }
                                 )
                             },
-                            privacy: nil
+                            privacy: nil,
+                            isPinned: item.isPinned,
+                            isExpired: item.isExpired,
+                            isPublic: item.isPublic
                         )
                         
                         self.sliceValue = StoryContentContextState.FocusedSlice(
@@ -728,7 +731,10 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                             }
                         )
                     },
-                    privacy: nil
+                    privacy: nil,
+                    isPinned: itemValue.isPinned,
+                    isExpired: itemValue.isExpired,
+                    isPublic: itemValue.isPublic
                 )
                 
                 let stateValue = StoryContentContextState(

@@ -20,6 +20,11 @@ private struct StoryChatListEntry : Equatable, Comparable, Identifiable {
     static func <(lhs: StoryChatListEntry, rhs: StoryChatListEntry) -> Bool {
         return lhs.index < rhs.index
     }
+    
+    static func ==(lhs: StoryChatListEntry, rhs: StoryChatListEntry) -> Bool {
+        return lhs.item == rhs.item && lhs.appearance == rhs.appearance
+    }
+    
     var stableId: AnyHashable {
         return item.peer.id
     }
@@ -144,7 +149,7 @@ private final class StoryListChatListRowView: TableRowView {
         let (deleted, inserted, updated) = proccessEntriesWithoutReverse(self.current, right: entries, { entry in
             return StoryListEntryRowItem(initialSize, entry: entry, context: context, open: item.open)
         })
-        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: true)
+        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: true, grouping: false, animateVisibleOnly: false)
 
         self.tableView.merge(with: transition)
 
@@ -290,7 +295,7 @@ private final class StoryListEntryRowView : HorizontalRowView {
         let name: String
         if item.entry.id == item.context.peerId {
             name = "My Story"
-            stateView.isHidden = true
+            stateView.isHidden = false
         } else {
             name = item.entry.item.peer._asPeer().compactDisplayTitle
             stateView.isHidden = false
