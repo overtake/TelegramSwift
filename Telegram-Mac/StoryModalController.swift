@@ -556,23 +556,22 @@ private final class StoryViewController: Control, Notifable {
             if peer?.id != self.peer?.id {
                 self.peer = peer
                 self.context = context
-                if let photo = self.photo {
-                    performSubviewRemoval(photo, animated: animated)
-                    self.photo = nil
-                }
+
                 if let peer = peer {
-                    let photo = AvatarControl(font: .avatar(18))
-                    photo.setFrameSize(NSMakeSize(30, 30))
-                    addSubview(photo)
-                    self.photo = photo
-                    photo.center()
-                    photo.userInteractionEnabled = false
-                    photo.layer?.opacity = 0.8
+                    if self.photo == nil {
+                        let photo = AvatarControl(font: .avatar(18))
+                        photo.setFrameSize(NSMakeSize(30, 30))
+                        addSubview(photo)
+                        self.photo = photo
+                    }
+                    self.photo?.center()
+                    self.photo?.userInteractionEnabled = false
+                    photo?.layer?.opacity = 0.8
                     
-                    photo.setPeer(account: context.account, peer: peer)
+                    photo?.setPeer(account: context.account, peer: peer)
                     
                     if animated {
-                        photo.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                       // photo.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                         //photo.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
                     }
                 }
@@ -2108,10 +2107,15 @@ final class StoryModalController : ModalViewController, Notifable {
         return false
     }
     
+    private var closed: Bool = false
+    
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
-        super.close(animationType: .common)
-        self.readThrottler.flush()
-        self.genericView.animateDisappear(initialId)
+        if !self.closed {
+            super.close(animationType: .common)
+            self.readThrottler.flush()
+            self.genericView.animateDisappear(initialId)
+        }
+        self.closed = true
     }
 
     override var isVisualEffectBackground: Bool {
