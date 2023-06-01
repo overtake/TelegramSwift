@@ -235,8 +235,8 @@ final class StoryMyInputView : Control, StoryInput {
         
         let avatars: AvatarContentView?
         
-        let photos = storyViews?.seenPeers.map { $0.id } ?? []
-        let peers = storyViews?.seenPeers.map { $0._asPeer() } ?? []
+        let photos = storyViews?.seenPeers.reversed().map { $0.id } ?? []
+        let peers = storyViews?.seenPeers.reversed().map { $0._asPeer() } ?? []
         if photos != self.photos {
             self.photos = photos
             if !photos.isEmpty {

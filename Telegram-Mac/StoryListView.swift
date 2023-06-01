@@ -99,10 +99,12 @@ final class StoryListView : Control, Notifable {
             case .concealed:
                 if container.userInteractionEnabled, scrollView.clipView.bounds.minY > 5 {
                     self.container.send(event: .Click)
+                    self.scrollView.clipView.scroll(to: .zero, animated: true)
                 }
             case .revealed:
                 if self.userInteractionEnabled, scrollView.clipView.bounds.minY < -5 {
                     self.send(event: .Click)
+                    self.scrollView.clipView.scroll(to: .zero, animated: true)
                 }
             }
         }
@@ -207,6 +209,19 @@ final class StoryListView : Control, Notifable {
             }
             
             self.updateLayout(size: frame.size, transition: transition)
+            
+            switch state {
+            case .concealed:
+                self.shadowView.background = NSColor.clear
+                if transition.isAnimated {
+                    self.shadowView.layer?.animateBackground()
+                }
+            case .revealed:
+                self.shadowView.background = NSColor.black.withAlphaComponent(0.9)
+                if transition.isAnimated {
+                    self.shadowView.layer?.animateBackground()
+                }
+            }
             
             return frame.size
         }
@@ -353,6 +368,9 @@ final class StoryListView : Control, Notifable {
     private let container = View()
     private var animationMask: SimpleLayer?
     
+    private var prevStoryView: ShadowView?
+    private var nextStoryView: ShadowView?
+    
     private var pauseOverlay: Control? = nil
         
     var storyDidUpdate:((Message)->Void)?
@@ -389,11 +407,17 @@ final class StoryListView : Control, Notifable {
         controls.layer?.cornerRadius = 10
         
         controls.set(handler: { [weak self] _ in
+            self?.updateSides()
+        }, for: .Down)
+        
+        controls.set(handler: { [weak self] _ in
             self?.arguments?.longDown()
+            self?.updateSides()
         }, for: .LongMouseDown)
         
         controls.set(handler: { [weak self] _ in
             self?.arguments?.longUp()
+            self?.updateSides()
         }, for: .Up)
         
         controls.set(handler: { [weak self] control in
@@ -405,9 +429,34 @@ final class StoryListView : Control, Notifable {
                     self?.arguments?.nextStory()
                 }
             }
+            self?.updateSides()
         }, for: .Click)
         
              
+    }
+    
+    private func updateSides(animated: Bool = true) {
+        if let args = self.arguments {
+            let isPrev: Bool?
+            if !args.interaction.presentation.mouseDown, let event = NSApp.currentEvent, event.type == .leftMouseDown {
+                let point = controls.convert(event.locationInWindow, from: nil)
+                if point.x < controls.frame.width / 2 {
+                    isPrev = true
+                } else {
+                    isPrev = false
+                }
+            } else {
+                isPrev = nil
+            }
+            
+            if let isPrev = isPrev {
+                self.prevStoryView?.change(opacity: isPrev ? 1 : 0, animated: animated)
+                self.nextStoryView?.change(opacity: !isPrev ? 1 : 0, animated: animated)
+            } else {
+                self.prevStoryView?.change(opacity: 0, animated: animated)
+                self.nextStoryView?.change(opacity: 0, animated: animated)
+            }
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -497,7 +546,9 @@ final class StoryListView : Control, Notifable {
         if value.mouseDown != oldValue.mouseDown {
             self.controls.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
             self.navigator.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
+            self.text?.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
         }
+        self.updateSides(animated: animated)
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -528,7 +579,13 @@ final class StoryListView : Control, Notifable {
             if let pauseOverlay = pauseOverlay {
                 transition.updateFrame(view: pauseOverlay, frame: rect)
             }
-
+            
+            if let view = self.prevStoryView {
+                transition.updateFrame(view: view, frame: NSMakeRect(0, rect.minY, 40, rect.height))
+            }
+            if let view = self.nextStoryView {
+                transition.updateFrame(view: view, frame: NSMakeRect(rect.width - 40, rect.minY, 40, rect.height))
+            }
         }
         inputView?.updateInputState(animated: transition.isAnimated)
         
@@ -672,9 +729,6 @@ final class StoryListView : Control, Notifable {
         
         self.current = current
         
-       
-        
-        self.current = current
         
         if let previous = previous {
             previous.onStateUpdate = nil
@@ -683,12 +737,51 @@ final class StoryListView : Control, Notifable {
         
         let story = entry.item.storyItem
         
-        self.updateLayout(size: self.frame.size, transition: .immediate)
 
 
-        self.controls.update(context: context, arguments: arguments, groupId: groupId, peer: entry.peer._asPeer(), story: story, animated: false)
         
         self.container.addSubview(current, positioned: .below, relativeTo: self.controls)
+        
+        
+        if entry.previousItemId != nil {
+            let current: ShadowView
+            if let view = self.prevStoryView {
+                current = view
+            } else {
+                current = ShadowView()
+                current.isEventLess = true
+                current.shadowBackground = NSColor.black.withAlphaComponent(0.15)
+                current.layer?.opacity = 0
+                self.prevStoryView = current
+            }
+            self.container.addSubview(current, positioned: .above, relativeTo: self.current)
+            current.direction = .horizontal(false)
+        } else if let view = self.prevStoryView {
+            performSubviewRemoval(view, animated: false)
+            self.prevStoryView = nil
+        }
+        if entry.nextItemId != nil {
+            let current: ShadowView
+            if let view = self.nextStoryView {
+                current = view
+            } else {
+                current = ShadowView()
+                current.isEventLess = true
+                current.layer?.opacity = 0
+                current.shadowBackground = NSColor.black.withAlphaComponent(0.2)
+                self.nextStoryView = current
+            }
+            self.container.addSubview(current, positioned: .above, relativeTo: self.current)
+            current.direction = .horizontal(true)
+        } else if let view = self.nextStoryView {
+            performSubviewRemoval(view, animated: false)
+            self.nextStoryView = nil
+        }
+        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+
+        self.controls.update(context: context, arguments: arguments, groupId: groupId, peer: entry.peer._asPeer(), story: story, animated: false)
+
         
         arguments.interaction.flushPauses()
         
@@ -714,6 +807,8 @@ final class StoryListView : Control, Notifable {
             previous?.removeFromSuperview()
             current?.backgroundColor = NSColor.black
         }))
+        
+       
         
     }
     
@@ -775,7 +870,9 @@ final class StoryListView : Control, Notifable {
         return self.container.frame.size
     }
     var contentRect: CGRect {
-        return self.container.frame
+        let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
+        let aspect = StoryView.size.aspectFitted(maxSize)
+        return CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor, (frame.width - aspect.width) / 2), y: 20), size: NSMakeSize(aspect.width, frame.height))
     }
     var storyRect: CGRect {
         if let current = self.current {

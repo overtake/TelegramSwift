@@ -633,7 +633,7 @@ class ChatListController : PeersListController {
                     stories = nil
                 case let .chatList(peerId):
                     space = .init(peerId: peerId, category: .global)
-                    stories = storyState?.items.first(where: { $0.peer.id == peerId && $0.hasUnseen })
+                    stories = storyState?.items.first(where: { $0.peer.id == peerId })
                 }
                 return .chat(item.0, state?.activities.activities[space] ?? [], item.1, filter: filterData.filter, generalStatus: generalStatus, selectedForum: state?.selectedForum, appearMode: state?.controllerAppear ?? .normal, hideContent: state?.appear == .short, stories: stories)
             }
