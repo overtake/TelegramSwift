@@ -563,6 +563,15 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         return frames
     }
     
+    func invokeFirst() {
+        for view in self.documentView.subviews {
+            if let view = view as? ReactionView {
+                view.send(event: .Click)
+                return
+            }
+        }
+    }
+    
     static var size: CGSize {
         return .init(width: 37, height: 34)
     }

@@ -270,7 +270,6 @@ class StoryView : Control {
         } else {
             view = StoryVideoView(frame: frame)
         }
-        view.backgroundColor = NSColor.black
         view.update(context: context, peerId: peerId, story: story, peer: peer)
         view.initializeStatus()
         return view

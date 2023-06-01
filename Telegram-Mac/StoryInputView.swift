@@ -34,26 +34,33 @@ protocol StoryInput {
     var text: TGModernGrowingTextView? { get }
     var input: NSTextView? { get }
 }
+private var send_image: CGImage {
+    NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent)
+}
 
-private let send_image = NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent)
-private let send_image_active = NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent.darker())
-
-private let attach_image = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.33))
-private let attach_image_active = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.53))
-
-private let voice_image = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.33))
-private let voice_image_active = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.53))
-
-private let video_message_image = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.33))
-private let video_message_image_active = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.53))
+private var send_image_active: CGImage {
+    NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent.darker())
+}
 
 
-private let stickers_image = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.33))
-private let stickers_image_active = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.53))
+private let attach_image: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.33))
+private let attach_image_active: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.53))
 
-private let story_like = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.33))
-private let story_like_active = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.53))
+private let voice_image: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.33))
+private let voice_image_active: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.53))
 
+private let video_message_image: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.33))
+private let video_message_image_active: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.53))
+
+
+private let stickers_image: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.33))
+private var stickers_image_active: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.53))
+
+private let story_like: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.33))
+private let story_like_active: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.53))
+
+private let share_image: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 0.33))
+private let share_image_active: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 0.53))
 
 
 
@@ -62,6 +69,7 @@ private final class StoryReplyActionButton : View {
     enum State : Equatable {
         case empty(isVoice: Bool)
         case text
+        case share
     }
     
     private var current: ImageButton?
@@ -89,6 +97,10 @@ private final class StoryReplyActionButton : View {
                     if let story = self?.story, let peerId = story.peerId {
                         arguments?.sendMessage(peerId, story.storyItem.id)
                     }
+                } else if state == .share {
+                    if let story = self?.story {
+                        arguments?.share(story.storyItem)
+                    }
                 } else {
                     arguments?.toggleRecordType()
                 }
@@ -110,6 +122,9 @@ private final class StoryReplyActionButton : View {
             case let .empty(isVoice: isVoice):
                 current.set(image: isVoice ? voice_image : video_message_image, for: .Normal)
                 current.set(image: isVoice ? voice_image_active : video_message_image_active, for: .Highlight)
+            case .share:
+                current.set(image: share_image, for: .Normal)
+                current.set(image: share_image_active, for: .Highlight)
             }
             self.current = current
             current.frame = frame.size.bounds
@@ -151,7 +166,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             return
         }
         self.reactions.isSelected = state.hasReactions
-        self.action.update(state: textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
+        self.action.update(state: !isFirstResponder ? .share : textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
         
         self.updateInputState(animated: animated)
         self.updateRecoringState(state, animated: animated)
@@ -385,7 +400,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 textView.inputView.isEditable = true
             }
         }
-        self.action.update(state: textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
+        self.action.update(state: !isFirstResponder ? .share : textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
         reactions.change(opacity: textView.string().isEmpty ? 1 : 0, animated: animated)
         self.updateInputSize(size: size, animated: animated)
         

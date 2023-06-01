@@ -394,7 +394,7 @@ final class StoryListView : Control, Notifable {
         
         controls.set(handler: { [weak self] _ in
             self?.arguments?.longUp()
-        }, for: .LongMouseUp)
+        }, for: .Up)
         
         controls.set(handler: { [weak self] control in
             if let event = NSApp.currentEvent {
@@ -406,6 +406,7 @@ final class StoryListView : Control, Notifable {
                 }
             }
         }, for: .Click)
+        
              
     }
     
@@ -468,9 +469,7 @@ final class StoryListView : Control, Notifable {
             }
             inputView.updateState(value, animated: animated)
         }
-        
-        NSLog("value.inputInFocus: \(value.inputInFocus)")
-        
+                
         if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.inputInFocus || value.inputRecording != nil {
             let current: Control
             if let view = self.pauseOverlay {
@@ -659,7 +658,6 @@ final class StoryListView : Control, Notifable {
         
     }
     
-    private var holder: StoryView?
     private let disposable = MetaDisposable()
     func redraw() {
         guard let context = context, let arguments = self.arguments, let entry = self.entry else {
@@ -672,62 +670,49 @@ final class StoryListView : Control, Notifable {
         let aspect = StoryView.size.aspectFitted(size)
         let current = StoryView.makeView(for: entry.item.storyItem, peerId: entry.peer.id, peer: entry.peer._asPeer(), context: context, frame: aspect.bounds)
         
-        self.holder = current
+        self.current = current
         
-        let ready: Signal<Bool, NoError>
-        if self.current == nil {
-            ready = .single(true)
-        } else {
-            ready = current.getReady
+       
+        
+        self.current = current
+        
+        if let previous = previous {
+            previous.onStateUpdate = nil
+            previous.disappear()
         }
         
-        disposable.set(ready.start(next: { [weak self, weak current] _ in
-            
-            guard let `self` = self, let current = current else {
-                return
-            }
-            
-            self.current = current
-            
-            if let previous = previous {
-                previous.removeFromSuperview()
-                previous.onStateUpdate = nil
-                previous.disappear()
-            }
-            
-            let story = entry.item.storyItem
-            
-            self.updateLayout(size: self.frame.size, transition: .immediate)
+        let story = entry.item.storyItem
+        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
 
 
-            self.controls.update(context: context, arguments: arguments, groupId: groupId, peer: entry.peer._asPeer(), story: story, animated: false)
-            
-            self.container.addSubview(current, positioned: .below, relativeTo: self.controls)
-            
-            arguments.interaction.flushPauses()
-            
-            entry.item.markAsSeen?()
+        self.controls.update(context: context, arguments: arguments, groupId: groupId, peer: entry.peer._asPeer(), story: story, animated: false)
+        
+        self.container.addSubview(current, positioned: .below, relativeTo: self.controls)
+        
+        arguments.interaction.flushPauses()
+        
+        entry.item.markAsSeen?()
 
-            current.onStateUpdate = { [weak self] state in
-                self?.updateStoryState(state)
-            }
-            
-            current.appear(isMuted: arguments.interaction.presentation.isMuted)
-            self.updateStoryState(current.state)
+        current.onStateUpdate = { [weak self] state in
+            self?.updateStoryState(state)
+        }
+        
+        current.appear(isMuted: arguments.interaction.presentation.isMuted)
+        self.updateStoryState(current.state)
 
-            
-            self.arguments?.interaction.update { current in
-                var current = current
-                current.storyId = story.id
-                current.entryState[groupId] = story.id
-                return current
-            }
-            self.inputView.update(entry.item, animated: false)
-            
-            self.updateText(story, state: .concealed, animated: false, context: context)
-            
-            self.holder = nil
-            self.ready.set(true)
+        self.inputView.update(entry.item, animated: false)
+        
+        self.updateText(story, state: .concealed, animated: false, context: context)
+        
+        self.ready.set(true)
+        
+        
+        let ready: Signal<Bool, NoError> = current.getReady
+        
+        disposable.set(ready.start(next: { [weak previous, weak current] _ in
+            previous?.removeFromSuperview()
+            current?.backgroundColor = NSColor.black
         }))
         
     }
@@ -823,6 +808,7 @@ final class StoryListView : Control, Notifable {
     }
     
     func restart() {
+        self.current?.restart()
 //        self.select(at: 0)
     }
     
