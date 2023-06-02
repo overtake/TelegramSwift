@@ -565,7 +565,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         transition.updateFrame(view: visualEffect, frame: focus(window.frame.size))
         
        
-        var textRect = focus(NSMakeSize(size.width - 100 - (textView.string().isEmpty ? 50 : 0), textView.frame.height))
+        var textRect = focus(NSMakeSize(size.width - 150, textView.frame.height))
         textRect.origin.x = 50
         transition.updateFrame(view: textView, frame: textRect)
     }
