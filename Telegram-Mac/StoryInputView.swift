@@ -165,7 +165,6 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         guard let arguments = self.arguments else {
             return
         }
-        self.reactions.isSelected = state.hasReactions
         self.action.update(state: !isFirstResponder ? .share : textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
         
         self.updateInputState(animated: animated)
@@ -401,7 +400,6 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             }
         }
         self.action.update(state: !isFirstResponder ? .share : textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
-        reactions.change(opacity: textView.string().isEmpty ? 1 : 0, animated: animated)
         self.updateInputSize(size: size, animated: animated)
         
     }
@@ -428,7 +426,6 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     private let attach = ImageButton()
     private let action = StoryReplyActionButton(frame: NSMakeRect(0, 0, 50, 50))
     private let stickers = ImageButton(frame: NSMakeRect(0, 0, 50, 50))
-    private var reactions = ImageButton(frame: NSMakeRect(0, 0, 50, 50))
     
     
     
@@ -441,7 +438,6 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         addSubview(attach)
         addSubview(action)
         addSubview(stickers)
-        addSubview(reactions)
         addSubview(textView)
         
         self.set(handler: { [weak self] _ in
@@ -452,11 +448,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
 //        attach.animates = false
 //        action.animates = false
         
-        
-        reactions.set(image: story_like, for: .Normal)
-        reactions.set(image: story_like_active, for: .Highlight)
-        reactions.sizeToFit(.zero, NSMakeSize(50, 50), thatFit: true)
-        
+                
         
         textView.textFont = .normal(.text)
         textView.textColor = .white
@@ -513,10 +505,6 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             self?.arguments?.showEmojiPanel(control)
         }, for: .Click)
         
-        reactions.set(handler: { [weak self] control in
-            self?.arguments?.showReactionsPanel(control)
-        }, for: .Click)
-        
         
         self.layer?.cornerRadius = 10
       //  self.action.update(state: .empty(isVoice: FastSettings.recordingState == .voice), animated: false)
@@ -538,7 +526,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     }
     
     var inputReactionsControl: Control? {
-        return self.reactions
+        return self.stickers
     }
     
     func resetInputView() {
@@ -571,15 +559,13 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         }
         transition.updateFrame(view: action, frame: NSMakeRect(size.width - action.frame.width, size.height - action.frame.height, action.frame.width, action.frame.height))
         transition.updateFrame(view: stickers, frame: NSMakeRect(action.frame.minX - stickers.frame.width, size.height - action.frame.height, stickers.frame.width, stickers.frame.height))
-        
-        transition.updateFrame(view: reactions, frame: NSMakeRect(stickers.frame.minX - reactions.frame.width, size.height - action.frame.height, reactions.frame.width, reactions.frame.height))
-        
+                
         
         transition.updateFrame(view: attach, frame: NSMakeRect(0, size.height - attach.frame.height, attach.frame.width, attach.frame.height))
         transition.updateFrame(view: visualEffect, frame: focus(window.frame.size))
         
        
-        var textRect = focus(NSMakeSize(size.width - 150 - (textView.string().isEmpty ? 50 : 0), textView.frame.height))
+        var textRect = focus(NSMakeSize(size.width - 100 - (textView.string().isEmpty ? 50 : 0), textView.frame.height))
         textRect.origin.x = 50
         transition.updateFrame(view: textView, frame: textRect)
     }

@@ -427,13 +427,14 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private let backgroundColorView = View()
     private let shadowLayer = SimpleShapeLayer()
     private let presentation: TelegramPresentationTheme
-    
-    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil, presentation: TelegramPresentationTheme = theme) {
+    private let hasBubble: Bool
+    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil, presentation: TelegramPresentationTheme = theme, hasBubble: Bool = true) {
         self.list = list
         self.showMore = ShowMore(frame: NSMakeRect(0, 0, 34, 34), theme: presentation)
         self.revealReactions = revealReactions
         self.radiusLayer = radiusLayer
         self.presentation = presentation
+        self.hasBubble = hasBubble
         super.init(frame: frameRect)
         
         
@@ -690,10 +691,10 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
 //        transition.updateFrame(layer: maskLayer, frame: rect.size.bounds)
         transition.updateFrame(layer: shadowLayer, frame: size.bounds)
 
-        maskLayer.path = getMaskPath(rect: rect)
+        maskLayer.path = getMaskPath(rect: rect, hasBubble: self.hasBubble)
         
-        shadowLayer.path = getMaskPath(rect: rect)
-        shadowLayer.shadowPath = getMaskPath(rect: rect)
+        shadowLayer.path = getMaskPath(rect: rect, hasBubble: self.hasBubble)
+        shadowLayer.shadowPath = getMaskPath(rect: rect, hasBubble: self.hasBubble)
 
         
         if transition.isAnimated {
@@ -701,14 +702,15 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         }
     }
     
-    private func getMaskPath(rect: CGRect) -> CGPath {
+    private func getMaskPath(rect: CGRect, hasBubble: Bool = true) -> CGPath {
         
         let mutablePath = CGMutablePath()
         mutablePath.addRoundedRect(in: rect, cornerWidth: rect.height / 2, cornerHeight: rect.height / 2)
         
-        let bubbleRect = NSMakeRect(rect.width - 40, rect.maxY - 10, 20, 20)
-
-        mutablePath.addRoundedRect(in: bubbleRect, cornerWidth: bubbleRect.width / 2, cornerHeight: bubbleRect.width / 2)
+        if hasBubble {
+            let bubbleRect = NSMakeRect(rect.width - 40, rect.maxY - 10, 20, 20)
+            mutablePath.addRoundedRect(in: bubbleRect, cornerWidth: bubbleRect.width / 2, cornerHeight: bubbleRect.width / 2)
+        }
 
         return mutablePath
     }

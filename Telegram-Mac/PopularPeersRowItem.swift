@@ -187,7 +187,7 @@ private final class PopularPeerItemView : HorizontalRowView {
             }
         }
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .normal(11)), maximumNumberOfLines: 1)
-        layout.measure(width: frame.width - 10)
+        layout.measure(width: frame.width - 15)
         textView.update(layout)
         
         self.needsLayout = true

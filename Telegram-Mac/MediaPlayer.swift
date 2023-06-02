@@ -73,6 +73,7 @@ private final class MediaPlayerContext {
     private let resourceReference: MediaResourceReference
     private let streamable: Bool
     private let video: Bool
+    private let isSeekable: Bool
     private let preferSoftwareDecoding: Bool
     private var enableSound: Bool
     private var baseRate: Double
@@ -103,7 +104,7 @@ private final class MediaPlayerContext {
     
     private var stoppedAtEnd = false
     
-    init(queue: Queue, playerStatus: ValuePromise<MediaPlayerStatus>, postbox: Postbox, userLocation: MediaResourceUserLocation, userContentType: MediaResourceUserContentType, resourceReference: MediaResourceReference, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool, playAutomatically: Bool, enableSound: Bool, baseRate: Double, volume: Float, fetchAutomatically: Bool, playAndRecord: Bool, keepAudioSessionWhilePaused: Bool, initialTimebase: CMTimebase?) {
+    init(queue: Queue, playerStatus: ValuePromise<MediaPlayerStatus>, postbox: Postbox, userLocation: MediaResourceUserLocation, userContentType: MediaResourceUserContentType, resourceReference: MediaResourceReference, streamable: Bool, video: Bool, isSeekable: Bool, preferSoftwareDecoding: Bool, playAutomatically: Bool, enableSound: Bool, baseRate: Double, volume: Float, fetchAutomatically: Bool, playAndRecord: Bool, keepAudioSessionWhilePaused: Bool, initialTimebase: CMTimebase?) {
         assert(queue.isCurrent())
         
         self.queue = queue
@@ -115,6 +116,7 @@ private final class MediaPlayerContext {
         self.resourceReference = resourceReference
         self.streamable = streamable
         self.video = video
+        self.isSeekable = isSeekable
         self.preferSoftwareDecoding = preferSoftwareDecoding
         self.enableSound = enableSound
         self.baseRate = baseRate
@@ -266,7 +268,7 @@ private final class MediaPlayerContext {
             self.playerStatus.set(status)
         }
         
-        let frameSource = FFMpegMediaFrameSource(queue: self.queue, postbox: self.postbox, userLocation: self.userLocation, userContentType: self.userContentType, resourceReference: self.resourceReference, tempFilePath: nil, streamable: self.streamable, isSeekable: true, video: self.video, preferSoftwareDecoding: self.preferSoftwareDecoding, fetchAutomatically: self.fetchAutomatically)
+        let frameSource = FFMpegMediaFrameSource(queue: self.queue, postbox: self.postbox, userLocation: self.userLocation, userContentType: self.userContentType, resourceReference: self.resourceReference, tempFilePath: nil, streamable: self.streamable, isSeekable: self.isSeekable, video: self.video, preferSoftwareDecoding: self.preferSoftwareDecoding, fetchAutomatically: self.fetchAutomatically)
         let disposable = MetaDisposable()
         self.state = .seeking(frameSource: frameSource, timestamp: timestamp, disposable: disposable, action: action, enableSound: self.enableSound)
         
@@ -907,14 +909,14 @@ final class MediaPlayer {
         }
     }
     
-    init(postbox: Postbox, userLocation: MediaResourceUserLocation, userContentType: MediaResourceUserContentType, reference: MediaResourceReference, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool, playAutomatically: Bool = false, enableSound: Bool, baseRate: Double = 1.0, volume: Float = 0.8, fetchAutomatically: Bool, playAndRecord: Bool = false, keepAudioSessionWhilePaused: Bool = true, initialTimebase: CMTimebase? = nil) {
+    init(postbox: Postbox, userLocation: MediaResourceUserLocation, userContentType: MediaResourceUserContentType, reference: MediaResourceReference, streamable: Bool, video: Bool, preferSoftwareDecoding: Bool, isSeekable: Bool = true, playAutomatically: Bool = false, enableSound: Bool, baseRate: Double = 1.0, volume: Float = 0.8, fetchAutomatically: Bool, playAndRecord: Bool = false, keepAudioSessionWhilePaused: Bool = true, initialTimebase: CMTimebase? = nil) {
         
         self.statusValue.set(MediaPlayerStatus(generationTimestamp: 0.0, duration: 0.0, dimensions: CGSize(), timestamp: 0.0, baseRate: baseRate, volume: volume, seekId: 0, status: .paused))
         
         let statusValue = self.statusValue
         
         self.contextRef = QueueLocalObject(queue: playerQueue, generate: {
-            return MediaPlayerContext(queue: playerQueue, playerStatus: statusValue, postbox: postbox, userLocation: userLocation, userContentType: userContentType, resourceReference: reference, streamable: streamable, video: video, preferSoftwareDecoding: preferSoftwareDecoding, playAutomatically: playAutomatically, enableSound: enableSound, baseRate: baseRate, volume: volume, fetchAutomatically: fetchAutomatically, playAndRecord: playAndRecord, keepAudioSessionWhilePaused: keepAudioSessionWhilePaused, initialTimebase: initialTimebase)
+            return MediaPlayerContext(queue: playerQueue, playerStatus: statusValue, postbox: postbox, userLocation: userLocation, userContentType: userContentType, resourceReference: reference, streamable: streamable, video: video, isSeekable: isSeekable, preferSoftwareDecoding: preferSoftwareDecoding, playAutomatically: playAutomatically, enableSound: enableSound, baseRate: baseRate, volume: volume, fetchAutomatically: fetchAutomatically, playAndRecord: playAndRecord, keepAudioSessionWhilePaused: keepAudioSessionWhilePaused, initialTimebase: initialTimebase)
 
         })
         

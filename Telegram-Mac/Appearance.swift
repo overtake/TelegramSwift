@@ -813,6 +813,29 @@ private func generateStoryState(_ color: NSColor, size: NSSize, wide: CGFloat) -
         let rect = CGRect(origin: CGPoint(), size: size)
         ctx.clear(rect)
         
+        ctx.setStrokeColor(color.cgColor)
+        
+        let startAngle = -CGFloat.pi / 2.0
+        let endAngle = CGFloat(1.0) * 2.0 * CGFloat.pi + startAngle
+        
+        let path = CGMutablePath()
+        
+        path.addArc(center: CGPoint(x: size.width / 2.0, y: size.height / 2.0), radius: size.width / 2 - 1, startAngle: startAngle, endAngle: endAngle, clockwise: false)
+        
+        ctx.setLineWidth(wide)
+        ctx.setLineCap(.round)
+        ctx.addPath(path)
+        ctx.strokePath()
+
+    })!
+}
+
+
+private func generateStoryStateWithOnline(_ color: NSColor, size: NSSize, wide: CGFloat) -> CGImage {
+    return generateImage(size, contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
         ctx.setFillColor(color.cgColor)
         ctx.fillEllipse(in: size.bounds)
         
@@ -820,6 +843,7 @@ private func generateStoryState(_ color: NSColor, size: NSSize, wide: CGFloat) -
         ctx.fillEllipse(in: size.bounds.insetBy(dx: wide, dy: wide))
     })!
 }
+
 
 
 

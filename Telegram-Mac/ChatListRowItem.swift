@@ -414,7 +414,7 @@ class ChatListRowItem: TableRowItem {
         self.mentionsCount = nil
         self.reactionsCount = nil
         self.selectedForum = nil
-        self.stories = nil
+        self.story = nil
         self.openStory = { _ in }
         self._stableId = stableId
         self.pinnedType = pinnedType
@@ -576,17 +576,19 @@ class ChatListRowItem: TableRowItem {
     let getHideProgress:(()->CGFloat?)?
     let selectedForum: PeerId?
     let autoremoveTimeout: Int32?
-    let stories: EngineStorySubscriptions.Item?
     
+    
+    let story: EngineStorySubscriptions.Item?
+    let openStory:(StoryInitialIndex?)->Void
+
     var lastStory: (EngineStorySubscriptions.Item, Bool)? {
-        if let item = stories {
+        if let item = story {
             return (item, item.hasUnseen)
         }
         return nil
     }
     
     
-    let openStory:(StoryInitialIndex?)->Void
 
     var isSelectedForum: Bool {
         if let selectedForum = selectedForum, isForum {
@@ -597,7 +599,7 @@ class ChatListRowItem: TableRowItem {
         return false
     }
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, stories: EngineStorySubscriptions.Item? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineStorySubscriptions.Item? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }) {
         
         
         
@@ -639,7 +641,7 @@ class ChatListRowItem: TableRowItem {
         self.chatListIndex = index
         self.renderedPeer = renderedPeer
         self.context = context
-        self.stories = stories
+        self.story = story
         self.openStory = openStory
         self.messages = messages
         self.activities = activities
@@ -1147,14 +1149,21 @@ class ChatListRowItem: TableRowItem {
     
     func openPeerStory() {
         if let peerId = peerId {
-            self.openStory(.init(peerId: peerId, id: nil, messageId: nil, takeControl: { [weak self] peerId, _, storyId in
-                self?.takeControl(peerId, storyId)
+            let table = self.table
+            self.openStory(.init(peerId: peerId, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, storyId in
+                var view: NSView?
+                table?.enumerateItems(with: { item in
+                    if let item = item as? ChatListRowItem, item.peerId == peerId {
+                        view = item.takeStoryControl()
+                    }
+                    return view == nil
+                })
+                return view
             }))
         }
     }
-    
-    private func takeControl(_ peerId: PeerId, _ storyId: Int32?) -> NSView? {
-        (self.view as? ChatListRowView)?.takeControl(peerId)
+    private func takeStoryControl() -> NSView? {
+        (self.view as? ChatListRowView)?.takeStoryControl()
     }
     
     var markAsUnread: Bool {

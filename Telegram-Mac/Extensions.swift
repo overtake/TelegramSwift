@@ -2664,7 +2664,7 @@ struct DateSelectorUtil {
     static let mediaFileDate: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeZone = NSTimeZone.local
-        formatter.dateFormat = "MMM d, yyyy, h a"
+        formatter.dateFormat = "MMM d, yyyy"
         return formatter
     }()
     

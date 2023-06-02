@@ -17,7 +17,10 @@ import Postbox
 
 class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
-    private var image:AvatarControl = AvatarControl(font: .avatar(.text))
+    private let image:AvatarControl = AvatarControl(font: .avatar(.text))
+    private let photoContainer = Control()
+    private var storyStateView: ImageView?
+
     private var deleteControl:ImageButton?
     private var selectControl:SelectingControl?
     private let container:Control = Control()
@@ -39,7 +42,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         container.frame = bounds
-        container.addSubview(image)
+        photoContainer.addSubview(image)
+        container.addSubview(photoContainer)
         container.displayDelegate = self
         containerView.addSubview(container)
         image.userInteractionEnabled = false
@@ -72,6 +76,13 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         containerView.set(handler: { [weak self] _ in
             self?.updateColors()
         }, for: .Highlight)
+        
+        
+        photoContainer.set(handler: { [weak self] _ in
+            if let item = self?.item as? ShortPeerRowItem {
+                item.openPeerStory()
+            } 
+        }, for: .Click)
     }
     
     private func invokeIfNeededUp() {
@@ -136,7 +147,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         return isRowSelected ? theme.colors.accentSelect : item?.isHighlighted ?? false ? theme.colors.grayForeground : theme.colors.background
     }
     
-    
+    func takeStoryControl() -> NSView? {
+        return self.image
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -264,7 +277,14 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 if let selectControl = selectControl {
                     selectControl.centerY(x: frame.width - selectControl.frame.width - item.inset.right)
                 }
-                image.frame = NSMakeRect(item.inset.left + (item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
+                
+                photoContainer.frame = NSMakeRect(item.inset.left + (item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
+                if let _ = storyStateView {
+                    image.frame = item.photoSize.bounds.insetBy(dx: 3, dy: 3)
+                } else {
+                    image.frame = item.photoSize.bounds
+                }
+                
                 if let switchView = switchView {
                     switchView.centerY(x:container.frame.width - switchView.frame.width - item.inset.right)
                 }
@@ -328,7 +348,13 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                     break
                 }
                 
-                image.frame = NSMakeRect((item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
+                photoContainer.frame = NSMakeRect((item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
+                
+                if let _ = storyStateView {
+                    image.frame = item.photoSize.bounds.insetBy(dx: 3, dy: 3)
+                } else {
+                    image.frame = item.photoSize.bounds
+                }
                 if let switchView = switchView {
                     switchView.centerY(x: containerView.frame.width - switchView.frame.width - innerInsets.right)
                 }
@@ -627,8 +653,42 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             separator.isHidden = !position.border || !item.drawCustomSeparator
         }
     
+        photoContainer.userInteractionEnabled = item.story != nil
         
-        image.setFrameSize(item.photoSize)
+        if let story = item.story {
+            let isUnseen = story.hasUnseen
+            let current: ImageView
+            let isNew: Bool
+            if let view = self.storyStateView {
+                current = view
+                isNew = false
+            } else {
+                current = ImageView(frame: item.photoSize.bounds)
+                self.storyStateView = current
+                photoContainer.addSubview(current)
+                isNew = true
+            }
+            if item.isHighlighted || isRowSelected {
+                current.image = theme.icons.story_seen_chat
+            } else {
+                current.image = !isUnseen ? theme.icons.story_seen_chat : theme.icons.story_unseen_chat
+            }
+            if animated, isNew {
+                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            self.image._change(size: NSMakeSize(item.photoSize.width - 6, item.photoSize.height - 6), animated: animated)
+            self.image._change(pos: NSMakePoint(3, 3), animated: animated)
+        } else {
+            if let view = self.storyStateView {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.storyStateView = nil
+            }
+            
+            self.image._change(size: item.photoSize, animated: animated)
+            self.image._change(pos: NSMakePoint(0, 0), animated: animated)
+        }
+        
         if let photo = item.photo {
             image.setSignal(photo)
         } else {
@@ -692,11 +752,6 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         contextLabel?.backgroundColor = backdorColor
         needsLayout = true
         self.container.setNeedsDisplayLayer()
-        
-        if !animated {
-            var bp = 0
-            bp += 1
-        }
         
         viewDidMoveToSuperview()
     }

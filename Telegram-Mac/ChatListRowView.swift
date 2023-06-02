@@ -1234,19 +1234,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
     }
     
-    func takeControl(_ peerId: PeerId) -> NSView? {
-        if let tableView = self.item?.table {
-            var control: NSView?
-            tableView.enumerateVisibleViews(with: { view in
-                if let view = view as? ChatListRowView, let item = view.item as? ChatListRowItem {
-                    if item.peerId == peerId {
-                        control = view.photoContainer
-                    }
-                }
-            })
-            return control
-        }
-        return nil
+    func takeStoryControl() -> NSView? {
+        
+        return self.photoContainer
     }
     
     required init?(coder: NSCoder) {
@@ -2026,7 +2016,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              photoContainer.scaleOnClick = true
              
              if let storyData = item.lastStory {
-                 let story = storyData.0
                  let isUnseen = storyData.1
                  let current: ImageView
                  let isNew: Bool

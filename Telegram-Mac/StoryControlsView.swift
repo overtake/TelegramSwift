@@ -111,16 +111,12 @@ final class StoryControlsView : Control {
         self.arguments = arguments
         avatar.setPeer(account: context.account, peer: peer)
         
-        let authorName = NSMutableAttributedString()
-        
-        authorName.append(string: context.peerId == groupId ? "My Story" : peer.displayTitle, color: .white, font: .medium(.title))
+
         
         let date = NSMutableAttributedString()
-
         date.append(string: " \(strings().bullet) ", color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
         date.append(string: DateUtils.string(forRelativeLastSeen: story.timestamp), color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
-        
-        
+
         let dateLayout = TextViewLayout(date)
         dateLayout.measure(width: .greatestFiniteMagnitude)
 
@@ -130,8 +126,14 @@ final class StoryControlsView : Control {
         more.isHidden = context.peerId == groupId
 
         
-        let authorLayout = TextViewLayout(authorName, maximumNumberOfLines: 1, truncationType: .middle)
-        authorLayout.measure(width: frame.width - dateLayout.layoutSize.width - more.frame.width - muted.frame.width - avatar.frame.width - 10 - (muted.isHidden ? 0 : 12) - (more.isHidden ? 0 : 12))
+        let authorWidth = frame.width - dateLayout.layoutSize.width - more.frame.width - muted.frame.width - avatar.frame.width - 10 - (muted.isHidden ? 0 : 12) - (more.isHidden ? 0 : 12)
+        
+        let authorName = NSMutableAttributedString()
+        authorName.append(string: context.peerId == groupId ? "My Story" : peer.compactDisplayTitle, color: .white, font: .medium(.title))
+
+        
+        var authorLayout = TextViewLayout(authorName, maximumNumberOfLines: 1, truncationType: .middle)
+        authorLayout.measure(width: authorWidth)
         
         textView.update(authorLayout)
         dateView.update(dateLayout)

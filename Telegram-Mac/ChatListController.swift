@@ -129,9 +129,13 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
-        case let .stories(state):
-            if case .stories(state) = rhs {
-                return true
+        case let .stories(lhsState):
+            if case let .stories(rhsState) = rhs {
+                if lhsState != rhsState {
+                    return false
+                } else {
+                    return true
+                }
             } else {
                 return false
             }
@@ -184,7 +188,7 @@ enum UIChatListEntry : Identifiable, Comparable {
         case .stories:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         case let .group(id, _, _, _, _, _):
-            var index = MessageIndex.absoluteUpperBound().globalPredecessor()
+            var index = MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor()
             for _ in 0 ..< id {
                 index = index.peerLocalPredecessor()
             }
@@ -239,7 +243,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 
         func makeItem(_ entry: AppearanceWrapperEntry<UIChatListEntry>) -> TableRowItem {
             switch entry.entry {
-            case let .chat(item, activities, addition, filter, hideStatus, selectedForum, appearMode, hideContent, stories):
+            case let .chat(item, activities, addition, filter, hideStatus, selectedForum, appearMode, hideContent, story):
                 var pinnedType: ChatListPinnedType = .some
                 if let addition = addition {
                     pinnedType = .ad(addition.item)
@@ -257,7 +261,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 }
                 
                 
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, stories: stories, openStory: arguments.openStory)
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, story: story, openStory: arguments.openStory)
 
             case let .group(_, item, animated, hideStatus, appearMode, hideContent):
                 var messages:[Message] = []
@@ -697,7 +701,8 @@ class ChatListController : PeersListController {
             }
             
             if let storyState = storyState {
-                if !storyState.items.isEmpty {
+                let selfStoryCount = storyState.accountItem?.storyCount ?? 0
+                if !storyState.items.isEmpty || selfStoryCount > 0 {
                     mapped.append(.stories(storyState))
                 }
             }
@@ -706,11 +711,7 @@ class ChatListController : PeersListController {
                 return AppearanceWrapperEntry(entry: entry, appearance: appearance)
             }
             
-            let prev = previousEntries.swap(entries)
-            
-            
-            
-            return prepareEntries(from: prev, to: entries, adIndex: nil, arguments: arguments, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId)
+            return prepareEntries(from: previousEntries.swap(entries), to: entries, adIndex: nil, arguments: arguments, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId)
         }
         
         

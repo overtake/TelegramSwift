@@ -194,13 +194,21 @@ class ShortPeerRowItem: GeneralRowItem {
     private let contextMenuItems:()->Signal<[ContextMenuItem], NoError>
     fileprivate let _peerId: PeerId?
     let disabledAction: (()->Void)?
-    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext?, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false, customTheme: GeneralRowItem.Theme? = nil, drawPhotoOuter: Bool = false, disabledAction:(()->Void)? = nil) {
+    
+    
+    let story: EngineStorySubscriptions.Item?
+    let openStory:(StoryInitialIndex?)->Void
+
+    
+    init(_ initialSize:NSSize, peer: Peer, account: Account, context: AccountContext?, peerId: PeerId? = nil, stableId:AnyHashable? = nil, enabled: Bool = true, height:CGFloat = 50, photoSize:NSSize = NSMakeSize(36, 36), titleStyle:ControlStyle = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, highlightColor: .white), titleAddition:String? = nil, leftImage:CGImage? = nil, statusStyle:ControlStyle = ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status:String? = nil, borderType:BorderType = [], drawCustomSeparator:Bool = true, isLookSavedMessage: Bool = false, deleteInset:CGFloat? = nil, drawLastSeparator:Bool = false, inset:NSEdgeInsets = NSEdgeInsets(left:10.0), drawSeparatorIgnoringInset: Bool = false, interactionType:ShortPeerItemInteractionType = .plain, generalType:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, contextMenuItems:@escaping()->Signal<[ContextMenuItem], NoError> = { .single([]) }, inputActivity: PeerInputActivity? = nil, highlightOnHover: Bool = false, alwaysHighlight: Bool = false, badgeNode: GlobalBadgeNode? = nil, compactText: Bool = false, highlightVerified: Bool = false, customTheme: GeneralRowItem.Theme? = nil, drawPhotoOuter: Bool = false, disabledAction:(()->Void)? = nil, story: EngineStorySubscriptions.Item? = nil, openStory: @escaping(StoryInitialIndex?)->Void = { _ in }) {
         self.peer = peer
         self.drawPhotoOuter = drawPhotoOuter
         self.contextMenuItems = contextMenuItems
         self.context = context
         self.account = account
         self._peerId = peerId
+        self.story = story
+        self.openStory = openStory
         self.photoSize = photoSize
         self.leftImage = leftImage
         self.disabledAction = disabledAction
@@ -265,6 +273,25 @@ class ShortPeerRowItem: GeneralRowItem {
         super.init(initialSize, height: height, stableId: stableId ?? AnyHashable(peerId ?? peer.id), type:generalType, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:borderType,inset:inset, enabled: enabled, customTheme: customTheme)
         
     }
+    
+    func openPeerStory() {
+        let table = self.table
+        self.openStory(.init(peerId: peerId, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, storyId in
+            var view: NSView?
+            table?.enumerateItems(with: { item in
+                if let item = item as? ShortPeerRowItem, item.peerId == peerId {
+                    view = item.takeStoryControl()
+                }
+                return view == nil
+            })
+            return view
+        }))
+    }
+    
+    private func takeStoryControl() -> NSView? {
+        (self.view as? ShortPeerRowView)?.takeStoryControl()
+    }
+    
     
     var peerId: PeerId {
         return _peerId ?? peer.id
