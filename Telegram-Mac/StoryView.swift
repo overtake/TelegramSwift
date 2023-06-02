@@ -409,7 +409,7 @@ class StoryVideoView : StoryImageView {
         
         let file = story.media._asMedia() as! TelegramMediaFile
         let reference = FileMediaReference.story(peer: peerReference, id: story.id, media: file)
-        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peerId), userContentType: .video, reference: reference.resourceReference(file.resource), streamable: true, video: true, preferSoftwareDecoding: false, isSeekable: true, enableSound: true, fetchAutomatically: true)
+        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peerId), userContentType: .video, reference: reference.resourceReference(file.resource), streamable: true, video: true, preferSoftwareDecoding: false, isSeekable: false, enableSound: true, fetchAutomatically: true)
         
         mediaPlayer.attachPlayerView(self.view)
         

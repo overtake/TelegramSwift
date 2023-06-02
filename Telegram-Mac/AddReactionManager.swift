@@ -444,7 +444,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         if !isLite(.blur) {
             self.visualEffect.state = .active
             self.visualEffect.wantsLayer = true
-            self.visualEffect.blendingMode = .behindWindow
+            self.visualEffect.blendingMode = hasBubble ? .behindWindow : .withinWindow
         }
         
         
