@@ -466,7 +466,8 @@ class StoryVideoView : StoryImageView {
     
     override var duration: Double {
         let file = self.story?.media._asMedia() as? TelegramMediaFile
-        return max(Double(self.state.status?.duration ?? Double(file?.videoDuration ?? 5)), 1.0)
+        let duration = self.state.status?.duration ?? 0
+        return max(Double(max(duration, Double(file?.videoDuration ?? 5))), 1.0)
     }
     
     override func restart() {

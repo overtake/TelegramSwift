@@ -218,12 +218,15 @@ final class StoryInteraction : InterfaceObserver {
         return story.media._asMedia() is TelegramMediaFile
     }
     
-    func updateInput(with text:String) {
+    func updateInput(with text:String, resetFocus: Bool = false) {
         let state = ChatTextInputState(inputText: text, selectionRange: text.length ..< text.length, attributes: [])
         self.update({ current in
             var current = current
             if let entryId = current.entryId {
                 current.inputs[entryId] = state
+            }
+            if resetFocus {
+                current.inputInFocus = false
             }
             return current
         })
@@ -1304,8 +1307,6 @@ private final class StoryViewController: Control, Notifable {
             return
         }
         
-        self.closeTooltip()
-
         view.setFrameOrigin(NSMakePoint((frame.width - view.frame.width) / 2, current.storyRect.maxY - view.frame.height + 15))
         addSubview(view)
         
@@ -1698,7 +1699,7 @@ final class StoryModalController : ModalViewController, Notifable {
             beforeCompletion()
             _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil).start(completed: {
                 afterCompletion()
-                self?.interactions.updateInput(with: "")
+                self?.interactions.updateInput(with: "", resetFocus: true)
                 self?.genericView.showTooltip(source)
             })
         }
