@@ -1180,6 +1180,14 @@ private final class StoryViewController: Control, Notifable {
         }
     }
     
+    fileprivate func closeTooltip() {
+        if let view = currentTooltip {
+            performSubviewRemoval(view, animated: true, scale: true)
+            self.currentTooltip = nil
+            self.tooltipDisposable.set(nil)
+        }
+    }
+    
     func playReaction(_ reaction: Reaction) -> Void {
         
         guard let arguments = self.arguments else {
@@ -1285,18 +1293,19 @@ private final class StoryViewController: Control, Notifable {
     }
     
     func showReactions() {
-        self.arguments?.showReactionsPanel()
+        if self.arguments?.interaction.presentation.input.inputText.isEmpty == true {
+            self.arguments?.showReactionsPanel()
+        }
     }
     
     func showReactions(_ view: NSView) {
         
-        guard let current = current, self.arguments?.interaction.presentation.hasReactions == false else {
+        guard let current = current, self.arguments?.interaction.presentation.hasReactions == false, self.reactions == nil else {
             return
         }
         
-//        let point = superview.convert(control.frame.origin, to: self)
-//
-        
+        self.closeTooltip()
+
         view.setFrameOrigin(NSMakePoint((frame.width - view.frame.width) / 2, current.storyRect.maxY - view.frame.height + 15))
         addSubview(view)
         
@@ -1328,11 +1337,7 @@ private final class StoryViewController: Control, Notifable {
         
         self.resetInputView()
         
-        if let view = currentTooltip {
-            performSubviewRemoval(view, animated: true, scale: true)
-            self.currentTooltip = nil
-            self.tooltipDisposable.set(nil)
-        }
+        self.closeTooltip()
         
         guard let arguments = self.arguments, let current = self.current, let entryId = arguments.interaction.presentation.entryId else {
             return
@@ -1614,19 +1619,24 @@ final class StoryModalController : ModalViewController, Notifable {
                 $0.withUpdatedEffectiveInputState(value.input)
             })
             
-            if value.input != oldValue.input {
-                self.genericView.closeReactions()
+            if value.input != oldValue.input || value.inputInFocus != oldValue.inputInFocus {
+                if value.input.inputText.isEmpty, value.inputInFocus {
+                    genericView.showReactions()
+                } else {
+                    self.genericView.closeReactions()
+                }
             }
             if value.hasReactions != oldValue.hasReactions, !value.hasReactions {
                 self.genericView.closeReactions()
             }
-            if value.inputInFocus != oldValue.inputInFocus, value.input.inputText.isEmpty {
-                if value.inputInFocus {
-                    genericView.showReactions()
-                }
+            if value.closed {
+                self.genericView.closeReactions()
+                self.genericView.closeTooltip()
             }
         }
     }
+    
+
     
     func isEqual(to other: Notifable) -> Bool {
         return self === other as? StoryModalController
@@ -1963,6 +1973,10 @@ final class StoryModalController : ModalViewController, Notifable {
         }, with: self, for: .LeftArrow, priority: .modal)
         
         window?.set(handler: { [weak self] _ in
+            return .rejected
+        }, with: self, for: .UpArrow, priority: .modal)
+        
+        window?.set(handler: { [weak self] _ in
             return self?.next() ?? .invoked
         }, with: self, for: .RightArrow, priority: .modal)
         
@@ -2126,7 +2140,6 @@ final class StoryModalController : ModalViewController, Notifable {
         self.interactions.update({ current in
             var current = current
             current.closed = true
-            current.hasReactions = false
             return current
         })
         self.closed = true
