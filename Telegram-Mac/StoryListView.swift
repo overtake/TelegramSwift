@@ -432,6 +432,10 @@ final class StoryListView : Control, Notifable {
             self?.updateSides()
         }, for: .Click)
         
+        
+        set(handler: { [weak self] _ in
+            self?.resetInputView()
+        }, for: .Click)
              
     }
     
@@ -471,6 +475,11 @@ final class StoryListView : Control, Notifable {
 
     func resetInputView() {
         self.inputView.resetInputView()
+        self.arguments?.interaction.update { current in
+            var current = current
+            current.hasReactions = false
+            return current
+        }
     }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
@@ -519,7 +528,7 @@ final class StoryListView : Control, Notifable {
             inputView.updateState(value, animated: animated)
         }
                 
-        if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.inputInFocus || value.inputRecording != nil {
+        if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.inputInFocus || value.inputRecording != nil || value.hasReactions {
             let current: Control
             if let view = self.pauseOverlay {
                 current = view
@@ -701,6 +710,7 @@ final class StoryListView : Control, Notifable {
             } else if let current = self.current {
                 self.updateStoryState(current.state)
                 self.inputView.update(entry.item, animated: true)
+                entry.item.markAsSeen?()
             } else {
                 self.redraw()
             }
@@ -784,8 +794,9 @@ final class StoryListView : Control, Notifable {
 
         
         arguments.interaction.flushPauses()
-        
-        entry.item.markAsSeen?()
+        if arguments.interaction.presentation.entryId == groupId {
+            entry.item.markAsSeen?()
+        }
 
         current.onStateUpdate = { [weak self] state in
             self?.updateStoryState(state)
@@ -803,12 +814,10 @@ final class StoryListView : Control, Notifable {
         
         let ready: Signal<Bool, NoError> = current.getReady
         
-        disposable.set(ready.start(next: { [weak previous, weak current] _ in
+        _ = ready.start(next: { [weak previous, weak current] _ in
             previous?.removeFromSuperview()
             current?.backgroundColor = NSColor.black
-        }))
-        
-       
+        })
         
     }
     
@@ -916,13 +925,9 @@ final class StoryListView : Control, Notifable {
         self.current?.pause()
     }
     
-    var inputReactionsControl: Control? {
-        return (self.inputView as? StoryInputView)?.inputReactionsControl
-    }
-    
     deinit {
-        arguments?.interaction.remove(observer: self)
         self.disposable.dispose()
+        arguments?.interaction.remove(observer: self)
         //self.current?.disappear()
     }
 }

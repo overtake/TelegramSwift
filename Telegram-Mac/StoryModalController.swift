@@ -96,12 +96,7 @@ private struct Reaction {
     let fromRect: CGRect?
 }
 
-struct StoryInitialIndex {
-    let peerId: PeerId
-    let id: Int32?
-    let messageId: MessageId?
-    let takeControl:((PeerId, MessageId?, Int32?)->NSView?)?
-}
+
 
 private let storedTheme = generateTheme(palette: nightAccentPalette, cloudTheme: nil, bubbled: false, fontSize: 13, wallpaper: .init())
 
@@ -154,11 +149,12 @@ final class StoryInteraction : InterfaceObserver {
         var isMuted: Bool = false
         var storyId: Int32? = nil
         var entryId: PeerId? = nil
+        var closed: Bool = false
         var inputRecording: ChatRecordingState?
         var recordType: RecordingStateSettings = FastSettings.recordingState
         
         var isPaused: Bool {
-            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock
+            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed
         }
         
         var inTransition: Bool {
@@ -279,7 +275,7 @@ final class StoryArguments {
     let interaction: StoryInteraction
     let chatInteraction: ChatInteraction
     let showEmojiPanel:(Control)->Void
-    let showReactionsPanel:(Control)->Void
+    let showReactionsPanel:()->Void
     let attachPhotoOrVideo:(ChatInteraction.AttachMediaType?)->Void
     let attachFile:()->Void
     let nextStory:()->Void
@@ -293,7 +289,7 @@ final class StoryArguments {
     let markAsRead:(PeerId, Int32)->Void
     let showViewers:(StoryContentItem)->Void
     let share:(EngineStoryItem)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping(Control)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(EngineStoryItem)->Void) {
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(EngineStoryItem)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -460,10 +456,10 @@ private func storyReactions(context: AccountContext, peerId: PeerId, react: @esc
         }
         
         if accessToAll {
-            available = Array(available.prefix(6))
+            available = Array(available.prefix(7))
         }
         
-        let width = ContextAddReactionsListView.width(for: available.count, maxCount: 6, allowToAll: accessToAll)
+        let width = ContextAddReactionsListView.width(for: available.count, maxCount: 7, allowToAll: accessToAll)
         
         
         let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 20), 40 + 20)
@@ -499,7 +495,7 @@ private func storyReactions(context: AccountContext, peerId: PeerId, react: @esc
         let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
             react(.init(item: value.toUpdate(), fromRect: fromRect))
             onClose()
-        }, radiusLayer: nil, revealReactions: reveal, presentation: storyTheme)
+        }, radiusLayer: nil, revealReactions: reveal, presentation: storyTheme, hasBubble: false)
         
         return view
     } |> deliverOnMainQueue
@@ -901,6 +897,9 @@ private final class StoryViewController: Control, Notifable {
         } else {
             close.set(image: close_image, for: .Normal)
         }
+        
+        self.prev_button.isHidden = self.reactions != nil
+        self.next_button.isHidden = self.reactions != nil
     }
     
     
@@ -977,6 +976,10 @@ private final class StoryViewController: Control, Notifable {
     }
     
     func previous() -> KeyHandlerResult {
+        if self.reactions != nil {
+            self.closeReactions()
+            return .invoked
+        }
         if isInputFocused {
             return .invokeNext
         }
@@ -997,6 +1000,10 @@ private final class StoryViewController: Control, Notifable {
         return .invoked
     }
     func next() -> KeyHandlerResult {
+        if self.reactions != nil {
+            self.closeReactions()
+            return .invoked
+        }
         if isInputFocused {
             return .invokeNext
         }
@@ -1031,17 +1038,16 @@ private final class StoryViewController: Control, Notifable {
     
     private func processGroupResult(_ result: StoryListView.UpdateIndexResult, animated: Bool, bySwipe: Bool = false) {
                 
+        
         guard let context = self.arguments?.context, !inTransition else {
             return
         }
         
-        
-        if self.isInputFocused {
-            if self.reactionsOverlay != nil {
-                self.closeReactions()
-            } else {
-                self.resetInputView()
-            }
+        if self.reactions != nil {
+            self.closeReactions()
+            return
+        } else  if self.isInputFocused {
+            self.resetInputView()
             return
         }
         
@@ -1113,10 +1119,12 @@ private final class StoryViewController: Control, Notifable {
             transition.updateFrame(view: rightTop, frame: NSMakeRect(size.width - halfSize, 0, halfSize, 50))
             transition.updateFrame(view: rightBottom, frame: NSMakeRect(size.width - halfSize, size.height - 50, halfSize, 50))
 
+            if let view = self.reactions {
+                let point = NSMakePoint((size.width - view.frame.width) / 2, current.storyRect.maxY - view.frame.height + 15)
+                transition.updateFrame(view: view, frame: CGRect(origin: point, size: view.frame.size))
+            }
         }
-        if let overlay = self.reactionsOverlay {
-            transition.updateFrame(view: overlay, frame: size.bounds)
-        }
+
         transition.updateFrame(view: close, frame: NSMakeRect(size.width - close.frame.width, 0, 50, 50))
     }
     
@@ -1138,23 +1146,23 @@ private final class StoryViewController: Control, Notifable {
         self.current?.setArguments(arguments)
     }
     
-    private var reactionsOverlay: Control? = nil
+    private var reactions: NSView? = nil
     private var makeParabollic: Bool = true
     
     func closeReactions(reactByFirst: Bool = false) {
         
         if reactByFirst {
-            if let overlay = reactionsOverlay, let view = overlay.subviews.first as? ContextAddReactionsListView {
+            if let view = self.reactions as? ContextAddReactionsListView {
                 self.makeParabollic = false
                 view.invokeFirst()
                 return
             }
         }
         
-        let hasReactions: Bool = self.reactionsOverlay != nil
-        if let view = self.reactionsOverlay {
+        let hasReactions: Bool = self.reactions != nil
+        if let view = self.reactions {
             performSubviewRemoval(view, animated: true)
-            self.reactionsOverlay = nil
+            self.reactions = nil
         }
         var resetInput = false
         if self.arguments?.interaction.presentation.input.inputText.isEmpty == true, hasReactions {
@@ -1277,39 +1285,25 @@ private final class StoryViewController: Control, Notifable {
     }
     
     func showReactions() {
-        if let reactions = current?.inputReactionsControl, reactions.layer?.opacity == 1 {
-            self.arguments?.showReactionsPanel(reactions)
-        }
+        self.arguments?.showReactionsPanel()
     }
     
-    func showReactions(_ view: NSView, control: Control) {
+    func showReactions(_ view: NSView) {
         
-        guard let superview = control.superview, self.reactionsOverlay == nil else {
+        guard let current = current, self.arguments?.interaction.presentation.hasReactions == false else {
             return
         }
         
-        let reactionsOverlay = Control(frame: bounds)
-        if self.isInputFocused {
-            reactionsOverlay.backgroundColor = NSColor.black.withAlphaComponent(0.0)
-        } else {
-            reactionsOverlay.backgroundColor = NSColor.black.withAlphaComponent(0.2)
-        }
-        reactionsOverlay.addSubview(view)
-        addSubview(reactionsOverlay)
+//        let point = superview.convert(control.frame.origin, to: self)
+//
         
+        view.setFrameOrigin(NSMakePoint((frame.width - view.frame.width) / 2, current.storyRect.maxY - view.frame.height + 15))
+        addSubview(view)
         
-        reactionsOverlay.set(handler: { [weak self] _ in
-            self?.closeReactions()
-        }, for: .Click)
+        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
         
-        self.reactionsOverlay = reactionsOverlay
-        
-        reactionsOverlay.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-        
-        
-        let point = superview.convert(control.frame.origin, to: reactionsOverlay)
-        
-        view.setFrameOrigin(NSMakePoint(point.x - view.frame.width + 75, point.y - view.frame.height + 5))
+        self.reactions = view
         
         self.arguments?.interaction.update { current in
             var current = current
@@ -1487,19 +1481,19 @@ private final class StoryViewController: Control, Notifable {
                     delta = -delta
                 }
                 current.setFrameOrigin(NSMakePoint(current.frame.minX, delta))
-                if let overlay = self.reactionsOverlay {
-                    overlay.setFrameOrigin(NSMakePoint(overlay.frame.minX, delta))
+                if let overlay = self.reactions {
+                    overlay.setFrameOrigin(NSMakePoint(overlay.frame.minX, current.storyRect.maxY - overlay.frame.height + 15 + delta))
                 }
             }
         } else if theEvent.phase == .ended || theEvent.phase == .cancelled {
             if let current = current {
                 current.change(pos: NSMakePoint(current.frame.minX, 0), animated: true)
-                if let overlay = self.reactionsOverlay {
-                    overlay.change(pos: NSMakePoint(overlay.frame.minX, 0), animated: true)
+                if let overlay = self.reactions {
+                    overlay._change(pos: NSMakePoint(overlay.frame.minX, current.storyRect.maxY - overlay.frame.height + 15), animated: true)
                 }
                 if scrollDeltaY > 50 {
                     if inputView == self.window?.firstResponder {
-                        if self.reactionsOverlay != nil {
+                        if self.reactions != nil {
                             self.closeReactions()
                         } else {
                             self.resetInputView()
@@ -1513,7 +1507,7 @@ private final class StoryViewController: Control, Notifable {
                             arguments?.showViewers(story)
                         }
                     } else {
-                        if self.reactionsOverlay != nil {
+                        if self.reactions != nil {
                             self.closeReactions(reactByFirst: true)
                         } else {
                             if self.isInputFocused {
@@ -1623,6 +1617,9 @@ final class StoryModalController : ModalViewController, Notifable {
             if value.input != oldValue.input {
                 self.genericView.closeReactions()
             }
+            if value.hasReactions != oldValue.hasReactions, !value.hasReactions {
+                self.genericView.closeReactions()
+            }
             if value.inputInFocus != oldValue.inputInFocus, value.input.inputText.isEmpty {
                 if value.inputInFocus {
                     genericView.showReactions()
@@ -1703,7 +1700,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if let panel = self?.entertainment {
                 showPopover(for: control, with: panel, edge: .maxX, inset:NSMakePoint(0 + 38, 10), delayBeforeShown: 0.1)
             }
-        }, showReactionsPanel: { [weak interactions, weak self] control in
+        }, showReactionsPanel: { [weak interactions, weak self] in
             if let entryId = interactions?.presentation.entryId, let id = interactions?.presentation.storyId {
                 _ = storyReactions(context: context, peerId: entryId, react: { [weak self] reaction in
                     
@@ -1721,7 +1718,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     self?.genericView.closeReactions()
                 }).start(next: { view in
                     if let view = view {
-                        self?.genericView.showReactions(view, control: control)
+                        self?.genericView.showReactions(view)
                     }
                 })
             }
@@ -1751,9 +1748,20 @@ final class StoryModalController : ModalViewController, Notifable {
                 current.recordType = FastSettings.recordingState
                 return current
             }
-        }, deleteStory: { story in
+        }, deleteStory: { [weak self] story in
             confirm(for: context.window, information: "Are you sure you want to delete story?", successHandler: { _ in
-                story.delete?()
+                if let stateValue = self?.stories.stateValue, let slice = stateValue.slice {
+                    if slice.nextItemId != nil {
+                        self?.stories.navigate(navigation: .item(.next))
+                    } else if slice.previousItemId != nil {
+                        self?.stories.navigate(navigation: .item(.previous))
+                    } else {
+                        self?.close()
+                    }
+                    let _ = context.engine.messages.deleteStory(id: slice.item.storyItem.id).start()
+                }
+
+                
             }, appearance: storyTheme.appearance)
         }, markAsRead: { [weak self] peerId, storyId in
             self?.readThrottler.addOrUpdate(.init(peerId: peerId, id: storyId))
@@ -2115,6 +2123,12 @@ final class StoryModalController : ModalViewController, Notifable {
             self.readThrottler.flush()
             self.genericView.animateDisappear(initialId)
         }
+        self.interactions.update({ current in
+            var current = current
+            current.closed = true
+            current.hasReactions = false
+            return current
+        })
         self.closed = true
     }
 

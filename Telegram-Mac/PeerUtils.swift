@@ -662,3 +662,9 @@ func getCachedDataView(peerId: PeerId, postbox: Postbox) -> Signal<CachedPeerDat
         return (view.views[.cachedPeerData(peerId: peerId)] as? CachedPeerDataView)?.cachedPeerData
     }
 }
+struct StoryInitialIndex {
+    let peerId: PeerId
+    let id: Int32?
+    let messageId: MessageId?
+    let takeControl:((PeerId, MessageId?, Int32?)->NSView?)?
+}
