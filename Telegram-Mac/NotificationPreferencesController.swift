@@ -188,7 +188,7 @@ private final class NotificationArguments {
         self.updateJoinedNotifications = updateJoinedNotifications
         self.toggleBadge = toggleBadge
         self.toggleRequestUserAttention = toggleRequestUserAttention
-        self.toggleContentsOnLockscreen = toggleRequestUserAttention
+        self.toggleContentsOnLockscreen = toggleContentsOnLockscreen
         self.toggleInAppSounds = toggleInAppSounds
     }
 }
