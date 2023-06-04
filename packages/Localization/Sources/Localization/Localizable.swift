@@ -6763,6 +6763,8 @@ public final class L10n {
   public static var notificationSettingsBadgeHeader: String  { return L10n.tr("Localizable", "NotificationSettings.BadgeHeader") }
   /// Bounce Dock Icon
   public static var notificationSettingsBounceDockIcon: String  { return L10n.tr("Localizable", "NotificationSettings.BounceDockIcon") }
+  /// Show Notification Content On Lock Screen
+  public static var notificationSettingsLockScreenContent: String  { return L10n.tr("Localizable", "NotificationSettings.LockScreenContent") }
   /// New Contacts
   public static var notificationSettingsContactJoined: String  { return L10n.tr("Localizable", "NotificationSettings.ContactJoined") }
   /// Receive notifications when one of your contacts becomes available on Telegram.

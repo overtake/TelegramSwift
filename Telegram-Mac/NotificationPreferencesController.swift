@@ -172,8 +172,9 @@ private final class NotificationArguments {
     let updateJoinedNotifications: (Bool) -> Void
     let toggleBadge: (Bool)->Void
     let toggleRequestUserAttention: ()->Void
+    let toggleContentsOnLockscreen: ()->Void
     let toggleInAppSounds:(Bool)->Void
-    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping() -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
+    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping() -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleContentsOnLockscreen: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
         self.resetAllNotifications = resetAllNotifications
         self.toggleMessagesPreview = toggleMessagesPreview
         self.toggleNotifications = toggleNotifications
@@ -187,6 +188,7 @@ private final class NotificationArguments {
         self.updateJoinedNotifications = updateJoinedNotifications
         self.toggleBadge = toggleBadge
         self.toggleRequestUserAttention = toggleRequestUserAttention
+        self.toggleContentsOnLockscreen = toggleRequestUserAttention
         self.toggleInAppSounds = toggleInAppSounds
     }
 }
@@ -205,6 +207,7 @@ private let _id_new_contacts = InputDataIdentifier("_id_new_contacts")
 private let _id_snoof = InputDataIdentifier("_id_snoof")
 private let _id_tone = InputDataIdentifier("_id_tone")
 private let _id_bounce = InputDataIdentifier("_id_bounce")
+private let _id_lockscreen = InputDataIdentifier("_id_lockscreen")
 
 private let _id_turnon_notifications = InputDataIdentifier("_id_turnon_notifications")
 private let _id_turnon_notifications_title = InputDataIdentifier("_id_turnon_notifications_title")
@@ -276,6 +279,11 @@ private func notificationEntries(settings:InAppNotificationSettings, soundList: 
 
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_bounce, data: InputDataGeneralData(name: strings().notificationSettingsBounceDockIcon, color: theme.colors.text, type: .switchable(settings.requestUserAttention), viewType: .innerItem, action: {
         arguments.toggleRequestUserAttention()
+    })))
+    index += 1
+    
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_lockscreen, data: InputDataGeneralData(name: strings().notificationSettingsLockScreenContent, color: theme.colors.text, type: .switchable(settings.showContentsOnLockscreen), viewType: .innerItem, action: {
+        arguments.toggleContentsOnLockscreen()
     })))
     index += 1
     
@@ -422,6 +430,10 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     }, toggleRequestUserAttention: {
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, { value in
             return value.withUpdatedRequestUserAttention(!value.requestUserAttention)
+        }).start()
+    }, toggleContentsOnLockscreen: {
+        _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, { value in
+            return value.withUpdatedShowContentsOnLockscreen(!value.showContentsOnLockscreen)
         }).start()
     }, toggleInAppSounds: { value in
         FastSettings.toggleInAppSouds(value)
