@@ -487,6 +487,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     return .complete()
                 }
             } |> deliverOnMainQueue).start(next: { sources, images, inAppSettings, screenIsLocked, accountPeer, soundPath in
+                let hideContentOnLockScreen = screenIsLocked && !inAppSettings.showContentsOnLockscreen
                 
                 if !primary, !inAppSettings.notifyAllAccounts {
                     return
@@ -523,7 +524,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 hasReplyButton = false
                             }
                             
-                            if screenIsLocked {
+                            if hideContentOnLockScreen {
                                 title = appName
                             }
                             
@@ -575,7 +576,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 subText = "\(txt) → \(threadData.info.title)"
                             }
                             
-                            if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || screenIsLocked {
+                            if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || hideContentOnLockScreen {
                                 text = strings().notificationLockedPreview
                                 subText = nil
                             }
@@ -614,14 +615,14 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 notification.soundName = nil
                             }
                                                         
-                            if self.activeAccounts.accounts.count > 1 && !screenIsLocked {
+                            if self.activeAccounts.accounts.count > 1 && !hideContentOnLockScreen {
                                 title += " → \(accountPeer.addressName ?? accountPeer.displayTitle)"
                             }
                                                         
                             notification.title = title
                             notification.informativeText = text as String
                             notification.subtitle = subText
-                            notification.contentImage = screenIsLocked ? nil : images[message.id]
+                            notification.contentImage = hideContentOnLockScreen ? nil : images[message.id]
                             notification.hasReplyButton = hasReplyButton
                             
                             notification.hasActionButton = !message.wasScheduled
