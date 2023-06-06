@@ -56,6 +56,11 @@ private let video_message_image_active: CGImage  = NSImage(named: "Icon_RecordVi
 private let stickers_image: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.33))
 private var stickers_image_active: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.53))
 
+private let emoji_image: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 0.33))
+private var emoji_image_active: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 0.53))
+
+
+
 private let story_like: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.33))
 private let story_like_active: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.53))
 
@@ -99,7 +104,7 @@ private final class StoryReplyActionButton : View {
                     }
                 } else if state == .share {
                     if let story = self?.story {
-                        arguments?.share(story.storyItem)
+                        arguments?.share(story)
                     }
                 } else {
                     arguments?.toggleRecordType()
@@ -109,7 +114,7 @@ private final class StoryReplyActionButton : View {
             current.set(handler: { [weak arguments] _ in
                 if state == .text {
                 } else {
-                    arguments?.startRecording(autohold: false)
+                    arguments?.startRecording(false)
                 }
             }, for: .LongMouseDown)
             
@@ -169,6 +174,9 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         self.updateInputState(animated: animated)
         self.updateRecoringState(state, animated: animated)
+        
+        stickers.set(image: state.emojiState == .emoji ? emoji_image : stickers_image, for: .Normal)
+        stickers.set(image: state.emojiState == .emoji ? emoji_image_active : stickers_image_active, for: .Highlight)
     }
     
     private func updateRecoringState(_ state: StoryInteraction.State, animated: Bool) {
@@ -427,6 +435,9 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     private let action = StoryReplyActionButton(frame: NSMakeRect(0, 0, 50, 50))
     private let stickers = ImageButton(frame: NSMakeRect(0, 0, 50, 50))
     
+    var actionControl: NSView {
+        return action
+    }
     
     
     
@@ -547,7 +558,9 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         if let attributedString = attributedString, !attributedString.string.isEmpty {
             self.textView.setAttributedString(attributedString, animated: false)
         }
+        
     }
+    
     
     deinit {
         rtfAttachmentsDisposable.dispose()

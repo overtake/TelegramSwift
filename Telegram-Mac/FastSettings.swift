@@ -164,6 +164,8 @@ class FastSettings {
     private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
 
     
+    private static let kStoryMuted = "kStoryMuted"
+    
 
     
     static var sendingType:SendingType {
@@ -516,6 +518,15 @@ class FastSettings {
     static func setSecretChatWebPreviewAvailable(for accountId: Int64, value: Bool) -> Void {
         UserDefaults.standard.set(value, forKey: "IsSecretChatWebPreviewAvailable_\(accountId)")
         UserDefaults.standard.synchronize()
+    }
+    
+    static var storyIsMuted: Bool {
+        get {
+            return UserDefaults.standard.value(forKey: kStoryMuted) as? Bool ?? false
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: kStoryMuted)
+        }
     }
     
     

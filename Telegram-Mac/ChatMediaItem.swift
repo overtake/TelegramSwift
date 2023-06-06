@@ -110,7 +110,7 @@ class ChatMediaLayoutParameters : Equatable {
     
     static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool, isFile: Bool = false, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false, isCopyProtected: Bool = false, isRevealed: Bool? = nil) -> ChatMediaLayoutParameters {
         if media.isInstantVideo && !isFile {
-            var duration:Int = 0
+            var duration:Double = 0
             for attr in media.attributes {
                 switch attr {
                 case let .Video(params):
@@ -123,20 +123,20 @@ class ChatMediaLayoutParameters : Equatable {
             return ChatMediaVideoMessageLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia, isRevealed: isRevealed)
         } else if media.isVoice && !isFile {
             var waveform:AudioWaveform? = nil
-            var duration:Int = 0
+            var duration:Double = 0
             for attr in media.attributes {
                 switch attr {
                 case let .Audio(_, _duration, _, _, _data):
                     if let data = _data {
                         waveform = AudioWaveform(bitstream: data, bitsPerSample: 5)
                     }
-                    duration = _duration
+                    duration = Double(_duration)
                 default:
                     break
                 }
             }
             
-            return ChatMediaVoiceLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, waveform:waveform, duration:duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload)
+            return ChatMediaVoiceLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, waveform:waveform, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload)
         } else if media.isMusic && !isFile {
             var audioTitle:String?
             var audioPerformer:String?

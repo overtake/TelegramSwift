@@ -17,7 +17,16 @@ import SwiftSignalKit
 private let more_image = NSImage(named: "Icon_StoryMore")!.precomposed(NSColor.white)
 private let delete_image = NSImage(named: "Icon_StoryDelete")!.precomposed(NSColor.white)
 
+private func makeItem(_ peer: Peer, context: AccountContext, callback:@escaping(PeerId)->Void) -> ContextMenuItem {
+    let title = peer.displayTitle.prefixWithDots(20)
+    let item = ReactionPeerMenu(title: title, handler: {
+        callback(peer.id)
+    }, peer: peer, context: context, reaction: nil, destination: .common)
 
+    ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), selfAsSaved: false)
+    
+    return item
+}
 
 final class StoryMyInputView : Control, StoryInput {
     
@@ -153,17 +162,33 @@ final class StoryMyInputView : Control, StoryInput {
             
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
             
-            menu.addItem(ContextMenuItem("Share", handler: { [weak self] in
-                if let story = self?.story {
-                    self?.arguments?.share(story.storyItem)
+            if let story = self?.story {
+               
+                
+                if !story.storyItem.isPinned {
+                    menu.addItem(ContextMenuItem("Save to Profile", handler: {
+                        self?.arguments?.togglePinned(story)
+                    }, itemImage: MenuAnimation.menu_plus.value))
+                } else {
+                    menu.addItem(ContextMenuItem("Remove from Profile", handler: {
+                        self?.arguments?.togglePinned(story)
+                    }, itemImage: MenuAnimation.menu_delete.value))
                 }
-            }, itemImage: MenuAnimation.menu_share.value))
-            menu.addItem(ContextMenuItem("Hide", itemImage: MenuAnimation.menu_hide.value))
+                
+                menu.addItem(ContextMenuItem("Copy Link", handler: {
+                    self?.arguments?.copyLink(story)
+                }, itemImage: MenuAnimation.menu_copy_link.value))
+                
+                menu.addItem(ContextMenuItem("Share", handler: {
+                    self?.arguments?.share(story)
+                }, itemImage: MenuAnimation.menu_share.value))
 
-            menu.addItem(ContextSeparatorItem())
-            menu.addItem(ContextMenuItem("Delete", handler: {
-                self?.deleteAction()
-            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+            }
+            
+//            menu.addItem(ContextSeparatorItem())
+//            menu.addItem(ContextMenuItem("Delete", handler: {
+//                self?.deleteAction()
+//            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
 
             return menu
         }
@@ -171,37 +196,9 @@ final class StoryMyInputView : Control, StoryInput {
         delete.set(handler: { [weak self] _ in
             self?.deleteAction()
         }, for: .Click)
-        
-        func makeItem(_ peer: Peer, context: AccountContext, callback:@escaping(PeerId)->Void) -> ContextMenuItem {
-            let title = peer.displayTitle.prefixWithDots(20)
-            let item = ReactionPeerMenu(title: title, handler: {
-                callback(peer.id)
-            }, peer: peer, context: context, reaction: nil, destination: .common)
-
-            ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), selfAsSaved: false)
-            
-            return item
-        }
+      
         
         
-        views.contextMenu = { [weak self] in
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
-            if let story = self?.story, let arguments = self?.arguments, let entryId = arguments.interaction.presentation.entryId {
-                if let views = story.storyItem.views {
-                    if views.seenCount > 3 {
-                        arguments.showViewers(story)
-                    } else {
-                        for peer in views.seenPeers {
-                            menu.addItem(makeItem(peer._asPeer(), context: arguments.context, callback: { peerId in
-                                arguments.openPeerInfo(peerId)
-                            }))
-                        }
-                    }
-                    
-                }
-            }
-            return menu
-        }
     }
     
     private func deleteAction() {
@@ -260,6 +257,32 @@ final class StoryMyInputView : Control, StoryInput {
                 self.avatars = nil
             }
         }
+        
+        if let views = story.storyItem.views, views.seenCount > 3 {
+            self.views.removeAllHandlers()
+            self.views.set(handler: { [weak arguments] _ in
+                arguments?.showViewers(story)
+            }, for: .SingleClick)
+        } else {
+            self.views.removeAllHandlers()
+        }
+        
+        self.views.contextMenu = { [weak self] in
+            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
+            if let story = self?.story, let arguments = self?.arguments {
+                if let views = story.storyItem.views {
+                    for peer in views.seenPeers {
+                        menu.addItem(makeItem(peer._asPeer(), context: arguments.context, callback: { peerId in
+                            arguments.openPeerInfo(peerId)
+                        }))
+                    }
+                }
+            }
+            return menu
+        }
+       
+        
+        
         let transition: ContainedViewLayoutTransition
         if animated {
             transition = .animated(duration: 0.2, curve: .easeOut)

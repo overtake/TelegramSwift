@@ -18,13 +18,13 @@ class ChatMediaVideoMessageLayoutParameters : ChatMediaLayoutParameters {
     let resource: TelegramMediaResource
     let showPlayer:(APController) -> Void
     let isMarked:Bool
-    let duration:Int
+    let duration: Double
     let durationLayout:TextViewLayout
     
     var transcribe:()->Void = {}
     fileprivate(set) var transcribeData: ChatMediaVoiceLayoutParameters.TranscribeData?
     
-    init(showPlayer:@escaping(APController) -> Void, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences, isRevealed: Bool?) {
+    init(showPlayer:@escaping(APController) -> Void, duration: Double, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences, isRevealed: Bool?) {
         self.showPlayer = showPlayer
         self.duration = duration
         self.isMarked = isMarked

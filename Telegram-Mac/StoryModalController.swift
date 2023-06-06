@@ -150,6 +150,9 @@ final class StoryInteraction : InterfaceObserver {
         var storyId: Int32? = nil
         var entryId: PeerId? = nil
         var closed: Bool = false
+        
+        var canRecordVoice: Bool = true
+        var emojiState: EntertainmentState = FastSettings.entertainmentState
         var inputRecording: ChatRecordingState?
         var recordType: RecordingStateSettings = FastSettings.recordingState
         
@@ -163,7 +166,7 @@ final class StoryInteraction : InterfaceObserver {
         
     }
     fileprivate(set) var presentation: State
-    init(presentation: State = .init()) {
+    init(presentation: State = .init(isMuted: FastSettings.storyIsMuted)) {
         self.presentation = presentation
     }
     
@@ -205,6 +208,7 @@ final class StoryInteraction : InterfaceObserver {
             current.isMuted = !current.isMuted
             return current
         }
+        FastSettings.storyIsMuted = self.presentation.isMuted
     }
     func flushPauses() {
         self.update { current in
@@ -291,8 +295,11 @@ final class StoryArguments {
     let deleteStory:(StoryContentItem)->Void
     let markAsRead:(PeerId, Int32)->Void
     let showViewers:(StoryContentItem)->Void
-    let share:(EngineStoryItem)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(EngineStoryItem)->Void) {
+    let share:(StoryContentItem)->Void
+    let copyLink:(StoryContentItem)->Void
+    let startRecording: (Bool)->Void
+    let togglePinned:(StoryContentItem)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -311,6 +318,9 @@ final class StoryArguments {
         self.markAsRead = markAsRead
         self.showViewers = showViewers
         self.share = share
+        self.copyLink = copyLink
+        self.startRecording = startRecording
+        self.togglePinned = togglePinned
     }
     
     func longDown() {
@@ -342,10 +352,6 @@ final class StoryArguments {
             current.isSpacePaused = false
             return current
         }
-    }
-    
-    func startRecording(autohold: Bool) {
-        self.interaction.startRecording(context: context, autohold: autohold, sendMedia: self.chatInteraction.sendMedia)
     }
     
     deinit {
@@ -623,6 +629,9 @@ private final class StoryViewController: Control, Notifable {
             case reaction(Reaction)
             case media([Media])
             case text
+            case addedToProfile
+            case removedFromProfile
+            case linkCopied
         }
         private let textView = TextView()
         private let button = TitleButton()
@@ -647,18 +656,19 @@ private final class StoryViewController: Control, Notifable {
         func update(source: Source, size: NSSize, context: AccountContext, callback: @escaping()->Void) {
             let title: String
             var mediaFile: TelegramMediaFile
+            let hasButton: Bool
             switch source {
             case let .media(medias):
                 if medias.count > 1 {
                     title = "Media Sent."
                 } else if let media = medias.first {
                     if let file = media as? TelegramMediaFile {
-                        if file.isVideo && file.isAnimated {
+                        if file.isSticker || file.isAnimatedSticker || file.isVideoSticker {
+                           title = "Sticker Sent.";
+                        } else if file.isVideo && file.isAnimated {
                             title = "GIF Sent."
                         } else if file.isVideo {
                             title = "Video Sent."
-                        } else if file.isSticker || file.isAnimatedSticker || file.isVideoSticker {
-                            title = "Sticker Sent.";
                         } else if file.isMusic || file.isMusicFile {
                             title = "Audio Sent.";
                         } else {
@@ -673,6 +683,7 @@ private final class StoryViewController: Control, Notifable {
                     title = "Media Sent."
                 }
                 mediaFile = MenuAnimation.menu_success.file
+                hasButton = true
             case let .reaction(reaction):
                 title = "Reaction Sent."
                 var file: TelegramMediaFile?
@@ -688,9 +699,23 @@ private final class StoryViewController: Control, Notifable {
                 } else {
                     mediaFile = MenuAnimation.menu_success.file
                 }
+                hasButton = true
             case .text:
                 title = "Message Sent."
                 mediaFile = MenuAnimation.menu_success.file
+                hasButton = true
+            case .addedToProfile:
+                title = "Saved stories can be viewed by others on your profile until you remove them."
+                mediaFile = MenuAnimation.menu_success.file
+                hasButton = false
+            case .removedFromProfile:
+                title = "Story removed from your profile."
+                mediaFile = MenuAnimation.menu_success.file
+                hasButton = false
+            case .linkCopied:
+                title = "Copied to clipboard."
+                mediaFile = MenuAnimation.menu_success.file
+                hasButton = false
             }
             
             let mediaLayer = InlineStickerItemLayer(account: context.account, file: mediaFile, size: NSMakeSize(24, 24), playPolicy: .toEnd(from: 0), getColors: { file in
@@ -706,13 +731,14 @@ private final class StoryViewController: Control, Notifable {
             
             let layout = TextViewLayout(.initialize(string: title, color: storyTheme.colors.text, font: .normal(.text)))
             
+            self.button.isHidden = !hasButton
             
             self.button.set(font: .medium(.text), for: .Normal)
             self.button.set(color: storyTheme.colors.accent, for: .Normal)
             self.button.set(text: "View in Chat", for: .Normal)
             self.button.sizeToFit(NSMakeSize(10, 10), .zero, thatFit: false)
             
-            layout.measure(width: size.width - 16 - 16 - self.button.frame.width - media.frame.width - 10 - 10)
+            layout.measure(width: size.width - 16 - (button.isHidden ? 0 : 16 + self.button.frame.width) - media.frame.width - 10 - 10)
             textView.update(layout)
 
             
@@ -720,7 +746,7 @@ private final class StoryViewController: Control, Notifable {
                 callback()
             }, for: .Click)
             
-            self.setFrameSize(size)
+            self.setFrameSize(NSMakeSize(size.width, max(size.height, layout.layoutSize.height + 10)))
             self.updateLayout(size: size, transition: .immediate)
         }
         
@@ -742,7 +768,7 @@ private final class StoryViewController: Control, Notifable {
     }
     
    
-    private var current: StoryListView?
+    fileprivate var current: StoryListView?
     private var arguments:StoryArguments?
     
     private let next_button: NavigationButton = NavigationButton(frame: .zero)
@@ -871,8 +897,11 @@ private final class StoryViewController: Control, Notifable {
             return
         }
         
-        let nextEntry = self.storyContext?.stateValue?.nextSlice
-        let prevEntry = self.storyContext?.stateValue?.previousSlice
+        let presentation = arguments.interaction.presentation
+        let hasOverlay = presentation.hasModal || presentation.hasMenu || presentation.hasPopover
+        
+        let nextEntry = hasOverlay ? nil : self.storyContext?.stateValue?.nextSlice
+        let prevEntry = hasOverlay ? nil : self.storyContext?.stateValue?.previousSlice
         
         self.prev_button.update(with: prevEntry?.peer._asPeer(), context: arguments.context, isNext: false, animated: animated)
         self.next_button.update(with: nextEntry?.peer._asPeer(), context: arguments.context, isNext: true, animated: animated)
@@ -1301,6 +1330,10 @@ private final class StoryViewController: Control, Notifable {
         }
     }
     
+    func showVoiceError() {
+        self.current?.showVoiceError()
+    }
+    
     func showReactions(_ view: NSView) {
         
         guard let current = current, self.arguments?.interaction.presentation.hasReactions == false, self.reactions == nil else {
@@ -1355,7 +1388,7 @@ private final class StoryViewController: Control, Notifable {
         
         tooltip.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         tooltip.layer?.animatePosition(from: tooltip.frame.origin.offsetBy(dx: 0, dy: 20), to: tooltip.frame.origin)
-        let signal = Signal<Void, NoError>.single(Void()) |> delay(3.5, queue: .mainQueue())
+        let signal = Signal<Void, NoError>.single(Void()) |> delay(4.5, queue: .mainQueue())
         self.tooltipDisposable.set(signal.start(completed: { [weak self] in
             if let view = self?.currentTooltip {
                 performSubviewRemoval(view, animated: true)
@@ -1572,9 +1605,11 @@ final class StoryModalController : ModalViewController, Notifable {
     
     private let disposable = MetaDisposable()
     private let updatesDisposable = MetaDisposable()
+    private let permissionDisposable = MetaDisposable()
     private var overlayTimer: SwiftSignalKit.Timer?
     private let readThrottler = ReadThrottledProcessingManager(delay: 5)
     
+    private var arguments: StoryArguments?
 
     init(context: AccountContext, stories: StoryContentContext, initialId: StoryInitialIndex?) {
         self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .stories, presentation: storyTheme)
@@ -1612,6 +1647,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 if let entryId = current.entryId {
                     current.inputs[entryId] = value.effectiveInput
                 }
+                current.emojiState = value.isEmojiSection ? .emoji : .stickers
                 return current
             })
         }
@@ -1652,6 +1688,7 @@ final class StoryModalController : ModalViewController, Notifable {
         
         let stories = self.stories
         
+        
         readThrottler.setProcess(process: { values in
             let signals = values.map {
                 return context.engine.messages.markStoryAsSeen(peerId: $0.peerId, id: $0.id)
@@ -1666,6 +1703,9 @@ final class StoryModalController : ModalViewController, Notifable {
                 if controller?.peerId != peerId {
                     context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
                 }
+                self?.close()
+            } else {
+                context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true))
                 self?.close()
             }
         }
@@ -1781,8 +1821,29 @@ final class StoryModalController : ModalViewController, Notifable {
                 showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: openPeerInfo), for: context.window)
             }
         }, share: { story in
-            showModal(with: ShareModalController(ShareLinkObject(context, link: "link to story"), presentation: storyTheme), for: context.window)
+            if let peer = story.peer, let address = peer.addressName {
+                showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(address)?story=\(story.storyItem.id)"), presentation: storyTheme), for: context.window)
+            }
+        }, copyLink: { [weak self] story in
+            if let peer = story.peer, let address = peer.addressName {
+                copyToClipboard("https://t.me/\(address)?story=\(story.storyItem.id)")
+                self?.genericView.showTooltip(.linkCopied)
+            }
+        }, startRecording: { [weak self] autohold in
+            guard let `self` = self else {
+                return
+            }
+            if !self.interactions.presentation.canRecordVoice {
+                self.genericView.showVoiceError()
+            } else {
+                self.interactions.startRecording(context: context, autohold: autohold, sendMedia: self.chatInteraction.sendMedia)
+            }
+        }, togglePinned: { [weak self] story in
+            _ = context.engine.messages.updateStoryIsPinned(id: story.storyItem.id, isPinned: !story.storyItem.isPinned).start()
+            self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile : .addedToProfile)
         })
+        
+        self.arguments = arguments
         
         genericView.setArguments(arguments)
         interactions.add(observer: self.genericView)
@@ -1922,12 +1983,27 @@ final class StoryModalController : ModalViewController, Notifable {
         
         let signal = stories.state |> deliverOnMainQueue
 
+        
+        var currentPeerId: PeerId? = nil
+        
         disposable.set(combineLatest(signal, genericView.getReady).start(next: { [weak self] state, ready in
             if state.slice == nil {
                 self?.initialId = nil
                 self?.close()
             } else if let stories = self?.stories {
                 self?.genericView.update(context: context, storyContext: stories, initial: initialId)
+                if let slice = state.slice, currentPeerId != slice.peer.id {
+                    let signal = context.account.viewTracker.peerView(slice.peer.id) |> deliverOnMainQueue
+                    self?.permissionDisposable.set(signal.start(next: { view in
+                        let cachedData = view.cachedData as? CachedUserData
+                        self?.interactions.update { current in
+                            var current = current
+                            current.canRecordVoice = cachedData?.voiceMessagesAvailable ?? false
+                            return current
+                        }
+                    }))
+                    currentPeerId = slice.peer.id
+                }
                 if ready {
                     self?.readyOnce()
                 }
@@ -1949,6 +2025,7 @@ final class StoryModalController : ModalViewController, Notifable {
         
         self.overlayTimer?.start()
         
+        
         updatesDisposable.set(context.window.keyWindowUpdater.start(next: { [weak interactions] windowIsKey in
             interactions?.update({ current in
                 var current = current
@@ -1961,7 +2038,7 @@ final class StoryModalController : ModalViewController, Notifable {
     
     private func openCurrentMedia() {
         if let peerId = self.interactions.presentation.entryId {
-            self.context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: peerId))
+           // self.context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: peerId))
         }
     }
     
@@ -1974,8 +2051,28 @@ final class StoryModalController : ModalViewController, Notifable {
         }, with: self, for: .LeftArrow, priority: .modal)
         
         window?.set(handler: { [weak self] _ in
-            return .rejected
+            if let story = self?.genericView.current?.story, story.peerId == context.peerId {
+                if story.storyItem.views?.seenCount != 0, findModal(InputDataModalController.self) == nil {
+                    self?.arguments?.showViewers(story)
+                    return .invoked
+                }
+            } else {
+                if self?.genericView.isInputFocused == false {
+                    self?.applyFirstResponder()
+                } else if self?.interactions.presentation.input.inputText.isEmpty == true {
+                    self?.genericView.closeReactions(reactByFirst: true)
+                }
+            }
+            return .invokeNext
         }, with: self, for: .UpArrow, priority: .modal)
+        
+        window?.set(handler: { [weak self] _ in
+            if self?.genericView.isInputFocused == true, self?.interactions.presentation.input.inputText.isEmpty == true {
+                self?.genericView.resetInputView()
+            }
+            return .invokeNext
+        }, with: self, for: .DownArrow, priority: .modal)
+        
         
         window?.set(handler: { [weak self] _ in
             return self?.next() ?? .invoked
@@ -2006,7 +2103,11 @@ final class StoryModalController : ModalViewController, Notifable {
             guard let `self` = self, self.genericView.isTextEmpty else {
                 return .rejected
             }
-            self.interactions.startRecording(context: context, autohold: true, sendMedia: self.chatInteraction.sendMedia)
+            if !self.interactions.presentation.canRecordVoice {
+                self.genericView.showVoiceError()
+            } else {
+                self.interactions.startRecording(context: context, autohold: true, sendMedia: self.chatInteraction.sendMedia)
+            }
             return .invoked
         }, with: self, for: .R, priority: .modal, modifierFlags: [.command])
         
@@ -2108,6 +2209,7 @@ final class StoryModalController : ModalViewController, Notifable {
     deinit {
         disposable.dispose()
         updatesDisposable.dispose()
+        permissionDisposable.dispose()
     }
     
     override var containerBackground: NSColor {
@@ -2162,6 +2264,16 @@ final class StoryModalController : ModalViewController, Notifable {
     }
     static func ShowSingleStory(context: AccountContext, storyId: StoryId, initialId: StoryInitialIndex?) {
         let storyContent = SingleStoryContentContextImpl(context: context, storyId: storyId)
+        let _ = (storyContent.state
+        |> filter { $0.slice != nil }
+        |> take(1)
+        |> deliverOnMainQueue).start(next: { _ in
+            showModal(with: StoryModalController(context: context, stories: storyContent, initialId: initialId), for: context.window, animationType: .animateBackground)
+        
+        })
+    }
+    static func ShowPeerStory(context: AccountContext, listContext: PeerStoryListContext, peerId: PeerId, initialId: StoryInitialIndex?) {
+        let storyContent = PeerStoryListContentContextImpl(context: context, peerId: peerId, listContext: listContext, initialId: initialId?.id)
         let _ = (storyContent.state
         |> filter { $0.slice != nil }
         |> take(1)

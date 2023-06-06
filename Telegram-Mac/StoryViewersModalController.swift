@@ -300,6 +300,22 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
         }
     }
     
+    controller.didAppear = { controller in        
+        controller.window?.set(handler: { _ in
+            return .invokeNext
+        }, with: controller, for: .All, priority: .supreme)
+        
+        controller.window?.set(handler: {  _ in
+            close?()
+            return .invoked
+        }, with: controller, for: .DownArrow, priority: .supreme)
+        
+        controller.window?.set(handler: {  _ in
+            close?()
+            return .invoked
+        }, with: controller, for: .Escape, priority: .supreme)
+    }
+    
     loadMore()
     
     return modalController

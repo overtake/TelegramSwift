@@ -53,7 +53,7 @@ class ChatVoiceContentView: ChatAudioContentView {
             } else {
                 let controller:APController
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, name: strings().audioControllerVoiceMessage, performer: parent.author?.displayTitle, duration: Int32(parameters.duration), id: parent.chatStableId), streamable: false, volume: FastSettings.volumeRate)
+                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, name: strings().audioControllerVoiceMessage, performer: parent.author?.displayTitle, duration: parameters.duration, id: parent.chatStableId), streamable: false, volume: FastSettings.volumeRate)
                 } else {
                     controller = APChatVoiceController(context: context, chatLocationInput: parameters.chatLocationInput(parent), mode: parameters.chatMode, index: MessageIndex(parent), volume: FastSettings.volumeRate)
                 }

@@ -30,7 +30,7 @@ final class StoryControlsView : Control {
     
     private var arguments: StoryArguments?
     private var groupId: PeerId?
-    private var story: EngineStoryItem?
+    private var story: StoryContentItem?
     
     private let shadowView = ShadowView()
     required init(frame frameRect: NSRect) {
@@ -102,7 +102,7 @@ final class StoryControlsView : Control {
         muted.set(image: isMuted ? muted_image : unmuted_image, for: .Normal)
     }
     
-    func update(context: AccountContext, arguments: StoryArguments, groupId: PeerId, peer: Peer?, story: EngineStoryItem, animated: Bool) {
+    func update(context: AccountContext, arguments: StoryArguments, groupId: PeerId, peer: Peer?, story: StoryContentItem, animated: Bool) {
         guard let peer = peer else {
             return
         }
@@ -115,14 +115,14 @@ final class StoryControlsView : Control {
         
         let date = NSMutableAttributedString()
         date.append(string: " \(strings().bullet) ", color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
-        date.append(string: DateUtils.string(forRelativeLastSeen: story.timestamp), color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
+        date.append(string: DateUtils.string(forRelativeLastSeen: story.storyItem.timestamp), color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
 
-        let dateLayout = TextViewLayout(date)
-        dateLayout.measure(width: .greatestFiniteMagnitude)
+        let dateLayout = TextViewLayout(date, maximumNumberOfLines: 1)
+        dateLayout.measure(width: frame.width / 2)
 
         
         muted.set(image: arguments.interaction.presentation.isMuted ? muted_image : unmuted_image, for: .Normal)
-        muted.isHidden = !arguments.interaction.canBeMuted(story)
+        muted.isHidden = !arguments.interaction.canBeMuted(story.storyItem)
         more.isHidden = context.peerId == groupId
 
         
@@ -132,12 +132,11 @@ final class StoryControlsView : Control {
         authorName.append(string: context.peerId == groupId ? "My Story" : peer.compactDisplayTitle, color: .white, font: .medium(.title))
 
         
-        var authorLayout = TextViewLayout(authorName, maximumNumberOfLines: 1, truncationType: .middle)
+        let authorLayout = TextViewLayout(authorName, maximumNumberOfLines: 1, truncationType: .middle)
         authorLayout.measure(width: authorWidth)
         
         textView.update(authorLayout)
         dateView.update(dateLayout)
-        
         
         avatarAndText.setFrameSize(NSMakeSize(textView.frame.width + dateView.frame.width + avatar.frame.width + 8, avatar.frame.height))
         
@@ -173,6 +172,13 @@ final class StoryControlsView : Control {
     
     override func layout() {
         super.layout()
+        
+        dateView.resize(frame.width / 2)
+
+        let width = frame.width - dateView.frame.width - more.frame.width - muted.frame.width - avatar.frame.width - 10 - (muted.isHidden ? 0 : 12) - (more.isHidden ? 0 : 12)
+        
+        self.textView.resize(width)
+
         self.updateLayout(size: frame.size, transition: .immediate)
     }
 }

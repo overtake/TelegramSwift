@@ -15,7 +15,9 @@ final class StoryMyEmptyRowItem : GeneralRowItem {
     fileprivate let sticker: LocalAnimatedSticker = LocalAnimatedSticker.chiken_born
     fileprivate let stickerSize: NSSize = NSMakeSize(120, 120)
     fileprivate let context: AccountContext
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType) {
+    fileprivate let showArchive: ()->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, showArchive: @escaping()->Void) {
+        self.showArchive = showArchive
         self.titleLayout = TextViewLayout.init(.initialize(string: "Only you can see archived stories unless you choose to save them to your profile.", color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         self.context = context
         super.init(initialSize, stableId: stableId, viewType: viewType)
@@ -35,7 +37,7 @@ final class StoryMyEmptyRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return self.viewType.innerInset.top + stickerSize.height + self.viewType.innerInset.top + titleLayout.layoutSize.height + self.viewType.innerInset.top + 20 + self.viewType.innerInset.bottom
+        return self.viewType.innerInset.top + stickerSize.height + self.viewType.innerInset.top + titleLayout.layoutSize.height + self.viewType.innerInset.top + 20 + self.viewType.innerInset.bottom + 20
     }
     
     override func viewClass() -> AnyClass {
@@ -59,6 +61,12 @@ private final class StoryMyEmptyRowView: GeneralContainableRowView {
         
         textView.isSelectable = false
         textView.userInteractionEnabled = true
+        
+        archive.set(handler: { [weak self] _ in
+            if let item = self?.item as? StoryMyEmptyRowItem {
+                item.showArchive()
+            }
+        }, for: .SingleClick)
 
     }
     
