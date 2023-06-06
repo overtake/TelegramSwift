@@ -815,7 +815,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         let size = file.size ?? 0
                         let contains = list.sounds.contains(where: { $0.file.fileId.id == file.fileId.id })
                         let duration = file.duration ?? 0
-                        if size < settings.maxSize, duration < settings.maxDuration, list.sounds.count < settings.maxSavedCount, !contains {
+                        if size < settings.maxSize, Int(duration) < settings.maxDuration, list.sounds.count < settings.maxSavedCount, !contains {
                             thirdBlock.append(ContextMenuItem(strings().chatContextSaveRingtoneAdd, handler: {
                                 let signal = context.engine.peers.saveNotificationSound(file: .message(message: .init(message), media: file))
                                 _ = showModalProgress(signal: signal, for: context.window).start(error: { error in

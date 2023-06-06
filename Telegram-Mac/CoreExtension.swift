@@ -200,7 +200,7 @@ extension TelegramMediaFile {
         return NSZeroSize
     }
     
-    var videoDuration:Int {
+    var videoDuration: Double {
         for attr in attributes {
             if case let .Video(duration,_, _, _) = attr {
                 return duration

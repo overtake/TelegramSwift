@@ -1014,7 +1014,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
             
             let state = EntertainmentState(rawValue: Int32(index))!
-            if mode == .common {
+            if mode == .common || mode == .stories {
                 FastSettings.changeEntertainmentState(state)
             }
             self?.chatInteraction?.update({ $0.withUpdatedIsEmojiSection(state == .emoji )})

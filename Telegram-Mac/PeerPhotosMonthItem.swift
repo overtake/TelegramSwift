@@ -526,7 +526,7 @@ class MediaVideoCell : MediaCell {
         if let status = mediaPlayerStatus, status.generationTimestamp > 0, status.duration > 0 {
             text = String.durationTransformed(elapsed: Int(status.duration - (status.timestamp + (CACurrentMediaTime() - status.generationTimestamp))))
         } else {
-            text = String.durationTransformed(elapsed: file.videoDuration)
+            text = String.durationTransformed(elapsed: Int(file.videoDuration))
         }
         
         var isBuffering: Bool = false

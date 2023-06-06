@@ -155,7 +155,7 @@ final class StoryListView : Control, Notifable {
                 }
             })
             
-            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: NSColor.black, spoilers: spoilers)
+            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: storyTheme.colors.grayText, spoilers: spoilers)
             layout.measure(width: frame.width - 20)
             layout.interactions = globalLinkExecutor
             
@@ -745,7 +745,7 @@ final class StoryListView : Control, Notifable {
             previous.disappear()
         }
         
-        let story = entry.item.storyItem
+        let story = entry.item
         
 
 
@@ -807,7 +807,7 @@ final class StoryListView : Control, Notifable {
 
         self.inputView.update(entry.item, animated: false)
         
-        self.updateText(story, state: .concealed, animated: false, context: context)
+        self.updateText(story.storyItem, state: .concealed, animated: false, context: context)
         
         self.ready.set(true)
         
@@ -923,6 +923,12 @@ final class StoryListView : Control, Notifable {
     }
     func pause() {
         self.current?.pause()
+    }
+    
+    func showVoiceError() {
+        if let control = (self.inputView as? StoryInputView)?.actionControl, let peer = self.story?.peer?._asPeer() {
+            tooltip(for: control, text: strings().chatSendVoicePrivacyError(peer.compactDisplayTitle))
+        }
     }
     
     deinit {

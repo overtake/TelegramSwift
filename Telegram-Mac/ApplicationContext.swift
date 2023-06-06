@@ -519,17 +519,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            filePanel(for: context.window, completion: { paths in
-                var signals:[Signal<Never, NoError>] = []
-                if let paths = paths {
-                    for path in paths {
-                        if let image = NSImage(contentsOfFile: path), let cgImage = image._cgImage, let data = cgImage.jpegData {
-                            signals.append(context.engine.messages.uploadStory(media: EngineStoryInputMedia.image(dimensions: .init(cgImage.size), data: data), text: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.", entities: [.init(range: 0..<5, type: MessageTextEntityType.Bold), .init(range: 6..<10, type: MessageTextEntityType.Italic), .init(range: 40..<100, type: MessageTextEntityType.Spoiler), .init(range: 100..<110, type: MessageTextEntityType.Code)], privacy: EngineStoryPrivacy(base: .everyone, additionallyIncludePeers: [])))
-                        }
-                    }
-                    _ = showModalProgress(signal: combineLatest(signals), for: context.window).start()
-                }
-            })
+            
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

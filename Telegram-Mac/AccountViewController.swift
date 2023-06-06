@@ -71,6 +71,7 @@ private final class AccountSearchBarView: View {
 
 fileprivate final class AccountInfoArguments {
     let context: AccountContext
+    var storyList: PeerStoryListContext
     let presentController:(ViewController, Bool) -> Void
     let openFaq:()->Void
     let ask:()->Void
@@ -80,8 +81,9 @@ fileprivate final class AccountInfoArguments {
     let setStatus:(Control, TelegramUser)->Void
     let runStatusPopover:()->Void
     let set2Fa:(TwoStepVeriticationAccessConfiguration?)->Void
-    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void) {
+    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void) {
         self.context = context
+        self.storyList = storyList
         self.presentController = presentController
         self.openFaq = openFaq
         self.ask = ask
@@ -308,7 +310,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .stories(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "My Stories", icon: theme.icons.settingsStories, activeIcon: theme.icons.settingsStoriesActive, type: .next, viewType: viewType, action: {
-                arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, standalone: true), true)
+                arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, listContext: arguments.storyList, standalone: true), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .proxy(_, viewType, status):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), viewType: viewType, action: {
@@ -628,6 +630,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     
     
     private let disposable = MetaDisposable()
+    private var updateStoryListContext:(()->Void)?
     
     private var searchController: InputDataController?
     private let searchState: ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
@@ -770,7 +773,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             }
         }
         
-        let arguments = AccountInfoArguments(context: context, presentController: { [weak self] controller, main in
+        
+        let arguments = AccountInfoArguments(context: context, storyList: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             guard let singleLayout = self?.context.layout else {return}
             if main {
@@ -859,6 +863,13 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             self?.tableView.merge(with: transition)
             self?.readyOnce()
         }))
+        var first = true
+        self.updateStoryListContext = { [weak arguments] in
+            if !first {
+                arguments?.storyList = PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false)
+            }
+            first = false
+        }
     }
     
     
@@ -976,6 +987,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         super.viewWillAppear(animated)
         let context = self.context
         
+        updateStoryListContext?()
         
         let privacySettings = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)
 

@@ -110,7 +110,7 @@ final class StoryContentContextState {
             if lhs.peer != rhs.peer {
                 return false
             }
-            if lhs.item.id != rhs.item.id {
+            if lhs.item.storyItem != rhs.item.storyItem {
                 return false
             }
             if lhs.totalCount != rhs.totalCount {
@@ -172,7 +172,8 @@ final class StoryContentContextImpl: StoryContentContext {
         private let peerId: EnginePeer.Id
         
         private(set) var sliceValue: StoryContentContextState.FocusedSlice?
-        
+        fileprivate var nextItems: [EngineStoryItem] = []
+
         let updated = Promise<Void>()
         
         private(set) var isReady: Bool = false
@@ -290,6 +291,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         let mappedItem = EngineStoryItem(
                             id: item.id,
                             timestamp: item.timestamp,
+                            expirationTimestamp: item.expirationTimestamp,
                             media: EngineMedia(media),
                             text: item.text,
                             entities: item.entities,
@@ -301,12 +303,31 @@ final class StoryContentContextImpl: StoryContentContext {
                                     }
                                 )
                             },
-                            privacy: nil,
+                            privacy: item.privacy.flatMap(EngineStoryPrivacy.init),
                             isPinned: item.isPinned,
                             isExpired: item.isExpired,
                             isPublic: item.isPublic
                         )
+                        var nextItems: [EngineStoryItem] = []
+                        for i in (focusedIndex + 1) ..< min(focusedIndex + 4, itemsView.items.count) {
+                            if let item = itemsView.items[i].value.get(Stories.StoredItem.self), case let .item(item) = item, let media = item.media {
+                                nextItems.append(EngineStoryItem(
+                                    id: item.id,
+                                    timestamp: item.timestamp,
+                                    expirationTimestamp: item.expirationTimestamp,
+                                    media: EngineMedia(media),
+                                    text: item.text,
+                                    entities: item.entities,
+                                    views: nil,
+                                    privacy: item.privacy.flatMap(EngineStoryPrivacy.init),
+                                    isPinned: item.isPinned,
+                                    isExpired: item.isExpired,
+                                    isPublic: item.isPublic
+                                ))
+                            }
+                        }
                         
+                        self.nextItems = nextItems
                         self.sliceValue = StoryContentContextState.FocusedSlice(
                             peer: peer,
                             item: StoryContentItem(
@@ -700,6 +721,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
     private var requestedStoryKeys = Set<StoryKey>()
     private var requestStoryDisposables = DisposableSet()
     
+    private var preloadStoryResourceDisposables: [MediaResourceId: Disposable] = [:]
+
     init(
         context: AccountContext,
         storyId: StoryId
@@ -720,6 +743,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 let mappedItem = EngineStoryItem(
                     id: itemValue.id,
                     timestamp: itemValue.timestamp,
+                    expirationTimestamp: itemValue.expirationTimestamp,
                     media: EngineMedia(media),
                     text: itemValue.text,
                     entities: itemValue.entities,
@@ -731,7 +755,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                             }
                         )
                     },
-                    privacy: nil,
+                    privacy: itemValue.privacy.flatMap(EngineStoryPrivacy.init),
                     isPinned: itemValue.isPinned,
                     isExpired: itemValue.isExpired,
                     isPublic: itemValue.isPublic
@@ -793,6 +817,10 @@ final class SingleStoryContentContextImpl: StoryContentContext {
     deinit {
         self.storyDisposable?.dispose()
         self.requestStoryDisposables.dispose()
+        for (_, disposable) in self.preloadStoryResourceDisposables {
+            disposable.dispose()
+        }
+
     }
     
     func resetSideStates() {
@@ -803,3 +831,155 @@ final class SingleStoryContentContextImpl: StoryContentContext {
 }
 
 
+
+final class PeerStoryListContentContextImpl: StoryContentContext {
+    private let context: AccountContext
+    
+    private(set) var stateValue: StoryContentContextState?
+    var state: Signal<StoryContentContextState, NoError> {
+        return self.statePromise.get()
+    }
+    private let statePromise = Promise<StoryContentContextState>()
+    
+    private let updatedPromise = Promise<Void>()
+    var updated: Signal<Void, NoError> {
+        return self.updatedPromise.get()
+    }
+    
+    private var storyDisposable: Disposable?
+    
+    private var requestedStoryKeys = Set<StoryKey>()
+    private var requestStoryDisposables = DisposableSet()
+    
+    private var listState: PeerStoryListContext.State?
+    
+    private var focusedId: Int32?
+    private var focusedIdUpdated = Promise<Void>(Void())
+    
+    init(context: AccountContext, peerId: EnginePeer.Id, listContext: PeerStoryListContext, initialId: Int32?) {
+        self.context = context
+        
+        self.storyDisposable = (combineLatest(queue: .mainQueue(),
+            context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)),
+            listContext.state,
+            self.focusedIdUpdated.get()
+        )
+        |> deliverOnMainQueue).start(next: { [weak self] peer, state, _ in
+            guard let self else {
+                return
+            }
+            
+            self.listState = state
+            
+            let focusedIndex: Int?
+            if let current = self.focusedId {
+                if let index = state.items.firstIndex(where: { $0.id == current }) {
+                    focusedIndex = index
+                } else if let index = state.items.firstIndex(where: { $0.id >= current }) {
+                    focusedIndex = index
+                } else if !state.items.isEmpty {
+                    focusedIndex = 0
+                } else {
+                    focusedIndex = nil
+                }
+            } else if let initialId = initialId {
+                if let index = state.items.firstIndex(where: { $0.id == initialId }) {
+                    focusedIndex = index
+                } else if let index = state.items.firstIndex(where: { $0.id >= initialId }) {
+                    focusedIndex = index
+                } else {
+                    focusedIndex = nil
+                }
+            } else {
+                if !state.items.isEmpty {
+                    focusedIndex = 0
+                } else {
+                    focusedIndex = nil
+                }
+            }
+            
+            let stateValue: StoryContentContextState
+            if let focusedIndex = focusedIndex, let peer = peer {
+                let item = state.items[focusedIndex]
+                self.focusedId = item.id
+                
+                stateValue = StoryContentContextState(
+                    slice: StoryContentContextState.FocusedSlice(
+                        peer: peer,
+                        item: StoryContentItem(
+                            id: AnyHashable(item.id),
+                            position: focusedIndex,
+                            peer: peer,
+                            storyItem: item,
+                            preload: nil,
+                            delete: {
+                            },
+                            markAsSeen: {
+                            },
+                            hasLike: false,
+                            isMy: peerId == self.context.account.peerId
+                        ),
+                        totalCount: state.totalCount,
+                        previousItemId: focusedIndex == 0 ? nil : state.items[focusedIndex - 1].id,
+                        nextItemId: (focusedIndex == state.items.count - 1) ? nil : state.items[focusedIndex + 1].id
+                    ),
+                    previousSlice: nil,
+                    nextSlice: nil
+                )
+            } else {
+                self.focusedId = nil
+                
+                stateValue = StoryContentContextState(
+                    slice: nil,
+                    previousSlice: nil,
+                    nextSlice: nil
+                )
+            }
+            
+            if self.stateValue == nil || self.stateValue?.slice != stateValue.slice {
+                self.stateValue = stateValue
+                self.statePromise.set(.single(stateValue))
+                self.updatedPromise.set(.single(Void()))
+            }
+        })
+    }
+    
+    deinit {
+        self.storyDisposable?.dispose()
+        self.requestStoryDisposables.dispose()
+    }
+    
+    func resetSideStates() {
+    }
+    
+    func navigate(navigation: StoryContentContextNavigation) {
+        switch navigation {
+        case .peer:
+            break
+        case let .item(direction):
+            let indexDifference: Int
+            switch direction {
+            case .next:
+                indexDifference = 1
+            case .previous:
+                indexDifference = -1
+            }
+            
+            if let listState = self.listState, let focusedId = self.focusedId {
+                if let index = listState.items.firstIndex(where: { $0.id == focusedId }) {
+                    var nextIndex = index + indexDifference
+                    if nextIndex < 0 {
+                        nextIndex = 0
+                    }
+                    if nextIndex > listState.items.count - 1 {
+                        nextIndex = listState.items.count - 1
+                    }
+                    if nextIndex != index {
+                        self.focusedId = listState.items[nextIndex].id
+                        self.focusedIdUpdated.set(.single(Void()))
+                    }
+                }
+            }
+        }
+    }
+}

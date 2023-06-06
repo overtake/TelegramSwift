@@ -501,6 +501,8 @@
     private let externalDisposable = MetaDisposable()
     private var currentController: ViewController?
      
+    private let storyListContext: PeerStoryListContext
+     
     private let threadInfo: ThreadInfo?
         
     var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
@@ -531,7 +533,7 @@
         self.isProfileIntended = isProfileIntended
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .photoOrVideo)
-        
+        self.storyListContext = .init(account: context.account, peerId: peerId, isArchived: false)
         var updateTitle:((ExternalSearchMessages)->Void)? = nil
         
         if let external = externalSearchData {
@@ -553,7 +555,7 @@
         self.members = PeerMediaGroupPeersController(context: context, peerId: peerId, editing: editing.get())
         self.commonGroups = GroupsInCommonViewController(context: context, peerId: peerId)
         self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .gif)
-        self.stories = StoryMediaController(context: context, peerId: peerId)
+         self.stories = StoryMediaController(context: context, peerId: peerId, listContext: storyListContext)
          
         super.init(context)
         
@@ -832,18 +834,16 @@
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
         }
         
-        storiesTab = .single((tag: .stories, exists: false, hasLoaded: true))
-//
-//        storiesTab = context.stories.state |> map { state -> (exist: Bool, loaded: Bool) in
-//
-//            if let itemSet = state.itemSets.first(where: { $0.peerId == peerId }) {
-//                return (exist: itemSet.items.count > 0, loaded: true)
-//            } else {
-//                return (exist: false, loaded: true)
-//            }
-//        } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
-//            return (tag: .stories, exists: data.exist, hasLoaded: data.loaded)
-//        }
+        if peerId.namespace == Namespaces.Peer.CloudUser {
+            storiesTab = storyListContext.state |> map { state -> (exist: Bool, loaded: Bool) in
+                return (exist: state.totalCount > 0, loaded: state.peerReference != nil)
+            } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+                return (tag: .stories, exists: data.exist, hasLoaded: data.loaded)
+            }
+        } else {
+            storiesTab = .single((tag: .stories, exists: false, hasLoaded: true))
+        }
+        
         
         let location: ChatLocationInput
         if let threadInfo = threadInfo {

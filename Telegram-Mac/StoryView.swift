@@ -93,7 +93,7 @@ class StoryView : Control {
             case let .playing(status):
                 self.timerTime = CACurrentMediaTime()
                 
-                self.timer = SwiftSignalKit.Timer(timeout: status.duration - status.timestamp, repeat: false, completion: { [weak self] in
+                self.timer = SwiftSignalKit.Timer(timeout: self.duration - status.timestamp, repeat: false, completion: { [weak self] in
                     self?.updateState(.finished)
                 }, queue: .mainQueue())
                 self.timer?.start()
@@ -410,7 +410,7 @@ class StoryVideoView : StoryImageView {
         let file = story.media._asMedia() as! TelegramMediaFile
         let reference = FileMediaReference.story(peer: peerReference, id: story.id, media: file)
         let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peerId), userContentType: .video, reference: reference.resourceReference(file.resource), streamable: true, video: true, preferSoftwareDecoding: false, isSeekable: false, enableSound: true, fetchAutomatically: true)
-        
+                
         mediaPlayer.attachPlayerView(self.view)
         
         self.mediaPlayer = mediaPlayer
@@ -421,12 +421,13 @@ class StoryVideoView : StoryImageView {
         })
         
         statusDisposable.set((mediaPlayer.status |> deliverOnMainQueue).start(next: { [weak self] status in
+            let currentStatus = self?.state.status ?? status
             if status.status == .playing {
-                self?.updateState(.playing(status))
+                self?.updateState(.playing(currentStatus))
             } else if status.status == .paused {
-                self?.updateState(.paused(status))
+                self?.updateState(.paused(currentStatus))
             } else if case .buffering = status.status {
-                self?.updateState(.loading(status))
+                self?.updateState(.loading(currentStatus))
             }
         }))
     }
@@ -466,29 +467,34 @@ class StoryVideoView : StoryImageView {
     
     override var duration: Double {
         let file = self.story?.media._asMedia() as? TelegramMediaFile
-        let duration = self.state.status?.duration ?? 0
-        return max(Double(max(duration, Double(file?.videoDuration ?? 5))), 1.0)
+        return max(Double(file?.videoDuration ?? 5.0), 1)//max(Double(max(duration, Double(file?.videoDuration ?? 5))), 1.0)
     }
     
     override func restart() {
+        super.restart()
         mediaPlayer?.seek(timestamp: 0)
     }
     override func mute() {
+        super.mute()
         mediaPlayer?.setVolume(0)
     }
     override func unmute() {
         mediaPlayer?.setVolume(1)
     }
     override func play() {
+        super.play()
         mediaPlayer?.play()
     }
     override func pause() {
+        super.pause()
         mediaPlayer?.pause()
     }
     override func appear(isMuted: Bool) {
+        super.appear(isMuted: isMuted)
         mediaPlayer?.setVolume(isMuted ? 0 : 1)
     }
     override func disappear() {
+        super.disappear()
         mediaPlayer?.pause()
         mediaPlayer?.seek(timestamp: 0)
     }
