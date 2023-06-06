@@ -865,7 +865,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
             self.focusedIdUpdated.get()
         )
         |> deliverOnMainQueue).start(next: { [weak self] peer, state, _ in
-            guard let self else {
+            guard let `self` = self else {
                 return
             }
             
