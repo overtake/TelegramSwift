@@ -91,7 +91,7 @@ private final class StoryListChatListRowView: TableRowView {
             case .bottom:
                 if let item = self?.item as? StoryListChatListRowItem {
                     if let _ = item.state.hasMoreToken {
-                        item.context.account.storySubscriptionsContext?.loadMore()
+                        item.context.account.allStorySubscriptionsContext?.loadMore()
                     }
                 }
             default:
@@ -157,7 +157,7 @@ private final class StoryListChatListRowView: TableRowView {
         
         if tableView.documentSize.height < tableView.frame.width * 2 {
             if let _ = item.state.hasMoreToken {
-                item.context.account.storySubscriptionsContext?.loadMore()
+                item.context.account.allStorySubscriptionsContext?.loadMore()
             }
         }
 
