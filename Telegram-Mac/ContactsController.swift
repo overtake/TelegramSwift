@@ -323,7 +323,7 @@ class ContactsController: PeersListController {
     }
     
     init(_ context:AccountContext) {
-        self.storyList = context.engine.messages.storySubscriptions()
+        self.storyList = context.engine.messages.storySubscriptions(includeHidden: false)
         super.init(context, searchOptions: [.chats])
     }
     

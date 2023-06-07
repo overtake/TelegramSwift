@@ -2407,7 +2407,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let storiesSignal: Signal<EngineStorySubscriptions?, NoError>
         
         if chatLocation.peerId.namespace == Namespaces.Peer.CloudUser, chatLocation.peerId != context.peerId, mode == .history {
-            storiesSignal = context.engine.messages.storySubscriptions()
+            storiesSignal = context.engine.messages.storySubscriptions(includeHidden: true)
             |> map(Optional.init)
         } else {
             storiesSignal = .single(nil)

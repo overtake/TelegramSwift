@@ -482,7 +482,7 @@ class ChatListController : PeersListController {
         }
         
 
-        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions()
+        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(includeHidden: false)
         |> deliverOnMainQueue).start(next: { [weak self] resources in
             
             guard let `self` = self else {
@@ -1507,7 +1507,7 @@ class ChatListController : PeersListController {
 
         self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
         if mode == .plain {
-            self.storyList = context.engine.messages.storySubscriptions()
+            self.storyList = context.engine.messages.storySubscriptions(includeHidden: false)
         } else {
             self.storyList = nil
         }

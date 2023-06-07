@@ -483,7 +483,7 @@ final class StoryContentContextImpl: StoryContentContext {
             self.focusedItem = (focusedPeerId, nil)
         }
         
-        self.storySubscriptionsDisposable = (context.engine.messages.storySubscriptions()
+        self.storySubscriptionsDisposable = (context.engine.messages.storySubscriptions(includeHidden: false)
         |> deliverOnMainQueue).start(next: { [weak self] storySubscriptions in
             guard let `self` = self else {
                 return
