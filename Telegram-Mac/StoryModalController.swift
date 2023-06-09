@@ -502,8 +502,8 @@ private func storyReactions(context: AccountContext, peerId: PeerId, react: @esc
         }
         
         let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
-            react(.init(item: value.toUpdate(), fromRect: fromRect))
             onClose()
+            react(.init(item: value.toUpdate(), fromRect: fromRect))
         }, radiusLayer: nil, revealReactions: reveal, presentation: storyTheme, hasBubble: false)
         
         return view
@@ -615,7 +615,7 @@ private final class StoryViewController: Control, Notifable {
                 if let slice = slice {
                     
                     if let preview = self.preview, !peerIsSame {
-                        performSubviewRemoval(preview, animated: animated, duration: 0.35, scale: true)
+                        performSubviewRemoval(preview, animated: animated, duration: 0.25, scale: true)
                         self.preview = nil
                     }
                     
@@ -1411,6 +1411,9 @@ private final class StoryViewController: Control, Notifable {
     func showVoiceError() {
         self.current?.showVoiceError()
     }
+    func showShareError() {
+        self.current?.showShareError()
+    }
     
     func showReactions(_ view: NSView) {
         
@@ -1890,18 +1893,22 @@ final class StoryModalController : ModalViewController, Notifable {
             if let peerId = story.peer?.id {
                 showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: openPeerInfo), for: context.window)
             }
-        }, share: { story in
-            if let peerId = story.peerId {
+        }, share: { [weak self] story in
+            if let peerId = story.peerId, story.sharable {
                 let signal = showModalProgress(signal: context.engine.messages.exportStoryLink(peerId: peerId, id: story.storyItem.id), for: context.window)
                 
-                _ = signal.start(next: { link in
+                _ = signal.start(next: { [weak self] link in
                     if let link = link {
                         showModal(with: ShareModalController(ShareLinkObject(context, link: link), presentation: storyTheme), for: context.window)
+                    } else {
+                        self?.genericView.showShareError()
                     }
                 })
+            } else {
+                self?.genericView.showShareError()
             }
         }, copyLink: { [weak self] story in
-            if let peerId = story.peerId {
+            if let peerId = story.peerId, story.sharable {
                 let signal = showModalProgress(signal: context.engine.messages.exportStoryLink(peerId: peerId, id: story.storyItem.id), for: context.window)
                 
                 _ = signal.start(next: { link in

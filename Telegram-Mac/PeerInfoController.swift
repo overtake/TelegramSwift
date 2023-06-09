@@ -287,14 +287,19 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     let threadInfo: ThreadInfo?
     
     let source: Source
+    let stories: PeerExpiringStoryListContext?
     
     
-    
-    init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isAd: Bool = false, source: Source = .none) {
+    init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
         self.peerId = peerId
         self.source = source
         self.threadInfo = threadInfo
         
+        if peerId.namespace == Namespaces.Peer.CloudUser {
+            self.stories = stories ?? .init(account: context.account, peerId: peerId)
+        } else {
+            self.stories = nil
+        }
         
         self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true)
         super.init(context)
@@ -528,18 +533,20 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 threadData = .single(nil)
             }
             
-            let stories = context.engine.messages.storySubscriptions(includeHidden: true)
             
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories)
+            let storiesSignal: Signal<PeerExpiringStoryListContext.State?, NoError>
+            if let stories = self.stories {
+                storiesSignal = stories.state |> map(Optional.init)
+            } else {
+                storiesSignal = .single(nil)
+            }
+            
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal)
                 |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
                     
-                    var story = stories.items.first(where: { $0.peer.id == peerId })
                     
-                    if peerId == context.peerId, stories.accountItem?.storyCount != 0 {
-                        story = stories.accountItem
-                    }
                     
-                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, story: story).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, stories: stories).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
                     return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0, threadData) }
                     

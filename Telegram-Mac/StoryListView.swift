@@ -668,19 +668,9 @@ final class StoryListView : Control, Notifable {
         layer.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: duration, timingFunction: .default, removeOnCompletion: false)
         
         
-       // layer.add(cornerRadium, forKey: "cornerRadius")
-        
-        let animationMask = SimpleLayer()
-        animationMask.frame = self.layer!.bounds
-        animationMask.backgroundColor = NSColor.red.cgColor
-        
-        //self.layer?.mask = animationMask
-//
-//
-//
-//
-//
-//        self.animationMask = animationMask
+        layer.cornerRadius = oldRect.height / 2
+        layer.animateCornerRadius(duration: duration)
+       
     }
 
     func update(context: AccountContext, entry: StoryContentContextState.FocusedSlice?) {
@@ -899,7 +889,7 @@ final class StoryListView : Control, Notifable {
     }
     var storyRect: CGRect {
         if let current = self.current {
-            return NSMakeRect(self.container.frame.minX, 20, current.frame.width, current.frame.height)
+            return NSMakeRect(contentRect.minX, 20, current.frame.width, current.frame.height)
         }
         return self.container.frame
     }
@@ -942,6 +932,12 @@ final class StoryListView : Control, Notifable {
     func showVoiceError() {
         if let control = (self.inputView as? StoryInputView)?.actionControl, let peer = self.story?.peer?._asPeer() {
             tooltip(for: control, text: strings().chatSendVoicePrivacyError(peer.compactDisplayTitle))
+        }
+    }
+    
+    func showShareError() {
+        if let control = (self.inputView as? StoryInputView)?.actionControl {
+            tooltip(for: control, text: "This story can't be shared")
         }
     }
     

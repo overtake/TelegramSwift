@@ -71,12 +71,11 @@ final class StoryControlsView : Control {
         more.contextMenu = { [weak self] in
             
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
-            
-            menu.addItem(ContextMenuItem("Share", handler: { [weak self] in
-                if let story = self?.story {
+            if let story = self?.story, story.sharable {
+                menu.addItem(ContextMenuItem("Share", handler: { [weak self] in
                     self?.arguments?.share(story)
-                }
-            }, itemImage: MenuAnimation.menu_share.value))
+                }, itemImage: MenuAnimation.menu_share.value))
+            }
             menu.addItem(ContextMenuItem("Hide", itemImage: MenuAnimation.menu_hide.value))
 
             menu.addItem(ContextSeparatorItem())

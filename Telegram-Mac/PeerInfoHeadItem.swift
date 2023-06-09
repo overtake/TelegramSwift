@@ -471,14 +471,14 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate let arguments: PeerInfoArguments
     fileprivate let threadData: MessageHistoryThreadData?
     fileprivate let threadId: Int64?
-    fileprivate let story: EngineStorySubscriptions.Item?
+    fileprivate let stories: PeerExpiringStoryListContext.State?
     let canEditPhoto: Bool
     
     
     let peerPhotosDisposable = MetaDisposable()
     
     var photos: [TelegramPeerPhoto] = []
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, story: EngineStorySubscriptions.Item? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, stories: PeerExpiringStoryListContext.State? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
         self.threadData = threadData
@@ -487,7 +487,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.editing = editing
         self.threadId = threadId
         self.arguments = arguments
-        self.story = story
+        self.stories = stories
         self.isVerified = peer?.isVerified ?? false
         self.isPremium = peer?.isPremium ?? false
         self.isScam = peer?.isScam ?? false
@@ -916,7 +916,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         photoContainer.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerInfoHeadItem {
-                if let _ = item.story {
+                if let stories = item.stories, !stories.items.isEmpty {
                     item.openPeerStory()
                 } else {
                     if let peer = item.peer, let _ = peer.largeProfileImage {
@@ -927,7 +927,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         }, for: .Click)
         
         photoContainer.contextMenu = { [weak self] in
-            if let item = self?.item as? PeerInfoHeadItem, item.story != nil {
+            if let item = self?.item as? PeerInfoHeadItem, let stories = item.stories, !stories.items.isEmpty {
                 let menu = ContextMenu()
                 menu.addItem(ContextMenuItem(strings().peerInfoContextOpenPhoto, handler: { [weak item] in
                     if let item = item {
@@ -1280,7 +1280,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         photoContainer.scaleOnClick = true
         
-        if let storyData = item.story {
+        if let storyData = item.stories {
             let isUnseen = storyData.hasUnseen
             let current: ImageView
             let isNew: Bool
