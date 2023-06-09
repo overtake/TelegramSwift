@@ -1273,7 +1273,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         photoContainer.scaleOnClick = true
         
-        if let storyData = item.stories {
+        if let storyData = item.stories, !storyData.items.isEmpty {
             let isUnseen = storyData.hasUnseen
             let current: ImageView
             let isNew: Bool
