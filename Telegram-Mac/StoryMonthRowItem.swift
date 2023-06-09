@@ -89,16 +89,18 @@ final class StoryMonthRowItem : GeneralRowItem {
     fileprivate private(set) var layoutItems:[StoryCellLayoutItem] = []
     fileprivate private(set) var itemSize: NSSize = NSZeroSize
     fileprivate let standalone: Bool
-
+    fileprivate let selected: Set<StoryId>?
     fileprivate let openStory:(StoryInitialIndex?)->Void
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void) {
+    fileprivate let toggleSelected: (StoryId)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void, toggleSelected: @escaping(StoryId)->Void) {
         self.items = items
+        self.selected = selected
         self.standalone = standalone
         self.peerReference = peerReference
         self.context = context
         self.peerId = peerId
         self.openStory = openStory
+        self.toggleSelected = toggleSelected
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 30, right: 30) : NSEdgeInsets())
     }
     
@@ -314,13 +316,20 @@ private final class StoryMonthRowView : GeneralContainableRowView, Notifable {
             for contentView in contentViews {
                 if let contentView = contentView, let layoutItem = contentView.layoutItem {
                     if NSPointInRect(point, contentView.frame) {
-                        item.openPeerStory(peerId: layoutItem.peerId, storyId: layoutItem.id.id, { [weak self] peerId, _, storyId in
-                            return self?.takeControl(peerId, storyId: storyId)
-                        })
+                        
+                        if item.selected != nil {
+                            item.toggleSelected(.init(peerId: layoutItem.peerId, id: layoutItem.id.id))
+                        } else {
+                            item.openPeerStory(peerId: layoutItem.peerId, storyId: layoutItem.id.id, { [weak self] peerId, _, storyId in
+                                return self?.takeControl(peerId, storyId: storyId)
+                            })
+                        }
                         return
                     }
                 }
             }
+            
+            
         }
     }
     
@@ -385,7 +394,13 @@ private final class StoryMonthRowView : GeneralContainableRowView, Notifable {
             } else {
                 view = self.contentViews[i]!
             }
-            view.update(layout: layout, selected: nil, context: item.context, table: item.table, animated: animated)
+            let selected: Bool?
+            if let state = item.selected {
+                selected = state.contains(.init(peerId: layout.peerId, id: layout.item.id))
+            } else {
+                selected = nil
+            }
+            view.update(layout: layout, selected: selected, context: item.context, table: item.table, animated: animated)
 
             view.frame = layout.frame
         }

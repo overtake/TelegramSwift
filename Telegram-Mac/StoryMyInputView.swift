@@ -224,7 +224,7 @@ final class StoryMyInputView : Control, StoryInput {
         self.story = story
         let storyViews = story.storyItem.views
         
-        let text: NSAttributedString = .initialize(string: storyViews == nil ? "No Views yet" : "\(storyViews!.seenCount) views", color: storyTheme.colors.text, font: .normal(.short))
+        let text: NSAttributedString = .initialize(string: storyViews == nil || storyViews!.seenCount == 0 ? "No Views yet" : "\(storyViews!.seenCount) views", color: storyTheme.colors.text, font: .normal(.short))
         let layout = TextViewLayout(text)
         layout.measure(width: .greatestFiniteMagnitude)
         self.viewsText.update(layout)

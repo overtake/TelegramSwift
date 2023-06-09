@@ -3978,7 +3978,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.openStories = { [weak self] f in
             let story = self?.uiState.with ({ $0.storyState })
             if let story = story {
-                StoryModalController.ShowStories(context: context, initialId: .init(peerId: story.peer.id, id: nil, messageId: nil, takeControl: f))
+                StoryModalController.ShowStories(context: context, includeHidden: false, initialId: .init(peerId: story.peer.id, id: nil, messageId: nil, takeControl: f))
             }
         }
         

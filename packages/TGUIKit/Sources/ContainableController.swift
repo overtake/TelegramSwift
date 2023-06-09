@@ -181,8 +181,12 @@ public extension ContainedViewLayoutTransition {
                 }
                 layer.animatePosition(from: presentRect.origin, to: frame.origin, duration: duration, timingFunction: timingFunction)
             }
-            animatePos(layer)
-            animateSize(layer)
+            if layer.frame.origin != frame.origin {
+                animatePos(layer)
+            }
+            if layer.frame.size != frame.size {
+                animateSize(layer)
+            }
             layer.frame = frame
             
         }

@@ -1020,6 +1020,16 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         })
         afterComplete(true)
+    case let .story(_, username, storyId, context):
+        let signal = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username), for: context.window)
+        _ = signal.start(next: { peer in
+            if let peer = peer {
+                StoryModalController.ShowSingleStory(context: context, storyId: .init(peerId: peer.id, id: storyId), initialId: nil, emptyCallback: {
+                    alert(for: context.window, info: strings().unknownError)
+                })
+            }
+        })
+        afterComplete(true)
     case let .unsupportedScheme(_, context, path):
         _ = (context.engine.resolve.getDeepLinkInfo(path: path) |> deliverOnMainQueue).start(next: { info in
             if let info = info {
@@ -1255,6 +1265,7 @@ enum inAppLink {
     case urlAuth(link: String, context: AccountContext)
     case loginCode(link: String, code: String)
     case folder(link: String, slug: String, context: AccountContext)
+    case story(link: String, username: String, storyId: Int32, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1314,6 +1325,8 @@ enum inAppLink {
             return link
         case let .loginCode(link, _):
             return link
+        case let .story(link, _, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1337,6 +1350,7 @@ private let keyURLCommentId = "comment";
 private let keyURLAdmin = "admin";
 private let keyURLThreadId = "thread";
 private let keyURLTopicId = "topic";
+private let keyURLStoryId = "story";
 private let keyURLInvite = "invite";
 private let keyURLUrl = "url";
 private let keyURLSet = "set";
@@ -1653,9 +1667,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if username.hasPrefix("$") {
                             return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
                         }
-                        if let topicId = vars[keyURLTopicId]?.nsstring.intValue {
+                        if let storyId = vars[keyURLStoryId]?.nsstring.intValue {
+                            return .story(link: urlString, username: username, storyId: storyId, context: context)
+                        } else if let topicId = vars[keyURLTopicId]?.nsstring.intValue {
                             return .topic(link: urlString, username: username, context: context, threadId: topicId, commentId: nil)
-                        } else  {
+                        } else {
                             return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
                         }
                     }
@@ -1770,6 +1786,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let comment = vars[keyURLCommentId]?.nsstring.intValue
                         let thread = vars[keyURLThreadId]?.nsstring.intValue
                         let topic = vars[keyURLTopicId]?.nsstring.intValue
+                        let story = vars[keyURLStoryId]?.nsstring.intValue
                         var action:ChatInitialAction? = nil
                         loop: for (key,value) in vars {
                             switch key {
@@ -1813,6 +1830,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 return .comments(link: urlString, username: username, context: context, threadId: thread, commentId: comment)
                             } else if let topic = topic {
                                 return .comments(link: urlString, username: username, context: context, threadId: topic, commentId: comment)
+                            } else if let story = story {
+                                return .story(link: urlString, username: username, storyId: story, context: context)
                             } else {
                                 return .followResolvedName(link: urlString, username: username, postId: post, context: context, action: action, callback:openInfo)
                             }

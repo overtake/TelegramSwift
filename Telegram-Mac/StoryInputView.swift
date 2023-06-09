@@ -219,15 +219,14 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         } else {
             transition = .immediate
         }
-        guard let superview = superview, let window = self.window else {
+        guard let window = self.window else {
             return
         }
-        
-        
-        let wSize = NSMakeSize(window.frame.width - 100, superview.frame.height - 110)
+                
+        let wSize = NSMakeSize(window.contentView!.frame.width - 100, window.contentView!.frame.height - 110)
         let aspect = StoryView.size.aspectFitted(wSize)
 
-        transition.updateFrame(view: self, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor,  (superview.frame.width - size.width) / 2), y: aspect.height + 10 - size.height + 50), size: size))
+        transition.updateFrame(view: self, frame: CGRect(origin: CGPoint(x: 0, y: aspect.height + 10 - size.height + 50), size: size))
         self.updateLayout(size: size, transition: transition)
 
     }
@@ -381,12 +380,14 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     
     func updateInputState(animated: Bool = true) {
         
-        guard let superview = self.superview, let window = self.window, let arguments = self.arguments else {
+        guard let window = self.window, let arguments = self.arguments else {
             return
         }
+        let maxSize = NSMakeSize(window.contentView!.frame.width - 100, window.contentView!.frame.height - 110)
+        let supersize = StoryView.size.aspectFitted(maxSize)
         let size: NSSize
         if self.arguments?.interaction.presentation.inputRecording != nil {
-            size = NSMakeSize(min(min(superview.frame.width + 60, window.frame.width - 20), StoryView.size.width + 80), self.textViewSize(self.textView).height + 16)
+            size = NSMakeSize(min(min(supersize.width + 60, window.frame.width - 20), StoryView.size.width + 80), self.textViewSize(self.textView).height + 16)
             textView.inputView.textContainer?.maximumNumberOfLines = 0
             textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
             textView.inputView.isSelectable = true
@@ -394,13 +395,13 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         } else {
             switch self.inputState {
             case .focus:
-                size = NSMakeSize(min(min(superview.frame.width + 60, window.frame.width - 20), StoryView.size.width + 80), self.textViewSize(self.textView).height + 16)
+                size = NSMakeSize(min(min(supersize.width + 60, window.frame.width - 20), StoryView.size.width + 80), self.textViewSize(self.textView).height + 16)
                 textView.inputView.textContainer?.maximumNumberOfLines = 0
                 textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
                 textView.inputView.isSelectable = true
                 textView.inputView.isEditable = true
             case .none:
-                size = NSMakeSize(superview.frame.width, self.textViewSize(self.textView).height + 16)
+                size = NSMakeSize(supersize.width, self.textViewSize(self.textView).height + 16)
                 textView.inputView.textContainer?.maximumNumberOfLines = 1
                 textView.inputView.textContainer?.lineBreakMode = .byTruncatingTail
                 textView.inputView.isSelectable = false

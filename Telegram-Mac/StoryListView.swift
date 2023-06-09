@@ -396,10 +396,9 @@ final class StoryListView : Control, Notifable {
         
         super.init(frame: frameRect)
         
-        container.layer?.masksToBounds = false
+        container.layer?.masksToBounds = true
         container.addSubview(self.controls)
         container.addSubview(self.navigator)
-
         
         controls.controlOpacityEventIgnored = true
         
@@ -490,6 +489,8 @@ final class StoryListView : Control, Notifable {
             return
         }
         
+        
+        
         var isPaused: Bool = false
 
         if let current = current, current.isEqual(to: value.storyId) {
@@ -528,6 +529,8 @@ final class StoryListView : Control, Notifable {
             inputView.updateState(value, animated: animated)
         }
                 
+
+        
         if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.inputInFocus || value.inputRecording != nil || value.hasReactions {
             let current: Control
             if let view = self.pauseOverlay {
@@ -548,9 +551,12 @@ final class StoryListView : Control, Notifable {
             }
             current.backgroundColor = NSColor.black.withAlphaComponent(0.25)
         } else if let view = self.pauseOverlay {
+            self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
             performSubviewRemoval(view, animated: animated)
             self.pauseOverlay = nil
         }
+        
+
         
         if value.mouseDown != oldValue.mouseDown {
             self.controls.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
@@ -569,14 +575,19 @@ final class StoryListView : Control, Notifable {
         
         let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
         let aspect = StoryView.size.aspectFitted(maxSize)
-
+        let containerSize: NSSize
+        if let arguments = self.arguments, arguments.interaction.presentation.inputInFocus || arguments.interaction.presentation.inputRecording != nil {
+            containerSize = NSMakeSize(min(min(aspect.width + 60, size.width - 20), StoryView.size.width + 80), aspect.height)
+        } else {
+            containerSize = aspect
+        }
         if container.superview == self {
-            transition.updateFrame(view: container, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor, (frame.width - aspect.width) / 2), y: 20), size: NSMakeSize(aspect.width, size.height)))
+            transition.updateFrame(view: container, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor, (frame.width - containerSize.width) / 2), y: 20), size: NSMakeSize(containerSize.width, size.height)))
         }
 
         
         if let current = self.current {
-            let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: aspect)
+            let rect = CGRect(origin: CGPoint(x: (containerSize.width - aspect.width) / 2, y: 0), size: aspect)
             transition.updateFrame(view: current, frame: rect)
             
             transition.updateFrame(view: controls, frame: rect)
@@ -590,18 +601,18 @@ final class StoryListView : Control, Notifable {
             }
             
             if let view = self.prevStoryView {
-                transition.updateFrame(view: view, frame: NSMakeRect(0, rect.minY, 40, rect.height))
+                transition.updateFrame(view: view, frame: NSMakeRect(rect.minX, rect.minY, 40, rect.height))
             }
             if let view = self.nextStoryView {
-                transition.updateFrame(view: view, frame: NSMakeRect(rect.width - 40, rect.minY, 40, rect.height))
+                transition.updateFrame(view: view, frame: NSMakeRect(rect.maxX - 40, rect.minY, 40, rect.height))
             }
         }
         inputView?.updateInputState(animated: transition.isAnimated)
         
         if let text = self.text {
             var rect = text.bounds
-            rect.size.width = container.frame.width
-            rect.origin.x = 0
+            rect.size.width = aspect.width
+            rect.origin.x = (containerSize.width - aspect.width) / 2
             rect.origin.y = controls.frame.maxY - text.frame.height
             transition.updateFrame(view: text, frame: rect)
         }
@@ -700,6 +711,9 @@ final class StoryListView : Control, Notifable {
                     case .none:
                         self?.arguments?.inputUnfocus()
                     }
+                    if let `self` = self {
+                        self.updateLayout(size: self.frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+                    }
                 })
                 
                 self.inputView.setArguments(self.arguments, groupId: entry.peer.id)
@@ -710,7 +724,7 @@ final class StoryListView : Control, Notifable {
             } else if let current = self.current {
                 self.updateStoryState(current.state)
                 self.inputView.update(entry.item, animated: true)
-                entry.item.markAsSeen?()
+                self.arguments?.markAsRead(entry.peer.id, entry.item.storyItem.id)
             } else {
                 self.redraw()
             }
@@ -795,7 +809,7 @@ final class StoryListView : Control, Notifable {
         
         arguments.interaction.flushPauses()
         if arguments.interaction.presentation.entryId == groupId {
-            entry.item.markAsSeen?()
+            arguments.markAsRead(groupId, story.storyItem.id)
         }
 
         current.onStateUpdate = { [weak self] state in

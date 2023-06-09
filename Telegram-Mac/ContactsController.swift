@@ -181,7 +181,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                     arguments.addContact()
                 })
             case let .stories(state):
-                item = StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: context, state: state, open: arguments.openStory)
+                item = StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: context, archive: true, state: state, open: arguments.openStory)
             }
             return item
         }
@@ -278,7 +278,7 @@ class ContactsController: PeersListController {
         let arguments = ContactsArguments(addContact: {
             showModal(with: AddContactModalController(context), for: context.window)
         }, openStory: { initialId in
-            StoryModalController.ShowStories(context: context, initialId: initialId)
+            StoryModalController.ShowStories(context: context, includeHidden: true, initialId: initialId)
         })
         
         
@@ -323,7 +323,7 @@ class ContactsController: PeersListController {
     }
     
     init(_ context:AccountContext) {
-        self.storyList = context.engine.messages.storySubscriptions(includeHidden: false)
+        self.storyList = context.engine.messages.storySubscriptions(includeHidden: true)
         super.init(context, searchOptions: [.chats])
     }
     

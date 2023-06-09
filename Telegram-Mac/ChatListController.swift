@@ -284,7 +284,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             case let .stories(state):
-                return StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: arguments.context, state: state, open: arguments.openStory)
+                return StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: arguments.context, archive: false, state: state, open: arguments.openStory)
             }
         }
         
@@ -557,7 +557,7 @@ class ChatListController : PeersListController {
                 _ = context.engine.peers.hideChatFolderUpdates(folderId: filter.id).start()
             }
         }, openStory: { initialId in
-            StoryModalController.ShowStories(context: context, initialId: initialId)
+            StoryModalController.ShowStories(context: context, includeHidden: false, initialId: initialId)
         })
         
         

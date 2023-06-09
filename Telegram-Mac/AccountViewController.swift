@@ -630,7 +630,6 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     
     
     private let disposable = MetaDisposable()
-    private var updateStoryListContext:(()->Void)?
     
     private var searchController: InputDataController?
     private let searchState: ValuePromise<SearchState> = ValuePromise(ignoreRepeated: true)
@@ -863,13 +862,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             self?.tableView.merge(with: transition)
             self?.readyOnce()
         }))
-        var first = true
-        self.updateStoryListContext = { [weak arguments] in
-            if !first {
-                arguments?.storyList = PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false)
-            }
-            first = false
-        }
+       
     }
     
     
@@ -986,9 +979,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         let context = self.context
-        
-        updateStoryListContext?()
-        
+                
         let privacySettings = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)
 
         settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(privacySettings), context.webSessions.state, proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
