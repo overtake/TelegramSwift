@@ -98,13 +98,13 @@ final class StoryListView : Control, Notifable {
             switch state {
             case .concealed:
                 if container.userInteractionEnabled, scrollView.clipView.bounds.minY > 5 {
+                    self.scrollView.clipView.scroll(to: .zero, animated: false)
                     self.container.send(event: .Click)
-                    self.scrollView.clipView.scroll(to: .zero, animated: true)
                 }
             case .revealed:
                 if self.userInteractionEnabled, scrollView.clipView.bounds.minY < -5 {
+                    self.scrollView.clipView.scroll(to: .zero, animated: false)
                     self.send(event: .Click)
-                    self.scrollView.clipView.scroll(to: .zero, animated: true)
                 }
             }
         }
@@ -889,7 +889,7 @@ final class StoryListView : Control, Notifable {
     }
     var storyRect: CGRect {
         if let current = self.current {
-            return NSMakeRect(contentRect.minX, 20, current.frame.width, current.frame.height)
+            return NSMakeRect(contentRect.minX, 0, current.frame.width, current.frame.height)
         }
         return self.container.frame
     }
