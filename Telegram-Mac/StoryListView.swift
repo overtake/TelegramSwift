@@ -668,8 +668,12 @@ final class StoryListView : Control, Notifable {
         layer.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: duration, timingFunction: .default, removeOnCompletion: false)
         
         
-        layer.cornerRadius = oldRect.height / 2
-        layer.animateCornerRadius(duration: duration)
+        
+        if control is AvatarControl {
+            layer.cornerRadius = oldRect.height / 2
+            layer.animateCornerRadius(duration: duration)
+        }
+        
        
     }
 

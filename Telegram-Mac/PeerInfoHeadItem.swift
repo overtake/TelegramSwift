@@ -945,13 +945,6 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
          registerForDraggedTypes([.tiff, .string, .kUrl, .kFileUrl])
     }
     
-    private func takeControl(_ peerId: PeerId) -> NSView? {
-        if let item = self.item as? PeerInfoHeadItem, item.peer?.id == peerId {
-            return photoView
-        }
-        return nil
-    }
-
     
     
     override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
@@ -1412,7 +1405,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     }
     
     func takeControl() -> NSView? {
-        return self.photoContainer
+        return self.photoView
     }
         
 }
