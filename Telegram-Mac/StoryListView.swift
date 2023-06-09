@@ -893,7 +893,7 @@ final class StoryListView : Control, Notifable {
     }
     var storyRect: CGRect {
         if let current = self.current {
-            return NSMakeRect(contentRect.minX, 0, current.frame.width, current.frame.height)
+            return NSMakeRect(contentRect.minX, 20, current.frame.width, current.frame.height)
         }
         return self.container.frame
     }
