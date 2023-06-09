@@ -27,6 +27,10 @@ final class StoryContentItem {
     var peerId: EnginePeer.Id? {
         return self.peer?.id
     }
+    
+    var sharable: Bool {
+        return peer?.addressName != nil && storyItem.privacy?.base == .everyone
+    }
 
     init(
         id: AnyHashable,
@@ -599,7 +603,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         self.currentStateUpdatedDisposable?.dispose()
                         self.currentStateUpdatedDisposable = (pendingState.updated.get()
                         |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                            guard let `self`, let pendingState = pendingState, self.currentState === pendingState else {
+                            guard let `self` = self, let pendingState = pendingState, self.currentState === pendingState else {
                                 return
                             }
                             self.updateState()

@@ -1625,6 +1625,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     
     private var liveTranslate: ChatLiveTranslateContext?
+    private var stories: PeerExpiringStoryListContext?
     private var themeSelector: ChatThemeSelectorController? = nil
     
     private let uiState: Atomic<State> = Atomic(value: State())
@@ -1638,7 +1639,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var threadLoading: MessageId?
         var mediaRevealed: Set<MessageId> = Set()
         var translate: ChatLiveTranslateContext.State?
-        var storyState: EngineStorySubscriptions.Item?
+        var storyState: PeerExpiringStoryListContext.State?
         var presentation:TelegramPresentationTheme = theme
         var presentation_genuie:TelegramPresentationTheme = theme
         var bespoke_wallpaper: ThemeWallpaper?
@@ -2404,11 +2405,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             translateSignal = .single(nil)
         }
         
-        let storiesSignal: Signal<EngineStorySubscriptions?, NoError>
+        
+        
         
         if chatLocation.peerId.namespace == Namespaces.Peer.CloudUser, chatLocation.peerId != context.peerId, mode == .history {
-            storiesSignal = context.engine.messages.storySubscriptions(includeHidden: true)
-            |> map(Optional.init)
+            self.stories = PeerExpiringStoryListContext(account: context.account, peerId: peerId)
+        } else {
+            self.stories = nil
+        }
+        
+        let storiesSignal: Signal<PeerExpiringStoryListContext.State?, NoError>
+        if let stories = self.stories {
+            storiesSignal = stories.state |> map(Optional.init)
         } else {
             storiesSignal = .single(nil)
         }
@@ -2422,7 +2430,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 current.presentation_emoticon = emoticon
                 current.presentation_genuie = genuie
                 current.translate = translate
-                current.storyState = storyState?.items.first(where: { $0.peer.id == peerId})
+                current.storyState = storyState
                 switch wallpaper {
                 case let .result(result):
                     current.presentation = theme
@@ -3384,7 +3392,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     } else {
                         threadInfo = nil
                     }
-                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, threadInfo: threadInfo))
+                    let stories: PeerExpiringStoryListContext?
+                    if peerId == strongSelf.chatInteraction.peerId {
+                        stories = strongSelf.stories
+                    } else {
+                        stories = nil
+                    }
+                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, threadInfo: threadInfo, stories: stories))
                 }
             }
         }
@@ -3976,9 +3990,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         chatInteraction.openStories = { [weak self] f in
-            let story = self?.uiState.with ({ $0.storyState })
-            if let story = story {
-                StoryModalController.ShowStories(context: context, includeHidden: false, initialId: .init(peerId: story.peer.id, id: nil, messageId: nil, takeControl: f))
+            let state = self?.uiState.with ({ $0.storyState })
+            if let state = state {
+                StoryModalController.ShowStories(context: context, includeHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: nil, takeControl: f))
             }
         }
         

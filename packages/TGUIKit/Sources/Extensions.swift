@@ -432,9 +432,9 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
     }
-    func animateCornerRadius() ->Void {
+    func animateCornerRadius(duration: Double = 0.2) ->Void {
         let animation = CABasicAnimation(keyPath: "cornerRadius")
-        animation.duration = 0.2
+        animation.duration = duration
         self.add(animation, forKey: "cornerRadius")
     }
     

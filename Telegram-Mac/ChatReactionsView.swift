@@ -236,6 +236,7 @@ final class ChatReactionsLayout {
             lhs.source == rhs.source &&
             lhs.mode == rhs.mode &&
             lhs.rect == rhs.rect &&
+            lhs.message.id == rhs.message.id &&
             lhs.canViewList == rhs.canViewList &&
             lhs.message.effectiveReactions == rhs.message.effectiveReactions
         }
