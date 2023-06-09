@@ -1236,7 +1236,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     func takeStoryControl() -> NSView? {
         
-        return self.photoContainer
+        return self.photo
     }
     
     required init?(coder: NSCoder) {

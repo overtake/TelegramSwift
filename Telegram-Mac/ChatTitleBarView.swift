@@ -339,7 +339,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     private func updateStoryState(_ story: PeerExpiringStoryListContext.State?, animated: Bool) {
         self.story = story
         let peerId = self.chatInteraction.peerId
-        if let storyState = story {
+        if let storyState = story, !storyState.items.isEmpty {
             let hasUnseen = storyState.hasUnseen
 
             let current: ImageView
