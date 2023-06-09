@@ -288,6 +288,8 @@ class ChatMessageItem: ChatRowItem {
                 link = inAppLink.peerInfo(link: "", peerId: id, action: action, openChat: peer.isChannel || peer.isBot, postId: messageId?.id, callback: chatInteraction.openInfo)
             case let .join(_, joinHash):
                 link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
+            case let .webPage(title, url: url):
+                fatalError("must be supported")
             }
             chatInteraction.markAdAction(adAttribute.opaqueId)
             execute(inapp: link)

@@ -1402,6 +1402,13 @@ extension Peer {
         }
         return false
     }
+    
+    var storyArchived: Bool {
+        if let user = self as? TelegramUser {
+            return user.storiesHidden ?? false
+        }
+        return false
+    }
 
     var canClearHistory: Bool {
         if self.isGroup || self.isUser || (self.isSupergroup && self.addressName == nil) {

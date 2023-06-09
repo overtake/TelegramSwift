@@ -43,11 +43,12 @@ final class StoryListChatListRowItem : TableRowItem {
     let context: AccountContext
     let state: EngineStorySubscriptions
     let open: (StoryInitialIndex?)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?)->Void) {
+    let archive: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, archive: Bool, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?)->Void) {
         self._stableId = stableId
         self.context = context
         self.state = state
-        
+        self.archive = archive
         self.open = open
         super.init(initialSize)
     }
@@ -91,7 +92,11 @@ private final class StoryListChatListRowView: TableRowView {
             case .bottom:
                 if let item = self?.item as? StoryListChatListRowItem {
                     if let _ = item.state.hasMoreToken {
-                        item.context.account.allStorySubscriptionsContext?.loadMore()
+                        if item.archive {
+                            item.context.account.filteredStorySubscriptionsContext?.loadMore()
+                        } else {
+                            item.context.account.allStorySubscriptionsContext?.loadMore()
+                        }
                     }
                 }
             default:
@@ -145,9 +150,10 @@ private final class StoryListChatListRowView: TableRowView {
 
         let initialSize = NSMakeSize(item.height, item.height)
         let context = item.context
+        let archive = item.archive
 
         let (deleted, inserted, updated) = proccessEntriesWithoutReverse(self.current, right: entries, { entry in
-            return StoryListEntryRowItem(initialSize, entry: entry, context: context, open: item.open)
+            return StoryListEntryRowItem(initialSize, entry: entry, context: context, archive: archive, open: item.open)
         })
         let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: true, grouping: false, animateVisibleOnly: false)
 
@@ -157,7 +163,11 @@ private final class StoryListChatListRowView: TableRowView {
         
         if tableView.documentSize.height < tableView.frame.width * 2 {
             if let _ = item.state.hasMoreToken {
-                item.context.account.allStorySubscriptionsContext?.loadMore()
+                if archive {
+                    item.context.account.filteredStorySubscriptionsContext?.loadMore()
+                } else {
+                    item.context.account.allStorySubscriptionsContext?.loadMore()
+                }
             }
         }
 
@@ -168,11 +178,13 @@ private final class StoryListChatListRowView: TableRowView {
 private final class StoryListEntryRowItem : TableRowItem {
     let entry: StoryChatListEntry
     let context: AccountContext
+    let archive: Bool
     let open:(StoryInitialIndex?)->Void
-    init(_ initialSize: NSSize, entry: StoryChatListEntry, context: AccountContext, open: @escaping(StoryInitialIndex?)->Void) {
+    init(_ initialSize: NSSize, entry: StoryChatListEntry, context: AccountContext, archive: Bool, open: @escaping(StoryInitialIndex?)->Void) {
         self.entry = entry
         self.context = context
         self.open = open
+        self.archive = archive
         super.init(initialSize)
     }
     override var stableId: AnyHashable {
@@ -181,6 +193,9 @@ private final class StoryListEntryRowItem : TableRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items: [ContextMenuItem] = []
+        let peerId = self.entry.item.peer.id
+        let context = self.context
+        
         items.append(.init("View Profile", handler: {
             
         }, itemImage: MenuAnimation.menu_open_profile.value))
@@ -189,9 +204,20 @@ private final class StoryListEntryRowItem : TableRowItem {
             
         }, itemImage: MenuAnimation.menu_mute.value))
         
-        items.append(.init("Hide", handler: {
+        if self.entry.item.peer._asPeer().storyArchived {
+            items.append(.init("Unarchive", handler: {
+                context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: false)
+            }, itemImage: MenuAnimation.menu_show.value))
             
-        }, itemImage: MenuAnimation.menu_hide.value))
+        } else {
+            if !archive {
+                items.append(.init("Archive", handler: {
+                    context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
+                }, itemImage: MenuAnimation.menu_hide.value))
+            }
+            
+        }
+       
 
         return .single(items)
     }

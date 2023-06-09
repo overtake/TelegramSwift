@@ -12,15 +12,14 @@ import TGUIKit
 
 final class StoryListNavigationView : View {
     
-    private var parts:[SimpleLayer] = []
-    private let selector: SimpleLayer = SimpleLayer(frame: NSMakeRect(0, 0, 2, 2))
+    private var parts:[View] = []
+    private let selector: View = View(frame: NSMakeRect(0, 0, 2, 2))
     private var selected: Int? = nil
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        selector.anchorPoint = NSMakePoint(0, 0)
-        selector.cornerRadius = 1
-        selector.backgroundColor = NSColor.white.cgColor
-        self.layer?.addSublayer(selector)
+        selector.layer?.cornerRadius = 1
+        selector.backgroundColor = NSColor.white
+        self.addSubview(selector)
     }
     
     required init?(coder: NSCoder) {
@@ -30,14 +29,14 @@ final class StoryListNavigationView : View {
     
     func initialize(count: Int) {
         for part in parts {
-            part.removeFromSuperlayer()
+            part.removeFromSuperview()
         }
         parts.removeAll()
         for _ in 0 ..< count {
-            let part = SimpleLayer(frame: NSMakeRect(0, 0, 0, 2))
-            part.backgroundColor = NSColor.white.withAlphaComponent(0.3).cgColor
-            part.cornerRadius = 1
-            self.layer?.addSublayer(part)
+            let part = View(frame: NSMakeRect(0, 0, 0, 2))
+            part.backgroundColor = NSColor.white.withAlphaComponent(0.3)
+            part.layer?.cornerRadius = 1
+            self.addSubview(part)
             parts.append(part)
         }
         self.updateLayout(size: frame.size, transition: .immediate)
@@ -49,18 +48,18 @@ final class StoryListNavigationView : View {
         CATransaction.begin()
         for (i, part) in parts.enumerated() {
             if i < index {
-                part.backgroundColor = NSColor.white.cgColor
+                part.backgroundColor = NSColor.white
             } else {
-                part.backgroundColor = NSColor.white.withAlphaComponent(0.3).cgColor
+                part.backgroundColor = NSColor.white.withAlphaComponent(0.3)
             }
             if i == index {
                 if playing {
                     var rect = part.frame
                     rect.size.width = part.frame.width * min(current / duration, 1)
                     selector.frame = rect
-                    selector.animateBounds(from: NSMakeSize(rect.size.width, 2).bounds, to: part.frame.size.bounds, duration: duration - current, timingFunction: .linear, removeOnCompletion: false)
+                    selector.layer?.animateBounds(from: NSMakeSize(rect.size.width, 2).bounds, to: part.frame.size.bounds, duration: duration - current, timingFunction: .linear, removeOnCompletion: false)
                 } else {
-                    selector.removeAnimation(forKey: "bounds")
+                    selector.layer?.removeAnimation(forKey: "bounds")
                     var rect = part.frame
                     rect.size.width = part.frame.width * min(current / duration, 1)
                     selector.frame = rect
@@ -80,10 +79,8 @@ final class StoryListNavigationView : View {
         
         var x: CGFloat = 6
         for part in parts {
-            transition.updateFrame(layer: part, frame: CGRect(origin: CGPoint(x: x, y: 0), size: itemSize))
+            transition.updateFrame(view: part, frame: CGRect(origin: CGPoint(x: x, y: 0), size: itemSize))
             x += itemSize.width + 2
         }
-        
-        
     }
 }

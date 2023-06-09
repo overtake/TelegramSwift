@@ -14,7 +14,7 @@ import Postbox
 
 
 private enum Entry : TableItemListNodeEntry {
-    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], viewType: GeneralViewType)
+    case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, viewType: GeneralViewType)
     case date(index: MessageIndex)
     case section(index: MessageIndex)
     case emptySelf(index: MessageIndex, viewType: GeneralViewType)
@@ -24,8 +24,8 @@ private enum Entry : TableItemListNodeEntry {
 
     func item(_ arguments: Arguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .month(_, stableId, peerId, peerReference, items, viewType):
-            return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, viewType: viewType, openStory: arguments.openStory)
+        case let .month(_, stableId, peerId, peerReference, items, selected, viewType):
+            return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected)
         case let .emptySelf(index, viewType):
             return StoryMyEmptyRowItem(initialSize, stableId: index, context: arguments.context, viewType: viewType, showArchive: arguments.showArchive)
         case .date:
@@ -37,7 +37,7 @@ private enum Entry : TableItemListNodeEntry {
     
     var stableId: MessageIndex {
         switch self {
-        case let .month(_, stableId, _, _, _, _):
+        case let .month(_, stableId, _, _, _, _, _):
             return stableId
         default:
             return self.index
@@ -46,7 +46,7 @@ private enum Entry : TableItemListNodeEntry {
     
     var index: MessageIndex {
         switch self {
-        case let .month(index, _, _, _, _, _):
+        case let .month(index, _, _, _, _, _, _):
             return index
         case let .emptySelf(index, _):
             return index
@@ -62,20 +62,24 @@ private final class Arguments {
     let context: AccountContext
     let standalone: Bool
     let openStory:(StoryInitialIndex?)->Void
+    let toggleSelected:(StoryId)->Void
     let showArchive:()->Void
-    init(context: AccountContext, standalone: Bool, openStory: @escaping(StoryInitialIndex?)->Void, showArchive:@escaping()->Void) {
+    init(context: AccountContext, standalone: Bool, openStory: @escaping(StoryInitialIndex?)->Void, toggleSelected:@escaping(StoryId)->Void, showArchive:@escaping()->Void) {
         self.context = context
         self.standalone = standalone
         self.openStory = openStory
         self.showArchive = showArchive
+        self.toggleSelected = toggleSelected
     }
 }
 
 private struct State : Equatable {
     var state:PeerStoryListContext.State?
+    var selected:Set<StoryId>? = nil
     var perRowCount: Int
-    init(state: PeerStoryListContext.State?, perRowCount: Int) {
+    init(state: PeerStoryListContext.State?, selected:Set<StoryId>?, perRowCount: Int) {
         self.state = state
+        self.selected = selected
         self.perRowCount = perRowCount
     }
 }
@@ -85,6 +89,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
     
     let standalone = arguments.standalone
 
+    let selected = state.selected
 
     if let state = state.state, !state.items.isEmpty, let peerReference = state.peerReference {
         let timeDifference = Int32(arguments.context.timeDifference)
@@ -108,7 +113,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
                     } else {
                         viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 0, 0))
                     }
-                    entries.append(.month(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), peerId: peerId, peerReference: peerReference, items: temp, viewType: viewType))
+                    entries.append(.month(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), peerId: peerId, peerReference: peerReference, items: temp, selected: selected, viewType: viewType))
                     temp.removeAll()
                 }
             } else {
@@ -117,20 +122,20 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
 
                 if !entries.isEmpty {
                     switch entries[entries.count - 1] {
-                    case let .month(prevIndex, stableId, peerId, peerReference, items, viewType):
+                    case let .month(prevIndex, stableId, peerId, peerReference, items, _, viewType):
                         let prevDateId = mediaDateId(for: prevIndex.timestamp)
                         if prevDateId != dateId {
                             entries.append(.section(index: index.peerLocalSuccessor()))
                             entries.append(.date(index: index))
-                            entries.append(.month(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), peerId: peerId, peerReference: peerReference, items: temp, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
+                            entries.append(.month(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), peerId: peerId, peerReference: peerReference, items: temp, selected: selected, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
                         } else {
-                            entries[entries.count - 1] = .month(index: prevIndex, stableId: stableId, peerId: peerId, peerReference: peerReference, items: items + temp, viewType: viewType)
+                            entries[entries.count - 1] = .month(index: prevIndex, stableId: stableId, peerId: peerId, peerReference: peerReference, items: items + temp, selected: selected, viewType: viewType)
                         }
                     default:
                         assertionFailure()
                     }
                 } else {
-                    entries.append(.month(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), peerId: peerId, peerReference: peerReference, items: temp, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
+                    entries.append(.month(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), peerId: peerId, peerReference: peerReference, items: temp, selected: selected, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 0, 0))))
 
                 }
             }
@@ -156,7 +161,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
     var j: Int = 0
     for entry in entries {
         switch entry {
-        case let .month(index, _, peerId, peerReference, items, _):
+        case let .month(index, _, peerId, peerReference, items, _, _):
             let chunks = items.chunks(state.perRowCount)
             for (i, chunk) in chunks.enumerated() {
                 let item = chunk[0]
@@ -167,7 +172,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
                     viewType = chunks.count > 1 ? .innerItem : .lastItem
                 }
                 let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 0, 0))
-                updated.append(.month(index: index, stableId: stableId, peerId: peerId, peerReference: peerReference, items: chunk, viewType: updatedViewType))
+                updated.append(.month(index: index, stableId: stableId, peerId: peerId, peerReference: peerReference, items: chunk, selected: selected, viewType: updatedViewType))
             }
             j += 1
         case .date:
@@ -201,7 +206,7 @@ final class StoryMediaController : TableViewController {
     private let standalone: Bool
     private let isArchived: Bool
     private var statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
-    private var stateValue: Atomic<State> = Atomic(value: State(state: nil, perRowCount: 4))
+    private var stateValue: Atomic<State> = Atomic(value: State(state: nil, selected: nil, perRowCount: 4))
     private let listContext: PeerStoryListContext
     private let archiveContext: PeerStoryListContext?
 
@@ -209,20 +214,88 @@ final class StoryMediaController : TableViewController {
         statePromise.set(stateValue.modify (f))
     }
 
+    
+    private var editButton:ImageButton? = nil
+    private var doneButton:TitleButton? = nil
+
+    override func requestUpdateRightBar() {
+        editButton?.style = navigationButtonStyle
+        editButton?.set(image: theme.icons.chatActions, for: .Normal)
+        editButton?.set(image: theme.icons.chatActionsActive, for: .Highlight)
+
+        
+        editButton?.setFrameSize(70, 50)
+        editButton?.center()
+        doneButton?.set(color: theme.colors.accent, for: .Normal)
+        doneButton?.style = navigationButtonStyle
+    }
+    
     override func getRightBarViewOnce() -> BarView {
-        if !isArchived {
-            let bar = ImageBarView(controller: self, theme.icons.chatActions)
-            bar.button.contextMenu = { [weak self] in
-                let menu = ContextMenu()
+        let back = BarView(70, controller: self) //MajorBackNavigationBar(self, account: account, excludePeerId: peerId)
+        
+        let editButton = ImageButton()
+       // editButton.disableActions()
+        back.addSubview(editButton)
+        
+        self.editButton = editButton
+//
+        let doneButton = TitleButton()
+      //  doneButton.disableActions()
+        doneButton.set(font: .medium(.text), for: .Normal)
+        doneButton.set(text: strings().navigationDone, for: .Normal)
+        
+        
+        _ = doneButton.sizeToFit()
+        back.addSubview(doneButton)
+        doneButton.center()
+        
+        self.doneButton = doneButton
+
+        doneButton.set(handler: { [weak self] _ in
+            self?.toggleSelection()
+        }, for: .Click)
+        
+        doneButton.isHidden = true
+        
+        let context = self.context
+        let isArchived = self.isArchived
+        
+        editButton.contextMenu = { [weak self] in
+            
+            let menu = ContextMenu()
+            if !isArchived {
                 menu.addItem(ContextMenuItem("Archive", handler: {
                     self?.openArchive()
                 }, itemImage: MenuAnimation.menu_archive.value))
-                return menu
             }
-            return bar
-        } else {
-            return super.getRightBarViewOnce()
+            let selecting = self?.stateValue.with { $0.selected != nil } == true
+            menu.addItem(ContextMenuItem(selecting ? "Done" : "Select", handler: {
+                self?.toggleSelection()
+            }, itemImage: MenuAnimation.menu_select_multiple.value))
+
+            return menu
         }
+        requestUpdateRightBar()
+        return back
+    }
+
+    
+    private func toggleSelection() {
+        
+        let button = self.rightBarView as? TextButtonBarView
+        
+        
+        updateState { current in
+            var current = current
+            if current.selected == nil {
+                current.selected = []
+            } else {
+                current.selected = nil
+            }
+            return current
+        }
+        
+        button?.set(text: stateValue.with { $0.selected != nil } ? "Done" : "Select", for: .Normal)
     }
     
     private func openArchive() {
@@ -285,6 +358,21 @@ final class StoryMediaController : TableViewController {
             if let list = self?.listContext {
                 StoryModalController.ShowPeerStory(context: context, listContext: list, peerId: peerId, initialId: initialId)
             }
+        }, toggleSelected: { [weak self] storyId in
+            self?.updateState { current in
+                var current = current
+                if var selected = current.selected {
+                    if selected.contains(storyId) {
+                        selected.remove(storyId)
+                    } else {
+                        selected.insert(storyId)
+                    }
+                    current.selected = selected
+                } else {
+                    current.selected = Set([storyId])
+                }
+                return current
+            }
         }, showArchive: { [weak self] in
             self?.openArchive()
         })
@@ -299,21 +387,26 @@ final class StoryMediaController : TableViewController {
         }))
 
 
-        let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
-            return entries(state, arguments: arguments)
+        let signal: Signal<([Entry], State), NoError> = statePromise.get() |> deliverOnPrepareQueue |> map { state in
+            return (entries(state, arguments: arguments), state)
         }
 
         let previous: Atomic<[AppearanceWrapperEntry<Entry>]> = Atomic(value: [])
         let first = Atomic(value: true)
 
-        let transition: Signal<TableUpdateTransition, NoError> = combineLatest(signal, appearanceSignal) |> map { entries, appearance -> TableUpdateTransition in
-            let entries = entries.map { AppearanceWrapperEntry(entry: $0, appearance: appearance)}
-            return prepareTransition(left: previous.swap(entries), right: entries, animated: !first.swap(false), initialSize: initialSize.with { $0 }, arguments: arguments)
+        let transition: Signal<(TableUpdateTransition, State), NoError> = combineLatest(signal, appearanceSignal) |> map { values, appearance -> (TableUpdateTransition, State) in
+            let entries = values.0.map { AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            return (prepareTransition(left: previous.swap(entries), right: entries, animated: !first.swap(false), initialSize: initialSize.with { $0 }, arguments: arguments), values.1)
         } |> deliverOnMainQueue
 
-        actionsDisposable.add(transition.start(next: { [weak self] transition in
+        actionsDisposable.add(transition.start(next: { [weak self] (transition, state) in
             self?.genericView.merge(with: transition)
             self?.readyOnce()
+            
+            self?.doneButton?.isHidden = state.selected == nil
+            self?.editButton?.isHidden = state.selected != nil
+
+            
         }))
         
     }
