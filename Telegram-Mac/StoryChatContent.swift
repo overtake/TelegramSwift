@@ -892,7 +892,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 }
             }
             
-            if let item = item, case let .item(itemValue) = item, let media = itemValue.media, let peer {
+            if let item = item, case let .item(itemValue) = item, let media = itemValue.media, let peer = peer {
                 let mappedItem = EngineStoryItem(
                     id: itemValue.id,
                     timestamp: itemValue.timestamp,
