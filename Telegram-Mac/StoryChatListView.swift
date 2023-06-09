@@ -135,6 +135,7 @@ private final class StoryListChatListRowView: TableRowView {
 
         var entries:[StoryChatListEntry] = []
         var index: Int = 0
+        let isArchive = item.archive
         
         if let item = item.state.accountItem, item.storyCount > 0 {
             entries.append(.init(item: item, index: index, appearance: appAppearance))
@@ -143,6 +144,11 @@ private final class StoryListChatListRowView: TableRowView {
         
         for item in item.state.items {
             if item.storyCount > 0 {
+                if !isArchive {
+                    if item.peer._asPeer().storyArchived {
+                        continue
+                    }
+                }
                 entries.append(.init(item: item, index: index, appearance: appAppearance))
                 index += 1
             }
