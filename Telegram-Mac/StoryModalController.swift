@@ -2185,21 +2185,45 @@ final class StoryModalController : ModalViewController, Notifable {
             return self?.delete() ?? .invoked
         }, with: self, for: .Delete, priority: .modal)
         
+        
+        var timer: SwiftSignalKit.Timer?
+        var spaceIsLong = false
+        
         window?.set(handler: { [weak self] _ in
             guard self?.genericView.isInputFocused == false else {
                 return .rejected
             }
-            self?.interactions.update { current in
-                var current = current
-                if current.isPaused {
-                    current.isSpacePaused = false
-                } else {
-                    current.isSpacePaused = !current.isSpacePaused
+            if timer == nil {
+                self?.interactions.update { current in
+                    var current = current
+                    if current.isPaused {
+                        current.isSpacePaused = false
+                    } else {
+                        current.isSpacePaused = !current.isSpacePaused
+                    }
+                    return current
                 }
-                return current
+                timer = .init(timeout: 0.35, repeat: false, completion: {
+                    spaceIsLong = true
+                }, queue: .mainQueue())
+                
+                timer?.start()
             }
             return .invoked
         }, with: self, for: .Space, priority: .modal)
+        
+        window?.keyUpHandler = { [weak self] event in
+            timer?.invalidate()
+            timer = nil
+            if spaceIsLong, self?.arguments?.interaction.presentation.isSpacePaused == true {
+                self?.interactions.update { current in
+                    var current = current
+                    current.isSpacePaused = false
+                    return current
+                }
+            }
+            spaceIsLong = false
+        }
         
         
         window?.set(handler: { [weak self] _ in
@@ -2213,6 +2237,8 @@ final class StoryModalController : ModalViewController, Notifable {
             }
             return .invoked
         }, with: self, for: .R, priority: .modal, modifierFlags: [.command])
+        
+       
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputTextView?.boldWord()
@@ -2259,6 +2285,7 @@ final class StoryModalController : ModalViewController, Notifable {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         window?.removeObserver(for: self)
+        window?.keyUpHandler = nil
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {
