@@ -910,6 +910,105 @@ class ShareMessageObject : ShareObject {
     }
 }
 
+
+
+class ShareStoryObject : ShareObject {
+    private let media:Media
+    private let link: String?
+    init(_ context: AccountContext, media: Media, link: String?) {
+        self.media = media
+        self.link = link
+        super.init(context)
+    }
+    
+    override var hasLink: Bool {
+        return link != nil
+    }
+    
+    override func shareLink() {
+        if let link = link {
+            copyToClipboard(link)
+        }
+    }
+
+    deinit {
+    }
+
+    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        
+        let context = self.context
+        var signals: [Signal<[MessageId?], NoError>] = []
+        let attrs:(PeerId)->[MessageAttribute] = { [weak self] peerId in
+            return self?.attributes(peerId) ?? []
+        }
+        let date = self.scheduleDate
+        let withoutSound = self.withoutSound
+        let threadIds = self.threadIds
+        let media = self.media
+        for peerId in peerIds {
+            let viewSignal: Signal<(Peer, PeerId?), NoError> = combineLatest(context.account.postbox.loadedPeerWithId(peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox))
+            |> take(1)
+            |> map { peer, cachedData in
+                if let cachedData = cachedData as? CachedChannelData {
+                    return (peer, cachedData.sendAsPeerId)
+                } else {
+                    return (peer, nil)
+                }
+            }
+            
+            let threadId = threadIds[peerId] ?? threadId
+            
+            signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
+                
+                let forward: Signal<[MessageId?], NoError> = Sender.enqueue(media: media, context: context, peerId: peerId, replyId: threadId , silent: withoutSound, atDate: date)
+                var caption: Signal<[MessageId?], NoError>?
+                if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
+                    let parsingUrlType: ParsingType
+                    if peerId.namespace != Namespaces.Peer.SecretChat {
+                        parsingUrlType = [.Hashtags]
+                    } else {
+                        parsingUrlType = [.Links, .Hashtags]
+                    }
+                                    
+                    var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
+                    attributes += attrs(peerId)
+                    if let sendAs = sendAs {
+                        attributes.append(SendAsMessageAttribute(peerId: sendAs))
+                    }
+                    if withoutSound {
+                        attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+                    }
+                    if let date = date {
+                        attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+                    }
+                    caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, replyToMessageId: threadId, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
+                }
+                if let caption = caption {
+                    return caption |> then(forward)
+                } else {
+                    return forward
+                }
+            })
+        }
+        return combineLatest(signals)
+        |> castError(String.self)
+        |> ignoreValues
+    }
+    
+    override func possibilityPerformTo(_ peer:Peer) -> Bool {
+        if peer.isSecretChat {
+            return false
+        } else if !peer.canSendMessage(false) {
+            return false
+        } else if let peer = peer as? TelegramChannel {
+            if peer.hasBannedRights(.banSendMedia) {
+                return false
+            }
+        }
+        return true
+    }
+}
+
 final class ForwardMessagesObject : ShareObject {
     fileprivate let messages: [Message]
     

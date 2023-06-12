@@ -349,6 +349,17 @@ class ChatMediaItem: ChatRowItem {
             case .full(let media):
                 self.media = media
             }
+        } else if let media = message.media[0] as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
+            switch story {
+            case let .item(item):
+                if let media = item.media {
+                    self.media = media
+                } else {
+                    self.media = media
+                }
+            case .placeholder:
+                self.media = media
+            }
         } else {
             self.media = message.media[0]
         }
@@ -368,20 +379,23 @@ class ChatMediaItem: ChatRowItem {
         let parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
             guard let `self` = self else {return}
             
-            var type:GalleryAppearType = .history
-            if let parameters = self.parameters as? ChatMediaGalleryParameters, parameters.isWebpage {
-                type = .alone
-            } else if message.containsSecretMedia {
-                type = .secret
+            if let media = message.media.first as? TelegramMediaStory {
+                self.chatInteraction.openStory(message.id, media.storyId)
+            } else {
+                var type:GalleryAppearType = .history
+                if let parameters = self.parameters as? ChatMediaGalleryParameters, parameters.isWebpage {
+                    type = .alone
+                } else if message.containsSecretMedia {
+                    type = .secret
+                }
+                if self.chatInteraction.mode.isThreadMode, self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
+                    type = .messages([message])
+                }
+                showChatGallery(context: context, message: message, self.table, self.parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
             }
-            if self.chatInteraction.mode.isThreadMode, self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
-                type = .messages([message])
-            }
-            showChatGallery(context: context, message: message, self.table, self.parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
-            
-            }, showMessage: { [weak self] message in
-                self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia, isRevealed: entry.isRevealed)
+        }, showMessage: { [weak self] message in
+            self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
+        }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia, isRevealed: entry.isRevealed)
         
         self.parameters = parameters
         
@@ -817,6 +831,10 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
         contentNode.addAccesoryOnCopiedView(view: view)
     }
 
+    
+    override var storyControl: NSView? {
+        return self.contentNode
+    }
 }
 
 

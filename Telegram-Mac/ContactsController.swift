@@ -152,8 +152,8 @@ private func entriesForView(_ view: EngineContactList, storyList: EngineStorySub
 
 private final class ContactsArguments {
     let addContact:()->Void
-    let openStory:(StoryInitialIndex?)->Void
-    init(addContact:@escaping()->Void, openStory:@escaping(StoryInitialIndex?)->Void) {
+    let openStory:(StoryInitialIndex?, Bool)->Void
+    init(addContact:@escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool)->Void) {
         self.addContact = addContact
         self.openStory = openStory
     }
@@ -175,7 +175,9 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right], highlightVerified: true, story: story, openStory: arguments.openStory)
+                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right], highlightVerified: true, story: story, openStory: { initialId in
+                    arguments.openStory(initialId, true)
+                })
             case .addContact:
                 item = AddContactTableItem(initialSize, stableId: entry.stableId, addContact: {
                     arguments.addContact()
@@ -277,8 +279,8 @@ class ContactsController: PeersListController {
         
         let arguments = ContactsArguments(addContact: {
             showModal(with: AddContactModalController(context), for: context.window)
-        }, openStory: { initialId in
-            StoryModalController.ShowStories(context: context, includeHidden: true, initialId: initialId)
+        }, openStory: { initialId, singlePeer in
+            StoryModalController.ShowStories(context: context, includeHidden: true, initialId: initialId, singlePeer: singlePeer)
         })
         
         

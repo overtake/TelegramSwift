@@ -429,6 +429,9 @@ class PeerInfoHeadItem: GeneralRowItem {
                 let maxActionSize: NSSize = items.max(by: { $0.size.height < $1.size.height })!.size
                 height += maxActionSize.height + insets.top
             }
+            if self.threadId != nil {
+                height += 40
+            }
         } else {
             height = photoDimension + insets.top + insets.bottom
         }

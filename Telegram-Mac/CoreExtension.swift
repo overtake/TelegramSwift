@@ -633,6 +633,13 @@ public extension Message {
             default:
                 break
             }
+        } else if let media = self.media.first as? TelegramMediaStory, let story = associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
+            switch story {
+            case let .item(item):
+                return item.media
+            default:
+                return media
+            }
         }
         return media.first
     }

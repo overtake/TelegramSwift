@@ -46,6 +46,7 @@
 		271824512A08C60400AFBD4C /* StoryChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271824502A08C60400AFBD4C /* StoryChatListView.swift */; };
 		2718FF8227BFB28900196BC4 /* login_airplane.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2718FF8127BFB28900196BC4 /* login_airplane.tgs */; };
 		2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718FF8727C3A11F00196BC4 /* DownloadsController.swift */; };
+		271999D92A372549009A3CC7 /* ChatStoryRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */; };
 		2719D8012A139B9D00081079 /* StoryRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D8002A139B9D00081079 /* StoryRecordingView.swift */; };
 		2719D80D2A16013F00081079 /* StoryMediaController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D80C2A16013F00081079 /* StoryMediaController.swift */; };
 		2719D8102A16048D00081079 /* StoryMonthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2719D80F2A16048D00081079 /* StoryMonthRowItem.swift */; };
@@ -1497,6 +1498,7 @@
 		2718FF8727C3A11F00196BC4 /* DownloadsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsController.swift; sourceTree = "<group>"; };
 		2718FF8B27C3CCC700196BC4 /* FetchManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FetchManager; path = packages/FetchManager; sourceTree = "<group>"; };
 		2719655325EEB89E00FC9DE5 /* GroupCallRecorderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallRecorderRowItem.swift; sourceTree = "<group>"; };
+		271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStoryRowItem.swift; sourceTree = "<group>"; };
 		271999E62683C04B000DE2B7 /* MetalPerformanceShaders.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalPerformanceShaders.framework; path = System/Library/Frameworks/MetalPerformanceShaders.framework; sourceTree = SDKROOT; };
 		2719D8002A139B9D00081079 /* StoryRecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryRecordingView.swift; sourceTree = "<group>"; };
 		2719D80C2A16013F00081079 /* StoryMediaController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryMediaController.swift; sourceTree = "<group>"; };
@@ -4240,6 +4242,7 @@
 				D0D139242524A31E005FCF35 /* RepliesHeaderRowItem.swift */,
 				2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */,
 				2733670C2760F3010027441E /* ChatMessageMenuItems.swift */,
+				271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -6941,6 +6944,7 @@
 				C225524B1F7BE7000007944D /* VideoRecorderModalController.swift in Sources */,
 				A778DC3023C8985300DD307B /* SoundEffects.swift in Sources */,
 				C2B648901EB25B1700BA574B /* MediaResources.swift in Sources */,
+				271999D92A372549009A3CC7 /* ChatStoryRowItem.swift in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				27E7E4A5270F0F9A00CF3A24 /* NetworkStatusManager.swift in Sources */,

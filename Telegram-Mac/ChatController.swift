@@ -3445,7 +3445,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.openStory = { [weak self ] messageId, storyId in
             StoryModalController.ShowSingleStory(context: context, storyId: storyId, initialId: .init(peerId: peerId, id: nil, messageId: messageId, takeControl: { peerId, messageId, storyId in
-                return self?.findStoryControl(messageId, storyId)
+                return self?.findStoryControl(messageId, storyId, peerId)
             }))
         }
         
@@ -3992,7 +3992,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.openStories = { [weak self] f in
             let state = self?.uiState.with ({ $0.storyState })
             if let _ = state {
-                StoryModalController.ShowStories(context: context, includeHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: nil, takeControl: f))
+                StoryModalController.ShowStories(context: context, includeHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: nil, takeControl: f), singlePeer: true)
             }
         }
         
@@ -7756,20 +7756,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.themeSelector?.close(true)
     }
     
-    func findStoryControl(_ messageId: MessageId?, _ storyId: Int32?) -> NSView? {
+    func findStoryControl(_ messageId: MessageId?, _ storyId: Int32?, _ peerId: PeerId) -> NSView? {
         var control: NSView? = nil
         genericView.tableView.enumerateVisibleItems(with: { item in
-            if let item = item as? ChatRowItem {
-                if let attr = item.message?.storyAttribute, item.message?.id == messageId {
+            guard let storyId = storyId else {
+                return false
+            }
+            if let item = item as? ChatRowItem, messageId == item.message?.id || messageId == nil {
+                if let attr = item.message?.storyAttribute {
                     if attr.storyId.id == storyId {
                         if let view = item.view as? ChatRowView {
                             control = view.storyControl
-                            return false
                         }
                     }
+                } else if let media = item.message?.media.first as? TelegramMediaStory, media.storyId == .init(peerId: peerId, id: storyId) {
+                    control = (item.view as? ChatRowView)?.storyControl
                 }
             }
-            return true
+            return control == nil
         })
         return control
     }

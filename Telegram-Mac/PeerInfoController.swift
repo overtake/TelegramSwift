@@ -75,7 +75,7 @@ class PeerInfoArguments {
     }
     
     func openStory(_ initialId: StoryInitialIndex?) {
-        StoryModalController.ShowStories(context: context, includeHidden: true, initialId: initialId)
+        StoryModalController.ShowStories(context: context, includeHidden: true, initialId: initialId, singlePeer: true)
     }
     
     func toggleNotifications(_ currentlyMuted: Bool) {

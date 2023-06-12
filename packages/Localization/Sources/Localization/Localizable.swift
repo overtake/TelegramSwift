@@ -2101,6 +2101,10 @@ public final class L10n {
   public static func chatBubblesForwardedFrom(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom", p1)
   }
+  /// Forwarded Story From: [%@]()
+  public static func chatBubblesForwardedStory(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Bubbles.ForwardedStory", p1)
+  }
   /// Incoming Call
   public static var chatCallIncoming: String  { return L10n.tr("Localizable", "Chat.Call.Incoming") }
   /// Outgoing Call
@@ -2635,6 +2639,8 @@ public final class L10n {
   }
   /// Contact
   public static var chatListContact: String  { return L10n.tr("Localizable", "Chat.List.Contact") }
+  /// Forwarded Story
+  public static var chatListForwardedStory: String  { return L10n.tr("Localizable", "Chat.List.ForwardedStory") }
   /// GIF
   public static var chatListGIF: String  { return L10n.tr("Localizable", "Chat.List.GIF") }
   /// Video message
