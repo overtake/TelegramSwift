@@ -715,8 +715,8 @@ final class StoryListView : Control, Notifable {
                     }
                 })
                 
-                self.inputView.setArguments(self.arguments, groupId: entry.peer.id)
                 self.inputView.update(entry.item, animated: false)
+                self.inputView.setArguments(self.arguments, groupId: entry.peer.id)
             }
             
             if let current = self.current, !current.isEqual(to: entry.item.id.base as? Int32) {

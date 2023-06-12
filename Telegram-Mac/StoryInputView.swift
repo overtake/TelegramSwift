@@ -559,7 +559,9 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         if let attributedString = attributedString, !attributedString.string.isEmpty {
             self.textView.setAttributedString(attributedString, animated: false)
         }
-        
+        if let arguments = arguments {
+            self.updateState(arguments.interaction.presentation, animated: false)
+        }
     }
     
     
