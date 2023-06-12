@@ -520,6 +520,10 @@ final class StoryListView : Control, Notifable {
             }
         }
         
+        if value.inputRecording != oldValue.inputRecording {
+            self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        }
+        
         if let groupId = self.entry?.peer.id {
             let curInput = value.inputs[groupId]
             let prevInput = oldValue.inputs[groupId]
@@ -557,6 +561,7 @@ final class StoryListView : Control, Notifable {
         }
         
 
+   
         
         if value.mouseDown != oldValue.mouseDown {
             self.controls.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
@@ -711,6 +716,7 @@ final class StoryListView : Control, Notifable {
                 })
                 
                 self.inputView.setArguments(self.arguments, groupId: entry.peer.id)
+                self.inputView.update(entry.item, animated: false)
             }
             
             if let current = self.current, !current.isEqual(to: entry.item.id.base as? Int32) {

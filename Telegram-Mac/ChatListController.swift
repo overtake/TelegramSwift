@@ -25,8 +25,8 @@ private final class Arguments {
     let hideDeprecatedSystem:()->Void
     let applySharedFolderUpdates:(ChatFolderUpdates)->Void
     let hideSharedFolderUpdates:()->Void
-    let openStory:(StoryInitialIndex?)->Void
-    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?)->Void) {
+    let openStory:(StoryInitialIndex?, Bool)->Void
+    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool)->Void) {
         self.context = context
         self.setupFilter = setupFilter
         self.openFilterSettings = openFilterSettings
@@ -556,8 +556,8 @@ class ChatListController : PeersListController {
             if let filter = self?.filterValue?.filter {
                 _ = context.engine.peers.hideChatFolderUpdates(folderId: filter.id).start()
             }
-        }, openStory: { initialId in
-            StoryModalController.ShowStories(context: context, includeHidden: false, initialId: initialId)
+        }, openStory: { initialId, singlePeer in
+            StoryModalController.ShowStories(context: context, includeHidden: false, initialId: initialId, singlePeer: singlePeer)
         })
         
         

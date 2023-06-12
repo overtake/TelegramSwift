@@ -2044,6 +2044,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.photo._change(pos: NSMakePoint(3, 3), animated: animated)
                  self.photoVideoView?._change(pos: NSMakePoint(3, 3), animated: animated)
                  self.archivedPhoto?._change(pos: NSMakePoint(3, 3), animated: animated)
+                 
+                 
+                 if let photoVideoView = photoVideoView {
+                     photoVideoView.layer?.cornerRadius = item.isForum ? 10 : photoVideoView.frame.height / 2
+                 }
+
              } else if let view = self.storyStateView {
                  performSubviewRemoval(view, animated: animated, scale: true)
                  self.storyStateView = nil
@@ -2055,6 +2061,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.photo._change(pos: NSMakePoint(0, 0), animated: animated)
                  self.photoVideoView?._change(pos: NSMakePoint(0, 0), animated: animated)
                  self.archivedPhoto?._change(pos: NSMakePoint(0, 0), animated: animated)
+                 
+                 if let photoVideoView = photoVideoView {
+                     photoVideoView.layer?.cornerRadius = item.isForum ? 10 : photoVideoView.frame.height / 2
+                 }
+                 
              }
          }
         

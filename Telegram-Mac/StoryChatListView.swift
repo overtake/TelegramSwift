@@ -42,9 +42,9 @@ final class StoryListChatListRowItem : TableRowItem {
     private let _stableId: AnyHashable
     let context: AccountContext
     let state: EngineStorySubscriptions
-    let open: (StoryInitialIndex?)->Void
+    let open: (StoryInitialIndex?, Bool)->Void
     let archive: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, archive: Bool, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, archive: Bool, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?, Bool)->Void) {
         self._stableId = stableId
         self.context = context
         self.state = state
@@ -92,7 +92,7 @@ private final class StoryListChatListRowView: TableRowView {
             case .bottom:
                 if let item = self?.item as? StoryListChatListRowItem {
                     if let _ = item.state.hasMoreToken {
-                        if item.archive {
+                        if !item.archive {
                             item.context.account.filteredStorySubscriptionsContext?.loadMore()
                         } else {
                             item.context.account.allStorySubscriptionsContext?.loadMore()
@@ -164,12 +164,14 @@ private final class StoryListChatListRowView: TableRowView {
         let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: true, grouping: false, animateVisibleOnly: false)
 
         self.tableView.merge(with: transition)
+        
+        CATransaction.commit()
 
         self.current = entries
         
         if tableView.documentSize.height < tableView.frame.width * 2 {
             if let _ = item.state.hasMoreToken {
-                if archive {
+                if !archive {
                     item.context.account.filteredStorySubscriptionsContext?.loadMore()
                 } else {
                     item.context.account.allStorySubscriptionsContext?.loadMore()
@@ -177,7 +179,6 @@ private final class StoryListChatListRowView: TableRowView {
             }
         }
 
-        CATransaction.commit()
     }
 }
 
@@ -185,8 +186,8 @@ private final class StoryListEntryRowItem : TableRowItem {
     let entry: StoryChatListEntry
     let context: AccountContext
     let archive: Bool
-    let open:(StoryInitialIndex?)->Void
-    init(_ initialSize: NSSize, entry: StoryChatListEntry, context: AccountContext, archive: Bool, open: @escaping(StoryInitialIndex?)->Void) {
+    let open:(StoryInitialIndex?, Bool)->Void
+    init(_ initialSize: NSSize, entry: StoryChatListEntry, context: AccountContext, archive: Bool, open: @escaping(StoryInitialIndex?, Bool)->Void) {
         self.entry = entry
         self.context = context
         self.open = open
@@ -239,7 +240,7 @@ private final class StoryListEntryRowItem : TableRowItem {
                 return view == nil
             })
             return view
-        }))
+        }), false)
     }
     
     private func takeControl(_ peerId: PeerId, _ storyId: Int32?) -> NSView? {

@@ -352,7 +352,6 @@ final class StoryMediaController : TableViewController {
 
                 
         self.setCenterTitle(isArchived ? "Archive" : peerId == context.peerId ? "My Stories" : "")
-
         
         let arguments = Arguments(context: context, standalone: standalone, openStory: { [weak self] initialId in
             if let list = self?.listContext {
@@ -384,6 +383,11 @@ final class StoryMediaController : TableViewController {
                 current.state = state
                 return current
             }
+            if state.totalCount > 0 {
+                self?.setCenterStatus("\(state.totalCount) stories")
+            } else {
+                self?.setCenterStatus(nil)
+            }
         }))
 
 
@@ -411,10 +415,20 @@ final class StoryMediaController : TableViewController {
         
     }
     
+    override func escapeKeyAction() -> KeyHandlerResult {
+        let selecting = self.stateValue.with({ $0.selected != nil })
+        if selecting {
+            self.toggleSelection()
+            return .invoked
+        } else {
+            return super.escapeKeyAction()
+        }
+    }
+    
     private var perRowCount: Int {
         var rowCount:Int = 4
         var perWidth: CGFloat = 0
-        let blockWidth = min(600, atomicSize.with { $0.width })
+        let blockWidth = min(600, atomicSize.with { $0.width }) - (standalone ? 60 : 0)
         while true {
             let maximum = blockWidth - CGFloat(rowCount * 2)
             perWidth = maximum / CGFloat(rowCount)

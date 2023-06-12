@@ -1090,6 +1090,12 @@ private final class StoryViewController: Control, Notifable {
             self.closeReactions()
             return .invoked
         }
+        guard let arguments = self.arguments else {
+            return .invokeNext
+        }
+        if arguments.interaction.presentation.hasPopover {
+            return .invokeNext
+        }
         if isInputFocused {
             return .invokeNext
         }
@@ -1110,6 +1116,12 @@ private final class StoryViewController: Control, Notifable {
         return .invoked
     }
     func next() -> KeyHandlerResult {
+        guard let arguments = self.arguments else {
+            return .invokeNext
+        }
+        if arguments.interaction.presentation.hasPopover {
+            return .invokeNext
+        }
         if self.reactions != nil {
             self.closeReactions()
             return .invoked
@@ -1182,7 +1194,6 @@ private final class StoryViewController: Control, Notifable {
 
             let storyView = StoryListView(frame: bounds)
             storyView.setArguments(self.arguments)
-
             storyView.update(context: context, entry: nextGroup)
 
             let previous = self.current
@@ -1895,11 +1906,14 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }, share: { [weak self] story in
             if let peerId = story.peerId, story.sharable {
+                
+                let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id))
+                
                 let signal = showModalProgress(signal: context.engine.messages.exportStoryLink(peerId: peerId, id: story.storyItem.id), for: context.window)
                 
                 _ = signal.start(next: { [weak self] link in
-                    if let link = link {
-                        showModal(with: ShareModalController(ShareLinkObject(context, link: link), presentation: storyTheme), for: context.window)
+                    if let _ = link {
+                        showModal(with: ShareModalController(ShareStoryObject(context, media: media, link: link), presentation: storyTheme), for: context.window)
                     } else {
                         self?.genericView.showShareError()
                     }
@@ -2340,8 +2354,8 @@ final class StoryModalController : ModalViewController, Notifable {
         return true
     }
     
-    static func ShowStories(context: AccountContext, includeHidden: Bool, initialId: StoryInitialIndex?) {
-        let storyContent = StoryContentContextImpl(context: context, includeHidden: includeHidden, focusedPeerId: initialId?.peerId)
+    static func ShowStories(context: AccountContext, includeHidden: Bool, initialId: StoryInitialIndex?, singlePeer: Bool = false) {
+        let storyContent = StoryContentContextImpl(context: context, includeHidden: includeHidden, focusedPeerId: initialId?.peerId, singlePeer: singlePeer)
         let _ = (storyContent.state
         |> filter { $0.slice != nil }
         |> take(1)

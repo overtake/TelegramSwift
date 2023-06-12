@@ -470,7 +470,7 @@ class ChatRowItem: TableRowItem {
         var top:CGFloat = defaultContentTopOffset
         
         if !isBubbled, forwardHeader == nil {
-            top -= topInset
+           // top -= topInset
         } else if isBubbled {
             top -= topInset
         }
@@ -1731,8 +1731,6 @@ class ChatRowItem: TableRowItem {
                 var accept:Bool = !isHasSource && message.id.peerId != context.peerId
                 
                 if let media = message.anyMedia as? TelegramMediaFile {
-                    
-                  
                     for attr in media.attributes {
                         switch attr {
                         case let .Audio(isVoice, _, _, _, _):
@@ -1869,6 +1867,33 @@ class ChatRowItem: TableRowItem {
                     forwardNameLayout = TextViewLayout(attr, maximumNumberOfLines: renderType == .bubble ? 2 : 1, truncationType: .end, alwaysStaticItems: true)
                     forwardNameLayout?.interactions = globalLinkExecutor
                 }
+            }
+            
+            if let story = message.media.first as? TelegramMediaStory, let author = message.peers[story.storyId.peerId] {
+                let forwardNameColor: NSColor
+                if isForwardScam {
+                    forwardNameColor = theme.chat.redUI(isIncoming, object.renderType == .bubble)
+                } else if !hasBubble {
+                    forwardNameColor = presentation.colors.grayText
+                } else if isIncoming {
+                    forwardNameColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
+                } else {
+                    forwardNameColor = presentation.chat.grayText(isIncoming, object.renderType == .bubble)
+                }
+                
+                var attr: NSMutableAttributedString = NSMutableAttributedString()
+                let fullName = author.compactDisplayTitle
+                
+                let text = strings().chatBubblesForwardedStory(fullName)
+                
+                let newAttr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: forwardNameColor), link: MarkdownAttributeSet(font: .medium(.short), textColor: forwardNameColor), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.peerInfo(link: "", peerId: author.id, action: nil, openChat: false, postId: nil, callback:chatInteraction.openInfo))
+                }))
+                attr = newAttr.mutableCopy() as! NSMutableAttributedString
+
+                forwardNameLayout = TextViewLayout(attr, maximumNumberOfLines: renderType == .bubble ? 2 : 1, truncationType: .end, alwaysStaticItems: true)
+                forwardNameLayout?.interactions = globalLinkExecutor
+
             }
             
             let fillName: Bool
@@ -2226,6 +2251,8 @@ class ChatRowItem: TableRowItem {
                         return ChatAnimatedStickerItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                     }
                     return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
+                } else if message.media[0] is TelegramMediaStory {
+                    return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaMap {
                     return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaContact {

@@ -170,7 +170,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         guard let arguments = self.arguments else {
             return
         }
-        self.action.update(state: !isFirstResponder ? .share : textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
+        self.action.update(state: !isFirstResponder && self.story?.sharable == true ? .share : textView.string().isEmpty ? .empty(isVoice: state.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
         
         self.updateInputState(animated: animated)
         self.updateRecoringState(state, animated: animated)
@@ -408,7 +408,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 textView.inputView.isEditable = true
             }
         }
-        self.action.update(state: !isFirstResponder ? .share : textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
+        self.action.update(state: !isFirstResponder && self.story?.sharable == true ? .share : textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
         self.updateInputSize(size: size, animated: animated)
         
     }
