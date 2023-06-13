@@ -92,7 +92,8 @@ final class StoryMonthRowItem : GeneralRowItem {
     fileprivate let selected: Set<StoryId>?
     fileprivate let openStory:(StoryInitialIndex?)->Void
     fileprivate let toggleSelected: (StoryId)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void, toggleSelected: @escaping(StoryId)->Void) {
+    fileprivate let menuItems: (EngineStoryItem)->[ContextMenuItem]
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, standalone: Bool, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, viewType: GeneralViewType, openStory:@escaping(StoryInitialIndex?)->Void, toggleSelected: @escaping(StoryId)->Void, menuItems:@escaping(EngineStoryItem)->[ContextMenuItem]) {
         self.items = items
         self.selected = selected
         self.standalone = standalone
@@ -101,7 +102,17 @@ final class StoryMonthRowItem : GeneralRowItem {
         self.peerId = peerId
         self.openStory = openStory
         self.toggleSelected = toggleSelected
+        self.menuItems = menuItems
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 30, right: 30) : NSEdgeInsets())
+    }
+    
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        for item in layoutItems {
+            if NSPointInRect(location, item.frame) {
+                return .single(self.menuItems(item.item))
+            }
+        }
+        return super.menuItems(in: location)
     }
     
     func openPeerStory(peerId: PeerId, storyId: Int32, _ takeControl: @escaping(PeerId, MessageId?, Int32?)->NSView?) {

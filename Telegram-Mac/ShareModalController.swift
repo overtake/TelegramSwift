@@ -914,20 +914,27 @@ class ShareMessageObject : ShareObject {
 
 class ShareStoryObject : ShareObject {
     private let media:Media
-    private let link: String?
-    init(_ context: AccountContext, media: Media, link: String?) {
+    private let _hasLink: Bool
+    private let storyId: StoryId
+    init(_ context: AccountContext, media: Media, hasLink: Bool, storyId: StoryId) {
         self.media = media
-        self.link = link
+        self._hasLink = hasLink
+        self.storyId = storyId
         super.init(context)
     }
     
     override var hasLink: Bool {
-        return link != nil
+        return _hasLink
     }
     
     override func shareLink() {
-        if let link = link {
-            copyToClipboard(link)
+        if _hasLink {
+            let signal = context.engine.messages.exportStoryLink(peerId: storyId.peerId, id: storyId.id) |> deliverOnMainQueue
+            _ = signal.start(next: { link in
+                if let link = link {
+                    copyToClipboard(link)
+                }
+            })
         }
     }
 

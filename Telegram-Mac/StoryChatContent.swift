@@ -31,6 +31,12 @@ final class StoryContentItem {
     var sharable: Bool {
         return storyItem.isPublic
     }
+    var canCopyLink: Bool {
+        if peer?.addressName != nil {
+            return storyItem.isPublic
+        }
+        return false
+    }
 
     init(
         id: AnyHashable,
