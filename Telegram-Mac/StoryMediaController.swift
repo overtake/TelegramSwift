@@ -14,6 +14,7 @@ import Postbox
 
 
 private enum Entry : TableItemListNodeEntry {
+    case headerText(index: MessageIndex, stableId: MessageIndex, text: String, viewType: GeneralViewType)
     case month(index: MessageIndex, stableId: MessageIndex, peerId: PeerId, peerReference: PeerReference, items: [EngineStoryItem], selected: Set<StoryId>?, viewType: GeneralViewType)
     case date(index: MessageIndex)
     case section(index: MessageIndex)
@@ -24,6 +25,8 @@ private enum Entry : TableItemListNodeEntry {
 
     func item(_ arguments: Arguments, initialSize: NSSize) -> TableRowItem {
         switch self {
+        case let .headerText(_, stableId, text, viewType):
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: viewType, text: text, font: .normal(.text))
         case let .month(_, stableId, peerId, peerReference, items, selected, viewType):
             return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
                 var items: [ContextMenuItem] = []
@@ -67,6 +70,8 @@ private enum Entry : TableItemListNodeEntry {
     var index: MessageIndex {
         switch self {
         case let .month(index, _, _, _, _, _, _):
+            return index
+        case let .headerText(index, _, _, _):
             return index
         case let .emptySelf(index, _):
             return index
@@ -122,13 +127,13 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
     if let state = state.state, !state.items.isEmpty, let peerReference = state.peerReference {
         let timeDifference = Int32(arguments.context.timeDifference)
         var temp:[EngineStoryItem] = []
+        var items = state.items.uniqueElements
+        for i in 0 ..< items.count {
 
-        for i in 0 ..< state.items.count {
-
-            let item = state.items[i]
+            let item = items[i]
             let peerId = peerReference.id
             temp.append(item)
-            let next = i < state.items.count - 1 ? state.items[i + 1] : nil
+            let next = i < items.count - 1 ? items[i + 1] : nil
             if let nextItem = next {
                 let dateId = mediaDateId(for: item.timestamp - timeDifference)
                 let nextDateId = mediaDateId(for: nextItem.timestamp - timeDifference)
@@ -170,7 +175,14 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
         }
 
         if standalone {
-            var index = MessageIndex.absoluteLowerBound()
+            var index = MessageIndex.absoluteUpperBound()
+            
+            if arguments.isArchive {
+                entries.insert(.section(index: index), at: 0)
+                index = index.globalPredecessor()
+                entries.insert(.headerText(index: index, stableId: index, text: strings().storyMediaArchiveText, viewType: .singleItem), at: 0)
+                index = index.globalPredecessor()
+            }
             entries.insert(.section(index: index), at: 0)
         }
 
@@ -209,9 +221,13 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
             updated.append(entry)
         case .section:
             updated.append(entry)
+        case .headerText:
+            updated.append(entry)
         }
     }
 
+ 
+    
     return updated
 }
 

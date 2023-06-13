@@ -562,8 +562,8 @@ final class StoryListView : Control, Notifable {
         
 
    
-        let isControlHid = value.mouseDown || value.isSpacePaused
-        let prevIsControlHid = oldValue.mouseDown || oldValue.isSpacePaused
+        let isControlHid = value.mouseDown //|| value.isSpacePaused
+        let prevIsControlHid = oldValue.mouseDown //|| oldValue.isSpacePaused
 
         if isControlHid != prevIsControlHid {
             self.controls.change(opacity: isControlHid ? 0 : 1, animated: animated)
