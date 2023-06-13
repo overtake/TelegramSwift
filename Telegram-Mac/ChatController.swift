@@ -7759,18 +7759,28 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     func findStoryControl(_ messageId: MessageId?, _ storyId: Int32?, _ peerId: PeerId) -> NSView? {
         var control: NSView? = nil
         genericView.tableView.enumerateVisibleItems(with: { item in
-            guard let storyId = storyId else {
+            guard let id = storyId else {
                 return false
             }
+            let storyId: StoryId = .init(peerId: peerId, id: id)
             if let item = item as? ChatRowItem, messageId == item.message?.id || messageId == nil {
                 if let attr = item.message?.storyAttribute {
-                    if attr.storyId.id == storyId {
+                    if attr.storyId == storyId {
                         if let view = item.view as? ChatRowView {
                             control = view.storyControl
                         }
                     }
-                } else if let media = item.message?.media.first as? TelegramMediaStory, media.storyId == .init(peerId: peerId, id: storyId) {
+                } else if let media = item.message?.media.first as? TelegramMediaStory, media.storyId == storyId {
                     control = (item.view as? ChatRowView)?.storyControl
+                } else if let media = item.message?.media.first as? TelegramMediaWebpage {
+                    switch media.content {
+                    case let .Loaded(content):
+                        if content.story?.storyId == storyId {
+                            control = (item.view as? ChatRowView)?.storyControl
+                        }
+                    default:
+                        break
+                    }
                 }
             }
             return control == nil

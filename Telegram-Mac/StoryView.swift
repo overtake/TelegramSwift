@@ -265,7 +265,9 @@ class StoryView : Control {
     
     static func makeView(for story: EngineStoryItem, peerId: PeerId, peer: Peer?, context: AccountContext, frame: NSRect) -> StoryView {
         let view: StoryView
-        if story.media._asMedia() is TelegramMediaImage {
+        if story.media._asMedia() is TelegramMediaUnsupported {
+            view = StoryUnsupportedView(frame: frame)
+        } else if story.media._asMedia() is TelegramMediaImage {
             view = StoryImageView(frame: frame)
         } else {
             view = StoryVideoView(frame: frame)
@@ -276,6 +278,43 @@ class StoryView : Control {
     }
 }
 
+
+class StoryUnsupportedView : StoryView {
+    private let textView = TextView()
+    private let bgView = View()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(bgView)
+        addSubview(textView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func update(context: AccountContext, peerId: PeerId, story: EngineStoryItem, peer: Peer?) {
+        super.update(context: context, peerId: peerId, story: story, peer: peer)
+        
+        bgView.backgroundColor = storyTheme.colors.listBackground
+        let attr = NSMutableAttributedString()
+        _ = attr.append(string: strings().storyMediaUnsupported, color: storyTheme.colors.text, font: .italic(.text))
+        attr.detectLinks(type: [.Links], context: context)
+        let layout = TextViewLayout(attr)
+        layout.measure(width: frame.width - 40)
+        layout.interactions = globalLinkExecutor
+        textView.update(layout)
+        
+        ready.set(true)
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        bgView.frame = bounds
+        textView.resize(frame.width - 40)
+        textView.center()
+    }
+}
 
 
 class StoryImageView : StoryView {

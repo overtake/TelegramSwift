@@ -31,13 +31,29 @@ class WPArticleLayout: WPLayout {
     private(set) var parameters:[ChatMediaLayoutParameters] = []
 
     init(with content: TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings, autoplayMedia: AutoplayMediaPreferences, theme: TelegramPresentationTheme, mayCopyText: Bool) {
+        
+        var content = content
+        
+        if let story = content.story, let media = parent.associatedStories[story.storyId]?.get(Stories.StoredItem.self), groupLayout == nil {
+            switch media {
+            case let .item(story):
+                if let image = story.media as? TelegramMediaImage {
+                    content = content.withUpdatedImage(image)
+                } else if let file = story.media as? TelegramMediaFile {
+                    content = content.withUpdatedFile(file)
+                }
+            default:
+                break
+            }
+        }
+        
+        
         if let duration = content.duration {
             self.durationAttributed = .initialize(string: String.durationTransformed(elapsed: duration), color: .white, font: .normal(.text))
         } else {
             durationAttributed = nil
         }
         
-        var content = content
         if content.type == "telegram_theme" {
             for attr in content.attributes {
                 switch attr {
@@ -109,6 +125,7 @@ class WPArticleLayout: WPLayout {
                 imageSize = dimensions
             }
         }
+       
         
         if let file = content.file, groupLayout == nil {
             if let dimensions = file.dimensions?.size {
@@ -217,7 +234,9 @@ class WPArticleLayout: WPLayout {
             
             if let imageSize = imageSize, isFullImageSize {
                 
-                if isTheme {
+                if content.story != nil {
+                    contrainedImageSize = imageSize.aspectFitted(NSMakeSize(maxw, maxw))
+                } else if isTheme {
                     contrainedImageSize = imageSize.fitted(NSMakeSize(maxw, maxw))
                 } else {
                     contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, maxw), maxw))

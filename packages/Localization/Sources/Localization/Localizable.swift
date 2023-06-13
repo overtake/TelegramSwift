@@ -4491,6 +4491,8 @@ public final class L10n {
   }
   /// Live stream started
   public static var chatListServiceVoiceChatStartedChannel1: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted.Channel1") }
+  /// Unsupported Story
+  public static var chatListStoryUnsupported: String  { return L10n.tr("Localizable", "ChatList.Story.Unsupported") }
   /// Archive
   public static var chatListSwipingArchive: String  { return L10n.tr("Localizable", "ChatList.Swiping.Archive") }
   /// Delete
@@ -7063,6 +7065,8 @@ public final class L10n {
   public static var markFake: String  { return L10n.tr("Localizable", "Mark.Fake") }
   /// SCAM
   public static var markScam: String  { return L10n.tr("Localizable", "Mark.Scam") }
+  /// Media Unsupported
+  public static var mediaCellUnsupported: String  { return L10n.tr("Localizable", "MediaCell.Unsupported") }
   /// Discard Changes
   public static var mediaSenderDiscardChangesHeader: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.Header") }
   /// Discard
@@ -11901,6 +11905,8 @@ public final class L10n {
   public static func storageUsageTelegramUsageTextPeer(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Text.Peer", p1)
   }
+  /// This story is not supported by your version of Telegram. Please update the app to the latest version.
+  public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }
   /// Suggest Frequent Contacts
   public static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }
   /// This will delete all data about the people you message frequently as well as the inline bots you are likely to use.

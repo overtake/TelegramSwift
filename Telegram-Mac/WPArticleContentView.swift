@@ -97,6 +97,8 @@ class WPArticleContentView: WPContentView {
                 showModal(with: WebpageModalController(context: layout.context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size), for: window)
             } else if layout.isGalleryAssemble {
                 showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
+            } else if layout.isStory {
+                layout.openStory()
             } else if let wallpaper = layout.wallpaper {
                 execute(inapp: wallpaper)
             } else if let link = layout.themeLink {
@@ -539,6 +541,10 @@ class WPArticleContentView: WPContentView {
             return groupedContentView.convert(point, from: nil)
         }
         return super.convertWindowPointToContent(point)
+    }
+    
+    override var mediaContentView: NSView? {
+        return self.imageView
     }
     
 }

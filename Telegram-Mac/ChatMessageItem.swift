@@ -549,6 +549,7 @@ class ChatMessageItem: ChatRowItem {
             if let webpage = media as? TelegramMediaWebpage {
                 switch webpage.content {
                 case let .Loaded(content):
+                    var content = content
                     var forceArticle: Bool = false
                     if let instantPage = content.instantPage {
                         if instantPage.blocks.count == 3 {
@@ -563,7 +564,21 @@ class ChatMessageItem: ChatRowItem {
                     if content.type == "telegram_background" {
                         forceArticle = true
                     }
-                    if content.file == nil || forceArticle {
+                    
+                    if let story = content.story, let media = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
+                        switch media {
+                        case let .item(story):
+                            if let image = story.media as? TelegramMediaImage {
+                                content = content.withUpdatedImage(image)
+                            } else if let file = story.media as? TelegramMediaFile {
+                                content = content.withUpdatedFile(file)
+                            }
+                        default:
+                            break
+                        }
+                    }
+                    
+                    if content.file == nil || forceArticle, content.story == nil {
                         webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
                     } else {
                         webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
@@ -577,11 +592,15 @@ class ChatMessageItem: ChatRowItem {
             
             
             (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in
-                if let webpage = message.anyMedia as? TelegramMediaWebpage {
+                if let webpage = message.media.first as? TelegramMediaWebpage {
                     switch webpage.content {
                     case let .Loaded(content):
                         if content.embedType == "iframe" && content.type != kBotInlineTypeGif, let url = content.embedUrl {
                             showModal(with: WebpageModalController(context: context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size, chatInteraction: self?.chatInteraction), for: context.window)
+                            return
+                        }
+                        if let story = content.story {
+                            self?.chatInteraction.openStory(message.id, story.storyId)
                             return
                         }
                     default:
