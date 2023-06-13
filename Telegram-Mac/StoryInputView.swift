@@ -386,12 +386,12 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         let maxSize = NSMakeSize(window.contentView!.frame.width - 100, window.contentView!.frame.height - 110)
         let supersize = StoryView.size.aspectFitted(maxSize)
         let size: NSSize
-        if self.arguments?.interaction.presentation.inputRecording != nil {
+        if arguments.interaction.presentation.inputRecording != nil {
             size = NSMakeSize(min(min(supersize.width + 60, window.frame.width - 20), StoryView.size.width + 80), self.textViewSize(self.textView).height + 16)
             textView.inputView.textContainer?.maximumNumberOfLines = 0
             textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
             textView.inputView.isSelectable = true
-            textView.inputView.isEditable = true
+            textView.inputView.isEditable = !arguments.interaction.presentation.inTransition
         } else {
             switch self.inputState {
             case .focus:
@@ -399,13 +399,13 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 textView.inputView.textContainer?.maximumNumberOfLines = 0
                 textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
                 textView.inputView.isSelectable = true
-                textView.inputView.isEditable = true
+                textView.inputView.isEditable = !arguments.interaction.presentation.inTransition
             case .none:
                 size = NSMakeSize(supersize.width, self.textViewSize(self.textView).height + 16)
                 textView.inputView.textContainer?.maximumNumberOfLines = 1
                 textView.inputView.textContainer?.lineBreakMode = .byTruncatingTail
                 textView.inputView.isSelectable = false
-                textView.inputView.isEditable = true
+                textView.inputView.isEditable = !arguments.interaction.presentation.inTransition
             }
         }
         self.action.update(state: !isFirstResponder && self.story?.sharable == true ? .share : textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)

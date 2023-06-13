@@ -562,11 +562,13 @@ final class StoryListView : Control, Notifable {
         
 
    
-        
-        if value.mouseDown != oldValue.mouseDown {
-            self.controls.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
-            self.navigator.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
-            self.text?.change(opacity: value.mouseDown ? 0 : 1, animated: animated)
+        let isControlHid = value.mouseDown || value.isSpacePaused
+        let prevIsControlHid = oldValue.mouseDown || oldValue.isSpacePaused
+
+        if isControlHid != prevIsControlHid {
+            self.controls.change(opacity: isControlHid ? 0 : 1, animated: animated)
+            self.navigator.change(opacity: isControlHid ? 0 : 1, animated: animated)
+            self.text?.change(opacity: isControlHid ? 0 : 1, animated: animated)
         }
         self.updateSides(animated: animated)
     }

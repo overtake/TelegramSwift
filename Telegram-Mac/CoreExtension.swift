@@ -3340,10 +3340,10 @@ extension TelegramMediaWebpageLoadedContent {
                 newUrl = self.url + "?t=\(Int(timecode))"
             }
         }
-        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, attributes: self.attributes, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, story: self.story, attributes: self.attributes, instantPage: self.instantPage)
     }
     func withUpdatedFile(_ file: TelegramMediaFile) -> TelegramMediaWebpageLoadedContent {
-        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: file, attributes: self.attributes, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: file, story: self.story, attributes: self.attributes, instantPage: self.instantPage)
     }
     
     var isCrossplatformTheme: Bool {

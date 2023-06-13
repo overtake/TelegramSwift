@@ -724,6 +724,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                 }
                                 signal = showModalProgress(signal: signal, for: context.window)
                                 _ = signal.start(next: { botApp, url in
+                                    
                                     if let url = url {
                                         openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
                                     } else {

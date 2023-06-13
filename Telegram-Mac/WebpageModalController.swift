@@ -1060,10 +1060,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let path_full = json["path_full"] as? String {
                     let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                   
                     execute(inapp: link)
+                    self.close()
                 }
             }
-            self.close()
         case "web_app_setup_back_button":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let isVisible = json["is_visible"] as? Bool {

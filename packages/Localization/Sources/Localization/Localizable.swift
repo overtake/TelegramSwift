@@ -2639,8 +2639,6 @@ public final class L10n {
   }
   /// Contact
   public static var chatListContact: String  { return L10n.tr("Localizable", "Chat.List.Contact") }
-  /// Forwarded Story
-  public static var chatListForwardedStory: String  { return L10n.tr("Localizable", "Chat.List.ForwardedStory") }
   /// GIF
   public static var chatListGIF: String  { return L10n.tr("Localizable", "Chat.List.GIF") }
   /// Video message
@@ -3965,6 +3963,8 @@ public final class L10n {
   public static var chatListHideMuted: String  { return L10n.tr("Localizable", "ChatList.HideMuted") }
   /// Proxy Sponsor
   public static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
+  /// Story
+  public static var chatListStory: String  { return L10n.tr("Localizable", "ChatList.Story") }
   /// Feed
   public static var chatListTitleFeed: String  { return L10n.tr("Localizable", "ChatList.TitleFeed") }
   /// Unhide Muted
@@ -13622,6 +13622,10 @@ public final class L10n {
   /// You sucessfully removed "%@" from attach menu.
   public static func webAppAttachRemoveSuccess(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.AttachRemove.Success", p1)
+  }
+  /// Are you sure you want to open %@ in Telegram?
+  public static func webAppConfirmOpenWebapp(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Confirm.OpenWebapp", p1)
   }
   /// Allow Write
   public static var webAppFirstOpenAllowWrite: String  { return L10n.tr("Localizable", "WebApp.FirstOpen.AllowWrite") }

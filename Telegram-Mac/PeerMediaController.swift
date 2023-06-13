@@ -147,6 +147,8 @@
             return view.tableView
         } else if let view = self.view.mainView as? PeerMediaGifsView {
             return view.tableView
+        } else if let view = self.view.mainView as? StoryMediaView {
+            return view.tableView
         }
         return nil
     }
