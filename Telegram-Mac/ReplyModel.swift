@@ -75,12 +75,11 @@ class ReplyModel: ChatAccessoryModel {
         var imageDimensions: CGSize?
         if let message = replyMessage {
             if !message.containsSecretMedia {
-                for media in message.media {
+                if let media = message.anyMedia {
                     if let image = media as? TelegramMediaImage {
                         if let representation = largestRepresentationForPhoto(image) {
                             imageDimensions = representation.dimensions.size
                         }
-                        break
                     } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
                         if let dimensions = file.dimensions {
                             imageDimensions = dimensions.size
@@ -89,7 +88,6 @@ class ReplyModel: ChatAccessoryModel {
                         } else if file.isAnimatedSticker {
                             imageDimensions = NSMakeSize(30, 30)
                         }
-                        break
                     }
                 }
             }
@@ -118,13 +116,12 @@ class ReplyModel: ChatAccessoryModel {
             var imageDimensions: CGSize?
             var hasRoundImage = false
             if !message.containsSecretMedia {
-                for media in message.media {
+                if let media = message.anyMedia {
                     if let image = media as? TelegramMediaImage {
                         updatedMedia = image
                         if let representation = largestRepresentationForPhoto(image) {
                             imageDimensions = representation.dimensions.size
                         }
-                        break
                     } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
                         updatedMedia = file
                         
@@ -138,7 +135,6 @@ class ReplyModel: ChatAccessoryModel {
                         if file.isInstantVideo {
                             hasRoundImage = true
                         }
-                        break
                     }
                 }
             }
@@ -480,10 +476,8 @@ class StoryReplyModel: ChatAccessoryModel {
         var display: Bool = display
         updateImageIfNeeded()
         
-
-        var title: String? = peer.displayTitle
-        //TODOLANG
-        let text: NSAttributedString = .initialize(string: "Story", color: presentation.disabledText, font: .normal(.text))
+        let title: String = peer.displayTitle
+        let text: NSAttributedString = .initialize(string: strings().chatListStory, color: presentation.disabledText, font: .normal(.text))
         self.header = .init(.initialize(string: title, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
         self.message = .init(text, maximumNumberOfLines: 1)
         

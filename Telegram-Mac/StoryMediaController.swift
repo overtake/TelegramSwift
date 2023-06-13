@@ -28,16 +28,20 @@ private enum Entry : TableItemListNodeEntry {
             return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
                 var items: [ContextMenuItem] = []
                 if selected == nil, arguments.isMy {
-                    items.append(ContextMenuItem("Select", handler: {
-                        arguments.toggleSelected(.init(peerId: peerId, id: story.id))
+                    items.append(ContextMenuItem("Select", handler: { [weak arguments] in
+                        arguments?.toggleSelected(.init(peerId: peerId, id: story.id))
                     }, itemImage: MenuAnimation.menu_check_selected.value))
                     
                     items.append(ContextSeparatorItem())
                     
                     if story.isPinned {
-                        items.append(ContextMenuItem("Remove from Profile", itemImage: MenuAnimation.menu_unpin.value))
+                        items.append(ContextMenuItem("Remove from Profile", handler: { [weak arguments] in
+                            arguments?.toggleStory(story)
+                        }, itemImage: MenuAnimation.menu_unpin.value))
                     } else {
-                        items.append(ContextMenuItem("Save to Profile", itemImage: MenuAnimation.menu_unpin.value))
+                        items.append(ContextMenuItem("Save to Profile", handler: { [weak arguments] in
+                            arguments?.toggleStory(story)
+                        }, itemImage: MenuAnimation.menu_unpin.value))
                     }
                 }
                 return items
@@ -82,7 +86,9 @@ private final class Arguments {
     let openStory:(StoryInitialIndex?)->Void
     let toggleSelected:(StoryId)->Void
     let showArchive:()->Void
-    init(context: AccountContext, standalone: Bool, isArchive: Bool, isMy: Bool, openStory: @escaping(StoryInitialIndex?)->Void, toggleSelected:@escaping(StoryId)->Void, showArchive:@escaping()->Void) {
+    let processSelected:()->Void
+    let toggleStory: (EngineStoryItem)->Void
+    init(context: AccountContext, standalone: Bool, isArchive: Bool, isMy: Bool, openStory: @escaping(StoryInitialIndex?)->Void, toggleSelected:@escaping(StoryId)->Void, showArchive:@escaping()->Void, processSelected:@escaping()->Void, toggleStory: @escaping(EngineStoryItem)->Void) {
         self.context = context
         self.standalone = standalone
         self.isArchive = isArchive
@@ -90,6 +96,8 @@ private final class Arguments {
         self.openStory = openStory
         self.showArchive = showArchive
         self.toggleSelected = toggleSelected
+        self.processSelected = processSelected
+        self.toggleStory = toggleStory
     }
 }
 
@@ -230,9 +238,10 @@ final class StoryMediaView : View {
         }
         
         
-        func update(title: String, callback:@escaping()->Void) {
+        func update(title: String, enabled: Bool, callback:@escaping()->Void) {
             self.border = [.Top]
             self.borderColor = theme.colors.border
+            self.backgroundColor = theme.colors.background
 
             self.button.set(color: theme.colors.underSelectedColor, for: .Normal)
             self.button.set(background: theme.colors.accent, for: .Normal)
@@ -243,6 +252,8 @@ final class StoryMediaView : View {
             self.button.set(handler: { _ in
                 callback()
             }, for: .SingleClick)
+            
+            self.button.isEnabled = enabled
             
             needsLayout = true
         }
@@ -259,7 +270,7 @@ final class StoryMediaView : View {
         }
     }
     
-    fileprivate let tableView: TableView
+    let tableView: TableView
     private var panel: Panel?
     
     required init(frame frameRect: NSRect) {
@@ -274,7 +285,7 @@ final class StoryMediaView : View {
     
     fileprivate func updateState(_ state: State, arguments: Arguments, animated: Bool) {
         
-        if state.selected != nil {
+        if let selected = state.selected, !selected.isEmpty {
             let current: Panel
             if let view = self.panel {
                 current = view
@@ -287,14 +298,14 @@ final class StoryMediaView : View {
                     current.layer?.animatePosition(from: NSMakePoint(0, frame.height), to: current.frame.origin)
                 }
             }
-            current.update(title: arguments.isArchive ? "Save to Profile" : "Remove from Profile", callback: { [weak arguments] in
-               // arguments.processSelected()
+            current.update(title: arguments.isArchive ? "Save to Profile" : "Remove from Profile", enabled: !selected.isEmpty, callback: { [weak arguments] in
+                arguments?.processSelected()
             })
         } else if let view = self.panel {
             performSubviewPosRemoval(view, pos: NSMakePoint(0, frame.height), animated: animated)
             self.panel = nil
         }
-        tableView.contentInsets = .init(top: 0, left: 0, bottom: self.panel != nil ? 60 : 0, right: 0)
+        tableView.contentInsets = .init(top: 0, left: 0, bottom: self.panel != nil ? 70 : 0, right: 0)
     }
     
     override func layout() {
@@ -455,6 +466,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         let context = self.context
         let peerId = self.peerId
         let initialSize = self.atomicSize
+        let isArchived = self.isArchived
         
         genericView.tableView.getBackgroundColor = {
            return theme.colors.listBackground
@@ -490,6 +502,34 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             }
         }, showArchive: { [weak self] in
             self?.openArchive()
+        }, processSelected: { [weak self] in
+            let selected = self?.stateValue.with { $0.selected } ?? Set()
+            let list = self?.stateValue.with { $0.state?.items } ?? []
+            var stories: [Int32 : EngineStoryItem] = [:]
+            for selected in selected {
+                if let story = list.first(where: { $0.id == selected.id }) {
+                    stories[story.id] = story
+                }
+            }
+            _ = context.engine.messages.updateStoriesArePinned(ids: stories, isPinned: isArchived).start()
+            if isArchived {
+                showModalText(for: context.window, text: "Saved stories can be viewed by others on your profile until you remove them.", title: "Stories Saved")
+            } else {
+                showModalText(for: context.window, text: "Story removed from your profile.", title: "Stories Removed")
+            }
+            self?.updateState({ current in
+                var current = current
+                current.selected = nil
+                return current
+            })
+        }, toggleStory: { story in
+            _ = context.engine.messages.updateStoriesArePinned(ids: [story.id : story], isPinned: isArchived).start()
+            
+            if isArchived {
+                showModalText(for: context.window, text: "Saved stories can be viewed by others on your profile until you remove them.", title: "Story Saved")
+            } else {
+                showModalText(for: context.window, text: "Story removed from your profile.", title: "Story Removed")
+            }
         })
 
         let stateSignal = listContext.state |> deliverOnMainQueue
@@ -542,6 +582,10 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         } else {
             return super.escapeKeyAction()
         }
+    }
+    
+    override var enableBack: Bool {
+        return true
     }
     
     private var perRowCount: Int {

@@ -147,7 +147,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
         case let poll as TelegramMediaPoll:
             messageText = "📊 \(poll.text)"
         case _ as TelegramMediaStory:
-            messageText = ("🖼 " + "Story")
+            messageText = strings().chatListStory
         case let webpage as TelegramMediaWebpage:
             if case let .Loaded(content) = webpage.content {
                 if let _ = content.image {
