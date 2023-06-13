@@ -843,7 +843,7 @@ final class StoryListView : Control, Notifable {
         
         let entities: [MessageTextEntity] = story.entities
         
-        if !text.isEmpty {
+        if !text.isEmpty, !(story.media._asMedia() is TelegramMediaUnsupported) {
             let current: Text
             if let view = self.text {
                 current = view

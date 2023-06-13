@@ -292,6 +292,8 @@ class MediaCell : Control {
     private(set) var layoutItem: MediaCellLayoutable?
     fileprivate var context: AccountContext?
     
+    private var unsupported: TextView?
+    
     private var inkView: MediaInkView?
 
     required init(frame frameRect: NSRect) {
@@ -320,6 +322,8 @@ class MediaCell : Control {
             let imageSize: NSSize
             let cacheArguments: TransformImageArguments
             let signal: Signal<ImageDataTransformation, NoError>
+            let isUnsupported = layout.imageMedia == nil && layout.fileMedia == nil
+            
             if let imageMedia = layout.imageMedia, let largestSize = largestImageRepresentation(imageMedia.media.representations)?.dimensions.size {
                 media = imageMedia.media
                 imageSize = largestSize.aspectFilled(layout.frame.size)
@@ -342,7 +346,28 @@ class MediaCell : Control {
                     signal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileMedia, scale: backingScaleFactor)
                 }
             } else {
+                
+                let current: TextView
+                if let view = self.unsupported {
+                    current = view
+                } else {
+                    current = TextView()
+                    self.unsupported = current
+                    current.userInteractionEnabled = false
+                    current.isSelectable = false
+                    addSubview(current)
+                }
+                let text = TextViewLayout(.initialize(string: strings().mediaCellUnsupported, color: theme.colors.listGrayText, font: .italic(.short)))
+                text.measure(width: layout.frame.width - 10)
+                current.update(text)
+                
+                
                 return
+            }
+            
+            if let unsupported = self.unsupported {
+                performSubviewRemoval(unsupported, animated: animated)
+                self.unsupported = nil
             }
             
             self.imageView.setSignal(signal: cachedMedia(media: media, arguments: cacheArguments, scale: backingScaleFactor), clearInstantly: previousLayout?.id != layout.id)
@@ -446,6 +471,8 @@ class MediaCell : Control {
             selectionView.setFrameOrigin(frame.width - selectionView.frame.width - 5, 5)
         }
         inkView?.frame = imageView.frame
+        self.unsupported?.resize(frame.width - 10)
+        self.unsupported?.center()
     }
 }
 

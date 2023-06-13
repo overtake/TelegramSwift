@@ -76,6 +76,7 @@ class WPLayout: Equatable {
     }
     
     let presentation: WPLayoutPresentation
+    let chatInteraction: ChatInteraction
     
     private var _approximateSynchronousValue: Bool = false
     var approximateSynchronousValue: Bool {
@@ -90,10 +91,12 @@ class WPLayout: Equatable {
         self.content = content
         self.context = context
         self.presentation = presentation
+        self.chatInteraction = chatInteraction
         self.mayCopyText = mayCopyText
         self.parent = parent
         self.fontSize = fontSize
         self._approximateSynchronousValue = approximateSynchronousValue
+        
         if let websiteName = content.websiteName {
             let siteName: String
             switch content.type {
@@ -195,11 +198,24 @@ class WPLayout: Equatable {
         
     }
     
+    var isStory: Bool {
+        return content.story != nil
+    }
+    
+    func openStory() {
+        if let story = content.story {
+            chatInteraction.openStory(parent.id, story.storyId)
+        }
+    }
+    
     var isGalleryAssemble: Bool {
-        // && content.instantPage != nil
+        if content.story != nil {
+            return false
+        }
         if (content.type == "video" && content.type == "video/mp4") || content.type == "photo" || ((content.websiteName?.lowercased() == "instagram" || content.websiteName?.lowercased() == "twitter" || content.websiteName?.lowercased() == "telegram")) || content.text == nil {
             return !content.url.isEmpty && content.type != "telegram_background" && content.type != "telegram_theme"
         }
+       
         return content.type == "telegram_album" && content.type != "telegram_background" && content.type != "telegram_theme"
     }
     

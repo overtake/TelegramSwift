@@ -367,7 +367,19 @@ class StoryReplyModel: ChatAccessoryModel {
         }
     }
     
+    var isUnsupported: Bool {
+        if case let .item(item) = self.story, let media = item.media {
+            if media is TelegramMediaUnsupported {
+                return true
+            }
+        }
+        return false
+    }
+    
     override var leftInset: CGFloat {
+        if isUnsupported {
+            return super.leftInset
+        }
         return 30 + super.leftInset * 2
     }
     
@@ -477,7 +489,7 @@ class StoryReplyModel: ChatAccessoryModel {
         updateImageIfNeeded()
         
         let title: String = peer.displayTitle
-        let text: NSAttributedString = .initialize(string: strings().chatListStory, color: presentation.disabledText, font: .normal(.text))
+        let text: NSAttributedString = .initialize(string: isUnsupported ? strings().chatListStoryUnsupported : strings().chatListStory, color: presentation.disabledText, font: .normal(.text))
         self.header = .init(.initialize(string: title, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
         self.message = .init(text, maximumNumberOfLines: 1)
         
