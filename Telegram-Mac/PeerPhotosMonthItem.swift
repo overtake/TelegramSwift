@@ -322,7 +322,6 @@ class MediaCell : Control {
             let imageSize: NSSize
             let cacheArguments: TransformImageArguments
             let signal: Signal<ImageDataTransformation, NoError>
-            let isUnsupported = layout.imageMedia == nil && layout.fileMedia == nil
             
             if let imageMedia = layout.imageMedia, let largestSize = largestImageRepresentation(imageMedia.media.representations)?.dimensions.size {
                 media = imageMedia.media
@@ -361,7 +360,8 @@ class MediaCell : Control {
                 text.measure(width: layout.frame.width - 10)
                 current.update(text)
                 
-                
+                self.imageView.clear()
+                needsLayout = true
                 return
             }
             

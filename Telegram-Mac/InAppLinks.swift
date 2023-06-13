@@ -1021,13 +1021,18 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         })
         afterComplete(true)
-    case let .story(_, username, storyId, context):
+    case let .story(_, username, storyId, messageId, context):
         let signal = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username), for: context.window)
         _ = signal.start(next: { peer in
             if let peer = peer {
-                StoryModalController.ShowSingleStory(context: context, storyId: .init(peerId: peer.id, id: storyId), initialId: nil, emptyCallback: {
-                    alert(for: context.window, info: strings().unknownError)
-                })
+                let controller = context.bindings.rootNavigation().controller as? ChatController
+                if let messageId = messageId, controller?.chatLocation.peerId == messageId.peerId {
+                    controller?.chatInteraction.openStory(messageId, .init(peerId: peer.id, id: storyId))
+                } else {
+                    StoryModalController.ShowSingleStory(context: context, storyId: .init(peerId: peer.id, id: storyId), initialId: nil, emptyCallback: {
+                        alert(for: context.window, info: strings().unknownError)
+                    })
+                }
             }
         })
         afterComplete(true)
@@ -1266,7 +1271,7 @@ enum inAppLink {
     case urlAuth(link: String, context: AccountContext)
     case loginCode(link: String, code: String)
     case folder(link: String, slug: String, context: AccountContext)
-    case story(link: String, username: String, storyId: Int32, context: AccountContext)
+    case story(link: String, username: String, storyId: Int32, messageId: MessageId?, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1326,7 +1331,7 @@ enum inAppLink {
             return link
         case let .loginCode(link, _):
             return link
-        case let .story(link, _, _, _):
+        case let .story(link, _, _, _, _):
             return link
         case .nothing:
             return ""
@@ -1669,7 +1674,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
                         }
                         if let storyId = vars[keyURLStoryId]?.nsstring.intValue {
-                            return .story(link: urlString, username: username, storyId: storyId, context: context)
+                            return .story(link: urlString, username: username, storyId: storyId, messageId: messageId, context: context)
                         } else if let topicId = vars[keyURLTopicId]?.nsstring.intValue {
                             return .topic(link: urlString, username: username, context: context, threadId: topicId, commentId: nil)
                         } else {
@@ -1832,7 +1837,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             } else if let topic = topic {
                                 return .comments(link: urlString, username: username, context: context, threadId: topic, commentId: comment)
                             } else if let story = story {
-                                return .story(link: urlString, username: username, storyId: story, context: context)
+                                return .story(link: urlString, username: username, storyId: story, messageId: messageId, context: context)
                             } else {
                                 return .followResolvedName(link: urlString, username: username, postId: post, context: context, action: action, callback:openInfo)
                             }

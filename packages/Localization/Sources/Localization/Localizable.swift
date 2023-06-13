@@ -7065,7 +7065,7 @@ public final class L10n {
   public static var markFake: String  { return L10n.tr("Localizable", "Mark.Fake") }
   /// SCAM
   public static var markScam: String  { return L10n.tr("Localizable", "Mark.Scam") }
-  /// Media Unsupported
+  /// Unsupported
   public static var mediaCellUnsupported: String  { return L10n.tr("Localizable", "MediaCell.Unsupported") }
   /// Discard Changes
   public static var mediaSenderDiscardChangesHeader: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.Header") }
@@ -11907,6 +11907,8 @@ public final class L10n {
   }
   /// This story is not supported by your version of Telegram. Please update the app to the latest version.
   public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }
+  /// Only you can see archived stories unless you choose to save them to your profile
+  public static var storyMediaArchiveText: String  { return L10n.tr("Localizable", "StoryMedia.ArchiveText") }
   /// Suggest Frequent Contacts
   public static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }
   /// This will delete all data about the people you message frequently as well as the inline bots you are likely to use.
