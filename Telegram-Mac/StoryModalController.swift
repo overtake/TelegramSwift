@@ -1906,18 +1906,8 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }, share: { [weak self] story in
             if let peerId = story.peerId, story.sharable {
-                
                 let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id))
-                
-                let signal = showModalProgress(signal: context.engine.messages.exportStoryLink(peerId: peerId, id: story.storyItem.id), for: context.window)
-                
-                _ = signal.start(next: { [weak self] link in
-                    if let _ = link {
-                        showModal(with: ShareModalController(ShareStoryObject(context, media: media, link: link), presentation: storyTheme), for: context.window)
-                    } else {
-                        self?.genericView.showShareError()
-                    }
-                })
+                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id)), presentation: storyTheme), for: context.window)
             } else {
                 self?.genericView.showShareError()
             }

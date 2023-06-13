@@ -174,14 +174,17 @@ final class StoryMyInputView : Control, StoryInput {
                         self?.arguments?.togglePinned(story)
                     }, itemImage: MenuAnimation.menu_delete.value))
                 }
-                
-                menu.addItem(ContextMenuItem("Copy Link", handler: {
-                    self?.arguments?.copyLink(story)
-                }, itemImage: MenuAnimation.menu_copy_link.value))
-                
-                menu.addItem(ContextMenuItem("Share", handler: {
-                    self?.arguments?.share(story)
-                }, itemImage: MenuAnimation.menu_share.value))
+                if story.sharable {
+                    menu.addItem(ContextMenuItem("Copy Link", handler: {
+                        self?.arguments?.copyLink(story)
+                    }, itemImage: MenuAnimation.menu_copy_link.value))
+                    
+                    if story.canCopyLink {
+                        menu.addItem(ContextMenuItem("Share", handler: {
+                            self?.arguments?.share(story)
+                        }, itemImage: MenuAnimation.menu_share.value))
+                    }
+                }
 
             }
             

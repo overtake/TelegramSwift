@@ -25,7 +25,23 @@ private enum Entry : TableItemListNodeEntry {
     func item(_ arguments: Arguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .month(_, stableId, peerId, peerReference, items, selected, viewType):
-            return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected)
+            return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
+                var items: [ContextMenuItem] = []
+                if selected == nil, arguments.isMy {
+                    items.append(ContextMenuItem("Select", handler: {
+                        arguments.toggleSelected(.init(peerId: peerId, id: story.id))
+                    }, itemImage: MenuAnimation.menu_check_selected.value))
+                    
+                    items.append(ContextSeparatorItem())
+                    
+                    if story.isPinned {
+                        items.append(ContextMenuItem("Remove from Profile", itemImage: MenuAnimation.menu_unpin.value))
+                    } else {
+                        items.append(ContextMenuItem("Save to Profile", itemImage: MenuAnimation.menu_unpin.value))
+                    }
+                }
+                return items
+            })
         case let .emptySelf(index, viewType):
             return StoryMyEmptyRowItem(initialSize, stableId: index, context: arguments.context, viewType: viewType, showArchive: arguments.showArchive)
         case .date:
@@ -61,12 +77,16 @@ private enum Entry : TableItemListNodeEntry {
 private final class Arguments {
     let context: AccountContext
     let standalone: Bool
+    let isArchive: Bool
+    let isMy: Bool
     let openStory:(StoryInitialIndex?)->Void
     let toggleSelected:(StoryId)->Void
     let showArchive:()->Void
-    init(context: AccountContext, standalone: Bool, openStory: @escaping(StoryInitialIndex?)->Void, toggleSelected:@escaping(StoryId)->Void, showArchive:@escaping()->Void) {
+    init(context: AccountContext, standalone: Bool, isArchive: Bool, isMy: Bool, openStory: @escaping(StoryInitialIndex?)->Void, toggleSelected:@escaping(StoryId)->Void, showArchive:@escaping()->Void) {
         self.context = context
         self.standalone = standalone
+        self.isArchive = isArchive
+        self.isMy = isMy
         self.openStory = openStory
         self.showArchive = showArchive
         self.toggleSelected = toggleSelected
@@ -198,8 +218,100 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<Entry>], right: 
 }
 
 
+final class StoryMediaView : View {
+    
+    private class Panel : View {
+        private let button = TitleButton()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(button)
+            self.button.autohighlight = false
+            self.button.scaleOnClick = true
+        }
+        
+        
+        func update(title: String, callback:@escaping()->Void) {
+            self.border = [.Top]
+            self.borderColor = theme.colors.border
 
-final class StoryMediaController : TableViewController {
+            self.button.set(color: theme.colors.underSelectedColor, for: .Normal)
+            self.button.set(background: theme.colors.accent, for: .Normal)
+            self.button.set(font: .medium(.text), for: .Normal)
+            self.button.set(text: title, for: .Normal)
+            
+            self.button.removeAllHandlers()
+            self.button.set(handler: { _ in
+                callback()
+            }, for: .SingleClick)
+            
+            needsLayout = true
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            self.button.sizeToFit(.zero, NSMakeSize(frame.width - 20, frame.height - 20), thatFit: true)
+            self.button.layer?.cornerRadius = 10
+            self.button.center()
+        }
+    }
+    
+    fileprivate let tableView: TableView
+    private var panel: Panel?
+    
+    required init(frame frameRect: NSRect) {
+        self.tableView = .init(frame: frameRect.size.bounds)
+        super.init(frame: frameRect)
+        addSubview(tableView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    fileprivate func updateState(_ state: State, arguments: Arguments, animated: Bool) {
+        
+        if state.selected != nil {
+            let current: Panel
+            if let view = self.panel {
+                current = view
+            } else {
+                current = Panel(frame: NSMakeRect(0, frame.height - 60, frame.width, 60))
+                self.panel = current
+                addSubview(current)
+                
+                if animated {
+                    current.layer?.animatePosition(from: NSMakePoint(0, frame.height), to: current.frame.origin)
+                }
+            }
+            current.update(title: arguments.isArchive ? "Save to Profile" : "Remove from Profile", callback: { [weak arguments] in
+               // arguments.processSelected()
+            })
+        } else if let view = self.panel {
+            performSubviewPosRemoval(view, pos: NSMakePoint(0, frame.height), animated: animated)
+            self.panel = nil
+        }
+        tableView.contentInsets = .init(top: 0, left: 0, bottom: self.panel != nil ? 60 : 0, right: 0)
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        if let panel = self.panel {
+            transition.updateFrame(view: panel, frame: NSMakeRect(0, size.height - 60, size.width, 60))
+        }
+        transition.updateFrame(view: tableView, frame: size.bounds)
+    }
+}
+
+
+final class StoryMediaController : TelegramGenericViewController<StoryMediaView> {
     
     private let actionsDisposable = DisposableSet()
     private let peerId: EnginePeer.Id
@@ -336,7 +448,7 @@ final class StoryMediaController : TableViewController {
         super.viewDidLoad()
         
         
-        genericView.set(stickClass: PeerMediaDateItem.self, handler: { _ in
+        genericView.tableView.set(stickClass: PeerMediaDateItem.self, handler: { _ in
             
         })
         
@@ -344,7 +456,11 @@ final class StoryMediaController : TableViewController {
         let peerId = self.peerId
         let initialSize = self.atomicSize
         
-        genericView.setScrollHandler({ [weak self] _ in
+        genericView.tableView.getBackgroundColor = {
+           return theme.colors.listBackground
+        }
+        
+        genericView.tableView.setScrollHandler({ [weak self] _ in
             if let list = self?.listContext {
                 list.loadMore()
             }
@@ -353,7 +469,7 @@ final class StoryMediaController : TableViewController {
                 
         self.setCenterTitle(isArchived ? "Archive" : peerId == context.peerId ? "My Stories" : "")
         
-        let arguments = Arguments(context: context, standalone: standalone, openStory: { [weak self] initialId in
+        let arguments = Arguments(context: context, standalone: standalone, isArchive: isArchived, isMy: peerId == context.peerId, openStory: { [weak self] initialId in
             if let list = self?.listContext {
                 StoryModalController.ShowPeerStory(context: context, listContext: list, peerId: peerId, initialId: initialId)
             }
@@ -403,13 +519,16 @@ final class StoryMediaController : TableViewController {
             return (prepareTransition(left: previous.swap(entries), right: entries, animated: !first.swap(false), initialSize: initialSize.with { $0 }, arguments: arguments), values.1)
         } |> deliverOnMainQueue
 
-        actionsDisposable.add(transition.start(next: { [weak self] (transition, state) in
-            self?.genericView.merge(with: transition)
+        actionsDisposable.add(transition.start(next: { [weak self, weak arguments] (transition, state) in
+            guard let arguments = arguments else {
+                return
+            }
+            self?.genericView.tableView.merge(with: transition)
             self?.readyOnce()
             
+            self?.genericView.updateState(state, arguments: arguments, animated: transition.animated)
             self?.doneButton?.isHidden = state.selected == nil
             self?.editButton?.isHidden = state.selected != nil
-
             
         }))
         
