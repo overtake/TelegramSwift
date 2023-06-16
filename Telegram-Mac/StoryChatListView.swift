@@ -322,7 +322,10 @@ private final class StoryListContainer : Control {
                 self.shortTextView = nil
             }
         } else {
-            
+            if animated, scrollView.documentOffset != .zero {
+                let to = CGRect.init(origin: .zero, size: scrollView.clipView.bounds.size)
+                scrollView.clipView.layer?.animateBounds(from: scrollView.clipView.bounds, to: to, duration: 0.2, timingFunction: .easeOut)
+            }
 //            scrollView.clipView.scroll(to: NSMakePoint(scrollView.documentOffset.x * progress, 0), animated: animated)
             
             let shortTextView: TextView
@@ -441,10 +444,12 @@ private final class StoryListContainer : Control {
 
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: documentView, frame: documentSize.bounds)
-        if transition.isAnimated {
-            transition.updateFrame(view: scrollView.contentView, frame: documentView.bounds)
-        }
+        let documentRect = CGRect(origin: .zero, size: documentSize)
+        transition.updateFrame(view: documentView, frame: documentRect)
+        
+        scrollView.contentView._change(size: CGSize(width: scrollView.contentView.bounds.width, height: size.height), animated: transition.isAnimated, duration: transition.duration, timingFunction: transition.timingFunction)
+        
+
         transition.updateFrame(view: scrollView, frame: size.bounds)
         
         for (i, view) in views.enumerated() {
@@ -704,6 +709,7 @@ private final class ItemView : Control {
         imageView.setFrameSize(NSMakeSize(44, 44))
         self.addSubview(textView)
         stateView.isEventLess = true
+        smallImageView.userInteractionEnabled = false
         imageView.userInteractionEnabled = false
         self.addSubview(stateView)
         self.addSubview(imageView)
