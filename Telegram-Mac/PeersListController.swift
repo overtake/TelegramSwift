@@ -1116,7 +1116,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return nil
     }
     
-    private  let stateValue: Atomic<PeerListState?> = Atomic(value: nil)
+    private let stateValue: Atomic<PeerListState?> = Atomic(value: nil)
     private let stateSignal: ValuePromise<PeerListState?> = ValuePromise(nil, ignoreRepeated: true)
     var stateUpdater: Signal<PeerListState?, NoError> {
         return stateSignal.get()

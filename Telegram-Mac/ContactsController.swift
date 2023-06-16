@@ -183,7 +183,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                     arguments.addContact()
                 })
             case let .stories(state):
-                item = StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: context, archive: true, state: state, open: arguments.openStory)
+                item = StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: context, archive: true, state: state, open: arguments.openStory, reveal: { })
             }
             return item
         }

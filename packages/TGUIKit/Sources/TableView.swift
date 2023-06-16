@@ -1007,6 +1007,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private var liveScrollStartPosition: NSPoint?
     
+    public func resetLiveScroll() {
+        liveScrollStartPosition = nil
+    }
+    
     public var _scrollWillStartLiveScrolling:(()->Void)?
     public var _scrollDidLiveScrolling:(()->Void)?
     public var _scrollDidEndLiveScrolling:(()->Void)?
@@ -1142,7 +1146,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     open func scrollDidChangedBounds() {
-
+        
         if let autohide = autohide, let item = autohide.item, autohide.hideUntilOverscroll, let _ = liveScrollStartPosition {
             let rect = self.rectOf(item: item)
             
@@ -1156,6 +1160,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 autohide.hideHandler(true)
             }
         }
+        
+        self.scrollDidLiveScrolling()
+
     }
     
     open func scrollDidEndLiveScrolling() {
@@ -1195,9 +1202,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 self?.scrollWillStartLiveScrolling()
             })
             
-            NotificationCenter.default.addObserver(forName: NSScrollView.didLiveScrollNotification, object: self, queue: nil, using: { [weak self] _ in
-                self?.scrollDidLiveScrolling()
-            })
 
             NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: clipView, queue: nil, using: { [weak self] _ in
                 self?.updateScroll()

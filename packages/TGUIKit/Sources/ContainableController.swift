@@ -235,7 +235,7 @@ public extension ContainedViewLayoutTransition {
                 completion(true)
             }
         case let .animated(duration, curve):
-            let previousAlpha = view.layer?.opacity ?? 1
+            let previousAlpha = view.layer?.presentation()?.opacity ?? view.layer?.opacity ?? 1
             view.layer?.opacity = Float(alpha)
             view.layer?.animateAlpha(from: CGFloat(previousAlpha), to: alpha, duration: duration, timingFunction: curve.timingFunction, completion: { result in
                 if let completion = completion {
