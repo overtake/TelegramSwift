@@ -512,7 +512,7 @@ class ChatListController : PeersListController {
                     let result = value - current
 
                     optimized = result
-                    autofinish = current > 5.2
+                    autofinish = current > 5.1
                 case .revealed:
                     autofinish = optimized >= StoryListChatListRowItem.InterfaceState.small
                 }
@@ -559,13 +559,17 @@ class ChatListController : PeersListController {
         }
     }
     
-    private func revealStoriesState() {
+    @discardableResult private func revealStoriesState() -> Bool {
         let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.stories) as? StoryListChatListRowItem
         guard let item = optional else {
-            return
+            return false
         }
-        self.storyInterfaceState = .revealed
-        self.genericView.tableView.reloadData(row: item.index, animated: true)
+        if self.storyInterfaceState != .revealed {
+            self.storyInterfaceState = .revealed
+            self.genericView.tableView.reloadData(row: item.index, animated: true)
+            return true
+        }
+        return false
     }
     
     override func completeUndefiedStates(animated: Bool) {
@@ -1249,11 +1253,13 @@ class ChatListController : PeersListController {
                 }
             } else {
                 if self.genericView.tableView.documentOffset.y == 0 {
-                    if self.filterValue?.filter == .allChats {
-                        self.context.bindings.mainController().showFastChatSettings()
-                    } else {
-                        self.updateFilter {
-                            $0.withUpdatedFilter(nil)
+                    if !self.revealStoriesState() {
+                        if self.filterValue?.filter == .allChats {
+                            self.context.bindings.mainController().showFastChatSettings()
+                        } else {
+                            self.updateFilter {
+                                $0.withUpdatedFilter(nil)
+                            }
                         }
                     }
                 } else {
