@@ -37,7 +37,7 @@ private struct StoryChatListEntry : Equatable, Comparable, Identifiable {
         if lhs.item != rhs.item {
             return false
         }
-        return true
+        return lhs.appearance == rhs.appearance
     }
     
     var stableId: AnyHashable {
@@ -338,9 +338,20 @@ private final class StoryListContainer : Control {
                 self.shortTextView = shortTextView
                 isNew = true
             }
-            let string = "Show Stories"
-            if shortTextView.textLayout?.attributedString.string != string {
-                let layout = TextViewLayout.init(.initialize(string: string, color: theme.colors.text, font: .medium(.text)))
+            let text = "Show Stories"
+            
+            let color: NSColor?
+            let string: String?
+            if let attr = shortTextView.textLayout?.attributedString, !attr.string.isEmpty {
+                color = attr.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+                string = attr.string
+            } else {
+                string = nil
+                color = nil
+            }
+            let newColor = theme.colors.text
+            if string != text || color != newColor {
+                let layout = TextViewLayout(.initialize(string: text, color: newColor, font: .medium(.text)))
                 layout.measure(width: frame.width - 80)
                 shortTextView.update(layout)
             }
@@ -682,6 +693,7 @@ private final class StoryListEntryRowItem : TableRowItem {
 
 private final class ItemView : Control {
     fileprivate let imageView = AvatarControl(font: .avatar(15))
+    fileprivate let smallImageView = AvatarControl(font: .avatar(7))
     fileprivate let textView = TextView()
     fileprivate let stateView = View()
     fileprivate var item: StoryListEntryRowItem?
@@ -695,6 +707,7 @@ private final class ItemView : Control {
         imageView.userInteractionEnabled = false
         self.addSubview(stateView)
         self.addSubview(imageView)
+        self.addSubview(smallImageView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
@@ -717,6 +730,7 @@ private final class ItemView : Control {
                 self?.open?(item)
             }
         }, for: .Click)
+        
     }
     
     
@@ -735,6 +749,10 @@ private final class ItemView : Control {
         self.item = item
         
         imageView.setPeer(account: item.context.account, peer: item.entry.item.peer._asPeer(), size: NSMakeSize(44, 44))
+        smallImageView.setPeer(account: item.context.account, peer: item.entry.item.peer._asPeer(), size: NSMakeSize(22, 22))
+        
+        imageView.isHidden = progress == 0
+        smallImageView.isHidden = progress != 0
         
         let name: String
         if item.entry.id == item.context.peerId {
@@ -750,7 +768,7 @@ private final class ItemView : Control {
         textView.update(layout)
         
         stateView.layer?.borderWidth = item.entry.hasUnseen ? 1.5 : 1.0
-        stateView.layer?.borderColor = item.entry.hasUnseen ? theme.colors.accent.cgColor : theme.colors.grayIcon.cgColor
+        stateView.layer?.borderColor = item.entry.hasUnseen ? theme.colors.accent.cgColor : theme.colors.grayIcon.withAlphaComponent(0.5).cgColor
         stateView.backgroundColor = theme.colors.background
         
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
@@ -773,12 +791,20 @@ private final class ItemView : Control {
         let imageSize = NSMakeSize(size.width - 6, size.width - 6)
         
         transition.updateFrame(view: imageView, frame: CGRect(origin: CGPoint(x: (size.width - imageSize.width) / 2, y: 3), size: imageSize))
+        transition.updateFrame(view: smallImageView, frame: CGRect(origin: CGPoint(x: (size.width - imageSize.width) / 2, y: 3), size: imageSize))
+
         transition.updateFrame(view: stateView, frame: imageView.frame.insetBy(dx: -(max(3 * progress, 2)), dy: -(max(3 * progress, 2))))
         
         stateView.layer?.cornerRadius = stateView.frame.height / 2
         if transition.isAnimated {
             stateView.layer?.animateCornerRadius(duration: transition.duration, timingFunction: transition.timingFunction)
         }
+        
+        imageView.layer?.cornerRadius = imageView.frame.height / 2
+        if transition.isAnimated {
+            imageView.layer?.animateCornerRadius(duration: transition.duration, timingFunction: transition.timingFunction)
+        }
+        
         transition.updateTransformScale(layer: textView.layer!, scale: progress)
         transition.updateFrame(view: textView, frame: textView.centerFrameX(y: stateView.frame.maxY + (4.0 * progress), addition: (textView.frame.width * (1 - progress)) / 2))
         transition.updateAlpha(view: textView, alpha: progress)
