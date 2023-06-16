@@ -265,12 +265,12 @@ class StoryView : Control {
     
     static func makeView(for story: EngineStoryItem, peerId: PeerId, peer: Peer?, context: AccountContext, frame: NSRect) -> StoryView {
         let view: StoryView
-        if story.media._asMedia() is TelegramMediaUnsupported {
-            view = StoryUnsupportedView(frame: frame)
-        } else if story.media._asMedia() is TelegramMediaImage {
+        if story.media._asMedia() is TelegramMediaImage {
             view = StoryImageView(frame: frame)
-        } else {
+        } else if let file = story.media._asMedia() as? TelegramMediaFile, file.isVideo {
             view = StoryVideoView(frame: frame)
+        } else {
+            view = StoryUnsupportedView(frame: frame)
         }
         view.update(context: context, peerId: peerId, story: story, peer: peer)
         view.initializeStatus()

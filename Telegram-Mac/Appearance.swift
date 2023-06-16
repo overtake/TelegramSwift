@@ -808,12 +808,11 @@ private func generateTriangle(_ size: NSSize, color: NSColor) -> CGImage {
     })!
 }
 
-private func generateStoryState(_ color: NSColor, size: NSSize, wide: CGFloat) -> CGImage {
+private func generateStoryState(_ color: NSColor, bgColor: NSColor, size: NSSize, wide: CGFloat) -> CGImage {
     return generateImage(size, contextGenerator: { size, ctx in
         let rect = CGRect(origin: CGPoint(), size: size)
         ctx.clear(rect)
         
-        ctx.setStrokeColor(color.cgColor)
         
         let startAngle = -CGFloat.pi / 2.0
         let endAngle = CGFloat(1.0) * 2.0 * CGFloat.pi + startAngle
@@ -822,11 +821,12 @@ private func generateStoryState(_ color: NSColor, size: NSSize, wide: CGFloat) -
         
         path.addArc(center: CGPoint(x: size.width / 2.0, y: size.height / 2.0), radius: size.width / 2 - 1, startAngle: startAngle, endAngle: endAngle, clockwise: false)
         
+        ctx.setStrokeColor(color.cgColor)
         ctx.setLineWidth(wide)
         ctx.setLineCap(.round)
         ctx.addPath(path)
         ctx.strokePath()
-
+        
     })!
 }
 
@@ -2702,13 +2702,13 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 folder_invite_link_revoked: { generateFolderLinkIcon(palette: palette, revoked: true) },
                               folders_sidebar_edit: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon, flipVertical: true) },
                               folders_sidebar_edit_active: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon.withAlphaComponent(0.8), flipVertical: true) },
-                              story_unseen: { generateStoryState(palette.accent, size: NSMakeSize(50, 50), wide: 1.5) },
-                              story_seen: { generateStoryState(palette.grayIcon.withAlphaComponent(0.5), size: NSMakeSize(50, 50), wide: 1.0) },
-                              story_selected: { generateStoryState(palette.underSelectedColor, size: NSMakeSize(50, 50), wide: 1.0) },
-                              story_unseen_chat: { generateStoryState(palette.accent, size: NSMakeSize(36, 36), wide: 1.5) },
-                              story_seen_chat: { generateStoryState(palette.grayIcon, size: NSMakeSize(36, 36), wide: 1.0) },
-                              story_unseen_profile: { generateStoryState(palette.accent, size: NSMakeSize(120, 120), wide: 1.5) },
-                              story_seen_profile: { generateStoryState(palette.grayIcon, size: NSMakeSize(120, 120), wide: 1.0) },
+                              story_unseen: { generateStoryState(palette.accent, bgColor: palette.background, size: NSMakeSize(50, 50), wide: 1.5) },
+                              story_seen: { generateStoryState(palette.grayIcon.withAlphaComponent(0.5), bgColor: palette.background, size: NSMakeSize(50, 50), wide: 1.0) },
+                              story_selected: { generateStoryState(palette.underSelectedColor, bgColor: palette.background, size: NSMakeSize(50, 50), wide: 1.0) },
+                              story_unseen_chat: { generateStoryState(palette.accent, bgColor: palette.background, size: NSMakeSize(36, 36), wide: 1.5) },
+                              story_seen_chat: { generateStoryState(palette.grayIcon, bgColor: palette.background, size: NSMakeSize(36, 36), wide: 1.0) },
+                              story_unseen_profile: { generateStoryState(palette.accent, bgColor: palette.background, size: NSMakeSize(120, 120), wide: 1.5) },
+                              story_seen_profile: { generateStoryState(palette.grayIcon, bgColor: palette.background, size: NSMakeSize(120, 120), wide: 1.0) },
                               story_view_read: { NSImage(named: "Icon_StoryViewRead")!.precomposed(palette.grayIcon) },
                               story_view_reaction: { NSImage(named: "Icon_StoryViewReaction")!.precomposed(palette.grayIcon) },
                               story_chatlist_reply: { NSImage(named: "Icon_StoryReply")!.precomposed(palette.grayIcon) },

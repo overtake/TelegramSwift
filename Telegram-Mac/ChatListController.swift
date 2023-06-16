@@ -26,7 +26,9 @@ private final class Arguments {
     let applySharedFolderUpdates:(ChatFolderUpdates)->Void
     let hideSharedFolderUpdates:()->Void
     let openStory:(StoryInitialIndex?, Bool)->Void
-    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool)->Void) {
+    let getStoryInterfaceState:()->StoryListChatListRowItem.InterfaceState
+    let revealStoriesState:()->Void
+    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void) {
         self.context = context
         self.setupFilter = setupFilter
         self.openFilterSettings = openFilterSettings
@@ -38,6 +40,8 @@ private final class Arguments {
         self.applySharedFolderUpdates = applySharedFolderUpdates
         self.hideSharedFolderUpdates = hideSharedFolderUpdates
         self.openStory = openStory
+        self.getStoryInterfaceState = getStoryInterfaceState
+        self.revealStoriesState = revealStoriesState
     }
 }
 
@@ -184,9 +188,9 @@ enum UIChatListEntry : Identifiable, Comparable {
                 return ChatListIndex(pinningIndex: index, messageIndex: .init(id: MessageId(peerId: entry.renderedPeer.peerId, namespace: namespace, id: id), timestamp: timestamp))
             }
         case .reveal:
-            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())
-        case .stories:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
+        case .stories:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())
         case let .group(id, _, _, _, _, _):
             var index = MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor()
             for _ in 0 ..< id {
@@ -284,7 +288,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             case let .stories(state):
-                return StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: arguments.context, archive: false, state: state, open: arguments.openStory)
+                return StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: arguments.context, archive: false, state: state, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
             }
         }
         
@@ -456,10 +460,116 @@ class ChatListController : PeersListController {
         super.viewDidResized(size)
     }
     
+    private var storyInterfaceState: StoryListChatListRowItem.InterfaceState = .concealed
+    private var deltaY: CGFloat = 0
+    
+    private func processScroll(_ event: NSEvent) -> Bool {
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.stories) as? StoryListChatListRowItem
+        guard let item = optional, genericView.tableView.documentOffset.y == 0 else {
+            return false
+        }
+        
+        
+        switch event.phase {
+        case .began:
+            if event.scrollingDeltaY != 0 {
+                switch storyInterfaceState {
+                case .revealed:
+                    deltaY = 0
+                    if event.scrollingDeltaY < 0 {
+                        self.storyInterfaceState = .progress(1.0, .revealed)
+                    } else {
+                        return false
+                    }
+                case .concealed:
+                    deltaY = StoryListChatListRowItem.InterfaceState.small
+                    if event.scrollingDeltaY > 0 {
+                        self.storyInterfaceState = .progress(0.0, .concealed)
+                    } else {
+                        return false
+                    }
+                case .progress:
+                    fatalError("state must be finished")
+                }
+                return true
+            } else {
+                return false
+            }
+        case .changed:
+            deltaY -= event.scrollingDeltaY
+            
+            switch storyInterfaceState {
+            case let .progress(_, from):
+                
+                var optimized: CGFloat = deltaY
+                let autofinish: Bool
+                switch from {
+                case .concealed:
+                    let value = StoryListChatListRowItem.InterfaceState.small
+                    
+                    let current = log(max(1, StoryListChatListRowItem.InterfaceState.small - optimized))
+                    
+                    let result = value - current
+
+                    optimized = result
+                    autofinish = current > 5.2
+                case .revealed:
+                    autofinish = optimized >= StoryListChatListRowItem.InterfaceState.small
+                }
+                
+                let progress: CGFloat = max(0.0, min(1.0 - optimized / StoryListChatListRowItem.InterfaceState.small, 1.0))
+                if autofinish {
+                    switch storyInterfaceState {
+                    case let .progress(_, from):
+                        switch from {
+                        case .revealed:
+                            storyInterfaceState = .concealed
+                        case .concealed:
+                            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .drawCompleted)
+                            storyInterfaceState = .revealed
+                        }
+                        self.genericView.tableView.reloadData(row: item.index, animated: true)
+                        return false
+                    default:
+                        fatalError("state not inited")
+                    }
+                } else {
+                    storyInterfaceState = .progress(progress, from)
+                    genericView.tableView.reloadData(row: item.index)
+                    return true
+                }
+            default:
+                return false
+            }
+        case .ended, .cancelled:
+            switch storyInterfaceState {
+            case let .progress(value, _):
+                if value > 0.5 {
+                    self.storyInterfaceState = .revealed
+                } else {
+                    self.storyInterfaceState = .concealed
+                }
+                self.genericView.tableView.reloadData(row: item.index, animated: true)
+            default:
+                break
+            }
+            return false
+        default:
+            return false
+        }
+    }
+    
+    private func revealStoriesState() {
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.stories) as? StoryListChatListRowItem
+        guard let item = optional else {
+            return
+        }
+        self.storyInterfaceState = .revealed
+        self.genericView.tableView.reloadData(row: item.index, animated: true)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        
         
         let initialSize = self.atomicSize
         let context = self.context
@@ -481,6 +591,9 @@ class ChatListController : PeersListController {
             storyState = .single(nil)
         }
         
+        genericView.tableView.applyExternalScroll = { [weak self] event in
+            return self?.processScroll(event) ?? false
+        }
 
         self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(includeHidden: false)
         |> deliverOnMainQueue).start(next: { [weak self] resources in
@@ -558,6 +671,13 @@ class ChatListController : PeersListController {
             }
         }, openStory: { initialId, singlePeer in
             StoryModalController.ShowStories(context: context, includeHidden: false, initialId: initialId, singlePeer: singlePeer)
+        }, getStoryInterfaceState: { [weak self] in
+            guard let `self` = self else {
+                return .revealed
+            }
+            return self.storyInterfaceState
+        }, revealStoriesState: { [weak self] in
+            self?.revealStoriesState()
         })
         
         

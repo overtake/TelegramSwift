@@ -55,7 +55,7 @@ class ChatListRevealItem: TableStickItem {
     }
 
     override var singletonItem: Bool {
-        return true
+        return false
     }
     
     func menuItems(for item: ChatListFilter, unreadCount: Int?) -> Signal<[ContextMenuItem], NoError> {

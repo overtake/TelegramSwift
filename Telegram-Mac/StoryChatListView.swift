@@ -11,7 +11,19 @@ import TGUIKit
 import TelegramCore
 import SwiftSignalKit
 import Postbox
+import ObjcUtils
 
+private func interpolateArray(from minValue: Double, to maxValue: Double, count: Int) -> [Double] {
+    var result: [Double] = []
+    
+    for i in 0..<count {
+        let t = Double(i) / Double(count - 1)
+        let interpolatedValue = (1 - t) * maxValue + t * minValue
+        result.append(interpolatedValue)
+    }
+    
+    return result
+}
 
 private struct StoryChatListEntry : Equatable, Comparable, Identifiable {
     let item: EngineStorySubscriptions.Item
@@ -22,7 +34,10 @@ private struct StoryChatListEntry : Equatable, Comparable, Identifiable {
     }
     
     static func ==(lhs: StoryChatListEntry, rhs: StoryChatListEntry) -> Bool {
-        return lhs.item == rhs.item && lhs.appearance == rhs.appearance
+        if lhs.item != rhs.item {
+            return false
+        }
+        return true
     }
     
     var stableId: AnyHashable {
@@ -39,17 +54,62 @@ private struct StoryChatListEntry : Equatable, Comparable, Identifiable {
 
 
 final class StoryListChatListRowItem : TableRowItem {
+    
+    enum InterfaceState : Equatable {
+        
+        enum From {
+            case concealed
+            case revealed
+        }
+        
+        case revealed
+        case concealed
+        case progress(CGFloat, From)
+        
+        var height: CGFloat {
+            switch self {
+            case .revealed:
+                return 86
+            case .concealed:
+                return 30
+            case let .progress(progress, _):
+                return 30 + 56 * progress
+            }
+        }
+        var progress: CGFloat {
+            switch self {
+            case .revealed:
+                return 1.0
+            case .concealed:
+                return 0.0
+            case let .progress(progress, _):
+                return progress
+            }
+        }
+        
+        static var small: CGFloat {
+            return 30
+        }
+        static var full: CGFloat {
+            return 86
+        }
+    }
+    
     private let _stableId: AnyHashable
     let context: AccountContext
     let state: EngineStorySubscriptions
     let open: (StoryInitialIndex?, Bool)->Void
     let archive: Bool
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, archive: Bool, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?, Bool)->Void) {
+    let getInterfaceState: ()->InterfaceState
+    let reveal: ()->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, archive: Bool, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?, Bool)->Void, getInterfaceState: @escaping()->InterfaceState = { return .revealed }, reveal: @escaping()->Void) {
         self._stableId = stableId
         self.context = context
         self.state = state
         self.archive = archive
         self.open = open
+        self.reveal = reveal
+        self.getInterfaceState = getInterfaceState
         super.init(initialSize)
     }
     
@@ -60,7 +120,7 @@ final class StoryListChatListRowItem : TableRowItem {
     }
     
     override var height: CGFloat {
-        return 86
+        return getInterfaceState().height
     }
     
     override func viewClass() -> AnyClass {
@@ -72,23 +132,342 @@ final class StoryListChatListRowItem : TableRowItem {
     }
 }
 
-
-private final class StoryListChatListRowView: TableRowView {
+private final class StoryListContainer : Control {
     
-    private let tableView: HorizontalTableView
-    private let borderView = View()
+    var loadMore:((ScrollDirection)->Void)? = nil
+    
+    private var list: [StoryChatListEntry] = []
+    private var views: [ItemView] = []
+    private let documentView = View()
+    private let scrollView = HorizontalScrollView(frame: .zero)
+    private var shortTextView: TextView?
+    private var progress: CGFloat = 1.0
+
+    private var item: StoryListChatListRowItem?
     required init(frame frameRect: NSRect) {
-        tableView = HorizontalTableView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
-        addSubview(tableView)
-        addSubview(borderView)
+        scrollView.documentView = documentView
+        addSubview(scrollView)
         
-        tableView.getBackgroundColor = {
-            .clear
+        
+        scrollView.background = .clear
+        self.scaleOnClick = true
+        
+        set(handler: { [weak self] _ in
+            self?.item?.reveal()
+        }, for: .Click)
+        
+        NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: scrollView.clipView, queue: nil, using: { [weak self] _ in
+            self?.updateScroll()
+        })
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private var scrollOffset: NSPoint = .zero
+    
+    private func updateScroll() {
+        let previous = self.scrollOffset
+        let current = scrollView.documentOffset
+        self.scrollOffset = current
+        
+        if previous.x < current.x, (current.x - frame.width) - documentSize.width < frame.width {
+            self.loadMore?(.bottom)
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    private func getAlpha(_ item: StoryListEntryRowItem, index i: Int, progress: CGFloat) -> CGFloat {
+        if visibleRange.contains(i) {
+            if !focusRange.contains(i) {
+                return progress
+            } else {
+                return 1.0
+            }
+        } else {
+            return progress == 1.0 ? 1 : 0
+        }
+    }
+    
+    private func getFrame(_ item: StoryListEntryRowItem, index i: Int, progress: CGFloat) -> NSRect {
+        let focusRange = self.focusRange
+        let visibleRange = self.visibleRange
+        
+        let itemSize = NSMakeSize(22 + (item.itemWidth - 22) * progress, 22 + (item.itemHeight - 22) * progress)
+        
+        var frame = CGRect(origin: .zero, size: itemSize)
+        if i < focusRange.location {
+            let w = itemSize.width - (itemSize.width / 2 * (1 - progress))
+            let h = itemSize.height - (itemSize.height / 2 * (1 - progress))
+            frame.size = NSMakeSize(w, h)
+            
+            frame.origin.x = (CGFloat(i) * itemSize.width)
+
+            frame.origin.x += (10.0 + (CGFloat(i) * 20))
+        } else {
+            
+            if i >= focusRange.max {
+                let w = itemSize.width - (itemSize.width / 2 * (1 - progress))
+                let h = itemSize.height - (itemSize.height / 2 * (1 - progress))
+                frame.size = NSMakeSize(w, h)
+            }
+            
+            frame.origin.x = ((1.0 - progress) * CGFloat(i - focusRange.location)) * itemSize.width + (CGFloat(i) * itemSize.width * progress) + ((1.0 - progress) * 13.0)
+            
+            let insets = (10.0 + (CGFloat(i) * 20)) * progress
+            frame.origin.x += insets
+            
+            if i > focusRange.max {
+                frame.origin.x -= 20 * CGFloat(i - focusRange.max) * (1 - progress)
+            }
+            if i > focusRange.location {
+                frame.origin.x -= ((1.0 - progress) * itemSize.width / 2) * CGFloat(i - focusRange.location)
+            }
+        }
+        frame.origin.y = (self.frame.height - frame.height) / 2
+        return frame
+    }
+    
+    private func getTextAlpha() -> CGFloat {
+        return 1.0 - self.progress
+    }
+    private func getTextRect() -> CGRect {
+        var edgeView: NSView?
+        if !views.isEmpty {
+            edgeView = views[focusRange.max - 1]
+        } else {
+            edgeView = nil
+        }
+        if let edgeView = edgeView, let shortTextView = shortTextView {
+            return CGRect(origin: NSMakePoint(edgeView.frame.maxX + 12.0, floorToScreenPixels(backingScaleFactor, (frame.height - shortTextView.frame.height) / 2)), size: shortTextView.frame.size)
+        } else {
+            return .zero
+        }
+    }
+    private func getTextScale() -> CGFloat {
+        return 1.0 - self.progress
+    }
+    
+    
+    func set(transition: TableUpdateTransition, item: StoryListChatListRowItem, context: AccountContext, progress: CGFloat, animated: Bool) {
+        
+        self.progress = progress
+        self.item = item
+        
+        if !transition.isEmpty {
+            var toRemove:[AnyHashable : ItemView] = [:]
+            
+            for deleted in transition.deleted.reversed() {
+                let view = views.remove(at: deleted)
+                if let item = view.item {
+                    toRemove[item.stableId] = view
+                } else {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                }
+            }
+            for inserted in transition.inserted {
+                let item = inserted.1 as! StoryListEntryRowItem
+                
+                let view: ItemView
+                let isNew: Bool
+                if let v = toRemove[item.stableId] {
+                    views.insert(v, at: inserted.0)
+                    toRemove.removeValue(forKey: item.stableId)
+                    view = v
+                    isNew = false
+                } else {
+                    let rect = getFrame(item, index: inserted.0, progress: progress)
+                    view = ItemView(frame: rect)
+                    views.insert(view, at: inserted.0)
+                    view.layer?.opacity = Float(getAlpha(item, index: inserted.0, progress: progress))
+                    isNew = true
+                }
+                
+                view.set(item: item, open: { [weak self] item in
+                    self?.open(item)
+                }, progress: progress, animated: false)
+                
+                if inserted.0 == 0 {
+                    documentView.addSubview(view, positioned: .below, relativeTo: views.first)
+                } else {
+                    documentView.addSubview(view, positioned: .above, relativeTo: views[inserted.0 - 1])
+                }
+                if animated, isNew {
+                    view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    view.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+                }
+            }
+            for updated in transition.updated {
+                views[updated.0].set(item: updated.1, open: { [weak self] item in
+                    self?.open(item)
+                }, progress: progress, animated: animated)
+            }
+            
+            for (_, view) in toRemove {
+                performSubviewRemoval(view, animated: animated, scale: true)
+            }
+            toRemove.removeAll()
         }
         
-        tableView.setScrollHandler({ [weak self] position in
-            switch position.direction {
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+
+        if progress == 1.0 {
+            if let shortTextView = self.shortTextView {
+                performSubviewRemoval(shortTextView, animated: animated)
+                self.shortTextView = nil
+            }
+        } else {
+            
+//            scrollView.clipView.scroll(to: NSMakePoint(scrollView.documentOffset.x * progress, 0), animated: animated)
+            
+            let shortTextView: TextView
+            let isNew: Bool
+            if let view = self.shortTextView {
+                shortTextView = view
+                isNew = false
+            } else {
+                shortTextView = TextView()
+                shortTextView.userInteractionEnabled = false
+                shortTextView.isSelectable = false
+                addSubview(shortTextView, positioned: .below, relativeTo: self.scrollView)
+                self.shortTextView = shortTextView
+                isNew = true
+            }
+            let string = "Show Stories"
+            let layout = TextViewLayout.init(.initialize(string: string, color: theme.colors.text, font: .medium(.text)))
+            layout.measure(width: frame.width - 80)
+            shortTextView.update(layout)
+            
+            if isNew {
+                shortTextView.frame = getTextRect()
+                shortTextView.layer?.opacity = Float(getTextAlpha())
+                shortTextView.layer?.transform = CATransform3DMakeScale(getTextScale(), getTextScale(), 1.0)
+            }
+        }
+        
+        self.updateLayout(size: frame.size, transition: transition)
+        
+        for (i, view) in views.enumerated() {
+            if focusRange.contains(i) {
+                view.layer?.zPosition = 1000.0 - CGFloat(i)
+            } else {
+                view.layer?.zPosition = CGFloat(views.count - i)
+            }
+            view.userInteractionEnabled = progress == 1.0
+        }
+        self.userInteractionEnabled = progress != 1.0
+    }
+    
+    var focusRange: NSRange {
+        if let itemView = views.first, itemView.item?.peerId == item?.context.peerId {
+            if views.count > 3 {
+                return NSMakeRange(1, 3)
+            } else {
+                return NSMakeRange(0, min(3, views.count))
+            }
+        } else {
+            return NSMakeRange(0, min(3, views.count))
+        }
+    }
+    
+    var visibleRange: NSRange {
+        return NSMakeRange(0, Int(ceil(scrollView.documentOffset.x + frame.width / 70)))
+    }
+    
+    var documentSize: NSSize {
+        if let last = views.last {
+            return NSMakeSize(max(last.frame.maxX + 10, frame.width), frame.height)
+        }
+        return frame.size
+    }
+    
+    var unitDocumentSize: NSSize {
+        let count = CGFloat(views.count)
+        return NSMakeSize(10 + (count * 50) + ((count - 1) * 20) + 10, frame.height)
+    }
+    
+    private func open(_ item: StoryListEntryRowItem) {
+        item.open(.init(peerId: item.entry.id, id: nil, messageId: nil, takeControl: { [weak self] peerId, _, _ in
+            return self?.scrollAndFindItem(peerId, animated: false)
+        }), false)
+    }
+    
+    private func scrollAndFindItem(_ peerId: PeerId, animated: Bool) -> NSView? {
+        for (i, view) in views.enumerated() {
+            if view.item?.entry.id == peerId {
+                self.scroll(index: i, animated: animated, toVisible: true)
+                return view.imageView
+            }
+        }
+        return nil
+    }
+    
+    private func scroll(index: Int, animated: Bool, toVisible: Bool) {
+        let view = self.views[index]
+        if toVisible && view.visibleRect.width < view.frame.width / 2 || !toVisible {
+            scrollView.clipView.scroll(to: NSMakePoint(min(max(view.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated)
+        }
+    }
+    
+    func scaleItems(scale: CGFloat, animated: Bool) {
+        for view in views {
+            if view.visibleRect != .zero {
+                let rect = view.bounds
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+                fr = CATransform3DScale(fr, scale, scale, 1)
+                fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                view.layer?.transform = fr
+            }
+        }
+    }
+
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: scrollView, frame: size.bounds)
+        transition.updateFrame(view: documentView, frame: documentSize.bounds)
+        
+        for (i, view) in views.enumerated() {
+            if let item = view.item {
+                transition.updateFrame(view: view, frame: getFrame(item, index: i, progress: progress))
+                transition.updateAlpha(view: view, alpha: getAlpha(item, index: i, progress: progress))
+                view.set(progress: progress, transition: transition)
+            }
+        }
+        
+        if let shortTextView = shortTextView {
+            transition.updateTransformScale(layer: shortTextView.layer!, scale: getTextAlpha())
+            transition.updateFrame(view: shortTextView, frame: getTextRect())
+            transition.updateAlpha(view: shortTextView, alpha: getTextAlpha())
+        }
+    }
+}
+
+private final class StoryListChatListRowView: TableRowView {
+        
+    private let interfaceView: StoryListContainer
+    private let borderView = View()
+    
+    private var listener: TableScrollListener!
+    
+    required init(frame frameRect: NSRect) {
+        self.interfaceView = StoryListContainer(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        super.init(frame: frameRect)
+        addSubview(interfaceView)
+        addSubview(borderView)
+        
+        self.listener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            self?.updateOverscroll()
+        })
+        
+
+        interfaceView.loadMore = { [weak self] direction in
+            switch direction {
             case .bottom:
                 if let item = self?.item as? StoryListChatListRowItem {
                     if let _ = item.state.hasMoreToken {
@@ -102,24 +481,48 @@ private final class StoryListChatListRowView: TableRowView {
             default:
                 break
             }
-        })
+        }
+    }
+    
+    private func updateOverscroll() {
+        guard let item = self.item as? StoryListChatListRowItem, let table = item.table else {
+            return
+        }
+        let state = item.getInterfaceState()
+        let value = table.documentOffset.y
+        switch state {
+        case .revealed:
+            let empty = TableUpdateTransition(deleted: [], inserted: [], updated: [])
+            let progress: CGFloat
+            if value < 0 {
+                let dest: CGFloat = 250
+                let unit = log(dest)
+                let current = log(abs(value))
+                
+                let result = current / unit * value
+                
+                progress = (item.height + min(abs(result), 9.0)) / item.height
+            } else {
+                progress = 1.0
+            }
+            interfaceView.scaleItems(scale: progress, animated: false)
+        default:
+            break
+        }
     }
     
     override var backdorColor: NSColor {
         return .clear
     }
 
-    override func layout() {
-        super.layout()
-        tableView.frame = bounds
-        borderView.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
-    }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     private var current: [StoryChatListEntry] = []
+    
+    private var interfaceState: StoryListChatListRowItem.InterfaceState?
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
@@ -128,15 +531,10 @@ private final class StoryListChatListRowView: TableRowView {
             return
         }
         
-        borderView.backgroundColor = theme.colors.border
         
-        CATransaction.begin()
-
-
         var entries:[StoryChatListEntry] = []
         var index: Int = 0
         let isArchive = item.archive
-        
         if let item = item.state.accountItem, item.storyCount > 0 {
             entries.append(.init(item: item, index: index, appearance: appAppearance))
             index += 1
@@ -153,6 +551,16 @@ private final class StoryListChatListRowView: TableRowView {
                 index += 1
             }
         }
+        
+
+        
+        let previous = self.interfaceState
+        let interfaceState = item.getInterfaceState()
+        self.interfaceState = interfaceState
+                
+        borderView.backgroundColor = .clear//theme.colors.border
+        
+
 
         let initialSize = NSMakeSize(item.height, item.height)
         let context = item.context
@@ -161,15 +569,18 @@ private final class StoryListChatListRowView: TableRowView {
         let (deleted, inserted, updated) = proccessEntriesWithoutReverse(self.current, right: entries, { entry in
             return StoryListEntryRowItem(initialSize, entry: entry, context: context, archive: archive, open: item.open)
         })
-        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: true, grouping: false, animateVisibleOnly: false)
+        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, grouping: false, animateVisibleOnly: false)
 
-        self.tableView.merge(with: transition)
-        
+        CATransaction.begin()
+
+        self.interfaceView.set(transition: transition, item: item, context: item.context, progress: interfaceState.progress, animated: animated)
+        self.updateOverscroll()
+
         CATransaction.commit()
 
         self.current = entries
         
-        if tableView.documentSize.height < tableView.frame.width * 2 {
+        if interfaceView.unitDocumentSize.width < interfaceView.frame.width * 2 {
             if let _ = item.state.hasMoreToken {
                 if !archive {
                     item.context.account.filteredStorySubscriptionsContext?.loadMore()
@@ -178,7 +589,20 @@ private final class StoryListChatListRowView: TableRowView {
                 }
             }
         }
-
+        
+        if let table = item.table {
+            table.addScroll(listener: self.listener)
+        }
+    }
+    
+    
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        transition.updateFrame(view: interfaceView, frame: size.bounds)
+        interfaceView.updateLayout(size: size, transition: transition)
+        transition.updateFrame(view: borderView, frame: NSMakeRect(0, size.height - .borderSize, size.width, .borderSize))
+        interfaceView.updateLayout(size: size, transition: transition)
     }
 }
 
@@ -194,6 +618,11 @@ private final class StoryListEntryRowItem : TableRowItem {
         self.archive = archive
         super.init(initialSize)
     }
+    
+    var peerId: PeerId {
+        return entry.item.peer.id
+    }
+    
     override var stableId: AnyHashable {
         return entry.stableId
     }
@@ -222,37 +651,14 @@ private final class StoryListEntryRowItem : TableRowItem {
                     context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
                 }, itemImage: MenuAnimation.menu_hide.value))
             }
-            
         }
        
 
         return .single(items)
     }
     
-    func callopenStory() {
-        let table = self.table
-        self.open(.init(peerId: entry.id, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, storyId in
-            var view: NSView?
-            table?.enumerateItems(with: { item in
-                if let item = item as? StoryListEntryRowItem {
-                    view = item.takeControl(peerId, storyId)
-                }
-                return view == nil
-            })
-            return view
-        }), false)
-    }
-    
-    private func takeControl(_ peerId: PeerId, _ storyId: Int32?) -> NSView? {
-        (self.view as? StoryListEntryRowView)?.takeControl(peerId)
-    }
-    
     override var instantlyResize: Bool {
         return true
-    }
-    
-    override func viewClass() -> AnyClass {
-        return StoryListEntryRowView.self
     }
     
     override var height: CGFloat {
@@ -262,68 +668,70 @@ private final class StoryListEntryRowItem : TableRowItem {
     override var width: CGFloat {
         return 86
     }
+    
+    var itemHeight: CGFloat {
+        return 66
+    }
+    var itemWidth: CGFloat {
+        return 50
+    }
 }
 
+private final class ItemView : Control {
+    fileprivate let imageView = AvatarControl(font: .avatar(15))
+    fileprivate let textView = TextView()
+    fileprivate let stateView = View()
+    fileprivate var item: StoryListEntryRowItem?
+    private var open:((StoryListEntryRowItem)->Void)?
 
-private final class StoryListEntryRowView : HorizontalRowView {
-    private let imageView = AvatarControl(font: .avatar(15))
-    private let textView = TextView()
-    private let view = View(frame: NSMakeRect(0, 0, 50, 50))
-    private let overlay = Control(frame: NSMakeRect(0, 0, 70, 86))
-    private let stateView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         imageView.setFrameSize(NSMakeSize(44, 44))
-        addSubview(overlay)
-        
-        
+        self.addSubview(textView)
         stateView.isEventLess = true
-        
         imageView.userInteractionEnabled = false
-        view.isEventLess = true
-        
-        overlay.addSubview(view)
-        overlay.addSubview(textView)
-        
-        view.addSubview(stateView)
-        
-        overlay.scaleOnClick = true
-        
-        view.addSubview(imageView)
+        self.addSubview(stateView)
+        self.addSubview(imageView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
-        overlay.set(handler: { [weak self] _ in
-            if let item = self?.item as? StoryListEntryRowItem {
-                item.callopenStory()
+        self.scaleOnClick = true
+        
+        self.contextMenu = { [weak self] in
+            let menu = ContextMenu()
+            if let signal = self?.item?.menuItems(in: .zero) {
+                _ = signal.start(next: { [weak menu] items in
+                    for item in items {
+                        menu?.addItem(item)
+                    }
+                })
+            }
+            return menu
+        }
+        
+        set(handler: { [weak self] _ in
+            if let item = self?.item {
+                self?.open?(item)
             }
         }, for: .Click)
     }
     
-    override var backdorColor: NSColor {
-        return .clear
-    }
-    
-    func takeControl(_ peerId: PeerId) -> NSView? {
-        if let tableView = self.item?.table {
-            let view = tableView.item(stableId: AnyHashable(peerId))?.view as? StoryListEntryRowView
-            return view?.imageView
-        }
-        return nil
-    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
-    override func set(item: TableRowItem, animated: Bool) {
-        super.set(item: item, animated: animated)
+    func set(item: TableRowItem, open: @escaping(StoryListEntryRowItem)->Void, progress: CGFloat, animated: Bool) {
         
         guard let item = item as? StoryListEntryRowItem else {
             return
         }
-        imageView.setPeer(account: item.context.account, peer: item.entry.item.peer._asPeer())
+        
+        self.open = open
+        self.progress = progress
+        self.item = item
+        
+        imageView.setPeer(account: item.context.account, peer: item.entry.item.peer._asPeer(), size: NSMakeSize(44, 44))
         
         let name: String
         if item.entry.id == item.context.peerId {
@@ -338,18 +746,110 @@ private final class StoryListEntryRowView : HorizontalRowView {
         layout.measure(width: item.height - 4)
         textView.update(layout)
         
-        stateView.image = item.entry.hasUnseen ? theme.icons.story_unseen : theme.icons.story_seen
+        stateView.layer?.borderWidth = item.entry.hasUnseen ? 1.5 : 1.0
+        stateView.layer?.borderColor = item.entry.hasUnseen ? theme.colors.accent.cgColor : theme.colors.grayIcon.cgColor
+        stateView.backgroundColor = theme.colors.background
         
-        
-        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        self.updateLayout(size: frame.size, transition: transition)
     }
     
     override func layout() {
         super.layout()
-        imageView.centerX(y: 3)
-        view.centerX(y: 10)
-        stateView.frame = imageView.frame.insetBy(dx: -3, dy: -3)
-        textView.centerX(y: view.frame.maxY + 4)
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    private var progress: CGFloat = 1.0
+    
+    func set(progress: CGFloat, transition: ContainedViewLayoutTransition) {
+        self.progress = progress
+        self.updateLayout(size: self.frame.size, transition: transition)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        let imageSize = NSMakeSize(size.width - 6, size.width - 6)
+        
+        transition.updateFrame(view: imageView, frame: CGRect(origin: CGPoint(x: (size.width - imageSize.width) / 2, y: 3), size: imageSize))
+        transition.updateFrame(view: stateView, frame: imageView.frame.insetBy(dx: -(max(3 * progress, 2)), dy: -(max(3 * progress, 2))))
+        
+        stateView.layer?.cornerRadius = stateView.frame.height / 2
+        if transition.isAnimated {
+            stateView.layer?.animateCornerRadius(duration: transition.duration, timingFunction: transition.timingFunction)
+        }
+        transition.updateTransformScale(layer: textView.layer!, scale: progress)
+        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: stateView.frame.maxY + (4.0 * progress), addition: (textView.frame.width * (1 - progress)) / 2))
+        transition.updateAlpha(view: textView, alpha: progress)
     }
     
 }
+
+
+
+
+
+
+
+
+
+
+
+/*
+ 
+ private final class StoryListEntryRowView : HorizontalRowView {
+     
+     private let view = View(frame: NSMakeRect(0, 0, 50, 66))
+     private let overlay = Control(frame: NSMakeRect(0, 0, 70, 86))
+     private let itemView: ItemView = ItemView(frame: NSMakeRect(0, 0, 50, 66))
+     required init(frame frameRect: NSRect) {
+         super.init(frame: frameRect)
+         
+         addSubview(overlay)
+         
+         view.isEventLess = true
+         overlay.addSubview(view)
+         view.addSubview(itemView)
+         
+         overlay.scaleOnClick = true
+         
+         overlay.set(handler: { [weak self] _ in
+             if let item = self?.item as? StoryListEntryRowItem {
+                 item.callopenStory()
+             }
+         }, for: .Click)
+     }
+     
+     override var backdorColor: NSColor {
+         return .clear
+     }
+     
+     func takeControl(_ peerId: PeerId) -> NSView? {
+         if let tableView = self.item?.table {
+             let view = tableView.item(stableId: AnyHashable(peerId))?.view as? StoryListEntryRowView
+             return view?.itemView.imageView
+         }
+         return nil
+     }
+     
+     required init?(coder: NSCoder) {
+         fatalError("init(coder:) has not been implemented")
+     }
+     
+     
+     override func set(item: TableRowItem, animated: Bool) {
+         super.set(item: item, animated: animated)
+         
+         guard let item = item as? StoryListEntryRowItem else {
+             return
+         }
+         itemView.set(item: item, open: { _ in }, progress: 1.0, animated: animated)
+     }
+     
+     override func layout() {
+         super.layout()
+         view.centerX(y: 10)
+         itemView.center()
+     }
+     
+ }
+
+ */
