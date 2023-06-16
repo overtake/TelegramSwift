@@ -1948,10 +1948,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
+    func completeUndefiedStates(animated: Bool) {
+        
+    }
+    
     private func showSearchController(animated: Bool) {
       
         
         if searchController == nil {
+            
             
             let initialTags: SearchTags
             let target: SearchController.Target
@@ -1992,11 +1997,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                             if complete {
                                 self?.searchController?.viewDidAppear(animated)
                             }
+                            self?.completeUndefiedStates(animated: false)
                         })
                         searchController.view.layer?.animateScaleSpring(from: 1.05, to: 1.0, duration: 0.4, bounce: false)
                         searchController.view.layer?.animatePosition(from: NSMakePoint(rect.minX, rect.minY + 15), to: rect.origin, duration: 0.4, timingFunction: .spring)
 
                     } else {
+                        self?.completeUndefiedStates(animated: false)
                         searchController.viewDidAppear(animated)
                     }
                     self?.addSubview(searchController.view)

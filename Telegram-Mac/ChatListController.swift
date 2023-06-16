@@ -465,7 +465,7 @@ class ChatListController : PeersListController {
     
     private func processScroll(_ event: NSEvent) -> Bool {
         let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.stories) as? StoryListChatListRowItem
-        guard let item = optional, genericView.tableView.documentOffset.y == 0 else {
+        guard let item = optional, genericView.tableView.documentOffset.y <= 2 else {
             return false
         }
         
@@ -566,6 +566,17 @@ class ChatListController : PeersListController {
         }
         self.storyInterfaceState = .revealed
         self.genericView.tableView.reloadData(row: item.index, animated: true)
+    }
+    
+    override func completeUndefiedStates(animated: Bool) {
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.stories) as? StoryListChatListRowItem
+        guard let item = optional else {
+            return
+        }
+        if self.storyInterfaceState == .revealed {
+            self.storyInterfaceState = .concealed
+            self.genericView.tableView.reloadData(row: item.index, animated: animated)
+        }
     }
     
     override func viewDidLoad() {
