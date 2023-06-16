@@ -431,7 +431,9 @@ private final class StoryListContainer : Control {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: documentView, frame: documentSize.bounds)
-        transition.updateFrame(view: scrollView.contentView, frame: documentView.bounds)
+        if transition.isAnimated {
+            transition.updateFrame(view: scrollView.contentView, frame: documentView.bounds)
+        }
         transition.updateFrame(view: scrollView, frame: size.bounds)
         
         for (i, view) in views.enumerated() {
