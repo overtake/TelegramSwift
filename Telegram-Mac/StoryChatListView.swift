@@ -339,10 +339,11 @@ private final class StoryListContainer : Control {
                 isNew = true
             }
             let string = "Show Stories"
-            let layout = TextViewLayout.init(.initialize(string: string, color: theme.colors.text, font: .medium(.text)))
-            layout.measure(width: frame.width - 80)
-            shortTextView.update(layout)
-            
+            if shortTextView.textLayout?.attributedString.string != string {
+                let layout = TextViewLayout.init(.initialize(string: string, color: theme.colors.text, font: .medium(.text)))
+                layout.measure(width: frame.width - 80)
+                shortTextView.update(layout)
+            }
             if isNew {
                 shortTextView.frame = getTextRect()
                 shortTextView.layer?.opacity = Float(getTextAlpha())
@@ -429,8 +430,9 @@ private final class StoryListContainer : Control {
 
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: scrollView, frame: size.bounds)
         transition.updateFrame(view: documentView, frame: documentSize.bounds)
+        transition.updateFrame(view: scrollView.contentView, frame: documentView.bounds)
+        transition.updateFrame(view: scrollView, frame: size.bounds)
         
         for (i, view) in views.enumerated() {
             if let item = view.item {
@@ -492,10 +494,9 @@ private final class StoryListChatListRowView: TableRowView {
         let value = table.documentOffset.y
         switch state {
         case .revealed:
-            let empty = TableUpdateTransition(deleted: [], inserted: [], updated: [])
             let progress: CGFloat
             if value < 0 {
-                let dest: CGFloat = 250
+                let dest: CGFloat = 700
                 let unit = log(dest)
                 let current = log(abs(value))
                 
@@ -580,7 +581,7 @@ private final class StoryListChatListRowView: TableRowView {
 
         self.current = entries
         
-        if interfaceView.unitDocumentSize.width < interfaceView.frame.width * 2 {
+        if interfaceView.unitDocumentSize.width < interfaceView.frame.width * 4 {
             if let _ = item.state.hasMoreToken {
                 if !archive {
                     item.context.account.filteredStorySubscriptionsContext?.loadMore()
