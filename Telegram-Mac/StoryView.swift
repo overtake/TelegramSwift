@@ -495,6 +495,10 @@ class StoryVideoView : StoryImageView {
         }))
     }
     
+    override var magnify: MagnifyView? {
+        return nil
+    }
+    
     override var statusSignal: Signal<MediaResourceStatus, NoError> {
         if let context = self.context, let mediaPlayer = mediaPlayer {
             if let media = story?.media._asMedia() as? TelegramMediaFile {

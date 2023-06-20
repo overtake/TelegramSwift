@@ -587,8 +587,8 @@ final class StoryListView : Control, Notifable {
         self.controls.userInteractionEnabled = !value.magnified
 
    
-        let isControlHid = value.mouseDown //|| value.isSpacePaused
-        let prevIsControlHid = oldValue.mouseDown //|| oldValue.isSpacePaused
+        let isControlHid = value.mouseDown || value.magnified //|| value.isSpacePaused
+        let prevIsControlHid = oldValue.mouseDown || oldValue.magnified //|| oldValue.isSpacePaused
 
         if isControlHid != prevIsControlHid {
             self.controls.change(opacity: isControlHid ? 0 : 1, animated: animated)
@@ -708,6 +708,13 @@ final class StoryListView : Control, Notifable {
         }
         
        
+    }
+    
+    func zoomIn() {
+        self.current?.magnify?.zoomIn()
+    }
+    func zoomOut() {
+        self.current?.magnify?.zoomOut()
     }
 
     func update(context: AccountContext, entry: StoryContentContextState.FocusedSlice?) {

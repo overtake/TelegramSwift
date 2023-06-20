@@ -1081,8 +1081,14 @@ private final class StoryViewController: Control, Notifable {
         
         arguments?.interaction.update(animated: false, { current in
             var current = current
+            let updated = current.storyId != state.slice?.item.storyItem.id
             current.entryId = state.slice?.peer.id
             current.storyId = state.slice?.item.storyItem.id
+            if updated {
+                current.magnified = false
+                current.readingText = false
+                current.mouseDown = false
+            }
             return current
         })
     }
@@ -1269,6 +1275,13 @@ private final class StoryViewController: Control, Notifable {
     }
     func makeUrl() {
         self.current?.makeUrl()
+    }
+    
+    func zoomIn() {
+        self.current?.zoomIn()
+    }
+    func zoomOut() {
+        self.current?.zoomOut()
     }
     
     func resetInputView() {
@@ -2257,6 +2270,16 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.genericView.inputTextView?.boldWord()
             return .invoked
         }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
+        
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.zoomIn()
+            return .invoked
+        }, with: self, for: .Equal, priority: .modal, modifierFlags: [.command])
+        
+        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.zoomOut()
+            return .invoked
+        }, with: self, for: .Minus, priority: .modal, modifierFlags: [.command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputTextView?.underlineWord()
