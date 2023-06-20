@@ -610,7 +610,7 @@ class ChatListController : PeersListController {
             return self?.processScroll(event) ?? false
         }
 
-        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(includeHidden: false)
+        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(isHidden: false)
         |> deliverOnMainQueue).start(next: { [weak self] resources in
             
             guard let `self` = self else {
@@ -1644,7 +1644,7 @@ class ChatListController : PeersListController {
 
         self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
         if mode == .plain {
-            self.storyList = context.engine.messages.storySubscriptions(includeHidden: false)
+            self.storyList = context.engine.messages.storySubscriptions(isHidden: false)
         } else {
             self.storyList = nil
         }

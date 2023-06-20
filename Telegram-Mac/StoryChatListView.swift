@@ -509,7 +509,7 @@ private final class StoryListChatListRowView: TableRowView {
                         if !item.archive {
                             item.context.account.filteredStorySubscriptionsContext?.loadMore()
                         } else {
-                            item.context.account.allStorySubscriptionsContext?.loadMore()
+                            item.context.account.hiddenStorySubscriptionsContext?.loadMore()
                         }
                     }
                 }
@@ -619,7 +619,7 @@ private final class StoryListChatListRowView: TableRowView {
                 if !archive {
                     item.context.account.filteredStorySubscriptionsContext?.loadMore()
                 } else {
-                    item.context.account.allStorySubscriptionsContext?.loadMore()
+                    item.context.account.hiddenStorySubscriptionsContext?.loadMore()
                 }
             }
         }
