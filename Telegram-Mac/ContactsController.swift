@@ -146,7 +146,7 @@ private func entriesForView(_ view: EngineContactList, storyList: EngineStorySub
         
         entries.append(.addContact)
         var index: Int32 = 0
-        let storyItems = storyList.items.filter { $0.peer._asPeer().storyArchived }
+        let storyItems = storyList.items
         if !storyItems.isEmpty {
             entries.append(.separator("HIDDEN STORIES", index))
             index += 1

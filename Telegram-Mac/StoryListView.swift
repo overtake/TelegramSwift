@@ -368,7 +368,21 @@ final class StoryListView : Control, Notifable {
     }
     
     private var entry: StoryContentContextState.FocusedSlice? = nil
-    private var current: StoryView?
+    private let magnifyDispsosable = MetaDisposable()
+    private var current: StoryView? {
+        didSet {
+            if let magnify = current?.magnify {
+                controls.redirectView = magnify
+                magnifyDispsosable.set(magnify.magnifyUpdaterValue.start(next: { [weak self] value in
+                    self?.arguments?.interaction.updateMagnify(value)
+                }))
+            } else {
+                self.arguments?.interaction.updateMagnify(1.0)
+                magnifyDispsosable.set(nil)
+                controls.redirectView = nil
+            }
+        }
+    }
     private var arguments: StoryArguments?
     private var context: AccountContext?
     private let controls = StoryControlsView(frame: .zero)
@@ -408,7 +422,7 @@ final class StoryListView : Control, Notifable {
         container.layer?.masksToBounds = true
         container.addSubview(self.controls)
         container.addSubview(self.navigator)
-        
+        container.layer?.masksToBounds = false
         controls.controlOpacityEventIgnored = true
         
         addSubview(container)
@@ -439,6 +453,7 @@ final class StoryListView : Control, Notifable {
             }
             self?.updateSides()
         }, for: .Click)
+        
         
         
         set(handler: { [weak self] _ in
@@ -569,6 +584,7 @@ final class StoryListView : Control, Notifable {
             self.pauseOverlay = nil
         }
         
+        self.controls.userInteractionEnabled = !value.magnified
 
    
         let isControlHid = value.mouseDown //|| value.isSpacePaused
@@ -965,6 +981,7 @@ final class StoryListView : Control, Notifable {
     
     deinit {
         self.disposable.dispose()
+        magnifyDispsosable.dispose()
         arguments?.interaction.remove(observer: self)
         //self.current?.disappear()
     }
