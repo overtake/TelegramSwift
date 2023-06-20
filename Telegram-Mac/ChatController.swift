@@ -5947,6 +5947,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData, isLoading: Bool, processedView: ChatHistoryView) {
         
         
+        CATransaction.begin()
         
         let wasEmpty = genericView.tableView.isEmpty
         self.updateBackgroundColor(processedView.theme.controllerBackgroundMode)
@@ -6125,7 +6126,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if !didSetReady {
             self.genericView.inputView.updateInterface(with: self.chatInteraction)
         }
-        
+        CATransaction.commit()
         self.didSetReady = true
                 
     }
