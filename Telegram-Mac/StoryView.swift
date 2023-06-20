@@ -120,6 +120,7 @@ class StoryView : Control {
     
     deinit {
         disposable.dispose()
+        delayDisposable.dispose()
     }
     
     func animateAppearing(disappear: Bool) {
@@ -155,30 +156,39 @@ class StoryView : Control {
     func getStatus(_ status: MediaResourceStatus) -> MediaResourceStatus {
         return status
     }
+    private let delayDisposable = MetaDisposable()
     
     fileprivate func updateStatus(_ status: MediaResourceStatus, animated: Bool) {
         let hasLoading: Bool
         switch status {
         case .Local:
             hasLoading = false
+            delayDisposable.set(nil)
         default:
             hasLoading = true
+            delayDisposable.set(nil)
         }
         if hasLoading {
-            let current: ShimmerLayer
-            if let local = self.shimmer {
-                current = local
-            } else {
-                current = ShimmerLayer()
-                current.frame = bounds
-                self.shimmer = current
-                overlay.layer?.addSublayer(current)
-                if animated {
-                    current.animateAlpha(from: 0, to: 1, duration: 0.2)
+            delayDisposable.set(delaySignal(0.5).start(completed: { [weak self] in
+                guard let `self` = self else {
+                    return
                 }
-            }
-            current.update(backgroundColor: nil, shimmeringColor: NSColor(0xffffff, 0.3), data: nil, size: frame.size, imageSize: frame.size)
-            current.updateAbsoluteRect(bounds, within: frame.size)
+                let current: ShimmerLayer
+                if let local = self.shimmer {
+                    current = local
+                } else {
+                    current = ShimmerLayer()
+                    current.frame = self.bounds
+                    self.shimmer = current
+                    self.overlay.layer?.addSublayer(current)
+                    if animated {
+                        current.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                }
+                current.update(backgroundColor: nil, shimmeringColor: NSColor(0xffffff, 0.3), data: nil, size: self.frame.size, imageSize: self.frame.size)
+                current.updateAbsoluteRect(self.bounds, within: self.frame.size)
+            }))
+            
         } else if let layer = self.shimmer {
             performSublayerRemoval(layer, animated: animated)
             self.shimmer = nil
@@ -365,7 +375,7 @@ class StoryImageView : StoryView {
         if let image = media as? TelegramMediaImage  {
             let reference = ImageMediaReference.story(peer: peerReference, id: story.id, media: image)
             updateImageSignal = chatMessagePhoto(account: context.account, imageReference: reference, scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
-            resource = image.representationForDisplayAtSize(.init(NSMakeSize(1280, 1280)))?.resource
+            resource = image.representations.last?.resource
         } else if let file = media as? TelegramMediaFile {
             let fileReference = FileMediaReference.story(peer: peerReference, id: story.id, media: file)
             updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor)

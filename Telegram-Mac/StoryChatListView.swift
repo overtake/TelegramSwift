@@ -196,7 +196,6 @@ private final class StoryListContainer : Control {
     
     private func getFrame(_ item: StoryListEntryRowItem, index i: Int, progress: CGFloat) -> NSRect {
         let focusRange = self.focusRange
-        let visibleRange = self.visibleRange
         
         let itemSize = NSMakeSize(22 + (item.itemWidth - 22) * progress, 22 + (item.itemHeight - 22) * progress)
         
@@ -454,9 +453,25 @@ private final class StoryListContainer : Control {
         
         for (i, view) in views.enumerated() {
             if let item = view.item {
-                transition.updateFrame(view: view, frame: getFrame(item, index: i, progress: progress))
+                let frame = getFrame(item, index: i, progress: progress)
+                transition.updateFrame(view: view, frame: frame)
                 transition.updateAlpha(view: view, alpha: getAlpha(item, index: i, progress: progress))
-                view.set(progress: progress, transition: transition)
+                
+                let nextIntersection: NSRect?
+                if focusRange.contains(i), i != focusRange.max - 1, let next = views[i + 1].item {
+                    let nextRect = getFrame(next, index: i + 1, progress: progress).insetBy(dx: 2, dy: 0)
+                    let currentRect = frame.insetBy(dx: 2, dy: 0)
+                    
+                    if NSIntersectsRect(nextRect, currentRect) {
+                        var intersect = currentRect.intersection(nextRect).offsetBy(dx: -frame.minX, dy: -frame.minY).offsetBy(dx: 1, dy: 0)
+                        nextIntersection = intersect
+                    } else {
+                        nextIntersection = nil
+                    }
+                } else {
+                    nextIntersection = nil
+                }
+                view.set(progress: progress, nextIntersection: nextIntersection, transition: transition)
             }
         }
         
@@ -701,9 +716,11 @@ private final class ItemView : Control {
     fileprivate let smallImageView = AvatarControl(font: .avatar(7))
     fileprivate let textView = TextView()
     fileprivate let stateView = View()
+    fileprivate let backgroundView = View()
     fileprivate var item: StoryListEntryRowItem?
     private var open:((StoryListEntryRowItem)->Void)?
-
+    private var overlap: View? = nil
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         imageView.setFrameSize(NSMakeSize(44, 44))
@@ -711,6 +728,7 @@ private final class ItemView : Control {
         stateView.isEventLess = true
         smallImageView.userInteractionEnabled = false
         imageView.userInteractionEnabled = false
+        self.addSubview(backgroundView)
         self.addSubview(stateView)
         self.addSubview(imageView)
         self.addSubview(smallImageView)
@@ -773,9 +791,13 @@ private final class ItemView : Control {
         layout.measure(width: item.height - 4)
         textView.update(layout)
         
-        stateView.layer?.borderWidth = item.entry.hasUnseen ? 1.5 : 1.0
+        self.backgroundView.backgroundColor = theme.colors.background
+        backgroundView.layer?.borderWidth = item.entry.hasUnseen ? 1.0 + (0.5 * progress) : 1.0
+        backgroundView.layer?.borderColor = .clear
+
+        stateView.layer?.borderWidth = item.entry.hasUnseen ? 1.0 + (0.5 * progress) : 1.0
         stateView.layer?.borderColor = item.entry.hasUnseen ? theme.colors.accent.cgColor : theme.colors.grayIcon.withAlphaComponent(0.5).cgColor
-        stateView.backgroundColor = theme.colors.background
+        stateView.backgroundColor = .clear
         
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
         self.updateLayout(size: frame.size, transition: transition)
@@ -787,13 +809,41 @@ private final class ItemView : Control {
     }
     
     private var progress: CGFloat = 1.0
+    private var nextIntersection: CGRect? = nil
     
-    func set(progress: CGFloat, transition: ContainedViewLayoutTransition) {
+    func set(progress: CGFloat, nextIntersection: CGRect?, transition: ContainedViewLayoutTransition) {
         self.progress = progress
+        self.nextIntersection = nextIntersection
+        
+        
+//        if let next = self.nextIntersection {
+//            let current: View
+//            if let view = self.overlap {
+//                current = view
+//            } else {
+//                current = View(frame: next)
+//                self.overlap = current
+//                addSubview(current)
+//             //   addSubview(current, positioned: .above, relativeTo: stateView)
+//            }
+//
+//            current.backgroundColor = .random//theme.colors.background
+//            current.layer?.cornerRadius = next.height / 2
+//        } else if let view = self.overlap {
+//            performSubviewRemoval(view, animated: transition.isAnimated)
+//            self.overlap = nil
+//        }
+        
         self.updateLayout(size: self.frame.size, transition: transition)
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        
+        if let next = nextIntersection, let overlap = self.overlap {
+            transition.updateFrame(view: overlap, frame: next)
+        }
+        
         let imageSize = NSMakeSize(size.width - 6, size.width - 6)
         
         transition.updateFrame(view: imageView, frame: CGRect(origin: CGPoint(x: (size.width - imageSize.width) / 2, y: 3), size: imageSize))
@@ -801,10 +851,19 @@ private final class ItemView : Control {
 
         transition.updateFrame(view: stateView, frame: imageView.frame.insetBy(dx: -(max(3 * progress, 2)), dy: -(max(3 * progress, 2))))
         
+        transition.updateFrame(view: backgroundView, frame: stateView.frame)
+
+        
         stateView.layer?.cornerRadius = stateView.frame.height / 2
         if transition.isAnimated {
             stateView.layer?.animateCornerRadius(duration: transition.duration, timingFunction: transition.timingFunction)
         }
+        
+        backgroundView.layer?.cornerRadius = backgroundView.frame.height / 2
+        if transition.isAnimated {
+            backgroundView.layer?.animateCornerRadius(duration: transition.duration, timingFunction: transition.timingFunction)
+        }
+
         
         imageView.layer?.cornerRadius = imageView.frame.height / 2
         if transition.isAnimated {

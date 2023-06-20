@@ -16,17 +16,22 @@ import TelegramCore
 private enum ContactsControllerEntryId: Hashable {
     case peerId(Int64)
     case addContact
-    case stories
-    
+    case story(Int64)
+    case separator(Int32)
     func hash(into hasher: inout Hasher) {
         switch self {
-        case .stories:
+        case let .story(peerId):
             hasher.combine(0)
+            hasher.combine(peerId)
         case .addContact:
             hasher.combine(1)
         case let .peerId(peerId):
             hasher.combine(2)
             hasher.combine(peerId)
+        case let .separator(index):
+            hasher.combine(3)
+            hasher.combine(index)
+
         }
     }
     
@@ -34,27 +39,32 @@ private enum ContactsControllerEntryId: Hashable {
 
 
 private enum ContactsEntry: Comparable, Identifiable {
-    case stories(EngineStorySubscriptions)
+    case separator(String, Int32)
+    case story(EngineStorySubscriptions.Item, Int32)
     case peer(Peer, PeerPresence?, Int32, EngineStorySubscriptions.Item?)
     case addContact
     var stableId: ContactsControllerEntryId {
         switch self {
-        case .stories:
-            return .stories
+        case let .story(item, _):
+            return .story(item.peer.id.toInt64())
         case .addContact:
             return .addContact
         case let .peer(peer,_, _, _):
             return .peerId(peer.id.toInt64())
+        case let .separator(_, index):
+            return .separator(index)
         }
     }
     
     var index: Int32 {
         switch self {
-        case .stories:
-            return -2
+        case let .story(_, index):
+            return index
         case .addContact:
             return -1
         case let .peer(_, _, index, _):
+            return index
+        case let .separator(_, index):
             return index
         }
     }
@@ -69,8 +79,14 @@ private func ==(lhs: ContactsEntry, rhs: ContactsEntry) -> Bool {
         } else {
             return false
         }
-    case let .stories(state):
-        if case .stories(state) = rhs {
+    case let .story(item, index):
+        if case .story(item, index) = rhs {
+            return true
+        } else {
+            return false
+        }
+    case let .separator(text, index):
+        if case .separator(text, index) = rhs {
             return true
         } else {
             return false
@@ -110,16 +126,7 @@ private func entriesForView(_ view: EngineContactList, storyList: EngineStorySub
     var entries: [ContactsEntry] = []
     if let accountPeer = accountPeer {
         
-        
-        let selfStoryCount = storyList.accountItem?.storyCount ?? 0
-        if !storyList.items.isEmpty || selfStoryCount != 0 {
-            entries.append(.stories(storyList))
-        }
-        
-        entries.append(.addContact)
-        
         var peerIds: Set<PeerId> = Set()
-        var index: Int32 = 0
         let orderedPeers = view.peers.map { $0._asPeer() }.sorted(by: { lhsPeer, rhsPeer in
             let lhsPresence = view.presences[lhsPeer.id]
             let rhsPresence = view.presences[rhsPeer.id]
@@ -136,6 +143,24 @@ private func entriesForView(_ view: EngineContactList, storyList: EngineStorySub
             }
             return lhsPeer.id < rhsPeer.id
         })
+        
+        entries.append(.addContact)
+        var index: Int32 = 0
+        let storyItems = storyList.items.filter { $0.peer._asPeer().storyArchived }
+        if !storyItems.isEmpty {
+            entries.append(.separator("HIDDEN STORIES", index))
+            index += 1
+            for item in storyItems {
+                entries.append(.story(item, index))
+                index += 1
+            }
+            
+            if !orderedPeers.isEmpty {
+                entries.append(.separator("CONTACTS", index))
+                index += 1
+            }
+        }
+    
         
         for peer in orderedPeers {
             if !peer.isEqual(accountPeer), !peerIds.contains(peer.id) {
@@ -182,8 +207,22 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                 item = AddContactTableItem(initialSize, stableId: entry.stableId, addContact: {
                     arguments.addContact()
                 })
-            case let .stories(state):
-                item = StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: context, archive: true, state: state, open: arguments.openStory, reveal: { })
+            case let .story(story, _):
+                let string = "\(story.storyCount) stories"
+                item = ShortPeerRowItem(initialSize, peer: story.peer._asPeer(), account: context.account, context: context, stableId: entry.stableId, statusStyle: ControlStyle(foregroundColor: theme.colors.grayText), status: string, borderType: [.Right], contextMenuItems: {
+                    
+                    var items: [ContextMenuItem] = []
+                    
+                    items.append(.init("Unarchive", handler: {
+                        context.engine.peers.updatePeerStoriesHidden(id: story.peer.id, isHidden: false)
+                    }, itemImage: MenuAnimation.menu_show.value))
+                    
+                    return .single(items)
+                }, highlightVerified: true, story: story, openStory: { initialId in
+                    arguments.openStory(initialId, true)
+                })
+            case let .separator(text, _):
+                item = SeparatorRowItem(initialSize, entry.stableId, string: text)
             }
             return item
         }
@@ -343,6 +382,17 @@ class ContactsController: PeersListController {
     }
     
     override func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
+        
+        if let item = item as? ShortPeerRowItem, let id = item.stableId.base as? ContactsControllerEntryId {
+            switch id {
+            case .story:
+                item.openPeerStory()
+                return false
+            default:
+                break
+            }
+        }
+        
         if  let item = item as? ShortPeerRowItem, let modalAction = navigationController?.modalAction {
             if !modalAction.isInvokable(for: item.peer) {
                 modalAction.alertError(for: item.peer, with:window!)
@@ -357,6 +407,7 @@ class ContactsController: PeersListController {
     override func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         
         if let item = item as? ShortPeerRowItem {
+            
             let navigation = context.bindings.rootNavigation()
             if !isNew {
                 if let modalAction = navigation.modalAction {

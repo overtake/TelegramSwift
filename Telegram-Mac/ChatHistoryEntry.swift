@@ -519,8 +519,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 } ?? []
                 
                 
-                let original = message.text.fixed
-                let unmodified = original.emojiUnmodified
+                let original = message.text.withoutColorizer
+                let unmodified = original.withoutColorizer.emojiUnmodified
                 
                 let fullCustom = customRange.first(where: { $0.0.intersection(NSMakeRange(0, message.text.length)) != nil })
                 
@@ -530,15 +530,6 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     if let file = message.associatedMedia[mediaId] as? TelegramMediaFile {
                         var file = file
                         var attributes = file.attributes
-//                        attributes.removeAll()
-//                        attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
-//                            switch attribute {
-//                            case let .CustomEmoji(_, _, alt, packReference):
-//                                return .Sticker(displayText: alt, packReference: packReference, maskData: nil)
-//                            default:
-//                                return attribute
-//                            }
-//                        }
                         attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
                         attributes.append(.Sticker(displayText: original, packReference: nil, maskData: nil))
                         

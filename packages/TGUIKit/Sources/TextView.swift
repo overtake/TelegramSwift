@@ -1113,8 +1113,8 @@ public final class TextViewLayout : Equatable {
                         
                         
                         let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.text
-                        let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
-                        strokeRects.append((rect, color))
+                        let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 0.5)
+                       // strokeRects.append((rect, color))
                     }
                 }
             }

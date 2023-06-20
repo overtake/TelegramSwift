@@ -83,6 +83,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 item.openPeerStory()
             } 
         }, for: .Click)
+        
+        photoContainer.scaleOnClick = true
     }
     
     private func invokeIfNeededUp() {

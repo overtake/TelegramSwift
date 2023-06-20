@@ -70,7 +70,7 @@ final class StoryListView : Control, Notifable {
         private let documentView = View()
         private let container = Control()
         private let shadowView = ShadowView()
-        
+        private var arguments: StoryArguments?
         private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
         
         required init(frame frameRect: NSRect) {
@@ -88,6 +88,14 @@ final class StoryListView : Control, Notifable {
             NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: scrollView.clipView, queue: nil, using: { [weak self] _ in
                 self?.updateScroll()
             })
+            
+            scrollView.applyExternalScroll = { [weak self] event in
+                if self?.arguments?.interaction.presentation.inTransition == true {
+                    self?.superview?.scrollWheel(with: event)
+                    return true
+                }
+                return false
+            }
             
             
             self.layer?.cornerRadius = 10
@@ -119,6 +127,7 @@ final class StoryListView : Control, Notifable {
         func update(text: String, entities: [MessageTextEntity], context: AccountContext, state: State, transition: ContainedViewLayoutTransition, toggleState: @escaping(State)->Void, arguments: StoryArguments?) -> NSSize {
             
             self.state = state
+            self.arguments = arguments
             
             let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: storyTheme.fontSize, openInfo: { [weak arguments] peerId, toChat, messageId, initialAction in
                 if toChat {
@@ -126,7 +135,7 @@ final class StoryListView : Control, Notifable {
                 } else {
                     arguments?.openPeerInfo(peerId)
                 }
-            }, textColor: storyTheme.colors.text, linkColor: storyTheme.colors.link, monospacedPre: storyTheme.colors.text, monospacedCode: storyTheme.colors.text).mutableCopy() as! NSMutableAttributedString
+            }, hashtag: arguments?.hashtag ?? { _ in }, textColor: storyTheme.colors.text, linkColor: storyTheme.colors.text, monospacedPre: storyTheme.colors.text, monospacedCode: storyTheme.colors.text, underlineLinks: true).mutableCopy() as! NSMutableAttributedString
             
             
 
@@ -568,8 +577,9 @@ final class StoryListView : Control, Notifable {
         if isControlHid != prevIsControlHid {
             self.controls.change(opacity: isControlHid ? 0 : 1, animated: animated)
             self.navigator.change(opacity: isControlHid ? 0 : 1, animated: animated)
-            self.text?.change(opacity: isControlHid ? 0 : 1, animated: animated)
         }
+        self.text?.change(opacity: isControlHid || value.inputInFocus ? 0 : 1, animated: animated)
+
         self.updateSides(animated: animated)
     }
     
