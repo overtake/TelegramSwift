@@ -301,7 +301,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             privacy: item.privacy.flatMap(EngineStoryPrivacy.init),
                             isPinned: item.isPinned,
                             isExpired: item.isExpired,
-                            isPublic: item.isPublic
+                            isPublic: item.isPublic,
+                            isPending: false
                         )
                         
                         var nextItems: [EngineStoryItem] = []
@@ -318,7 +319,8 @@ final class StoryContentContextImpl: StoryContentContext {
                                     privacy: item.privacy.flatMap(EngineStoryPrivacy.init),
                                     isPinned: item.isPinned,
                                     isExpired: item.isExpired,
-                                    isPublic: item.isPublic
+                                    isPublic: item.isPublic,
+                                    isPending: false
                                 ))
                             }
                         }
@@ -1012,7 +1014,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     privacy: itemValue.privacy.flatMap(EngineStoryPrivacy.init),
                     isPinned: itemValue.isPinned,
                     isExpired: itemValue.isExpired,
-                    isPublic: itemValue.isPublic
+                    isPublic: itemValue.isPublic,
+                    isPending: false
                 )
                 
                 let stateValue = StoryContentContextState(

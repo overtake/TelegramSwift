@@ -162,18 +162,39 @@ final class StoryMyInputView : Control, StoryInput {
             
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
             
-            if let story = self?.story {
+            if let story = self?.story, let context = self?.arguments?.context {
                
                 
                 if !story.storyItem.isPinned {
                     menu.addItem(ContextMenuItem("Save to Profile", handler: {
                         self?.arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_plus.value))
+                    }, itemImage: MenuAnimation.menu_save_to_profile.value))
                 } else {
                     menu.addItem(ContextMenuItem("Remove from Profile", handler: {
                         self?.arguments?.togglePinned(story)
                     }, itemImage: MenuAnimation.menu_delete.value))
                 }
+                let resource: TelegramMediaFile?
+                if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
+                    if let res = media.representations.last?.resource {
+                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story")])
+                    } else {
+                        resource = nil
+                    }
+                    
+                } else if let media = story.storyItem.media._asMedia() as? TelegramMediaFile {
+                    resource = media
+                } else {
+                    resource = nil
+                }
+                
+                
+                if let resource = resource {
+                    menu.addItem(ContextMenuItem("Save Media...", handler: {
+                        saveAs(resource, account: context.account)
+                    }, itemImage: MenuAnimation.menu_save_as.value))
+                }
+                
                 if story.sharable {
                     menu.addItem(ContextMenuItem("Copy Link", handler: {
                         self?.arguments?.copyLink(story)

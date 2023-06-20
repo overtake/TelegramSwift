@@ -73,7 +73,7 @@ final class EmojiScreenEffect {
     }
     
     private func checkItem(_ item: TableRowItem, _ messageId: MessageId, with emoji: String) -> Bool {
-        if let item = item as? ChatRowItem, item.message?.text == emoji {
+        if let item = item as? ChatRowItem, item.message?.text.withoutColorizer == emoji.withoutColorizer {
             if messageId.peerId.namespace == Namespaces.Peer.CloudUser {
                 return context.sharedContext.baseSettings.bigEmoji
             }

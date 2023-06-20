@@ -299,7 +299,8 @@ final class StoryArguments {
     let copyLink:(StoryContentItem)->Void
     let startRecording: (Bool)->Void
     let togglePinned:(StoryContentItem)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void) {
+    let hashtag:(String)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -321,6 +322,7 @@ final class StoryArguments {
         self.copyLink = copyLink
         self.startRecording = startRecording
         self.togglePinned = togglePinned
+        self.hashtag = hashtag
     }
     
     func longDown() {
@@ -342,6 +344,7 @@ final class StoryArguments {
             var current = current
             current.inputInFocus = true
             current.isSpacePaused = true
+            current.readingText = false
             return current
         }
     }
@@ -1560,6 +1563,10 @@ private final class StoryViewController: Control, Notifable {
             } else if scrollDeltaX < 0 {
                 self.processGroupResult(.moveNext, animated: true, bySwipe: true)
             }
+            
+            if scrollDeltaX != 0 || scrollDeltaY != 0 {
+                self.inTransition = true
+            }
         } else if theEvent.phase == .changed {
             let previous = self.scrollDeltaX
             if scrollDeltaX > 0, scrollDeltaX + theEvent.scrollingDeltaX <= 0 {
@@ -1650,6 +1657,10 @@ private final class StoryViewController: Control, Notifable {
                         }
                     }
                 }
+            }
+            
+            if scrollDeltaY != 0 {
+                self.inTransition = false
             }
             
             var progress = value
@@ -1934,6 +1945,9 @@ final class StoryModalController : ModalViewController, Notifable {
         }, togglePinned: { [weak self] story in
             _ = context.engine.messages.updateStoriesArePinned(ids: [story.storyItem.id : story.storyItem], isPinned: !story.storyItem.isPinned).start()
             self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile : .addedToProfile)
+        }, hashtag: { [weak self] string in
+            self?.close()
+            self?.context.bindings.globalSearch(string)
         })
         
         self.arguments = arguments

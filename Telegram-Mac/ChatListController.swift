@@ -528,7 +528,7 @@ class ChatListController : PeersListController {
                             NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .drawCompleted)
                             storyInterfaceState = .revealed
                         }
-                        self.genericView.tableView.reloadData(row: item.index, animated: true)
+                        self.genericView.tableView.reloadData(row: item.index, animated: progress != 0)
                         return false
                     default:
                         fatalError("state not inited")
