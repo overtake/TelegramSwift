@@ -1714,9 +1714,14 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     } else {
                         var postIndex: Int = userAndPost.count - 1
-                        var post = userAndPost[postIndex].isEmpty ? nil : Int32(userAndPost[postIndex])
-                        if let range = userAndPost[postIndex].range(of: "?") {
-                            post = Int32(userAndPost[postIndex][..<range.lowerBound])
+                        let postText = userAndPost[postIndex]
+                        var post = postText.isEmpty ? nil : Int32(postText)
+                        var storyId: Int32? = nil
+                        if let range = postText.range(of: "?") {
+                            post = Int32(postText[..<range.lowerBound])
+                        } else if postText.hasPrefix("s") {
+                            let indexAfter = postText.index(after: postText.startIndex)
+                            storyId = Int32(postText[indexAfter...])
                         }
                         if name.hasPrefix("iv?") {
                             return .external(link: urlString, false)
@@ -1755,6 +1760,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 return .topic(link: urlString, username: name, context: context, threadId: topic, commentId: post)
                             } else if userAndPost.count == 3, let threadId = Int32(userAndPost[1]) {
                                 return .topic(link: urlString, username: name, context: context, threadId: threadId, commentId: post)
+                            } else if let storyId = storyId {
+                                return .story(link: urlString, username: name, storyId: storyId, messageId: messageId, context: context)
                             } else {
                                 return .followResolvedName(link: urlString, username: name, postId: post, context: context, action: action, callback: openInfo)
                             }

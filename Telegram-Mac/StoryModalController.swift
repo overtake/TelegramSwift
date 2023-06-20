@@ -661,25 +661,18 @@ private final class StoryViewController: Control, Notifable {
                         self.preview = nil
                     }
                 }
-                if isNext {
-                    button.set(image: next_chevron_hover, for: .Normal)
-//                    button.set(image: next_chevron_hover, for: .Hover)
-//                    button.set(image: next_chevron_hover, for: .Highlight)
-                } else {
-                    button.set(image: prev_chevron_hover, for: .Normal)
-//                    button.set(image: prev_chevron_hover, for: .Hover)
-//                    button.set(image: prev_chevron_hover, for: .Highlight)
-                }
-                
-                button.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
-                button.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
-                
-               
-
-                button.controlOpacityEventIgnored = true
-                button.controlOpacityEventIgnored = true
-
             }
+            if isNext {
+                button.set(image: next_chevron_hover, for: .Normal)
+            } else {
+                button.set(image: prev_chevron_hover, for: .Normal)
+            }
+            
+            button.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
+            button.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
+
+            button.controlOpacityEventIgnored = true
+            button.controlOpacityEventIgnored = true
             self.updateVisibility(animated: false)
             needsLayout = true
         }
@@ -976,10 +969,10 @@ private final class StoryViewController: Control, Notifable {
     }
     
     var hasNextGroup: Bool {
-        return self.storyContext?.stateValue?.nextSlice != nil
+        return self.storyContext?.stateValue?.nextSlice != nil || self.storyContext?.stateValue?.slice?.nextItemId != nil
     }
     var hasPrevGroup: Bool {
-        return self.storyContext?.stateValue?.previousSlice != nil
+        return self.storyContext?.stateValue?.previousSlice != nil || self.storyContext?.stateValue?.slice?.previousItemId != nil
     }
     
     private func updatePrevNextControls(_ event: NSEvent, animated: Bool = true) {
