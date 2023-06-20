@@ -17,6 +17,7 @@ import Postbox
 
 class StoryView : Control {
     
+    fileprivate var magnifyView: MagnifyView!
     
     fileprivate let ready: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     
@@ -143,6 +144,9 @@ class StoryView : Control {
         self.peer = peer
         self.context = context
         self.story = story
+        self.magnifyView?.minMagnify = 1.0
+        self.magnifyView?.maxMagnify = 2.0
+
     }
     
     func initializeStatus() {
@@ -169,7 +173,7 @@ class StoryView : Control {
             delayDisposable.set(nil)
         }
         if hasLoading {
-            delayDisposable.set(delaySignal(0.5).start(completed: { [weak self] in
+            delayDisposable.set(delaySignal(1.5).start(completed: { [weak self] in
                 guard let `self` = self else {
                     return
                 }
@@ -219,9 +223,18 @@ class StoryView : Control {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: overlay, frame: size.bounds)
+        if let magnifyView = magnifyView {
+            transition.updateFrame(view: magnifyView, frame: size.bounds)
+            magnifyView.contentSize = size
+        }
+        
         if let shimmer = self.shimmer {
             transition.updateFrame(layer: shimmer, frame: size.bounds)
         }
+    }
+    
+    var magnify: MagnifyView? {
+        return self.magnifyView
     }
     
     func restart() {
@@ -332,7 +345,8 @@ class StoryImageView : StoryView {
     private let awaitingDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(imageView, positioned: .below, relativeTo: overlay)
+        magnifyView = .init(imageView, contentSize: frameRect.size)
+        addSubview(magnifyView, positioned: .below, relativeTo: overlay)
     }
     
     deinit {

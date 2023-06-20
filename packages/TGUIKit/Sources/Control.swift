@@ -636,6 +636,16 @@ open class Control: View {
         }
         return false
     }
+    
+    public weak var redirectView: NSView?
+    
+    open override func smartMagnify(with event: NSEvent) {
+        if let redirectView = self.redirectView {
+            redirectView.smartMagnify(with: event)
+        } else {
+            super.smartMagnify(with: event)
+        }
+    }
  
     public var forceMouseDownCanMoveWindow: Bool = false
     open override var mouseDownCanMoveWindow: Bool {

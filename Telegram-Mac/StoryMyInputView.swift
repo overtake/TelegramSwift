@@ -177,7 +177,7 @@ final class StoryMyInputView : Control, StoryInput {
                 let resource: TelegramMediaFile?
                 if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
                     if let res = media.representations.last?.resource {
-                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story")])
+                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
                     } else {
                         resource = nil
                     }

@@ -146,6 +146,7 @@ final class StoryInteraction : InterfaceObserver {
         var isSpacePaused: Bool = false
         var playingReaction: Bool = false
         var readingText: Bool = false
+        var magnified: Bool = false
         var isMuted: Bool = false
         var storyId: Int32? = nil
         var entryId: PeerId? = nil
@@ -157,7 +158,7 @@ final class StoryInteraction : InterfaceObserver {
         var recordType: RecordingStateSettings = FastSettings.recordingState
         
         var isPaused: Bool {
-            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed
+            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified
         }
         
         var inTransition: Bool {
@@ -199,6 +200,14 @@ final class StoryInteraction : InterfaceObserver {
         self.presentation = f(presentation)
         if oldValue != presentation {
             notifyObservers(value: presentation, oldValue:oldValue, animated: animated)
+        }
+    }
+    
+    func updateMagnify(_ value: CGFloat) {
+        self.update { current in
+            var current = current
+            current.magnified = value != 1.0
+            return current
         }
     }
     
@@ -1663,7 +1672,7 @@ private final class StoryViewController: Control, Notifable {
                 self.inTransition = false
             }
             
-            var progress = value
+            let progress = value
             var cancelAnyway = false
             switch result {
             case .moveBack:
