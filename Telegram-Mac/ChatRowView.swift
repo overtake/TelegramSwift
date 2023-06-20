@@ -2135,4 +2135,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     var storyControl: NSView? {
         return replyView?.imageView
     }
+    
+    var storyMediaControl: NSView? {
+        return nil
+    }
 }

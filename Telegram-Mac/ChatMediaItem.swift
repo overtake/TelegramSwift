@@ -831,8 +831,9 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
         contentNode.addAccesoryOnCopiedView(view: view)
     }
 
+
     
-    override var storyControl: NSView? {
+    override var storyMediaControl: NSView? {
         return self.contentNode
     }
 }
