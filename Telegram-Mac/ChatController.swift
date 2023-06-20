@@ -7772,12 +7772,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     }
                 } else if let media = item.message?.media.first as? TelegramMediaStory, media.storyId == storyId {
-                    control = (item.view as? ChatRowView)?.storyControl
+                    control = (item.view as? ChatRowView)?.storyMediaControl
                 } else if let media = item.message?.media.first as? TelegramMediaWebpage {
                     switch media.content {
                     case let .Loaded(content):
                         if content.story?.storyId == storyId {
-                            control = (item.view as? ChatRowView)?.storyControl
+                            control = (item.view as? ChatRowView)?.storyMediaControl
                         }
                     default:
                         break
