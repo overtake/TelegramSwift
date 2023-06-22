@@ -19,7 +19,7 @@ final class TopicInfoArguments : PeerInfoArguments {
     override func updateEditable(_ editable: Bool, peerView: PeerView, controller: PeerInfoController) -> Bool {
         
         if let threadData = threadData, let state = state as? TopicInfoState {
-            let controller = ForumTopicInfoController(context: context, purpose: .edit(threadData.info, state.threadId), peerId: peerId)
+            let controller = ForumTopicInfoController(context: context, purpose: .edit(threadData, state.threadId), peerId: peerId)
             self.pullNavigation()?.push(controller)
         }
         
@@ -28,12 +28,12 @@ final class TopicInfoArguments : PeerInfoArguments {
     }
     
     func share() {
-        let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> deliverOnMainQueue
+        let peer = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue
         let context = self.context
         let state = self.state as! TopicInfoState
         let threadId = state.threadId
-        _ = peer.start(next: { peerView in
-            if let peer = peerViewMainPeer(peerView) {
+        _ = peer.start(next: { peer in
+            if let peer = peer {
                 var link: String = "https://t.me/c/\(peer.id.id._internalGetInt64Value())"
                 if let address = peer.addressName, !address.isEmpty {
                     link = "https://t.me/\(address)"
@@ -79,14 +79,14 @@ class TopicInfoState: PeerInfoState {
 
 
 enum TopicInfoEntry: PeerInfoEntry {
-    case info(section:Int, view: PeerView, editingState: Bool, threadData: MessageHistoryThreadData, viewType: GeneralViewType)
+    case info(section:Int, view: PeerView, editingState: Bool, threadData: MessageHistoryThreadData, threadId: Int64, viewType: GeneralViewType)
     case addressName(section:Int, name:String, viewType: GeneralViewType)
     case media(section:Int, controller: PeerMediaController, isVisible: Bool, viewType: GeneralViewType)
     case section(Int)
     
     func withUpdatedViewType(_ viewType: GeneralViewType) -> TopicInfoEntry {
         switch self {
-        case let .info(section, view, editingState, threadData, _): return .info(section: section, view: view, editingState: editingState, threadData: threadData, viewType: viewType)
+        case let .info(section, view, editingState, threadData, threadId, _): return .info(section: section, view: view, editingState: editingState, threadData: threadData, threadId: threadId, viewType: viewType)
         case let .addressName(section, name, _): return .addressName(section: section, name: name, viewType: viewType)
         case let .media(section, controller, isVisible, _): return  .media(section: section, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section: return self
@@ -99,11 +99,14 @@ enum TopicInfoEntry: PeerInfoEntry {
         }
         
         switch self {
-        case let .info(lhsSection, lhsPeerView, lhsEditingState, lhsUpdatingPhotoState, lhsViewType):
+        case let .info(lhsSection, lhsPeerView, lhsEditingState, lhsThreadData, lhsThreadId, lhsViewType):
             switch entry {
-            case let .info(rhsSection, rhsPeerView, rhsEditingState, rhsUpdatingPhotoState, rhsViewType):
+            case let .info(rhsSection, rhsPeerView, rhsEditingState, rhsThreadData, rhsThreadId, rhsViewType):
                 
-                if lhsUpdatingPhotoState != rhsUpdatingPhotoState {
+                if lhsThreadData != rhsThreadData {
+                    return false
+                }
+                if lhsThreadId != rhsThreadId {
                     return false
                 }
                 if lhsSection != rhsSection {
@@ -194,7 +197,7 @@ enum TopicInfoEntry: PeerInfoEntry {
     
     var sectionId: Int {
         switch self {
-        case let .info(sectionId, _, _, _, _):
+        case let .info(sectionId, _, _, _, _, _):
             return sectionId
         case let .addressName(sectionId, _, _):
             return sectionId
@@ -207,7 +210,7 @@ enum TopicInfoEntry: PeerInfoEntry {
     
     var sortIndex: Int {
         switch self {
-        case let .info(sectionId, _, _, _, _):
+        case let .info(sectionId, _, _, _, _, _):
             return (sectionId * 100000) + stableIndex
         case let .addressName(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
@@ -229,8 +232,8 @@ enum TopicInfoEntry: PeerInfoEntry {
     func item(initialSize:NSSize, arguments:PeerInfoArguments) -> TableRowItem {
         let arguments = arguments as! TopicInfoArguments
         switch self {
-        case let .info(_, peerView, editable, threadData, viewType):
-            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: threadData, viewType: viewType, editing: editable)
+        case let .info(_, peerView, editable, threadData, threadId, viewType):
+            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: threadData, threadId: threadId, viewType: viewType, editing: editable)
         case let .addressName(_, value, viewType):
             let link = "https://t.me/\(value)"
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: link, context: arguments.context, viewType: viewType, isTextSelectable: false, callback:{
@@ -270,7 +273,7 @@ func topicInfoEntries(view: PeerView, threadData: MessageHistoryThreadData, argu
             entries.append(contentsOf: block)
         }
         
-        infoBlock.append(.info(section: TopicInfoSection.header.rawValue, view: view, editingState: false, threadData: threadData, viewType: .singleItem))
+        infoBlock.append(.info(section: TopicInfoSection.header.rawValue, view: view, editingState: false, threadData: threadData, threadId: state.threadId, viewType: .singleItem))
         
         
         applyBlock(infoBlock)

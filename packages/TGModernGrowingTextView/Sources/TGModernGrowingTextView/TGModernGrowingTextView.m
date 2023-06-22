@@ -225,6 +225,10 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     
 }
 
+- (id)accessibilityFocusedUIElement {
+    return nil;
+}
+
 
 - (NSRect) highlightRectForRange:(NSRange)aRange whole: (BOOL)whole
 {
@@ -268,6 +272,9 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     return aRect;
 }
     
+- (id)accessibilityParent {
+    return nil;
+}
     
 -(void)setSelectedRange:(NSRange)selectedRange {
     [super setSelectedRange:selectedRange];
@@ -309,7 +316,9 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         
         if (item.action == @selector(submenuAction:)) {
             [item.submenu.itemArray enumerateObjectsUsingBlock:^(NSMenuItem * _Nonnull subItem, NSUInteger idx, BOOL * _Nonnull stop) {
-                if (subItem.action == @selector(_shareServiceSelected:) || subItem.action == @selector(orderFrontFontPanel:)  || subItem.action == @selector(orderFrontSubstitutionsPanel:) || subItem.action == @selector(orderFrontSubstitutionsPanel:) || subItem.action == @selector(startSpeaking:) || subItem.action == @selector(changeLayoutOrientation:) ) {
+                
+                if (subItem
+                    .action == @selector(_shareServiceSelected:) || subItem.action == @selector(orderFrontFontPanel:)  || subItem.action == @selector(orderFrontSubstitutionsPanel:) || subItem.action == @selector(orderFrontSubstitutionsPanel:) || subItem.action == @selector(startSpeaking:) || subItem.action == @selector(changeLayoutOrientation:) ) {
                     [removeItems addObject:item];
                     *stop = YES;
                 } else if (subItem.action == @selector(capitalizeWord:)) {
@@ -401,10 +410,9 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
 -(void)removeAll:(id)sender {
     NSRange selectedRange = self.selectedRange;
     NSMutableAttributedString *attr = [self.attributedString mutableCopy];
-    [attr removeAttribute:TGCustomLinkAttributeName range:selectedRange];
-    [attr removeAttribute:TGSpoilerAttributeName range:selectedRange];
-    [attr removeAttribute:TGAnimatedEmojiAttributeName range:selectedRange];
+    [attr setAttributes:nil range:selectedRange];
     [attr addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:self.font.pointSize] range: selectedRange];
+
     
     [self.textStorage setAttributedString:attr];
     [self setSelectedRange:NSMakeRange(selectedRange.location + selectedRange.length, 0)];
@@ -868,6 +876,10 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     return [self.superview menuForEvent:event];
 }
 
+- (NSView *)hitTest:(NSPoint)point {
+    return nil;
+}
+
 -(void)mouseDown:(NSEvent *)event {
     [super mouseDown:event];
 }
@@ -972,6 +984,8 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         [_placeholder setSelectable:NO];
         [_placeholder setEditable:NO];
         [_placeholder setEnabled:NO];
+        [_placeholder setContinuous:NO];
+        
         [_placeholder setLineBreakMode:NSLineBreakByTruncatingTail];
         [_placeholder setMaximumNumberOfLines:0];
         
@@ -1694,10 +1708,8 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         return;
     }
     NSMutableAttributedString *attr = [self.textView.attributedString mutableCopy];
-    [attr removeAttribute:NSFontAttributeName range:self.selectedRange];
-    [attr removeAttribute:TGCustomLinkAttributeName range:self.selectedRange];
-    [attr removeAttribute:TGSpoilerAttributeName range:self.selectedRange];
-    [attr removeAttribute:TGAnimatedEmojiAttributeName range:self.selectedRange];
+    [attr setAttributes:nil range:self.selectedRange];
+    [attr addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:self.textFont.pointSize] range: self.selectedRange];
     [self.textView.textStorage setAttributedString:attr];
 }
     
@@ -1819,6 +1831,29 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     } else {
         id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
         [self addInputTextTag:tag range:range];
+        [self update:YES];
+    }
+}
+
+-(void)addLink:(NSString *_Nullable)link text: (NSString * __nonnull)text range: (NSRange)range {
+    if (link == nil) {
+        NSMutableAttributedString *copy = [self.attributedString mutableCopy];
+        [copy replaceCharactersInRange:range withString:text];
+        [copy removeAttribute:TGCustomLinkAttributeName range: range];
+        [self setAttributedString:copy animated:false];
+    } else {
+        
+        id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:link attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:_linkColor]];
+        
+        NSAttributedString *was = [self.attributedString mutableCopy];
+        
+        NSMutableAttributedString *be = [self.attributedString mutableCopy];
+        [be addAttribute:TGCustomLinkAttributeName value:tag range: range];
+        [be replaceCharactersInRange:range withString:text];
+
+        SimpleUndoItem *item = [[SimpleUndoItem alloc] initWithAttributedString:was be:be wasRange:range beRange:NSMakeRange(range.location, text.length)]; //[[SimpleUndoItem alloc] initWithAttributedString:was be:be inRange:range];
+        [self addSimpleItem:item];
+
         [self update:YES];
     }
 }

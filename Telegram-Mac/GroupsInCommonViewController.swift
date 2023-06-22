@@ -38,6 +38,10 @@ private func commonGroupsEntries(state: GroupsInCommonState, arguments: GroupsIn
     
     let peers = state.peers.compactMap { $0.chatMainPeer }
     
+    struct Tuple : Equatable {
+        let peer: PeerEquatable
+        let viewType: GeneralViewType
+    }
     for (i, peer) in peers.enumerated() {
         var viewType: GeneralViewType = bestGeneralViewType(peers, for: i)
         if i == 0 {
@@ -47,9 +51,10 @@ private func commonGroupsEntries(state: GroupsInCommonState, arguments: GroupsIn
                 viewType = .innerItem
             }
         }
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer.id), equatable: InputDataEquatable(PeerEquatable(peer)), comparable: nil, item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsetsZero, viewType: viewType, action: {
-                arguments.open(peer.id)
+        let tuple = Tuple(peer: .init(peer), viewType: viewType)
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_id(peer.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+            return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 46, photoSize: NSMakeSize(32, 32), inset: NSEdgeInsetsZero, viewType: tuple.viewType, action: {
+                arguments.open(tuple.peer.peer.id)
             })
         }))
         index += 1
@@ -72,8 +77,8 @@ func GroupsInCommonViewController(context: AccountContext, peerId: PeerId) -> Vi
     })
     
     let contextValue: Promise<GroupsInCommonContext> = Promise()
-    let peerId = context.account.postbox.peerView(id: peerId) |> take(1) |> map { view in
-        return peerViewMainPeer(view)?.id ?? peerId
+    let peerId = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> map { peer in
+        return peer?.id ?? peerId
     }
     contextValue.set(peerId |> map {
         GroupsInCommonContext(account: context.account, peerId: $0)

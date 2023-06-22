@@ -922,7 +922,7 @@ private class PhoneCallWindowView : View {
             self.imageView.set(arguments: arguments)
             
             if let reference = PeerReference(user) {
-                fetching.set(fetchedMediaResource(mediaBox: session.account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start())
+                fetching.set(fetchedMediaResource(mediaBox: session.account.postbox.mediaBox, userLocation: .peer(user.id), userContentType: .image, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start())
             }
             
         } else {
@@ -1430,6 +1430,7 @@ func closeCall(minimisize: Bool = false) {
                     break
                 }
             })
+            closeAllModals(window: controller.window)
             if controller.window.isFullScreen {
                 controller.window.toggleFullScreen(nil)
                 delay(0.8, closure: {

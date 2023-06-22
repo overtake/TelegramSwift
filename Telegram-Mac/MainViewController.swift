@@ -288,14 +288,15 @@ class MainViewController: TelegramViewController {
         let context = self.context
         
         navigation.hasBarRightBorder = true
-        
+        navigation.hasBarLeftBorder = true
+
         tabController._frameRect = self._frameRect
         self.navigation._frameRect = self._frameRect
         self.bar = .init(height: 0)
         self.tabController.bar = .init(height: 0)
         
         backgroundColor = theme.colors.background
-        addSubview(self.navigation.view)
+        addSubview(self.tabController.view)
         
         if !context.isSupport {
         #if !APP_STORE
@@ -307,7 +308,7 @@ class MainViewController: TelegramViewController {
         
         tabController.add(tab: TabItem(image: theme.icons.tab_calls, selectedImage: theme.icons.tab_calls_active, controller: phoneCalls))
         
-        tabController.add(tab: TabBadgeItem(context, controller: chatList, image: theme.icons.tab_chats, selectedImage: theme.icons.tab_chats_active, longHoverHandler: { [weak self] control in
+        tabController.add(tab: TabBadgeItem(context, controller: navigation, image: theme.icons.tab_chats, selectedImage: theme.icons.tab_chats_active, longHoverHandler: { [weak self] control in
             self?.showFastChatSettings(control)
         }))
         
@@ -380,10 +381,10 @@ class MainViewController: TelegramViewController {
                 confirm(for: context.window, information: strings().chatListPopoverConfirm, successHandler: { _ in
                     _ = context.engine.messages.markAllChatsAsReadInteractively(items: [(.root, nil), (.archive, nil)]).start()
                 })
-            }, itemImage: MenuAnimation.menu_read.value))
+            }, itemImage: MenuAnimation.menu_folder_read.value))
         }
         
-        if self.tabController.current == chatList, !items.isEmpty, let event = NSApp.currentEvent {
+        if self.tabController.current == navigation, !items.isEmpty, let event = NSApp.currentEvent {
             let menu = ContextMenu(betterInside: true)
             for item in items {
                 menu.addItem(item)
@@ -506,6 +507,11 @@ class MainViewController: TelegramViewController {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         tabController.updateLocalizationAndTheme(theme: theme)
+        
+        navigation.hasBarRightBorder = true
+        navigation.hasBarLeftBorder = true
+
+        
         let theme = (theme as! TelegramPresentationTheme)
         #if !APP_STORE
         updateController.updateLocalizationAndTheme(theme: theme)
@@ -639,7 +645,7 @@ class MainViewController: TelegramViewController {
     
     
     func openChat(_ index: Int, force: Bool = false) {
-        if self.tabController.current == chatList {
+        if self.tabController.current == navigation {
             let controller = navigation.controller
             if let controller = controller as? ChatListController {
                 controller.openChat(index, force: force)
@@ -660,11 +666,7 @@ class MainViewController: TelegramViewController {
     }
     
     var effectiveNavigation: NavigationViewController {
-        if self.context.layout == .single {
-            return context.bindings.rootNavigation()
-        } else {
-            return self.navigation
-        }
+        return self.navigation
     }
     
     func showChatList() {
@@ -677,7 +679,7 @@ class MainViewController: TelegramViewController {
     
     func isCanMinimisize() -> Bool{
         let current = self.tabController.current
-        return current == chatList || current == contacts || current == phoneCalls
+        return current == navigation || current == contacts || current == phoneCalls
     }
     
     override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
@@ -691,7 +693,7 @@ class MainViewController: TelegramViewController {
         self.contacts = ContactsController(context)
         self.settings = AccountViewController(context)
         self.phoneCalls = RecentCallsViewController(context)
-        self.navigation = NavigationViewController(self.tabController, context.window)
+        self.navigation = NavigationViewController(self.chatList, context.window)
         
         #if !APP_STORE
             updateController = UpdateTabController(context.sharedContext)

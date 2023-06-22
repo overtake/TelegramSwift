@@ -23,6 +23,7 @@ import InAppSettings
 import ThemeSettings
 import ColorPalette
 import WebKit
+import System
 
 #if !APP_STORE
 import AppCenter
@@ -190,8 +191,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private(set) var appEncryption: AppEncryptionParameters!
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        UserDefaults.standard.set(false, forKey: "NSTableViewCanEstimateRowHeights")
-        
+       // UserDefaults.standard.set(true, forKey: "NSTableViewCanEstimateRowHeights")
+     //   UserDefaults.standard.removeObject(forKey: "NSTableViewCanEstimateRowHeights")
     }
     
     var allowedDomains: [String] {
@@ -443,26 +444,25 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     
     private func launchApp(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
-        
+        FontCacheKey.initializeCache()
         
         self.appEncryption = appEncryption
         
         let rootPath = containerUrl!
         let window = self.window!
         System.updateScaleFactor(window.backingScaleFactor)
-        
-        
+                
         window.minSize = NSMakeSize(380, 500)
         
         let networkDisposable = MetaDisposable()
         
-        
-        self.window.closeInterceptor = {
-            if !self.terminated {
-                self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
-            }
-            return false
-        }
+//        
+//        self.window.closeInterceptor = {
+//            if !self.terminated {
+//                self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
+//            }
+//            return false
+//        }
         
         let displayUpgrade:(Float?) -> Void = { progress in
             if let progress = progress {
@@ -496,9 +496,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 case let .numericalPassword(value), let .plaintextPassword(value):
                     if !value.isEmpty {
                         appEncryption.change(value)
-                        accountManager.transaction {
+                        _ = accountManager.transaction {
                             $0.setAccessChallengeData(.plaintextPassword(value: ""))
-                        }
+                        }.start()
                     }
                 default:
                     break
@@ -531,10 +531,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 
                 _ = signal.start(next: { updatedTheme in
                     if let theme = updatedTheme {
-                        self.enumerateApplicationContexts({ context in
-                            telegramUpdateTheme(theme, window: context.context.window, animated: true)
-                            context.applyNewTheme()
-                        })
+                        if self.contextValue == nil {
+                            telegramUpdateTheme(theme, window: window, animated: true)
+                        } else {
+                            self.enumerateApplicationContexts({ context in
+                                telegramUpdateTheme(theme, window: context.context.window, animated: true)
+                                context.applyNewTheme()
+                            })
+                        }
                     }
                 })
                 
@@ -648,7 +652,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     return EmptyDisposable
                 } |> runOn(.concurrentBackgroundQueue())
                 
-                let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: appData, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), resolvedDeviceName: ApiEnvironment.resolvedDeviceName)
+                
+                var useBetaFeatures: Bool = false
+                #if BETA || DEBUG
+                useBetaFeatures = false
+                #endif
+                
+                let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: OngoingCallContext.maxLayer, voipVersions: voipVersions, appData: appData, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), deviceModelName: deviceModelPretty(), useBetaFeatures: useBetaFeatures, isICloudEnabled: false)
                 
                 let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: displayUpgrade)
                 
@@ -704,7 +714,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         let currentInChat = navigation.controller is ChatController
                         let controller = navigation.controller as? ChatController
                         
-                        if controller?.chatInteraction.mode.threadId == threadId {
+                        if controller?.chatLocation.peerId == threadId.peerId,  controller?.chatLocation.threadMsgId == threadId {
                             controller?.scrollup()
                         } else {
                             
@@ -1461,5 +1471,16 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             })
         }
         window.makeKeyAndOrderFront(sender)
+    }
+    
+    func applyExternalLoginCode(_ code: String) {
+        if let modal = findModal(ModalController.self) {
+            let controller = modal.controller.controller as? PhoneNumberCodeConfirmController
+            if let controller = controller {
+                controller.applyExternalLoginCode(code)
+                return
+            }
+        }
+        self.authContextValue?.applyExternalLoginCode(code)
     }
 }

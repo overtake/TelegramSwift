@@ -38,8 +38,10 @@ enum LocalAnimatedSticker : String {
     case group_call_chatlist_typing
     case invitations
     case destructor
+    case global_autoremove
     case gigagroup
     case police
+    case duck_empty
     
     case voice_chat_raise_hand_1
     case voice_chat_raise_hand_2
@@ -101,6 +103,9 @@ enum LocalAnimatedSticker : String {
     case device_windows
     
     case change_sim
+    case pirate_flag
+    
+    case share_folder
     
     case text_to_voice
     case voice_to_text
@@ -138,6 +143,7 @@ enum LocalAnimatedSticker : String {
     case menu_save_as
     case menu_select_messages
     case menu_schedule_message
+    case menu_online
     case menu_send_now
     case menu_seen
     case menu_view_replies
@@ -188,8 +194,6 @@ enum LocalAnimatedSticker : String {
     case menu_camera
     case menu_translate
     case menu_gear
-
-    
     case menu_folder_all_chats
     case menu_folder_animal
     case menu_folder_book
@@ -220,18 +224,14 @@ enum LocalAnimatedSticker : String {
     case menu_drugs
     case menu_reload
     case menu_webapp_placeholder
-    
     case menu_autodelete_1d
     case menu_autodelete_1h
     case menu_autodelete_1m
     case menu_autodelete_1w
     case menu_autodelete_never
     case menu_autodelete_customize
-
-    
     case menu_speaker_muted
     case menu_speaker
-    
     case menu_sharescreen_slash
     case menu_sharescreen
     case menu_note_download
@@ -243,14 +243,57 @@ enum LocalAnimatedSticker : String {
     case menu_topics
     case menu_pause
     case menu_play
+    case menu_hide
+    case menu_show
+    case menu_report_false_positive
+    case menu_bio
+    case menu_send_spoiler
+    case menu_forever
+    case menu_add
+    case menu_more
+    case menu_atsign
+    case menu_speed
 
+    case emoji_category_activities
+    case emoji_category_angry
+    case emoji_category_arrow_to_search
+    case emoji_category_away
+    case emoji_category_bath
+    case emoji_category_busy
+    case emoji_category_dislike
+    case emoji_category_food
+    case emoji_category_happy
+    case emoji_category_heart
+    case emoji_category_hi
+    case emoji_category_home
+    case emoji_category_like
+    case emoji_category_neutral
+    case emoji_category_omg
+    case emoji_category_party
+    case emoji_category_recent
+    case emoji_category_sad
+    case emoji_category_search_to_arrow
+    case emoji_category_sleep
+    case emoji_category_study
+    case emoji_category_tongue
+    case emoji_category_vacation
+    case emoji_category_what
+    case emoji_category_work
+    
+    
+    
     case forum_topic
     
     case custom_reaction
     
+    
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
+    }
+    
+    func menuIcon(_ color: NSColor) -> CGImage? {
+        return NSImage(named: self.rawValue)?.precomposed(color)
     }
     
     

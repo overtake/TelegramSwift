@@ -41,7 +41,7 @@ final class PremiumDemoLegacyPhoneView : View {
         self.position = position
         if let video = video {
                                     
-            let mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: .standalone(resource: video.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+            let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .other, userContentType: .video, reference: .standalone(resource: video.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
             mediaPlayer.attachPlayerView(self.videoView)
             self.player = mediaPlayer
             

@@ -424,7 +424,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
             
             let parameters = ChatMediaGalleryParameters(showMedia: { _ in }, showMessage: { message in
                 self?.chatInteraction.focusMessageId(nil, message.id, .none(nil))
-            }, isWebpage: false, media: message.effectiveMedia!, automaticDownload: true)
+            }, isWebpage: false, media: message.anyMedia!, automaticDownload: true)
             
             showChatGallery(context: context, message: message, supplyment, parameters, type: type, reversed: true, chatMode: mode, contextHolder: contextHolder)
         })

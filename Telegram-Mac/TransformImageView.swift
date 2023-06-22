@@ -158,11 +158,14 @@ open class TransformImageView: NSView {
 
     
     override open func copy() -> Any {
+        
+        var visibleRect = self.effectiveVisibleRect
+        
         let view = NSView()
         view.wantsLayer = true
         view.background = .clear
         view.layer?.contents = self.image
-        view.frame = self.visibleRect
+        view.frame = visibleRect
         view.layer?.masksToBounds = true
    
         

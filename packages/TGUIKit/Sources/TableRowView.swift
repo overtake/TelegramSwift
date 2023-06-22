@@ -73,6 +73,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
 
+    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+        get {
+            return false
+        }
+        set {
+
+        }
+    }
     
     open func updateColors() {
         self.layer?.backgroundColor = backdorColor.cgColor
@@ -106,6 +114,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
 
+    open override func isAccessibilityElement() -> Bool {
+        return false
+    }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
 //        ctx.setFillColor(backdorColor.cgColor)
@@ -238,6 +249,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
 
+    open func canAnimateUpdate(_ item: TableRowItem) -> Bool {
+        return true
+    }
     
     open func showContextMenu(_ event:NSEvent) -> Void {
         
@@ -381,7 +395,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    open func onInsert(_ animation: NSTableView.AnimationOptions) {
+    open func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {
         
     }
     
@@ -447,6 +461,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
+    
     @objc private func _updateAnimatableContent() {
         DispatchQueue.main.async { [weak self] in
             self?.updateAnimatableContent()
@@ -457,7 +472,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    
+    open var isEmojiLite: Bool {
+        return false
+    }
     
     open override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
@@ -478,6 +495,11 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         } else {
             center.removeObserver(self)
         }
+    }
+    
+    open override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        NSCursor.arrow.set()
     }
     
     private func removeNotificationListeners() {

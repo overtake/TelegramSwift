@@ -31,6 +31,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case instantViewAppearance = 50
     case recentEmoji = 52
     case downloadedPaths = 53
+    case someSettings = 54
 }
 
 public struct ApplicationSpecificPreferencesKeys {
@@ -45,6 +46,7 @@ public struct ApplicationSpecificPreferencesKeys {
     public static let walletPasscodeTimeout = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.walletPasscodeTimeout.rawValue)
     public static let chatListSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.chatListSettings.rawValue)
     public static let voipDerivedState = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.voipDerivedState.rawValue)
+    public static let someSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.someSettings.rawValue)
 }
 
 public struct ApplicationSharedPreferencesKeys {
@@ -62,11 +64,13 @@ public struct ApplicationSharedPreferencesKeys {
 private enum ApplicationSpecificItemCacheCollectionIdValues: Int8 {
     case instantPageStoredState = 0
     case cachedInstantPages = 1
+    case translationState = 2
 }
 
 public struct ApplicationSpecificItemCacheCollectionId {
     public static let instantPageStoredState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.instantPageStoredState.rawValue)
     public static let cachedInstantPages = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.cachedInstantPages.rawValue)
+    public static let translationState = applicationSpecificItemCacheCollectionId(ApplicationSpecificItemCacheCollectionIdValues.translationState.rawValue)
 }
 private enum ApplicationSpecificOrderedItemListCollectionIdValues: Int32 {
     case settingsSearchRecentItems = 0

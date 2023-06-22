@@ -134,6 +134,11 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
                 default:
                     break
                 }
+            } else if maxIndex < inputText.endIndex {
+                let char = inputText[maxIndex]
+                if !char.isWhitespace {
+                    possibleTypes = []
+                }
             }
         }
         
@@ -275,11 +280,7 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
                 return .none
             }
         } else if possibleTypes == [.emoji] {
-            if query.trimmingCharacters(in: CharacterSet.letters).isEmpty {
-                return .emoji(query, firstWord: false)
-            } else {
-                return .none
-            }
+            return .emoji(query, firstWord: !query.trimmingCharacters(in: CharacterSet.letters).isEmpty)
         } else if possibleTypes == [.emojiFast] {
             return .emoji(query, firstWord: true)
         }

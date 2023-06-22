@@ -35,7 +35,9 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>238802</string>
+	<string>245683</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.social-networking</string>
 	<key>LSFileQuarantineEnabled</key>

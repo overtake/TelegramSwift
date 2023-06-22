@@ -51,6 +51,7 @@ private final class BlurCheckbox : View {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        
     }
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -64,6 +65,8 @@ private final class BlurCheckbox : View {
     
     override func draw(_ layer: CALayer, in context: CGContext) {
         super.draw(layer, in: context)
+        
+        context.round(frame.size, frame.height / 2)
         
         let borderWidth: CGFloat = 2.0
         
@@ -192,6 +195,7 @@ final class WallpaperCheckboxView : Control {
         }
         set {
             _isSelected = newValue
+            self.checkbox.set(isSelected: newValue, animated: false)
             self.update(by: self.bgcolor)
         }
     }
@@ -265,7 +269,7 @@ final class WallpaperCheckboxView : Control {
             backgroundColor = isSelected ? theme.chatServiceItemColor.darker() : theme.chatServiceItemColor
         }
         if colorsValue.isEmpty {
-            checkbox.set(isSelected: self.isSelected, animated: true)
+            checkbox.set(isSelected: checkbox.isSelected, animated: true)
         }
     }
     

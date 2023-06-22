@@ -437,7 +437,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
             switch entry {
             case let .plain(peer, _):
-                return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
+                return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction, side: .right))
             case .emptySearch:
                 return SearchEmptyRowItem(initialSize, stableId: SelectablePeersEntryStableId.emptySearch)
             }
@@ -512,56 +512,54 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         let selectInteraction = self.selectInteractions
         selectInteraction.add(observer: self)
         
-        let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> = search.get() |> distinctUntilChanged |> mapToSignal { [weak self] search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
+        let inSearchSelected = self.inSearchSelected
+        
+        let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> = search.get() |> distinctUntilChanged |> mapToSignal { search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
             
             if search.state == .None {
                 let signal:Signal<(ChatListView,ViewUpdateType), NoError> = account.viewTracker.tailChatListView(groupId: .root, count: 100) |> take(1)
                 
-                
-                return combineLatest(signal, account.postbox.loadedPeerWithId(account.peerId)) |> deliverOn(prepareQueue) |> mapToQueue { [weak self] value, mainPeer -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
-                    if let strongSelf = self {
-                        var entries:[SelectablePeersEntry] = []
-                        
-                        let fromSearch = strongSelf.inSearchSelected.modify({$0})
-                        let fromSetIds:Set<PeerId> = Set(fromSearch)
-                        var fromPeers:[PeerId:Peer] = [:]
-                        var contains:[PeerId:Peer] = [:]
-                        
-                        entries.append(.plain(mainPeer, ChatListIndex.init(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())))
-                        contains[mainPeer.id] = mainPeer
-                        
-                        for entry in value.0.entries {
-                            switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _):
-                                if let peer = renderedPeer.chatMainPeer {
-                                    if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
-                                        if peer.canSendMessage(false) {
-                                            entries.append(.plain(peer,id))
-                                            contains[peer.id] = peer
-                                        }
-                                    } else {
-                                        fromPeers[peer.id] = peer
+                return combineLatest(signal, account.postbox.loadedPeerWithId(account.peerId)) |> deliverOn(prepareQueue) |> mapToQueue { value, mainPeer -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
+                    var entries:[SelectablePeersEntry] = []
+                    
+                    let fromSearch = inSearchSelected.modify({$0})
+                    let fromSetIds:Set<PeerId> = Set(fromSearch)
+                    var fromPeers:[PeerId:Peer] = [:]
+                    var contains:[PeerId:Peer] = [:]
+                    
+                    entries.append(.plain(mainPeer, ChatListIndex.init(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())))
+                    contains[mainPeer.id] = mainPeer
+                    
+                    for entry in value.0.entries {
+                        switch entry {
+                        case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
+                            if let peer = renderedPeer.chatMainPeer {
+                                if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
+                                    if peer.canSendMessage(false) {
+                                        entries.append(.plain(peer,id))
+                                        contains[peer.id] = peer
                                     }
+                                } else {
+                                    fromPeers[peer.id] = peer
                                 }
-                            default:
-                                break
                             }
+                        default:
+                            break
                         }
-                        
-                        var i:Int32 = Int32.max
-                        for peerId in fromSearch {
-                            if let peer = fromPeers[peerId] , contains[peer.id] == nil {
-                                let index = MessageIndex(id: MessageId(peerId: peer.id, namespace: 1, id: i), timestamp: i)
-                                entries.append(.plain(peer, ChatListIndex(pinningIndex: nil, messageIndex: index)))
-                                contains[peer.id] = peer
-                            }
-                            i -= 1
-                        }
-                        entries.sort(by: <)
-                        
-                        return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
                     }
-                    return .never()
+                    
+                    var i:Int32 = Int32.max
+                    for peerId in fromSearch {
+                        if let peer = fromPeers[peerId] , contains[peer.id] == nil {
+                            let index = MessageIndex(id: MessageId(peerId: peer.id, namespace: 1, id: i), timestamp: i)
+                            entries.append(.plain(peer, ChatListIndex(pinningIndex: nil, messageIndex: index)))
+                            contains[peer.id] = peer
+                        }
+                        i -= 1
+                    }
+                    entries.sort(by: <)
+                    
+                    return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
                 }
             } else {
                 

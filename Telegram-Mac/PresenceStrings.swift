@@ -12,6 +12,7 @@ import TelegramCore
 import DateUtils
 import TGUIKit
 import MapKit
+import CalendarUtils
 
 func stringForTimestamp(day: Int32, month: Int32, year: Int32) -> String {
     return String(format: "%d.%02d.%02d", day, month, year - 100)
@@ -184,7 +185,7 @@ func userPresenceStringRefreshTimeout(_ presence: TelegramUserPresence, timeDiff
 }
 
 
-func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
+func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32, medium: Bool = false) -> String {
     var t: time_t = time_t(relativeTimestamp)
     var timeinfo: tm = tm()
     localtime_r(&t, &timeinfo)
@@ -201,7 +202,11 @@ func stringForRelativeSymbolicTimestamp(relativeTimestamp: Int32, relativeTo tim
     if dayDifference == 0 {
         return strings().timeTodayAt(stringForShortTimestamp(hours: hours, minutes: minutes))
     } else {
-        return stringForFullDate(timestamp: relativeTimestamp)
+        if medium {
+            return stringForMediumDate(timestamp: relativeTimestamp)
+        } else {
+            return stringForFullDate(timestamp: relativeTimestamp)
+        }
     }
 }
 
@@ -266,6 +271,30 @@ func stringForFullDate(timestamp: Int32) -> String {
         return ""
     }
 }
+
+
+
+extension Date {
+    
+    static var kernelBootTimeSecs:Int32 {
+        var mib = [ CTL_KERN, KERN_BOOTTIME ]
+        var bootTime = timeval()
+        var bootTimeSize = MemoryLayout<timeval>.size
+        
+        if 0 != sysctl(&mib, UInt32(mib.count), &bootTime, &bootTimeSize, nil, 0) {
+            fatalError("Could not get boot time, errno: \(errno)")
+        }
+        
+        return Int32(bootTime.tv_sec)
+    }
+    var isToday: Bool {
+        return CalendarUtils.isSameDate(self, date: Date(), checkDay: true)
+    }
+    var isTomorrow: Bool {
+        return Calendar.current.isDateInTomorrow(self)
+    }
+}
+
 
 func stringForMediumDate(timestamp: Int32) -> String {
     var t: time_t = Int(timestamp)

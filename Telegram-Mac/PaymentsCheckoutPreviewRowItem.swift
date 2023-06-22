@@ -111,7 +111,7 @@ private final class PaymentsCheckoutPreviewRowView : GeneralContainableRowView {
             self.imageView?.setFrameSize(item.imageSize)
             imageView?.setSignal(chatMessageWebFilePhoto(account: item.context.account, photo: image, scale: backingScaleFactor))
             
-            _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: image.resource)).start()
+            _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: image.resource)).start()
 
             imageView?.set(arguments: TransformImageArguments(corners: .init(radius: .cornerRadius), imageSize: item.imageSize, boundingSize: item.imageSize, intrinsicInsets: .init()))
 

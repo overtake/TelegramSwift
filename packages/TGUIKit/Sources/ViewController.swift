@@ -88,8 +88,10 @@ open class BackgroundView: View {
             self.tile = tile
         }
         
+        var validLayout: CGRect? = nil
         
         func update(frame: NSRect, transition: ContainedViewLayoutTransition) {
+            
             
             var rects:[CGRect] = []
             var frame = frame
@@ -116,7 +118,7 @@ open class BackgroundView: View {
                         self.tileLayers.removeLast().removeFromSuperlayer()
                     }
                     while self.tileLayers.count < rects.count {
-                        let layer = CALayer()
+                        let layer = SimpleLayer()
 //                        layer.disableActions()
                         self.tileLayers.append(layer)
                     }
@@ -217,6 +219,7 @@ open class BackgroundView: View {
             if oldValue != backgroundMode {
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
+                tileControl.validLayout = nil
                 var backgroundView: NSView? = nil
                 switch backgroundMode {
                 case let .background(image, intensity, colors, rotation):
@@ -324,11 +327,11 @@ open class BackgroundView: View {
     }
     
     public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(layer: imageView, frame: bounds)
-        transition.updateFrame(view: container, frame: bounds)
-        tileControl.update(frame: bounds, transition: transition)
+        transition.updateFrame(layer: imageView, frame: size.bounds)
+        transition.updateFrame(view: container, frame: size.bounds)
+        tileControl.update(frame: size.bounds, transition: transition)
         if let backgroundView = backgroundView {
-            transition.updateFrame(view: backgroundView, frame: bounds)
+            transition.updateFrame(view: backgroundView, frame: size.bounds)
             if let backgroundView = backgroundView as? AnimatedGradientBackgroundView {
                 backgroundView.updateLayout(size: size, transition: transition)
             }
@@ -339,6 +342,15 @@ open class BackgroundView: View {
         let view = BackgroundView(frame: self.frame)
         view.isCopy = true
         view.backgroundMode = self.backgroundMode
+        view.useSharedAnimationPhase = true
+        view.updateLayout(size: view.frame.size, transition: .immediate)
+        return view
+    }
+    
+    open func copy(_ backgroundMode: TableBackgroundMode?) -> BackgroundView {
+        let view = BackgroundView(frame: self.frame)
+        view.isCopy = true
+        view.backgroundMode = backgroundMode ?? self.backgroundMode
         view.useSharedAnimationPhase = true
         view.updateLayout(size: view.frame.size, transition: .immediate)
         return view
@@ -451,6 +463,39 @@ public class ControllerToaster {
 }
 
 open class ViewController : NSObject {
+    
+    
+    public struct StakeSettings {
+        
+        
+        public let keepLeft: CGFloat
+        public let straightMove: Bool
+        public let keepIn: Bool
+        
+        public var isCustom: Bool {
+            if keepLeft > 0 {
+                return true
+            }
+            if straightMove {
+                return true
+            }
+            if keepIn {
+                return true
+            }
+            return false
+        }
+        
+        public init(keepLeft: CGFloat, straightMove: Bool, keepIn: Bool) {
+            self.keepLeft = keepLeft
+            self.straightMove = straightMove
+            self.keepIn = keepIn
+        }
+        
+        public static var `default`: StakeSettings {
+            return .init(keepLeft: 0, straightMove: false, keepIn: false)
+        }
+    }
+    
     fileprivate var _view:NSView?
     public var _frameRect:NSRect
     
@@ -470,7 +515,7 @@ open class ViewController : NSObject {
     
     public var noticeResizeWhenLoaded: Bool = true
     
-    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:CAMediaTimingFunctionName.spring)
+    public var animationStyle:AnimationStyle = AnimationStyle(duration: 0.4, function:CAMediaTimingFunctionName.spring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     
     public var leftBarView:BarView!
@@ -480,7 +525,7 @@ open class ViewController : NSObject {
     public var popover:Popover?
     open var modal:Modal?
     
-    private var widthOnDisappear: CGFloat? = nil
+    var widthOnDisappear: CGFloat? = nil
     
     public var ableToNextController:(ViewController, @escaping(ViewController, Bool)->Void)->Void = { controller, f in
         f(controller, true)
@@ -558,17 +603,15 @@ open class ViewController : NSObject {
         return true
     }
     
-    public private(set) var internalId:Int = 0;
+    public let internalId:Int = Int(arc4random());
     
     public override init() {
         _frameRect = NSZeroRect
-        self.internalId = Int(arc4random());
         super.init()
     }
     
     public init(frame frameRect:NSRect) {
         _frameRect = frameRect;
-        self.internalId = Int(arc4random());
     }
     
     open func readyOnce() -> Void {
@@ -650,8 +693,10 @@ open class ViewController : NSObject {
             viewDidResized(frame.size)
         }
     }
+    public private(set) var bgMode: TableBackgroundMode?
     
     open func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
+        self.bgMode = backgroundMode
         switch backgroundMode {
         case .background, .gradient:
             backgroundColor = .clear
@@ -758,6 +803,20 @@ open class ViewController : NSObject {
     }
     
     open func viewDidChangedNavigationLayout(_ state: SplitViewState) -> Void {
+        
+    }
+    open func setToNextController(_ controller: ViewController, style: ViewControllerStyle) {
+        
+    }
+    open func setToPreviousController(_ controller: ViewController, style: ViewControllerStyle) {
+        
+    }
+    open var stake: StakeSettings {
+        return .default
+    }
+    open weak var tied: ViewController?
+    
+    open func updateSwipingState(_ state: SwipeState, controller: ViewController, isPrevious: Bool) -> Void {
         
     }
     
@@ -1050,7 +1109,7 @@ open class GenericViewController<T> : ViewController where T:NSView {
     }
     
     public var initializationRect: NSRect {
-        return NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height)
+        return NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width - self.stake.keepLeft, _frameRect.height - bar.height)
     }
     
 
@@ -1231,7 +1290,7 @@ open class ModalViewController : ViewController, ModalControllerHelper {
 }
 
 open class ModalController : ModalViewController {
-    private let controller: NavigationViewController
+    public let controller: NavigationViewController
     public init(_ controller: NavigationViewController) {
         self.controller = controller
         super.init(frame: controller._frameRect)

@@ -104,7 +104,7 @@ class StickerPackPanelRowItem: TableRowItem {
                 _ = attributed.append(string: title.uppercased(), color: theme.colors.grayText, font: .medium(.text))
             }
             let layout = TextViewLayout(attributed, alwaysStaticItems: true)
-            layout.measure(width: 300)
+            layout.measure(width: 260)
             self.packNameLayout = layout
             
             self.namePoint = NSMakePoint(10, floorToScreenPixels(System.backingScale, ((packInfo.featured ? 50 : 30) - layout.layoutSize.height) / 2))
@@ -132,6 +132,8 @@ class StickerPackPanelRowItem: TableRowItem {
     
     override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        let width = max(width, 350)
         
         var filesAndPoints:[(TelegramMediaFile, NSPoint)] = []
 
@@ -339,6 +341,10 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         }, for: .Up)
         
         contentView.set(handler: { [weak self] _ in
+            self?.updateAnimatableContent()
+        }, for: .Other)
+        
+        contentView.set(handler: { [weak self] _ in
             let item = self?.item as? StickerPackPanelRowItem
             let table = item?.table
             let window = self?.window as? Window
@@ -420,9 +426,20 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     override func updateAnimatableContent() -> Void {
         for (_, value) in self.inlineStickerItemViews {
             if let superview = value.superview {
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && self.window != nil && self.window!.isKeyWindow
+                var playable: Bool =  NSIntersectsRect(value.frame, superview.visibleRect) && self.window != nil && self.window!.isKeyWindow
+                if isEmojiLite {
+                    playable = playable && itemUnderMouse?.0 === value
+                }
+                value.isPlayable = playable
             }
         }
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? StickerPackPanelRowItem {
+            return item.context.isLite(.stickers)
+        }
+        return super.isEmojiLite
     }
 
     required init?(coder: NSCoder) {
@@ -448,7 +465,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     }
     
 
-    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [(TelegramMediaFile, NSPoint)]) {
+    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [(TelegramMediaFile, NSPoint)], animated: Bool) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var index: Int = 0
 
@@ -462,15 +479,20 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
                 view = current
             } else {
-                self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                if let layer = self.inlineStickerItemViews[id] {
+                    performSublayerRemoval(layer, animated: animated, scale: true)
+                }
                 view = InlineStickerItemLayer(account: context.account, file: item.0, size: rect.size)
                 self.inlineStickerItemViews[id] = view
                 view.superview = contentView
                 contentView.layer?.addSublayer(view)
+                if animated {
+                    view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
+                    view.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
             }
             index += 1
 
-            view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && window != nil && window!.isKeyWindow
             view.frame = rect
         }
 
@@ -478,12 +500,13 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         for (key, itemLayer) in self.inlineStickerItemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
-                itemLayer.removeFromSuperlayer()
+                performSublayerRemoval(itemLayer, animated: animated, scale: true)
             }
         }
         for key in removeKeys {
             self.inlineStickerItemViews.removeValue(forKey: key)
         }
+        self.updateAnimatableContent()
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -561,7 +584,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         
         self.layout()
         
-        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.files)
+        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.files, animated: animated)
         
     }
     

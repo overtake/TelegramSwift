@@ -137,7 +137,7 @@ class DateSelectorModalController: ModalViewController {
     private var sendWhenOnline: Bool = false
     fileprivate let mode: Mode
     private let disposable = MetaDisposable()
-    init(context: AccountContext, defaultDate: Date? = nil, mode: Mode, selectedAt:@escaping(Date)->Void) {
+    init(context: AccountContext, defaultDate: Date = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + 1 * 60 * 60), mode: Mode, selectedAt:@escaping(Date)->Void) {
         self.context = context
         self.defaultDate = defaultDate
         self.selectedAt = selectedAt

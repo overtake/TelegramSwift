@@ -113,6 +113,31 @@ final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentat
     }
 }
 
+final class CachedWallpaperRepresentation: CachedMediaResourceRepresentation {
+    var keepDuration: CachedMediaRepresentationKeepDuration = .general
+    var uniqueId: String {
+        return CachedBlurredWallpaperRepresentation.uniqueId
+    }
+    let isDark: Bool
+    let settings: WallpaperSettings
+    init(isDark: Bool, settings: WallpaperSettings) {
+        self.isDark = isDark
+        self.settings = settings
+    }
+    
+    static var uniqueId: String {
+        return "cached-wallpaper"
+    }
+    
+    func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
+        if let to = to as? CachedWallpaperRepresentation {
+            return to.isDark == self.isDark && to.settings == to.settings
+        } else {
+            return false
+        }
+    }
+}
+
 
 final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentation {
     var keepDuration: CachedMediaRepresentationKeepDuration = .general

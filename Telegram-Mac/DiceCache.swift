@@ -107,10 +107,51 @@ class DiceCache {
     private let loadDataDisposable = MetaDisposable()
     private let emojiesSoundDisposable = MetaDisposable()
     
+    var animatedEmojies:Signal<[String: StickerPackItem], NoError> {
+        return _animatedEmojies.get()
+    }
+    private let _animatedEmojies:Promise<[String : StickerPackItem]> = .init()
+    
+    private let _emojies_reactions = Promise<ItemCollectionsView>()
+    private let _emojies_status = Promise<ItemCollectionsView>()
+    private let _emojies = Promise<ItemCollectionsView>()
+
+    var emojies_reactions: Signal<ItemCollectionsView, NoError> {
+        return _emojies_reactions.get()
+    }
+    var emojies_status: Signal<ItemCollectionsView, NoError> {
+        return _emojies_status.get()
+    }
+    var emojies: Signal<ItemCollectionsView, NoError> {
+        return _emojies.get()
+    }
+    
     init(postbox: Postbox, engine: TelegramEngine) {
         self.postbox = postbox
         self.engine = engine
         
+        
+        _emojies_status.set(postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudFeaturedStatusEmoji, Namespaces.OrderedItemList.CloudRecentStatusEmoji], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000))
+        
+        _emojies_reactions.set(postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000))
+
+        _emojies.set(postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000))
+        
+        self._animatedEmojies.set(engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
+                                  |> map { result -> [String: StickerPackItem] in
+                                      switch result {
+                                      case let .result(_, items, _):
+                                          var animatedEmojiStickers: [String: StickerPackItem] = [:]
+                                          for case let item in items {
+                                              if let emoji = item.getStringRepresentationsOfIndexKeys().first {
+                                                  animatedEmojiStickers[emoji] = item
+                                              }
+                                          }
+                                          return animatedEmojiStickers
+                                      default:
+                                          return [:]
+                                      }
+                              })
         
         let availablePacks = postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]) |> map { view in
             return view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? .defaultValue
@@ -125,7 +166,7 @@ class DiceCache {
             return EmojiesSoundConfiguration.with(appConfiguration: value)
         } |> distinctUntilChanged |> mapToSignal { value -> Signal<Never, NoError> in
             //val
-            let list = value.sounds.map { fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.standalone(resource: $0.value.resource )) }
+            let list = value.sounds.map { fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: $0.value.resource )) }
             let signals = combineLatest(list)
             
             return signals |> ignoreValues |> `catch` { _ -> Signal<Never, NoError> in return .complete() }
@@ -179,7 +220,7 @@ class DiceCache {
                 } else {
                     reference = FileMediaReference.standalone(media: value.file).resourceReference(value.file.resource)
                 }
-                return fetchedMediaResource(mediaBox: postbox.mediaBox, reference: reference)
+                return fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: reference)
             }
             return combineLatest(signals) |> map { _ in return } |> `catch` { _ in return .complete() }
         }
@@ -243,12 +284,12 @@ class DiceCache {
                 return
             }
             for diceData in data {
-                let context = self.dataContexts[diceData.key.fixed] ?? EmojiDataContext()
+                let context = self.dataContexts[diceData.key] ?? EmojiDataContext()
                 context.data = diceData.value
                 for subscriber in context.subscribers.copyItems() {
                     subscriber(diceData.value)
                 }
-                self.dataContexts[diceData.key.fixed] = context
+                self.dataContexts[diceData.key] = context
             }
             for effect in dataEffects {
                 let context = self.dataEffectsContexts[effect.key] ?? EmojiDataContext()

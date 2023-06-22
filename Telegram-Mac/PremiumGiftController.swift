@@ -446,6 +446,8 @@ final class PremiumGiftController : ModalViewController {
             closeAllModals()
         }
         
+        genericView.dismiss = close
+        
         let inAppPurchaseManager = context.inAppPurchaseManager
         
         let products: Signal<[InAppPurchaseManager.Product], NoError>

@@ -52,9 +52,9 @@ class GroupedLayout {
     init(_ messages: [Message], type: GroupedMediaType = .photoOrVideo) {
         switch type {
         case .photoOrVideo:
-            self.messages = messages.filter { $0.effectiveMedia!.isInteractiveMedia }
+            self.messages = messages.filter { $0.anyMedia!.isInteractiveMedia }
         case .files:
-            self.messages = messages.filter { $0.effectiveMedia is TelegramMediaFile }
+            self.messages = messages.filter { $0.anyMedia is TelegramMediaFile }
         }
         self.type = type
     }
@@ -230,11 +230,15 @@ class GroupedLayout {
                 if forceCalc || photos.count >= 5 {
                     var croppedRatios:[CGFloat] = []
                     for photo in photos {
+                        let aspectRatio = photo.aspectRatio
+                        var croppedRatio = aspectRatio
                         if averageAspectRatio > 1.1 {
-                            croppedRatios.append(max(1.0, photo.aspectRatio))
+                            croppedRatio = max(1.0, aspectRatio)
                         } else {
-                            croppedRatios.append(min(1.0, photo.aspectRatio))
+                            croppedRatio = min(1.0, aspectRatio)
                         }
+                        croppedRatio = max(0.66667, min(1.7, croppedRatio))
+                        croppedRatios.append(croppedRatio)
                     }
                     
                     func multiHeight(_ ratios: [CGFloat]) -> CGFloat {
@@ -403,7 +407,7 @@ class GroupedLayout {
             for (i, message) in messages.enumerated() {
                 let info = MessagePhotoInfo(message)
                 var height:CGFloat = 40
-                if let file = message.effectiveMedia as? TelegramMediaFile {
+                if let file = message.anyMedia as? TelegramMediaFile {
                     if file.isMusicFile {
                         height = 40
                     } else if file.previewRepresentations.isEmpty {

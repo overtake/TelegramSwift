@@ -87,7 +87,7 @@ class SearchRowView : TableRowView {
 //        searchView.isHidden = true
     }
     
-    override func onInsert(_ animation: NSTableView.AnimationOptions) {
+    override func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {
         
         if animation.contains(.effectFade) {
             self.isHidden = true

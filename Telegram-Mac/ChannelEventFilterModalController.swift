@@ -407,12 +407,34 @@ class ChannelEventFilterModalController: ModalViewController {
             updateState({$0.withUpdatedEventsException($0.eventsException.isEmpty ? $0.allEvents : [])})
         })
         
+        
+        
         let previous: Atomic<[ChannelEventFilterEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
         
         let adminsSignal = Signal<[RenderedChannelParticipant], NoError>.single(admins)
         let updatedSize:Atomic<Bool> = Atomic(value: false)
-        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(statePromise.get(), context.account.postbox.loadedPeerWithId(peerId), adminsSignal) |> map { state, peer, admins -> (ChannelEventFilterState, Peer, [RenderedChannelParticipant]?) in
+        
+        
+        
+        let antiSpamBotConfiguration = AntiSpamBotConfiguration.with(appConfiguration: context.appConfiguration)
+        let antiSpamBotPeerPromise = Promise<RenderedChannelParticipant?>(nil)
+        if let antiSpamBotId = antiSpamBotConfiguration.antiSpamBotId {
+            antiSpamBotPeerPromise.set(context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: antiSpamBotId))
+            |> map { peer in
+                if let peer = peer, case let .user(user) = peer {
+                    return RenderedChannelParticipant(participant: .member(id: user.id, invitedAt: 0, adminInfo: nil, banInfo: nil, rank: nil), peer: user)
+                } else {
+                    return nil
+                }
+            })
+        }
+
+        let admins = combineLatest(adminsSignal, antiSpamBotPeerPromise.get()) |> map { admins, antispamAdmin in
+            return [antispamAdmin].compactMap { $0 } + admins
+        }
+        
+        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(statePromise.get(), context.account.postbox.loadedPeerWithId(peerId), admins) |> map { state, peer, admins -> (ChannelEventFilterState, Peer, [RenderedChannelParticipant]?) in
             
             let state = stateValue.swap(state.withUpdatedAllAdmins(Set(admins.map {$0.peer.id})).withUpdatedAllEvents(Set(eventFilters(peer.isChannel))))
             

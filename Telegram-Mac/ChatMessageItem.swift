@@ -14,6 +14,7 @@ import Postbox
 import SwiftSignalKit
 import InAppSettings
 import TGModernGrowingTextView
+import Strings
 
 /*
  static func == (lhs: ChatTextCustomEmojiAttribute, rhs: ChatTextCustomEmojiAttribute) -> Bool {
@@ -108,16 +109,17 @@ final class InlineStickerItem : Hashable {
                 return r.intersection(range) != nil
             })
             if intersection == nil {
-                let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
-                var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
-                
-                let text = copy.string.nsstring.substring(with: range).fixed
-                
-                
-                updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
-                
-                let insertString = NSAttributedString(string: "🤡", attributes: updatedAttributes)
-                copy.replaceCharacters(in: range, with: insertString)
+                let textRange = NSMakeRange(0, copy.string.length)
+                if let range = textRange.intersection(range) {
+                    let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
+                    var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
+                    let text = copy.string.nsstring.substring(with: range).fixed
+                    updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
+                    
+                    let insertString = NSAttributedString(string: "🤡", attributes: updatedAttributes)
+                    copy.replaceCharacters(in: range, with: insertString)
+
+                } 
             }
         }
     }
@@ -197,6 +199,7 @@ class ChatMessageItem: ChatRowItem {
                 return bubbleFrame.width - bubbleDefaultInnerInset
             }
         }
+        
         return self.contentSize.width
     }
     
@@ -211,6 +214,7 @@ class ChatMessageItem: ChatRowItem {
             }
         }
         if let webpage = webpageLayout, !webpage.hasInstantPage {
+            let content = webpage.content
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             switch link {
             case let .followResolvedName(_, _, postId, _, action, _):
@@ -222,13 +226,32 @@ class ChatMessageItem: ChatRowItem {
                         } else {
                             return strings().chatMessageJoinVoiceChatAsListener
                         }
+                    case .makeWebview:
+                        return strings().chatMessageOpenApp
                     default:
                         break inner
+                    }
+                } else {
+                    switch content.type {
+                    case "telegram_channel":
+                        return strings().chatMessageViewChannel
+                    case "telegram_group":
+                        return strings().chatMessageViewGroup
+                    case "telegram_megagroup":
+                        return strings().chatMessageViewGroup
+                    case "telegram_gigagroup":
+                        return strings().chatMessageViewGroup
+                    case "telegram_user":
+                        return strings().chatMessageSendMessage
+                    default:
+                        break
                     }
                 }
                 if let postId = postId, postId > 0 {
                     return strings().chatMessageActionShowMessage
                 }
+            case .folder:
+                return strings().chatMessageViewChatList
             default:
                 break
             }
@@ -248,11 +271,7 @@ class ChatMessageItem: ChatRowItem {
     }
     
     override var isEditMarkVisible: Bool {
-        if containsBigEmoji {
-            return false
-        } else {
-            return super.isEditMarkVisible
-        }
+        return super.isEditMarkVisible
     }
     
     func invokeAction() {
@@ -295,8 +314,23 @@ class ChatMessageItem: ChatRowItem {
 
             var openSpecificTimecodeFromReply:((Double?)->Void)? = nil
             
+             
+             var text: String = message.text
+             var attributes: [MessageAttribute] = message.attributes
+             if let translate = entry.additionalData.translate {
+                 switch translate {
+                 case .loading:
+                     self.isTranslateLoading = true
+                 case let .complete(toLang: toLang):
+                     if let attribute = message.translationAttribute(toLang: toLang) {
+                         text = attribute.text
+                         attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
+                     }
+                 }
+             }
+             
             let messageAttr:NSMutableAttributedString
-            if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.effectiveMedia is TelegramMediaUnsupported) {
+            if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.anyMedia is TelegramMediaUnsupported) {
                 let attr = NSMutableAttributedString()
                 _ = attr.append(string: strings().chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr
@@ -307,7 +341,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 var canAssignToReply: Bool = true
                 
-                if let media = message.effectiveMedia as? TelegramMediaWebpage {
+                if let media = message.anyMedia as? TelegramMediaWebpage {
                     switch media.content {
                     case let .Loaded(content):
                         canAssignToReply = !ExternalVideoLoader.isPlayable(content)
@@ -322,9 +356,9 @@ class ChatMessageItem: ChatRowItem {
                     mediaDurationMessage = message
                 }
                 if let message = mediaDurationMessage {
-                    if let file = message.effectiveMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
+                    if let file = message.anyMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
                         mediaDuration = Double(duration)
-                    } else if let media = message.effectiveMedia as? TelegramMediaWebpage {
+                    } else if let media = message.anyMedia as? TelegramMediaWebpage {
                         switch media.content {
                         case let .Loaded(content):
                             if ExternalVideoLoader.isPlayable(content) {
@@ -341,7 +375,8 @@ class ChatMessageItem: ChatRowItem {
                 }
                 
                 
-                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
+                
+                messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
                 }).mutableCopy() as! NSMutableAttributedString
 
@@ -403,7 +438,7 @@ class ChatMessageItem: ChatRowItem {
             }
 
             let containsBigEmoji: Bool
-            if message.effectiveMedia == nil, bigEmojiMessage(context.sharedContext, message: message) {
+            if message.anyMedia == nil, bigEmojiMessage(context.sharedContext, message: message) {
                 containsBigEmoji = true
                 switch copy.string.count {
                 case 1:
@@ -434,7 +469,7 @@ class ChatMessageItem: ChatRowItem {
            
            
              var spoilers:[TextViewLayout.Spoiler] = []
-             for attr in message.attributes {
+             for attr in attributes {
                  if let attr = attr as? TextEntitiesMessageAttribute {
                      for entity in attr.entities {
                          switch entity.type {
@@ -446,16 +481,18 @@ class ChatMessageItem: ChatRowItem {
                                  color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
                              }
                              let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                             copy.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
+                             if let range = copy.range.intersection(range) {
+                                 copy.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
+                             }
                          default:
                              break
                          }
                      }
                  }
              }
-             InlineStickerItem.apply(to: copy, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+             InlineStickerItem.apply(to: copy, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
 
-             copy.fixUndefinedEmojies()
+//             copy.fixUndefinedEmojies()
 
              
              if let text = message.restrictedText(context.contentSettings) {
@@ -483,27 +520,12 @@ class ChatMessageItem: ChatRowItem {
             textLayout.mayBlocked = entry.renderType != .bubble
             
             if let highlightFoundText = entry.additionalData.highlightFoundText {
-                if highlightFoundText.isMessage {
-                    let range = copy.string.lowercased().nsstring.range(of: highlightFoundText.query.lowercased())
-                    if range.location != NSNotFound {
-                        textLayout.additionalSelections = [TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
-                    }
-                } else {
-                    var additionalSelections:[TextSelectedRange] = []
-                    let string = copy.string.lowercased().nsstring
-                    var searchRange = NSMakeRange(0, string.length)
-                    var foundRange:NSRange = NSMakeRange(NSNotFound, 0)
-                    while (searchRange.location < string.length) {
-                        searchRange.length = string.length - searchRange.location
-                        foundRange = string.range(of: highlightFoundText.query.lowercased(), options: [], range: searchRange) 
-                        if (foundRange.location != NSNotFound) {
-                            additionalSelections.append(TextSelectedRange(range: foundRange, color: theme.colors.grayIcon.withAlphaComponent(0.5), def: false))
-                            searchRange.location = foundRange.location+foundRange.length;
-                        } else {
-                            break
-                        }
-                    }
-                    textLayout.additionalSelections = additionalSelections
+                let string = copy.string.lowercased()
+                let subranges = findSubstringRanges(in: string, query: highlightFoundText.query.lowercased())
+                
+                for subrange in subranges.0 {
+                    let range = NSRange(string: string, range: subrange)
+                    textLayout.additionalSelections.append(TextSelectedRange(range: range, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false))
                 }
                 
             }
@@ -513,7 +535,7 @@ class ChatMessageItem: ChatRowItem {
             }
             
             
-            var media = message.effectiveMedia
+            var media = message.anyMedia
             if let game = media as? TelegramMediaGame {
                 media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, attributes: [], instantPage: nil)))
             }
@@ -552,7 +574,7 @@ class ChatMessageItem: ChatRowItem {
             
             
             (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in
-                if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
+                if let webpage = message.anyMedia as? TelegramMediaWebpage {
                     switch webpage.content {
                     case let .Loaded(content):
                         if content.embedType == "iframe" && content.type != kBotInlineTypeGif, let url = content.embedUrl {
@@ -579,7 +601,7 @@ class ChatMessageItem: ChatRowItem {
             openSpecificTimecodeFromReply = { [weak self] timecode in
                 if let timecode = timecode {
                     var canAssignToReply: Bool = true
-                    if let media = message.effectiveMedia as? TelegramMediaWebpage {
+                    if let media = message.anyMedia as? TelegramMediaWebpage {
                         switch media.content {
                         case let .Loaded(content):
                             canAssignToReply = !ExternalVideoLoader.isPlayable(content)
@@ -647,14 +669,7 @@ class ChatMessageItem: ChatRowItem {
         
         fatalError("entry has not message")
     }
-    
-    override var identifier: String {
-        if webpageLayout == nil {
-            return super.identifier
-        } else {
-            return super.identifier + "\(stableId)"
-        }
-    }
+
     
     override var ignoreAtInitialization: Bool {
         return message?.adAttribute != nil
@@ -664,7 +679,10 @@ class ChatMessageItem: ChatRowItem {
         if actionButtonText != nil  {
             return true
         }
-         if let webpageLayout = webpageLayout {
+        if textLayout.lastLineIsRtl {
+            return true
+        }
+        if let webpageLayout = webpageLayout {
              if let webpageLayout = webpageLayout as? WPArticleLayout {
                  if webpageLayout.hasInstantPage {
                      return true
@@ -690,16 +708,27 @@ class ChatMessageItem: ChatRowItem {
             return super.isForceRightLine
         }
     }
-    
+    private(set) var isTranslateLoading: Bool = false
+    private(set) var block: (NSPoint, CGImage?) = (.zero, nil)
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         let size:NSSize = super.makeContentSize(width)
      
         webpageLayout?.measure(width: min(width, 380))
         
+        
+        
         let textBlockWidth: CGFloat = isBubbled ? max((webpageLayout?.size.width ?? width), min(240, width)) : width
         
         textLayout.measure(width: textBlockWidth, isBigEmoji: containsBigEmoji)
-
+        if isTranslateLoading {
+            self.block = textLayout.generateBlock(backgroundColor: .blackTransparent)
+        } else {
+            self.block = (.zero, nil)
+        }
+        
+//        if actionButtonText != nil, let wp = webpageLayout {
+//            wp.layout(with: NSMakeSize(max(200, min(wp.size.width, 320), textLayout.layoutSize.width), wp.size.height))
+//        }
         
         var contentSize = NSMakeSize(max(webpageLayout?.contentRect.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
         
@@ -727,7 +756,13 @@ class ChatMessageItem: ChatRowItem {
     }
     
     override var bubbleFrame: NSRect {
+        
+        if let frame = _bubbleFrame {
+            return frame
+        }
+        
         var frame = super.bubbleFrame
+        
         
         
         if isBubbleFullFilled {
@@ -738,6 +773,9 @@ class ChatMessageItem: ChatRowItem {
         if replyMarkupModel != nil, webpageLayout == nil, textLayout.layoutSize.width < 200 {
             frame.size.width = max(blockWidth, frame.width)
         }
+        
+        _bubbleFrame = frame
+        
         return frame
     }
     
@@ -776,9 +814,16 @@ class ChatMessageItem: ChatRowItem {
         
         let new = addLocallyGeneratedEntities(text, enabledTypes: [.timecode], entities: entities, mediaDuration: mediaDuration)
         var nsString: NSString?
-        entities  = entities + (new ?? [])
+        entities = entities + (new ?? [])
+        
+        
+        
         for entity in entities {
-            let range = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
+            let r = string.trimRange(NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound))
+            
+            guard let range = string.range.intersection(r) else {
+                continue
+            }
             
             switch entity.type {
             case .Url:

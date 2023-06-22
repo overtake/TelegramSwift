@@ -120,10 +120,12 @@ public class Language : Equatable {
 public func ==(lhs:Language, rhs:Language) -> Bool {
     return lhs === rhs
 }
+private let ZeroValueHolder = "_ZeroValueHolder"
 
 public func translate(key: String, _ args: [CVarArg]) -> String {
     var format:String?
     var args = args
+    
     if key.hasSuffix("_countable") {
         
         for i in 0 ..< args.count {
@@ -132,7 +134,13 @@ public func translate(key: String, _ args: [CVarArg]) -> String {
                 
                 if let index = key.range(of: "_")?.lowerBound {
                     var string = String(key[..<index])
-                    string += "_\(presentationStringsPluralizationForm(code, Int32(count)).name)"
+                    
+                    
+                    if Int32(count) == 0, _NSLocalizedKeyExist(string + ZeroValueHolder) {
+                        string += ZeroValueHolder
+                    } else {
+                        string += "_\(presentationStringsPluralizationForm(code, Int32(count)).name)"
+                    }
                     format = _NSLocalizedString(string)
                     //if args.count > 1 {
                         //args.remove(at: i)
@@ -155,7 +163,7 @@ public func translate(key: String, _ args: [CVarArg]) -> String {
     if let format = format {
         let ranges = extractArgumentRanges(format)
         var formatted = format
-        while ranges.count != args.count {
+        while ranges.count != args.count, !args.isEmpty {
             args.removeFirst()
         }
         let argIndexes = ranges.sorted(by: { lhs, rhs -> Bool in
@@ -253,6 +261,23 @@ public func _NSLocalizedString(_ key: String) -> String {
             return NSLocalizedString(key, bundle: bundle, comment: "")
         }
         return NSLocalizedString(key, comment: "")
+        
+    }
+}
+
+public func _NSLocalizedKeyExist(_ key: String) -> Bool {
+    
+    let primary = appCurrentLanguage.primaryLanguage
+    let secondary = appCurrentLanguage.secondaryLanguage
+
+    if let value = (primary.strings[key] ?? secondary?.strings[key]), !value.isEmpty {
+        return true
+    } else {
+        let path = Bundle.main.path(forResource: "en", ofType: "lproj")
+        if let path = path, let bundle = Bundle(path: path) {
+            return NSLocalizedString(key, bundle: bundle, comment: "") != key
+        }
+        return NSLocalizedString(key, comment: "") != key
         
     }
 }

@@ -340,7 +340,7 @@ private final class ThemeListRowView : GeneralContainableRowView {
         tableView.endTableUpdates()
         
         if let item = scrollItem {
-            self.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: reloadAnimated, focus: .init(focus: false), inset: 0), true)
+            self.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: reloadAnimated, focus: .init(focus: false), inset: 0), toVisible: true)
         }
     }
 }

@@ -24,7 +24,7 @@ private class EmojiTolerance : View {
             button.set(font: .normal(.header), for: .Normal)
             button.set(text: emoji, for: .Normal)
             button.setFrameSize(NSMakeSize(30, 30))
-            button.centerY(x: x, addition: 4)
+            button.centerY(x: x, addition: 0)
             button.set(background: .clear, for: .Normal)
             button.set(background: theme.colors.grayForeground, for: .Highlight)
             button.layer?.cornerRadius = .cornerRadius
@@ -74,6 +74,84 @@ class EmojiToleranceController: NSViewController {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+}
+
+
+final class EmojiToleranceContextMenuItem : ContextMenuItem {
+    let emoji: String
+    let callback:(String?)->Void
+    init(emoji: String, callback:@escaping(String?)->Void) {
+        self.emoji = emoji
+        self.callback = callback
+        super.init("", handler: {
+            
+        })
+    }
+    
+    
+    
+    override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
+        return EmojiToleranceContextMenuRowItem.init(.zero, presentation: presentation, menuItem: self, interaction: interaction)
+    }
+    
+    required init(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
+private final class EmojiToleranceContextMenuRowItem : AppMenuBasicItem {
+    override func viewClass() -> AnyClass {
+        return EmojiToleranceContextMenuRowView.self
+    }
+    
+    fileprivate var castMenuItem: EmojiToleranceContextMenuItem? {
+        return self.menuItem as? EmojiToleranceContextMenuItem
+    }
+    
+    override var effectiveSize: NSSize {
+        return NSMakeSize(30 * 6 + 10, 30)
+    }
+    
+    override var height: CGFloat {
+        return 30
+    }
+    
+    
+    var emoji: String {
+        return castMenuItem?.emoji ?? ""
+    }
+    var callback:((String?)->Void)? {
+        return castMenuItem?.callback
+    }
+}
+
+private final class EmojiToleranceContextMenuRowView: AppMenuBasicItemView {
+    
+    private var tolerance: EmojiTolerance?
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? EmojiToleranceContextMenuRowItem else {
+            return
+        }
+        
+        let current: EmojiTolerance
+        if let view = self.tolerance {
+            current = view
+        } else {
+            current = EmojiTolerance(frame: CGRect(origin: .zero, size: CGSize.init(width: 30 * 6, height: item.height)), emoji: item.emoji, handle: { [weak item] emoji, color in
+                item?.callback?(color)
+                if let menuItem = item?.menuItem {
+                    item?.interaction?.action(menuItem)
+                }
+            })
+            addSubview(current)
+            self.tolerance = current
+        }
     }
     
 }

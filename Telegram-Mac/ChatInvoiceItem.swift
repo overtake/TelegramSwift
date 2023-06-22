@@ -538,7 +538,7 @@ class ChatInvoiceView : ChatRowView {
                 current.set(arguments: arguments)
                 current.setFrameSize(arguments.boundingSize)
                 
-                _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, reference: MediaResourceReference.media(media: AnyMediaReference.message(message: MessageReference(message), media: photo), resource: photo.resource)).start()
+                _ = fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, userLocation: .peer(message.id.peerId), userContentType: .image, reference: MediaResourceReference.media(media: AnyMediaReference.message(message: MessageReference(message), media: photo), resource: photo.resource)).start()
                 
             } else if let view = self.imageView {
                 performSubviewRemoval(view, animated: animated)

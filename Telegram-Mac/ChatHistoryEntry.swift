@@ -137,7 +137,12 @@ struct MessageEntryAdditionalData : Equatable {
     let reactions: AvailableReactions?
     let animatedEmojiStickers: [String: StickerPackItem]
     let transribeState:TranscribeAudioState?
-    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil) {
+    let eventLog: AdminLogEvent?
+    let isRevealed: Bool?
+    let translate: ChatLiveTranslateContext.State.Result?
+    var replyTranslate: ChatLiveTranslateContext.State.Result?
+
+    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil, eventLog: AdminLogEvent? = nil, isRevealed: Bool? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, replyTranslate: ChatLiveTranslateContext.State.Result? = nil) {
         self.pollStateData = pollStateData
         self.highlightFoundText = highlightFoundText
         self.isThreadLoading = isThreadLoading
@@ -146,6 +151,10 @@ struct MessageEntryAdditionalData : Equatable {
         self.reactions = reactions
         self.animatedEmojiStickers = animatedEmojiStickers
         self.transribeState = transribeState
+        self.eventLog = eventLog
+        self.isRevealed = isRevealed
+        self.translate = translate
+        self.replyTranslate = replyTranslate
     }
 }
 
@@ -241,7 +250,18 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return nil
         }
     }
-    
+    func additionalData(_ messageId: MessageId) -> MessageEntryAdditionalData {
+        switch self {
+        case let .MessageEntry(_,_,_,_,_,_,data):
+            return data.additionData
+        case let .groupedPhotos(entries,_):
+            return entries.first(where: { $0.message?.id == messageId})?.additionalData ?? MessageEntryAdditionalData()
+        case let .DateEntry(_, _, theme):
+            return MessageEntryAdditionalData(chatTheme: theme)
+        default:
+            return MessageEntryAdditionalData()
+        }
+    }
     
     var additionalData: MessageEntryAdditionalData {
         switch self {
@@ -253,6 +273,16 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return MessageEntryAdditionalData(chatTheme: theme)
         default:
             return MessageEntryAdditionalData()
+        }
+    }
+    var isRevealed: Bool {
+        switch self {
+        case let .MessageEntry(_,_,_,_,_,_,data):
+            return data.additionData.isRevealed ?? false
+        case let .groupedPhotos(entries,_):
+            return entries.contains(where: { $0.isRevealed == true })
+        default:
+            return true
         }
     }
     
@@ -446,9 +476,8 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil, mediaRevealed: Set<MessageId> = Set(), translate: ChatLiveTranslateContext.State? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
-
     
     var groupedPhotos:[ChatHistoryEntry] = []
     var groupInfo: MessageGroupInfo?
@@ -501,15 +530,15 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     if let file = message.associatedMedia[mediaId] as? TelegramMediaFile {
                         var file = file
                         var attributes = file.attributes
-                        attributes.removeAll()
-                        attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
-                            switch attribute {
-                            case let .CustomEmoji(_, alt, packReference):
-                                return .Sticker(displayText: alt, packReference: packReference, maskData: nil)
-                            default:
-                                return attribute
-                            }
-                        }
+//                        attributes.removeAll()
+//                        attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
+//                            switch attribute {
+//                            case let .CustomEmoji(_, _, alt, packReference):
+//                                return .Sticker(displayText: alt, packReference: packReference, maskData: nil)
+//                            default:
+//                                return attribute
+//                            }
+//                        }
                         attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
                         attributes.append(.Sticker(displayText: original, packReference: nil, maskData: nil))
                         
@@ -571,7 +600,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         
         var disableEntry = false
-        if let action = message.effectiveMedia as? TelegramMediaAction {
+        if let action = message.extendedMedia as? TelegramMediaAction {
             switch action.action {
             case .historyCleared:
                 disableEntry = true
@@ -653,13 +682,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         if message.itHasRestrictedContent {
             message = message.withUpdatedMedia([]).withUpdatedText(" ")
         }
-        
-        let allowAttributes:[MessageAttribute.Type] = [ReplyThreadMessageAttribute.self, OutgoingMessageInfoAttribute.self, TextEntitiesMessageAttribute.self, EditedMessageAttribute.self, ForwardSourceInfoAttribute.self, ViewCountMessageAttribute.self, ConsumableContentMessageAttribute.self, NotificationInfoMessageAttribute.self, ChannelMessageStateVersionAttribute.self, AutoremoveTimeoutMessageAttribute.self, ReactionsMessageAttribute.self, PendingReactionsMessageAttribute.self]
-        
+                
         if renderType == .list {
             if let prev = prev {
                 var actionShortAccess: Bool = true
-                if let action = prev.message.effectiveMedia as? TelegramMediaAction {
+                if let action = prev.message.extendedMedia as? TelegramMediaAction {
                     switch action.action {
                     case .phoneCall:
                         actionShortAccess = true
@@ -672,16 +699,19 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     if let peer = peer as? TelegramChannel, case .broadcast(_) = peer.info {
                         itemType = .Full(rank: rank, header: .normal)
                     } else {
-                        var canShort:Bool = (message.media.isEmpty || message.effectiveMedia?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
+                        var canShort:Bool = (message.media.isEmpty || message.anyMedia?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
                         
                         
                         
-                        attrsLoop: for attr in message.attributes {
-                            let contains = allowAttributes.contains(where: { type(of: attr) == $0 })
-                            if !contains {
-                                canShort = false
-                                break attrsLoop
-                            }
+//                        attrsLoop: for attr in message.attributes {
+//                            let contains = allowAttributes.contains(where: { type(of: attr) == $0 })
+//                            if !contains {
+//                                canShort = false
+//                                break attrsLoop
+//                            }
+//                        }
+                        if message.threadId != prev.message.threadId {
+                           // canShort = false
                         }
                         itemType = !canShort ? .Full(rank: rank, header: .normal) : .Short(rank: rank, header: .normal)
                         
@@ -705,10 +735,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                         accept = false
                     }
                 }
-                if lhs.effectiveMedia is TelegramMediaAction {
+                if lhs.extendedMedia is TelegramMediaAction {
                     accept = false
                 }
-                if rhs.effectiveMedia is TelegramMediaAction {
+                if rhs.extendedMedia is TelegramMediaAction {
                     accept = false
                 }
                 if lhs.isAnonymousMessage {
@@ -716,6 +746,11 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 }
                 if rhs.isAnonymousMessage {
                     accept = false
+                }
+                if let peer = lhs.peers[lhs.id.peerId], peer.isForum {
+                    if lhs.threadId != rhs.threadId {
+                        accept = false
+                    }
                 }
                 return accept
             }
@@ -785,15 +820,33 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         var highlightFoundText: HighlightFoundText? = nil
         
         
-        if let searchState = searchState, !message.text.isEmpty {
-            highlightFoundText = HighlightFoundText(query: searchState.query, isMessage: searchState.containsMessage(message))
+        if let searchState = searchState, !message.text.isEmpty, searchState.containsMessage(message) {
+            highlightFoundText = HighlightFoundText(query: searchState.query, isMessage: true)
         }
         
-        if let data = pollAnswersLoading[message.id] {
-            additionalData = MessageEntryAdditionalData(pollStateData: data, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id])
-        } else {
-            additionalData = MessageEntryAdditionalData(pollStateData: ChatPollStateData(), highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id])
+        let pollData = pollAnswersLoading[message.id] ?? ChatPollStateData()
+        
+        var messageTranslate: ChatLiveTranslateContext.State.Result?
+        var replyTranslate: ChatLiveTranslateContext.State.Result?
+        if let translate = translate {
+            messageTranslate = translate.result[.Key(id: message.id, toLang: translate.to)]
+            if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
+                replyTranslate = translate.result[.init(id: replyMessage.id, toLang: translate.to)]
+            } else {
+                replyTranslate = nil
+            }
+            if translate.canTranslate, translate.translate {
+                if let _ = message.translationAttribute(toLang: translate.to) {
+                    messageTranslate = .complete(toLang: translate.to)
+                }
+                if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
+                    if let _ = replyMessage.translationAttribute(toLang: translate.to) {
+                        replyTranslate = .complete(toLang: translate.to)
+                    }
+                }
+            }
         }
+        additionalData = MessageEntryAdditionalData(pollStateData: pollData, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id], isRevealed: mediaRevealed.contains(message.id), translate: messageTranslate, replyTranslate: replyTranslate)
         let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
         
        

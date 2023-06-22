@@ -23,6 +23,7 @@ protocol PictureInPictureControl {
     func play()
     func didEnter()
     func didExit()
+    func isPlaying() -> Bool
     var view: NSView { get }
     var isPictureInPicture: Bool { get }
     
@@ -299,7 +300,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             var rect = saver.rect.size.bounds
             rect.origin = NSMakePoint(screen.frame.width - convert_s.width - 30, screen.frame.height - convert_s.height - 50)
 
-            self.setFrame(NSMakeRect(saver.rect.minX, saver.rect.minY, convert_s.width, convert_s.height), display: true, animate: true)
+            self.setFrame(NSMakeRect(rect.minX, rect.minY, convert_s.width, convert_s.height), display: true, animate: true)
            
         }
     }
@@ -331,14 +332,17 @@ func exitPictureInPicture() {
 
 func pausepip() {
     if let window = window as? ModernPictureInPictureVideoWindow {
-        window.control.pause()
-        window.forcePaused = true
+        if window.control.isPlaying() {
+            window.control.pause()
+            window.forcePaused = true
+        }
     }
 }
 
 func playPipIfNeeded() {
     if let window = window as? ModernPictureInPictureVideoWindow, window.forcePaused {
         window.control.play()
+        window.forcePaused = false
     }
 }
 

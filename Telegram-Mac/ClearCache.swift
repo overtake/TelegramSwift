@@ -104,7 +104,7 @@ private final class CCTask : Equatable {
                 scanFiles(at: account.postbox.mediaBox.basePath + "/cache", anyway: { value in
                     files.append(value)
                 })
-                return account.postbox.mediaBox.removeCachedResources(ids) |> then(clearCache(files, excludes: excludes, start: Date().timeIntervalSince1970))
+                return account.postbox.mediaBox.removeCachedResources(Array(ids)) |> then(clearCache(files, excludes: excludes, start: Date().timeIntervalSince1970))
             } |> deliverOn(cacheQueue)
         
         self.disposable.set(signal.start(next: { [weak self] value in

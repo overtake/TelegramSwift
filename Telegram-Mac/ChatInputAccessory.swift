@@ -114,8 +114,8 @@ class ChatInputAccessory: View {
                 guard let context = self?.chatInteraction.context else {
                     return
                 }
-                let fwdMessages = state.interfaceState.forwardMessageIds
-                showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: fwdMessages, emptyPerformOnClose: true)), for: context.window)
+                let fwdMessages = state.interfaceState.forwardMessages
+                showModal(with: ShareModalController(ForwardMessagesObject(context, messages: fwdMessages, emptyPerformOnClose: true)), for: context.window)
                 delay(0.15, closure: {
                     self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
                 })
@@ -154,7 +154,7 @@ class ChatInputAccessory: View {
                 items.append(ContextSeparatorItem())
                 
                 let messagesWithCaption = state.interfaceState.forwardMessages.filter {
-                    !$0.text.isEmpty && $0.effectiveMedia != nil
+                    !$0.text.isEmpty && $0.anyMedia != nil
                 }.count
                 
                 if messagesWithCaption > 0 {

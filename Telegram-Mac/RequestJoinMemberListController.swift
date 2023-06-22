@@ -217,7 +217,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("progress"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                return LoadingTableItem(initialSize, height: 100, stableId: stableId)
+                return LoadingTableItem(initialSize, height: 50, stableId: stableId, backgroundColor: .clear)
             }))
             index += 1
             

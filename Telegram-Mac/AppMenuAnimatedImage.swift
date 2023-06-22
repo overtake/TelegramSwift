@@ -47,25 +47,44 @@ final class AppMenuAnimatedImage : LottiePlayerView, AppMenuItemImageDrawable {
     
     private let sticker: LocalAnimatedSticker
     private let item: ContextMenuItem
+    private let imageView = ImageView(frame: NSMakeRect(0, 0, 18, 18))
+    
+    
+    private let disposable = MetaDisposable()
     init(_ sticker: LocalAnimatedSticker, _ color: NSColor?, _ item: ContextMenuItem) {
         self.sticker = sticker
         self.item = item
         super.init(frame: NSMakeRect(0, 0, 18, 18))
+        addSubview(imageView)
+        self.imageView.image = sticker.menuIcon(color ?? theme.colors.text)
         
         if let data = sticker.data {
-            
+
             var colors:[LottieColor] = []
             if let color = color {
                 colors = [.init(keyPath: "", color: color)]
             } else {
                 colors = []
             }
-            
-            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey.init(key: .bundle(self.sticker.rawValue), size: frame.size), type: .lottie, cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, colors: colors, metalSupport: false)
-            
-            self.set(animation, reset: true, saveContext: false, animated: false)
+
+            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle(self.sticker.rawValue), size: frame.size), type: .lottie, cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, colors: colors, metalSupport: false)
+
+            self.animation = animation
 
         }
+        
+        disposable.set(state.start(next: { [weak self] state in
+            self?.imageView.isHidden = state == .playing
+            if state == .finished {
+                let animation = self?.animation
+                self?.set(nil, animated: false)
+                self?.animation = animation
+            }
+        }))
+    }
+    
+    deinit {
+        disposable.dispose()
     }
     
     required init?(coder decoder: NSCoder) {
@@ -85,15 +104,17 @@ final class AppMenuAnimatedImage : LottiePlayerView, AppMenuItemImageDrawable {
     }
     func setColor(_ color: NSColor) {
         self.setColors([.init(keyPath: "", color: color)])
+        self.imageView.image = sticker.menuIcon(color)
     }
     func updateState(_ controlState: ControlState) {
         switch controlState {
         case .Hover:
-            if self.animation?.playPolicy == .framesCount(1), self.currentState != .playing {
-                self.set(self.animation?.withUpdatedPolicy(.once), reset: false)
-            } else {
-                self.playAgain()
+            if !isLite(.menu_animations) {
+                if self.currentState != .playing {
+                    self.set(self.animation?.withUpdatedPolicy(.once), reset: false)
+                } 
             }
+            
         default:
             break
         }
@@ -116,7 +137,7 @@ final class AppMenuAnimatedRemoteImage : LottiePlayerView, AppMenuItemImageDrawa
         super.init(frame: NSMakeRect(0, 0, 18, 18))
         
         if let reference = PeerReference(sticker.bot) {
-            _ = fetchedMediaResource(mediaBox: sticker.context.account.postbox.mediaBox, reference: .media(media: .attachBot(peer: reference, media: sticker.file), resource: sticker.file.resource)).start()
+            _ = fetchedMediaResource(mediaBox: sticker.context.account.postbox.mediaBox, userLocation: .peer(sticker.bot.id), userContentType: .other, reference: .media(media: .attachBot(peer: reference, media: sticker.file), resource: sticker.file.resource)).start()
         }
         
         let signal = sticker.context.account.postbox.mediaBox.resourceData(sticker.file.resource, attemptSynchronously: true) |> deliverOnMainQueue
@@ -173,10 +194,12 @@ final class AppMenuAnimatedRemoteImage : LottiePlayerView, AppMenuItemImageDrawa
     func updateState(_ controlState: ControlState) {
         switch controlState {
         case .Hover:
-            if self.animation?.playPolicy == .framesCount(1) {
-                self.set(self.animation?.withUpdatedPolicy(.once), reset: false)
-            } else {
-                self.playAgain()
+            if !isLite(.menu_animations) {
+                if self.animation?.playPolicy == .framesCount(1) {
+                    self.set(self.animation?.withUpdatedPolicy(.once), reset: false)
+                } else {
+                    self.playAgain()
+                }
             }
         default:
             break

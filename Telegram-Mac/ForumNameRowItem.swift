@@ -41,7 +41,7 @@ private final class ForumNameRowItemView: InputDataRowView {
     private var inlineLayer: InlineStickerItemLayer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(control)
+        containerView.addSubview(control)
     }
     
     override func layout() {
@@ -49,7 +49,7 @@ private final class ForumNameRowItemView: InputDataRowView {
         guard let item = item as? InputDataRowItem else {
             return
         }
-        control.frame = NSMakeRect(item.inset.left + 7, 6, 30, 30)
+        control.frame = NSMakeRect(item.viewType.innerInset.left - 2, 6, 30, 30)
     }
     
     override func set(item: TableRowItem, animated: Bool) {

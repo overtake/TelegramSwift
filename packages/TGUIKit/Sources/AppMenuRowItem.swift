@@ -159,7 +159,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
             return (NSAttributedString.Key.link.rawValue, contents)
         }))
         
-        self.text = TextViewLayout(attr)
+        self.text = TextViewLayout(attr, maximumNumberOfLines: item.removeTail ? 1 : .max)
         
         if item.keyEquivalent.isEmpty {
             keyEquivalentText = nil
@@ -191,7 +191,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
             return (NSAttributedString.Key.link.rawValue, contents)
         }))
         
-        self.text = TextViewLayout(attr)
+        self.text = TextViewLayout(attr, maximumNumberOfLines: item.removeTail ? 1 : .max)
         
         _ = makeSize(self.width)
         
@@ -210,7 +210,34 @@ open class AppMenuRowItem : AppMenuBasicItem {
     
     var hasDrawable: Bool {
         if let menu = item.menu {
-            return menu.items.compactMap { $0 as? ContextMenuItem }.contains(where: { $0.itemImage != nil })
+            
+            var range: NSRange = NSMakeRange(NSNotFound, 0)
+            for (i, item) in menu.items.enumerated() {
+                if item === self.item {
+                    range.location = i
+                    range.length = 1
+                } else if range.location != NSNotFound {
+                    if item is ContextSeparatorItem {
+                        break
+                    } else {
+                        range.length += 1
+                    }
+                }
+            }
+            if range.location != NSNotFound, range.location > 0 {
+                for i in stride(from: range.location - 1, to: -1, by: -1) {
+                    let item = menu.items[i]
+                    if item is ContextSeparatorItem {
+                        break
+                    } else {
+                        range.location -= 1
+                        range.length += 1
+                    }
+                }
+            }
+            let blockItems = menu.items[range.min ..< range.max]
+            
+            return blockItems.compactMap { $0 as? ContextMenuItem }.contains(where: { $0.itemImage != nil })
         }
         return false
     }
@@ -245,12 +272,22 @@ open class AppMenuRowItem : AppMenuBasicItem {
     }
     
     open override var height: CGFloat {
-        return 28
+        if self.text.lines.count <= 1 {
+            return 28
+        } else {
+            return self.text.layoutSize.height + 8
+        }
+    }
+    
+    open var textMaxWidth: CGFloat {
+        let width = item.overrideWidth ?? width
+        return width - leftInset * 2 - innerInset * 2
     }
     
     open override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
-        self.text.measure(width: width - leftInset * 2 - innerInset * 2)
+        let width = item.overrideWidth ?? width
+        self.text.measure(width: textMaxWidth)
         self.keyEquivalentText?.measure(width: .greatestFiniteMagnitude)
         return true
     }
@@ -270,10 +307,13 @@ open class AppMenuRowView: AppMenuBasicItemView {
     private var drawable: AppMenuItemImageDrawable? = nil
     private var more: ImageView? = nil
     
+    public let contentView = View()
+    
     private let hoverDisposable = MetaDisposable()
     
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        super.addSubview(contentView)
         self.addSubview(textView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
@@ -302,11 +342,17 @@ open class AppMenuRowView: AppMenuBasicItemView {
         
         
         containerView.set(handler: { [weak self] _ in
+            guard let item = self?.item as? AppMenuRowItem else {
+                return
+            }
             if !CheckWindow() {
                 return
             }
-            self?.drawable?.updateState(.Hover)
-            self?.updateState(.Hover)
+            if item.item.isEnabled {
+                self?.drawable?.updateState(.Hover)
+                self?.updateState(.Hover)
+            }
+           
             
             self?.hoverDisposable.set(delaySignal(0.5).start(completed: {
                 guard let item = self?.item as? AppMenuRowItem else {
@@ -317,11 +363,16 @@ open class AppMenuRowView: AppMenuBasicItemView {
             
         }, for: .Hover)
         containerView.set(handler: { [weak self] _ in
+            guard let item = self?.item as? AppMenuRowItem else {
+                return
+            }
             if !CheckWindow() {
                 return
             }
-            self?.drawable?.updateState(.Highlight)
-            self?.updateState(.Highlight)
+            if item.item.isEnabled {
+                self?.drawable?.updateState(.Highlight)
+                self?.updateState(.Highlight)
+            }
             self?.hoverDisposable.set(nil)
         }, for: .Highlight)
         containerView.set(handler: { [weak self] _ in
@@ -358,6 +409,11 @@ open class AppMenuRowView: AppMenuBasicItemView {
             item.interaction?.action(item.item)
         }, for: .RightDown)
     }
+    
+    open override func addSubview(_ view: NSView) {
+        contentView.addSubview(view)
+    }
+    
     private var previous: ControlState = .Normal
     open func updateState(_ state: ControlState) {
       
@@ -369,6 +425,10 @@ open class AppMenuRowView: AppMenuBasicItemView {
     open override func mouseUp(with event: NSEvent) {
         var bp = 0
         bp += 1
+    }
+    open override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        NSCursor.arrow.set()
     }
     
     open override func updateMouse() {
@@ -440,12 +500,18 @@ open class AppMenuRowView: AppMenuBasicItemView {
     open override func layout() {
         super.layout()
         
+        contentView.setFrameSize(containerView.frame.size)
+        
         guard let item = item as? AppMenuRowItem else {
             return
         }
         
         if let drawable = drawable {
-            drawable.centerY(x: item.leftInset)
+            if item.text.numberOfLines == 1 {
+                drawable.centerY(x: item.leftInset)
+            } else {
+                drawable.setFrameOrigin(NSMakePoint(item.leftInset, 4))
+            }
             textView.setFrameOrigin(NSMakePoint(drawable.frame.maxX + item.leftInset - 2, textY))
         } else if let imageView = imageView {
             imageView.centerY(x: item.leftInset)
@@ -489,7 +555,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
         
         if let drawable = drawable {
             if drawable.superview != containerView {
-                containerView.addSubview(drawable)
+                contentView.addSubview(drawable)
             }
         } else if let current = self.drawable {
             self.drawable = nil
@@ -504,10 +570,12 @@ open class AppMenuRowView: AppMenuBasicItemView {
             } else {
                 current = ImageView()
                 current.setFrameSize(item.imageSize, item.imageSize)
+                current.isEventLess = true
                 containerView.addSubview(current)
                 self.imageView = current
             }
             current.layer?.contents = image
+            current.layer?.opacity = item.item.isEnabled ? 1 : 0.4
         } else if let view = self.imageView {
             self.imageView = nil
             performSubviewRemoval(view, animated: animated)
@@ -525,10 +593,11 @@ open class AppMenuRowView: AppMenuBasicItemView {
                     current.setFrameSize(item.moreSize)
                 }
                 current.contentGravity = .center
-                containerView.addSubview(current)
+                contentView.addSubview(current)
                 self.more = current
             }
             current.image = item.item.state == .on ? item.presentation.selected : item.presentation.more
+            current.layer?.opacity = item.item.isEnabled ? 1 : 0.4
         } else if let view = self.more {
             self.more = nil
             performSubviewRemoval(view, animated: animated)
@@ -542,10 +611,12 @@ open class AppMenuRowView: AppMenuBasicItemView {
                 current = TextView()
                 current.userInteractionEnabled = false
                 current.isSelectable = false
+                current.isEventLess = true
                 self.addSubview(current)
                 self.keyEquivalent = current
             }
             current.update(keyEquivalent)
+            current.alphaValue = item.item.isEnabled ? 1 : 0.8
         } else if let view = self.keyEquivalent {
             self.keyEquivalent = nil
             performSubviewRemoval(view, animated: animated)

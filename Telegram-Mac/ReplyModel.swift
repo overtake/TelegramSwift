@@ -24,13 +24,15 @@ class ReplyModel: ChatAccessoryModel {
     private let autodownload: Bool
     private let headerAsName: Bool
     private let customHeader: String?
-    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil) {
+    private let translate: ChatLiveTranslateContext.State.Result?
+    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil, translate: ChatLiveTranslateContext.State.Result? = nil) {
         self.isPinned = isPinned
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
         self.replyMessage = replyMessage
         self.headerAsName = headerAsName
         self.customHeader = customHeader
+        self.translate = translate
         super.init(context: context, presentation: presentation, drawLine: drawLine)
         
       
@@ -163,17 +165,29 @@ class ReplyModel: ChatAccessoryModel {
                 var updateImageSignal: Signal<ImageDataTransformation, NoError>?
                 if mediaUpdated {
                     if let image = updatedMedia as? TelegramMediaImage {
-                        updateImageSignal = chatMessagePhotoThumbnail(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor, synchronousLoad: true)
+                        if message.isMediaSpoilered {
+                            updateImageSignal = chatSecretPhoto(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor)
+                        } else {
+                            updateImageSignal = chatMessagePhotoThumbnail(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor, synchronousLoad: false)
+                        }
                     } else if let file = updatedMedia as? TelegramMediaFile {
                         if file.isVideo {
-                            updateImageSignal = chatMessageVideoThumbnail(account: self.context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: false)
+                            if message.isMediaSpoilered {
+                                updateImageSignal = chatSecretMessageVideo(account: self.context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor)
+                            } else {
+                                updateImageSignal = chatMessageVideoThumbnail(account: self.context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: false)
+                            }
                         } else if file.isAnimatedSticker {
                             updateImageSignal = chatMessageAnimatedSticker(postbox: self.context.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize), fetched: true, isVideo: file.isVideoSticker)
                         } else if file.isSticker {
                             updateImageSignal = chatMessageSticker(postbox: self.context.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, fetched: true)
                         } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
                             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-                            updateImageSignal = chatWebpageSnippetPhoto(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true, synchronousLoad: true)
+                            if message.isMediaSpoilered {
+                                updateImageSignal = chatSecretPhoto(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor)
+                            } else {
+                                updateImageSignal = chatWebpageSnippetPhoto(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true, synchronousLoad: true)
+                            }
                         }
                     }
                 }
@@ -223,6 +237,8 @@ class ReplyModel: ChatAccessoryModel {
 
         if let message = message {
             
+            
+            
             var title: String? = message.effectiveAuthor?.displayTitle
             if let info = message.forwardInfo {
                 title = info.authorTitle
@@ -235,9 +251,19 @@ class ReplyModel: ChatAccessoryModel {
                     break
                 }
             }
+            if isPinned {
+                title = strings().chatHeaderPinnedMessage
+            }
+            
+            let text: NSAttributedString
+            if let translate = self.translate, let translateText = message.translationAttribute(toLang: translate.toLang)?.text  {
+                text = .initialize(string: translateText, color: theme.colors.text, font: .normal(.text))
+            } else {
+                text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
+            }
             
             
-            let text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
+            
             if let header = customHeader {
                 self.header = .init(.initialize(string: header, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
             } else {
@@ -245,16 +271,18 @@ class ReplyModel: ChatAccessoryModel {
             }
             let attr = NSMutableAttributedString()
             attr.append(text)
-            attr.addAttribute(.foregroundColor, value: message.media.isEmpty || message.effectiveMedia is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, range: attr.range)
+            attr.addAttribute(.foregroundColor, value: message.media.isEmpty || message.anyMedia is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, range: attr.range)
             attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
             
-            attr.fixUndefinedEmojies()
+//            attr.fixUndefinedEmojies()
             self.message = .init(attr, maximumNumberOfLines: 1)
         } else {
             self.header = nil
             self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.disabledText, font: .normal(.text)), maximumNumberOfLines: 1)
             display = true
         }
+        
+       
         
         if !isLoading {
             measureSize(width, sizeToFit: sizeToFit)
@@ -264,6 +292,26 @@ class ReplyModel: ChatAccessoryModel {
             self.view?.setFrameSize(self.size)
             self.setNeedDisplay()
         }
+    }
+    
+    override func measureSize(_ width: CGFloat = 0, sizeToFit: Bool = false) {
+        super.measureSize(width, sizeToFit: sizeToFit)
+        
+//        if let translate = translate, let message = self.message {
+//            switch translate {
+//            case .loading:
+//                _shimm = message.generateBlock(backgroundColor: .blackTransparent)
+//            case .complete:
+//                _shimm = (.zero, nil)
+//            }
+//        } else {
+//            _shimm = (.zero, nil)
+//        }
+    }
+    
+    private var _shimm: (NSPoint, CGImage?) = (.zero, nil)
+    override var shimm: (NSPoint, CGImage?) {
+        return _shimm
     }
 
     

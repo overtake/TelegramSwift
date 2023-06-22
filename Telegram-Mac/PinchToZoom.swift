@@ -73,6 +73,10 @@ final class PinchToZoom {
 
         disposable.set(nil)
         
+        var _returnView:(()->Void)?
+        
+        var eventSetup: Bool = false
+        
         let updateMagnify:(CGFloat)->Void = { [weak self, weak view] magnifyValue in
             guard let `self` = self, let view = view else {
                 return
@@ -91,6 +95,22 @@ final class PinchToZoom {
             
           
             self.currentMagnify = magnifyValue
+            
+            if magnifyValue > 1 {
+                if !eventSetup {
+                    window.set(handler: { event in
+                        _returnView?()
+                        return .invoked
+                    }, with: view, for: .All, priority: .supreme)
+                    
+                    eventSetup = true
+                }
+            } else {
+                if eventSetup {
+                    window.removeAllHandlers(for: view)
+                    eventSetup = false
+                }
+            }
         }
         
         self.animation = nil
@@ -110,7 +130,13 @@ final class PinchToZoom {
                     view.setFrameOrigin(.zero)
                     strongSelf.parentView?.addSubview(view)
                 }
+                gesture.isEnabled = true
             })
+        }
+        
+        _returnView = {
+            gesture.isEnabled = false
+            returnView(true)
         }
         
         

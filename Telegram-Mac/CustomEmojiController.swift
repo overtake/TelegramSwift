@@ -128,7 +128,7 @@ func CustomEmojiController(context: AccountContext) -> InputDataController {
         FastSettings.toggleSwapEmoji(stateValue.with { $0.suggest})
     })
     
-    let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
+    let emojies = context.diceCache.emojies
 
     
     actionsDisposable.add(emojies.start(next: { view in

@@ -435,9 +435,9 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
             }, image: {
                 return lowIsSelected ? theme.icons.empty_chat_storage_low_active : theme.icons.empty_chat_storage_low
             }, click: {
-                _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
-                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(5)
-                }).start()
+//                _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+//                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(5)
+//                }).start()
             }))
             
             buttons.append(.init(text: { strings().emptyChatStorageUsageMedium }, selected: {
@@ -445,9 +445,9 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
             }, image: {
                 return normalIsSelected ?  theme.icons.empty_chat_storage_medium_active : theme.icons.empty_chat_storage_medium
             }, click: {
-                _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
-                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(32)
-                }).start()
+//                _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+//                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(32)
+//                }).start()
             }))
             
             buttons.append(.init(text: { strings().emptyChatStorageUsageNoLimit }, selected: {
@@ -455,9 +455,9 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
             }, image: {
                 return highIsSelected ? theme.icons.empty_chat_storage_high_active : theme.icons.empty_chat_storage_high
             }, click: {
-                _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
-                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(.max)
-                }).start()
+//                _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, {
+//                    $0.withUpdatedDefaultCacheStorageLimitGigabytes(.max)
+//                }).start()
             }))
             
             let data: WidgetData = .init(title: { strings().emptyChatStorageUsageData }, desc: { strings().widgedStorageInfoText }, descClick: {

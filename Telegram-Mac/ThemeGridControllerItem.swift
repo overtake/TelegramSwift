@@ -95,7 +95,7 @@ final class SettingsThemeWallpaperView: BackgroundView {
             self.imageView.setSignal(chatWallpaper(account: account, representations: representations, mode: .thumbnail, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor))
             self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: largestImageRepresentation(representations)!.dimensions.size.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: nil))
             self.backgroundMode = .plain
-            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(wallpaper: nil, resource: largestImageRepresentation(representations)!.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: nil, resource: largestImageRepresentation(representations)!.resource)).start())
         case let .file(slug, file, settings, isPattern):
             self.label.isHidden = true
             self.imageView.isHidden = false
@@ -104,9 +104,9 @@ final class SettingsThemeWallpaperView: BackgroundView {
             var representations:[TelegramMediaImageRepresentation] = []
 //            representations.append(contentsOf: file.previewRepresentations)
             if let dimensions = file.dimensions {
-                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
             } else {
-                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(600, 600)), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(600, 600)), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
             }
             
             let sz = largestImageRepresentation(representations)?.dimensions.size ?? size
@@ -125,14 +125,22 @@ final class SettingsThemeWallpaperView: BackgroundView {
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: sz.aspectFilled(isPattern ? NSMakeSize(300, 300) : size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: patternColor)
             
-
-            self.imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor), clearInstantly: false)
+            let signal = chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor)
+            
+            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale))
+            
+            if !self.imageView.isFullyLoaded {
+                self.imageView.setSignal(signal, clearInstantly: false, cacheImage: { result in
+                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+                })
+            }
+            
 
 
             self.imageView.set(arguments: arguments)
 
             
-            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(wallpaper: .slug(slug), resource: largestImageRepresentation(representations)!.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: .slug(slug), resource: largestImageRepresentation(representations)!.resource)).start())
             
             self.backgroundMode = .plain
         default:

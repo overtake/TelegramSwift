@@ -294,7 +294,7 @@ class ContactsController: PeersListController {
         super.init(context, searchOptions: [.chats])
     }
     
-    override func changeSelection(_ location: ChatLocation?) {
+    override func changeSelection(_ location: ChatLocation?, globalForumId: PeerId?) {
         if let location = location {
             switch location {
             case let .peer(peerId):

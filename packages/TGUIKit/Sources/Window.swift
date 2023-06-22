@@ -276,6 +276,8 @@ open class Window: NSWindow {
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
+    public  var pastehandler:(()->Void)? = nil
+
     public  var masterCopyhandler:(()->Void)? = nil
 
     public var closeInterceptor:(()->Bool)? = nil
@@ -486,6 +488,7 @@ open class Window: NSWindow {
     
     public func applyResponderIfNeeded(_ event: NSEvent? = nil) ->Void {
         let sorted = responsders.sorted(by: >)
+        
         if let event = event, event.modifierFlags.contains(.option)
          || event.modifierFlags.contains(.control) {
             return
@@ -561,9 +564,7 @@ open class Window: NSWindow {
     open override func becomeFirstResponder() -> Bool {
         return false
     }
-    open override var accessibilityFocusedUIElement: Any? {
-        return nil
-    }
+   
 
     public func sendKeyEvent(_ key: KeyboardKey, modifierFlags: NSEvent.ModifierFlags) {
         guard let event = NSEvent.keyEvent(with: .keyDown, location: mouseLocationOutsideOfEventStream, modifierFlags: modifierFlags, timestamp: Date().timeIntervalSince1970, windowNumber: windowNumber, context: graphicsContext, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: key.rawValue) else {return}
@@ -704,11 +705,16 @@ open class Window: NSWindow {
     
     @objc public func pasteToFirstResponder(_ sender: Any) {
         
-        applyResponderIfNeeded()
-        
-        if let firstResponder = firstResponder, firstResponder.responds(to: NSSelectorFromString("paste:")) {
-            firstResponder.performSelector(onMainThread: NSSelectorFromString("paste:"), with: sender, waitUntilDone: false)
+        if let pastehandler = pastehandler {
+            pastehandler()
+        } else {
+            applyResponderIfNeeded()
+            if let firstResponder = firstResponder, firstResponder.responds(to: NSSelectorFromString("paste:")) {
+                firstResponder.performSelector(onMainThread: NSSelectorFromString("paste:"), with: sender, waitUntilDone: false)
+            }
         }
+        
+        
     }
     
     @objc public func copyFromFirstResponder(_ sender: Any) {
@@ -947,7 +953,7 @@ open class Window: NSWindow {
     }
 
 
-    
+
     @objc open func windowDidBecomeKey() {
         isKeyWindowValue.set(true)
 
@@ -971,9 +977,16 @@ open class Window: NSWindow {
     @objc func windowDidChangeOcclusionState() {
         occlusionStateValue.set(self.occlusionState)
     }
+    
+    open override func updateConstraintsIfNeeded() {
+        
+    }
+    
 
     public override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing bufferingType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: style, backing: bufferingType, defer: flag)
+        
+        
         
         self.acceptsMouseMovedEvents = true
         occlusionStateValue.set(self.occlusionState)

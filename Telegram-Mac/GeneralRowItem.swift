@@ -65,11 +65,26 @@ func bestGeneralViewType<T>(_ array:[T], for i: Int) -> GeneralViewType  {
     }
 }
 
+func bestGeneralViewTypeAfterFirst<T>(_ array:[T], for i: Int) -> GeneralViewType  {
+    if i == 0 {
+        if array.count == 1 {
+            return .lastItem
+        } else {
+            return .innerItem
+        }
+    } else {
+        return bestGeneralViewType(array, for: i)
+    }
+}
+
 enum GeneralInteractedType : Equatable {
     case none
     case next
     case nextContext(String)
+    case imageContext(CGImage, String)
+    case nextImage(CGImage)
     case selectable(Bool)
+    case selectableLeft(Bool)
     case switchable(Bool)
     case context(String)
     case loading
@@ -79,7 +94,7 @@ enum GeneralInteractedType : Equatable {
     case colorSelector(NSColor)
     case badge(String, NSColor)
     #if !SHARE
-    case contextSelector(String, [SPopoverItem])
+    case contextSelector(String, [ContextMenuItem])
     #endif
 }
 
@@ -308,7 +323,7 @@ class GeneralRowItem: TableRowItem {
     var drawCustomSeparator:Bool = true {
         didSet {
             if drawCustomSeparator != oldValue {
-                self.redraw()
+                self.noteHeightOfRow()
             }
         }
     }

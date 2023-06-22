@@ -26,7 +26,7 @@ open class TableAnimationInterface: NSObject {
         self.animate = animate
     }
 
-    public func animate(table:TableView, documentOffset: NSPoint, added:[TableRowItem], removed:[TableRowItem], previousRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
+    @discardableResult public func animate(table:TableView, documentOffset: NSPoint, added:[TableRowItem], removed:[TableRowItem], previousRange: NSRange = NSMakeRange(NSNotFound, 0)) -> [AnimateItem] {
         
         var height:CGFloat = 0
         
@@ -73,13 +73,13 @@ open class TableAnimationInterface: NSObject {
         }
         
         if previousRange.length == 0  {
-            return
+            return []
         }
         
         range = table.visibleRows(height)
         
         if added.isEmpty && removed.isEmpty {
-            return
+            return []
         }
         
         var animatedItems:[AnimateItem] = []
@@ -134,6 +134,7 @@ open class TableAnimationInterface: NSObject {
         if !animatedItems.isEmpty {
             self.animate(animatedItems)
         }
+        return animatedItems
     }
     
     public func scroll(table:TableView, from:NSRect, to:NSRect) -> Void {

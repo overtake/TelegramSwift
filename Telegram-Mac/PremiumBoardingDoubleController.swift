@@ -157,27 +157,19 @@ enum PremiumBoardingDoubleItem {
     }
 }
 
-final class PremiumBoardingDoubleView: View {
+final class PremiumBoardingDoubleView: View, PremiumSlideView {
     
     final class HeaderView: View {
-        let dismiss = ImageButton()
         private let container = View()
         private let titleView = TextView()
         required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            addSubview(dismiss)
-            
-            dismiss.scaleOnClick = true
-            dismiss.autohighlight = false
-            
-            dismiss.set(image: theme.icons.chatNavigationBack, for: .Normal)
-            dismiss.sizeToFit(NSMakeSize(20, 20), .zero, thatFit: false)
+            super.init(frame: frameRect)            
             
             titleView.userInteractionEnabled = false
             titleView.isSelectable = false
             titleView.isEventLess = true
             
-            container.backgroundColor = .clear
+            container.backgroundColor = theme.colors.background
             container.border = [.Bottom]
             container.isEventLess = true
 
@@ -185,19 +177,15 @@ final class PremiumBoardingDoubleView: View {
             layout.measure(width: 300)
             
             titleView.update(layout)
-            self.addSubview(titleView)
+            container.addSubview(titleView)
             
             addSubview(container)
 
         }
         
-        func update(isHidden: Bool, animated: Bool) {
-            container.change(opacity: isHidden ? 0 : 1, animated: animated)
-        }
         
         override func layout() {
             super.layout()
-            dismiss.centerY(x: 20)
             container.frame = bounds
             titleView.center()
         }
@@ -210,96 +198,85 @@ final class PremiumBoardingDoubleView: View {
 
 
     let headerView = HeaderView(frame: .zero)
-    let bottomView = View(frame: .zero)
-    var acceptView: Control?
+    let bottomBorder = View(frame: .zero)
     
-    private let bottomBorder = View()
-
     let tableView: TableView = TableView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(bottomView)
         addSubview(tableView)
         addSubview(headerView)
-        layer?.cornerRadius = 10
         
-        bottomView.addSubview(bottomBorder)
-        
+        addSubview(bottomBorder)
         bottomBorder.backgroundColor = theme.colors.border
         
-        tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
-            self?.updateScroll(position, animated: true)
-        }))
     }
     
     override func layout() {
         super.layout()
         headerView.frame = NSMakeRect(0, 0, frame.width, 50)
-        bottomView.frame = NSMakeRect(0, frame.height - 60, frame.width, 60)
-        
-        let bottomOffset = self.acceptView != nil ? self.bottomView.frame.height : 0
-        
-        tableView.frame = NSMakeRect(0, headerView.frame.height, frame.width, frame.height - headerView.frame.height - bottomOffset)
-        self.acceptView?.center()
-        self.bottomBorder.frame = NSMakeRect(0, 0, frame.width, .borderSize)
+                
+        tableView.frame = NSMakeRect(0, headerView.frame.height, frame.width, frame.height - headerView.frame.height)
+        self.bottomBorder.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setAccept(_ view: Control?) {
-        self.acceptView = view
-        if let view = view {
-            view.layer?.cornerRadius = 10
-            bottomView.addSubview(view)
-        }
-    }
     
-    func updateScroll(_ scroll: ScrollPosition, animated: Bool) {
-        if scroll.rect.minY >= tableView.listHeight || self.acceptView == nil {
-            bottomBorder.change(opacity: 0, animated: animated)
-        } else {
-            bottomBorder.change(opacity: 1, animated: animated)
-        }
-        headerView.update(isHidden: scroll.rect.minY == tableView.frame.height, animated: animated)
-    }
-}
-
-final class PremiumBoardingDoubleController : TelegramGenericViewController<PremiumBoardingDoubleView> {
-    private let back:()->Void
-    private let makeAcceptView:()->Control?
-    init(_ context: AccountContext, back:@escaping()->Void, makeAcceptView: @escaping()->Control?) {
-        self.back = back
-        self.makeAcceptView = makeAcceptView
-        super.init(context)
-        bar = .init(height: 0)
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        let initialSize = self.frame.size
-        
-        _ = genericView.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
+    func initialize(context: AccountContext, initialSize: NSSize) {
+        _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
         
         for type in PremiumBoardingDoubleItem.all {
             let item = PremiumBoardingDoubleRowItem(initialSize, limits: context.premiumLimits, type: type)
-            _ = genericView.tableView.addItem(item: item)
-            _ = genericView.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
+            _ = self.tableView.addItem(item: item)
+            _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
         }
-        genericView.headerView.dismiss.set(handler: { [weak self] _ in
-            self?.back()
-        }, for: .Click)
         
-        genericView.setAccept(self.makeAcceptView())
-        genericView.updateScroll(genericView.tableView.scrollPosition().current, animated: false)
-
-        readyOnce()
     }
     
-    deinit {
-        var bp = 0
-        bp += 1
+    func willAppear() {
+        
+    }
+    func willDisappear() {
+        
     }
 }
+//
+//final class PremiumBoardingDoubleController : TelegramGenericViewController<PremiumBoardingDoubleView> {
+//    private let back:()->Void
+//    private let makeAcceptView:()->Control?
+//    init(_ context: AccountContext, back:@escaping()->Void, makeAcceptView: @escaping()->Control?) {
+//        self.back = back
+//        self.makeAcceptView = makeAcceptView
+//        super.init(context)
+//        bar = .init(height: 0)
+//    }
+//
+//    override func viewDidLoad() {
+//        super.viewDidLoad()
+//
+//        let initialSize = self.frame.size
+//
+//        _ = genericView.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
+//
+//        for type in PremiumBoardingDoubleItem.all {
+//            let item = PremiumBoardingDoubleRowItem(initialSize, limits: context.premiumLimits, type: type)
+//            _ = genericView.tableView.addItem(item: item)
+//            _ = genericView.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
+//        }
+//        genericView.headerView.dismiss.set(handler: { [weak self] _ in
+//            self?.back()
+//        }, for: .Click)
+//
+//        genericView.setAccept(self.makeAcceptView())
+//        genericView.updateScroll(genericView.tableView.scrollPosition().current, animated: false)
+//
+//        readyOnce()
+//    }
+//
+//    deinit {
+//        var bp = 0
+//        bp += 1
+//    }
+//}

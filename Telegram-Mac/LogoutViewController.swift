@@ -77,15 +77,6 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-//    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_log_out, data: InputDataGeneralData(name: strings().logoutOptionsLogOut, color: theme.colors.redUI, viewType: .singleItem, action: arguments.logout)))
-//    index += 1
-//
-//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().logoutOptionsLogOutInfo), data: InputDataGeneralTextData(viewType: .textBottomItem)))
-//    index += 1
-
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-
     
     return entries
 }
@@ -112,7 +103,11 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
         f(StorageUsageController(context))
     }, changePhoneNumber: {
         closeAllModals()
-        f(PhoneNumberIntroController(context))
+        let navigation = MajorNavigationController(PhoneNumberIntroController.self, PhoneNumberIntroController(context), context.window)
+        navigation.alwaysAnimate = true
+        navigation._frameRect = NSMakeRect(0, 0, 350, 400)
+        navigation.readyOnce()
+        showModal(with: navigation, for: context.window)
     }, contactSupport: {
         confirm(for: context.window, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
             closeAllModals()

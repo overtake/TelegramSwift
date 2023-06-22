@@ -13,7 +13,7 @@ private let maskInset: CGFloat = 1.0
 
 
 final class ChatMessageBubbleBackdrop: NSView {
-    private let backgroundContent: NSView
+    private var backgroundContent: NSView?
     private let borderView: SImageView = SImageView()
     private var currentMaskMode: Bool?
     
@@ -21,15 +21,12 @@ final class ChatMessageBubbleBackdrop: NSView {
     
     
     init() {
-        self.backgroundContent = NSView()
         
         super.init(frame: NSZeroRect)
         autoresizingMask = []
         autoresizesSubviews = false
-        self.backgroundContent.wantsLayer = true
         wantsLayer = true
         self.layer?.masksToBounds = true
-        self.addSubview(self.backgroundContent)
         self.addSubview(self.borderView)
         self.layer?.disableActions()
     }
@@ -71,21 +68,39 @@ final class ChatMessageBubbleBackdrop: NSView {
             }
         }
         self.borderView.data = border
-        self.backgroundContent.layer?.contents = background
+        if image == nil {
+            if let view = self.backgroundContent {
+                performSubviewRemoval(view, animated: false)
+            }
+            self.backgroundContent = nil
+        } else {
+            let current: NSView
+            if let view = self.backgroundContent {
+                current = view
+            } else {
+                current = NSView()
+                current.wantsLayer = true
+                self.backgroundContent = current
+                addSubview(current, positioned: .below, relativeTo: self.borderView)
+            }
+            current.layer?.contents = background
+        }
+        
         if let maskView = self.maskView {
             maskView.data = image
         }
-        self.backgroundContent.isHidden = image == nil
     }
     
     func update(rect: CGRect, within containerSize: CGSize, transition: ContainedViewLayoutTransition, rotated: Bool = false) {
         
-        transition.updateFrame(view: self.backgroundContent, frame: CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: containerSize))
+        if let backgroundContent = backgroundContent {
+            transition.updateFrame(view: backgroundContent, frame: CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: containerSize))
+        }
         
         if rotated {
-            backgroundContent.rotate(byDegrees: 180)
+            backgroundContent?.rotate(byDegrees: 180)
         } else {
-            backgroundContent.rotate(byDegrees: 0)
+            backgroundContent?.rotate(byDegrees: 0)
         }
     }
 }

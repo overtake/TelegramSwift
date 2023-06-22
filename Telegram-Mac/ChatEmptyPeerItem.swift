@@ -37,6 +37,10 @@ class ChatEmptyPeerItem: TableRowItem {
         }
         return initialSize.height
     }
+    private var _shouldBlurService: Bool? = nil
+    var shouldBlurService: Bool {
+        return _shouldBlurService ?? theme.shouldBlurService
+    }
     
     private let peerViewDisposable = MetaDisposable()
     let presentation: TelegramPresentationTheme
@@ -45,31 +49,33 @@ class ChatEmptyPeerItem: TableRowItem {
         self.presentation = theme
         let attr = NSMutableAttributedString()
         var lineSpacing: CGFloat? = 5
+        
+        let textColor: NSColor = isLite(.blur) ? theme.colors.text : theme.chatServiceItemTextColor
         switch chatInteraction.mode {
         case .history:
             if  chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
-                _ = attr.append(string: strings().chatSecretChatEmptyHeader, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().chatSecretChatEmptyHeader, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().chatSecretChat1Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().chatSecretChat1Feature, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().chatSecretChat2Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().chatSecretChat2Feature, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().chatSecretChat3Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().chatSecretChat3Feature, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().chatSecretChat4Feature, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().chatSecretChat4Feature, color: textColor, font: .medium(.text))
                 
             } else if let peer = chatInteraction.peer, peer.isGroup || peer.isSupergroup, peer.groupAccess.isCreator {
-                _ = attr.append(string: strings().emptyGroupInfoTitle, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().emptyGroupInfoTitle, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoSubtitle, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().emptyGroupInfoSubtitle, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoLine1(chatInteraction.presentation.limitConfiguration.maxSupergroupMemberCount.formattedWithSeparator), color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().emptyGroupInfoLine1(chatInteraction.presentation.limitConfiguration.maxSupergroupMemberCount.formattedWithSeparator), color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoLine2, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().emptyGroupInfoLine2, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoLine3, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().emptyGroupInfoLine3, color: textColor, font: .medium(.text))
                 _ = attr.append(string: "\n")
-                _ = attr.append(string: strings().emptyGroupInfoLine4, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().emptyGroupInfoLine4, color: textColor, font: .medium(.text))
             } else {
                 if let restriction = chatInteraction.presentation.restrictionInfo {
                     var hasRule: Bool = false
@@ -85,33 +91,34 @@ class ChatEmptyPeerItem: TableRowItem {
                         #endif
                     }
                     if !hasRule {
-                        _ = attr.append(string: strings().chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                        _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
                         lineSpacing = nil
                     }
                     
                 } else {
                     lineSpacing = nil
-                    _ = attr.append(string: strings().chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                    _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
                 }
             }
         case .scheduled:
             lineSpacing = nil
-            _ = attr.append(string: strings().chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
+            _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
         case let .thread(_, mode):
             lineSpacing = nil
             switch mode {
             case .comments:
-                _ = attr.append(string: strings().chatEmptyComments, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().chatEmptyComments, color: textColor, font: .medium(.text))
             case .replies:
-                _ = attr.append(string: strings().chatEmptyReplies, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().chatEmptyReplies, color: textColor, font: .medium(.text))
             case .topic:
                 //TODOLANG
-                _ = attr.append(string: "Send first message to start this topic.", color: theme.chatServiceItemTextColor, font: .medium(.text))
+                _ = attr.append(string: strings().chatEmptyTopic, color: textColor, font: .medium(.text))
             }
         case .pinned:
             lineSpacing = nil
-            _ = attr.append(string: strings().chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
+            _ = attr.append(string: strings().chatEmptyChat, color: textColor, font: .medium(.text))
         }
+        
         
         
         textViewLayout = TextViewLayout(attr, alignment: .center, lineSpacing: lineSpacing, alwaysStaticItems: true)
@@ -138,12 +145,13 @@ class ChatEmptyPeerItem: TableRowItem {
                     }
                     guard let `self` = self else {return}
                     let attr = NSMutableAttributedString()
-                    _ = attr.append(string: about, color: theme.chatServiceItemTextColor, font: .medium(.text))
+                    _ = attr.append(string: about, color: theme.colors.text, font: .medium(.text))
                     attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
+                    self._shouldBlurService = false
                     self.textViewLayout = TextViewLayout(attr, alignment: .left)
                     self.textViewLayout.interactions = globalLinkExecutor
                     self.image = botInfo.photo
-                    self.view?.layout()
+                    self.view?.set(item: self)
                 }
             }))
         }
@@ -161,14 +169,16 @@ class ChatEmptyPeerItem: TableRowItem {
 }
 
 
+
+
 class ChatEmptyPeerView : TableRowView {
     let textView:TextView = TextView()
     private var imageView: TransformImageView? = nil
-    private let visualEffect = VisualEffect(frame: .zero)
+    private var visualEffect: VisualEffect?
+    private var bgView: View?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(visualEffect)
-        visualEffect.addSubview(textView)
+        self.addSubview(textView)
 
         textView.isSelectable = false
         textView.userInteractionEnabled = true
@@ -178,17 +188,9 @@ class ChatEmptyPeerView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        guard let theme = (item as? ChatEmptyPeerItem)?.presentation else {
-            return
-        }
         
         
-        if theme.shouldBlurService {
-            visualEffect.bgColor = theme.blurServiceColor
-        } else {
-            visualEffect.background = theme.chatServiceItemColor
-            visualEffect.bgColor = backdorColor
-        }
+      
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -204,12 +206,54 @@ class ChatEmptyPeerView : TableRowView {
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item)
+        
+        guard let item = item as? ChatEmptyPeerItem else {
+            return
+        }
+        
+        if item.shouldBlurService && !isLite(.blur) {
+            let current: VisualEffect
+            if let view = self.visualEffect {
+                current = view
+            } else {
+                current = VisualEffect(frame: .zero)
+                self.visualEffect = current
+                addSubview(current, positioned: .below, relativeTo: nil)
+            }
+            current.bgColor = item.presentation.blurServiceColor
+        } else if let view = self.visualEffect {
+            performSubviewRemoval(view, animated: animated)
+            self.visualEffect = nil
+        }
+        
+        if item.shouldBlurService && !isLite(.blur) {
+            if let view = self.bgView {
+                performSubviewRemoval(view, animated: animated)
+                self.bgView = nil
+            }
+        } else {
+            let current: View
+            if let view = self.bgView {
+                current = view
+            } else {
+                current = View(frame: .zero)
+                self.bgView = current
+                addSubview(current, positioned: .below, relativeTo: nil)
+            }
+            current.backgroundColor = item.presentation.colors.background
+        }
+
+        
         needsLayout = true
     }
     
     override func layout() {
         super.layout()
-        if let item = item as? ChatEmptyPeerItem {
+        let bgView = self.visualEffect ?? self.bgView
+
+        if let item = item as? ChatEmptyPeerItem, let bgView = bgView {
+            
+            
             item.textViewLayout.measure(width: min(frame.width - 80, 400))
             
             if item.textViewLayout.lineSpacing != nil {
@@ -230,7 +274,7 @@ class ChatEmptyPeerView : TableRowView {
                     current = view
                 } else {
                     current = TransformImageView()
-                    visualEffect.addSubview(current)
+                    bgView.addSubview(current)
                     self.imageView = current
                 }
                 
@@ -254,12 +298,12 @@ class ChatEmptyPeerView : TableRowView {
             let singleLine = item.textViewLayout.lines.count == 1
             
             if let imageView = imageView {
-                visualEffect.setFrameSize(NSMakeSize(textView.frame.width + 20, imageView.frame.height + textView.frame.height + 20))
+                bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, imageView.frame.height + textView.frame.height + 20))
             } else {
-                visualEffect.setFrameSize(NSMakeSize(textView.frame.width + 20, textView.frame.height + 20))
+                bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, textView.frame.height + 20))
             }
             
-            visualEffect.center()
+            bgView.center()
             
             if let imageView = imageView {
                 imageView.centerX(y: 0)
@@ -269,9 +313,9 @@ class ChatEmptyPeerView : TableRowView {
             }
             
             if imageView == nil {
-                visualEffect.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 8
+                bgView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 8
             } else {
-                visualEffect.layer?.cornerRadius = 8
+                bgView.layer?.cornerRadius = 8
             }
         }
     }

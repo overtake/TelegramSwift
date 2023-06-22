@@ -278,7 +278,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             var peers = importers?.importers.map { $0.peer } ?? []
             peers = Array(peers.prefix(3))
             
-            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: link, lastPeers: peers, viewType: viewType, mode: isNew ? .short : .normal, menuItems: {
+            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: link, lastPeers: peers, viewType: viewType, mode: isNew ? .short : .normal(hasUsage: true), menuItems: {
                 
                 var items:[ContextMenuItem] = []
                 if let link = link {
@@ -321,10 +321,12 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 text = format.description
                 color = theme.colors.redUI
             case let .availability(availability):
-                text = availability.description(for: addressName)
+                text = availability.description(for: addressName, target: .channel)
                 switch availability {
                 case .available:
                     color = theme.colors.accent
+                case .purchaseAvailable:
+                    color = theme.colors.grayText
                 default:
                     color = theme.colors.redUI
                 }
@@ -332,7 +334,12 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 break
             }
             
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: NSAttributedString.initialize(string: text, color: color, font: .normal(.text)), viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .markdown(text, linkHandler: { link in
+                if link == "fragment" {
+                    let link: String = "fragment.com/username/\(addressName)"
+                    execute(inapp: inApp(for: link.nsstring))
+                }
+            }), textColor: color, viewType: viewType)
         case let .increaseLimit(_, counts, viewType):
             return PremiumIncreaseLimitItem(initialSize, stableId: stableId, context: arguments.context, type: .publicLink, counts: counts, viewType: viewType, callback: arguments.premiumCallback)
         case let .existingLinksInfo(_, text, viewType):

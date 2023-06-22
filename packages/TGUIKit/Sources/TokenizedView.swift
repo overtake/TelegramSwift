@@ -199,7 +199,7 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         self.tokens.append(contentsOf: tokens)
         
         for token in tokens {
-            let view = TokenView(token, maxSize: NSMakeSize(80, 22), onDismiss: { [weak self] in
+            let view = TokenView(token, maxSize: NSMakeSize(frame.width - 10, 22), onDismiss: { [weak self] in
                 self?.removeTokens(uniqueIds: [token.uniqueId], animated: true)
             }, onSelect: { [weak self] in
                 self?.selectedIndex = self?.tokens.firstIndex(of: token)
@@ -381,6 +381,10 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
     public override func layout() {
         super.layout()
         //layoutContainer(animated: false)
+    }
+    
+    public override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
     }
     
     

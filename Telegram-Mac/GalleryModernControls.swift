@@ -189,12 +189,12 @@ class GalleryModernControlsView: View {
         case let .message(message):
             let cantSave = message.message?.containsSecretMedia == true || message.message?.isCopyProtected() == true
             
-            if message.message?.effectiveMedia is TelegramMediaImage {
+            if message.message?.anyMedia is TelegramMediaImage {
                 zoomInControl.isHidden = false
                 zoomOutControl.isHidden = false
                 rotateControl.isHidden = false
                 fastSaveControl.isHidden = cantSave
-            } else if let file = message.message?.effectiveMedia as? TelegramMediaFile {
+            } else if let file = message.message?.anyMedia as? TelegramMediaFile {
                 if file.isVideo {
                     zoomInControl.isHidden = false
                     zoomOutControl.isHidden = false
@@ -211,7 +211,7 @@ class GalleryModernControlsView: View {
                     rotateControl.isHidden = false
                     fastSaveControl.isHidden = cantSave
                 }
-            } else if let webpage = message.message?.effectiveMedia as? TelegramMediaWebpage {
+            } else if let webpage = message.message?.anyMedia as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content {
                     if ExternalVideoLoader.isPlayable(content) {
                         zoomInControl.isHidden = false
@@ -226,7 +226,7 @@ class GalleryModernControlsView: View {
                 rotateControl.isHidden = true
                 fastSaveControl.isHidden = true
             }
-        case let .photo(_, _, photo, _, _, _, _):
+        case let .photo(_, _, photo, _, _, _, _, _, _):
             zoomInControl.isHidden = false
             zoomOutControl.isHidden = false
             rotateControl.isHidden = !photo.videoRepresentations.isEmpty

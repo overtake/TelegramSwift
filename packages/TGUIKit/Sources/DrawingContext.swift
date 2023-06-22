@@ -15,7 +15,7 @@ public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) 
     if size.width.isZero || size.height.isZero {
         return nil
     }
-    let context = DrawingContext(size: size, scale: scale ?? 0.0, clear: false)
+    let context = DrawingContext(size: size, scale: scale, clear: false)
     context.withContext { c in
         contextGenerator(context.size, c)
     }
@@ -242,7 +242,8 @@ public class DrawingContext {
     }
     
     public init(size: CGSize, scale: CGFloat, clear: Bool = false) {
-        self.size = NSMakeSize(max(size.width, 1), max(size.height, 1))
+        let size = NSMakeSize(max(size.width, 1), max(size.height, 1))
+        self.size = size
         
         let actualScale: CGFloat
         if scale.isZero {

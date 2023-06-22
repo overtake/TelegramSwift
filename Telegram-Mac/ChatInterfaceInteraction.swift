@@ -16,9 +16,11 @@ import MapKit
 
 
 final class ReplyMarkupInteractions {
+    let context: AccountContext
     let proccess:(ReplyMarkupButton, @escaping(Bool)->Void) -> Void
     
-    init(proccess:@escaping (ReplyMarkupButton, @escaping(Bool)->Void)->Void) {
+    init(context: AccountContext, proccess:@escaping (ReplyMarkupButton, @escaping(Bool)->Void)->Void) {
+        self.context = context
         self.proccess = proccess
     }
     
@@ -86,11 +88,15 @@ final class ChatInteraction : InterfaceObserver  {
     
     var withToggledSelectedMessage:((ChatPresentationInterfaceState)->ChatPresentationInterfaceState)->Void = { _ in }
     
-
+    enum AttachMediaType {
+        case photo
+        case video
+    }
+    
     var setupReplyMessage: (MessageId?) -> Void = {_ in}
     var beginMessageSelection: (MessageId?) -> Void = {_ in}
     var deleteMessages: ([MessageId]) -> Void = {_ in }
-    var forwardMessages: ([MessageId]) -> Void = {_ in}
+    var forwardMessages: ([Message]) -> Void = {_ in}
     var reportMessages:(ReportReasonValue, [MessageId]) -> Void = { _, _ in }
     var sendMessage: (Bool, Date?) -> Void = { _, _ in }
     var sendPlainText: (String) -> Void = {_ in}
@@ -100,7 +106,7 @@ final class ChatInteraction : InterfaceObserver  {
     var focusPinnedMessageId: (MessageId) -> Void = { _ in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
     var sendAppFile:(TelegramMediaFile, Bool, String?, Bool, ItemCollectionId?) -> Void = { _,_, _, _, _ in}
-    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?) -> Void = {_,_,_,_,_,_ in}
+    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?, Bool) -> Void = {_,_,_,_,_,_, _ in}
     var focusInputField:()->Void = {}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
@@ -138,7 +144,7 @@ final class ChatInteraction : InterfaceObserver  {
     var reactionPressed:()->Void = {}
     var clearReactions:()->Void = {}
     var attachFile:(Bool)->Void = { _ in }
-    var attachPhotoOrVideo:()->Void = {}
+    var attachPhotoOrVideo:(AttachMediaType?)->Void = { _ in }
     var attachPicture:()->Void = {}
     var attachLocation:()->Void = {}
     var updateEditingMessageMedia:([String]?, Bool) -> Void = { _, _ in}
@@ -182,10 +188,16 @@ final class ChatInteraction : InterfaceObserver  {
     
     var showEmojiUseTooltip:()->Void = { }
     var restartTopic: ()->Void = { }
-
+    var revealMedia:(MessageId)->Void = { _ in }
+    var toggleTranslate:()->Void = { }
+    var hideTranslation:()->Void = { }
+    var doNotTranslate:(String)->Void = { _ in }
+    var translateTo:(String)->Void = { _ in }
+    var enableTranslatePaywall:()->Void = { }
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }
     var setupChatThemes:()->Void = { }
+    var closeChatThemes:()->Void = { }
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())
@@ -338,8 +350,12 @@ final class ChatInteraction : InterfaceObserver  {
     
     func forwardSelectedMessages() {
         if let ids = presentation.selectionState?.selectedIds {
-            forwardMessages(Array(ids))
+            let messages = context.account.postbox.messagesAtIds(Array(ids)) |> deliverOnMainQueue
+            _ = messages.start(next: { [weak self] messages in
+                self?.forwardMessages(messages)
+            })
         }
+        
     }
     
     func deleteSelectedMessages() {
@@ -515,7 +531,7 @@ final class ChatInteraction : InterfaceObserver  {
                             } else {
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.hasSettings, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
                             
                         }, error: { _ in
                             showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
@@ -560,6 +576,15 @@ final class ChatInteraction : InterfaceObserver  {
                             }
                         })
                     }
+                })
+            case let .openWebview(botPeer, botApp, url):
+                update(animated: animated, {
+                    $0.withoutInitialAction()
+                })
+                showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: .simple(url: url, bot: botPeer.peer, buttonText: "", isInline: true), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+            case .makeWebview:
+                update(animated: animated, {
+                    $0.withoutInitialAction()
                 })
             case let .joinVoiceChat(joinHash):
                 update(animated: animated, {
@@ -629,7 +654,7 @@ final class ChatInteraction : InterfaceObserver  {
                     } else {
                         thumbFile = MenuAnimation.menu_folder_bot.file
                     }
-                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: attach.hasSettings, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
+                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: attach.flags.contains(.hasSettings), complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
 
                 }, error: { [weak strongSelf] _ in
                     showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: false, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
@@ -648,13 +673,62 @@ final class ChatInteraction : InterfaceObserver  {
         }
     }
     
+    func loadAndOpenInlineWebview(botId: PeerId, url: String) {
+        let context = self.context
+        
+        let bot = context.account.postbox.loadedPeerWithId(botId) |> deliverOnMainQueue
+        _ = bot.start(next: { [weak self] peer in
+            let invoke:()->Void = {
+                self?.openWebview(bot: peer, title: nil, buttonText: "", url: url, simple: true, inline: true)
+            }
+            if FastSettings.shouldConfirmWebApp(botId) {
+                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { result in
+                    
+                    FastSettings.markWebAppAsConfirmed(botId)
+                    invoke()
+                })
+            } else {
+                invoke()
+            }
+        })
+        
+    }
+    
+    func openWebview(bot:Peer, title: String?, buttonText: String, url: String, simple: Bool, inline: Bool) {
+        let replyTo = self.presentation.interfaceState.replyMessageId
+        let threadId = self.presentation.chatLocation.threadId
+        let botId = bot.id
+        let context = self.context
+        let peerId = self.peerId
+        if simple {
+            let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, inline: false, themeParams: generateWebAppThemeParams(theme))
+            _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
+                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, isInline: inline), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+            })
+        } else {
+            _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak self] attach in
+                
+                let thumbFile: TelegramMediaFile
+                if let file = attach.icons[.macOSAnimated] {
+                    thumbFile = file
+                } else {
+                    thumbFile = MenuAnimation.menu_folder_bot.file
+                }
+                showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+
+            }, error: { [weak self] _ in
+                showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+            })
+        }
+    }
+    
     func processBotKeyboard(with keyboardMessage:Message) ->ReplyMarkupInteractions {
         if let attribute = keyboardMessage.replyMarkup, !isLogInteraction {
             
             let context = self.context
             let peerId = self.peerId
             
-            return ReplyMarkupInteractions(proccess: { [weak self] (button, progress) in
+            return ReplyMarkupInteractions(context: context, proccess: { [weak self] (button, progress) in
                 if let strongSelf = self {
                     switch button.action {
                     case let .url(url):
@@ -676,21 +750,24 @@ final class ChatInteraction : InterfaceObserver  {
                         strongSelf.requestMessageActionCallback(keyboardMessage.id, true, nil)
                     case let .callback(data):
                         strongSelf.requestMessageActionCallback(keyboardMessage.id, false, data)
-                    case let .switchInline(samePeer: same, query: query):
+                    case let .switchInline(samePeer: same, query: query, peerTypes):
                         let text = "@\(keyboardMessage.inlinePeer?.username ?? keyboardMessage.author?.username ?? "") \(query)"
                         if same {
                             strongSelf.updateInput(with: text)
                         } else {
-                            if let peer = keyboardMessage.inlinePeer ?? keyboardMessage.effectiveAuthor {
-                                strongSelf.context.bindings.rootNavigation().set(modalAction: ShareInlineResultNavigationAction(payload: text, botName: peer.displayTitle), strongSelf.context.layout != .single)
-                                if strongSelf.context.layout == .single {
-                                    strongSelf.context.bindings.rootNavigation().push(ForwardChatListController(strongSelf.context))
+                            
+                            let object = ShareCallbackPeerTypesObject(context, peerTypes: peerTypes, callback: { peerIds in
+                                if let peerId = peerIds.first {
+                                    let controller = ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: .inputText(text: text, behavior: .automatic))
+                                    context.bindings.rootNavigation().push(controller)
                                 }
-                            }
+                                return .complete()
+                            })
+                            showModal(with: ShareModalController(object), for: context.window)
                             
                         }
                     case .payment:
-                        if let invoice = keyboardMessage.effectiveMedia as? TelegramMediaInvoice {
+                        if let invoice = keyboardMessage.anyMedia as? TelegramMediaInvoice {
                             let receiptMessageId = invoice.receiptMessageId
                             if let receiptMessageId = receiptMessageId {
                                 showModal(with: PaymentsReceiptController(context: strongSelf.context, messageId: receiptMessageId, invoice: invoice), for: strongSelf.context.window)
@@ -727,32 +804,11 @@ final class ChatInteraction : InterfaceObserver  {
                         strongSelf.openInfo(peerId, false, nil, nil)
                     case let .openWebView(hashUrl, simple):
                         let bot = keyboardMessage.inlinePeer ?? keyboardMessage.author
-                        let replyTo = strongSelf.presentation.interfaceState.replyMessageId
-                        let threadId = strongSelf.presentation.chatLocation.threadId
                         if let bot = bot {
-                            let botId = bot.id
-                            if simple {
-                                let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: hashUrl, themeParams: generateWebAppThemeParams(theme))
-                                _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot, buttonText: button.title), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
-                                })
-                            } else {
-                                _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak strongSelf] attach in
-                                    
-                                    let thumbFile: TelegramMediaFile
-                                    if let file = attach.icons[.macOSAnimated] {
-                                        thumbFile = file
-                                    } else {
-                                        thumbFile = MenuAnimation.menu_folder_bot.file
-                                    }
-                                    showModal(with: WebpageModalController(context: context, url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, fromMenu: false, hasSettings: attach.hasSettings, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
-
-                                }, error: { [weak strongSelf] _ in
-                                    showModal(with: WebpageModalController(context: context, url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, fromMenu: false, hasSettings: false, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
-                                })
-                            }
-
+                            strongSelf.openWebview(bot: bot, title: bot.displayTitle, buttonText: button.title, url: hashUrl, simple: simple, inline: false)
                         }
+                    case let .requestPeer(peerType, buttonId):
+                        selectSpecificPeer(context: context, peerType: peerType, messageId: keyboardMessage.id, buttonId: buttonId)
                     default:
                         break
                     }
@@ -762,7 +818,7 @@ final class ChatInteraction : InterfaceObserver  {
                 }
             })
         }
-        return ReplyMarkupInteractions(proccess: {_,_  in})
+        return ReplyMarkupInteractions(context: context, proccess: {_,_  in})
     }
     
     
@@ -829,4 +885,5 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
 }
+
 

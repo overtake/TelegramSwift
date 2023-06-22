@@ -178,12 +178,25 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
                 guard let data = item.info.get(MessageHistoryThreadData.self) else {
                     continue
                 }
+                
+                let defaultPeerNotificationSettings: TelegramPeerNotificationSettings = (view.peerNotificationSettings as? TelegramPeerNotificationSettings) ?? .defaultSettings
+
                 var hasUnseenMentions = false
                                
                 var isMuted = false
-                if case .muted = data.notificationSettings.muteState {
+                switch data.notificationSettings.muteState {
+                case .muted:
                     isMuted = true
+                case .unmuted:
+                    isMuted = false
+                case .default:
+                    if case .default = data.notificationSettings.muteState {
+                        if case .muted = defaultPeerNotificationSettings.muteState {
+                            isMuted = true
+                        }
+                    }
                 }
+
                 
                 if let info = item.tagSummaryInfo[ChatListEntryMessageTagSummaryKey(
                     tag: .unseenPersonalMessage,
@@ -231,8 +244,10 @@ func chatListViewForLocation(chatListLocation: ChatListControllerLocation, locat
                     hasUnseenMentions: hasUnseenMentions,
                     hasUnseenReactions: hasUnseenReactions,
                     forumTopicData: nil,
+                    topForumTopicItems: [],
                     hasFailed: false,
-                    isContact: false
+                    isContact: false,
+                    autoremoveTimeout: nil
                 ))
 
             }

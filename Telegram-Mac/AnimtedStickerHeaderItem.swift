@@ -17,7 +17,7 @@ class AnimatedStickerHeaderItem: GeneralRowItem {
     let stickerSize: NSSize
     let bgColor: NSColor?
     let modify:[String]?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(160, 160), bgColor: NSColor? = nil, modify:[String]? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, sticker: LocalAnimatedSticker, text: NSAttributedString, stickerSize: NSSize = NSMakeSize(120, 120), bgColor: NSColor? = nil, modify:[String]? = nil) {
         self.context = context
         self.sticker = sticker
         self.stickerSize = stickerSize

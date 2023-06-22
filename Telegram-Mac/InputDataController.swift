@@ -40,6 +40,7 @@ public class InputDataModalController : ModalViewController {
     public override var modalTheme: ModalViewController.Theme {
         return getModalTheme?() ?? super.modalTheme
     }
+
     
     var isFullScreenImpl: (()->Bool)? = nil
     
@@ -207,20 +208,18 @@ final class InputDataArguments {
     }
 }
 
-private let queue: Queue = Queue(name: "InputDataItemsQueue", qos: DispatchQoS.background)
-
-func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool, animateEverything: Bool = false) -> Signal<TableUpdateTransition, NoError> {
+func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], right: [AppearanceWrapperEntry<InputDataEntry>], animated: Bool, searchState: TableSearchViewState?, initialSize:NSSize, arguments: InputDataArguments, onMainQueue: Bool, animateEverything: Bool = false, grouping: Bool = true, makeFirstFast: Bool = false) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
         
         func makeItem(_ entry: InputDataEntry) -> TableRowItem {
             return entry.item(arguments: arguments, initialSize: initialSize)
         }
         
-        let applyQueue = onMainQueue ? .mainQueue() : prepareQueue
+        let applyQueue = prepareQueue
         
         let cancelled: Atomic<Bool> = Atomic(value: false)
         
-        if Thread.isMainThread && left.isEmpty {
+        if Thread.isMainThread || makeFirstFast, left.isEmpty {
             var initialIndex:Int = 0
             var height:CGFloat = 0
             var firstInsertion:[(Int, TableRowItem)] = []
@@ -239,22 +238,20 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
             initialIndex = firstInsertion.count
             subscriber.putNext(TableUpdateTransition(deleted: [], inserted: firstInsertion, updated: [], state: .none(nil), searchState: searchState))
             
-            if !cancelled.with({ $0 }) {
-                
-                var insertions:[(Int, TableRowItem)] = []
-                let updates:[(Int, TableRowItem)] = []
-                
-                for i in initialIndex ..< entries.count {
-                    let item:TableRowItem
-                    item = makeItem(entries[i].entry)
-                    insertions.append((i, item))
-                    if cancelled.with({ $0 }) {
-                        break
-                    }
-                }
+            applyQueue.justDispatch {
                 if !cancelled.with({ $0 }) {
-                    applyQueue.async {
-                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: updates, state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
+                    var insertions:[(Int, TableRowItem)] = []
+                    
+                    for i in initialIndex ..< entries.count {
+                        let item:TableRowItem
+                        item = makeItem(entries[i].entry)
+                        insertions.append((i, item))
+                        if cancelled.with({ $0 }) {
+                            break
+                        }
+                    }
+                    if !cancelled.with({ $0 }) {
+                        subscriber.putNext(TableUpdateTransition(deleted: [], inserted: insertions, updated: [], state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
                         subscriber.putCompletion()
                     }
                 }
@@ -268,10 +265,8 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
                 }
             })
             if !cancelled.with({ $0 }) {
-                applyQueue.async {
-                    subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
-                    subscriber.putCompletion()
-                }
+                subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state: .none(nil), animateVisibleOnly: !animateEverything, searchState: searchState))
+                subscriber.putCompletion()
             }
         }
         
@@ -299,10 +294,14 @@ struct InputDataSignalValue {
     let entries: [InputDataEntry]
     let animated: Bool
     let searchState: TableSearchViewState?
-    init(entries: [InputDataEntry], animated: Bool = true, searchState: TableSearchViewState? = nil) {
+    let grouping: Bool
+    let animateEverything: Bool
+    init(entries: [InputDataEntry], animated: Bool = true, searchState: TableSearchViewState? = nil, grouping: Bool = true, animateEverything: Bool = false) {
         self.entries = entries
         self.animated = animated
         self.searchState = searchState
+        self.grouping = grouping
+        self.animateEverything = animateEverything
     }
 }
 
@@ -350,6 +349,7 @@ class InputDataController: GenericViewController<InputDataView> {
     var customRightButton:((ViewController)->BarView?)?
     var updateRightBarView:((BarView)->Void)?
     var afterTransaction: (InputDataController)->Void
+    var beforeTransaction: (InputDataController)->Void
     var backInvocation: ([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void
     var returnKeyInvocation:(InputDataIdentifier?, NSEvent) -> InputDataReturnResult
     var deleteKeyInvocation:(InputDataIdentifier?) -> InputDataDeleteResult
@@ -374,11 +374,16 @@ class InputDataController: GenericViewController<InputDataView> {
     var getTitle:(()->String)? = nil
     var getStatus:(()->String?)? = nil
     
-    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }) {
+    var doneString: ()->String
+    
+    var autoInputAction: Bool = false
+    
+    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
         self.updateDatas = updateDatas
+        self.doneString = doneString
         self.didLoaded = didLoaded
         self.identifier = identifier
         self._removeAfterDisappear = removeAfterDisappear
@@ -386,6 +391,7 @@ class InputDataController: GenericViewController<InputDataView> {
         self.updateDoneValue = updateDoneValue
         self.customRightButton = customRightButton
         self.afterTransaction = afterTransaction
+        self.beforeTransaction = beforeTransaction
         self.backInvocation = backInvocation
         self.returnKeyInvocation = returnKeyInvocation
         self.deleteKeyInvocation = deleteKeyInvocation
@@ -419,7 +425,7 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return customRightButton?(self) ?? (hasDone ? TextButtonBarView(controller: self, text: strings().navigationDone, style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
+        return customRightButton?(self) ?? (hasDone ? TextButtonBarView(controller: self, text: doneString(), style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
     }
     
     private var doneView: TextButtonBarView {
@@ -465,11 +471,11 @@ class InputDataController: GenericViewController<InputDataView> {
             
             if let focusIdentifier = focusIdentifier {
                 if let item = findItem(for: focusIdentifier) {
-                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
+                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), toVisible: true)
                 }
             } else if scrollIfNeeded {
                 if !scrollDown  {
-                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), true)
+                    tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), toVisible: true)
                 } else {
                     tableView.scroll(to: .down(true))
                 }
@@ -494,7 +500,7 @@ class InputDataController: GenericViewController<InputDataView> {
                             var invoked: Bool = false
                             scrollFirstItem = item
                             if let item = item, !invoked {
-                                tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, true)
+                                tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), timingFunction: .linear, toVisible: true)
                                 invoked = true
                             }
                         }
@@ -589,13 +595,14 @@ class InputDataController: GenericViewController<InputDataView> {
         
         let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, values.get()) |> mapToQueue { appearance, state in
             let entries = state.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
-            return prepareInputDataTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: state.searchState, initialSize: initialSize.modify{$0}, arguments: arguments, onMainQueue: onMainQueue.swap(false))
+            return prepareInputDataTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: state.searchState, initialSize: initialSize.modify{$0}, arguments: arguments, onMainQueue: onMainQueue.swap(false), animateEverything: state.animateEverything, grouping: state.grouping)
         } |> deliverOnMainQueue |> afterDisposed {
             previous.swap([])
         }
         
         disposable.set(signal.start(next: { [weak self] transition in
             guard let `self` = self else {return}
+            self.beforeTransaction(self)
             self.tableView.merge(with: transition)
             
             
@@ -640,10 +647,11 @@ class InputDataController: GenericViewController<InputDataView> {
                 if event.type != .keyDown || FastSettings.checkSendingAbility(for: event) {
                     self.validateInput(data: self.fetchData())
                 } else {
+                    
                     let containsString = fetchData().compactMap {
                         $0.value.stringValue
                     }
-                    if event.type == .keyDown, containsString.isEmpty {
+                    if event.type == .keyDown, containsString.isEmpty || autoInputAction {
                         self.validateInput(data: self.fetchData())
                     } else {
                         return .invokeNext
@@ -939,7 +947,7 @@ class InputDataController: GenericViewController<InputDataView> {
         self.executeReturn()
         return .invoked
     }
-    
+
     deinit {
         disposable.dispose()
         appearanceDisposablet.dispose()

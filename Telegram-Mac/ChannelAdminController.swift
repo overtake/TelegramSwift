@@ -13,6 +13,11 @@ import TelegramCore
 
 import SwiftSignalKit
 
+private func areAllAdminRightsEnabled(_ flags: TelegramChatAdminRightsFlags, peer: EnginePeer, except: TelegramChatAdminRightsFlags) -> Bool {
+    return TelegramChatAdminRightsFlags.peerSpecific(peer: peer).subtracting(except).intersection(flags) == TelegramChatAdminRightsFlags.peerSpecific(peer: peer).subtracting(except)
+}
+
+
 private final class ChannelAdminControllerArguments {
     let context: AccountContext
     let toggleRight: (TelegramChatAdminRightsFlags, TelegramChatAdminRightsFlags) -> Void
@@ -451,9 +456,16 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                     entries.append(.description(sectionId, descId, addAdminsEnabled ? strings().channelAdminAdminAccess : strings().channelAdminAdminRestricted, .textBottomItem))
                     descId += 1
                 }
+                
                 if channel.flags.contains(.isCreator), !admin.isBot  {
                     if admin.id != accountPeerId {
-                        if (channel.isChannel && currentRightsFlags.contains(TelegramChatAdminRightsFlags.allChannel)) || currentRightsFlags.contains(TelegramChatAdminRightsFlags.all) {
+                        
+                        var canTransfer = false
+                        if admin.botInfo == nil && !admin.isDeleted && channel.flags.contains(.isCreator) && areAllAdminRightsEnabled(currentRightsFlags, peer: .channel(channel), except: .canBeAnonymous) {
+                            canTransfer = true
+                        }
+
+                        if channel.isChannel && canTransfer {
                             entries.append(.section(sectionId))
                             sectionId += 1
                             entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? strings().channelAdminTransferOwnershipChannel : strings().channelAdminTransferOwnershipGroup, .singleItem))
@@ -608,6 +620,8 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 }
             }
         }
+    } else if let group = peerViewMainPeer(channelView) as? TelegramGroup {
+        canDismiss = group.groupAccess.isCreator
     }
     
     if canDismiss {
@@ -633,6 +647,37 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminEntr
     return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: true)
 }
 
+private func getTransferErrorText(_ error: ChannelOwnershipTransferError, isGroup: Bool) -> String? {
+    var errorText: String? = nil
+    switch error {
+    case .generic:
+        errorText = strings().unknownError
+    case .tooMuchJoined:
+        errorText = strings().inviteChannelsTooMuch
+    case .authSessionTooFresh:
+        errorText = strings().channelTransferOwnerErrorText
+    case .twoStepAuthMissing:
+        errorText = strings().channelTransferOwnerErrorText
+    case .twoStepAuthTooFresh:
+        errorText = strings().channelTransferOwnerErrorText
+    case .invalidPassword:
+        errorText = nil
+    case .requestPassword:
+        errorText = nil
+    case .restricted, .userBlocked:
+        errorText = isGroup ? strings().groupTransferOwnerErrorPrivacyRestricted : strings().channelTransferOwnerErrorPrivacyRestricted
+    case .adminsTooMuch:
+         errorText = isGroup ? strings().groupTransferOwnerErrorAdminsTooMuch : strings().channelTransferOwnerErrorAdminsTooMuch
+    case .userPublicChannelsTooMuch:
+        errorText = strings().channelTransferOwnerErrorPublicChannelsTooMuch
+    case .limitExceeded:
+        errorText = strings().loginFloodWait
+    case .userLocatedGroupsTooMuch:
+        errorText = strings().groupOwnershipTransferErrorLocatedGroupsTooMuch
+    }
+    
+    return errorText
+}
 
 class ChannelAdminController: TableModalViewController {
     private var arguments: ChannelAdminControllerArguments?
@@ -734,6 +779,7 @@ class ChannelAdminController: TableModalViewController {
                     header = strings().channelAdminTransferOwnershipConfirmGroupTitle
                     text = strings().channelAdminTransferOwnershipConfirmGroupText(peer.displayTitle, admin.displayTitle)
                 }
+                let isGroup = peer.isSupergroup || peer.isGroup
                 
                 let checkPassword:(PeerId)->Void = { peerId in
                     showModal(with: InputPasswordController(context: context, title: strings().channelAdminTransferOwnershipPasswordTitle, desc: strings().channelAdminTransferOwnershipPasswordDesc, checker: { pwd in
@@ -741,14 +787,17 @@ class ChannelAdminController: TableModalViewController {
                             |> deliverOnMainQueue
                             |> ignoreValues
                             |> `catch` { error -> Signal<Never, InputPasswordValueError> in
-                            switch error {
-                            case .generic:
-                                return .fail(.generic)
-                            case .invalidPassword:
-                                return .fail(.wrong)
-                            default:
-                                return .fail(.generic)
-                            }
+                                let errorText: String? = getTransferErrorText(error, isGroup: isGroup)
+                                switch error {
+                                case .invalidPassword:
+                                    return .fail(.wrong)
+                                default:
+                                    if let errorText = errorText {
+                                        return .fail(.custom(errorText))
+                                    } else {
+                                        return .fail(.generic)
+                                    }
+                                }
                         }  |> afterCompleted {
                             dismissImpl()
                             _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 2.0)
@@ -758,34 +807,13 @@ class ChannelAdminController: TableModalViewController {
                 
                 let transfer:(PeerId, Bool, Bool)->Void = { _peerId, isGroup, convert in
                     actionsDisposable.add(showModalProgress(signal: context.engine.peers.checkOwnershipTranfserAvailability(memberId: adminId), for: context.window).start(error: { error in
-                        let errorText: String?
+                        let errorText: String? = getTransferErrorText(error, isGroup: isGroup)
                         var install2Fa = false
                         switch error {
-                        case .generic:
-                            errorText = strings().unknownError
-                        case .tooMuchJoined:
-                            errorText = strings().inviteChannelsTooMuch
-                        case .authSessionTooFresh:
-                            errorText = strings().channelTransferOwnerErrorText
                         case .twoStepAuthMissing:
-                            errorText = strings().channelTransferOwnerErrorText
                             install2Fa = true
-                        case .twoStepAuthTooFresh:
-                            errorText = strings().channelTransferOwnerErrorText
-                        case .invalidPassword:
-                            preconditionFailure()
-                        case .requestPassword:
-                            errorText = nil
-                        case .restricted, .userBlocked:
-                            errorText = isGroup ? strings().groupTransferOwnerErrorPrivacyRestricted : strings().channelTransferOwnerErrorPrivacyRestricted
-                        case .adminsTooMuch:
-                             errorText = isGroup ? strings().groupTransferOwnerErrorAdminsTooMuch : strings().channelTransferOwnerErrorAdminsTooMuch
-                        case .userPublicChannelsTooMuch:
-                            errorText = strings().channelTransferOwnerErrorPublicChannelsTooMuch
-                        case .limitExceeded:
-                            errorText = strings().loginFloodWait
-                        case .userLocatedGroupsTooMuch:
-                            errorText = strings().groupOwnershipTransferErrorLocatedGroupsTooMuch
+                        default:
+                            break
                         }
                         
                         if let errorText = errorText {
@@ -833,7 +861,7 @@ class ChannelAdminController: TableModalViewController {
                 }
                 
                 confirm(for: context.window, header: header, information: text, okTitle: strings().channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
-                    transfer(peerId, peer.isSupergroup || peer.isGroup, peer.isGroup)
+                    transfer(peerId, isGroup, peer.isGroup)
                 })
             })
         }, updateRank: { rank in

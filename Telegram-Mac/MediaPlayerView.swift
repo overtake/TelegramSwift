@@ -81,7 +81,7 @@ final class MediaPlayerView: View {
         }
     }
     
-    private let maskLayer = CAShapeLayer()
+    private let maskLayer = SimpleShapeLayer()
     
     var cornerRadius: CGFloat = .cornerRadius
     
@@ -139,9 +139,10 @@ final class MediaPlayerView: View {
                     self.currentRotationAngle = rotationAngle
                     self.currentAspect = aspect
                     var transform = CGAffineTransform(rotationAngle: CGFloat(rotationAngle))
-                    if !rotationAngle.isZero {
+                    if abs(rotationAngle).remainder(dividingBy: Double.pi) > 0.1 {
                         transform = transform.scaledBy(x: CGFloat(aspect), y: CGFloat(1.0 / aspect))
                     }
+
                     videoLayer.setAffineTransform(transform)
                 }
                 

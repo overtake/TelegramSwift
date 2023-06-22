@@ -129,6 +129,14 @@ enum ContextReaction : Equatable {
             return .complete()
         }
     }
+    var selectedAnimation: TelegramMediaFile? {
+        switch self {
+        case let .builtin(_, _, selectAnimation, _, _):
+            return selectAnimation
+        case let .custom(_, _, file, _ ):
+            return file
+        }
+    }
     var appearAnimation: TelegramMediaFile? {
         switch self {
         case let .builtin(_, _, _, appearAnimation, _):
@@ -156,9 +164,10 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private final class ReactionView : Control {
                 
         let player: LottiePlayerView
-        private let imageView: InlineStickerView
+        private var imageView: InlineStickerView?
         private let disposable = MetaDisposable()
         private let appearDisposable = MetaDisposable()
+        private let fetchDisposables = DisposableSet()
         let reaction: ContextReaction
         let context: AccountContext
         private let stateDisposable = MetaDisposable()
@@ -167,20 +176,26 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         private var selectionView : View?
         
+        
         required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool, NSRect?)->Void) {
             
             let size: NSSize = reaction.isSelected ? NSMakeSize(25, 24) : NSMakeSize(frameRect.width, 30)
             let rect = CGRect(origin: .zero, size: size)
             
+            let isLite = context.isLite(.emoji)
+            
             self.player = LottiePlayerView(frame: rect)
-            self.imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size, shimmerColor: .init(circle: true))
             self.reaction = reaction
             self.context = context
            
             super.init(frame: frameRect)
-            addSubview(imageView)
+            
+            if let file = reaction.selectedAnimation {
+                let imageView = InlineStickerView(account: context.account, file: file, size: size, isPlayable: false)
+                self.imageView = imageView
+                addSubview(imageView)
+            }
             addSubview(player)
-            self.imageView.isHidden = false
             self.player.isHidden = false
 
            
@@ -195,11 +210,11 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 switch state {
                 case .playing:
                     delay(0.016, closure: {
-                        self?.imageView.removeFromSuperview()
+                        self?.imageView?.removeFromSuperview()
                     })
                 case .stoped:
                     delay(0.016, closure: {
-                        self?.imageView.removeFromSuperview()
+                        self?.imageView?.removeFromSuperview()
                     })
                 default:
                     break
@@ -218,7 +233,12 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             disposable.set(signal.start(next: { [weak self] resourceData in
                 if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
                     self?.selectAnimationData = data
-                    self?.apply(data, key: "select", policy: .framesCount(1))
+                    if isLite {
+                        let apply:()->Void = {
+                            self?.apply(data, key: "select", policy: .framesCount(1))
+                        }
+                        apply()
+                    }
                 }
             }))
             set(handler: { control in
@@ -247,14 +267,25 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 
                 if case .custom = reaction.value {
                     self.player.layer?.cornerRadius = 4
-                    self.imageView.layer?.cornerRadius = 4
+                    self.imageView?.layer?.cornerRadius = 4
                 }
+            }
+
+            if let file = reaction.selectedAnimation {
+                fetchDisposables.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .standalone(resource: file.resource)).start())
+            }
+            if let file = reaction.appearAnimation {
+                fetchDisposables.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .standalone(resource: file.resource)).start())
             }
             
         }
         
+        var isLite: Bool {
+            return context.isLite(.emoji)
+        }
+        
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
-            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, runOnQueue: .mainQueue(), metalSupport: false)
+            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, runOnQueue: Queue(), metalSupport: false)
             player.set(animation, reset: true, saveContext: true, animated: false)
             self.currentKey = key
         }
@@ -263,6 +294,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             disposable.dispose()
             stateDisposable.dispose()
             appearDisposable.dispose()
+            fetchDisposables.dispose()
         }
         
         override func layout() {
@@ -272,7 +304,9 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
             transition.updateFrame(view: player, frame: self.focus(player.frame.size))
-            transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
+            if let imageView = imageView {
+                transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
+            }
             if let selectionView = self.selectionView {
                 selectionView.center()
             }
@@ -280,9 +314,10 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         private var previous: ControlState = .Normal
         override func stateDidUpdate(_ state: ControlState) {
             super.stateDidUpdate(state)
+            let isLite = context.isLite(.emoji)
             switch state {
             case .Hover:
-                if self.player.currentState != .playing{
+                if self.player.currentState != .playing, !isLite {
                     if self.player.animation?.playPolicy == .framesCount(1) {
                         self.player.set(self.player.animation?.withUpdatedPolicy(.once), reset: false)
                     } else {
@@ -305,11 +340,14 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             previous = state
         }
         
+        private var timestamp: TimeInterval? = Date().timeIntervalSince1970
+        
         func playAppearAnimation() {
-            
-            guard self.visibleRect != .zero else {
+            guard self.visibleRect != .zero && !self.isLite else {
                 return
             }
+          
+            
             
             if let appearAnimation = reaction.appearAnimation {
                 let signal = context.account.postbox.mediaBox.resourceData(appearAnimation.resource, attemptSynchronously: true)
@@ -318,15 +356,18 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                 }
                 |> deliverOnMainQueue
                 
-                self.imageView.removeFromSuperview()
+//                self.imageView?.removeFromSuperview()
                             
                 appearDisposable.set(signal.start(next: { [weak self] resourceData in
                     if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
+                        if let timestamp = self?.timestamp, Date().timeIntervalSince1970 - timestamp > 0.1 {
+                            return
+                        }
                         self?.apply(data, key: "appear", policy: .toEnd(from: 0))
                     }
                 }))
             } else {
-                imageView.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.35, bounce: true)
+                imageView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.35, bounce: true)
             }
             
         }
@@ -380,6 +421,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private let backgroundColorView = View()
     private let shadowLayer = SimpleShapeLayer()
     
+    
     required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil) {
         self.list = list
         self.revealReactions = revealReactions
@@ -388,10 +430,12 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         
         backgroundView.layer?.mask = maskLayer
+        if !isLite(.blur) {
+            self.visualEffect.state = .active
+            self.visualEffect.wantsLayer = true
+            self.visualEffect.blendingMode = .behindWindow
+        }
         
-        self.visualEffect.state = .active
-        self.visualEffect.wantsLayer = true
-        self.visualEffect.blendingMode = .behindWindow
         
         
         showMore.isHidden = revealReactions == nil
@@ -416,16 +460,16 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         topGradient.shadowBackground = theme.colors.background.withAlphaComponent(1)
         topGradient.direction = .horizontal(false)
         
-       
-        visualEffect.material = theme.colors.isDark ? .dark : .mediumLight
-
+        if !isLite(.blur) {
+            visualEffect.material = theme.colors.isDark ? .dark : .mediumLight
+        }
         
-        if #available(macOS 11.0, *) {
+        if #available(macOS 11.0, *), !isLite(.blur) {
             backgroundColorView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
         } else {
             backgroundColorView.backgroundColor = theme.colors.background
         }
-        if #available(macOS 11.0, *) {
+        if #available(macOS 11.0, *), !isLite(.blur) {
             backgroundView.addSubview(visualEffect)
         }
         backgroundView.addSubview(backgroundColorView)
@@ -470,11 +514,20 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         
         for reaction in list {
-            let itemSize = size.bounds
-            let reaction = ReactionView(frame: NSMakeRect(x, 3, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
-            
-            documentView.addSubview(reaction)
-            x += size.width + 4
+            let add:(ContextReaction)->Void = { reaction in
+                let itemSize = size.bounds
+                let reaction = ReactionView(frame: NSMakeRect(x, 3, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
+                
+                self.documentView.addSubview(reaction)
+                x += size.width + 4
+            }
+            if x < frame.width {
+                add(reaction)
+            } else {
+                DispatchQueue.main.async {
+                    add(reaction)
+                }
+            }
         }
         
         

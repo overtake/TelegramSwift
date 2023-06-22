@@ -83,17 +83,18 @@ open class TitleButton: ImageButton {
             text.string = stateText[.Normal]
         }
         
-        if isEnabled {
-            if let stateColor = stateColor[state] {
-                text.foregroundColor = stateColor.cgColor
-            } else if let stateColor = stateColor[.Normal] {
-                text.foregroundColor = stateColor.cgColor
-            } else {
-                text.foregroundColor = style.foregroundColor.cgColor
-            }
-            
+        let color: NSColor
+        if let stateColor = stateColor[state] {
+            color = stateColor
+        } else if let stateColor = stateColor[.Normal] {
+            color = stateColor
         } else {
-            text.foregroundColor = presentation.colors.grayText.cgColor
+            color = style.foregroundColor
+        }
+        if isEnabled {
+            text.foregroundColor = color.cgColor
+        } else {
+            text.foregroundColor = color.withAlphaComponent(0.8).cgColor
         }
         
         text.backgroundColor = .clear
@@ -215,7 +216,7 @@ open class TitleButton: ImageButton {
         layout.measure(width: .greatestFiniteMagnitude)
         var size:NSSize = layout.layoutSize
         size.width = ceil(size.width) + (size.width == 0 ? 0 : 10)
-        size.height = ceil(size.height)
+        size.height = ceil(size.height + 1)
         return size
     }
     

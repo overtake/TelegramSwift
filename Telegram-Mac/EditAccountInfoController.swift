@@ -115,7 +115,7 @@ struct EditInfoState : Equatable {
         self.peer = peer
         self.firstName = peer?.firstName ?? ""
         self.lastName = peer?.lastName ?? ""
-        self.username = peer?.username
+        self.username = peer?.usernames.first(where: { $0.isActive })?.username
         self.phone = peer?.phone
         self.about = (peerView.cachedData as? CachedUserData)?.about ?? ""
         self.representation = peer?.smallProfileImage
@@ -143,8 +143,9 @@ struct EditInfoState : Equatable {
     func withUpdatedPeerView(_ peerView: PeerView) -> EditInfoState {
         let peer = peerView.peers[peerView.peerId] as? TelegramUser
         let about = stateInited ? self.about : (peerView.cachedData as? CachedUserData)?.about ?? self.about
+        let username = peer?.usernames.first(where: { $0.isActive })?.username
         let peerStatusSettings = (peerView.cachedData as? CachedUserData)?.peerStatusSettings
-        return EditInfoState(stateInited: true, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: peer?.username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState, peer: peer, peerStatusSettings: peerStatusSettings, addToException: self.addToException)
+        return EditInfoState(stateInited: true, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState, peer: peer, peerStatusSettings: peerStatusSettings, addToException: self.addToException)
     }
     func withUpdatedUpdatingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> EditInfoState {
         return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: f(self.updatingPhotoState), peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException)
@@ -207,7 +208,16 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: strings().editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : ""), viewType: .firstItem, action: nil)))
+    let username: String
+    if let name = state.username {
+        username = "@\(name)"
+    } else if let name = state.peer?.username {
+        username = "@\(name)"
+    } else {
+        username = ""
+    }
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: strings().editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(username), viewType: .firstItem, action: nil)))
     index += 1
 
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: strings().editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), viewType: .lastItem, action: nil)))
@@ -279,7 +289,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             putToTemp(image: $0, compress: true)
         } |> deliverOnMainQueue
         _ = signal.start(next: { path in
-            let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+            let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square))
             showModal(with: controller, for: context.window, animationType: .scaleCenter)
             
             let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in
@@ -291,7 +301,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                         }
                     }
                 } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                    return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, mapResourceToAvatarSizes: { resource, representations in
+                    return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, markup: nil, mapResourceToAvatarSizes: { resource, representations in
                         return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                     })
                 } |> deliverOnMainQueue
@@ -316,10 +326,6 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                     return state.withoutUpdatingPhotoState()
                 }
             }))
-            
-            controller.onClose = {
-                removeFile(at: path)
-            }
         })
     }
     

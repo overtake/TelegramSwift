@@ -43,7 +43,13 @@ class WPMediaLayout: WPLayout {
         super.measure(width: width)
         
         var contentSize = ChatLayoutUtils.contentSize(for: media, with: width - insets.left, hasText: textLayout != nil && theme.bubbled)
+        
+        
         self.mediaSize = contentSize
+        
+        if let parameters = parameters as? ChatMediaMusicLayoutParameters {
+            contentSize.width = max(50 + max(parameters.nameLayout.layoutSize.width, parameters.durationLayout.layoutSize.width), contentSize.width)
+        }
         
         textLayout?.measure(width: contentSize.width)
         
@@ -57,9 +63,7 @@ class WPMediaLayout: WPLayout {
         
         parameters?.makeLabelsForWidth(contentSize.width - 50)
         
-        if let parameters = parameters as? ChatMediaMusicLayoutParameters {
-            contentSize.width = 50 + max(parameters.nameLayout.layoutSize.width, parameters.durationLayout.layoutSize.width)
-        }
+
         
         layout(with: contentSize)
         

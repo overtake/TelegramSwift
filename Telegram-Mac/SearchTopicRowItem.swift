@@ -25,6 +25,15 @@ final class SearchTopicRowItem: GeneralRowItem {
         _ = makeSize(initialSize.width)
     }
     
+    var threadId: Int64? {
+        switch item.id {
+        case let .forum(threadId):
+            return threadId
+        default:
+            return nil
+        }
+    }
+    
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
@@ -128,9 +137,9 @@ private class SearchTopicRowView : TableRowView {
                     self.inlineTopicPhotoLayer = nil
                 }
                 if let fileId = info.icon {
-                    current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
+                    current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .framesCount(1))
                 } else {
-                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: item.threadId ==  1)
                     current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
                 }
                 current.superview = containerView
@@ -151,6 +160,7 @@ private class SearchTopicRowView : TableRowView {
     }
     
     override func updateAnimatableContent() -> Void {
+        let isLite: Bool = self.isEmojiLite
         let checkValue:(InlineStickerItemLayer)->Void = { value in
             if let superview = value.superview {
                 var isKeyWindow: Bool = false
@@ -161,11 +171,18 @@ private class SearchTopicRowView : TableRowView {
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = superview.visibleRect != .zero && isKeyWindow
+                value.isPlayable = superview.visibleRect != .zero && isKeyWindow && !isLite
             }
         }
         if let value = inlineTopicPhotoLayer {
             checkValue(value)
         }
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? SearchTopicRowItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
     }
 }

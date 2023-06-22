@@ -271,7 +271,14 @@ class GeneralTextRowView : GeneralRowView {
             
             self.rightTextView?.update(textLayout)
             self.rightTextView?.isSelectable = false
-            self.rightTextView?.userInteractionEnabled = false
+            self.rightTextView?.userInteractionEnabled = item.rightItem.action != nil
+            
+            if let action = item.rightItem.action {
+                self.rightTextView?.removeAllHandlers()
+                self.rightTextView?.set(handler: { _ in
+                    action()
+                }, for: .Click)
+            }
         } else {
             self.rightTextView?.removeFromSuperview()
             self.rightTextView = nil

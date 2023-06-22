@@ -309,7 +309,9 @@ class AuthController : GenericViewController<AuthView> {
         bar = .init(height: 0)
     }
     
-    
+    func applyExternalLoginCode(_ code: String) {
+        self.code_entry_c.applyExternalLoginCode(code)
+    }
 
     deinit {
         disposable.dispose()
@@ -500,9 +502,10 @@ class AuthController : GenericViewController<AuthView> {
             updateProxy()
         }))
         
-        let delaySignal = unauthorizedConfiguration(accountManager: self.sharedContext.accountManager) |> take(1) |> castError(Void.self) |> timeout(25.0, queue: .mainQueue(), alternate: .fail(Void())) |> deliverOnMainQueue
+
+        let delaySignal = engine.auth.test() |> take(1) |> timeout(10, queue: .mainQueue(), alternate: .fail("timeout")) |> deliverOnMainQueue
         
-        delayDisposable.set(delaySignal.start(error: {
+        delayDisposable.set(delaySignal.start(error: { _ in
             forceHide = false
             updateProxy()
         }))
@@ -550,9 +553,11 @@ class AuthController : GenericViewController<AuthView> {
         self.exportTokenDisposable.set(nil)
         self.tokenEventsDisposable.set(nil)
 
-        
-        guard let currentState = state.state else {
-            return
+        var currentState: UnauthorizedAccountStateContents
+        if let state = state.state {
+            currentState = state
+        } else {
+            currentState = .empty
         }
         
         if state.lockAfterLogin {
@@ -967,8 +972,7 @@ class AuthController : GenericViewController<AuthView> {
             current.locked = true
             return current
         }
-
-        let signal = sendAuthorizationCode(accountManager: sharedContext.accountManager, account: self.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, syncContacts: false)
+        let signal = sendAuthorizationCode(accountManager: sharedContext.accountManager, account: self.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, pushNotificationConfiguration: nil, firebaseSecretStream: .never(), syncContacts: false, forcedPasswordSetupNotice: { _ in return nil })
                                        |> map(Optional.init)
                                        |> mapError(Optional.init)
                                        |> timeout(20, queue: Queue.mainQueue(), alternate: .fail(nil))
@@ -977,14 +981,19 @@ class AuthController : GenericViewController<AuthView> {
                                        |> deliverOnMainQueue
         
 
-        self.actionDisposable.set(signal.start(next: { [weak self] account in
+        self.actionDisposable.set(signal.start(next: { [weak self] result in
             updateState { current in
                 var current = current
                 current.error = nil
                 current.locked = false
                 return current
             }
-            self?.account = account
+            switch result {
+            case let .sentCode(account):
+                self?.account = account
+            default:
+                break
+            }
         }, error: { [weak self] error in
             if let error = error {
                 updateState { current in
@@ -1089,6 +1098,7 @@ class AuthController : GenericViewController<AuthView> {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        NSApp.activate(ignoringOtherApps: true)
     }
     
 }

@@ -431,7 +431,7 @@
             if isLoaded(), let peerView = peerView, isProfileIntended {
                 let context = self.context
                 
-                if let cachedData = peerView.cachedData as? CachedChannelData {
+                if let cachedData = peerView.cachedData as? CachedChannelData, let peer = peerViewMainPeer(peerView), peer.isGroup || peer.isSupergroup || peer.isGigagroup {
                     let onlineMemberCount:Signal<Int32?, NoError>
                     if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
                         onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue
@@ -798,9 +798,10 @@
             }
             if (view.cachedData as? CachedGroupData) != nil {
                 return (exist: true, loaded: true)
-            } else if (view.cachedData as? CachedChannelData) != nil {
-                if let peer = peerViewMainPeer(view), peer.isSupergroup {
-                    return (exist: true, loaded: true)
+            } else if let cachedData = view.cachedData as? CachedChannelData {
+                if let peer = peerViewMainPeer(view), peer.isSupergroup || peer.isGigagroup {
+                    let visible = !(cachedData.membersHidden.knownValue?.value ?? false) || peer.isAdmin
+                    return (exist: visible, loaded: true)
                 } else {
                     return (exist: false, loaded: true)
                 }
@@ -812,12 +813,12 @@
         }
         
         commonGroupsTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
+            if view.peerId.namespace == Namespaces.Peer.SecretChat {
+                return (exist: false, loaded: false)
+            }
             if let cachedData = view.cachedData as? CachedUserData {
                 return (exist: cachedData.commonGroupCount > 0, loaded: true)
             } else {
-                if view.peerId.namespace == Namespaces.Peer.CloudUser || view.peerId.namespace == Namespaces.Peer.SecretChat {
-                    return (exist: false, loaded: false)
-                }
                 return (exist: false, loaded: true)
             }
         } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
@@ -866,7 +867,7 @@
                 }
                 
             }
-            return (tabs: tabs.filter { $0.exists }.map { $0.tag }, selected: selectedValue, hasLoaded: tabs.reduce(true, { $0 && $1.hasLoaded }))
+            return (tabs: tabs.filter { $0.exists }.map { $0.tag }, selected: selectedValue, hasLoaded: tabs.first?.hasLoaded ?? false)
         }
         
         tabsSignal.set(tabSignal)
@@ -952,8 +953,8 @@
         }
         
         
-        interactions.forwardMessages = { messageIds in
-            showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: messageIds)), for: context.window)
+        interactions.forwardMessages = { messages in
+            showModal(with: ShareModalController(ForwardMessagesObject(context, messages: messages)), for: context.window)
         }
         
         let openChat:(PeerId, MessageId?)->Void = { [weak self] id, messageId in

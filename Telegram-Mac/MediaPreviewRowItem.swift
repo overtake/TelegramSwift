@@ -27,7 +27,7 @@ class MediaPreviewRowItem: TableRowItem {
     fileprivate let paint:()->Void
     fileprivate let delete: (()->Void)?
     fileprivate let editedData: EditedImageData?
-    init(_ initialSize: NSSize, media: Media, context: AccountContext, editedData: EditedImageData? = nil, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
+    init(_ initialSize: NSSize, media: Media, context: AccountContext, editedData: EditedImageData? = nil, isSpoiler: Bool, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
         self.edit = edit
         self.paint = paint
         self.delete = delete
@@ -38,8 +38,11 @@ class MediaPreviewRowItem: TableRowItem {
         if let media = media as? TelegramMediaFile {
             parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty, automaticDownload: true, isIncoming: false, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
         } else {
-            parameters = nil
+            parameters = ChatMediaLayoutParameters(presentation: .empty, media: media)
         }
+        
+        parameters?.forceSpoiler = isSpoiler
+        
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -123,7 +126,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
                     var representations: [TelegramMediaImageRepresentation] = []
                     representations.append(contentsOf: file.previewRepresentations)
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                     let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
@@ -189,7 +192,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
         
         
         editControl.canEdit = (item.media is TelegramMediaImage)
-        editControl.isInteractiveMedia = item.media.isInteractiveMedia
+        editControl.isInteractiveMedia = item.media.isInteractiveMedia || item.media.probablySticker
         editControl.canDelete = item.delete != nil
         editControl.set(edit: { [weak item] in
             item?.edit()

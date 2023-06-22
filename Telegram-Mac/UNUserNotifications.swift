@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import TGUIKit
-
+import ApiCredentials
 
 func resourcePath(_ postbox: Postbox, _ resource: MediaResource) -> String {
     if let resource = resource as? LocalFileReferenceMediaResource {
@@ -306,6 +306,10 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         content.userInfo = notification.userInfo ?? [:]
         let soundSettings = self.soundSettings
         
+        guard let containerUrl = ApiEnvironment.legacyContainerURL?.path else {
+            return
+        }
+        
         if let soundName = notification.soundName {
             if soundName == "default" {
                 content.sound = .default
@@ -313,7 +317,13 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
                 if let soundSettings = soundSettings {
                     switch soundSettings {
                     case .enabled:
-                        appDelegate?.playSound(soundName)
+                        if soundName.hasPrefix(containerUrl) {
+                            content.sound = nil
+                            appDelegate?.playSound(soundName)
+                        } else {
+                            let name = soundName.nsstring.lastPathComponent.nsstring.deletingPathExtension
+                            content.sound = .init(named: .init(name))
+                        }
                     default:
                         break
                     }

@@ -23,7 +23,7 @@ class ReplyMarkupButtonLayout {
     init(button:ReplyMarkupButton, theme: TelegramPresentationTheme, isInput: Bool, paid: Bool) {
         self.button = button
         self.presentation = theme
-        self.text = TextViewLayout(NSAttributedString.initialize(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
+        self.text = TextViewLayout(NSAttributedString.initialize(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .semibold(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
     }
     
     func measure(_ width:CGFloat) {
@@ -52,10 +52,12 @@ class ReplyMarkupNode: Node {
     
     private let interactions:ReplyMarkupInteractions
     private let isInput: Bool
+    private let theme: TelegramPresentationTheme
     init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ theme: TelegramPresentationTheme, _ view:View? = nil, _ isInput: Bool = false, paid: Bool = false) {
         self.flags = flags
         self.isInput = isInput
         self.interactions = interactions
+        self.theme = theme
         var layoutRows:[[ReplyMarkupButtonLayout]] = Array(repeating: [], count: rows.count)
         for i in 0 ..< rows.count {
             for button in rows[i].buttons {
@@ -64,6 +66,10 @@ class ReplyMarkupNode: Node {
         }
         self.markup = layoutRows
         super.init(view)
+    }
+    
+    var shouldBlurService: Bool {
+        return !isLite(.blur) && theme.shouldBlurService
     }
     
     func redraw() {
@@ -107,8 +113,8 @@ class ReplyMarkupNode: Node {
                 btnView.layer?.cornerRadius = .cornerRadius
                 btnView.isSelectable = false
                 btnView.disableBackgroundDrawing = true
-
-                if !self.isInput && button.presentation.shouldBlurService {
+                
+                if !self.isInput && shouldBlurService {
                     btnView.blurBackground = button.presentation.blurServiceColor
                     btnView.backgroundColor = .clear
                 } else {
@@ -151,7 +157,7 @@ class ReplyMarkupNode: Node {
                 rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
                 let btnView:TextView? = view?.subviews[i] as? TextView
                 
-                if !self.isInput && button.presentation.shouldBlurService {
+                if !self.isInput && self.shouldBlurService {
                     btnView?.blurBackground = button.presentation.blurServiceColor
                     btnView?.backgroundColor = .clear
                 } else {
@@ -185,13 +191,14 @@ class ReplyMarkupNode: Node {
     override func measureSize(_ width: CGFloat) {
         for row in markup {
             let count = row.count
-            let single:CGFloat = floorToScreenPixels(System.backingScale, (width - CGFloat(6 * (count - 1))) / CGFloat(count))
+            
+            let single:CGFloat = floorToScreenPixels(System.backingScale, (width - CGFloat(ReplyMarkupNode.buttonPadding * CGFloat(count - 1))) / CGFloat(count))
             for button in row {
                 button.measure(single)
             }
         }
         self.width = width
-        self.height = CGFloat(markup.count * 34) + CGFloat((markup.count - 1) * 6)
+        self.height = CGFloat(CGFloat(markup.count) * ReplyMarkupNode.buttonHeight) + CGFloat(CGFloat(markup.count - 1) * ReplyMarkupNode.buttonPadding)
     }
     
     override var size: NSSize {

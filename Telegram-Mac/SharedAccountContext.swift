@@ -61,6 +61,7 @@ public final class AccountWithInfo: Equatable {
 
 
 
+
 class SharedAccountContext {
     let accountManager: AccountManager<TelegramAccountManagerTypes>
 
@@ -72,8 +73,27 @@ class SharedAccountContext {
     var baseSettings: BaseApplicationSettings {
         return _baseSettings.with { $0 }
     }
-    #endif
+    
    
+    func isLite(_ key: LiteModeKey = .any) -> Bool {
+        let mode = baseSettings.liteMode
+        if mode.enabled {
+            return true
+        }
+        if mode.lowBatteryPercent != 100 {
+            if batteryLevel <= Double(mode.lowBatteryPercent) {
+                return true
+            }
+        }
+        
+        return !mode.isEnabled(key: key)
+    }
+    #endif
+
+    private(set) var batteryLevel: Double = 100
+    
+    private var batteryLevelTimer: SwiftSignalKit.Timer?
+    
     private let managedAccountDisposables = DisposableDict<AccountRecordId>()
     
     
@@ -232,10 +252,20 @@ class SharedAccountContext {
         #endif
         
         
+        self.batteryLevelTimer = .init(timeout: 1 * 60, repeat: true, completion: {
+            let internalFinder = InternalFinder()
+            if let internalBattery = internalFinder.getInternalBattery() {
+                let batteryLevel = internalBattery.charge ?? 100
+                DispatchQueue.main.async {
+                    self.batteryLevel = batteryLevel
+                }
+            }
+        }, queue: .concurrentDefaultQueue())
         
         
+        self.batteryLevelTimer?.start()
         
-        
+
         let differenceDisposable = MetaDisposable()
         let _ = (accountManager.accountRecords()
             |> map { view -> (AccountRecordId?, [AccountRecordId: AccountAttributes], (AccountRecordId, Bool)?) in
@@ -697,6 +727,7 @@ class SharedAccountContext {
     
     #endif
     deinit {
+        batteryLevelTimer?.invalidate()
     }
     
 }

@@ -18,10 +18,11 @@ import TGModernGrowingTextView
 
 enum InputContextEntry : Comparable, Identifiable {
     case switchPeer(PeerId, ChatContextResultSwitchPeer)
+    case webView(botId: PeerId, text: String, url: String)
     case message(Int64, Message, String)
     case peer(Peer, Int, Int64)
     case contextResult(ChatContextResultCollection,ChatContextResult,Int64)
-    case contextMediaResult(ChatContextResultCollection?, InputMediaContextRow, Int64)
+    case contextMediaResult(Int64, ChatContextResultCollection?, InputMediaContextRow, Int64)
     case command(PeerCommand, Int64, Int64)
     case sticker(InputMediaStickersRow, Int64)
     case showPeers(Int, Int64)
@@ -33,13 +34,15 @@ enum InputContextEntry : Comparable, Identifiable {
         switch self {
         case .switchPeer:
             return -1
+        case .webView:
+            return -2
         case let .message(_, message, _):
             return Int64(message.id.string.hashValue)
         case let .peer(_,_, stableId):
             return stableId
         case let .contextResult(_,_,index):
             return index
-        case let .contextMediaResult(_,_,index):
+        case let .contextMediaResult(_,_,_,stableId):
             return index
         case let .command( _, _, stableId):
             return stableId
@@ -62,11 +65,13 @@ enum InputContextEntry : Comparable, Identifiable {
         switch self {
         case .switchPeer:
             return -1
+        case .webView:
+            return -2
         case let .peer(_, index, _):
             return Int64(index)
         case let .contextResult(_, _, index):
             return index //result.maybeId | ((Int64(index) << 40))
-        case let .contextMediaResult(_, _, index):
+        case let .contextMediaResult(index, _, _, _):
             return index //result.maybeId | ((Int64(index) << 40))
         case let .command(_, index, _):
             return index //result.maybeId | ((Int64(index) << 40))
@@ -100,6 +105,12 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
         } else {
             return false
         }
+    case let .webView(botId, text, url):
+        if case .webView(botId, text, url) = rhs {
+            return true
+        } else {
+            return false
+        }
     case let .peer(lhsPeer, lhsIndex, _):
         if case let .peer(rhsPeer, rhsIndex, _) = rhs {
             return lhsPeer.id == rhsPeer.id && lhsIndex == rhsIndex
@@ -110,8 +121,8 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
             return  lhsResult == rhsResult
         }
         return false
-    case let .contextMediaResult(_, lhsResult,_):
-        if case let .contextMediaResult(_, rhsResult, _) = rhs {
+    case let .contextMediaResult(_, _, lhsResult,_):
+        if case let .contextMediaResult(_, _, rhsResult, _) = rhs {
             return  lhsResult == rhsResult
         }
         return false
@@ -169,6 +180,10 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             return ContextSwitchPeerRowItem(initialSize, peerId:peerId, switchPeer:switchPeer, account: context.account, callback: {
                 chatInteraction.switchInlinePeer(peerId, .start(parameter: switchPeer.startParam, behavior: .automatic))
             })
+        case let .webView(botId, text, url):
+            return ContextInlineWebViewRowItem(initialSize, text: text, url: url, account: context.account, callback: {
+                chatInteraction.loadAndOpenInlineWebview(botId: botId, url: url)
+            })
         case let .peer(peer, _, _):
             var status:String?
             if let user = peer as? TelegramUser, let address = user.addressName {
@@ -181,8 +196,8 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: titleStyle, statusStyle: statusStyle, status: status, borderType: [], drawCustomSeparator: true, inset: NSEdgeInsets(left:20))
         case let .contextResult(results,result,index):
             return ContextListRowItem(initialSize, results, result, index, context, chatInteraction)
-        case let .contextMediaResult(results,result,index):
-            return ContextMediaRowItem(initialSize, result, index, context, ContextMediaArguments(sendResult: { _, result, view in
+        case let .contextMediaResult(_, results, result, stableId):
+            return ContextMediaRowItem(initialSize, result, stableId, context, ContextMediaArguments(sendResult: { _, result, view in
                 if let results = results {
                     if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                         showSlowModeTimeoutTooltip(slowMode, for: view)
@@ -341,10 +356,10 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
-                if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
+                if case .stickers = strongSelf.chatInteraction.presentation.effectiveInputContext {
                     strongSelf.selectPreviousSticker()
                     return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
-                } else if case .emoji = strongSelf.chatInteraction.presentation.inputContext {
+                } else if case .emoji = strongSelf.chatInteraction.presentation.effectiveInputContext {
                      return strongSelf.selectPrevEmojiClue()
                 }
             }
@@ -369,10 +384,10 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let strongSelf = self {
-                if case .stickers = strongSelf.chatInteraction.presentation.inputContext {
+                if case .stickers = strongSelf.chatInteraction.presentation.effectiveInputContext {
                     strongSelf.selectNextSticker()
                     return strongSelf.genericView.selectedItem() != nil ? .invoked : .invokeNext
-                } else if case .emoji = strongSelf.chatInteraction.presentation.inputContext {
+                } else if case .emoji = strongSelf.chatInteraction.presentation.effectiveInputContext {
                     return strongSelf.selectNextEmojiClue()
                 }
             }
@@ -571,8 +586,12 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let selectedIndex = selectedItem.selectedIndex {
                 var index = selectedIndex
                 index -= 1
-                let count = selectedItem.clues.count + selectedItem.animated.count
-                selectedItem.selectedIndex = max(min(index, count - 1), 0)
+                if index == -1 {
+                    selectedItem.selectedIndex = nil
+                } else {
+                    let count = selectedItem.clues.count + selectedItem.animated.count
+                    selectedItem.selectedIndex = max(min(index, count - 1), 0)
+                }
                 selectedItem.redraw(animated: true)
             }
             return selectedItem.selectedIndex != nil ? .invoked : .rejected
@@ -713,15 +732,18 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 break
             }
             if let selectIndex = selectIndex {
-                _ = genericView.select(item: genericView.item(at: selectIndex))
-                genericView.scroll(to: .center(id: genericView.item(at: selectIndex).stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
+                let item = genericView.item(at: selectIndex)
+                _ = genericView.select(item: item)
+                if !(item is ContextSearchMessageItem) {
+                    genericView.scroll(to: .center(id: item.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
+                }
             }
         }
     }
     
     func layout(_ animated:Bool) {
         if let superview = superview, let relativeView = genericView.relativeView {
-            var height = min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 3))
+            var height = min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 2))
             if genericView.firstItem is ContextClueRowItem {
                 height = min(height, 120)
             }
@@ -848,13 +870,14 @@ class InputContextHelper: NSObject {
                 controller.make(with: transition, animated:animated, selectIndex: selectIndex, result: result)
 
                 if let view = view {
+                    if !controller.markAsNeedShown {
+                        controller.view.setFrameOrigin(0, relativeView.frame.minY)
+                        controller.view.layer?.opacity = 0
+                    }
                     controller.markAsNeedShown = true
                     controller.viewWillAppear(animated)
-                    if controller.view.superview == nil {
-                        view.addSubview(controller.view, positioned: .below, relativeTo: relativeView)
-                        controller.view.layer?.opacity = 0
-                        controller.view.setFrameOrigin(0, relativeView.frame.minY)
-                    }
+                    view.addSubview(controller.view, positioned: .below, relativeTo: relativeView)
+                    
                     controller.viewDidAppear(animated)
                     controller.genericView.isHidden = false
                     controller.genericView.change(opacity: 1, animated: animated)
@@ -918,6 +941,9 @@ class InputContextHelper: NSObject {
                         if let switchPeer = result.switchPeer {
                             entries.append(.switchPeer(result.botId, switchPeer))
                         }
+                        if let webview = result.webView {
+                            entries.append(.webView(botId: result.botId, text: webview.text, url: webview.url))
+                        }
                         
                         switch result.presentation {
                         case .list:
@@ -930,13 +956,7 @@ class InputContextHelper: NSObject {
                             
                             for i in 0 ..< mediaRows.count {
                                 if !mediaRows[i].results.isEmpty {
-                                    let random = Int64(arc4random64())
-                                    let stableId = random | ((Int64(entries.count) << 40))
-                                    let separatorStableId = Int64(random + 1) | ((Int64(entries.count) << 40))
-                                    entries.append(.contextMediaResult(result, mediaRows[i], stableId))
-                                    if i != mediaRows.count - 1 {
-                                        entries.append(.separator("", separatorStableId, arc4random64(), 1))
-                                    }
+                                    entries.append(.contextMediaResult(Int64(i), result, mediaRows[i], Int64(mediaRows[i].hashValue)))
                                 }
                             }
                             

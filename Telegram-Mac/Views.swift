@@ -10,8 +10,8 @@ import Cocoa
 import TGUIKit
 
 class RestrictionWrappedView : Control {
-    let textView: TextView = TextView()
-    let text:String
+    private let textView: TextView = TextView()
+    private var text:String
     required init(frame frameRect: NSRect) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -24,11 +24,18 @@ class RestrictionWrappedView : Control {
         updateLocalizationAndTheme(theme: theme)
     }
     
+    func update(_ text: String) {
+        self.text = text
+        updateLocalizationAndTheme(theme: theme)
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         self.backgroundColor = theme.colors.background
         let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        layout.measure(width: frame.width - 40)
         textView.update(layout)
         textView.backgroundColor = theme.colors.background
+        needsLayout = true
     }
     
     required init?(coder: NSCoder) {

@@ -56,7 +56,7 @@ class ChannelRecentPostRowItem: GeneralRowItem {
         }
         self.contentImageMedia = contentImageMedia
         
-        self.titleLayout = TextViewLayout(NSAttributedString.initialize(string: pullText(from: message) as String, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.titleLayout = TextViewLayout(NSAttributedString.initialize(string: pullText(from: message).string as String, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
         self.dateLayout = TextViewLayout(NSAttributedString.initialize(string: stringForFullDate(timestamp: message.timestamp), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         
         

@@ -125,6 +125,9 @@ class ModalPreviewHandler : NSObject {
     }
     
     func startHandler() {
+        guard window.isKeyWindow else {
+            return
+        }
         let initial = global.fileAtLocationInWindow(window.mouseLocationOutsideOfEventStream)
         if let initial = initial {
             modal.update(with: initial.0)

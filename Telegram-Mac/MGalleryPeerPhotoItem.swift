@@ -19,6 +19,10 @@ class MGalleryPeerPhotoItem: MGalleryItem {
         
         self.media = entry.photo!
         super.init(context, entry, pagerSize)
+        
+        if let publicPhoto = entry.publicPhoto, let peer = entry.peer as? TelegramUser {
+            self.publicPhoto = .init(image: publicPhoto, peer: peer)
+        }
     }
     
     override var sizeValue: NSSize {
@@ -105,7 +109,15 @@ class MGalleryPeerPhotoItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-        fetching.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: self.entry.peerPhotoResource()).start())
+        let resource = self.entry.peerPhotoResource()
+        let id = self.entry.peer?.id ?? self.entry.message?.id.peerId
+        let userLocation: MediaResourceUserLocation
+        if let id = id {
+            userLocation = .peer(id)
+        } else {
+            userLocation = .other
+        }
+        fetching.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: userLocation, userContentType: .image, reference: resource).start())
     }
     
     override func cancel() -> Void {

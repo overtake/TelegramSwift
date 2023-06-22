@@ -34,6 +34,8 @@ private struct State : Equatable {
 
 private let _id_name = InputDataIdentifier("_id_name")
 private let _id_emojies = InputDataIdentifier("_id_emojies")
+private let _id_hide_general = InputDataIdentifier("_id_hide_general")
+
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -61,10 +63,30 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(t2), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emojies, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return ForumTopicEmojiSelectRowItem(initialSize, stableId: stableId, context: arguments.context, getView: arguments.getView, viewType: .singleItem)
-    }))
-    index += 1
+    let isGeneral: Bool
+    let isHidden: Bool
+    switch arguments.purpose {
+    case .create:
+        isGeneral = false
+        isHidden = false
+    case let .edit(data, threadId):
+        isHidden = data.isHidden
+        isGeneral = threadId == 1
+    }
+    
+    if !isGeneral {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emojies, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+            return ForumTopicEmojiSelectRowItem(initialSize, stableId: stableId, context: arguments.context, getView: arguments.getView, viewType: .singleItem)
+        }))
+        index += 1
+    } else {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_hide_general, data: .init(name: strings().forumTopicEditGeneralShow, color: theme.colors.text, type: .switchable(!isHidden), viewType: .singleItem)))
+        index += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().forumTopicEditGeneralInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+    }
+    
     
     // entries
     
@@ -76,7 +98,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 enum ForumTopicInfoPurpose : Equatable {
     case create
-    case edit(EngineMessageHistoryThread.Info, Int64)
+    case edit(MessageHistoryThreadData, Int64)
 }
 
 func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPurpose, peerId: PeerId) -> InputDataController {
@@ -91,15 +113,15 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
         let file = ForumUI.makeIconFile(title: "A")
         initialState = State(icon: .init(file: file, fileId: file.fileId.id, fromRect: nil), name: "")
         title = strings().forumTopicTitleCreate
-    case let .edit(info, _):
+    case let .edit(data, threadId):
         let icon: ForumNameRowItem.Icon?
-        if let fileId = info.icon {
+        if let fileId = data.info.icon {
             icon = .init(file: nil, fileId: fileId, fromRect: nil)
         } else {
-            let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+            let file = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor, isGeneral: threadId == 1)
             icon = .init(file: file, fileId: file.fileId.id, fromRect: nil)
         }
-        initialState = State(icon: icon, name: info.title)
+        initialState = State(icon: icon, name: data.info.title)
         title = strings().forumTopicTitleEdit
     }
     
@@ -125,20 +147,33 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
     interactions.sendAnimatedEmoji = { sticker, _, _, fromRect in
         let pass: Bool
         switch purpose {
-        case let .edit(info, _):
-            pass = info.icon == sticker.file.fileId.id
+        case let .edit(data, _):
+            pass = data.info.icon == sticker.file.fileId.id
         default:
             pass = false
         }
-        if !context.isPremium, sticker.file.isPremiumEmoji && !pass {
-            showPremiumAlert()
-        } else {
-            updateState { current in
-                var current = current
-                current.icon = .init(file: sticker.file, fileId: sticker.file.fileId.id, fromRect: fromRect)
-                return current
+        
+        let freeItems: Signal<[StickerPackItem], NoError> = context.engine.stickers.loadedStickerPack(reference: .iconTopicEmoji, forceActualized: false) |> map { result in
+            switch result {
+            case let .result(_, items, _):
+                return items
+            default:
+                return []
             }
-        }
+        } |> take(1) |> deliverOnMainQueue
+        
+        _ = freeItems.start(next: { freeItems in
+            let accept = freeItems.contains(where: { $0.file.fileId == sticker.file.fileId })
+            if !context.isPremium, sticker.file.isPremiumEmoji && !pass && !accept {
+                showPremiumAlert()
+            } else {
+                updateState { current in
+                    var current = current
+                    current.icon = .init(file: sticker.file, fileId: sticker.file.fileId.id, fromRect: fromRect)
+                    return current
+                }
+            }
+        })
     }
     
     emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(peerId), context: context))
@@ -169,8 +204,8 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
         switch purpose {
         case .create:
             return true
-        case let .edit(info, _):
-            return info.title != state.name || info.icon != state.icon?.fileId
+        case let .edit(data, _):
+            return data.info.title != state.name || data.info.icon != state.icon?.fileId
         }
     }
     
@@ -210,7 +245,7 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
                         alert(for: context.window, info: "create topic error: \(error)")
                     })
                 case let .edit(_, threadId):
-                    let signal = context.engine.peers.editForumChannelTopic(id: peerId, threadId: threadId, title: state.name, iconFileId: fileId)
+                    let signal = context.engine.peers.editForumChannelTopic(id: peerId, threadId: threadId, title: state.name, iconFileId: threadId == 1 ? nil : fileId)
                     
                     _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
                         alert(for: context.window, info: "edit topic error: \(error)")
@@ -232,6 +267,8 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
+    
+    controller.autoInputAction = true
                                                                                 
     controller.afterTransaction = { [weak emojis] controller in
         let value = stateValue.with { value in

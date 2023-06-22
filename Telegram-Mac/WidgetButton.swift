@@ -68,7 +68,7 @@ final class WidgetButton: Button {
         view.setFrameSize(NSMakeSize(image.frame.width + 4 + textView.frame.width, frame.height))
         image.centerY(x: 0)
         layer?.cornerRadius = frame.height / 2
-        textView.centerY(x: image.frame.maxX + 4, addition: -1)
+        textView.centerY(x: image.frame.maxX + 4)
         
         view.center()
     }
