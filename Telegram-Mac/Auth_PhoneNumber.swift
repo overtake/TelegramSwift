@@ -15,9 +15,23 @@ import SwiftSignalKit
 private func formatNumber(_ number: String, country: Country) -> String {
     var formatted: String = ""
     
-    guard let pattern = country.countryCodes.first?.patterns.first else {
+    var pattern: String?
+    if number.isEmpty {
+        pattern = country.countryCodes.first?.patterns.first(where: { value in
+            return value.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321")).count == value.count
+        })
+    } else {
+        pattern = country.countryCodes.first?.patterns.first(where: { value in
+            return value.first == number.first
+        })
+    }
+    if pattern == nil {
+        pattern = country.countryCodes.first?.patterns.last
+    }
+    guard let pattern = pattern else {
         return number
     }
+    
     let numberChars = Array(number)
     let patternChars = Array(pattern)
     
@@ -29,8 +43,10 @@ private func formatNumber(_ number: String, country: Country) -> String {
                 formatted.append(char)
             } else {
                 formatted.append("\(pattern)")
-                formatted.append(char)
-                patternIndex += 1
+                if pattern == " " {
+                    formatted.append(char)
+                    patternIndex += 1
+                }
             }
             patternIndex += 1
         } else {
@@ -44,6 +60,11 @@ private func formatNumber(_ number: String, country: Country) -> String {
 }
 
 private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
+    
+    if countryCode == "FT" {
+        return "🏴‍☠️"
+    }
+    
     if countryCode.count != 2 {
         return ""
     }
@@ -51,6 +72,7 @@ private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
     if countryCode == "TG" {
         return "🛰️"
     }
+   
     
     if countryCode == "XG" {
         return "🛰️"
@@ -92,17 +114,20 @@ private extension Country {
 final class Auth_CountryManager {
     let list: [Country]
     init(_ countries:[Country]) {
-        self.list = countries.sorted(by: { lhs, rhs in
+        self.list = (countries).sorted(by: { lhs, rhs in
             return lhs.name < rhs.name
         })
     }
     
     private let global: Country = .init(id: "TG", name: "Test", localizedName: "Test", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
     
+
+    
     func items(byCodeNumber codeNumber: String, checkAll: Bool = false) -> [Country] {
         
         var list = self.list
         list.append(global)
+
         
         return list.filter( { value in
             for code in value.countryCodes {
@@ -120,6 +145,9 @@ final class Auth_CountryManager {
         if codeNumber == "999" {
             return global
         }
+//        if codeNumber == "888" {
+//            return fragment
+//        }
         let firstTrip = self.list.first(where: { value in
             for code in value.countryCodes {
                 if code.code == codeNumber {
@@ -328,7 +356,20 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         let number = numberText.stringValue
         var text: String = number.isEmpty ? strings().loginPhoneFieldPlaceholder : ""
         if let item = selected {
-            if let pattern = item.countryCodes.first?.patterns.first {
+            var pattern: String?
+            if number.isEmpty {
+                pattern = item.countryCodes.first?.patterns.first(where: { value in
+                    return value.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321")).count == value.count
+                })
+            } else {
+                pattern = item.countryCodes.first?.patterns.first(where: { value in
+                    return value.first == number.first
+                })
+            }
+            if pattern == nil {
+                pattern = item.countryCodes.first?.patterns.last
+            }
+            if let pattern = pattern {
                 text = String(pattern.replacingOccurrences(of: "X", with: "-"))
             }
         }

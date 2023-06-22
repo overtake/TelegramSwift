@@ -153,7 +153,7 @@ final class StickerPremiumHolderView: NSVisualEffectView {
             self?.stickerView.set(animation)
         }))
         if let sticker = file.stickerReference {
-            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .stickerPackThumbnail(stickerPack: sticker, resource: file.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .stickerPackThumbnail(stickerPack: sticker, resource: file.resource)).start())
         }
         
         if let effect = file.premiumEffect {
@@ -174,7 +174,7 @@ final class StickerPremiumHolderView: NSVisualEffectView {
                 self?.stickerEffectView.set(animation)
             }))
             if let sticker = file.stickerReference {
-                fetchEffectDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .stickerPackThumbnail(stickerPack: sticker, resource: effect.resource)).start())
+                fetchEffectDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .stickerPackThumbnail(stickerPack: sticker, resource: effect.resource)).start())
             }
         }
         

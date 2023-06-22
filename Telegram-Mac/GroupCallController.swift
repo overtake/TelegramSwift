@@ -567,7 +567,6 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
 
     let canInvite: Bool = !members.contains(where: { $0.isVertical })
     
-    
     if canInvite {
         
         struct Tuple : Equatable {
@@ -839,6 +838,9 @@ final class GroupCallUIController : ViewController {
         }, mute: { [weak self] peerId, isMuted in
             _ = self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted)
         }, toggleSpeaker: { [weak self] in
+            if let value = self?.genericView.state?.isMuted {
+                self?.sharing?.updateDefaultMuted(!value)
+            }
             self?.data.call.toggleIsMuted()
         }, remove: { [weak self] peer in
             guard let window = self?.window, let accountContext = self?.data.call.accountContext else {
@@ -977,14 +979,18 @@ final class GroupCallUIController : ViewController {
                     let deviceId = sharedContext.devicesContext.currentCameraId
                     
                     actionsDisposable.add(devicesSignal.start(next: { devices in
-                        let device = devices.camera.first(where: { deviceId == $0.uniqueID })
+                        let preselectedDevice = devices.camera.first(where: { FastSettings.defaultVideoShare() == $0.uniqueID })
+                        let device = preselectedDevice ?? devices.camera.first(where: { deviceId == $0.uniqueID })
                         if let device = device {
                             select(CameraCaptureDevice(device))
                         }
                     }))
                 case .screencast:
                     let screens = DesktopCaptureSourceManagerMac(_s: ())
-                    if let first = screens.list().first {
+                    let windows = DesktopCaptureSourceManagerMac(_w: ())
+                    let sf = screens.list().first(where: { $0.uniqueKey() == FastSettings.defaultScreenShare() })
+                    let wf = windows.list().first(where: { $0.uniqueKey() == FastSettings.defaultScreenShare() })
+                    if let first = sf ?? wf ?? screens.list().first {
                         select(first)
                     }
                 }
@@ -1203,8 +1209,14 @@ final class GroupCallUIController : ViewController {
                     arguments.openInfo(state.peer)
                 }, itemImage: MenuAnimation.menu_open_profile.value))
                 
+                if let about = state.about {
+                    firstBlock.append(ContextMenuItem(about, handler: {
+                        arguments.openInfo(state.peer)
+                    }, itemImage: MenuAnimation.menu_bio.value, removeTail: false, overrideWidth: 200))
+                }
+
                 if data.peer.id != data.accountPeerId, state.muteState == nil || state.muteState?.canUnmute == true {
-                    secondBlock.append(GroupCallVolumeMenuItem(volume: CGFloat((state.volume ?? 10000)) / 10000.0, { value, sync in
+                    secondBlock.append(SliderContextMenuItem(volume: CGFloat((state.volume ?? 10000)) / 10000.0, { value, sync in
                         if value == 0 {
                             arguments.mute(data.peer.id, true)
                         } else {
@@ -1246,11 +1258,11 @@ final class GroupCallUIController : ViewController {
                         if muteState.mutedByYou {
                             secondBlock.append(.init(strings().voiceChatUnmuteForMe, handler: {
                                 arguments.mute(data.peer.id, false)
-                            }, itemImage: MenuAnimation.menu_unmuted.value))
+                            }, itemImage: MenuAnimation.menu_speaker.value))
                         } else {
                             secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {
                                 arguments.mute(data.peer.id, true)
-                            }, itemImage: MenuAnimation.menu_mute.value))
+                            }, itemImage: MenuAnimation.menu_speaker_muted.value))
                         }
                     } else {
                         secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {
@@ -1777,7 +1789,7 @@ final class GroupCallUIController : ViewController {
         let inputArguments = InputDataArguments(select: { _, _ in }, dataUpdated: {})
         
                 
-        let transition: Signal<(GroupCallUIState, TableUpdateTransition), NoError> = combineLatest(state, appearanceSignal) |> mapToQueue { state, appAppearance in
+        let transition: Signal<(GroupCallUIState, TableUpdateTransition), NoError> = combineLatest(state, appearanceSignal) |> deliverOnPrepareQueue |> mapToQueue { state, appAppearance in
             let current = peerEntries(state: state, account: account, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appAppearance) }
             let previous = previousEntries.swap(current)
             let signal = prepareInputDataTransition(left: previous, right: current, animated: abs(current.count - previous.count) <= 10 && state.isWindowVisible && state.isFullScreen == previousIsFullScreen, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputArguments, onMainQueue: false, animateEverything: true)

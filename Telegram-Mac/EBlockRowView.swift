@@ -36,7 +36,9 @@ private final class LineLayer : SimpleLayer {
         if self.contents == nil {
             self.disposable = signal.start(next: { [weak self] image in
                 self?.content.contents = image
-                cacheEmoji(image, emoji: emoji.string, scale: System.backingScale)
+                if let image = image {
+                    cacheEmoji(image, emoji: emoji.string, scale: System.backingScale)
+                }
             })
         }
     }
@@ -116,6 +118,10 @@ class EBlockRowView: TableRowView {
         self.currentDownItem = nil
     }
     
+    var emojiUnderMouse: String? {
+        return itemUnderMouse?.1.string
+    }
+    
     private var itemUnderMouse: (LineLayer, NSAttributedString)? {
         guard let window = self.window else {
             return nil
@@ -157,12 +163,17 @@ class EBlockRowView: TableRowView {
             return
         }
         
-        updateLines(item: item)
+        updateLines(item: item, animated: animated)
     }
     
-   
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        for (_, line) in lines {
+            line.contentsScale = backingScaleFactor
+        }
+    }
     
-    func updateLines(item: EBlockItem) {
+    func updateLines(item: EBlockItem, animated: Bool) {
         
         var validIds: [LineLayer.Key] = []
         var point: NSPoint = NSMakePoint(10, 0)
@@ -177,6 +188,11 @@ class EBlockRowView: TableRowView {
                     view = LineLayer(emoji: symbol)
                     self.lines[id] = view
                     self.content.layer?.addSublayer(view)
+                    
+                    if animated {
+                       // view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
+                       // view.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                 }
                 let size = NSMakeSize(xAdd, yAdd)
                 view.frame = CGRect(origin: point, size: size)

@@ -274,18 +274,18 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().recentSessionsTTLHeader, viewType: viewType)
         case let .revokeOld(_, ttl, viewType):
             
-            var items:[SPopoverItem] = []
-            items.append(.init(strings().timerWeeksCountable(1), {
+            var items:[ContextMenuItem] = []
+            items.append(.init(strings().timerWeeksCountable(1), handler: {
                 arguments.toggleTtl(7)
             }))
             
-            items.append(.init(strings().timerMonthsCountable(1), {
+            items.append(.init(strings().timerMonthsCountable(1), handler: {
                 arguments.toggleTtl(31)
             }))
-            items.append(.init(strings().timerMonthsCountable(3), {
+            items.append(.init(strings().timerMonthsCountable(3), handler: {
                 arguments.toggleTtl(31 * 3)
             }))
-            items.append(.init(strings().timerMonthsCountable(6), {
+            items.append(.init(strings().timerMonthsCountable(6), handler: {
                 arguments.toggleTtl(31 * 6)
             }))
             

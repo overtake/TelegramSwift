@@ -1,4 +1,5 @@
 import Foundation
+import UserNotifications
 import TGUIKit
 import SwiftSignalKit
 import Postbox
@@ -35,10 +36,12 @@ final class UnauthorizedApplicationContext {
     let sharedContext: SharedAccountContext
     
     private let updatesDisposable: DisposableSet = DisposableSet()
+    private let authController: AuthController
     
     var rootView: NSView {
         return rootController.view
     }
+    
     
     init(window:Window, sharedContext: SharedAccountContext, account: UnauthorizedAccount, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
 
@@ -53,11 +56,11 @@ final class UnauthorizedApplicationContext {
             window.setFrame(NSMakeRect(window.frame.minX, window.frame.minY, window.minSize.width, window.minSize.height), display: true)
             window.center()
         }
-        
+        self.authController = AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers)
         self.account = account
         self.window = window
         self.sharedContext = sharedContext
-        self.rootController = MajorNavigationController(AuthController.self, AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers), window)
+        self.rootController = MajorNavigationController(AuthController.self, self.authController, window)
         rootController._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
 
         self.modal = AuthModalController(rootController)
@@ -69,6 +72,11 @@ final class UnauthorizedApplicationContext {
  
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
         
+    }
+    
+    
+    func applyExternalLoginCode(_ code: String) {
+        authController.applyExternalLoginCode(code)
     }
     
     deinit {
@@ -166,7 +174,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let someActionsDisposable = DisposableSet()
     private let clearReadNotifiesDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
-    private let updatesDisposable = MetaDisposable()
     private let updateFoldersDisposable = MetaDisposable()
     private let _ready:Promise<Bool> = Promise()
     var ready: Signal<Bool, NoError> {
@@ -245,10 +252,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         super.init()
         
 
-        
-        
-        updatesDisposable.set(managedAppConfigurationUpdates(accountManager: context.sharedContext.accountManager, network: context.account.network).start())
-        
+                
         context.bindings = AccountContextBindings(rootNavigation: { [weak self] () -> MajorNavigationController in
             guard let `self` = self else {
                 return MajorNavigationController(ViewController.self, ViewController(), window)
@@ -298,6 +302,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             }
         }))
         
+        closeAllPopovers(for: context.window)
+        closeAllModals(window: context.window)
+        AppMenu.closeAll()
       
        // var forceNotice:Bool = false
         if FastSettings.isMinimisize {
@@ -310,8 +317,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         self.view.splitView.delegate = self;
         self.view.splitView.update(false)
         
-       
-        
+
         let accountId = context.account.id
         self.loggedOutDisposable.set(context.account.loggedOut.start(next: { value in
             if value {
@@ -513,25 +519,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            
-//            context.bindings.rootNavigation().push(ForumTopicInfoController(context: context, purpose: .create))
-            
-//            let rect = self!.window.contentView!.frame.focus(NSMakeSize(160, 160))
-//            self!.window.contentView!.addSubview(CustomReactionEffectView(frame: rect, context: context, fileId: 5415816441561619011))
-            
-//            let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: 5415816441561619011, file: nil, emoji: ""), size: NSMakeSize(30, 30))
-//            testParabolla(layer, window: context.window)
-
-//            showModal(with: PremiumLimitController.init(context: context, type: .pin), for: context.window)
-//            showModal(with: PremiumBoardingController(context: context), for: context.window)
-//            showInactiveChannels(context: context, source: .create)
-//            showModal(with: AvatarConstructorController(context, target: .avatar), for: context.window)
+            showInactiveChannels(context: context, source: .join)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
             
-            showModal(with: PremiumLimitController(context: context, type: .pin), for: context.window)
             return .invoked
         }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         #endif
@@ -875,7 +868,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
         appUpdateDisposable.dispose()
-        updatesDisposable.dispose()
         updateFoldersDisposable.dispose()
         foldersReadyDisposable.dispose()
         context.cleanup()

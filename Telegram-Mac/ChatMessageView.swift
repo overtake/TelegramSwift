@@ -36,10 +36,14 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         return webpageContent?.previewMediaIfPossible() ?? false
     }
     
-    private let text:TextView = TextView()
+    private var text:TextView?
 
     private(set) var webpageContent:WPContentView?
     private var actionButton: TitleButton?
+    
+    private var shimmerEffect: ShimmerView?
+    private var shimmerMask: SimpleLayer?
+
     override func draw(_ dirtyRect: NSRect) {
         
         // Drawing code here.
@@ -49,8 +53,8 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         
         super.init(frame: frameRect)
        // self.layerContentsRedrawPolicy = .never
-        self.addSubview(text)
     }
+    
     
     override func layout() {
         super.layout()
@@ -61,8 +65,10 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         guard let item = self.item as? ChatMessageItem else {
             return .zero
         }
+        let maxY = text?.frame.maxY ?? 0
         if let webpageLayout = item.webpageLayout {
-            return CGRect(origin: NSMakePoint(0, text.frame.maxY + item.defaultContentInnerInset), size: webpageLayout.size)
+            var size = webpageLayout.size
+            return CGRect(origin: NSMakePoint(0, maxY + item.defaultContentInnerInset), size: size)
         }
         return .zero
     }
@@ -88,7 +94,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     }
 
     override func canStartTextSelecting(_ event: NSEvent) -> Bool {
-        if let superTextView = text.superview {
+        if let superTextView = text?.superview {
             if let webpageContent = webpageContent {
                 return !NSPointInRect(superTextView.convert(event.locationInWindow, from: nil), webpageContent.frame)
             }
@@ -98,7 +104,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     }
     
     override var selectableTextViews: [TextView] {
-        var views:[TextView] = [text]
+        var views:[TextView] = [text].compactMap { $0 }
         if let webpage = webpageContent {
             views += webpage.selectableTextViews
         }
@@ -119,12 +125,30 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
 
 
     override func set(item:TableRowItem, animated:Bool = false) {
+        let previous = self.item as? ChatMessageItem
         super.set(item: item, animated: animated)
 
         if let item = item as? ChatMessageItem {
-            self.text.update(item.textLayout)
             
-            updateInlineStickers(context: item.context, view: self.text, textLayout: item.textLayout)
+            let isEqual = previous?.textLayout.attributedString.string == item.textLayout.attributedString.string
+            if isEqual, let view = self.text {
+                view.update(item.textLayout)
+            } else {
+                if let view = self.text {
+                    performSubviewRemoval(view, animated: animated)
+                }
+                let current: TextView = TextView()
+                current.update(item.textLayout)
+                self.text = current
+                addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            if let view = self.text {
+                updateInlineStickers(context: item.context, view: view, textLayout: item.textLayout)
+            }
             
             if let webpageLayout = item.webpageLayout {
                 let updated = webpageContent == nil || !webpageContent!.isKind(of: webpageLayout.viewClass())
@@ -173,7 +197,65 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     actionButton = nil
                 }
             }
+            
+            if item.isTranslateLoading, let blockImage = item.block.1 {
+                let size = blockImage.size
+                let current: ShimmerView
+                if let view = self.shimmerEffect {
+                    current = view
+                } else {
+                    current = ShimmerView()
+                    self.shimmerEffect = current
+                    self.rowView.addSubview(current, positioned: .below, relativeTo: contentView)
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                }
+                current.update(backgroundColor: .blackTransparent, data: nil, size: size, imageSize: size)
+                current.updateAbsoluteRect(size.bounds, within: size)
+                
+                let frame = contentFrame(item)
+                current.frame = blockImage.backingSize.bounds.offsetBy(dx: frame.minX - 5, dy: frame.minY - 1)
+                
+                if let blockImage = item.block.1 {
+                    if shimmerMask == nil {
+                        shimmerMask = SimpleLayer()
+                    }
+                    var fr = CATransform3DIdentity
+                    fr = CATransform3DTranslate(fr, blockImage.backingSize.width / 2, 0, 0)
+                    fr = CATransform3DScale(fr, 1, -1, 1)
+                    fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
+                    
+                    shimmerMask?.transform = fr
+                    shimmerMask?.contentsScale = 2.0
+                    shimmerMask?.contents = blockImage
+                    shimmerMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
+                    current.layer?.mask = shimmerMask
+                } else {
+                    self.shimmerMask = nil
+                    current.layer?.mask = nil
+                }
+            } else {
+                if let view = self.shimmerEffect {
+                    let shimmerMask = self.shimmerMask
+                    performSubviewRemoval(view, animated: animated, completed: { [weak shimmerMask] _ in
+                        shimmerMask?.removeFromSuperlayer()
+                    })
+                    self.shimmerEffect = nil
+                    self.shimmerMask = nil
+                }
+            }
 
+        }
+
+    }
+    
+    override func updateAnimatableContent() {
+        super.updateAnimatableContent()
+        
+        if let current = shimmerEffect {
+            current.reloadAnimation()
         }
 
     }
@@ -181,11 +263,15 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     override func clickInContent(point: NSPoint) -> Bool {
         guard let item = item as? ChatMessageItem else {return true}
         
-        let point = text.convert(point, from: self)
-        let layout = item.textLayout
-        
-        let index = layout.findIndex(location: point)
-        return index >= 0 && point.x < layout.lines[index].frame.maxX
+        if let text = self.text {
+            let point = text.convert(point, from: self)
+            let layout = item.textLayout
+            
+            let index = layout.findIndex(location: point)
+            return index >= 0 && point.x < layout.lines[index].frame.maxX
+        } else {
+            return false
+        }
     }
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {

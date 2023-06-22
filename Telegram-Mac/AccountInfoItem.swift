@@ -45,7 +45,7 @@ class AccountInfoItem: GeneralRowItem {
         let activeTitle = titleAttr.mutableCopy() as! NSMutableAttributedString
         activeTitle.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: titleAttr.range)
         self.titleActiveLayout = .init(activeTitle, maximumNumberOfLines: 1)
-
+        
         if let phone = peer.phone {
             _ = attr.append(string: formatPhoneNumber(phone), color: theme.colors.grayText, font: .normal(.text))
         }
@@ -63,11 +63,11 @@ class AccountInfoItem: GeneralRowItem {
         activeTextlayout = TextViewLayout(active, maximumNumberOfLines: 4)
         super.init(initialSize, height: 90, stableId: stableId, viewType: viewType, action: action, inset: inset)
         
-        self.photos = syncPeerPhotos(peerId: peer.id)
+        self.photos = syncPeerPhotos(peerId: peer.id).map { $0.value }
         let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
         peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
-            self?.photos = photos
-            self?.redraw()
+            self?.photos = photos.map { $0.value }
+            self?.noteHeightOfRow()
         }))
         
     }
@@ -195,8 +195,8 @@ private class AccountInfoView : GeneralContainableRowView {
     }
     
     deinit {
-        removeNotificationListeners()
         playStatusDisposable.dispose()
+        removeNotificationListeners()
     }
 
 
@@ -276,11 +276,11 @@ private class AccountInfoView : GeneralContainableRowView {
         if let item = item as? AccountInfoItem {
             
             var interactiveStatus: Reactions.InteractiveStatus? = nil
-            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus {
+            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus, !item.context.isLite(.emoji_effects) {
                 interactiveStatus = interactive
             }
             if let view = self.statusControl, interactiveStatus != nil, interactiveStatus?.fileId != nil {
-                performSubviewRemoval(view, animated: true, duration: 0.3)
+                performSubviewRemoval(view, animated: animated, duration: 0.3)
                 self.statusControl = nil
             }
             
@@ -290,7 +290,7 @@ private class AccountInfoView : GeneralContainableRowView {
                 self.statusControl = control
                 self.container.addSubview(control)
             } else if let view = self.statusControl {
-                performSubviewRemoval(view, animated: true)
+                performSubviewRemoval(view, animated: animated)
                 self.statusControl = nil
             }
             if let interactive = interactiveStatus {
@@ -333,7 +333,7 @@ private class AccountInfoView : GeneralContainableRowView {
                         
                         let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
                         
-                        let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                        let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: .peer(item.context.peerId), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                         
                         mediaPlayer.actionAtEnd = .loop(nil)
                         

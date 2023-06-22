@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import SwiftSignalKit
 import Postbox
 
 
@@ -128,7 +128,12 @@ final class TelegramFilterCategory : Peer {
 extension CachedPeerData {
     var photo: TelegramMediaImage? {
         if let data = self as? CachedUserData {
-            return data.photo
+            switch data.photo {
+            case let .known(image):
+                return image
+            default:
+                return nil
+            }
         }
         if let data = self as? CachedChannelData {
             return data.photo
@@ -138,7 +143,253 @@ extension CachedPeerData {
         }
         return nil
     }
+    var personalPhoto: TelegramMediaImage? {
+        if let data = self as? CachedUserData {
+            switch data.personalPhoto {
+            case let .known(image):
+                return image
+            default:
+                return nil
+            }
+        }
+        return nil
+    }
+    var fallbackPhoto: TelegramMediaImage? {
+        if let data = self as? CachedUserData {
+            switch data.fallbackPhoto {
+            case let .known(image):
+                return image
+            default:
+                return nil
+            }
+        }
+        return nil
+    }
 }
+
+let internal_allPossibleGroupPermissionList: [(TelegramChatBannedRightsFlags, TelegramChannelPermission)] = [
+    (.banSendText, .banMembers),
+    (.banSendMedia, .banMembers),
+    (.banSendPhotos, .banMembers),
+    (.banSendVideos, .banMembers),
+    (.banSendGifs, .banMembers),
+    (.banSendMusic, .banMembers),
+    (.banSendFiles, .banMembers),
+    (.banSendVoice, .banMembers),
+    (.banSendInstantVideos, .banMembers),
+    (.banEmbedLinks, .banMembers),
+    (.banSendPolls, .banMembers),
+    (.banAddMembers, .banMembers),
+    (.banPinMessages, .pinMessages),
+    (.banManageTopics, .manageTopics),
+    (.banChangeInfo, .changeInfo)
+]
+
+
+
+public func allGroupPermissionList(peer: Peer) -> [(TelegramChatBannedRightsFlags, TelegramChannelPermission)] {
+    if let channel = peer as? TelegramChannel, channel.flags.contains(.isForum) {
+        return [
+            (.banSendText, .banMembers),
+            (.banSendMedia, .banMembers),
+            (.banAddMembers, .banMembers),
+            (.banPinMessages, .pinMessages),
+            (.banManageTopics, .manageTopics),
+            (.banChangeInfo, .changeInfo)
+        ]
+    } else {
+        return [
+            (.banSendText, .banMembers),
+            (.banSendMedia, .banMembers),
+            (.banAddMembers, .banMembers),
+            (.banPinMessages, .pinMessages),
+            (.banChangeInfo, .changeInfo)
+        ]
+    }
+}
+
+func banSendMediaSubList() -> [(TelegramChatBannedRightsFlags, TelegramChannelPermission)] {
+    return [
+        (.banSendPhotos, .banMembers),
+        (.banSendVideos, .banMembers),
+        (.banSendGifs, .banMembers),
+        (.banSendMusic, .banMembers),
+        (.banSendFiles, .banMembers),
+        (.banSendVoice, .banMembers),
+        (.banSendInstantVideos, .banMembers),
+        (.banEmbedLinks, .banMembers),
+        (.banSendPolls, .banMembers),
+    ]
+}
+
+
+
+let publicGroupRestrictedPermissions: TelegramChatBannedRightsFlags = [
+    .banPinMessages,
+    .banChangeInfo
+]
+
+
+
+func checkMediaPermission(_ media: Media, for peer: Peer) -> String? {
+    switch media {
+    case _ as TelegramMediaPoll:
+        return permissionText(from: peer, for: .banSendPolls)
+    case _ as TelegramMediaImage:
+        return permissionText(from: peer, for: .banSendPhotos)
+    case let file as TelegramMediaFile:
+        if file.isAnimated && file.isVideo {
+            return permissionText(from: peer, for: .banSendGifs)
+        } else if file.isStaticSticker {
+            return permissionText(from: peer, for: .banSendStickers)
+        } else if file.isMusic {
+            return permissionText(from: peer, for: .banSendMusic)
+        } else if file.isVoice {
+            return permissionText(from: peer, for: .banSendVoice)
+        } else if file.isInstantVideo {
+            return permissionText(from: peer, for: .banSendInstantVideos)
+        } else if file.isVideo {
+            return permissionText(from: peer, for: .banSendVideos)
+        } else {
+            return permissionText(from: peer, for: .banSendFiles)
+        }
+    case _ as TelegramMediaGame:
+        return permissionText(from: peer, for: .banSendGames)
+    default:
+        return nil
+    }
+}
+
+func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -> String? {
+    var bannedPermission: (Int32, Bool)?
+    
+    let get:(TelegramChatBannedRightsFlags) -> (Int32, Bool)? = { flags in
+        if let channel = peer as? TelegramChannel {
+            return channel.hasBannedPermission(flags)
+        } else if let group = peer as? TelegramGroup {
+            if group.hasBannedPermission(flags) {
+                return (Int32.max, false)
+            } else {
+                return nil
+            }
+        } else {
+            return nil
+        }
+    }
+    bannedPermission = get(flags)
+    if bannedPermission == nil, banSendMediaSubList().contains(where: { $0.0 == flags }) {
+        bannedPermission = get(.banSendMedia)
+    }
+    
+    if let (untilDate, personal) = bannedPermission {
+        
+        switch flags {
+        case .banSendText:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendMessagesUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendMessagesForever
+            } else {
+                return strings().channelPersmissionDeniedSendMessagesDefaultRestrictedText
+            }
+        case .banSendStickers:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendStickersUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendStickersForever
+            } else {
+                return strings().channelPersmissionDeniedSendStickersDefaultRestrictedText
+            }
+        case .banSendGifs:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendGifsUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendGifsForever
+            } else {
+                return strings().channelPersmissionDeniedSendGifsDefaultRestrictedText
+            }
+        case .banSendMedia:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendMediaUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendMediaForever
+            } else {
+                return strings().channelPersmissionDeniedSendMediaDefaultRestrictedText
+            }
+        case .banSendPolls:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendPollUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendPollForever
+            } else {
+                return strings().channelPersmissionDeniedSendPollDefaultRestrictedText
+            }
+        case .banSendInline:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendInlineUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendInlineForever
+            } else {
+                return strings().channelPersmissionDeniedSendInlineDefaultRestrictedText
+            }
+        case .banSendVoice:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendVoiceUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendVoiceForever
+            } else {
+                return strings().channelPersmissionDeniedSendVoiceDefaultRestrictedText
+            }
+        case .banSendInstantVideos:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendInstantVideoUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendInstantVideoForever
+            } else {
+                return strings().channelPersmissionDeniedSendInstantVideoDefaultRestrictedText
+            }
+        case .banSendVideos:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendVideoUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendVideoForever
+            } else {
+                return strings().channelPersmissionDeniedSendVideoDefaultRestrictedText
+            }
+        case .banSendPhotos:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendPhotoUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendPhotoForever
+            } else {
+                return strings().channelPersmissionDeniedSendPhotoDefaultRestrictedText
+            }
+        case .banSendFiles:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendFileUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendFileForever
+            } else {
+                return strings().channelPersmissionDeniedSendFileDefaultRestrictedText
+            }
+        case .banSendMusic:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendMusicUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendMusicForever
+            } else {
+                return strings().channelPersmissionDeniedSendMusicDefaultRestrictedText
+            }
+        default:
+            return nil
+        }
+        
+        
+    }
+    
+    return nil
+}
+
 
 extension Peer {
     
@@ -165,13 +416,17 @@ extension Peer {
         return false
     }
     
-    func canSendMessage(_ isThreadMode: Bool = false, threadData: MessageHistoryThreadData? = nil) -> Bool {
+    func canSendMessage(_ isThreadMode: Bool = false, media: Media? = nil, threadData: MessageHistoryThreadData? = nil) -> Bool {
         if self.id == repliesPeerId {
             return false
         }
         if let channel = self as? TelegramChannel {
             if case .broadcast(_) = channel.info {
-                return channel.hasPermission(.sendMessages)
+                if let media = media, channel.hasPermission(.sendSomething) {
+                    return checkMediaPermission(media, for: channel) == nil
+                } else {
+                    return channel.hasPermission(.sendText)
+                }
             } else if case .group = channel.info {
                 
                 if let data = threadData {
@@ -182,10 +437,18 @@ extension Peer {
                 
                 switch channel.participationStatus {
                 case .member:
-                    return !channel.hasBannedRights(.banSendMessages)
+                    if let media = media, channel.hasPermission(.sendSomething) {
+                        return checkMediaPermission(media, for: channel) == nil
+                    } else {
+                        return channel.hasPermission(.sendText)
+                    }
                 case .left:
                     if isThreadMode {
-                        return !channel.hasBannedRights(.banSendMessages)
+                        if let media = media, channel.hasPermission(.sendSomething) {
+                            return checkMediaPermission(media, for: channel) == nil
+                        } else {
+                            return channel.hasPermission(.sendText)
+                        }
                     }
                     return false
                 case .kicked:
@@ -193,7 +456,7 @@ extension Peer {
                 }
             }
         } else if let group = self as? TelegramGroup {
-            return group.membership == .Member && !group.hasBannedPermission(.banSendMessages)
+            return group.membership == .Member && !group.hasBannedPermission(.banSendText)
         } else if let secret = self as? TelegramSecretChat {
             switch secret.embeddedState {
             case .terminated:
@@ -210,11 +473,11 @@ extension Peer {
     
     var username:String? {
         if let peer = self as? TelegramChannel {
-            return peer.username
+            return peer.addressName
         } else if let peer = self as? TelegramGroup {
-            return peer.username
+            return peer.addressName
         } else if let peer = self as? TelegramUser {
-            return peer.username
+            return peer.addressName
         }
         return nil
     }
@@ -243,12 +506,12 @@ extension Peer {
                     name += lastName
                 }
                 
-                return name.replacingOccurrences(of: "􀇻", with: "")
+                return name
             }
         case let group as TelegramGroup:
-            return group.title.replacingOccurrences(of: "􀇻", with: "")
+            return group.title
         case let channel as TelegramChannel:
-            return channel.title.replacingOccurrences(of: "􀇻", with: "")
+            return channel.title
         case let filter as TelegramFilterCategory:
             return filter.displayTitle ?? ""
         default:
@@ -379,5 +642,17 @@ extension PeerId {
             }
         }
         return peerId
+    }
+}
+
+
+func getPeerView(peerId: PeerId, postbox: Postbox) -> Signal<Peer?, NoError> {
+    return postbox.combinedView(keys: [.basicPeer(peerId)]) |> map { view in
+        return (view.views[.basicPeer(peerId)] as? BasicPeerView)?.peer
+    }
+}
+func getCachedDataView(peerId: PeerId, postbox: Postbox) -> Signal<CachedPeerData?, NoError> {
+    return postbox.combinedView(keys: [.cachedPeerData(peerId: peerId)]) |> map { view in
+        return (view.views[.cachedPeerData(peerId: peerId)] as? CachedPeerDataView)?.cachedPeerData
     }
 }

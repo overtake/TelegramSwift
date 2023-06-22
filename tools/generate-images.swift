@@ -398,6 +398,7 @@ func initialize() -> [String] {
     array.append("privacySettings_activeSessions")
     array.append("privacySettings_passcode")
     array.append("privacySettings_twoStep")
+    array.append("privacy_settings_autodelete")
     array.append("deletedAccount")
     array.append("stickerPackSelection")
     array.append("stickerPackSelectionActive")
@@ -521,7 +522,7 @@ func initialize() -> [String] {
     array.append("profile_share")
     array.append("profile_stats")
     array.append("profile_unblock")
-
+    array.append("profile_translate")
     
     array.append("chat_quiz_explanation")
     array.append("chat_quiz_explanation_bubble_incoming")
@@ -790,6 +791,68 @@ func initialize() -> [String] {
     
     array.append("chatlist_arrow")
     array.append("chatlist_arrow_active")
+    
+    array.append("dialog_auto_delete")
+    
+    array.append("contact_set_photo")
+    array.append("contact_suggest_photo")
+    
+    array.append("send_media_spoiler")
+    array.append("general_delete")
+    
+    array.append("storage_music_play")
+    array.append("storage_music_pause")
+    array.append("storage_media_play")
+
+    array.append("general_chevron_up")
+    array.append("general_chevron_down")
+    
+    array.append("account_settings_set_password")
+    
+    array.append("select_peer_create_channel")
+    array.append("select_peer_create_group")
+    array.append("chat_translate")
+    
+    array.append("msg_emoji_activities")
+    array.append("msg_emoji_angry")
+    array.append("msg_emoji_away")
+    array.append("msg_emoji_bath")
+    array.append("msg_emoji_busy")
+    array.append("msg_emoji_dislike")
+    array.append("msg_emoji_food")
+    array.append("msg_emoji_haha")
+    array.append("msg_emoji_happy")
+    array.append("msg_emoji_heart")
+    array.append("msg_emoji_hi2")
+    array.append("msg_emoji_home")
+    array.append("msg_emoji_like")
+    array.append("msg_emoji_neutral")
+    array.append("msg_emoji_omg")
+    array.append("msg_emoji_party")
+    array.append("msg_emoji_recent")
+    array.append("msg_emoji_sad")
+    array.append("msg_emoji_sleep")
+    array.append("msg_emoji_study")
+    array.append("msg_emoji_tongue")
+    array.append("msg_emoji_vacation")
+    array.append("msg_emoji_what")
+    array.append("msg_emoji_work")
+
+    
+    array.append("installed_stickers_archive")
+    array.append("installed_stickers_custom_emoji")
+    array.append("installed_stickers_dynamic_order")
+    array.append("installed_stickers_loop")
+    array.append("installed_stickers_reactions")
+    array.append("installed_stickers_suggest")
+    array.append("installed_stickers_trending")
+
+    
+    array.append("folder_invite_link")
+    array.append("folder_invite_link_revoked")
+
+    array.append("folders_sidebar_edit")
+    array.append("folders_sidebar_edit_active")
 
     return array
 }

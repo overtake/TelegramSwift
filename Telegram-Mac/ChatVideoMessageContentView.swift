@@ -286,8 +286,27 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     @objc func updatePlayerIfNeeded() {
         let timebase:CMTimebase? = context?.audioPlayer?.currentSong?.stableId == parent?.chatStableId ? context?.audioPlayer?.timebase : nil
-        player.set(data: acceptVisibility ? data : nil, timebase: timebase)
         
+        var accept = acceptVisibility
+        if isLite(.video) && timebase == nil {
+            accept = accept && mouseInside()
+        }
+        
+        player.set(data: accept ? data : nil, timebase: timebase)
+        
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        self.updatePlayerIfNeeded()
     }
     
     func updateListeners() {

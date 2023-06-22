@@ -33,7 +33,7 @@ final class ReactionsWindowController : NSObject {
             self.contentView = content
             self.visualView = NSVisualEffectView(frame: content.bounds)
             super.init(frame: content.bounds)
-            if #available(macOS 11.0, *) {
+            if #available(macOS 11.0, *), !isLite(.blur) {
                 container.addSubview(visualView)
                 backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
             } else {
@@ -46,15 +46,16 @@ final class ReactionsWindowController : NSObject {
             addSubview(container)
             
 
-            self.visualView.wantsLayer = true
-            self.visualView.state = .active
-            self.visualView.blendingMode = .behindWindow
-            self.visualView.autoresizingMask = []
+            if !isLite(.blur) {
+                self.visualView.wantsLayer = true
+                self.visualView.state = .active
+                self.visualView.blendingMode = .behindWindow
+                self.visualView.autoresizingMask = []
+                self.visualView.material = theme.colors.isDark ? .dark : .light
+            }
+            
             self.autoresizesSubviews = false
-            
-            self.visualView.material = theme.colors.isDark ? .dark : .light
-            
-            
+
             
             self.layer?.isOpaque = false
             self.layer?.shouldRasterize = true
@@ -141,12 +142,13 @@ final class ReactionsWindowController : NSObject {
 
     
     private var keyDisposable: Disposable?
-    
+    private var panelKeyDisposable: Disposable?
+
     private func makeView(_ content: NSView, _ initialView: NSView, _ initialRect: NSRect, animated: Bool) -> (Window, V) {
         
         let v = V(content)
         
-        let panel = Window(contentRect: NSMakeRect(initialRect.minX - 21, initialRect.maxY - 320 + (initialRect.height + 20) - 32, 390, 340), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+        let panel = Window(contentRect: NSMakeRect(initialRect.minX - 21, initialRect.maxY - 320 + (initialRect.height + 20) - 32 + 36, 390, 340), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
         panel.level = .popUpMenu
@@ -166,10 +168,10 @@ final class ReactionsWindowController : NSObject {
         v.frame = v.frame.offsetBy(dx: 20, dy: 20)
         contentView.addSubview(v)
         
-        initialView.frame = NSMakeRect(v.frame.minX + 1, v.frame.maxY - initialView.frame.height - 48, initialView.frame.width, initialView.frame.height)
+        initialView.frame = NSMakeRect(v.frame.minX + 1, v.frame.maxY - initialView.frame.height - (48 + 36), initialView.frame.width, initialView.frame.height)
 //        initialView.background = .red
 //        initialView.layer?.opacity = 0.5
-        
+        initialView.removeFromSuperview()
         contentView.addSubview(initialView)
         
         return (panel, v)
@@ -184,11 +186,13 @@ final class ReactionsWindowController : NSObject {
         
         if let reactions = message.effectiveReactions {
             for reaction in reactions {
-                switch reaction.value {
-                case let .builtin(emoji):
-                    selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
-                case let .custom(fileId):
-                    selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                if reaction.isSelected {
+                    switch reaction.value {
+                    case let .builtin(emoji):
+                        selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
+                    case let .custom(fileId):
+                        selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    }
                 }
             }
         }
@@ -267,17 +271,18 @@ final class ReactionsWindowController : NSObject {
     
     private func ready(_ initialView: NSView & StickerFramesCollector, animated: Bool) {
         
-        
-        let initialScreenRect = initialView.window!.convertToScreen(initialView.convert(initialView.bounds, to: nil))
+        let initialWindow = initialView.window!
+        let initialScreenRect = initialWindow.convertToScreen(initialView.convert(initialView.bounds, to: nil))
         
         self.emojies.view.frame = self.emojies.view.bounds
         let (panel, view) = makeView(self.emojies.view, initialView, initialScreenRect, animated: animated)
         
         panel.makeKeyAndOrderFront(nil)
         
-        panel.order(.below, relativeTo: initialView.window!.windowNumber)
+        panel.order(.below, relativeTo: initialWindow.windowNumber)
         
         self.panel = panel
+        let context = self.context
                 
 
         panel.set(handler: { [weak self] _ in
@@ -336,10 +341,18 @@ final class ReactionsWindowController : NSObject {
         var skippedFirst: Bool = false
         
         self.keyDisposable = context.window.keyWindowUpdater.start(next: { [weak self] value in
-            if !value && skippedFirst {
+            if !value && skippedFirst, self?.panel?._canBecomeKey == false {
                 self?.close()
             }
             skippedFirst = true
+        })
+        
+        self.panelKeyDisposable = panel.keyWindowUpdater.start(next: { [weak self] value in
+            if self?.panel?.canBecomeKey == true, !value {
+                DispatchQueue.main.async {
+                    self?.close(animated: context.window.isKeyWindow == true)
+                }
+            }
         })
         
         view.initFake(initialView.frame, to: view.frame)
@@ -356,10 +369,15 @@ final class ReactionsWindowController : NSObject {
             self?.initialPlayers = initialView.collect()
             CATransaction.begin()
             view.appearAnimated(from: initialView.frame, to: view.frame)
-            initialView.removeFromSuperview()
             CATransaction.commit()
+            initialView.removeFromSuperview()
         })
         
+    }
+    
+    deinit {
+        panelKeyDisposable?.dispose()
+        keyDisposable?.dispose()
     }
     
     private func close(animated: Bool = false) {

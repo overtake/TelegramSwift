@@ -95,9 +95,9 @@ private final class VideoAvatarContainer : View {
     func updateWith(file: TelegramMediaFile, seekTo: TimeInterval?, peer: Peer, reference: PeerReference?, context: AccountContext) {
        // player.update(FileMediaReference.standalone(media: file), context: context)
         if let reference = reference {
-            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: file.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.avatar(peer: reference, resource: file.resource)).start())
         } else {
-            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: file.resource)).start())
         }
         
         if peer.isForum {
@@ -113,7 +113,7 @@ private final class VideoAvatarContainer : View {
             mediaReference = MediaResourceReference.standalone(resource: file.resource)
         }
         
-        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: mediaReference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
+        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peer.id), userContentType: .avatar, reference: mediaReference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
         
         
         let view = MediaPlayerView()
@@ -233,40 +233,94 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     var peerView:PeerView? {
         didSet {
             let context = chatInteraction.context
-            updateStatus(presentation: chatInteraction.presentation)
+            if let oldValue = oldValue, let newValue = peerView  {
+                let peerEqual = PeerEquatable(peerViewMainPeer(oldValue)) == PeerEquatable(peerViewMainPeer(newValue))
+                let cachedEqual = CachedDataEquatable(oldValue.cachedData) == CachedDataEquatable(newValue.cachedData)
+                var presenceEqual: Bool = true
+                if oldValue.peerPresences.count != newValue.peerPresences.count {
+                    presenceEqual = false
+                } else {
+                    for (key, lhsValue) in oldValue.peerPresences {
+                        let rhsValue = newValue.peerPresences[key]
+                        if let rhsValue = rhsValue, !lhsValue.isEqual(to: rhsValue) {
+                            presenceEqual = false
+                        } else if rhsValue == nil {
+                            presenceEqual = false
+                        }
+                        if !presenceEqual {
+                            break
+                        }
+                    }
+                }
+
+                if !peerEqual || !cachedEqual || !presenceEqual {
+                    updateStatus(presentation: chatInteraction.presentation)
+                }
+            } else {
+                updateStatus(presentation: chatInteraction.presentation)
+            }
             
             if oldValue == nil {
                 let answersCount: Signal<Int32?, NoError>
                 let onlineMemberCount:Signal<Int32?, NoError>
 
-                if chatInteraction.mode.isThreadMode {
+                let peerId = chatInteraction.peerId
+                let threadId = chatInteraction.mode.threadId64
+                let isThread = chatInteraction.mode.isThreadMode
+                
+                if let threadId = threadId {
                     switch chatInteraction.mode {
                     case let .thread(data, _):
-                        answersCount = context.account.postbox.messageView(data.messageId)
-                            |> map {
-                                $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
-                            }
-                            |> map {
-                                $0?.count
-                            }
-                            |> deliverOnMainQueue
+                        if isThread {
+                            answersCount = context.account.postbox.messageView(data.messageId)
+                                |> map {
+                                    $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
+                                }
+                                |> map {
+                                    $0?.count
+                                }
+                                |> deliverOnMainQueue
+                        } else {
+                            let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Cloud)
+                            let localCountViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Local)
+                            
+                            answersCount = context.account.postbox.combinedView(keys: [countViewKey, localCountViewKey])
+                            |> map { views -> Int32 in
+                                var messageCount = 0
+                                if let summaryView = views.views[countViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                    if threadId == 1 {
+                                        messageCount += Int(count)
+                                    } else {
+                                        messageCount += max(Int(count) - 1, 0)
+                                    }
+                                }
+                                if let summaryView = views.views[localCountViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                    messageCount += Int(count)
+                                }
+                                return Int32(messageCount)
+                            } |> map(Optional.init) |> deliverOnMainQueue
+                        }
                     default:
                         answersCount = .single(nil)
                     }
-                   
                 } else {
                     answersCount = .single(nil)
                 }
-                if let cachedData = peerView?.cachedData as? CachedChannelData {
-                    if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
-                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
-                    } else {
-                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
-                    }
+                if let peerView = peerView, let peer = peerViewMainPeer(peerView), peer.isSupergroup || peer.isGigagroup {
+                    if let cachedData = peerView.cachedData as? CachedChannelData {
+                        if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
+                            onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                        } else {
+                            onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                        }
 
+                    } else {
+                        onlineMemberCount = .single(nil)
+                    }
                 } else {
                     onlineMemberCount = .single(nil)
                 }
+                
                 self.counterDisposable.set(combineLatest(queue: .mainQueue(), onlineMemberCount, answersCount).start(next: { [weak self] online, answers in
                     let counters = Counters(replies: answers, online: online)
                     self?.counters = counters
@@ -431,7 +485,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         if NSPointInRect(point, avatarControl.frame), chatInteraction.mode == .history, let peer = chatInteraction.presentation.mainPeer, peer.hasVideo {
            let signal = peerPhotos(context: chatInteraction.context, peerId: peer.id) |> deliverOnMainQueue
             videoAvatarDisposable.set(signal.start(next: { [weak self] photos in
-                self?.applyVideoAvatarIfNeeded(photos.first)
+                self?.applyVideoAvatarIfNeeded(photos.first?.value)
             }))
         } else {
             videoAvatarDisposable.set(nil)
@@ -454,7 +508,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         let file: TelegramMediaFile?
         let seekTo: TimeInterval?
         if let photo = photo, let video = photo.image.videoRepresentations.first {
-            file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: photo.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+            file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: arc4random64()), partialReference: nil, resource: video.resource, previewRepresentations: photo.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
             seekTo = video.startTimestamp
         } else {
             seekTo = nil
@@ -605,8 +659,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         if hasPhoto {
             activities.view?.setFrameOrigin(avatarControl.frame.maxX + 8, 25)
-        } else {
-            activities.view?.setFrameOrigin(24, 25)
+        } else if let titleRect = titleRect {
+            activities.view?.setFrameOrigin(titleRect.minX, 25)
         }
         badgeNode.view!.setFrameOrigin(6,4)
         
@@ -620,8 +674,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         
         
-        let input = self.inputActivities
-        self.inputActivities = input
+//        let input = self.inputActivities
+//        self.inputActivities = input
 
     }
     
@@ -635,7 +689,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
 
     override var inset:CGFloat {
-        return 36 + 50 + (callButton.isHidden ? 10 : callButton.frame.width + 35)
+        return 36 + 50 + (callButton.isHidden ? 10 : callButton.frame.width + 35) + (statusControl?.frame.width ?? 0)
     }
     
     
@@ -654,12 +708,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             if self.currentRepresentations != representations {
                 applyVideoAvatarIfNeeded(nil)                
                 
+                let mediaBox = chatInteraction.context.account.postbox.mediaBox
+                
+                //
                 if let peerReference = PeerReference(peer) {
                     if let largeProfileImage = peer.largeProfileImage {
-                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: chatInteraction.context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
                     }
                     if let smallProfileImage = peer.smallProfileImage {
-                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: chatInteraction.context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
+                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
                     }
                 }
             }
@@ -797,7 +854,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 if let fileId = info.icon {
                     current = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
                 } else {
-                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: chatInteraction.mode.threadId64 == 1)
                     current = .init(account: context.account, file: file, size: size, playPolicy: .playCount(2))
                 }
                 current.superview = containerView
@@ -835,9 +892,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 case .replies:
                     result = result.withUpdatedTitle(strings().chatTitleRepliesCountable(Int(self.counters.replies ?? 0)))
                 case .topic:
-                    result = result
-                        .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
-                        .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
+                    if let count = self.counters.replies, count > 0 {
+                        result = result
+                            .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
+                            .withUpdatedStatus(strings().chatTitleTopicCountable(Int(count)))
+                    } else {
+                        result = result
+                            .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
+                            .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
+                    }
                 }
                 switch mode {
                 case .topic:

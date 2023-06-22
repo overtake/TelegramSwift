@@ -11,6 +11,530 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import Accelerate
+
+private let badgeDiameter = floor(15.0 * 20.0 / 17.0)
+private let avatarBadgeDiameter: CGFloat = floor(floor(15.0 * 22.0 / 17.0))
+private let avatarTimerBadgeDiameter: CGFloat = floor(floor(15.0 * 24.0 / 17.0))
+
+
+private final class AvatarBadgeView: ImageView {
+    enum OriginalContent: Equatable {
+        case color(NSColor)
+        case image(CGImage)
+        
+        static func ==(lhs: OriginalContent, rhs: OriginalContent) -> Bool {
+            switch lhs {
+            case let .color(color):
+                if case .color(color) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+            case let .image(lhsImage):
+                if case let .image(rhsImage) = rhs {
+                    return lhsImage === rhsImage
+                } else {
+                    return false
+                }
+            }
+        }
+    }
+    
+    private struct Parameters: Equatable {
+        var size: CGSize
+        var text: String
+    }
+    
+    private var originalContent: OriginalContent?
+    private var parameters: Parameters?
+    private var hasContent: Bool = false
+    
+    override public init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(content: OriginalContent) {
+        if self.originalContent != content || !self.hasContent {
+            self.originalContent = content
+            self.update()
+        }
+    }
+    
+    public func update(size: CGSize, text: String) {
+        let parameters = Parameters(size: size, text: text)
+        if self.parameters != parameters || !self.hasContent {
+            self.parameters = parameters
+            self.update()
+        }
+    }
+    
+    private func update() {
+        guard let originalContent = self.originalContent, let parameters = self.parameters else {
+            return
+        }
+        
+        self.hasContent = true
+        
+        let blurredWidth = 16
+        let blurredHeight = 16
+        let blurredContext = DrawingContext(size: CGSize(width: CGFloat(blurredWidth), height: CGFloat(blurredHeight)), scale: 1.0)
+        
+        let blurredSize = CGSize(width: CGFloat(blurredWidth), height: CGFloat(blurredHeight))
+        blurredContext.withContext { c in
+            switch originalContent {
+            case let .color(color):
+                c.setFillColor(color.cgColor)
+                c.fill(CGRect(origin: CGPoint(), size: blurredSize))
+            case let .image(image):
+                c.setFillColor(NSColor.black.cgColor)
+                c.fill(CGRect(origin: CGPoint(), size: blurredSize))
+                
+                c.scaleBy(x: blurredSize.width / parameters.size.width, y: blurredSize.height / parameters.size.height)
+                let offsetFactor: CGFloat = 1.0 - 0.6
+                let imageFrame = CGRect(origin: CGPoint(x: parameters.size.width - image.size.width + offsetFactor * parameters.size.width, y: parameters.size.height - image.size.height + offsetFactor * parameters.size.height), size: image.size)
+                
+                c.draw(image, in: imageFrame)
+            }
+        }
+            
+        var destinationBuffer = vImage_Buffer()
+        destinationBuffer.width = UInt(blurredWidth)
+        destinationBuffer.height = UInt(blurredHeight)
+        destinationBuffer.data = blurredContext.bytes
+        destinationBuffer.rowBytes = blurredContext.bytesPerRow
+        
+        vImageBoxConvolve_ARGB8888(
+            &destinationBuffer,
+            &destinationBuffer,
+            nil,
+            0, 0,
+            UInt32(15),
+            UInt32(15),
+            nil,
+            vImage_Flags(kvImageTruncateKernel | kvImageDoNotTile)
+        )
+        
+        let divisor: Int32 = 0x1000
+
+        let rwgt: CGFloat = 0.3086
+        let gwgt: CGFloat = 0.6094
+        let bwgt: CGFloat = 0.0820
+
+        let adjustSaturation: CGFloat = 1.7
+
+        let a = (1.0 - adjustSaturation) * rwgt + adjustSaturation
+        let b = (1.0 - adjustSaturation) * rwgt
+        let c = (1.0 - adjustSaturation) * rwgt
+        let d = (1.0 - adjustSaturation) * gwgt
+        let e = (1.0 - adjustSaturation) * gwgt + adjustSaturation
+        let f = (1.0 - adjustSaturation) * gwgt
+        let g = (1.0 - adjustSaturation) * bwgt
+        let h = (1.0 - adjustSaturation) * bwgt
+        let i = (1.0 - adjustSaturation) * bwgt + adjustSaturation
+
+        let satMatrix: [CGFloat] = [
+            a, b, c, 0,
+            d, e, f, 0,
+            g, h, i, 0,
+            0, 0, 0, 1
+        ]
+        
+        let brightness: CGFloat = 0.94
+        let brighnessMatrix: [CGFloat] = [
+            brightness, 0, 0, 0,
+            0, brightness, 0, 0,
+            0, 0, brightness, 0,
+            0, 0, 0, 1
+        ]
+        
+        func matrixMul(a: [CGFloat], b: [CGFloat], result: inout [CGFloat]) {
+            for i in 0 ..< 4 {
+                for j in 0 ..< 4 {
+                    var sum: CGFloat = 0.0
+                    for k in 0 ..< 4 {
+                        sum += a[i + k * 4] * b[k + j * 4]
+                    }
+                    result[i + j * 4] = sum
+                }
+            }
+        }
+        
+        var resultMatrix = Array<CGFloat>(repeating: 0.0, count: 4 * 4)
+        matrixMul(a: satMatrix, b: brighnessMatrix, result: &resultMatrix)
+
+        var matrix: [Int16] = resultMatrix.map { value in
+            return Int16(value * CGFloat(divisor))
+        }
+
+        vImageMatrixMultiply_ARGB8888(&destinationBuffer, &destinationBuffer, &matrix, divisor, nil, nil, vImage_Flags(kvImageDoNotTile))
+        
+        guard let blurredImage = blurredContext.generateImage() else {
+            return
+        }
+        
+        self.image = generateImage(parameters.size, rotatedContext: { size, context in
+            
+            context.clear(CGRect(origin: CGPoint(), size: size))
+            
+            context.setBlendMode(.copy)
+            context.setFillColor(NSColor.black.cgColor)
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+            
+            context.setBlendMode(.sourceIn)
+            context.draw(blurredImage, in: CGRect(origin: CGPoint(), size: size))
+            
+            
+            context.setBlendMode(.normal)
+            
+            /*context.setFillColor(UIColor(white: 1.0, alpha: 0.08).cgColor)
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+            context.setFillColor(UIColor(white: 0.0, alpha: 0.05).cgColor)
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))*/
+            
+            var fontSize: CGFloat = floor(parameters.size.height * 0.48)
+            while true {
+                let string: NSAttributedString = .initialize(string: parameters.text, color: .white, font: .bold(fontSize))
+                
+                
+                let line = CTLineCreateWithAttributedString(string)
+                let stringBounds = CTLineGetBoundsWithOptions(line, [.excludeTypographicLeading])
+                
+                if stringBounds.width <= size.width - 5.0 * 2.0 || fontSize <= 2.0 {
+                
+                    context.saveGState()
+                    context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
+                                        
+                    context.textPosition = CGPoint(x: stringBounds.minX + floor((size.width - stringBounds.width) / 2.0), y: stringBounds.maxY + floor((size.height - stringBounds.height) / 2.0))
+                    
+                    CTLineDraw(line, context)
+                    
+                    context.restoreGState()
+                    
+                    break
+                } else {
+                    fontSize -= 1.0
+                }
+            }
+            
+            let lineWidth: CGFloat = 1.5
+            let lineInset: CGFloat = 2.0
+            let lineRadius: CGFloat = size.width * 0.5 - lineInset - lineWidth * 0.5
+            context.setLineWidth(lineWidth)
+            context.setStrokeColor(NSColor.white.cgColor)
+            context.setLineCap(.round)
+            
+            context.addArc(center: CGPoint(x: size.width * 0.5, y: size.height * 0.5), radius: lineRadius, startAngle: CGFloat.pi * 0.5, endAngle: -CGFloat.pi * 0.5, clockwise: false)
+            context.strokePath()
+            
+            let sectionAngle: CGFloat = CGFloat.pi / 11.0
+            
+            for i in 0 ..< 10 {
+                if i % 2 == 0 {
+                    continue
+                }
+                
+                let startAngle = CGFloat.pi * 0.5 - CGFloat(i) * sectionAngle - sectionAngle * 0.15
+                let endAngle = startAngle - sectionAngle * 0.75
+                
+                context.addArc(center: CGPoint(x: size.width * 0.5, y: size.height * 0.5), radius: lineRadius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+                context.strokePath()
+            }
+        })
+    }
+}
+
+
+
+
+final class ChatListTopicNameAndTextLayout {
+    private let context: AccountContext
+    private let message: Message
+    private let items: [EngineChatList.ForumTopicData]
+    private let draft:EngineChatList.Draft?
+    
+    private(set) var size: NSSize = .zero
+    
+    var first: EngineChatList.ForumTopicData? {
+        return items.first
+    }
+    var peerId: PeerId {
+        return message.id.peerId
+    }
+    
+    private(set) var mainText: TextViewLayout?
+    private(set) var selectedMain: TextViewLayout?
+    
+    private(set) var allNames: TextViewLayout?
+    private(set) var allSelectedNames: TextViewLayout?
+
+    init(_ context: AccountContext, message: Message, items: [EngineChatList.ForumTopicData], draft: EngineChatList.Draft?) {
+        self.message = message
+        self.items = items
+        self.context = context
+        self.draft = draft
+    }
+    
+    var fastTrack: Bool {
+        return first?.isUnread == true
+    }
+    
+    func measure(_ width: CGFloat) {
+        
+        self.mainText = nil
+        self.allNames = nil
+        self.selectedMain = nil
+        
+        if let data = items.first {
+            let attr = NSMutableAttributedString()
+            let title = "🤡 " + data.title
+            let temp = NSAttributedString.initialize(string: title, color: theme.colors.text, font: .normal(.text))
+            
+            
+            let titleSize = temp.sizeFittingWidth(.greatestFiniteMagnitude)
+             
+            let perSymbol = titleSize.width / CGFloat(title.length)
+            let maxCount = (width - 10) / perSymbol
+            
+            _ = attr.append(string: title.prefixWithDots(Int(maxCount - 3)), color: theme.colors.text, font: .normal(.text))
+            
+            let range = attr.string.nsstring.range(of: "🤡")
+            if range.location != NSNotFound {
+                let item: InlineStickerItem
+                if let fileId = data.iconFileId {
+                    item = .init(source: .attribute(.init(fileId: fileId, file: message.associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: "")))
+                } else {
+                    let file = ForumUI.makeIconFile(title: data.title, iconColor: data.iconColor, isGeneral: data.id == 1)
+                    item = .init(source: .attribute(.init(fileId: Int64(data.iconColor), file: file, emoji: "")))
+                }
+                attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: item, range: range)
+            }
+            
+            _ = attr.append(string: "\n")
+            
+            let text = chatListText(account: context.account, for: message, messagesCount: 1, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium).mutableCopy() as! NSMutableAttributedString
+            
+            if let author = message.author {
+                let ignore: Bool
+                if message.media.first is TelegramMediaAction {
+                    ignore = true
+                } else {
+                    ignore = false
+                }
+                if !ignore {
+                    let name = author.id == context.peerId ? strings().you : author.compactDisplayTitle
+                    text.insert(.initialize(string: "\(name): ", color: theme.colors.text, font: .normal(.text)), at: 0)
+                }
+            }
+            
+            attr.append(text)
+            attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+
+            self.selectedMain = .init(attr, maximumNumberOfLines: 2, mayItems: false, truncatingColor: theme.colors.grayText)
+            self.mainText = .init(attr, maximumNumberOfLines: 2, mayItems: false, truncatingColor: theme.colors.grayText)
+            
+            self.mainText?.measure(width: width - 20)
+            self.selectedMain?.measure(width: width - 20)
+
+            if data.isUnread {
+                self.mainText?.generateAutoBlock(backgroundColor: theme.colors.grayText.withAlphaComponent(0.1))
+                self.selectedMain?.generateAutoBlock(backgroundColor: .clear)
+            }
+            
+            var main: CGFloat = 0
+            if let mainText = mainText, let line = mainText.lines.first {
+                main = line.frame.width
+            }
+            
+            if items.count > 1, width - main > 40 {
+                let rest = items.suffix(items.count - 1)
+                let attr = NSMutableAttributedString()
+                for item in rest {
+                    
+                    var range = attr.append(string: "🤡" + item.title, color: item.isUnread ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
+                    
+                    range = NSMakeRange(range.location, 2)
+                    
+                    let embedded: InlineStickerItem
+                    if let fileId = item.iconFileId {
+                        embedded = .init(source: .attribute(.init(fileId: fileId, file: message.associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: "")))
+                    } else {
+                        let file = ForumUI.makeIconFile(title: item.title, iconColor: item.iconColor, isGeneral: item.id == 1)
+                        embedded = .init(source: .attribute(.init(fileId: Int64(item.iconColor), file: file, emoji: "")))
+                    }
+                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: embedded, range: range)
+                    
+                    _ = attr.append(string: " ")
+                }
+                self.allNames = .init(attr, maximumNumberOfLines: 1)
+                
+   
+                
+                self.allNames?.measure(width: width - 15 - main)
+            }
+        }
+        
+      
+
+        var size = NSMakeSize(width, 0)
+        if let mainText = mainText {
+            size.height += mainText.layoutSize.height
+        }
+        self.size = size
+    }
+}
+
+
+
+private final class TopicNameAndTextView : View {
+    
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+
+    private let mainView = TextView()
+    private var allView: TextView?
+    private var highlighted = false
+    
+    private var validLayout: ChatListTopicNameAndTextLayout?
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(mainView)
+        mainView.isSelectable = false
+        
+        mainView.onlyTextIsInteractive = true
+        mainView.scaleOnClick = true
+        
+        self.layer?.masksToBounds = false
+        mainView.layer?.masksToBounds = false
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    private var isLite: Bool = false
+    
+    func update(context: AccountContext, item: ChatListTopicNameAndTextLayout, highlighted: Bool, animated: Bool) {
+        self.isLite = context.isLite(.emoji)
+        self.validLayout = item
+        mainView.update(highlighted ? item.selectedMain : item.mainText)
+        
+        mainView.removeAllHandlers()
+        mainView.set(handler: { _ in
+            if let first = item.first {
+                ForumUI.open(item.peerId, context: context, threadId: first.id)
+            }
+        }, for: .Click)
+        
+        mainView.userInteractionEnabled = item.fastTrack
+        
+        if let all = item.allNames {
+            let current: TextView
+            if let view = self.allView {
+                current = view
+            } else {
+                current = TextView()
+                current.isSelectable = false
+                current.userInteractionEnabled = false
+                self.allView = current
+                addSubview(current)
+            }
+            current.update(all)
+        } else if let view = self.allView {
+            performSubviewRemoval(view, animated: animated)
+            self.allView = nil
+        }
+        
+        updateInlineStickers(context: context, views: [mainView, allView].compactMap { $0 })
+    }
+    
+    func updateInlineStickers(context: AccountContext, views: [TextView]) {
+        var validIds: [InlineStickerItemLayer.Key] = []
+        
+        var index: Int = 0
+        
+        for textView in views {
+            if let textLayout = textView.textLayout {
+                for item in textLayout.embeddedItems {
+                    if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                        
+                        let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                        validIds.append(id)
+                        
+                        
+                        var rect: NSRect
+                        rect = item.rect.insetBy(dx: -2, dy: -2)
+
+                        if textLayout.hasBlock {
+                            rect = rect.offsetBy(dx: 6, dy: 1)
+                        }
+
+                        
+                        let view: InlineStickerItemLayer
+                        if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                            view = current
+                        } else {
+                            self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: .framesCount(1), textColor: theme.colors.grayText)
+                            self.inlineStickerItemViews[id] = view
+                            view.superview = textView
+                            textView.addEmbeddedLayer(view)
+                        }
+                        index += 1
+                        view.frame = rect
+                    }
+                }
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemLayer.Key] = []
+        for (key, itemLayer) in self.inlineStickerItemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperlayer()
+            }
+        }
+        for key in removeKeys {
+            self.inlineStickerItemViews.removeValue(forKey: key)
+        }
+        updateAnimatableContent()
+        
+        needsLayout = true
+    }
+    
+    
+    func updateAnimatableContent() -> Void {
+        for (_, value) in inlineStickerItemViews {
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = self.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isLite
+            }
+        }
+    }
+    
+    
+    override func layout() {
+        super.layout()
+        
+        if let main = mainView.textLayout, let first = main.lines.first {
+            mainView.setFrameOrigin(.zero)
+            if let allView = allView {
+                allView.setFrameOrigin(NSMakePoint(first.frame.maxX + 6, first.frame.minY - first.frame.height + 2))
+            }
+        }
+    }
+}
 
 
 
@@ -128,6 +652,7 @@ private final class ChatListMediaPreviewView: View {
     private var requestedImage: Bool = false
     private var disposable: Disposable?
     private var shimmer: ShimmerLayer?
+    private var inkView: MediaInkView?
     
     init(context: AccountContext, message: Message, media: Media) {
         self.context = context
@@ -141,6 +666,7 @@ private final class ChatListMediaPreviewView: View {
         
         self.addSubview(self.imageView)
         self.addSubview(self.playIcon)
+        
     }
     
     required init?(coder: NSCoder) {
@@ -164,7 +690,7 @@ private final class ChatListMediaPreviewView: View {
             playIcon.isHidden = true
             if let largest = largestImageRepresentation(image.representations) {
                 dimensions = largest.dimensions.size
-                signal = mediaGridMessagePhoto(account: self.context.account, imageReference: .message(message: MessageReference(self.message), media: image), scale: backingScaleFactor)
+                signal = mediaGridMessagePhoto(account: self.context.account, imageReference: .message(message: MessageReference(self.message), media: image), scale: backingScaleFactor, autoFetchFullSize: true)
             }
         } else if let file = self.media as? TelegramMediaFile {
             if file.isAnimated {
@@ -215,6 +741,44 @@ private final class ChatListMediaPreviewView: View {
         
         self.imageView.frame = frame
         self.imageView.set(arguments: arguments)
+        
+        let isSpoiler = message.isMediaSpoilered
+
+        if isSpoiler {
+            let current: MediaInkView
+            if let view = self.inkView {
+                current = view
+            } else {
+                current = MediaInkView(frame: frame)
+                self.inkView = current
+                
+                let aboveView = self.playIcon
+                self.addSubview(current, positioned: .below, relativeTo: aboveView)
+            }
+            current.userInteractionEnabled = false
+            
+            
+            self.imageView.layer?.opacity = 0
+            
+            let image: TelegramMediaImage
+            if let current = media as? TelegramMediaImage {
+                image = current
+            } else if let file = media as? TelegramMediaFile {
+                image = TelegramMediaImage.init(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+            } else {
+                fatalError()
+            }
+            
+            let imageReference = ImageMediaReference.message(message: MessageReference(message), media: image)
+            
+            current.update(isRevealed: false, updated: true, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: false)
+            current.frame = frame
+        } else if let view = self.inkView {
+            performSubviewRemoval(view, animated: false)
+            self.inkView = nil
+            self.imageView.layer?.opacity = 1
+        }
+        
     }
 }
 
@@ -291,19 +855,26 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private var messageTextView:TextView? = nil
     private var chatNameTextView: TextView? = nil
+    private var dateTextView: TextView? = nil
+    private var displayNameView: TextView? = nil
     
     
     private var forumTopicTextView: TextView? = nil
     private var forumTopicNameIcon: ForumTopicArrow?
-
+    
+    private var topicsView: TopicNameAndTextView?
+    
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     
     private var inlineTopicPhotoLayer: InlineStickerItemLayer?
         
     private var badgeView:View?
-    private var additionalBadgeView:View?
+    private var badgeShortView:View?
+
     private var mentionsView: ImageView?
     private var reactionsView: ImageView?
+    
+    private var selectionView: View?
 
     
     private var activeImage: ImageView?
@@ -311,7 +882,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var activitiesModel:ChatActivitiesModel?
     private let photo: AvatarControl = AvatarControl(font: .avatar(22))
     private var photoVideoView: MediaPlayerView?
-    private var photoVideoPlayer: MediaPlayer? 
+    private var photoVideoPlayer: MediaPlayer?
+    
+    private var borderView: View?
 
     private var hiddenMessage:Bool = false {
         didSet {
@@ -324,11 +897,17 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var removeControl:ImageButton? = nil
     private var animatedView: RowAnimateView?
     private var archivedPhoto: LAnimationButton?
+   
     private let containerView: ChatListDraggingContainerView = ChatListDraggingContainerView(frame: NSZeroRect)
+    private let contentView: View = View()
+    private var leftHolder: View?
+
     private var expandView: ChatListExpandView?
     
     private var statusControl: PremiumStatusControl?
     
+    private var avatarTimerBadge: AvatarBadgeView?
+
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [(message: Message, media: Media, size: CGSize)] = []
@@ -386,10 +965,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     activitiesModel?.view?.removeFromSuperview()
                     activitiesModel = nil
                     self.hiddenMessage = false
-                    containerView.needsDisplay = true
                 } else if activitiesModel == nil {
                     activitiesModel = ChatActivitiesModel()
-                    containerView.addSubview(activitiesModel!.view!)
+                    contentView.addSubview(activitiesModel!.view!)
                 }
                 
                 
@@ -399,24 +977,18 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
                 
                 if highlighted {
-                    activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: theme.chatList.selectedBackgroundColor)
-                } else if item.isFixedItem {
-                    activity = theme.activity(key: 14, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
+                    activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: backdorColor)
                 } else {
-                    activity = theme.activity(key: 15, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.colors.background)
+                    activity = theme.activity(key: 15, foregroundColor: theme.colors.grayIcon, backgroundColor: theme.colors.background)
                 }
                 if oldValue != item.activities || activity != activitiesModel?.theme {
                     activitiesModel?.update(with: inputActivities, for: item.messageWidth, theme:  activity, layout: { [weak self] show in
-                        if let item = self?.item as? ChatListRowItem, let displayLayout = item.ctxDisplayLayout {
-                            self?.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
-                        }
                         self?.hiddenMessage = show
-                        self?.containerView.needsDisplay = true
+                        self?.needsLayout = true
                     })
                 }
               
                 
-                activitiesModel?.view?.isHidden = item.context.layout == .minimisize
             } else {
                 activitiesModel?.clean()
                 activitiesModel?.view?.removeFromSuperview()
@@ -472,10 +1044,24 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
     }
     
+    var _backgroundColor: NSColor {
+        if let item = item as? ChatListRowItem {
+            if item.shouldHideContent {
+                return theme.colors.listBackground
+            } else {
+                return theme.colors.background
+            }
+            
+        }
+        return theme.colors.background
+    }
     
     
     override var backdorColor: NSColor {
         if let item = item as? ChatListRowItem {
+            if item.isForum && !item.isTopic, !isResorting {
+                return .clear
+            }
             if item.isCollapsed {
                 return theme.colors.grayBackground
             }
@@ -488,15 +1074,30 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if !item.isSelected && containerView.activeDragging {
                 return theme.chatList.activeDraggingBackgroundColor
             }
-            if item.isFixedItem && !item.isSelected {
-                return theme.chatList.pinnedBackgroundColor
-            }
+
             if item.isSelected && item.isForum && !item.isTopic {
                 return theme.chatList.activeDraggingBackgroundColor
             }
-            return item.isSelected ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : theme.colors.background
+            
+            let effective: NSColor
+            if self.isResorting {
+                if item.shouldHideContent {
+                    effective = theme.colors.listBackground
+                } else {
+                    effective = theme.colors.background
+                }
+            } else {
+                effective = .clear
+            }
+            
+            return item.isSelected && !item.isAutohidden ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : effective
         }
-        return theme.colors.background
+        return .clear
+    }
+    
+    override func updateIsResorting() {
+        super.updateIsResorting()
+        updateColors()
     }
     
     
@@ -504,40 +1105,20 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
         super.draw(layer, in: ctx)
 
-                
-       // NSLog("\(ctx.bytesPerRow), \(ctx.bitsPerComponent), \(ctx.bitsPerPixel), \(ctx.bitmapInfo), \(ctx.colorSpace)")
-        
+                        
 //
          if let item = self.item as? ChatListRowItem {
-            if !item.isSelected {
+             if !item.isSelected || item.isSelectedForum, !item.isAutohidden {
                 
-                if layer != containerView.layer {
+                if layer == contentView.layer {
                     ctx.setFillColor(theme.colors.border.cgColor)
-                    ctx.fill(NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height))
-                } else {
-                    
-                    if item.context.layout == .minimisize {
-                        return
-                    }
-                    
-                    if backingScaleFactor == 1.0 {
-                        ctx.setFillColor(backdorColor.cgColor)
-                        ctx.fill(layer.bounds)
-                    }
-                    
-                    ctx.setFillColor(theme.colors.border.cgColor)
-                    ctx.fill(NSMakeRect(item.isLastPinned ? 0 : item.leftInset, NSHeight(layer.bounds) - .borderSize, item.isLastPinned ? layer.frame.width : layer.bounds.width - item.leftInset, .borderSize))
+                    ctx.fill(NSMakeRect(item.isLastPinned ? 0 : item.leftInset, layer.bounds.height - .borderSize, item.isLastPinned ? layer.frame.width : layer.bounds.width - item.leftInset, .borderSize))
                 }
             }
             
-            if item.context.layout == .minimisize {
-                return
-            }
-            
-            if layer == containerView.layer {
+            if layer == contentView.layer {
                 
                 let highlighted = self.highlighed
-                
                 
                 if item.ctxBadgeNode == nil && item.mentionsCount == nil && (item.isPinned || item.isLastPinned) {
                     ctx.draw(highlighted ? theme.icons.pinnedImageSelected : theme.icons.pinnedImage, in: NSMakeRect(frame.width - theme.icons.pinnedImage.backingSize.width - item.margin - 1, frame.height - theme.icons.pinnedImage.backingSize.height - (item.margin + 1), theme.icons.pinnedImage.backingSize.width, theme.icons.pinnedImage.backingSize.height))
@@ -551,7 +1132,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         addition += theme.icons.secretImage.backingSize.height
                         
                     }
-                    displayLayout.1.draw(NSMakeRect(item.leftInset + addition, item.margin - 1, displayLayout.0.size.width, displayLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
+                    if item.appearMode == .short, item.isTopic {
+                        addition += 20
+                    }
                     
                     if let statusControl = statusControl {
                         addition += statusControl.frame.width + 1
@@ -562,22 +1145,18 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         let activeIcon = theme.icons.dialogMuteImageSelected
                         let y: CGFloat
                         let x: CGFloat
-                        if displayLayout.0.numberOfLines > 1 {
-                            x = item.leftInset + displayLayout.0.firstLineWidth + 4 + addition
-                            y = item.margin + 4
+                        if displayLayout.numberOfLines > 1 {
+                            x = item.leftInset + displayLayout.lastLineWidth + 4 + addition
+                            y = item.margin + 2 + displayLayout.layoutSize.height - displayLayout.lastLineHeight
                         } else {
-                            x = item.leftInset + displayLayout.0.size.width + 4 + addition
-                            y = item.margin + round((displayLayout.0.size.height - icon.backingSize.height) / 2.0) - 1
+                            x = item.leftInset + displayLayout.layoutSize.width + 4 + addition
+                            y = item.margin + round((displayLayout.layoutSize.height - icon.backingSize.height) / 2.0) - 1
                         }
                         ctx.draw(highlighted ? activeIcon : icon, in: NSMakeRect(x, y, icon.backingSize.width, icon.backingSize.height))
                     }
                     
-                   
-                    
                     if let dateLayout = item.ctxDateLayout, !item.hasDraft {
-                        let dateX = frame.width - dateLayout.0.size.width - item.margin
-                        dateLayout.1.draw(NSMakeRect(dateX, item.margin, dateLayout.0.size.width, dateLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-                        
+                        let dateX = contentView.frame.width - dateLayout.layoutSize.width - item.margin
                         
                         if item.isClosedTopic {
                             let icon = theme.icons.chatlist_forum_closed_topic
@@ -607,7 +1186,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
             }
         }
- 
     }
 
 
@@ -616,7 +1194,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         super.init(frame: frameRect)
         
-        
+        containerView.addSubview(contentView)
         addSubview(revealRightView)
         addSubview(revealLeftView)
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
@@ -625,10 +1203,19 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         containerView.addSubview(photo)
         addSubview(containerView)
         
-        containerView.displayDelegate = self
         containerView.frame = bounds
+        contentView.frame = bounds
         
         
+        photo.contentUpdated = { [weak self] image in
+            if let image = image {
+                self?.avatarTimerBadge?.update(content: .image(image as! CGImage))
+            } else {
+                self?.avatarTimerBadge?.update(content: .color(.white))
+            }
+        }
+        
+        contentView.displayDelegate = self
         
     }
     
@@ -663,13 +1250,20 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         let inputActivities = self.inputActivities
         self.inputActivities = inputActivities
         self.containerView.background = backdorColor
-        expandView?.backgroundColor = theme.colors.grayBackground
+        self.expandView?.backgroundColor = theme.colors.grayBackground
+        self.contentView.backgroundColor = backdorColor
     }
     
     
+    override var isEmojiLite: Bool {
+        if let item = item as? ChatListRowItem {
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
+    }
     
     override func updateAnimatableContent() -> Void {
-        
+        let isLite = self.isEmojiLite
         let checkValue:(InlineStickerItemLayer)->Void = { value in
             if let superview = value.superview {
                 var isKeyWindow: Bool = false
@@ -680,7 +1274,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = superview.visibleRect != .zero && isKeyWindow
+                value.isPlayable = superview.visibleRect != .zero && isKeyWindow && !isLite
             }
         }
         
@@ -691,6 +1285,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             checkValue(value)
         }
         updatePlayerIfNeeded()
+        topicsView?.updateAnimatableContent()
     }
     
     
@@ -706,12 +1301,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 let rect = item.rect.insetBy(dx: -2, dy: -2)
                 
+                let textColor = self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
+                
                 let view: InlineStickerItemLayer
-                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, current.textColor == textColor {
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)
@@ -761,18 +1358,94 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
         }
         
-         let wasHidden: Bool = (self.item as? ChatListRowItem)?.isCollapsed ?? false
+        let previous = self.item as? ChatListRowItem
+        
+        
+         let wasHidden: Bool = previous?.isCollapsed ?? false
          super.set(item:item, animated:animated)
         
                 
          if let item = item as? ChatListRowItem {
+             
+             let animated = animated && previous?.splitState == item.splitState
+                          
+             let unhideProgress = item.getHideProgress?()
+             
+             
+             contentView.change(opacity: unhideProgress ?? (item.shouldHideContent ? 0 : 1), animated: animated)
+             contentView.change(pos: contentPoint(item), animated: animated)
+             
+             
+             if item.isForum && !item.isTopic, item.isSelectedForum {
+                 let current: View
+                 let isNew: Bool
+                 if let view = self.selectionView {
+                     current = view
+                     isNew = false
+                 } else {
+                     isNew = true
+                     current = View()
+                     current.layer?.cornerRadius = 4
+                     containerView.addSubview(current)
+                     self.selectionView = current
+                 }
+                 current.backgroundColor = theme.colors.accentSelect
+                 let rect = selectionViewRect(item)
+                 if isNew {
+                     current.frame = rect
+                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                 } else {
+                     current.change(pos: rect.origin, animated: animated)
+                     current.change(size: rect.size, animated: animated)
+                 }
+             } else if let view = self.selectionView {
+                 
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.selectionView = nil
+             }
+             
+             
+             if let displayLayout = item.ctxDisplayLayout {
+                 let current: TextView
+                 if let view = self.displayNameView {
+                     current = view
+                 } else {
+                     current = TextView()
+                     current.userInteractionEnabled = false
+                     current.isSelectable = false
+                     self.displayNameView = current
+                     contentView.addSubview(current)
+                 }
+                 current.update(displayLayout)
+             } else if let view = self.displayNameView {
+                 performSubviewRemoval(view, animated: animated)
+                 self.displayNameView = nil
+             }
+             
+             if let dateLayout = item.ctxDateLayout {
+                 let current: TextView
+                 if let view = self.dateTextView {
+                     current = view
+                 } else {
+                     current = TextView()
+                     current.userInteractionEnabled = false
+                     current.isSelectable = false
+                     self.dateTextView = current
+                     contentView.addSubview(current)
+                 }
+                 current.update(dateLayout)
+             } else if let view = self.dateTextView {
+                 performSubviewRemoval(view, animated: animated)
+                 self.dateTextView = nil
+             }
              
              if let peer = item.peer, peer.id != item.context.peerId {
                  let highlighted = self.highlighed
                  let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: highlighted, cached: self.statusControl, animated: animated)
                  if let control = control {
                      self.statusControl = control
-                     self.containerView.addSubview(control)
+                     self.contentView.addSubview(control)
                  } else if let view = self.statusControl {
                      performSubviewRemoval(view, animated: animated)
                      self.statusControl = nil
@@ -782,7 +1455,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.statusControl = nil
              }
              
-             if let messageText = item.ctxMessageText, !hiddenMessage, item.context.layout != .minimisize {
+             if let messageText = item.ctxMessageText, !hiddenMessage {
                  let current: TextView
                  if let view = self.messageTextView {
                      current = view
@@ -791,7 +1464,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      current.userInteractionEnabled = false
                      current.isSelectable = false
                      self.messageTextView = current
-                     self.containerView.addSubview(current)
+                     self.contentView.addSubview(current)
                  }
                  current.update(messageText)
                  updateInlineStickers(context: item.context, view: current, textLayout: messageText)
@@ -801,7 +1474,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  performSubviewRemoval(view, animated: false)
              }
              
-             if let nameText = item.ctxChatNameLayout, !hiddenMessage, item.context.layout != .minimisize {
+             if let nameText = item.ctxChatNameLayout, !hiddenMessage {
                  let current: TextView
                  if let view = self.chatNameTextView {
                      current = view
@@ -810,7 +1483,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      current.userInteractionEnabled = false
                      current.isSelectable = false
                      self.chatNameTextView = current
-                     self.containerView.addSubview(current)
+                     self.contentView.addSubview(current)
                  }
                  current.update(nameText)
                  
@@ -819,7 +1492,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  performSubviewRemoval(view, animated: false)
              }
              
-             if let nameText = item.ctxForumTopicNameLayout, !hiddenMessage, item.context.layout != .minimisize {
+             if let nameText = item.ctxForumTopicNameLayout, !hiddenMessage {
                  let current: TextView
                  if let view = self.forumTopicTextView {
                      current = view
@@ -828,7 +1501,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      current.userInteractionEnabled = false
                      current.isSelectable = false
                      self.forumTopicTextView = current
-                     self.containerView.addSubview(current)
+                     self.contentView.addSubview(current)
                  }
                  current.update(nameText)
                  
@@ -837,19 +1510,34 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  performSubviewRemoval(view, animated: false)
              }
              
-             if item.hasForumIcon, !hiddenMessage, item.context.layout != .minimisize {
+             if item.hasForumIcon, !hiddenMessage {
                  let current: ForumTopicArrow
                  if let view = self.forumTopicNameIcon {
                      current = view
                  } else {
                      current = ForumTopicArrow(frame: NSMakeRect(0, 0, 8, 18))
                      self.forumTopicNameIcon = current
-                     self.containerView.addSubview(current)
+                     self.contentView.addSubview(current)
                  }
                  current.update(item, animated: animated)
              } else if let view = self.forumTopicNameIcon {
                  self.forumTopicNameIcon = nil
                  performSubviewRemoval(view, animated: false)
+             }
+             
+             if let layout = item.topicsLayout {
+                 let current: TopicNameAndTextView
+                 if let view = self.topicsView {
+                     current = view
+                 } else {
+                     current = .init(frame: layout.size.bounds)
+                     self.topicsView = current
+                     self.contentView.addSubview(current)
+                 }
+                 current.update(context: item.context, item: layout, highlighted: item.isSelected && item.selectedForum != item.peerId, animated: animated)
+             } else if let view = self.topicsView {
+                 performSubviewRemoval(view, animated: false)
+                 self.topicsView = nil
              }
              
              
@@ -860,7 +1548,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      let equal = videoRepresentation?.resource.id == video.resource.id
                      
                      if !equal {
-                         
+                                                  
                          self.photoVideoView?.removeFromSuperview()
                          self.photoVideoView = nil
                          
@@ -884,8 +1572,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          } else {
                              reference = MediaResourceReference.standalone(resource: file.resource)
                          }
+                         let userLocation: MediaResourceUserLocation
+                         if let id = item.peer?.id {
+                             userLocation = .peer(id)
+                         } else {
+                             userLocation = .other
+                         }
                          
-                         let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                         let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: userLocation, userContentType: .avatar, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                          
                          mediaPlayer.actionAtEnd = .loop(nil)
                          
@@ -919,9 +1613,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             var validMediaIds: [MessageId] = []
             for (message, media, mediaSize) in item.contentImageSpecs {
-                guard item.context.layout != .minimisize else {
-                    continue
-                }
+                
                 validMediaIds.append(message.id)
                 let previewView: ChatListMediaPreviewView
                 if let current = self.mediaPreviewViews[message.id] {
@@ -929,7 +1621,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 } else {
                     previewView = ChatListMediaPreviewView(context: item.context, message: message, media: media)
                     self.mediaPreviewViews[message.id] = previewView
-                    self.containerView.addSubview(previewView)
+                    self.contentView.addSubview(previewView)
                 }
                 previewView.updateLayout(size: mediaSize)
             }
@@ -949,76 +1641,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 containerView.change(pos: NSMakePoint(0, item.isCollapsed ? -item.height : 0), animated: !revealActionInvoked && animated)
             }
 
-            if let isOnline = item.isOnline, item.context.layout != .minimisize {
-                if isOnline {
-                    var animate: Bool = false
-                    if activeImage == nil {
-                        activeImage = ImageView()
-                        self.containerView.addSubview(activeImage!)
-                        animate = true
-                    }
-                    guard let activeImage = self.activeImage else { return }
-                    activeImage.image = item.isSelected && item.context.layout != .single ? theme.icons.hintPeerActiveSelected : theme.icons.hintPeerActive
-                    activeImage.sizeToFit()
-
-                    activeImage.setFrameOrigin(photo.frame.maxX - activeImage.frame.width - 3, photo.frame.maxY - 12)
-
-                    if animated && animate {
-                        activeImage.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
-                        activeImage.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
-                    }
-                } else {
-                    if animated {
-                        let activeImage = self.activeImage
-                        self.activeImage = nil
-                        activeImage?.layer?.animateAlpha(from: 1, to: 0.5, duration: 0.2)
-                        activeImage?.layer?.animateScaleSpring(from: 1.0, to: 0.0, duration: 0.3, removeOnCompletion: false, completion: { [weak activeImage] completed in
-                            activeImage?.removeFromSuperview()
-                        })
-                    } else {
-                        activeImage?.removeFromSuperview()
-                        activeImage = nil
-                    }
-                }
-            } else {
-                activeImage?.removeFromSuperview()
-                activeImage = nil
-            }
             
-            if item.hasActiveGroupCall, item.context.layout != .minimisize {
-                var animate: Bool = false
-
-                if self.groupActivityView == nil {
-                    self.groupActivityView = GroupCallActivity(frame: .init(origin: .zero, size: NSMakeSize(20, 20)))
-                    self.containerView.addSubview(self.groupActivityView!)
-                    animate = true
-                }
-                
-                let groupActivityView = self.groupActivityView!
-                
-                groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
-                
-                let isActive = item.context.layout != .single && item.isSelected
-                
-                groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: isActive ? theme.colors.underSelectedColor : theme.colors.accentSelect, backgroundColor: backdorColor, animColor: isActive ? theme.colors.accentSelect : theme.colors.underSelectedColor)
-                if animated && animate {
-                    groupActivityView.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
-                    groupActivityView.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
-                }
-            } else {
-                if animated {
-                    if let groupActivityView = self.groupActivityView {
-                        self.groupActivityView = nil
-                        groupActivityView.layer?.animateAlpha(from: 1, to: 0.5, duration: 0.2)
-                        groupActivityView.layer?.animateScaleSpring(from: 1.0, to: 0.0, duration: 0.3, removeOnCompletion: false, completion: { [weak groupActivityView] completed in
-                            groupActivityView?.removeFromSuperview()
-                        })
-                    }
-                } else {
-                    groupActivityView?.removeFromSuperview()
-                    groupActivityView = nil
-                }
-            }
+            
             
             
             containerView.item = item
@@ -1029,31 +1653,40 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              switch item.mode {
              case let .topic(_, data):
+                 
                  if item.titleMode == .normal {
-                     let size = NSMakeSize(30, 30)
+                     let value: CGFloat = item.appearMode == .short && !item.shouldHideContent ? 16 : 30
+                     let size = NSMakeSize(value, value)
                      let current: InlineStickerItemLayer
-                     let forumIconFile = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor)
+                     let forumIconFile = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor, isGeneral: item.mode.isGeneralTopic)
                      let checkFileId = data.info.icon ?? forumIconFile.fileId.id
-                     if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId {
+                     if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId, layer.size == size {
                          current = layer
                      } else {
                          if let layer = inlineTopicPhotoLayer {
-                             performSublayerRemoval(layer, animated: animated)
+                             performSublayerRemoval(layer, animated: false)
                              self.inlineTopicPhotoLayer = nil
                          }
                          if let fileId = data.info.icon {
-                             current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
+                             current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .framesCount(1))
                          } else {
-                             current = .init(account: item.context.account, file: forumIconFile, size: size, playPolicy: .playCount(2))
+                             current = .init(account: item.context.account, file: forumIconFile, size: size, playPolicy: .framesCount(1))
                          }
-                         current.superview = containerView
-                         self.containerView.layer?.addSublayer(current)
                          self.inlineTopicPhotoLayer = current
                      }
-                     if item.context.layout == .minimisize {
+                     
+                     if item.shouldHideContent {
                          current.frame = CGRect(origin: NSMakePoint(20, 20), size: size)
+                         current.superview = containerView
+                         self.containerView.layer?.addSublayer(current)
                      } else {
-                         current.frame = CGRect(origin: NSMakePoint(10, 12), size: size)
+                         if item.appearMode == .short {
+                             current.frame = CGRect(origin: NSMakePoint(10, item.margin), size: size)
+                         } else {
+                             current.frame = CGRect(origin: NSMakePoint(10, 12), size: size)
+                         }
+                         current.superview = contentView
+                         self.contentView.layer?.addSublayer(current)
                      }
                      photo.isHidden = true
                  } else {
@@ -1093,8 +1726,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
                 self.archivedPhoto?.frame = self.photo.frame
                 self.archivedPhoto?.userInteractionEnabled = false
-                self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground)
-                self.archivedPhoto?.background = item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground
+                self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground)
+                self.archivedPhoto?.background = item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground
                 self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
 
                 let animateArchive = item.animateArchive && animated
@@ -1109,86 +1742,155 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 self.archivedPhoto?.removeFromSuperview()
                 self.archivedPhoto = nil
             }
-        
-             var additionBadgeOffset: CGFloat = 0
-             
-             if let badgeNode = item.ctxAdditionalBadgeNode {
-                 var presented: Bool = false
-                 if additionalBadgeView == nil {
-                     additionalBadgeView = View()
-                     containerView.addSubview(additionalBadgeView!)
-                     presented = true
-                 }
-                 additionalBadgeView?.setFrameSize(badgeNode.size)
-                 badgeNode.view = additionalBadgeView
-                 badgeNode.setNeedDisplay()
-                 
-                 let point = NSMakePoint(self.containerView.frame.width - badgeNode.size.width - item.margin, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
-                 additionBadgeOffset += (badgeNode.size.width + item.margin)
-
-                 if presented {
-                     self.additionalBadgeView?.setFrameOrigin(point)
-                     if animated {
-                         self.additionalBadgeView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
-                         self.additionalBadgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                     }
-                 } else {
-                     self.additionalBadgeView?.change(pos: point, animated: animated)
-                 }
-             } else {
-                 if animated {
-                     if let badge = self.additionalBadgeView {
-                         self.additionalBadgeView = nil
-                         badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
-                         badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
-                             badge?.removeFromSuperview()
-                         })
-                     }
-                 } else {
-                     self.additionalBadgeView?.removeFromSuperview()
-                     self.additionalBadgeView = nil
-                 }
-             }
-             
+                     
              if let badgeNode = item.ctxBadgeNode {
                  var presented: Bool = false
                  if badgeView == nil {
                      badgeView = View()
-                     containerView.addSubview(badgeView!)
+                     contentView.addSubview(badgeView!)
                      presented = true
                  }
                  badgeView?.setFrameSize(badgeNode.size)
+                 badgeNode.aroundFill = nil
                  badgeNode.view = badgeView
                  badgeNode.setNeedDisplay()
                  
-                 let point = NSMakePoint(self.containerView.frame.width - badgeNode.size.width - item.margin - additionBadgeOffset, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
-                 
+                 let point = badgePoint(item)
+
                  if presented {
-                     self.badgeView?.setFrameOrigin(point)
+                     badgeView?.setFrameOrigin(point)
                      if animated {
                          self.badgeView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
                          self.badgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                      }
                  } else {
-                     self.badgeView?.change(pos: point, animated: false)
+                     badgeView?.change(pos: point, animated: animated)
                  }
-                 
-             } else {
-                 if animated {
-                     if let badge = self.badgeView {
-                         self.badgeView = nil
-                         badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
-                         badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
-                             badge?.removeFromSuperview()
-                         })
-                     }
-                 } else {
-                     self.badgeView?.removeFromSuperview()
-                     self.badgeView = nil
-                 }
+             } else if let view = self.badgeView {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.badgeView = nil
              }
              
-             if let _ = item.mentionsCount, item.context.layout != .minimisize {
+             if let badgeNode = item.ctxShortBadgeNode, item.shouldHideContent {
+                 var presented: Bool = false
+                 if badgeShortView == nil {
+                     badgeShortView = View()
+                     containerView.addSubview(badgeShortView!)
+                     presented = true
+                 }
+                 badgeShortView?.setFrameSize(badgeNode.size)
+                 badgeNode.aroundFill = _backgroundColor
+                 badgeNode.view = badgeShortView
+                 badgeNode.setNeedDisplay()
+                 
+                 let point = badgeShortPoint(item)
+
+                 if presented {
+                     badgeShortView?.setFrameOrigin(point)
+                     if animated {
+                         self.badgeShortView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
+                         self.badgeShortView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     }
+                 } else {
+                     badgeShortView?.change(pos: point, animated: animated)
+                     if let unhideProgress = unhideProgress {
+                         badgeShortView?.change(opacity: 1 - unhideProgress, animated: animated)
+                     } else {
+                         badgeShortView?.change(opacity: 1, animated: animated)
+                     }
+                 }
+             } else if let view = self.badgeShortView {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.badgeShortView = nil
+             }
+             
+             if item.hasActiveGroupCall, badgeShortView == nil {
+                 var animate: Bool = false
+
+                 if self.groupActivityView == nil {
+                     self.groupActivityView = GroupCallActivity(frame: .init(origin: .zero, size: NSMakeSize(20, 20)))
+                     self.containerView.addSubview(self.groupActivityView!)
+                     animate = true
+                 }
+                 
+                 let groupActivityView = self.groupActivityView!
+                 
+                 groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
+                 
+                 let isActive = item.isSelected
+                 
+                 groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: isActive ? theme.colors.underSelectedColor : theme.colors.accentSelect, backgroundColor: isActive ? theme.colors.accentSelect : _backgroundColor, animColor: isActive ? theme.colors.accentSelect : theme.colors.underSelectedColor)
+                 if animated && animate {
+                     groupActivityView.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
+                     groupActivityView.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                 }
+             } else if let view = groupActivityView {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.groupActivityView = nil
+             }
+             
+             if let isOnline = item.isOnline {
+                 if isOnline, self.badgeShortView == nil {
+                     var animate: Bool = false
+                     if activeImage == nil {
+                         activeImage = ImageView()
+                         self.containerView.addSubview(activeImage!, positioned: .above, relativeTo: photoVideoView ?? photo)
+                         animate = true
+                     }
+                     guard let activeImage = self.activeImage else { return }
+                     activeImage.image = item.isSelected && item.context.layout != .single ? theme.icons.hintPeerActiveSelected : theme.icons.hintPeerActive
+                     activeImage.sizeToFit()
+
+                     activeImage.setFrameOrigin(photo.frame.maxX - activeImage.frame.width - 3, photo.frame.maxY - 12)
+
+                     if animated && animate {
+                         activeImage.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
+                         activeImage.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                     }
+                 } else if let view = self.activeImage {
+                     performSubviewRemoval(view, animated: animated, scale: true)
+                     self.activeImage = nil
+                 }
+             } else {
+                 activeImage?.removeFromSuperview()
+                 activeImage = nil
+             }
+             
+             
+             if let autoremoveTimeout = item.autoremoveTimeout, activeImage == nil, badgeShortView == nil {
+                 let current: AvatarBadgeView
+                 let isNew: Bool
+                 if let view = self.avatarTimerBadge {
+                     current = view
+                     isNew = false
+                 } else {
+                     current = AvatarBadgeView(frame: CGRect())
+                     self.avatarTimerBadge = current
+                     self.containerView.addSubview(current, positioned: .above, relativeTo: photoVideoView ?? photo)
+                     isNew = true
+                 }
+                 let avatarFrame = self.photo.frame
+                 
+                 let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
+                 current.update(size: avatarBadgeSize, text: shortTimeIntervalString(value: autoremoveTimeout))
+                 let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+                 
+                 
+                 current.frame = avatarBadgeFrame
+                 
+                 if isNew, animated {
+                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                 }
+                 
+                 photo.callContentUpdater()
+                 
+             } else if let view = self.avatarTimerBadge {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.avatarTimerBadge = nil
+             }
+             
+             if let _ = item.mentionsCount {
                  
                  let highlighted = self.highlighed
                  let icon: CGImage
@@ -1201,14 +1903,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  var presented: Bool = false
                  if self.mentionsView == nil {
                      self.mentionsView = ImageView()
-                     self.containerView.addSubview(self.mentionsView!)
+                     self.contentView.addSubview(self.mentionsView!)
                      presented = true
                  }
                  
                  self.mentionsView?.image = icon
                  self.mentionsView?.sizeToFit()
                  
-                 let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - icon.backingSize.width - item.margin, self.containerView.frame.height - icon.backingSize.height - (item.margin + 1))
+                 let point = mentionPoint(item)
                  
                  if presented {
                      self.mentionsView?.setFrameOrigin(point)
@@ -1219,21 +1921,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  } else {
                      self.mentionsView?.change(pos: point, animated: animated)
                  }
-             } else {
-                 if let mentionsView = self.mentionsView {
-                     self.mentionsView = nil
-                     if animated {
-                         mentionsView.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
-                         mentionsView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak mentionsView] _ in
-                             mentionsView?.removeFromSuperview()
-                         })
-                     } else {
-                         mentionsView.removeFromSuperview()
-                     }
-                 }
+             } else if let view = mentionsView {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.mentionsView = nil
              }
              
-             if let _ = item.reactionsCount, item.context.layout != .minimisize {
+             if let _ = item.reactionsCount {
                  
                  let highlighted = self.highlighed
                  let icon: CGImage
@@ -1246,15 +1939,15 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  var presented: Bool = false
                  if self.reactionsView == nil {
                      self.reactionsView = ImageView()
-                     self.containerView.addSubview(self.reactionsView!)
+                     self.contentView.addSubview(self.reactionsView!)
                      presented = true
                  }
-                 
+                                  
                  self.reactionsView?.image = icon
                  self.reactionsView?.sizeToFit()
                  
-                 let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - icon.backingSize.width - item.margin - (item.mentionsCount != nil ? icon.backingSize.width + item.margin : 0), self.containerView.frame.height - icon.backingSize.height - (item.margin + 1))
-                 
+                 let point = reactionsPoint(item)
+
                  if presented {
                      self.reactionsView?.setFrameOrigin(point)
                      if animated {
@@ -1264,22 +1957,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  } else {
                      self.reactionsView?.change(pos: point, animated: animated)
                  }
-             } else {
-                 if let reactionsView = self.reactionsView {
-                     self.reactionsView = nil
-                     if animated {
-                         reactionsView.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
-                         reactionsView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak reactionsView] _ in
-                             reactionsView?.removeFromSuperview()
-                         })
-                     } else {
-                         reactionsView.removeFromSuperview()
-                     }
-                 }
+             } else if let view = self.reactionsView {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.reactionsView = nil
              }
 
             
-            if let peerId = item.peerId {
+             if let peerId = item.peerId, item.forumTopicItems.isEmpty {
                 let activities = item.activities.map {
                     ($0.peer.peer, $0.activity)
                 }
@@ -1287,51 +1971,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             } else {
                 self.inputActivities = nil
             }
+             
          }
         
         if let _ = endRevealState {
             initRevealState()
         }
-        containerView.needsDisplay = true
         
-        containerView.customHandler.layout = { [weak self] _ in
-            guard let `self` = self else { return }
-            
-            if let item = self.item as? ChatListRowItem, let displayLayout = item.ctxDisplayLayout {
-                self.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
-                
-                var additionalOffset: CGFloat = 0
-                
-                if let badgeNode = item.ctxAdditionalBadgeNode {
-                    self.additionalBadgeView?.setFrameOrigin(self.containerView.frame.width - badgeNode.size.width - item.margin, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
-                    additionalOffset += (badgeNode.size.width + item.margin)
-                }
-                
-                if let badgeNode = item.ctxBadgeNode {
-                    self.badgeView?.setFrameOrigin(self.containerView.frame.width - badgeNode.size.width - item.margin - additionalOffset, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
-                }
-                
-                if let mentionsView = self.mentionsView {
-                    let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - mentionsView.frame.width - item.margin, self.containerView.frame.height - mentionsView.frame.height - (item.margin + 1))
-                    mentionsView.setFrameOrigin(point)
-                }
-                if let reactionsView = self.reactionsView {
-                    let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - reactionsView.frame.width - item.margin - (item.mentionsCount != nil ? reactionsView.frame.width + item.margin : 0), self.containerView.frame.height - reactionsView.frame.height - (item.margin + 1))
-                    reactionsView.setFrameOrigin(point)
-                }
-                
-                if let activeImage = self.activeImage {
-                    activeImage.setFrameOrigin(self.photo.frame.maxX - activeImage.frame.width - 3, self.photo.frame.maxY - 12)
-                }
-                if let groupActivityView = self.groupActivityView {
-                    groupActivityView.setFrameOrigin(self.photo.frame.maxX - groupActivityView.frame.width + 3, self.photo.frame.maxY - 18)
-                }
-            }
-        }
-        
-        containerView.needsLayout = true
+        contentView.needsLayout = true
         revealActionInvoked = false
-        needsDisplay = true
+        contentView.needsDisplay = true
         needsLayout = true
         
     }
@@ -1449,8 +2098,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 item.delete()
             }, for: .Click)
             
-            
-            revealRightView.addSubview(pin)
+            if item.isTopic, let peer = item.peer as? TelegramChannel {
+                if peer.hasPermission(.pinMessages) {
+                    revealRightView.addSubview(pin)
+                }
+            } else {
+                revealRightView.addSubview(pin)
+            }
 
             if (item.isTopic && item.canDeleteTopic) || !item.isTopic {
                 revealRightView.addSubview(delete)
@@ -1468,19 +2122,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 revealLeftView.backgroundColor = unreadBackground
             }
             
-            let revealBackgroundColor: NSColor
-            if item.isTopic && !item.canDeleteTopic {
-                revealBackgroundColor = theme.colors.revealAction_constructive_background
-            } else if item.filter == .allChats && !item.isTopic {
-                revealBackgroundColor = theme.colors.revealAction_inactive_background
-            } else {
-                revealBackgroundColor = theme.colors.revealAction_destructive_background
-            }
-            //item.mode.threadId == nil
-            
-            revealRightView.backgroundColor = revealBackgroundColor
-            
-            
             unread.setFrameSize(frame.height, frame.height)
             mute.setFrameSize(frame.height, frame.height)
             
@@ -1495,6 +2136,20 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             mute.setFrameOrigin(unread.frame.maxX, 0)
             
+            var found: Control?
+            for view in revealRightView.subviews {
+                if let view = view as? Control {
+                    if let current = found {
+                        if view.frame.maxX > current.frame.maxX {
+                            found = view
+                        }
+                    } else {
+                        found = view
+                    }
+                }
+                
+            }
+            revealRightView.layer?.backgroundColor = found?.layer?.backgroundColor ?? theme.colors.revealAction_constructive_background.cgColor
             
             revealRightView.setFrameSize(rightRevealWidth, frame.height)
             revealLeftView.setFrameSize(leftRevealWidth, frame.height)
@@ -1526,13 +2181,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             
             
-            if let archiveStatus = item.archiveStatus {
+            if let hideStatus = item.hideStatus {
                 
 
                 let hideOrPin: LAnimationButton
                 let hideOrPinTitle = TextViewLabel()
 
-                switch archiveStatus {
+                switch hideStatus {
                 case .hidden:
                     hideOrPin = LAnimationButton(animation: "anim_hide", size: NSMakeSize(frame.height, frame.height), keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_accent_background, offset: NSMakeSize(0, 0), autoplaySide: .left, rotated: true)
                     hideOrPinTitle.attributedString = .initialize(string: strings().chatListRevealActionPin, color: theme.colors.revealAction_accent_foreground, font: .medium(12))
@@ -1553,7 +2208,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 hideOrPin.setFrameSize(frame.height, frame.height)
                 revealLeftView.addSubview(hideOrPin)
-                revealLeftView.backgroundColor = item.archiveStatus?.isHidden == true ? theme.colors.revealAction_accent_background : theme.colors.revealAction_inactive_background
+                revealLeftView.backgroundColor = item.hideStatus?.isHidden == true ? theme.colors.revealAction_accent_background : theme.colors.revealAction_inactive_background
                 revealLeftView.setFrameSize(leftRevealWidth, frame.height)
                 
                 hideOrPin.set(handler: { [weak self] _ in
@@ -1926,20 +2581,66 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
         }
     }
+        
+    func updateHideProgress(animated: Bool) {
+        if let item = self.item as? ChatListRowItem {
+            self.set(item: item, animated: animated)
+        }
+    }
+    
+    
+    func badgeShortPoint(_ item: ChatListRowItem) -> NSPoint {
+        if let badgeView = badgeShortView {
+            let point: NSPoint
+            let y = self.containerView.frame.height - badgeView.frame.height - (item.margin + 1)
+            point = NSMakePoint(photo.frame.maxX - badgeView.frame.width, y)
+            return point
+        }
+        return .zero
+    }
+    func badgePoint(_ item: ChatListRowItem) -> NSPoint {
+        if let badgeView = badgeView {
+            let point: NSPoint
+            let y = self.containerView.frame.height - badgeView.frame.height - (item.margin + 1)
+            point = NSMakePoint(self.containerView.frame.width - badgeView.frame.width - item.margin, y)
+            return point
+        }
+        return .zero
+    }
+    
+    func contentPoint(_ item: ChatListRowItem) -> NSPoint {
+        return .zero
+    }
+    
+    func selectionViewRect(_ item: ChatListRowItem) -> NSRect {
+        let rect = NSMakeRect(-5, 10, 10, frame.height - 20)
+//        if let progress = item.getHideProgress?() {
+//            return rect.scaleLinear(amount:  1 - progress)
+//        } else {
+//            var bp = 0
+//            bp += 1
+//        }
+        return rect
+    }
+    
+    func mentionPoint(_ item: ChatListRowItem) -> NSPoint {
+        let point = NSMakePoint(self.contentView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - 20 - item.margin, self.contentView.frame.height - 20 - (item.margin + 1))
+        return point
+    }
+    func reactionsPoint(_ item: ChatListRowItem) -> NSPoint {
+        let point = NSMakePoint(self.contentView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - 20 - item.margin - (item.mentionsCount != nil ? 20 + item.margin : 0), self.contentView.frame.height - 20 - (item.margin + 1))
+        
+        return point
+    }
+    
     
     override func layout() {
         super.layout()
        
         guard let item = item as? ChatListRowItem else { return }
-        
+                
         photoVideoView?.frame = photo.frame
 
-        if item.context.layout == .minimisize {
-            self.inlineTopicPhotoLayer?.frame = NSMakeRect(20, 20, 30, 30)
-        } else {
-            self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, 12, 30, 30)
-        }
-        
         animatedView?.frame = bounds
         
         expandView?.frame = NSMakeRect(0, item.isCollapsed ? 0 : item.height, frame.width - .borderSize, frame.height)
@@ -1962,11 +2663,74 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
             
             containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -item.height : 0, frame.width - .borderSize, item.height)
+            
+            contentView.frame = CGRect(origin: contentPoint(item), size: frame.size)
+            
             revealLeftView.frame = NSMakeRect(-leftRevealWidth - additionalDelta, 0, leftRevealWidth, frame.height)
             revealRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightRevealWidth, frame.height)
             
             
-            if let displayLayout = item.ctxDisplayLayout {
+            if item.shouldHideContent {
+                self.inlineTopicPhotoLayer?.frame = NSMakeRect(20, 20, 30, 30)
+            } else {
+                if item.appearMode == .short {
+                    self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, item.margin, 16, 16)
+                } else {
+                    self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, 12, 30, 30)
+                }
+            }
+            
+            if let badgeView = self.badgeView {
+                let point = badgePoint(item)
+                badgeView.setFrameOrigin(point)
+            }
+            if let badgeView = self.badgeShortView {
+                let point = badgeShortPoint(item)
+                badgeView.setFrameOrigin(point)
+            }
+            
+            if let reactionsView = self.reactionsView {
+                let point = reactionsPoint(item)
+                reactionsView.setFrameOrigin(point)
+            }
+            
+            if let mentionsView = self.mentionsView {
+                let point = mentionPoint(item)
+                mentionsView.setFrameOrigin(point)
+            }
+
+            if let selectionView = self.selectionView {
+                selectionView.frame = selectionViewRect(item)
+            }
+            
+            if let view = avatarTimerBadge {
+                let avatarFrame = self.photo.frame
+                let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
+                let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+                view.frame = avatarBadgeFrame
+            }
+
+            
+            if let displayNameView = self.displayNameView {
+                
+                if let view = activitiesModel?.view {
+                    view.setFrameOrigin(item.leftInset, displayNameView.frame.height + item.margin + 3)
+                }
+                
+                if let dateTextView = self.dateTextView {
+                    let dateX = contentView.frame.width - dateTextView.frame.width - item.margin
+                    dateTextView.setFrameOrigin(NSMakePoint(dateX, item.margin))
+                }
+                
+                var addition:CGFloat = 0
+                if item.isSecret {
+                    addition += theme.icons.secretImage.backingSize.height
+                }
+                if item.appearMode == .short, item.isTopic {
+                    addition += 20
+                }
+                displayNameView.setFrameOrigin(NSMakePoint(item.leftInset + addition, item.margin - 1))
+                
                 var offset: CGFloat = 0
                 if let chatName = item.ctxChatNameLayout {
                     offset += chatName.layoutSize.height + 1
@@ -1977,10 +2741,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     if item.isSecret {
                         addition += theme.icons.secretImage.backingSize.height
                     }
-                    statusControl.setFrameOrigin(NSMakePoint(addition + item.leftInset + displayLayout.0.size.width + 2, displayLayout.0.size.height - 8))
+                    statusControl.setFrameOrigin(NSMakePoint(addition + item.leftInset + displayNameView.frame.width + 2, displayNameView.frame.height - 8))
                 }
                 
-                var mediaPreviewOffset = NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 2 + offset)
+                var mediaPreviewOffset = NSMakePoint(item.leftInset, displayNameView.frame.height + item.margin + 2 + offset)
                 let contentImageSpacing: CGFloat = 2.0
                 
                 for (message, _, mediaSize) in self.currentMediaPreviewSpecs {
@@ -1994,9 +2758,18 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 if let chatNameLayout = item.ctxChatNameLayout {
                     messageOffset += min(chatNameLayout.layoutSize.height, 17) + 2
                 }
-                let displayHeight = displayLayout.0.size.height
+                let displayHeight = displayNameView.frame.height
                 if let messageTextView = messageTextView {
                     messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 1 + messageOffset))
+                }
+                
+                if let topicsView = topicsView, let layout = item.topicsLayout {
+                    var inset: CGPoint = .zero
+                    if layout.fastTrack {
+                        inset.x += 5
+                    }
+                    let point = NSMakePoint(item.leftInset - inset.x, displayHeight + item.margin + 2 - inset.y)
+                    topicsView.frame = CGRect(origin: point, size: layout.size)
                 }
                 
                 if let chatNameTextView = chatNameTextView {
@@ -2009,7 +2782,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     }
                 }
             }
-            
         }
     }
     

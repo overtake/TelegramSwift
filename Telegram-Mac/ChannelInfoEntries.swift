@@ -12,7 +12,7 @@ import TelegramCore
 
 import TGUIKit
 import SwiftSignalKit
-
+import InAppSettings
 
 struct ChannelInfoEditingState: Equatable {
     let editingName: String?
@@ -243,6 +243,17 @@ class ChannelInfoArguments : PeerInfoArguments {
     func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) {
         pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: false)))
     }
+    
+    func enableTranslate() {
+        let peerId = self.peerId
+        _ = context.engine.messages.togglePeerMessagesTranslationHidden(peerId: peerId, hidden: false).start()
+        
+        let chat = self.pullNavigation()?.first({ $0 is ChatController }) as? ChatController
+        chat?.chatInteraction.toggleTranslate()
+        
+        self.pullNavigation()?.back()
+
+    }
 
     
     func setupDiscussion() {
@@ -299,12 +310,12 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         let context = self.context
         
-        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { image in
+        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { [weak self] image in
             let signal = image |> mapToSignal { image in
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
-            _ = signal.start(next: { path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+            _ = signal.start(next: { [weak self] path in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square))
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
                     self?.updatePhoto(url.path)
@@ -1007,7 +1018,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         let arguments = arguments as! ChannelInfoArguments
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
-            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
+            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
         case let .scam(_, title, text, viewType):
             return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
@@ -1147,7 +1158,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             if channel.adminRights != nil || channel.flags.contains(.isCreator) {
                 var block: [ChannelInfoEntry] = []
                 if channel.flags.contains(.isCreator) {
-                    block.append(.link(sectionId: .type, addressName: channel.username ?? "", viewType: .singleItem))
+                    block.append(.link(sectionId: .type, addressName: channel.usernames.first(where: { $0.isActive })?.username ?? channel.username ?? "", viewType: .singleItem))
                 }
                
                 let group: Peer?

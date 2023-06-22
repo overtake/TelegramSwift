@@ -21,6 +21,16 @@ class PeerInfoArguments {
     let isAd: Bool
     let pushViewController:(ViewController) -> Void
     
+    var peer: Peer?
+    
+    var effectivePeerId: PeerId {
+        if let peer = peer as? TelegramSecretChat {
+            return peer.associatedPeerId ?? peerId
+        } else {
+            return peer?.id ?? peerId
+        }
+    }
+    
     let pullNavigation:()->NavigationViewController?
     let mediaController: ()->PeerMediaController?
     
@@ -47,7 +57,7 @@ class PeerInfoArguments {
         copyToClipboard(string)
         pullNavigation()?.controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
     }
-
+    
     func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
         return true
     }
@@ -66,16 +76,20 @@ class PeerInfoArguments {
     
     func toggleNotifications(_ currentlyMuted: Bool) {
         
-        toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: peerId, threadId: nil).start())
+        toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: effectivePeerId, threadId: nil).start())
         
         pullNavigation()?.controller.show(toaster: ControllerToaster(text: currentlyMuted ? strings().toastUnmuted : strings().toastMuted))
     }
     
     func delete() {
+        self.delete(force: false)
+    }
+    
+    func delete(force: Bool) {
         let context = self.context
         let peerId = self.peerId
         
-        let isEditing = (state as? GroupInfoState)?.editingState != nil || (state as? ChannelInfoState)?.editingState != nil
+        let isEditing = (state as? GroupInfoState)?.editingState != nil || (state as? ChannelInfoState)?.editingState != nil || force
         
         let signal = context.account.postbox.peerView(id: peerId) |> take(1) |> mapToSignal { view -> Signal<Bool, NoError> in
             return removeChatInteractively(context: context, peerId: peerId, userId: peerViewMainPeer(view)?.id, deleteGroup: isEditing && peerViewMainPeer(view)?.groupAccess.isCreator == true)
@@ -400,6 +414,11 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         arguments.set(context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] peer in
             guard let `self` = self else {return .never()}
             
+            self._topicArguments?.peer = peer
+            self._groupArguments?.peer = peer
+            self._channelArguments?.peer = peer
+            self._userArguments?.peer = peer
+
             if peer.isForum && threadId != nil {
                 return .single(self._topicArguments)
             }
@@ -420,22 +439,6 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         var loadMoreControl: PeerChannelMemberCategoryControl?
         
-        let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
-        if peerId.namespace == Namespaces.Peer.CloudChannel {
-            let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
-                channelMembersPromise.set(.single(state.list))
-            })
-            actionsDisposable.add(disposable)
-
-            let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { _ in
-                
-            })
-            actionsDisposable.add(contactsDisposable)
-            
-            loadMoreControl = control
-        } else {
-            channelMembersPromise.set(.single([]))
-        }
         
         
         let mediaTabsData: Signal<PeerMediaTabsData, NoError> = mediaController.tabsValue
@@ -448,30 +451,61 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> = arguments.get() |> mapToSignal { arguments in
             
             let inviteLinksCount: Signal<Int32, NoError>
-            if let arguments = arguments as? GroupInfoArguments {
-                inviteLinksCount = arguments.linksManager.state |> map {
-                    $0.effectiveCount
-                }
-            } else if let arguments = arguments as? ChannelInfoArguments {
-                inviteLinksCount = arguments.linksManager.state |> map {
-                    $0.effectiveCount
+            if let peer = arguments.peer as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
+                if let arguments = arguments as? GroupInfoArguments {
+                    inviteLinksCount = arguments.linksManager.state |> map {
+                        $0.effectiveCount
+                    }
+                } else if let arguments = arguments as? ChannelInfoArguments {
+                    inviteLinksCount = arguments.linksManager.state |> map {
+                        $0.effectiveCount
+                    }
+                } else {
+                    inviteLinksCount = .single(0)
                 }
             } else {
                 inviteLinksCount = .single(0)
             }
             
-            let joinRequestsCount: Signal<Int32, NoError>
-            if let arguments = arguments as? GroupInfoArguments {
-                joinRequestsCount = arguments.requestManager.state |> map {
-                    Int32($0.waitingCount)
+            
+            let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
+            if peerId.namespace == Namespaces.Peer.CloudChannel {
+                if let peer = arguments.peer as? TelegramChannel, peer.isSupergroup || peer.isGigagroup {
+                    let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
+                        channelMembersPromise.set(.single(state.list))
+                    })
+                    actionsDisposable.add(disposable)
+
+                    let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { _ in
+                        
+                    })
+                    actionsDisposable.add(contactsDisposable)
+                    
+                    loadMoreControl = control
+                } else {
+                    channelMembersPromise.set(.single([]))
                 }
-            } else if let arguments = arguments as? ChannelInfoArguments {
-                joinRequestsCount = arguments.requestManager.state |> map {
-                    Int32($0.waitingCount)
+            } else {
+                channelMembersPromise.set(.single([]))
+            }
+            
+            let joinRequestsCount: Signal<Int32, NoError>
+            if let peer = arguments.peer as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
+                if let arguments = arguments as? GroupInfoArguments {
+                    joinRequestsCount = arguments.requestManager.state |> map {
+                        Int32($0.waitingCount)
+                    }
+                } else if let arguments = arguments as? ChannelInfoArguments {
+                    joinRequestsCount = arguments.requestManager.state |> map {
+                        Int32($0.waitingCount)
+                    }
+                } else {
+                    joinRequestsCount = .single(0)
                 }
             } else {
                 joinRequestsCount = .single(0)
             }
+            
             
             let availableReactions: Signal<AvailableReactions?, NoError> = context.reactions.stateValue
             
@@ -526,7 +560,13 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                         editable = group.groupAccess.canEditGroupInfo || group.groupAccess.canEditMembers
                     }
                 } else if peer is TelegramUser, !peer.isBot, peerView.peerIsContact {
-                    editable = context.account.peerId != peer.id
+                    if peerId.namespace == Namespaces.Peer.SecretChat {
+                        editable = false
+                    } else {
+                        editable = context.account.peerId != peer.id
+                    }
+                } else if let botInfo = peer.botInfo, botInfo.flags.contains(.canEdit) {
+                    editable = true
                 } else {
                     editable = false
                 }

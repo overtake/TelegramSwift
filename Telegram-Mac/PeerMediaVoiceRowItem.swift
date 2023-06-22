@@ -23,8 +23,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         let message = object.message!
         self.file = message.media[0] as! TelegramMediaFile
         self.music = music
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
+        let formatter = DateSelectorUtil.mediaMediumDate
         
         let date = Date(timeIntervalSince1970: TimeInterval(object.message!.timestamp) - interface.context.timeDifference)
         
@@ -348,7 +347,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         guard let item = item as? PeerMediaVoiceRowItem else {return}
         let backgroundColor: NSColor
         let foregroundColor: NSColor
-        if let media = item.message.effectiveMedia as? TelegramMediaFile, media.isInstantVideo {
+        if let media = item.message.anyMedia as? TelegramMediaFile, media.isInstantVideo {
             backgroundColor = .blackTransparent
             foregroundColor = .white
         } else {

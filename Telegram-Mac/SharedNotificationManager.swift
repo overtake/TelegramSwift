@@ -25,7 +25,7 @@ func getNotificationMessageId(userInfo:[AnyHashable: Any], for prefix: String) -
 func getNotificationToneFile(account: Account, sound: PeerMessageSound) -> Signal<String?, NoError> {
     let engine = TelegramEngine(account: account)
     return engine.peers.notificationSoundList() |> take(1) |> mapToSignal { list in
-        return fileNameForNotificationSound(postbox: account.postbox, sound: sound, defaultSound: nil, list: list) |> map { resource in
+        return fileNameForNotificationSound(postbox: account.postbox, sound: sound, defaultSound: nil, list: list?.sounds) |> map { resource in
             if let resource = resource {
                 return resourcePath(account.postbox, resource)
             } else {
@@ -427,7 +427,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                         }
                         if let peer = peer {
                             if let threadData = source.threadData {
-                                photos.append(peerAvatarImage(account: account, photo: .topic(threadData.info), genCap: false) |> map { data in return (message.id, data.0)})
+                                photos.append(peerAvatarImage(account: account, photo: .topic(threadData.info, message.threadId == 1), genCap: false) |> map { data in return (message.id, data.0)})
                             } else {
                                 photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
                             }
@@ -448,45 +448,36 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     |> take(1)
                     |> map { data in return (sources, images, inAppSettings, data.isLocked)}
             }
-            |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
+            |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?, TelegramPeerNotificationSettings?), NoError> in
             
                 return account.postbox.loadedPeerWithId(account.peerId) |> mapToSignal { peer in
                     if let message = values.0.first?.messages.first {
-                        return account.postbox.transaction { transaction -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
+                        return account.postbox.transaction { transaction -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?, TelegramPeerNotificationSettings?), NoError> in
                             let notifications = transaction.getPeerNotificationSettings(id: message.id.peerId) as? TelegramPeerNotificationSettings
                             
-                            if let threadData = values.0.first?.threadData {
-                                if threadData.notificationSettings.isMuted {
-                                    return .complete()
-                                }
-                            }
-                            if notifications == nil || !notifications!.isMuted {
-                                if let messageSound = notifications?.messageSound {
-                                    switch messageSound {
-                                    case .none:
-                                        return .single((values.0, values.1, values.2, values.3, peer, nil))
-                                    case .default:
-                                        return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
-                                            return (values.0, values.1, values.2, values.3, peer, soundPath)
-                                        }
-                                    default:
-                                        return getNotificationToneFile(account: account, sound: messageSound) |> map { soundPath in
-                                            return (values.0, values.1, values.2, values.3, peer, soundPath)
-                                        }
-                                    }
-                                } else {
+                            if let messageSound = notifications?.messageSound {
+                                switch messageSound {
+                                case .none:
+                                    return .single((values.0, values.1, values.2, values.3, peer, nil, notifications))
+                                case .default:
                                     return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
-                                        return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                        return (values.0, values.1, values.2, values.3, peer, soundPath, notifications)
+                                    }
+                                default:
+                                    return getNotificationToneFile(account: account, sound: messageSound) |> map { soundPath in
+                                        return (values.0, values.1, values.2, values.3, peer, soundPath, notifications)
                                     }
                                 }
                             } else {
-                                return .complete()
+                                return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
+                                    return (values.0, values.1, values.2, values.3, peer, soundPath, notifications)
+                                }
                             }
                         } |> switchToLatest
                     }
                     return .complete()
                 }
-            } |> deliverOnMainQueue).start(next: { sources, images, inAppSettings, screenIsLocked, accountPeer, soundPath in
+            } |> deliverOnMainQueue).start(next: { sources, images, inAppSettings, screenIsLocked, accountPeer, soundPath, notifications in
                 
                 if !primary, !inAppSettings.notifyAllAccounts {
                     return
@@ -501,6 +492,16 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
 
                         if message.isImported {
                             continue
+                        }
+                        if let notifications = notifications, notifications.isMuted {
+                            if message.consumableMention == nil {
+                                continue
+                            }
+                        }
+                        if let thread = source.threadData, thread.notificationSettings.isMuted {
+                            if message.consumableMention == nil {
+                                continue
+                            }
                         }
                         
                         if message.author?.id != account.peerId || message.wasScheduled {
@@ -542,7 +543,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     reactionText = file?.customEmojiText ?? file?.stickerText ?? ""
                                 }
                                 
-                                let msg = pullText(from: message) as String
+                                let msg = pullText(from: message).string as String
                                 title = message.peers[message.id.peerId]?.displayTitle ?? ""
                                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
                                     text = strings().notificationContactReacted(reactionText.fixed, msg)
@@ -647,9 +648,14 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 dict["thread.message.namespace"] = threadId.namespace
                                 dict["thread.peer.id"] = threadId.peerId.id._internalGetInt64Value()
                                 dict["thread.peer.namespace"] = threadId.peerId.namespace._internalGetInt32Value()
-                                if let threadData = source.threadData, let data = CodableEntry(threadData)?.data {
-                                    dict["thread_data"] = data
-                                }
+                            } else if message.threadId == 1 {
+                                dict["thread.message.id"] = 1
+                                dict["thread.message.namespace"] = message.id.namespace
+                                dict["thread.peer.id"] = message.id.peerId.id._internalGetInt64Value()
+                                dict["thread.peer.namespace"] = message.id.peerId.namespace._internalGetInt32Value()
+                            }
+                            if let threadData = source.threadData, let data = CodableEntry(threadData)?.data {
+                                dict["thread_data"] = data
                             }
                             
                             dict["reply.message.id"] =  message.id.id

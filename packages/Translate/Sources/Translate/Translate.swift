@@ -51,6 +51,14 @@ public struct Translate {
     }
     
     public static func find(_ code: String) -> Value? {
+        var code = code
+        if code == "pt-br" {
+            code = "pt"
+        }
+        if code == "nb" {
+            code = "no"
+        }
+
         return self.codes.first(where: {
             return $0.code.contains(code)
         })
@@ -171,18 +179,115 @@ public struct Translate {
     }
     
     public static var supportedTranslationLanguages = [
-        "en",
+        "af",
+        "sq",
+        "am",
         "ar",
+        "hy",
+        "az",
+        "eu",
+        "be",
+        "bn",
+        "bs",
+        "bg",
+        "ca",
+        "ceb",
         "zh",
+        "co",
+        "hr",
+        "cs",
+        "da",
+        "nl",
+        "en",
+        "eo",
+        "et",
+        "fi",
         "fr",
+        "fy",
+        "gl",
+        "ka",
         "de",
+        "el",
+        "gu",
+        "ht",
+        "ha",
+        "haw",
+        "he",
+        "hi",
+        "hmn",
+        "hu",
+        "is",
+        "ig",
+        "id",
+        "ga",
         "it",
-        "jp",
+        "ja",
+        "jv",
+        "kn",
+        "kk",
+        "km",
+        "rw",
         "ko",
+        "ku",
+        "ky",
+        "lo",
+        "lv",
+        "lt",
+        "lb",
+        "mk",
+        "mg",
+        "ms",
+        "ml",
+        "mt",
+        "mi",
+        "mr",
+        "mn",
+        "my",
+        "ne",
+        "no",
+        "ny",
+        "or",
+        "ps",
+        "fa",
+        "pl",
         "pt",
+        "pa",
+        "ro",
         "ru",
-        "es"
+        "sm",
+        "gd",
+        "sr",
+        "st",
+        "sn",
+        "sd",
+        "si",
+        "sk",
+        "sl",
+        "so",
+        "es",
+        "su",
+        "sw",
+        "sv",
+        "tl",
+        "tg",
+        "ta",
+        "tt",
+        "te",
+        "th",
+        "tr",
+        "tk",
+        "uk",
+        "ur",
+        "ug",
+        "uz",
+        "vi",
+        "cy",
+        "xh",
+        "yi",
+        "yo",
+        "zu"
     ]
+
     
     public static var languagesEmojies:[String:String] = [
         "en":"🏴󠁧󠁢󠁥󠁮󠁧󠁿",
@@ -212,12 +317,27 @@ public struct Translate {
     private static let languageRecognizer = NLLanguageRecognizer()
 
     public static func detectLanguage(for text: String) -> String? {
-        let text = String(text.prefix(64))
+        let text = String(text.prefix(256))
         if #available(macOS 10.14, *) {
             languageRecognizer.processString(text)
-            let hypotheses = languageRecognizer.languageHypotheses(withMaximum: 3)
+            let hypotheses = languageRecognizer.languageHypotheses(withMaximum: 4)
             languageRecognizer.reset()
-            if let value = hypotheses.sorted(by: { $0.value > $1.value }).first?.key.rawValue {
+            
+            
+            func normalize(_ code: String) -> String {
+                if code.contains("-") {
+                    return code.components(separatedBy: "-").first ?? code
+                } else if code == "nb" {
+                    return "no"
+                } else {
+                    return code
+                }
+            }
+            
+            let filteredLanguages = hypotheses.filter { supportedTranslationLanguages.contains(normalize($0.key.rawValue)) }.sorted(by: { $0.value > $1.value })
+
+            
+            if let value = filteredLanguages.first?.key.rawValue {
                 return value
             }
         }

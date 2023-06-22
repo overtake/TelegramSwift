@@ -12,52 +12,62 @@ import SwiftSignalKit
 import ColorPalette
 
 struct EditedImageData : Equatable {
-    let originalUrl: URL
-    let selectedRect: NSRect
-    let orientation: ImageOrientation?
-    let dimensions: SelectionRectDimensions
-    let isHorizontalFlipped: Bool
-    let paintings: [EditImageDrawTouch]
-    init(originalUrl: URL, selectedRect: NSRect = NSZeroRect, orientation: ImageOrientation? = nil, dimensions: SelectionRectDimensions = .none, isHorizontalFlipped: Bool = false, paintings: [EditImageDrawTouch] = []) {
-        self.originalUrl = originalUrl
-        self.dimensions = dimensions
-        self.selectedRect = selectedRect
-        self.orientation = orientation
-        self.isHorizontalFlipped = isHorizontalFlipped
-        self.paintings = paintings
+    
+    enum UndoRedoAction : Equatable {
+        case images([Image], AnyHashable?)
     }
+    
+    struct Image : Equatable {
+        let url: URL
+        let img: NSImage
+        let stableId: AnyHashable
+        var rect: NSRect
+        var multiplier: CGSize = NSMakeSize(1, 1)
+        var rotation: CGFloat
+        
+        func new(_ stableId: AnyHashable) -> Image {
+            return .init(url: self.url, img: self.img, stableId: stableId, rect: self.rect, multiplier: self.multiplier, rotation: self.rotation)
+        }
+    }
+    
+    var originalUrl: URL
+    var selectedRect: NSRect = .zero
+    var orientation: ImageOrientation?
+    var dimensions: SelectionRectDimensions  = .none
+    var isHorizontalFlipped: Bool = false
+    var paintings: [EditImageDrawTouch] = []
+    var selectedImage: AnyHashable?
+    var images: [Image] = []
+        
+    var undo: [UndoRedoAction] = []
+    var redo: [UndoRedoAction] = []
+    
     var hasntData: Bool {
-        return orientation == nil && dimensions == .none && !isHorizontalFlipped && paintings.isEmpty
+        return orientation == nil && dimensions == .none && !isHorizontalFlipped && paintings.isEmpty && images.isEmpty
     }
     
-    
-    func withUpdatedOrientation( _ orientation: ImageOrientation?) -> EditedImageData {
-        return EditedImageData(originalUrl: self.originalUrl, selectedRect: selectedRect, orientation: orientation, dimensions: self.dimensions, isHorizontalFlipped: self.isHorizontalFlipped, paintings: self.paintings)
-    }
-    func withUpdatedFlip(_ isHorizontalFlipped: Bool) -> EditedImageData {
-        return EditedImageData(originalUrl: self.originalUrl, selectedRect: self.selectedRect, orientation: self.orientation, dimensions: self.dimensions, isHorizontalFlipped: isHorizontalFlipped, paintings: self.paintings)
-    }
-    func withUpdatedDimensions(_ dimensions: SelectionRectDimensions) -> EditedImageData {
-        return EditedImageData(originalUrl: self.originalUrl, selectedRect: self.selectedRect, orientation: self.orientation, dimensions: dimensions, isHorizontalFlipped: self.isHorizontalFlipped, paintings: self.paintings)
-    }
-    
-    func withUpdatedSelectedRect(_ selectedRect: NSRect) -> EditedImageData {
-        return EditedImageData(originalUrl: self.originalUrl, selectedRect: selectedRect, orientation: self.orientation, dimensions: self.dimensions, isHorizontalFlipped: self.isHorizontalFlipped, paintings: self.paintings)
-    }
-    
-    func withUpdatedPaintings(_ paintings: [EditImageDrawTouch]) -> EditedImageData {
-        return EditedImageData(originalUrl: self.originalUrl, selectedRect: self.selectedRect, orientation: self.orientation, dimensions: self.dimensions, isHorizontalFlipped: self.isHorizontalFlipped, paintings: paintings)
-    }
-    
-    func makeImage(_ image: CGImage) -> CGImage {
-        return EditedImageData.makeImage(image, data: self)
+    func makeImage(_ image: CGImage, interface: Bool) -> CGImage {
+        return EditedImageData.makeImage(image, data: self, interface: interface)
     }
     
     func isNeedToRegenerate(_ data: EditedImageData?) -> Bool {
-        return data?.orientation != self.orientation || (data != nil && data!.isHorizontalFlipped != self.isHorizontalFlipped) || (data != nil && data!.paintings != self.paintings) || data == nil
+        if let other = data {
+            if other.orientation != self.orientation {
+                return true
+            }
+            if other.isHorizontalFlipped != self.isHorizontalFlipped {
+                return true
+            }
+            if other.paintings != self.paintings {
+                return true
+            }
+            return false
+        } else {
+            return true
+        }
     }
     
-    fileprivate static func makeImage(_ image: CGImage, data: EditedImageData) -> CGImage {
+    fileprivate static func makeImage(_ image: CGImage, data: EditedImageData, interface: Bool) -> CGImage {
         var image: CGImage = image
         var orientation = data.orientation
         
@@ -112,6 +122,23 @@ struct EditedImageData : Equatable {
           //  image = NSImage(cgImage: image, size: image.backingSize).precomposed(flipHorizontal: true)
         }
         
+        if !data.images.isEmpty, !interface {
+            image = generateImage(image.size, contextGenerator: { size, context in
+                let rect = NSMakeRect(0, 0, size.width, size.height)
+                context.clear(rect)
+                
+                context.draw(image, in: rect)
+                
+                context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                context.scaleBy(x: 1.0, y: -1.0)
+                context.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
+                
+                for image in data.images {
+                    context.draw(image.img.precomposed(flipVertical: true), in: image.rect.apply(multiplier: image.multiplier))
+                }
+            }, scale: 1.0)!
+        }
+        
         return image
     }
     
@@ -123,11 +150,9 @@ struct EditedImageData : Equatable {
                     subscriber.putNext(data.originalUrl)
                     subscriber.putCompletion()
                 } else {
-                    if let image = self.makeImage(image, data: data).cropping(to: selectedRect) {
+                    if let image = self.makeImage(image, data: data, interface: false).cropping(to: selectedRect) {
                         return putToTemp(image: NSImage(cgImage: image, size: image.size), compress: true).start(next: { url in
                             subscriber.putNext(URL(fileURLWithPath: url))
-                        }, error: { error in
-                            subscriber.putError(error)
                         }, completed: {
                             subscriber.putCompletion()
                         })
@@ -150,11 +175,13 @@ final class EditImageControlsArguments {
     let selectionDimensions: (SelectionRectDimensions) -> Void
     let rotate: () -> Void
     let draw: ()->Void
-    init(cancel:@escaping()->Void, success: @escaping()->Void, flip: @escaping()->Void, selectionDimensions: @escaping(SelectionRectDimensions)->Void, rotate: @escaping() -> Void, draw: @escaping()->Void) {
+    let getDoneString:()->String?
+    init(cancel:@escaping()->Void, success: @escaping()->Void, flip: @escaping()->Void, selectionDimensions: @escaping(SelectionRectDimensions)->Void, rotate: @escaping() -> Void, draw: @escaping()->Void, getDoneString:@escaping()->String?) {
         self.cancel = cancel
         self.success = success
         self.flip = flip
         self.rotate = rotate
+        self.getDoneString = getDoneString
         self.selectionDimensions = selectionDimensions
         self.draw = draw
     }
@@ -188,7 +215,7 @@ final class EditImageControlsView : View {
         layer?.cornerRadius = 6
     }
     
-    fileprivate func updateUserInterface(_ data: EditedImageData) {
+    fileprivate func updateUserInterface(_ data: EditedImageData, doneString: String?) {
         draw.set(image: NSImage(named: "Icon_EditImageDraw")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         flipper.set(image: NSImage(named: "Icon_EditImageFlip")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         rotate.set(image: NSImage(named: "Icon_EditImageRotate")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
@@ -214,7 +241,7 @@ final class EditImageControlsView : View {
         cancel.set(color: .white, for: .Normal)
         
         cancel.set(text: strings().modalCancel, for: .Normal)
-        success.set(text: strings().navigationDone, for: .Normal)
+        success.set(text: doneString ?? strings().navigationDone, for: .Normal)
         
         _ = cancel.sizeToFit(NSZeroSize, NSMakeSize(75, frame.height), thatFit: true)
         _ = success.sizeToFit(NSZeroSize, NSMakeSize(75, frame.height), thatFit: true)
@@ -315,8 +342,9 @@ class EditImageControls: GenericViewController<EditImageControlsView> {
         super.viewDidLoad()
         
         genericView.set(settings: settings, handlers: arguments)
+        let string = arguments.getDoneString()
         stateDisposable.set(stateValue.start(next: { [weak self] current in
-            self?.genericView.updateUserInterface(current)
+            self?.genericView.updateUserInterface(current, doneString: string)
         }))
     }
     

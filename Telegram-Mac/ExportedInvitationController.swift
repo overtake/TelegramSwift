@@ -125,19 +125,25 @@ private func entries(_ state: State, admin: Peer?, invitation: _ExportedInvitati
             for importer in requestedState.importers {
                 struct Tuple : Equatable {
                     let importer: PeerInvitationImportersState.Importer
+                    let status: String
                     let viewType: GeneralViewType
                 }
+                let status: String
+                if importer.joinedViaFolderLink {
+                    status = strings().exportedInvitationJoinedViaFolder
+                } else {
+                    status = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(importer.date)))
+                }
                 
-                let tuple = Tuple(importer: importer, viewType: bestGeneralViewType(requestedState.importers, for: importer))
+                let tuple = Tuple(importer: importer, status: status, viewType: bestGeneralViewType(requestedState.importers, for: importer))
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(importer.peer.peerId, joined: false), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(importer.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
                         arguments.openProfile(tuple.importer.peer.peerId)
                     }, contextMenuItems: {
                         let items = [ContextMenuItem(strings().exportedInvitationContextOpenProfile, handler: {
                             arguments.openProfile(tuple.importer.peer.peerId)
                         })]
-                        
                         return .single(items)
                     })
                 }))
@@ -159,13 +165,20 @@ private func entries(_ state: State, admin: Peer?, invitation: _ExportedInvitati
             for importer in joinedState.importers {
                 struct Tuple : Equatable {
                     let importer: PeerInvitationImportersState.Importer
+                    let status: String
                     let viewType: GeneralViewType
                 }
+                let status: String
+                if importer.joinedViaFolderLink {
+                    status = strings().exportedInvitationJoinedViaFolder
+                } else {
+                    status = dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(importer.date)))
+                }
                 
-                let tuple = Tuple(importer: importer, viewType: bestGeneralViewType(joinedState.importers, for: importer))
+                let tuple = Tuple(importer: importer, status: status, viewType: bestGeneralViewType(joinedState.importers, for: importer))
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(importer.peer.peerId, joined: true), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(importer.date))), inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: tuple.importer.peer.peer!, account: arguments.accountContext.account, context: arguments.accountContext, stableId: stableId, height: 48, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: tuple.viewType, action: {
                         arguments.openProfile(tuple.importer.peer.peerId)
                     }, contextMenuItems: {
                         let items = [ContextMenuItem(strings().exportedInvitationContextOpenProfile, handler: {

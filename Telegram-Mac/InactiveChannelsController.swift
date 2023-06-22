@@ -93,7 +93,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
     
     if !arguments.context.isPremium && !arguments.context.premiumIsBlocked {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_premium"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return PremiumIncreaseLimitItem.init(initialSize, stableId: stableId, context: arguments.context, type: .channels, counts: nil, viewType: .singleItem, callback: arguments.premium)
+            return PremiumIncreaseLimitItem(initialSize, stableId: stableId, context: arguments.context, type: .channels, counts: nil, viewType: .singleItem, callback: arguments.premium)
         }))
         index += 1
         
@@ -117,7 +117,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
             let equatable = _Equatable(channel: channel, viewType: viewType)
             
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_peer_\(channel.peer.id.toInt64())"), equatable: InputDataEquatable(equatable), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select), viewType: viewType)
+                return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select, side: .right), viewType: viewType)
             }))
             index += 1
         }
@@ -157,7 +157,7 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
     }))
     
     let arguments = InactiveChannelsArguments(context: context, select: SelectPeerInteraction(), premium: {
-        
+        showModal(with: PremiumBoardingController(context: context, source: .double_limits(.channels)), for: context.window)
     })
     
     let signal = statePromise.get() |> map { state in

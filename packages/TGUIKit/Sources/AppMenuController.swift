@@ -74,7 +74,11 @@ private extension Window {
     }
 }
 
-final class MenuView: View, TableViewDelegate {
+final class MenuView: Control, TableViewDelegate {
+    
+    override func cursorUpdate(with event: NSEvent) {
+        NSCursor.arrow.set()
+    }
     
     struct Entry : Identifiable, Comparable, Equatable {
         static func < (lhs: MenuView.Entry, rhs: MenuView.Entry) -> Bool {
@@ -112,6 +116,9 @@ final class MenuView: View, TableViewDelegate {
         if #available(macOS 11.0, *) {
             addSubview(visualView)
         }
+        
+        tableView.verticalScroller = nil
+        
         addSubview(backgroundView)
         addSubview(tableView)
         self.visualView.wantsLayer = true
@@ -302,6 +309,7 @@ final class MenuView: View, TableViewDelegate {
     var submenuId: Int64?
     weak var parentView: Window?
     weak var childView: Window?
+    var dismissed: Bool = false
 }
 
 final class AppMenuController : NSObject  {
@@ -578,9 +586,10 @@ final class AppMenuController : NSObject  {
             self.parent?.copyhandler = self.previousCopyHandler
 
             if let window = self.menu.topWindow, let view = window.contentView {
-                view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak view, weak window] _ in
-                    
-                    view?.removeFromSuperview()
+                view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak view, weak window] completed in
+                    if completed {
+                        view?.removeFromSuperview()
+                    }
                     window?.orderOut(nil)
                 })
             }
@@ -597,7 +606,7 @@ final class AppMenuController : NSObject  {
         let panel = Window(contentRect: .zero, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
-        panel.level = .popUpMenu
+        panel.level = .screenSaver
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = false
@@ -630,12 +639,13 @@ final class AppMenuController : NSObject  {
             if let menu = menu {
                 for value in menu.contextItems {
                     if value.id != item.id {
-                        self?.cancelSubmenu(value)
+                        self?.cancelSubmenu(value.id, true)
+
                     }
                 }
             }
         }, cancelSubmenu: { [weak self] item in
-            self?.cancelSubmenu(item)
+            self?.cancelSubmenu(item.id)
         }, hover: { item in
             item.hover?()
         })
@@ -715,24 +725,34 @@ final class AppMenuController : NSObject  {
         submenu.view.parentView?.view.childView = nil
         submenu.view.parentView = nil
         
+        submenu.view.dismissed = true
+        
         submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
             if let submenu = submenu {
                 submenu.orderOut(nil)
             }
         })
+        
+        if let childView = submenu.view.childView {
+            cancelSubmenuNow(childView)
+        }
     }
     
-    private func cancelSubmenu(_ item: ContextMenuItem) {
+    private func cancelSubmenu(_ itemId: Int64, _ force: Bool = false) {
         delay(0.1, closure: { [weak self] in
             guard let `self` = self else {
                 return
             }
-            let submenu = self.findSubmenu(item.id)
-            let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(item.id))
+            let submenu = self.findSubmenu(itemId)
+            let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(itemId))
             let insideItem = tableItem?.view?.mouseInside() ?? false
             
-            if let submenu = submenu, submenu.view.childView == nil, (!submenu.view.mouseInside() && !insideItem) {
-                self.cancelSubmenuNow(submenu)
+            if let submenu = submenu, (!submenu.view.mouseInside() && !insideItem) {
+                if let child = submenu.view.childView {
+                    self.cancelSubmenuNow(child)
+                } else {
+                    self.cancelSubmenuNow(submenu)
+                }
             }
         })
         
@@ -750,6 +770,9 @@ final class AppMenuController : NSObject  {
             }
         }
         if parentView.view.childView != nil {
+            return
+        }
+        if parentView.view.dismissed {
             return
         }
         
@@ -949,11 +972,16 @@ final class AppMenuController : NSObject  {
 }
 
 
-func contextMenuOnScreen()->Bool {
+public func contextMenuOnScreen()->Bool {
     for window in NSApp.windows {
         if let window = window as? Window, let _ = window.weakView {
             return true
         }
     }
     return false
+}
+public extension Window {
+    var isContextMenu: Bool {
+        return self.weakView != nil
+    }
 }

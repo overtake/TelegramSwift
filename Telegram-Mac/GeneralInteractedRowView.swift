@@ -14,11 +14,13 @@ class GeneralInteractedRowView: GeneralRowView {
         
     let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     private(set) var switchView:SwitchView?
+    private(set) var selectLeftControl: SelectingControl?
     private(set) var progressView: ProgressIndicator?
     private(set) var textView:TextView?
     private(set) var descriptionView: TextView?
-    private var nextView:ImageView = ImageView()
-    
+    private let nextView:ImageView = ImageView()
+    private var imageContext:ImageView?
+
     private var badgeView: View?
     
     private var rightIconView: ImageView?
@@ -55,14 +57,30 @@ class GeneralInteractedRowView: GeneralRowView {
                 switchView?.presentation = item.switchAppearance
                 switchView?.setIsOn(stateback,animated:animated)
                 
-                switchView?.stateChanged = item.action
+                switchView?.stateChanged = item.switchAction ?? item.action
                 switchView?.userInteractionEnabled = item.enabled
                 switchView?.isEnabled = item.enabled
             } else {
                 switchView?.removeFromSuperview()
                 switchView = nil
             }
-            
+            if case let .selectableLeft(value) = item.type {
+                let current: SelectingControl
+                if let view = self.selectLeftControl {
+                    current = view
+                } else {
+                    current = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
+                    containerView.addSubview(current)
+                    self.selectLeftControl = current
+                }
+                current.update(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected, selected: value, animated: animated)
+                
+                current.layer?.opacity = item.enabled ? 1 : 0.7
+            } else if let view = self.selectLeftControl {
+                performSubviewRemoval(view, animated: animated)
+                self.selectLeftControl = nil
+            }
+                        
             if let badgeNode = item.badgeNode {
                 if badgeView == nil {
                     badgeView = View()
@@ -83,7 +101,7 @@ class GeneralInteractedRowView: GeneralRowView {
             }
             
             switch item.type {
-            case let .context(value), let .nextContext(value), let .contextSelector(value, _):
+            case let .context(value), let .nextContext(value), let .contextSelector(value, _), let .imageContext(_, value):
                 if textView == nil {
                     textView = TextView()
                     textView?.animates = false
@@ -95,19 +113,41 @@ class GeneralInteractedRowView: GeneralRowView {
                 
                 textView?.set(layout: layout)
                 var nextVisible: Bool = true
-                if case let .contextSelector(_, items) = item.type {
-                    nextVisible = !items.isEmpty
+                if case let .contextSelector(value, items) = item.type {
+                    nextVisible = !items.isEmpty && !value.isEmpty
+                } else if case .imageContext = item.type {
+                    nextVisible = true
                 }
                 nextView.isHidden = !nextVisible
             default:
                 textView?.removeFromSuperview()
                 textView = nil
             }
+            if case let .nextImage(image) = item.type {
+                let current:ImageView
+                if let view = self.imageContext {
+                    current = view
+                } else {
+                    current = ImageView()
+                    containerView.addSubview(current)
+                    self.imageContext = current
+                }
+                current.image = image 
+                current.sizeToFit()
+            } else if let view = self.imageContext {
+                performSubviewRemoval(view, animated: animated)
+                self.imageContext = nil
+            }
             textView?.backgroundColor = backdorColor
             
             if case let .selectable(value) = item.type {
                 nextView.isHidden = !value
                 nextView.image = #imageLiteral(resourceName: "Icon_Check").precomposed(item.customTheme?.accentColor ?? theme.colors.accent)
+                nextView.sizeToFit()
+            }
+            if case let .imageContext(image, _) = item.type {
+                nextView.isHidden = false
+                nextView.image = image
                 nextView.sizeToFit()
             }
             
@@ -121,8 +161,11 @@ class GeneralInteractedRowView: GeneralRowView {
             if case .nextContext = item.type {
                 needNextImage = true
             }
-            if case let .contextSelector(_, items) = item.type {
-                needNextImage = !items.isEmpty
+            if case .nextImage = item.type {
+                needNextImage = true
+            }
+            if case let .contextSelector(value, items) = item.type {
+                needNextImage = !items.isEmpty && !value.isEmpty
             }
             if needNextImage {
                 nextView.isHidden = false
@@ -236,6 +279,9 @@ class GeneralInteractedRowView: GeneralRowView {
             } else {
                 textXAdditional = thumb.thumb.backingSize.width + 10
             }
+        }
+        if let _ = self.selectLeftControl {
+            textXAdditional += 24 + item.viewType.innerInset.left
         }
         return textXAdditional
     }
@@ -353,21 +399,15 @@ class GeneralInteractedRowView: GeneralRowView {
         if item.enabled {
             if let textView = self.textView {
                 switch item.type {
-                case let .contextSelector(value, items):
+                case let .contextSelector(_, items):
                     if let event = NSApp.currentEvent {
                         let menu = ContextMenu()
 
-                        let items = items.map{ pItem -> ContextMenuItem in
-                            return ContextMenuItem(pItem.title, handler: pItem.handler, dynamicTitle: nil, state: value == pItem.title ? .on : nil)
-                        }
                         for item in items {
                             menu.addItem(item)
                         }
                         AppMenu.show(menu: menu, event: event, for: textView)
-                    } else {
-                        showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
                     }
-                    
                     
                     return
                 default:
@@ -377,7 +417,7 @@ class GeneralInteractedRowView: GeneralRowView {
             
             switch item.type {
             case let .switchable(enabled):
-                if item.autoswitch {
+                if item.autoswitch && item.switchAction == nil {
                     item.type = .switchable(!enabled)
                     self.switchView?.send(event: .Click)
                     return
@@ -387,7 +427,9 @@ class GeneralInteractedRowView: GeneralRowView {
             }
             item.action()
         } else {
-            item.disabledAction()
+            if let action = item.disabledAction {
+                action()
+            }
         }
     }
     private func invokeIfNeededUp() {
@@ -448,15 +490,22 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let textView = textView {
                     var width:CGFloat = 100
                     if let name = item.nameLayout {
-                        width = frame.width - name.0.size.width - nextInset - insets.right - insets.left - 10
+                        width = containerView.frame.width - name.0.size.width - nextInset - insets.right - insets.left - 10
                     }
                     textView.textLayout?.measure(width: width)
                     textView.update(textView.textLayout)
-                    textView.centerY(x:frame.width - insets.right - textView.frame.width - nextInset, addition: -1)
+                    textView.centerY(x: containerView.frame.width - insets.right - textView.frame.width - nextInset, addition: -1)
                     if !nextView.isHidden {
                         textView.setFrameOrigin(textView.frame.minX,textView.frame.minY - 1)
                     }
                 }
+                if let current = self.imageContext {
+                    current.centerY(x: containerView.frame.width - insets.right - current.frame.width - nextInset)
+                    if !nextView.isHidden {
+                        current.setFrameOrigin(current.frame.minX, current.frame.minY - 2)
+                    }
+                }
+                
                 nextView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - nextView.frame.width)
                 if let progressView = progressView {
                     progressView.centerY(x: frame.width - (insets.right == 0 ? 10 : insets.right) - progressView.frame.width, addition: -1)
@@ -466,6 +515,11 @@ class GeneralInteractedRowView: GeneralRowView {
                 
                 
                 self.containerView.setCorners(self.isResorting ? GeneralViewItemCorners.all : item.viewType.corners)
+                
+                if let current = self.selectLeftControl {
+                    current.centerY(x: innerInsets.left)
+                }
+                
                 if let descriptionView = self.descriptionView {
                     descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - innerInsets.bottom)
                 }
@@ -486,6 +540,13 @@ class GeneralInteractedRowView: GeneralRowView {
                         textView.setFrameOrigin(textView.frame.minX, textView.frame.minY - 1)
                     }
                 }
+                if let current = self.imageContext {
+                    current.centerY(x: containerView.frame.width - innerInsets.right - current.frame.width - nextInset)
+                    if !nextView.isHidden {
+                        current.setFrameOrigin(current.frame.minX, current.frame.minY - 2)
+                    }
+                }
+                
                 if let textView = textView {
                     nextInset += textView.frame.width + 10
                 }

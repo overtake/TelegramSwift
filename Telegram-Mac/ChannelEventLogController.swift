@@ -253,18 +253,18 @@ private func eventLogItems(_ entries:[ChannelAdminEventLogEntry], isGroup: Bool,
     for entry in entries {
         switch entry.event.action {
         case let .editMessage(prev, new):
-            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme) as? ChatRowItem
+            let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(eventLog: entry.event), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme) as? ChatRowItem
             if let item = item {
-                if !(new.effectiveMedia is TelegramMediaAction) {
+                if !(new.extendedMedia is TelegramMediaAction) {
                     items.append(ChannelEventLogEditedPanelItem(initialSize, previous: prev, item: item))
                     items.append(item)
                 }
             }
         case let .deleteMessage(message), let .sendMessage(message):
-            items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()).withUpdatedTimestamp(entry.event.date), MessageIndex(message), true, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme))
+            items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message.withUpdatedStableId(arc4random()).withUpdatedTimestamp(entry.event.date), MessageIndex(message), true, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(eventLog: entry.event), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme))
         case let .updatePinned(message):
             if let message = message?.withUpdatedStableId(arc4random()) {
-                items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message, MessageIndex(message), true, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme))
+                items.append(ChatRowItem.item(initialSize, from: .MessageEntry(message, MessageIndex(message), true, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(eventLog: entry.event), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme))
             }
         default:
             break

@@ -218,16 +218,16 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
     if let reactions = availableReactions {
         for reaction in reactions.reactions {
             
-            let signal = chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.staticIcon), small: false, scale: System.backingScale)
+            let signal = chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.centerAnimation ?? reaction.selectAnimation), small: false, scale: System.backingScale)
             
-            let arguments = TransformImageArguments(corners: .init(), imageSize: NSMakeSize(24, 24), boundingSize: NSMakeSize(24, 24), intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
+            let arguments = TransformImageArguments(corners: .init(), imageSize: NSMakeSize(20 * 2, 20 * 2), boundingSize: NSMakeSize(20, 20), intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
 
             
             actionsDisposable.add(signal.start(next: { value in
                 updateState { current in
                     var current = current
                     if let image = value.execute(arguments, value.data)?.generateImage() {
-                        current.thumbs[reaction.value] = NSImage(cgImage: image, size: NSMakeSize(24, 24)).precomposed(flipVertical: true)
+                        current.thumbs[reaction.value] = NSImage(cgImage: image, size: NSMakeSize(20, 20)).precomposed(flipVertical: true)
                     }
                     return current
                 }

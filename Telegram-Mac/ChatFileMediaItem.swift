@@ -54,7 +54,7 @@ class ChatFileLayoutParameters : ChatMediaGalleryParameters {
         downloadLayout = TextViewLayout(attr, maximumNumberOfLines: 1, alwaysStaticItems: true)
         
 
-        super.init(isWebpage: false, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
+        super.init(isWebpage: false, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia, isRevealed: nil)
         
     }
     override func makeLabelsForWidth(_ width: CGFloat) -> CGFloat {

@@ -162,6 +162,9 @@ class WPArticleLayout: WPLayout {
                     return false
                 }
             }
+            if type == "telegram_user" {
+                return false
+            }
             return true
         }
         return content.text == nil || content.text!.trimmed.isEmpty
@@ -234,7 +237,7 @@ class WPArticleLayout: WPLayout {
                     contentSize.height += 6
                 }
             } else {
-                if let _ = imageSize {
+                if let _ = imageSize, !isFullImageSize {
                     contrainedImageSize = NSMakeSize(54, 54)
                     textLayout?.cutout = TextViewCutout(topRight: NSMakeSize(contrainedImageSize.width + 16, contrainedImageSize.height + 10))
                 }

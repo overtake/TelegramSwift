@@ -16,6 +16,8 @@ import ThemeSettings
 import OpenSSLEncryption
 import BuildConfig
 import Localization
+import System
+
 class ShareViewController: NSViewController {
 
     override var nibName: NSNib.Name? {
@@ -115,7 +117,12 @@ class ShareViewController: NSViewController {
             return EmptyDisposable
         } |> runOn(.concurrentBackgroundQueue())
         
-        let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: 90, voipVersions: [], appData: appData, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), resolvedDeviceName: ApiEnvironment.resolvedDeviceName)
+        var useBetaFeatures: Bool = false
+        #if BETA || DEBUG
+        useBetaFeatures = false
+        #endif
+        
+        let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: 90, voipVersions: [], appData: appData, autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), deviceModelName: deviceModelPretty(), useBetaFeatures: useBetaFeatures, isICloudEnabled: false)
         
         let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: { _ in })
         

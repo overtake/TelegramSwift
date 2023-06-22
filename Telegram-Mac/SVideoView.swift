@@ -284,7 +284,9 @@ final class SVideoInteractions {
     let togglePictureInPicture: ()->Void
     let closePictureInPicture: ()->Void
     let setBaseRate:(Double)->Void
-    init(playOrPause: @escaping()->Void, rewind: @escaping(Double)->Void, scrobbling: @escaping(Double?)->Void, volume: @escaping(Float) -> Void, toggleFullScreen: @escaping()->Void, togglePictureInPicture: @escaping() -> Void, closePictureInPicture:@escaping()->Void, setBaseRate:@escaping(Double)->Void) {
+    let pause:()->Void
+    let play:()->Void
+    init(playOrPause: @escaping()->Void, rewind: @escaping(Double)->Void, scrobbling: @escaping(Double?)->Void, volume: @escaping(Float) -> Void, toggleFullScreen: @escaping()->Void, togglePictureInPicture: @escaping() -> Void, closePictureInPicture:@escaping()->Void, setBaseRate:@escaping(Double)->Void, pause: @escaping()->Void, play: @escaping()->Void) {
         self.playOrPause = playOrPause
         self.rewind = rewind
         self.scrobbling = scrobbling
@@ -293,6 +295,8 @@ final class SVideoInteractions {
         self.togglePictureInPicture = togglePictureInPicture
         self.closePictureInPicture = closePictureInPicture
         self.setBaseRate = setBaseRate
+        self.play = play
+        self.pause = pause
     }
 }
 
@@ -324,6 +328,7 @@ private final class SVideoControlsView : Control {
             layout()
         }
     }
+    private var downInside: Bool = false
     
     override func mouseUp(with event: NSEvent) {
         if progress.hasTemporaryState {
@@ -341,20 +346,40 @@ private final class SVideoControlsView : Control {
         }
     }
     
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        
+        let point = self.convert(event.locationInWindow, from: nil)
+
+        let rect = NSMakeRect(self.progress.frame.minX, self.progress.frame.minY - 5, self.progress.frame.width, self.progress.frame.height + 10)
+        
+        self.downInside = NSPointInRect(point, rect)
+
+    }
+    
     private func updateLivePreview() {
         guard let window = window else {
             return
         }
+        
+        let live = (NSEvent.pressedMouseButtons & (1 << 0)) != 0 && self.progress.hasTemporaryState
+        
+        
         let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         
         let rect = NSMakeRect(self.progress.frame.minX, self.progress.frame.minY - 5, self.progress.frame.width, self.progress.frame.height + 10)
         
-        if NSPointInRect(point, rect) || self.progress.hasTemporaryState {
-            let point = self.progress.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-            let result = max(min(point.x, self.progress.frame.width), 0) / self.progress.frame.width
-            self.livePreview?(Float(result))
+        if !self.volumeSlider.hasTemporaryState {
+            if NSPointInRect(point, rect) || self.progress.hasTemporaryState {
+                let point = self.progress.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                let result = max(min(point.x, self.progress.frame.width), 0) / self.progress.frame.width
+                self.livePreview?(Float(result), live)
+            } else {
+                self.livePreview?(nil, live)
+            }
         } else {
-            self.livePreview?(nil)
+            var bp = 0
+            bp += 1
         }
     }
     
@@ -451,7 +476,7 @@ private final class SVideoControlsView : Control {
     let menuItems: ImageButton = ImageButton()
     let togglePip: ImageButton = ImageButton()
     
-    var livePreview: ((Float?)->Void)?
+    var livePreview: ((Float?, Bool)->Void)?
     
     let volumeContainer: View = View()
     let volumeToggle: ImageButton = ImageButton()
@@ -571,7 +596,7 @@ private final class SVideoControlsView : Control {
         
         
         self.progress.onLiveScrobbling = { [weak self] _ in
-            if let `self` = self, !self.progress.mouseInside() {
+            if let `self` = self {
                 self.updateLivePreview()
             }
         }
@@ -627,17 +652,20 @@ private final class SVideoControlsView : Control {
     }
     
     func updateBaseRate() {
-        if FastSettings.playingVideoRate == 1.0 {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_1X")!.precomposed(), for: .Normal)
-        } else if FastSettings.playingVideoRate <= 1.25 {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_125X")!.precomposed(), for: .Normal)
-        } else if FastSettings.playingVideoRate <= 1.5 {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_15X")!.precomposed(), for: .Normal)
-        } else if FastSettings.playingVideoRate <= 1.75 {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_175X")!.precomposed(), for: .Normal)
-        } else {
-            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_2X")!.precomposed(), for: .Normal)
-        }
+        
+        menuItems.set(image: optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingVideoRate), color: .white, isLarge: true), for: .Normal)
+        
+//        if FastSettings.playingVideoRate == 1.0 {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_1X")!.precomposed(), for: .Normal)
+//        } else if FastSettings.playingVideoRate <= 1.25 {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_125X")!.precomposed(), for: .Normal)
+//        } else if FastSettings.playingVideoRate <= 1.5 {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_15X")!.precomposed(), for: .Normal)
+//        } else if FastSettings.playingVideoRate <= 1.75 {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_175X")!.precomposed(), for: .Normal)
+//        } else {
+//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_2X")!.precomposed(), for: .Normal)
+//        }
         self.menuItems.sizeToFit()
     }
     
@@ -722,6 +750,7 @@ class SVideoView: NSView {
     
     var initialedSize: NSSize = NSZeroSize
     
+    
     var controlsStyle:SVideoControlsStyle = .regular(pip: false, fullScreen: false, hideRewind: false) {
         didSet {
             if oldValue != controlsStyle {
@@ -749,6 +778,7 @@ class SVideoView: NSView {
     var isStreamable: Bool = true
     
     private var previewView: PreviewView?
+    private var overlayPreview: ImageView?
     
     var status: MediaPlayerStatus? = nil {
         didSet {
@@ -764,6 +794,14 @@ class SVideoView: NSView {
                     }
                 } else {
                     bufferingIndicatorValue.set(.single(!isStreamable))
+                }
+                if let status = status, status.status != oldValue?.status {
+                    switch status.status {
+                    case .playing, .paused:
+                        self.hideScrubblerPreviewIfNeeded(live: true)
+                    default:
+                        break
+                    }
                 }
             }
             
@@ -830,7 +868,7 @@ class SVideoView: NSView {
             controls.isHidden = false
         }
         if hide {
-            self.hideScrubblerPreviewIfNeeded()
+            self.hideScrubblerPreviewIfNeeded(live: false)
         }
         
         controls._change(opacity: hide ? 0 : 1, animated: animated, duration: 0.2, timingFunction: .linear, completion: { [weak self] completed in
@@ -867,6 +905,7 @@ class SVideoView: NSView {
                 
                 current.playOrPause.set(handler: { [weak self] _ in
                     self?.interactions?.playOrPause()
+                    self?.hideScrubblerPreviewIfNeeded(live: true)
                 }, for: .Click)
                 
                 current.progress.onUserChanged = { [weak self] value in
@@ -981,12 +1020,22 @@ class SVideoView: NSView {
             self?.interactions?.playOrPause()
         }, for: .Click)
         
-        controls.livePreview = { [weak self] value in
+        
+        controls.livePreview = { [weak self] value, live in
             guard let `self` = self else {return}
             if let status = self.status {
                 self.interactions?.scrobbling(value != nil ? status.duration * Double(value!) : nil)
-                self.setCurrentScrubblingState(self.currentPreviewState)
+                self.setCurrentScrubblingState(self.currentPreviewState, live: live)
             }
+            if value != nil {
+                if live {
+                    self.interactions?.pause()
+                    self.hideScrubblerPreviewIfNeeded(live: false)
+                } else {
+                    self.interactions?.play()
+                }
+            }
+            
         }
         
         controls.progress.onUserChanged = { [weak self] value in
@@ -1046,27 +1095,25 @@ class SVideoView: NSView {
                 self?.isInMenu = false
             }
             menu.delegate = menu
-    
-            menu.addItem(ContextMenuItem("1x", handler: {
-                self?.interactions?.setBaseRate(1.0)
+            
+            let customItem = ContextMenuItem(String(format: "%.1fx", FastSettings.playingVideoRate), image: NSImage(cgImage: generateEmptySettingsIcon(), size: NSMakeSize(24, 24)))
+            
+            menu.addItem(SliderContextMenuItem(volume: FastSettings.playingVideoRate, minValue: 0.2, maxValue: 2.5, midValue: 1, drawable: MenuAnimation.menu_speed, drawable_muted: MenuAnimation.menu_speed, { [weak self] value, _ in
+                customItem.title = String(format: "%.1fx", value)
+                self?.interactions?.setBaseRate(value)
                 self?.controls.updateBaseRate()
             }))
-            menu.addItem(ContextMenuItem.init("1.25x", handler: {
-                self?.interactions?.setBaseRate(1.25)
-                self?.controls.updateBaseRate()
-            }))
-            menu.addItem(ContextMenuItem.init("1.5x", handler: {
-                self?.interactions?.setBaseRate(1.5)
-                self?.controls.updateBaseRate()
-            }))
-            menu.addItem(ContextMenuItem.init("1.75x", handler: {
-                self?.interactions?.setBaseRate(1.75)
-                self?.controls.updateBaseRate()
-            }))
-            menu.addItem(ContextMenuItem.init("2x", handler: {
-                self?.interactions?.setBaseRate(2.0)
-                self?.controls.updateBaseRate()
-            }))
+            
+            menu.addItem(customItem)
+            
+            if FastSettings.playingVideoRate != 1.0 {
+                menu.addItem(ContextSeparatorItem())
+                menu.addItem(ContextMenuItem(strings().playbackSpeedSetToDefault, handler: { [weak self] in
+                    self?.interactions?.setBaseRate(1.0)
+                    self?.controls.updateBaseRate()
+                }, itemImage: MenuAnimation.menu_reset.value))
+            }
+            
             menu.appearance = darkPalette.appearance
             return menu
         }
@@ -1090,20 +1137,37 @@ class SVideoView: NSView {
         backgroundView.isHidden = !isInFullScreen
     }
     
-    func showScrubblerPreviewIfNeeded() {
-        if previewView == nil {
-            previewView = PreviewView(frame: NSZeroRect)
-            previewView?.background = .black
-            addSubview(previewView!)
+    func showScrubblerPreviewIfNeeded(live: Bool) {
+        if !live {
+            if previewView == nil {
+                previewView = PreviewView(frame: NSZeroRect)
+                previewView?.background = .black
+                addSubview(previewView!)
+            }
+            previewView?.setFrameSize(initialedSize.aspectFitted(NSMakeSize(150, 150)))
         }
-        previewView?.setFrameSize(initialedSize.aspectFitted(NSMakeSize(150, 150)))
+        if live {
+            if self.overlayPreview == nil {
+                self.overlayPreview = ImageView(frame: self.mediaPlayer.frame)
+                self.addSubview(overlayPreview!, positioned: .above, relativeTo: mediaPlayer)
+                self.overlayPreview?.background = theme.colors.blackTransparent
+            }
+            if let _ = previewView {
+                self.previewView?.removeFromSuperview()
+                self.previewView = nil
+            }
+        }
+    }
+    
+    var mouseDownIncontrols: Bool {
+        return self.controls.progress.hasTemporaryState
     }
     
     private var currentPreviewState: MediaPlayerFramePreviewResult?
     
-    func setCurrentScrubblingState(_ state: MediaPlayerFramePreviewResult?) {
+    func setCurrentScrubblingState(_ state: MediaPlayerFramePreviewResult?, live: Bool) {
         self.currentPreviewState = state
-        guard let previewView = self.previewView, let window = self.window, let status = self.status, !self.controls.isHidden else {
+        guard let window = self.window, let status = self.status, !self.controls.isHidden else {
             self.previewView?.removeFromSuperview()
             self.previewView = nil
             return
@@ -1113,11 +1177,18 @@ class SVideoView: NSView {
         if let state = currentPreviewState {
             switch state {
             case let .image(image):
-                previewView.imageView.image = image
-                previewView.imageView.isHidden = false
+                previewView?.imageView.image = image
+                previewView?.imageView.isHidden = false
+                
+                overlayPreview?.image = image
+                
             case .waitingForData:
                 break
             }
+        }
+        
+        guard let previewView = self.previewView else {
+            return
         }
         
         
@@ -1143,9 +1214,18 @@ class SVideoView: NSView {
     private(set) var isInMenu: Bool = false
     
     
-    func hideScrubblerPreviewIfNeeded() {
-        previewView?.removeFromSuperview()
-        previewView = nil
+    func hideScrubblerPreviewIfNeeded(live: Bool) {
         self.currentPreviewState = nil
+        if live {
+            if let _ = self.overlayPreview {
+                self.overlayPreview?.removeFromSuperview()
+                self.overlayPreview = nil
+            }
+        } else {
+            if let _ = previewView {
+                previewView?.removeFromSuperview()
+                previewView = nil
+            }
+        }
     }
 }

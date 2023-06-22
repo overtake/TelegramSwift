@@ -392,10 +392,10 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsInputTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: strings().callSettingsInputText, color: theme.textColor, type: .contextSelector(settings.audioInputDeviceId == nil ? strings().callSettingsDeviceDefault : microDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: strings().callSettingsInputText, color: theme.textColor, type: .contextSelector(settings.audioInputDeviceId == nil ? strings().callSettingsDeviceDefault : microDevice?.localizedName ?? strings().callSettingsDeviceDefault, [ContextMenuItem(strings().callSettingsDeviceDefault, handler: {
             arguments.toggleInputAudioDevice(nil)
         })] + devices.audioInput.map { value in
-            return SPopoverItem(value.localizedName, {
+            return ContextMenuItem(value.localizedName, handler: {
                 arguments.toggleInputAudioDevice(value.uniqueID)
             })
         }), viewType: microDevice == nil ? .singleItem : .firstItem, theme: theme)))
@@ -421,10 +421,10 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsOutput), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_audio, data: .init(name: strings().voiceChatSettingsOutputDevice, color: theme.textColor, type: .contextSelector(outputDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_output_audio, data: .init(name: strings().voiceChatSettingsOutputDevice, color: theme.textColor, type: .contextSelector(outputDevice?.localizedName ?? strings().callSettingsDeviceDefault, [ContextMenuItem(strings().callSettingsDeviceDefault, handler: {
         arguments.toggleOutputAudioDevice(nil)
     })] + devices.audioOutput.map { value in
-        return SPopoverItem(value.localizedName, {
+        return ContextMenuItem(value.localizedName, handler: {
             arguments.toggleOutputAudioDevice(value.uniqueID)
         })
     }), viewType: .singleItem, theme: theme)))

@@ -254,8 +254,9 @@ final class DesktopCaptureListUI : GenericViewController<HorizontalTableView> {
             break
         }
         
+        let selected = sList.first(where: { $0.uniqueKey() == FastSettings.defaultScreenShare() }) ?? wList.first(where: { $0.uniqueKey() == FastSettings.defaultScreenShare() })
         
-        let initialState = DesktopCaptureListState(cameras: [], screens: sList, windows: wList, selected: nil, access: .init(sharing: sharingAccess, camera: hasCameraAccess))
+        let initialState = DesktopCaptureListState(cameras: [], screens: sList, windows: wList, selected: selected, access: .init(sharing: sharingAccess, camera: hasCameraAccess))
 
 
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -376,13 +377,20 @@ final class DesktopCaptureListUI : GenericViewController<HorizontalTableView> {
         switch mode {
         case .screencast:
             self.updateDisposable = combineLatest(updateSignal, muxedDevices).start()
+            
         case .video:
+            var first: Bool = true
             devicesDisposable.set((devices.signal |> deliverOnMainQueue).start(next: { devices in
                 updateState { current in
                     var current = current
                     current.cameras = devices.camera.filter { !$0.isSuspended && $0.isConnected && $0.hasMediaType(.video) }.map { CameraCaptureDevice($0) }
+                    if first {
+                        first = false
+                        current.selected = current.cameras.first(where: { $0.uniqueKey() == FastSettings.defaultVideoShare() })
+                    }
                     return current
                 }
+                
                 checkSelected()
             }))
         }
@@ -395,12 +403,14 @@ final class DesktopCaptureListUI : GenericViewController<HorizontalTableView> {
                 current.selected = source
                 return current
             }
+            FastSettings.setDefaultScreenShare(source.uniqueKey())
         }, selectCamera: { source in
             updateState { current in
                 var current = current
                 current.selected = source
                 return current
             }
+            FastSettings.setDefaultVideoShare(source.uniqueKey())
         })
         
         let excludeWindowNumber = self.excludeWindowNumber

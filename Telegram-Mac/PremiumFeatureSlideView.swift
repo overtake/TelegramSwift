@@ -58,6 +58,7 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         case swirlStars
         case fasterStars
         case badgeStars
+        case hello
     }
     private var bgDecoration: BackgroundDecoration = .none
 
@@ -83,6 +84,9 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     
+    var appear: (()->Void)? = nil
+    var disappear: (()->Void)? = nil
+
     func setup(context: AccountContext, type: PremiumValue, decoration: BackgroundDecoration, getView: @escaping(PremiumFeatureSlideView)->(NSView & PremiumSlideView)) {
         
         self.getView = getView
@@ -120,6 +124,7 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         view.frame = bounds
         self.content.addSubview(view)
         
+        appear?()
         
         switch bgDecoration {
         case .none:
@@ -167,12 +172,23 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
                 content.addSubview(current, positioned: .below, relativeTo: content.subviews.first)
             }
             current.setVisible(true)
+        case .hello:
+            let current: (NSView & PremiumDecorationProtocol)
+            if let view = self.decorationView {
+                current = view
+            } else {
+                current = HelloView(frame: content.bounds)
+                self.decorationView = current
+                content.addSubview(current, positioned: .below, relativeTo: content.subviews.first)
+            }
+            current.setVisible(true)
         }
         
         needsLayout = true
     }
     
     func willDisappear() {
+        disappear?()
         self.decorationView?.setVisible(false)
         self.view?.willDisappear()
     }

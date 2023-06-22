@@ -79,6 +79,7 @@ public func adjustSaturationInContext(context: DrawingContext, saturation: CGFlo
 }
 
 private func generateGradient(size: CGSize, colors: [NSColor], positions: [CGPoint], adjustSaturation: CGFloat = 1.0) -> CGImage {
+    
     let width = Int(max(1, size.width))
     let height = Int(max(1, size.height))
 
@@ -279,6 +280,8 @@ public final class AnimatedGradientBackgroundView: ImageView {
     }
     
     deinit {
+        var bp = 0
+        bp += 1
     }
 
     public func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition, extendAnimation: Bool = false) {

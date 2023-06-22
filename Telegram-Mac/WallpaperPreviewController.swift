@@ -212,7 +212,7 @@ private final class WallpaperPreviewView: View {
     
     
     
-    required init(frame frameRect: NSRect, context: AccountContext, wallpaper: Wallpaper) {
+    required init(frame frameRect: NSRect, source: WallpaperSource, context: AccountContext, wallpaper: Wallpaper) {
         self.context = context
         self.wallpaper = wallpaper
         self.tableView = TableView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height), isFlipped: false, drawBorder: false)
@@ -269,9 +269,9 @@ private final class WallpaperPreviewView: View {
             .clear
         }
         
-        addTableItems(context)
+        addTableItems(context, source: source)
         
-        self.layout()
+      //  self.layout()
 
         
         blurCheckbox.onChangedValue = { [weak self] isSelected in
@@ -407,7 +407,7 @@ private final class WallpaperPreviewView: View {
         
     }
     
-    private func addTableItems(_ context: AccountContext) {
+    private func addTableItems(_ context: AccountContext, source: WallpaperSource) {
         
         
         switch wallpaper {
@@ -451,6 +451,9 @@ private final class WallpaperPreviewView: View {
             firstText = strings().chatWPColorFirstMessage
             secondText = strings().chatWPColorSecondMessage
         }
+        
+
+
 
         let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
         
@@ -461,14 +464,31 @@ private final class WallpaperPreviewView: View {
         let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, .bubble, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
         
         
+        
+        
         let item1 = ChatRowItem.item(frame.size, from: firstEntry, interaction: chatInteraction, theme: theme)
         let item2 = ChatRowItem.item(frame.size, from: secondEntry, interaction: chatInteraction, theme: theme)
         
-
         
+        item1.makeSize(frame.size.width)
+        item2.makeSize(frame.size.width)
+
         _ = tableView.addItem(item: item2)
         _ = tableView.addItem(item: item1)
         
+        switch source {
+        case let .chat(peer, _):
+            let zeroMessage = Message(stableId: 111, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [TelegramMediaAction(action: .customText(text: strings().wallpaperBackgroundNoApplyToPeer(peer.compactDisplayTitle), entities: []))], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
+
+            let zeroEntry: ChatHistoryEntry = .MessageEntry(zeroMessage, MessageIndex(zeroMessage), true, .bubble, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
+            let item0 = ChatRowItem.item(frame.size, from: zeroEntry, interaction: chatInteraction, theme: theme)
+            item0.makeSize(frame.size.width)
+
+            _ = tableView.addItem(item: item0)
+        default:
+            break
+        }
+
     }
     
     var croppedRect: NSRect {
@@ -485,6 +505,13 @@ private final class WallpaperPreviewView: View {
     override func layout() {
         super.layout()
         self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    override var needsLayout: Bool {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
     }
     
     
@@ -526,9 +553,7 @@ private final class WallpaperPreviewView: View {
         
       
 
-        
-        transition.updateFrame(view: tableView, frame: bounds)
-        
+                
         if let progressView = progressView {
             transition.updateFrame(view: progressView, frame: progressView.centerFrame())
         }
@@ -541,22 +566,20 @@ private final class WallpaperPreviewView: View {
         
        
         
-        let backgroundSize: NSSize
-        switch self.previewState  {
-        case .color:
-            backgroundSize = NSMakeSize(frame.width, frame.height - colorPickerSize.height)
-        case .pattern:
-            backgroundSize = NSMakeSize(frame.width, frame.height - patternsSize.height)
-        default:
-            backgroundSize = frame.size
-        }
+        let backgroundSize: NSSize = size
+//        switch self.previewState  {
+//        case .color:
+//            backgroundSize = NSMakeSize(frame.width, size.height - colorPickerSize.height)
+//        case .pattern:
+//            backgroundSize = NSMakeSize(frame.width, frame.height - colorPickerSize.height)
+//        default:
+//            backgroundSize = frame.size
+//        }
         transition.updateFrame(view: backgroundView, frame: backgroundSize.bounds)
         backgroundView.updateLayout(size: backgroundSize, transition: transition)
         
         switch previewState {
-        case .color, .pattern:
-            transition.updateFrame(view: documentView, frame: .init(origin: .init(x: 0, y: frame.height - colorPicker.frame.height - tableView.listHeight - 10), size: documentSize))
-            
+        case .color, .pattern:            
             let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, frame.height - colorPicker.frame.height - checkboxSize.height - 10), size: checkboxSize)
             
             transition.updateFrame(view: checkboxContainer, frame: checkboxRect)
@@ -564,7 +587,6 @@ private final class WallpaperPreviewView: View {
             let checkboxRect = CGRect(origin: NSMakePoint(focus(checkboxSize).minX, frame.height - checkboxSize.height - 10), size: checkboxSize)
             
             transition.updateFrame(view: checkboxContainer, frame: checkboxRect)
-            transition.updateFrame(view: documentView, frame: .init(origin: .init(x: 0, y: frame.height - tableView.listHeight - 10), size: documentSize))
 
             transition.updateFrame(view: colorPicker, frame: CGRect(origin: NSMakePoint(0, frame.height), size: colorPickerSize))
             
@@ -604,6 +626,13 @@ private final class WallpaperPreviewView: View {
             x += view.frame.width + 10
         }
 
+        switch previewState {
+        case .color, .pattern:
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: frame.height - colorPicker.frame.height - tableView.listHeight - 10 - 120), size: documentSize))
+        case .normal:
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: frame.height - tableView.listHeight - 10 - 120), size: documentSize))
+        }
+        
     }
     
     func updateModifyState(_ state: WallpaperPreviewState, animated: Bool) {
@@ -752,9 +781,9 @@ private final class WallpaperPreviewView: View {
             var representations:[TelegramMediaImageRepresentation] = []
             representations.append(contentsOf: file.previewRepresentations)
             if let dimensions = file.dimensions {
-                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
             } else {
-                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(maximumSize), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(maximumSize), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
             }
             
             if isPattern {
@@ -866,8 +895,36 @@ private final class WallpaperPreviewView: View {
 
 enum WallpaperSource {
     case link(TelegramWallpaper)
+    case chat(Peer, TelegramWallpaper?)
+    case message(MessageId, TelegramWallpaper?)
     case gallery(TelegramWallpaper)
     case none
+    
+    var peerId: PeerId? {
+        switch self {
+        case let .chat(peer, _):
+            return peer.id
+        case let .message(messageId, _):
+            return messageId.peerId
+        default:
+            return nil
+        }
+    }
+    
+    func withWallpaper(_ wallpaper: TelegramWallpaper) -> WallpaperSource {
+        switch self {
+        case .none:
+            return .gallery(wallpaper)
+        case let .message(messageId, _):
+            return .message(messageId, wallpaper)
+        case let .chat(peerId, _):
+            return .chat(peerId, wallpaper)
+        case .gallery:
+            return .gallery(wallpaper)
+        case .link:
+            return .link(wallpaper)
+        }
+    }
 }
 
 private func cropWallpaperImage(_ image: CGImage, dimensions: NSSize, rect: NSRect, magnify: CGFloat, settings: WallpaperSettings?) -> CGImage {
@@ -924,8 +981,9 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
         let disposable = MetaDisposable()
         switch wallpaper {
         case let .image(representations, _):
-            if let representation = largestImageRepresentation(representations), let resource = representation.resource as? LocalFileReferenceMediaResource {
-                if let image = NSImage(contentsOfFile: resource.localFilePath)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            if let representation = largestImageRepresentation(representations) {
+                let path = account.postbox.mediaBox.resourcePath(representation.resource)
+                if let image = NSImage(contentsOfFile: path)?.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                     
                     let fittedImage = cropWallpaperImage(image, dimensions: representation.dimensions.size, rect: rect, magnify: magnify, settings: nil)
 
@@ -941,16 +999,27 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                         if CGImageDestinationFinalize(colorDestination) {
                             let thumdResource = LocalFileMediaResource(fileId: arc4random64())
                             account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                         }
                     }
                     
                     let fittedDimensions = WallpaperDimensions.aspectFitted(representation.dimensions.size)
                     
                      disposable.set(putToTemp(image: NSImage(cgImage: fittedImage, size: fittedDimensions), compress: false).start(next: { path in
-                        copyToClipboard(path)
-                        let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-                        result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedDimensions), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                         
+                         let data = try? Data(contentsOf: URL(fileURLWithPath: path))
+                         guard let data = data else {
+                             subscriber.putCompletion()
+                             return
+                         }
+                         let resource = LocalFileMediaResource(fileId: arc4random64(), size: Int64(data.count))
+                         account.postbox.mediaBox.storeResourceData(resource.id, data: data)
+                         
+                         result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedDimensions), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
+
+                         
+
+                         
                         
                         let wallpaper: Wallpaper = .image(result, settings: wallpaper.settings)
                         subscriber.putNext(wallpaper)
@@ -1043,8 +1112,16 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                     })!
                     
                     disposable.set(putToTemp(image: NSImage(cgImage: image, size: size), compress: false).start(next: { path in
-                        let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
                         
+                        
+                        let data = try? Data(contentsOf: URL(fileURLWithPath: path))
+                        guard let data = data else {
+                            subscriber.putCompletion()
+                            return
+                        }
+                        let resource = LocalFileMediaResource(fileId: arc4random64(), size: Int64(data.count))
+                        account.postbox.mediaBox.storeResourceData(resource.id, data: data)
+                                                                        
                         var attributes = file.attributes
                         loop: for (i, attr) in attributes.enumerated() {
                             switch attr {
@@ -1079,15 +1156,25 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                         if CGImageDestinationFinalize(colorDestination) {
                             let thumdResource = LocalFileMediaResource(fileId: arc4random64())
                             account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                         }
                     }
                     
                     let fittedDimensions = WallpaperDimensions.aspectFitted(dimensions)
                     
                     disposable.set(putToTemp(image: NSImage(cgImage: fittedImage, size: fittedDimensions), compress: false).start(next: { path in
-                        let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
                         
+                        
+                        let data = try? Data(contentsOf: URL(fileURLWithPath: path))
+                        guard let data = data else {
+                            subscriber.putCompletion()
+                            return
+                        }
+                        let resource = LocalFileMediaResource(fileId: arc4random64(), size: Int64(data.count))
+                        account.postbox.mediaBox.storeResourceData(resource.id, data: data)
+                        
+                        result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedDimensions), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
+                                                
                         var attributes = file.attributes
                         loop: for (i, attr) in attributes.enumerated() {
                             switch attr {
@@ -1135,11 +1222,12 @@ class WallpaperPreviewController: ModalViewController {
     private let context: AccountContext
 
     let source: WallpaperSource
-    
-    init(_ context: AccountContext, wallpaper: Wallpaper, source: WallpaperSource) {
+    let onComplete:(()->Void)?
+    init(_ context: AccountContext, wallpaper: Wallpaper, source: WallpaperSource, onComplete:(()->Void)? = nil) {
         self.wallpaper = wallpaper.isSemanticallyEqual(to: theme.wallpaper.wallpaper) ? wallpaper.withUpdatedBlurrred(theme.wallpaper.wallpaper.isBlurred) : wallpaper
         self.context = context
         self.source = source
+        self.onComplete = onComplete
         super.init(frame: NSMakeRect(0, 0, 380, 300))
         bar = .init(height: 0)
     }
@@ -1270,28 +1358,60 @@ class WallpaperPreviewController: ModalViewController {
     private func applyAndClose() {
         let context = self.context
         closeAllModals()
+        self.onComplete?()
         
-        let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect) |> mapToSignal { wallpaper in
-            return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper)
-        }
+        let current = self.genericView.wallpaper
+        let source = self.source
         
-        _ = showModalProgress(signal: signal, for: context.window).start(next: { wallpaper in
-            _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper().withSavedAssociatedTheme().withUpdatedBubbled(true)
-            }) |> deliverOnMainQueue).start(completed: {
-                var stats:[Signal<Void, NoError>] = []
-                switch self.source {
-                case let .gallery(wallpaper):
-                    stats = [installWallpaper(account: context.account, wallpaper: wallpaper)]
-                case let .link(wallpaper):
-                    stats = [installWallpaper(account: context.account, wallpaper: wallpaper), saveWallpaper(account: context.account, wallpaper: wallpaper)]
-                case .none:
-                    break
-                }
-                let _ = combineLatest(stats).start()
+        switch source {
+        case .gallery, .link, .none:
+            let signal = cropWallpaperIfNeeded(genericView.wallpaper, account: context.account, rect: genericView.croppedRect) |> mapToSignal { wallpaper in
+                return moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper)
+            }
+            
+            _ = signal.start(next: { wallpaper in
+                _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                    return settings.updateWallpaper { $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper().withSavedAssociatedTheme().withUpdatedBubbled(true)
+                }) |> delay(0.2, queue: .mainQueue()) |> deliverOnMainQueue).start(completed: {
+                    var stats:[Signal<Void, NoError>] = []
+                    switch source {
+                    case let .gallery(wallpaper):
+                        stats = [installWallpaper(account: context.account, wallpaper: wallpaper)]
+                    case let .link(wallpaper):
+                        stats = [installWallpaper(account: context.account, wallpaper: wallpaper), saveWallpaper(account: context.account, wallpaper: wallpaper)]
+                    default:
+                        break
+                    }
+                    let _ = combineLatest(stats).start()
+                })
             })
-        })
-        
+        case .chat, .message:
+            _ = (updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                return settings.withUpdatedBubbled(true)
+            }) |> delay(0.2, queue: .mainQueue()) |> deliverOnMainQueue).start(completed: {
+                
+                let complete:Signal<Never, NoError>
+                switch current {
+                case let .image(represenations, settings):
+                    if let peerId = source.peerId {
+                        let temporaryWallpaper: TelegramWallpaper = .image(represenations, settings)
+                        context.account.pendingPeerMediaUploadManager.add(peerId: peerId, content: .wallpaper(temporaryWallpaper))
+                    }
+                    complete = .complete()
+                default:
+                    switch source {
+                    case let .chat(peer, _):
+                        complete = context.engine.themes.setChatWallpaper(peerId: peer.id, wallpaper: current.cloudWallpaper) |> `catch` { _ in return .complete() }
+                    case let .message(messageId, _):
+                        complete = context.engine.themes.setExistingChatWallpaper(messageId: messageId, settings: current.settings) |> `catch` { _ in return .complete() } |> ignoreValues
+                    default:
+                        complete = .complete()
+                    }
+                }
+                                
+                let _ = complete.start()
+            })
+        }
     }
     
     override var modalInteractions: ModalInteractions? {
@@ -1300,7 +1420,7 @@ class WallpaperPreviewController: ModalViewController {
         }, drawBorder: true, height: 50, singleButton: true)
     }
     override func initializer() -> NSView {
-        return WallpaperPreviewView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), context: context, wallpaper: wallpaper);
+        return WallpaperPreviewView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), source: source, context: context, wallpaper: wallpaper);
     }
     
     override var dynamicSize: Bool {

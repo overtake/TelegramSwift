@@ -102,8 +102,9 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     ($0.0.map { $0._asPeer() }, $0.1.mapValues { $0._asPresence() })
                 }
             }
-            contacts = combineLatest(account.postbox.peerView(id: peerId), contacts) |> map { peerView, contacts in
-                if let peer = peerViewMainPeer(peerView) {
+            
+            contacts = combineLatest(getPeerView(peerId: peerId, postbox: account.postbox), contacts) |> map { peer, contacts in
+                if let peer = peer {
                     if peer.groupAccess.canAddMembers {
                         return contacts
                     } else {
@@ -209,13 +210,13 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     if let linkInvation = linkInvation, let peer = peer {
                         if peer.groupAccess.canMakeVoiceChat {
                             if peer.isSupergroup, isUnmutedForAll {
-                                entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                             } else {
-                                entries.append(.inviteLink(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
-                                entries.append(.inviteLink(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
                             }
-                        } else {
-                            entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                        } else if peer.groupAccess.canAddMembers {
+                            entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                         }
                     }
                 }
@@ -320,7 +321,7 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                     var entries:[Peer] = []
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
+                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
                             if let peer = renderedPeer.chatMainPeer, peer.canSendMessage() {
                                 entries.append(peer)
                             }
@@ -398,16 +399,16 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                         if peer.addressName != nil {
                             if peer.groupAccess.canMakeVoiceChat {
                                 if peer.isSupergroup, isUnmutedForAll {
-                                    entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                    entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                                 } else {
-                                    entries.append(.inviteLink(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
-                                    entries.append(.inviteLink(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
+                                    entries.append(.actionButton(strings().voiceChatInviteCopyListenersLink, GroupCallTheme.invite_listener, 0, customTheme(), linkInvation))
+                                    entries.append(.actionButton(strings().voiceChatInviteCopySpeakersLink, GroupCallTheme.invite_speaker, 1, customTheme(), linkInvation))
                                 }
                             } else {
-                                entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                                entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                             }
                         } else {
-                            entries.append(.inviteLink(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
+                            entries.append(.actionButton(strings().voiceChatInviteCopyInviteLink, GroupCallTheme.invite_link, 0, customTheme(), linkInvation))
                         }
                     }
                 }

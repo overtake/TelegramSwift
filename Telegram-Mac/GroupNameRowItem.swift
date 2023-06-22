@@ -49,14 +49,14 @@ class GroupNameRowView : InputDataRowView {
     private let imageView:ImageView = ImageView()
     private let photoView: TransformImageView = TransformImageView()
     private let tranparentView: View = View()
-    private let circleView = View(frame: NSMakeRect(0, 0, 50, 50))
+    private let circleView = View(frame: NSMakeRect(0, 0, 52, 52))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         containerView.addSubview(photoView)
         containerView.addSubview(tranparentView)
         containerView.addSubview(imageView)
         containerView.addSubview(circleView)
-        photoView.setFrameSize(50, 50)
+        photoView.setFrameSize(52, 52)
         tranparentView.setFrameSize(50, 50)
         photoView.animatesAlphaOnFirstTransition = true
         tranparentView.layer?.cornerRadius = 25
@@ -74,7 +74,7 @@ class GroupNameRowView : InputDataRowView {
         if let path = item.photo, let image = NSImage(contentsOf: URL(fileURLWithPath: path)) {
             
             let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
             photoView.setSignal(chatMessagePhoto(account: item.account, imageReference: ImageMediaReference.standalone(media: image), scale: backingScaleFactor), clearInstantly: false, animate: true)
             
             let arguments = TransformImageArguments(corners: ImageCorners(radius: photoView.frame.width / 2), imageSize: photoView.frame.size, boundingSize: photoView.frame.size, intrinsicInsets: NSEdgeInsets())

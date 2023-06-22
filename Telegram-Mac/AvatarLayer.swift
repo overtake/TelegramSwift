@@ -67,11 +67,28 @@ class AvatarControl: NSView {
             }
         }
     }
+   
+
+    
     private let disposable = MetaDisposable()
 
     private var state: AvatarNodeState = .Empty
     private var account:Account?
+    private var disableForum: Bool = false
     private var contentScale: CGFloat = 0
+    
+    var contentUpdated: ((Any?)->Void)?
+    
+    func callContentUpdater() {
+        self.contentUpdated?(self.imageContents)
+    }
+    
+    var imageContents: Any? {
+        didSet {
+            self.layer?.contents = imageContents
+            self.contentUpdated?(imageContents)
+        }
+    }
     
     public var animated: Bool = false
     private var _attemptLoadNextSynchronous: Bool = false
@@ -122,15 +139,16 @@ class AvatarControl: NSView {
         }
     }
     
-    public func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil) {
+    public func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil, disableForum: Bool = false) {
         self.account = account
+        self.disableForum = disableForum
         let state: AvatarNodeState
         if let peer = peer {
-            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, size, peer.isForum)
+            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, size, peer.isForum && !disableForum)
         } else {
             state = .Empty
         }
-        if self.state != state || self.layer?.contents == nil {
+        if self.state != state || self.imageContents == nil {
             self.state = state
             contentScale = 0
             self.viewDidChangeBackingProperties()
@@ -201,7 +219,7 @@ class AvatarControl: NSView {
             if contentScale != backingScaleFactor {
                 contentScale = backingScaleFactor
                 self.displaySuspended = true
-                self.layer?.contents = nil
+                self.imageContents = nil
                 let photo: PeerPhoto?
                 var updatedSize: NSSize = self.frame.size
                 switch state {
@@ -222,11 +240,11 @@ class AvatarControl: NSView {
                     photo = nil
                 }
                 if let photo = photo {
-                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: updatedSize, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous), force: false)
+                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: updatedSize, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous, disableForum: disableForum), force: false)
                 } else {
-                    let content = self.layer?.contents
+                    let content = self.imageContents
                     self.displaySuspended = false
-                    self.layer?.contents = content
+                    self.imageContents = content
                 }
                 
             }
@@ -241,7 +259,7 @@ class AvatarControl: NSView {
         }
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] image, animated in
             if let strongSelf = self {
-                strongSelf.layer?.contents = image
+                strongSelf.imageContents = image
                 if animated {
                     strongSelf.layer?.animateContents()
                 }
@@ -285,7 +303,7 @@ class AvatarControl: NSView {
         view.wantsLayer = true
         view.background = .clear
         view.layer?.frame = NSMakeRect(0, visibleRect.minY == 0 ? 0 : visibleRect.height - frame.height, frame.width,  frame.height)
-        view.layer?.contents = self.layer?.contents
+        view.layer?.contents = self.imageContents
         view.layer?.masksToBounds = true
         view.frame = self.visibleRect
         view.layer?.shouldRasterize = true

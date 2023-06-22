@@ -55,6 +55,13 @@ class ChatCommentsHeaderItem : TableStickItem {
         super.init(initialSize)
     }
     
+    var shouldBlurService: Bool {
+        if isLite(.blur) {
+            return false
+        }
+        return presentation.shouldBlurService
+    }
+    
     override var canBeAnchor: Bool {
         return false
     }
@@ -117,7 +124,7 @@ class ChatCommentsHeaderView : TableRowView {
         guard let item = item as? ChatCommentsHeaderItem else {
             return
         }
-        if item.presentation.shouldBlurService {
+        if item.shouldBlurService {
             textView.blurBackground = theme.blurServiceColor
             textView.backgroundColor = .clear
         } else {

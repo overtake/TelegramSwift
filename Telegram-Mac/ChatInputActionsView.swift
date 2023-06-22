@@ -168,8 +168,7 @@ class ChatInputActionsView: View {
             
             let context = chatInteraction.context
             let navigation = context.bindings.rootNavigation()
-            NSLog("\(navigation.frame.width), \(context.layout == .dual)")
-            if (navigation.frame.width <= 730 && context.layout == .dual) || !FastSettings.sidebarEnabled {
+            if (navigation.frame.width <= 730) || !FastSettings.sidebarEnabled {
                 self.showEntertainment()
             }
         }, for: .Hover)
@@ -188,7 +187,7 @@ class ChatInputActionsView: View {
                 let chatInteraction = strongSelf.chatInteraction
                 let navigation = chatInteraction.context.bindings.rootNavigation()
                 if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled, sidebarEnabled {
-                    if navigation.frame.width > 730 && chatInteraction.context.layout == .dual {
+                    if navigation.frame.width > 730 {
                         chatInteraction.toggleSidebar()
                     }
                 }
@@ -552,11 +551,18 @@ class ChatInputActionsView: View {
                 case .history, .thread:
                     if !peer.isSecretChat {
                         let text = peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
-                        items.append(ContextMenuItem(text, handler: {
+                        items.append(ContextMenuItem(text, handler: { [weak chatInteraction] in
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak chatInteraction] date in
                                 chatInteraction?.sendMessage(false, date)
                             }), for: context.window)
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
+                        
+                        if peer.id != chatInteraction.context.peerId, chatInteraction.presentation.canScheduleWhenOnline {
+                            
+                            items.append(ContextMenuItem(strings().chatSendSendWhenOnline, handler: { [weak chatInteraction] in
+                                chatInteraction?.sendMessage(false, scheduleWhenOnlineDate)
+                            }, itemImage: MenuAnimation.menu_online.value))
+                        }
                     }
                 default:
                     break

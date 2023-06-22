@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TGUIKit
 
 final class ChatMessageThrottledProcessingManager {
-    private let queue = Queue()
+    private let queue = messagesViewQueue
     
     private let delay: Double
     private let submitInterval: Double?

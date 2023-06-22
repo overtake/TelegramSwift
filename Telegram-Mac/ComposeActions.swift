@@ -18,32 +18,32 @@ func createGroup(with context: AccountContext, selectedPeers:Set<PeerId> = Set()
     
     let select = { SelectPeersController(titles: ComposeTitles(strings().composeSelectUsers, strings().composeNext), context: context, settings: [.contacts, .remote], isNewGroup: true, selectedPeers: selectedPeers) }
     let chooseName = { CreateGroupViewController(titles: ComposeTitles(strings().groupNewGroup, strings().composeCreate), context: context) }
-    let signal = execute(context: context, select, chooseName) |> mapError { _ in return CreateGroupError.generic } |> mapToSignal { (_, result) -> Signal<(PeerId?, String?), CreateGroupError> in
-        let signal = showModalProgress(signal: context.engine.peers.createGroup(title: result.title, peerIds: result.peerIds) |> map { return ($0, result.picture)}, for: context.window, disposeAfterComplete: false)
+    let signal = execute(context: context, select, chooseName) |> castError(CreateGroupError.self) |> mapToSignal { (_, result) -> Signal<(CreateGroupResult?, String?), CreateGroupError> in
+        let signal = showModalProgress(signal: context.engine.peers.createGroup(title: result.title, peerIds: result.peerIds, ttlPeriod: result.autoremoveTimeout) |> map { return ($0, result.picture) }, for: context.window, disposeAfterComplete: false)
         return signal
-    } |> mapToSignal{ peerId, picture -> Signal<(PeerId?, Bool), CreateGroupError> in
-            if let peerId = peerId, let picture = picture {
+    } |> mapToSignal{ result, picture -> Signal<(CreateGroupResult?, Bool), CreateGroupError> in
+            if let result = result, let picture = picture {
                 let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
-                let signal:Signal<(PeerId?, Bool), NoError> = context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                let signal:Signal<(CreateGroupResult?, Bool), NoError> = context.engine.peers.updatePeerPhoto(peerId: result.peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
                     return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                 }) |> `catch` {_ in .complete()} |> map { value in
                     switch value {
                     case .complete:
-                        return (Optional(peerId), false)
+                        return (result, false)
                     default:
                         return (nil, false)
                     }
                 }
                 
-                return .single((peerId, true)) |> then(signal |> mapError { _ in return CreateGroupError.generic})
+                return .single((result, true)) |> then(signal |> castError(CreateGroupError.self))
             }
-            return .single((peerId, true))
+        return .single((result, true))
         } |> deliverOnMainQueue |> filter {$0.1}
     
     
-    _ = signal.start(next: { peerId, complete in
-        if let peerId = peerId, complete {
-            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+    _ = signal.start(next: { result, complete in
+        if let result = result, complete {
+            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(result.peerId)))
         }
     }, error: { error in
         let text: String
@@ -65,6 +65,79 @@ func createGroup(with context: AccountContext, selectedPeers:Set<PeerId> = Set()
     })
 }
 
+
+func createGroupDirectly(with context: AccountContext, selectedPeers: [PeerId] = [], requires: CreateGroupRequires = [], onCreate:@escaping(PeerId)->Void = { _ in })  {
+    let chooseName = CreateGroupViewController(titles: ComposeTitles(strings().groupNewGroup, strings().composeCreate), context: context, requires: requires)
+    let signal = chooseName.onComplete.get() |> mapToSignal { result -> Signal<(CreateGroupResult?, Bool), NoError> in
+        
+        let signal: Signal<CreateGroupResult?, CreateGroupError>
+        if requires.isEmpty {
+            signal = context.engine.peers.createGroup(title: result.title, peerIds: result.peerIds, ttlPeriod: result.autoremoveTimeout)
+        } else {
+            signal = context.engine.peers.createSupergroup(title: result.title, description: nil, username: result.username, isForum: result.isForum) |> map {
+                return .init(peerId: $0, failedToInvitePeerIds: [])
+            } |> mapError { error -> CreateGroupError in
+                switch error {
+                case .generic:
+                    return .generic
+                case .restricted:
+                    return .restricted
+                case .tooMuchJoined:
+                    return .tooMuchJoined
+                case .tooMuchLocationBasedGroups:
+                    return .tooMuchLocationBasedGroups
+                case let .serverProvided(value):
+                    return .serverProvided(value)
+                }
+            }
+        }
+        
+        
+        let createSignal = showModalProgress(signal: signal |> map { return ($0, result.picture ) }, for: context.window, disposeAfterComplete: false)
+
+        return createSignal
+         |> `catch` { _ in
+            return .single((nil, nil))
+         }
+         |> mapToSignal { groupResult, picture -> Signal<(CreateGroupResult?, Bool), NoError> in
+            if let groupResult = groupResult {
+                
+                var additionalSignals:[Signal<Void, NoError>] = []
+                
+                if let picture = picture {
+                    let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
+                    let signal:Signal<Void, NoError> = context.engine.peers.updatePeerPhoto(peerId: groupResult.peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                        return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                    }) |> `catch` { _ in .complete() } |> map { _ in }
+                    additionalSignals.append(signal)
+                }
+                
+                if !requires.isEmpty {
+                    if let username = result.username {
+                        additionalSignals.append(context.engine.peers.updateAddressName(domain: .peer(groupResult.peerId), name: username) |> `catch` { _ in .complete() })
+                    }
+                    additionalSignals.append(context.peerChannelMemberCategoriesContextsManager.addMembersAllowPartial(peerId: groupResult.peerId, memberIds: result.peerIds) |> map { _ in })
+                }
+                
+                let combined:Signal<(CreateGroupResult?, Bool), NoError> = combineLatest(additionalSignals) |> map { _ in (nil, false) }
+                
+                return .single((groupResult, true)) |> then(combined)
+            }
+             return .single((groupResult, true))
+        } |> deliverOnMainQueue
+        
+    }
+    
+    context.bindings.rootNavigation().push(chooseName)
+    chooseName.restart(with: ComposeState(selectedPeers))
+    _ = signal.start(next: { result, complete in
+        if let result = result, complete {
+            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(result.peerId)))
+            onCreate(result.peerId)
+            
+        }
+    })
+}
 
 func createSupergroup(with context: AccountContext, defaultText: String = "") -> Signal<PeerId?, NoError> {
     let chooseName = CreateGroupViewController(titles: ComposeTitles(strings().groupNewGroup, strings().composeCreate), context: context, defaultText: defaultText)
@@ -112,40 +185,39 @@ func createChannel(with context: AccountContext) {
     
     let introCompletion: Signal<Void, NoError> = FastSettings.needShowChannelIntro ? intro.onComplete.get() : Signal<Void, NoError>.single(Void())
     
+    let promise: Promise<PeerId?> = Promise()
+    
     let create = introCompletion |> mapToSignal { () -> Signal<PeerId?, NoError> in
-        let create = CreateChannelViewController(titles: ComposeTitles(strings().channelNewChannel, strings().composeNext), context: context)
+        let create = CreateChannelController(context: context, onComplete: { peerId, completed in
+            FastSettings.markChannelIntroHasSeen()
+            context.bindings.rootNavigation().removeAll()
+            
+            var chat: ChatController? = ChatController(context: context, chatLocation: .peer(peerId))
+            var visibility: ChannelVisibilityController? = ChannelVisibilityController(context, peerId: peerId, isChannel: true, isNew: true)
+
+            chat!.navigationController = context.bindings.rootNavigation()
+            visibility!.navigationController = context.bindings.rootNavigation()
+            
+            chat!.loadViewIfNeeded(context.bindings.rootNavigation().bounds)
+            visibility!.loadViewIfNeeded(context.bindings.rootNavigation().bounds)
+            
+            
+            
+            let chatSignal = chat!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
+            let visibilitySignal = visibility!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
+
+            _ = combineLatest(queue: .mainQueue(), chatSignal, visibilitySignal).start(completed: {
+                context.bindings.rootNavigation().push(chat!)
+                context.bindings.rootNavigation().push(visibility!)
+
+                chat = nil
+                visibility = nil
+            })
+           
+            promise.set(visibility!.onComplete.get() |> map { _ in return peerId })
+        })
         context.bindings.rootNavigation().push(create)
-        return create.onComplete.get() |> deliverOnMainQueue |> filter {$0.1} |> mapToSignal { peerId, _ -> Signal<PeerId?, NoError> in
-            if let peerId = peerId {
-                FastSettings.markChannelIntroHasSeen()
-                context.bindings.rootNavigation().removeAll()
-                
-                var chat: ChatController? = ChatController(context: context, chatLocation: .peer(peerId))
-                var visibility: ChannelVisibilityController? = ChannelVisibilityController(context, peerId: peerId, isChannel: true, isNew: true)
-
-                chat!.navigationController = context.bindings.rootNavigation()
-                visibility!.navigationController = context.bindings.rootNavigation()
-                
-                chat!.loadViewIfNeeded(context.bindings.rootNavigation().bounds)
-                visibility!.loadViewIfNeeded(context.bindings.rootNavigation().bounds)
-                
-                
-                
-                let chatSignal = chat!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
-                let visibilitySignal = visibility!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
-
-                _ = combineLatest(queue: .mainQueue(), chatSignal, visibilitySignal).start(completed: {
-                    context.bindings.rootNavigation().push(chat!)
-                    context.bindings.rootNavigation().push(visibility!)
-
-                    chat = nil
-                    visibility = nil
-                })
-               
-                return visibility!.onComplete.get() |> map {_ in return peerId}
-            }
-            return .single(nil)
-        }
+        return promise.get()
     }
     
     _ = create.start(next: { peerId in

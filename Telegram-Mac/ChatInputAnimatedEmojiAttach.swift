@@ -29,11 +29,11 @@ final class ChatInputAnimatedEmojiAttach: View {
         let fromRect = attachment.fromRect
         
         
-        self.media = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: size)
+        self.media = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: size, textColor: theme.colors.text)
         
         let mediaRect = self.focus(media.frame.size)
         
-        self.media.isPlayable = true
+        self.media.isPlayable = !isLite(.emoji)
         self.media.frame = mediaRect
         self.layer?.addSublayer(media)
         
@@ -42,7 +42,7 @@ final class ChatInputAnimatedEmojiAttach: View {
             self.isHidden = true
             DispatchQueue.main.async {
                 
-                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: size)
+                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: size, textColor: theme.colors.text)
                 let toRect = self.convert(self.bounds, to: nil)
                 
                 let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)

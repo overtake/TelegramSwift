@@ -21,6 +21,38 @@ import ApiCredentials
 
 
 
+
+struct AntiSpamBotConfiguration {
+    static var defaultValue: AntiSpamBotConfiguration {
+        return AntiSpamBotConfiguration(antiSpamBotId: nil, group_size_min: 100)
+    }
+    
+    let antiSpamBotId: EnginePeer.Id?
+    let group_size_min: Int32
+    fileprivate init(antiSpamBotId: EnginePeer.Id?, group_size_min: Int32) {
+        self.antiSpamBotId = antiSpamBotId
+        self.group_size_min = group_size_min
+    }
+    
+    static func with(appConfiguration: AppConfiguration) -> AntiSpamBotConfiguration {
+        if let data = appConfiguration.data, let string = data["telegram_antispam_user_id"] as? String, let value = Int64(string) {
+            let group_size_min: Int32
+            
+            if let string = data["telegram_antispam_group_size_min"] as? String, let value = Int32(string) {
+                group_size_min = value
+            } else {
+                group_size_min = 100
+            }
+            
+            return AntiSpamBotConfiguration(antiSpamBotId: EnginePeer.Id(namespace: Namespaces.Peer.CloudUser, id: EnginePeer.Id.Id._internalFromInt64Value(value)), group_size_min: group_size_min)
+        } else {
+            return .defaultValue
+        }
+    }
+}
+
+
+
 protocol ChatLocationContextHolder: AnyObject {
 }
 
@@ -203,10 +235,20 @@ final class AccountContext {
     
     private let premiumDisposable = MetaDisposable()
     
+    private let globalLocationDisposable = MetaDisposable()
     let globalPeerHandler:Promise<ChatLocation?> = Promise()
     
+    private let _globalLocationId = Atomic<ChatLocation?>(value: nil)
+    var globalLocationId: ChatLocation? {
+        return _globalLocationId.with { $0 }
+    }
+    
+    let globalForumId:ValuePromise<PeerId?> = ValuePromise(nil, ignoreRepeated: true)
+    
     func updateGlobalPeer() {
-        globalPeerHandler.set(globalPeerHandler.get() |> take(1))
+        _ = (self.globalPeerHandler.get() |> take(1)).start(next: { [weak self] location in
+            self?.globalPeerHandler.set(.single(location))
+        })
     }
     
     let hasPassportSettings: Promise<Bool> = Promise(false)
@@ -238,6 +280,10 @@ final class AccountContext {
     private let cloudThemeObserver = MetaDisposable()
     private let freeSpaceDisposable = MetaDisposable()
     private let prefDisposable = DisposableSet()
+    private let reindexCacheDisposable = MetaDisposable()
+    private let shouldReindexCacheDisposable = MetaDisposable()
+    private let checkSidebarShouldEnable = MetaDisposable()
+
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
     
     var limitConfiguration: LimitsConfiguration {
@@ -293,10 +339,15 @@ final class AccountContext {
         return _contentSettings.with { $0 }
     }
     
+    private let _stickerSettings: Atomic<StickerSettings> = Atomic(value: StickerSettings.defaultSettings)
+    
+    var stickerSettings: StickerSettings {
+        return _stickerSettings.with { $0 }
+    }
+    
     
     public var closeFolderFirst: Bool = false
     
-    private let preloadGifsDisposable = MetaDisposable()
     let engine: TelegramEngine
     
     private let giftStickersValues:Promise<[TelegramMediaFile]> = Promise([])
@@ -304,6 +355,7 @@ final class AccountContext {
         return giftStickersValues.get()
     }
 
+    
     
     init(sharedContext: SharedAccountContext, window: Window, account: Account, isSupport: Bool = false) {
         self.sharedContext = sharedContext
@@ -345,7 +397,6 @@ final class AccountContext {
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]).start(next: { view in
             _ = limitConfiguration.swap(view.values[PreferencesKeys.limitsConfiguration]?.get(LimitsConfiguration.self) ?? LimitsConfiguration.defaultValue)
         }))
-        let preloadGifsDisposable = self.preloadGifsDisposable
         let appConfiguration = _appConfiguration
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]).start(next: { view in
             let configuration = view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
@@ -357,31 +408,6 @@ final class AccountContext {
         
         
         #if !SHARE
-        let signal:Signal<Void, NoError> = Signal { subscriber in
-            
-            let signal: Signal<Never, NoError> = account.postbox.transaction {
-                return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
-            } |> mapToSignal { configuration in
-                let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
-                var signals = value.emojis.map {
-                    engine.stickers.searchGifs(query: $0)
-                }
-                signals.insert(engine.stickers.searchGifs(query: ""), at: 0)
-                return combineLatest(signals) |> ignoreValues
-            }
-            
-            let disposable = signal.start(completed: {
-                subscriber.putCompletion()
-            })
-            
-            return ActionDisposable {
-                disposable.dispose()
-            }
-        }
-        
-        let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
-        preloadGifsDisposable.set(updated.start())
-        
        
         let chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager)) |> mapToSignal { appearance, themes in
             var signals:[Signal<(String, TelegramPresentationTheme), NoError>] = []
@@ -538,6 +564,11 @@ final class AccountContext {
             _ = contentSettings.swap(settings)
         }))
         
+        let st = _stickerSettings
+        prefDisposable.add(InAppSettings.stickerSettings(postbox: account.postbox).start(next: { settings in
+            _ = st.swap(settings)
+        }))
+        
         
         globalPeerHandler.set(.single(nil))
         
@@ -573,11 +604,50 @@ final class AccountContext {
             self?.updateTheme(update)
         }))
         
+        var previous: [ChatListFilter]?
+        checkSidebarShouldEnable.set(engine.peers.updatedChatListFilters().start(next: { filters in
+            if previous != filters, let previous = previous {
+                let prevCount = previous.count
+                let newCount = filters.count
+                if newCount > prevCount, newCount > 3 {
+                    _ = updateChatListFolderSettings(account.postbox, { current in
+                        if !current.interacted {
+                            return current.withUpdatedSidebar(true)
+                        } else {
+                            return current
+                        }
+                    }).start()
+                }
+            }
+            previous = filters
+        }))
+        
         
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
         
-       
+//        var shouldReindex: Signal<SomeAccountSettings, NoError> = someAccountSetings(postbox: account.postbox) |> filter { value -> Bool in
+//            if value.appVersion != ApiEnvironment.version {
+//                return true
+//            } else if let time = value.lastChatReindexTime {
+//                return Int32(Date().timeIntervalSince1970) > time
+//            } else {
+//                return true
+//            }
+//        } |> deliverOnMainQueue
+//
+//        shouldReindex = (shouldReindex |> then(.complete() |> suspendAwareDelay(60 * 60, queue: Queue.mainQueue()))) |> restart
+//
+//        shouldReindexCacheDisposable.set(shouldReindex.start(next: { [weak self] _ in
+//            self?.reindexCacheDisposable.set(engine.resources.reindexCacheInBackground(lowImpact: true).start())
+//            _ = updateSomeSettingsInteractively(postbox: account.postbox, { settings in
+//                var settings = settings
+//                settings.lastChatReindexTime = Int32(Date().timeIntervalSince1970) + 2 * 60 * 60 * 24
+//                settings.appVersion = ApiEnvironment.version
+//                return settings
+//            }).start()
+//        }))
+//
         
         #if !SHARE
         var freeSpaceSignal:Signal<UInt64?, NoError> = Signal { subscriber in
@@ -633,6 +703,10 @@ final class AccountContext {
             self?.isPremium = value
         }))
         
+        self.globalLocationDisposable.set(globalPeerHandler.get().start(next: { [weak self] value in
+            _ = self?._globalLocationId.swap(value)
+        }))
+        
     }
     
     @objc private func updateKeyWindow() {
@@ -641,6 +715,13 @@ final class AccountContext {
     
     func focus() {
         window.makeKeyAndOrderFront(nil)
+    }
+    
+    func isLite(_ key: LiteModeKey = .any) -> Bool {
+        #if !SHARE
+        return sharedContext.isLite(key)
+        #endif
+        return false
     }
     
     private func updateTheme(_ update: ApplyThemeUpdate) {
@@ -720,9 +801,12 @@ final class AccountContext {
         actualizeCloudTheme.dispose()
         applyThemeDisposable.dispose()
         cloudThemeObserver.dispose()
-        preloadGifsDisposable.dispose()
         freeSpaceDisposable.dispose()
         premiumDisposable.dispose()
+        globalLocationDisposable.dispose()
+        reindexCacheDisposable.dispose()
+        shouldReindexCacheDisposable.dispose()
+        checkSidebarShouldEnable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
@@ -979,7 +1063,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
         |> deliverOnMainQueue
     } else if let file = cloudTheme.file {
         return Signal { subscriber in
-            let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
+            let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .file, reference: MediaResourceReference.standalone(resource: file.resource)).start()
             let wallpaperDisposable = DisposableSet()
             
             let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1)
@@ -1129,3 +1213,30 @@ private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
     }
 }
 
+
+/*
+ let signal:Signal<Void, NoError> = Signal { subscriber in
+     
+     let signal: Signal<Never, NoError> = account.postbox.transaction {
+         return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
+     } |> mapToSignal { configuration in
+         let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
+         var signals = value.emojis.map {
+             engine.stickers.searchGifs(query: $0)
+         }
+         signals.insert(engine.stickers.searchGifs(query: ""), at: 0)
+         return combineLatest(signals) |> ignoreValues
+     }
+     
+     let disposable = signal.start(completed: {
+         subscriber.putCompletion()
+     })
+     
+     return ActionDisposable {
+         disposable.dispose()
+     }
+ }
+ 
+ let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
+ preloadGifsDisposable.set(updated.start())
+ */

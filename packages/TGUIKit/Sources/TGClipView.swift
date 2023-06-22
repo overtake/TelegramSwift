@@ -185,7 +185,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         if layer?.animation(forKey: "bounds") != nil {
             return true
         }
-        return false
+        return self.point != nil
     }
     
     func endScroll() -> Void {
@@ -209,17 +209,23 @@ public class TGClipView: NSClipView,CALayerDelegate {
 //        return -endValue/2 * ((newElapsedTimeMs)*(newElapsedTimeMs-2) - 1) + startValue
 //    }
 
+    public func reset() {
+        endScroll()
+        if let destinationOrigin = destinationOrigin {
+            super.scroll(to: destinationOrigin)
+            handleCompletionIfNeeded(withSuccess: false)
+        }
+    }
     
     public func updateOrigin() -> Void {
         if (self.window == nil) {
-            self.endScroll()
+            self.reset()
             return;
         }
         
         if let destination = self.destinationOrigin {
             var o:CGPoint = self.bounds.origin;
             let lastOrigin:CGPoint = o;
-            var _:CGFloat = self.decelerationRate;
             
             
             
@@ -231,32 +237,18 @@ public class TGClipView: NSClipView,CALayerDelegate {
             
             
             // Make this call so that we can force an update of the scroller positions.
-            self.containingScrollView?.reflectScrolledClipView(self);
+      //      self.containingScrollView?.reflectScrolledClipView(self);
             
-            if ((abs(o.x - lastOrigin.x) < 0.1 && abs(o.y - lastOrigin.y) < 0.1)) {
-                if destination.x == o.x && destination.y == o.y {
-                    self.endScroll()
-                    super.scroll(to: o)
-                    handleCompletionIfNeeded(withSuccess: true)
-                } else {
-                    _ = destination.x - o.x
-                    let ydif = ceil(destination.y - o.y)
-                    let xdif = ceil(destination.x - o.x)
-
-         
-                    if ydif != 0 {
-                        let incY = abs(ydif) - abs(ydif + 1)
-                        o.y -= incY
-                    }
-                    if xdif != 0 {
-                        let incX = abs(xdif) - abs(xdif + 1)
-                        o.x -= incX
-                    }
-                    super.scroll(to: o)
-                }
-                
-                
+            if ((abs(o.x - lastOrigin.x) < 1 && abs(o.y - lastOrigin.y) < 1)) {
+                self.endScroll()
+                super.scroll(to: destination)
+                self.handleCompletionIfNeeded(withSuccess: true)
+            } else if o == destination {
+                self.endScroll()
+                self.handleCompletionIfNeeded(withSuccess: true)
             }
+        } else {
+            endScroll()
         }
         
 
@@ -295,30 +287,61 @@ public class TGClipView: NSClipView,CALayerDelegate {
         return success
     }
     
+    var documentOffset: NSPoint {
+        return self.point ?? self.bounds.origin
+    }
+        
+    private(set) var point: NSPoint?
     
     public func scroll(to point: NSPoint, animated:Bool, completion: @escaping (Bool) -> Void = {_ in})  {
         
-        self.scrollCompletion?(false)
-        self.shouldAnimateOriginChange = animated
         self.scrollCompletion = completion
+        self.destinationOrigin = point
         if animated {
-            self.layer?.removeAllAnimations()
-            beginScroll()
-        }
-        if animated && abs(bounds.minY - point.y) > frame.height {
-            let y:CGFloat
-            if bounds.minY < point.y {
-                y = point.y - floor(frame.height / 2)
-            } else {
-                y = point.y + floor(frame.height / 2)
-            }
-            super.scroll(to: NSMakePoint(point.x,y))
-            DispatchQueue.main.async(execute: { [weak self] in
-                self?.scroll(to: point)
+            
+            self.point = point
+            NSAnimationContext.runAnimationGroup({ ctx in
+                ctx.duration = 0.35
+                let timingFunction = CAMediaTimingFunction(controlPoints: 0.5, 1.0 + 0.4 / 3.0, 1.0, 1.0)
+                ctx.timingFunction = timingFunction
+                self.animator().setBoundsOrigin(point)
+            }, completionHandler: {
+//                if point != self.bounds.origin, self.point == point {
+//                    self.setBoundsOrigin(point)
+//                }
+                self.destinationOrigin = nil
+                self.point = nil
+                self.scrollCompletion?(point == self.bounds.origin)
             })
         } else {
-            self.scroll(to: point)
+            self.setBoundsOrigin(point)
+            self.point = nil
+            self.destinationOrigin = nil
+            self.scrollCompletion?(false)
         }
+        
+//        self.scrollCompletion?(false)
+//        self.shouldAnimateOriginChange = animated
+//        self.scrollCompletion = completion
+        
+//        if animated {
+//            self.layer?.removeAllAnimations()
+//            beginScroll()
+//        }
+//        if animated && abs(bounds.minY - point.y) > frame.height {
+//            let y:CGFloat
+//            if bounds.minY < point.y {
+//                y = point.y - floor(frame.height / 2)
+//            } else {
+//                y = point.y + floor(frame.height / 2)
+//            }
+//            super.scroll(to: NSMakePoint(point.x,y))
+//            DispatchQueue.main.async(execute: { [weak self] in
+//                self?.scroll(to: point)
+//            })
+//        } else {
+//            self.scroll(to: point)
+//        }
         
     }
     
@@ -335,7 +358,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
             self.beginScroll()
         } else {
             if !isAnimateScrolling {
-                self.destinationOrigin = newOrigin;
+                self.destinationOrigin = nil;
                 self.endScroll()
                 super.scroll(to: newOrigin)
                 Queue.mainQueue().justDispatch {
@@ -357,6 +380,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     func handleCompletionIfNeeded(withSuccess success: Bool) {
+        self.destinationOrigin = nil
         if self.scrollCompletion != nil {
           //  super.scroll(to: bounds.origin)
             self.scrollCompletion!(success)
@@ -364,4 +388,11 @@ public class TGClipView: NSClipView,CALayerDelegate {
         }
     }
     
+    
+    public override func isAccessibilityElement() -> Bool {
+        return false
+    }
+    public override func accessibilityParent() -> Any? {
+        return nil
+    }
 }

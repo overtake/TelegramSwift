@@ -52,7 +52,7 @@ final class RenderAtomic<T> {
 
 
 let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 1.0)
-private let stateQueue = Queue()
+let lottieStateQueue = Queue(name: "lottieStateQueue", qos: .utility)
 
 
 
@@ -465,7 +465,7 @@ final class LottieSoundEffect {
     private(set) var isPlayable: Bool = false
     
     init(file: TelegramMediaFile, postbox: Postbox, triggerOn: Int32?) {
-        self.player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true)
+        self.player = MediaPlayer(postbox: postbox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: file.resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true)
         self.triggerOn = triggerOn
     }
     func play() {
@@ -602,9 +602,9 @@ private final class PlayerRenderer {
         
         let initialState = RendererState(cancelled: false, animation: self.animation, container: player, frames: [], cachedFrames: [:], currentFrame: currentFrame, startFrame: startFrame, endFrame: endFrame)
         
-        let stateValue:RenderAtomic<RendererState?> = RenderAtomic(value: initialState)
-        let updateState:(_ f:(RendererState?)->RendererState?)->Void = { f in
-            _ = stateValue.modify(f)
+        var stateValue:RenderAtomic<RendererState?>? = RenderAtomic(value: initialState)
+        let updateState:(_ f:(RendererState?)->RendererState?)->Void = { [weak stateValue] f in
+            _ = stateValue?.modify(f)
         }
         
         self.getCurrentFrame = { [weak stateValue] in
@@ -630,11 +630,12 @@ private final class PlayerRenderer {
             }
             framesTask?.cancel()
             framesTask = nil
-            _ = stateValue.swap(nil)
+            _ = stateValue?.swap(nil)
+            stateValue = nil
         }
         
-        let currentState:(_ state: RenderAtomic<RendererState?>) -> RendererState? = { state in
-            return state.with { $0 }
+        let currentState:(_ state: RenderAtomic<RendererState?>?) -> RendererState? = { state in
+            return state?.with { $0 }
         }
         
         var renderNext:(()->Void)? = nil
@@ -644,7 +645,7 @@ private final class PlayerRenderer {
         var playedCount: Int32 = 0
         var loopCount: Int32 = 0
         var previousFrame: Int32 = 0
-        let render:()->Void = { [weak self] in
+        let render:()->Void = { [weak self, weak stateValue] in
             var hungry: Bool = false
             var cancelled: Bool = false
             if let renderer = self {
@@ -778,9 +779,9 @@ private final class PlayerRenderer {
         var firstTimeRendered: Bool = true
         
         let maximum = Int(initialState.endFrame - initialState.startFrame)
-        framesTask = ThreadPoolTask { state in
+        framesTask = ThreadPoolTask { [weak stateValue] state in
             _ = isRendering.swap(true)
-            _ = stateValue.with { stateValue -> RendererState? in
+            _ = stateValue?.with { stateValue -> RendererState? in
                 while let stateValue = stateValue, stateValue.frames.count < min(maximum_renderer_frames, maximum) {
                     let cancelled = state.cancelled.with({$0})
                     if cancelled {
@@ -1239,7 +1240,7 @@ private final class LottieRenderer : RenderContainer {
                 data = frame
             }
         }
-        if frame > endFrame - 1 {
+        if frame > endFrame {
             return nil
         }
         if data == nil {
@@ -1321,7 +1322,7 @@ final class LottieAnimation : Equatable {
     }
 
     
-    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue, metalSupport: Bool = false) {
+    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = lottieStateQueue, metalSupport: Bool = false) {
         self.compressed = compressed
         self.key = key.withUpdatedColors(colors)
         self.cache = cachePurpose
@@ -1504,7 +1505,7 @@ private final class Loop {
         self.commandQueue = commandQueue
         self.timer = SwiftSignalKit.Timer(timeout: 1 / TimeInterval(runLoop.fps), repeat: true, completion: { [weak self] in
             self?.renderItems()
-        }, queue: stateQueue)
+        }, queue: lottieStateQueue)
         
         self.timer?.start()
     }
@@ -1557,7 +1558,7 @@ final class MetalContext {
     private var loops: QueueLocalObject<Loops>
     
     init?() {
-        self.loops = QueueLocalObject(queue: stateQueue, generate: {
+        self.loops = QueueLocalObject(queue: lottieStateQueue, generate: {
             return Loops()
         })
         self.displayId = CGMainDisplayID()
@@ -2014,7 +2015,7 @@ class LottiePlayerView : View {
             }
         } else {
             self.context = nil
-            self.stateValue.set(self._currentState.modify { _ in .stoped })
+            //self.stateValue.set(self._currentState.modify { _ in .stoped })
         }
     }
 }

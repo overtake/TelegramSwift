@@ -102,12 +102,18 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     
     let openPremium:(()->Void)?
     let installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)?
+//
+//    override var identifier: String {
+//        let ids: String = _items.reduce("", { $0 + "\($1.file.fileId.id)" })
+//        return "emojies_\(ids)"
+//    }
     
     enum Mode {
         case panel
         case preview
         case reactions
         case statuses
+        case topic
     }
     let mode: Mode
     
@@ -139,7 +145,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         if let _ = info {
             switch mode {
-            case .panel, .reactions, .statuses:
+            case .panel, .reactions, .statuses, .topic:
                 if isPremium && !context.isPremium {
                     if installed {
                         self.unlockText = (strings().emojiPackRestore, true, true)
@@ -234,7 +240,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             height += nameLayout.layoutSize.height + (unlockText != nil ? 15 : 5)
         }
         
-        let perline: CGFloat = floor(width / itemSize.width)
+        let perline: CGFloat = floor(max(300, width - 20) / itemSize.width)
 
         
         height += self.itemSize.height * CGFloat(ceil(CGFloat(items.count) / perline))
@@ -254,6 +260,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         let context = self.context
         
         var copyItem: ContextMenuItem?
+        var setStatus: ContextMenuItem?
         if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
             let input: ChatTextInputState
             if let bundle = file.stickerText {
@@ -265,6 +272,17 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             copyItem = ContextMenuItem(strings().contextCopy, handler: {
                 copyToClipboard(input)
             }, itemImage: MenuAnimation.menu_copy.value)
+            
+            
+        }
+        
+        if context.isPremium {
+            if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
+                setStatus = .init(strings().emojiContextSetStatus, handler: {
+                    _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+                    showModalText(for: context.window, text: strings().emojiContextSetStatusSuccess)
+                }, itemImage: MenuAnimation.menu_smile.value)
+            }
         }
         
         switch mode {
@@ -283,6 +301,9 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 
                 if let copyItem = copyItem {
                     items.append(copyItem)
+                }
+                if let setStatus = setStatus {
+                    items.append(setStatus)
                 }
             }
             return .single(items)
@@ -309,14 +330,23 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                     }
                 }
             }
+            
             return .single(items)
         case .preview:
             if let copyItem = copyItem {
                 items.append(copyItem)
             }
+            if let setStatus = setStatus {
+                items.append(setStatus)
+            }
             return .single(items)
         default:
             break
+        }
+        
+        
+        if let setStatus = setStatus {
+            items.append(setStatus)
         }
         
         if stableId == AnyHashable(0) || self.viewSet == nil {
@@ -350,7 +380,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     func invokeLockAction() {
         if let info = info {
             switch mode {
-            case .panel, .reactions, .statuses:
+            case .panel, .reactions, .statuses, .topic:
                 if isPremium && !context.isPremium {
                     self.openPremium?()
                 } else if !installed {
@@ -371,17 +401,19 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
 
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
-        
-//        if let item = itemUnderMouse?.1, let file = item.item?.file, let emojiReference = file.emojiReference {
-//            let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
-//            if file.isVideoSticker && !file.isWebm {
-//                return (.file(reference, GifPreviewModalView.self), nil)
-//            } else if file.isAnimatedSticker || file.isWebm {
-//                return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
-//            } else if file.isStaticSticker {
-//                return (.file(reference, StickerPreviewModalView.self), nil)
-//            }
-//        }
+        if let item = itemUnderMouse?.1, let file = item.item?.file {
+            let emojiReference = file.emojiReference ?? file.stickerReference
+            if let emojiReference = emojiReference {
+                let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
+                if file.isVideoSticker && !file.isWebm {
+                    return (.file(reference, GifPreviewModalView.self), nil)
+                } else if file.isAnimatedSticker || file.isWebm || file.isCustomEmoji {
+                    return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
+                } else if file.isStaticSticker  {
+                    return (.file(reference, StickerPreviewModalView.self), nil)
+                }
+            }
+        }
         return nil
     }
     
@@ -795,7 +827,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
             }
         }
     }
@@ -852,12 +884,20 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
                     view = current
                 } else {
-                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    if let layer = self.inlineStickerItemViews[id] {
+                        performSublayerRemoval(layer, animated: animated, scale: true)
+                    }
+                    let mode = (self.item as? EmojiesSectionRowItem)?.mode
+                    let isPanel = mode == .panel || mode == .preview
                     
-                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size, textColor: isPanel ? theme.colors.text : theme.colors.accent)
                     self.inlineStickerItemViews[id] = view
                     view.superview = contentView
                     contentView.layer?.addSublayer(view)
+                    if animated {
+                        view.animateScale(from: 0.1, to: 1, duration: 0.3, timingFunction: .spring)
+                        view.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                 }
                 
                 if #available(macOS 10.15, *) {
@@ -898,7 +938,6 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && isKeyWindow
                 view.frame = rect
             }
         }
@@ -907,7 +946,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         for (key, itemLayer) in self.inlineStickerItemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
-                itemLayer.removeFromSuperlayer()
+                performSublayerRemoval(itemLayer, animated: animated, scale: true)
             }
         }
         for key in removeKeys {
@@ -935,56 +974,21 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         for key in removeSelectionKeys {
             self.selectedLayers.removeValue(forKey: key)
         }
+        self.updateAnimatableContent()
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? EmojiesSectionRowItem {
+            if item.mode == .topic {
+                return true
+            }
+            return item.context.isLite(.emoji)
+        }
         
+        return super.isEmojiLite
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
-
-
-/*
- let groupBorderFrame = NSMakeRect(10, 8, bounds.width - 20, bounds.height - 2 - 8)
-
- 
- shapeLayer.frame = groupBorderFrame
- 
- 
- let radius: CGFloat = 10
- 
- let headerWidth: CGFloat = container.frame.width + 10
- 
- let path = CGMutablePath()
- path.move(to: CGPoint(x: floor((groupBorderFrame.width - headerWidth) / 2.0), y: 0.0))
- path.addLine(to: CGPoint(x: radius, y: 0.0))
- path.addArc(tangent1End: CGPoint(x: 0.0, y: 0.0), tangent2End: CGPoint(x: 0.0, y: radius), radius: radius)
- path.addLine(to: CGPoint(x: 0.0, y: groupBorderFrame.height - radius))
- path.addArc(tangent1End: CGPoint(x: 0.0, y: groupBorderFrame.height), tangent2End: CGPoint(x: radius, y: groupBorderFrame.height), radius: radius)
- path.addLine(to: CGPoint(x: groupBorderFrame.width - radius, y: groupBorderFrame.height))
- path.addArc(tangent1End: CGPoint(x: groupBorderFrame.width, y: groupBorderFrame.height), tangent2End: CGPoint(x: groupBorderFrame.width, y: groupBorderFrame.height - radius), radius: radius)
- path.addLine(to: CGPoint(x: groupBorderFrame.width, y: radius))
- path.addArc(tangent1End: CGPoint(x: groupBorderFrame.width, y: 0.0), tangent2End: CGPoint(x: groupBorderFrame.width - radius, y: 0.0), radius: radius)
- path.addLine(to: CGPoint(x: floor((groupBorderFrame.width - headerWidth) / 2.0) + headerWidth, y: 0.0))
- 
- let pathLength = (2.0 * groupBorderFrame.width + 2.0 * groupBorderFrame.height - 8.0 * radius + 2.0 * .pi * radius) - headerWidth
- 
- var numberOfDashes = Int(floor(pathLength / 6.0))
- if numberOfDashes % 2 == 0 {
-     numberOfDashes -= 1
- }
- let wholeLength = 6.0 * CGFloat(numberOfDashes)
- let remainingLength = pathLength - wholeLength
- let dashSpace = remainingLength / CGFloat(numberOfDashes)
-                        
- shapeLayer.path = path
- shapeLayer.lineDashPattern = [(5.0 + dashSpace) as NSNumber, (7.0 + dashSpace) as NSNumber]
-
- 
- shapeLayer.strokeColor = theme.colors.grayIcon.withAlphaComponent(0.7).cgColor
- shapeLayer.lineWidth = 1
- shapeLayer.lineCap = .round
- shapeLayer.fillColor = nil
- 
- shapeLayer.opacity = !item.context.isPremium && item.isPremium ? 1 : 0
- */

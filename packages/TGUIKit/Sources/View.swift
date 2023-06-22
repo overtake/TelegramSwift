@@ -238,7 +238,13 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         return flip
     }
     
+    open override func accessibilityParent() -> Any? {
+        return nil
+    }
 
+    open override func isAccessibilityElement() -> Bool {
+        return false
+    }
     
     public init() {
         super.init(frame: NSZeroRect)
@@ -250,14 +256,14 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
        // self.layer?.delegate = self
-      //  self.layer?.isOpaque = false
+        self.layer?.isOpaque = true
        // self.autoresizesSubviews = false
        // self.layerContentsRedrawPolicy = .onSetNeedsDisplay
        // self.layer?.drawsAsynchronously = System.drawAsync
         if #available(macOS 10.15, *) {
             self.layer?.cornerCurve = .continuous
         }
-
+       // self.translatesAutoresizingMaskIntoConstraints = false
     }
     
     override required public init(frame frameRect: NSRect) {
@@ -269,25 +275,27 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
      //   self.layer?.delegate = self
-      //  self.layer?.isOpaque = false
+        self.layer?.isOpaque = true
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
       //  self.layer?.drawsAsynchronously = System.drawAsync
         if #available(macOS 10.15, *) {
             self.layer?.cornerCurve = .continuous
         }
+       // self.translatesAutoresizingMaskIntoConstraints = false
 
     }
     
-//    open override var wantsDefaultClipping: Bool {
-//        return false
-//    }
+    
+    open override var wantsDefaultClipping: Bool {
+        return false
+    }
     
     open override var translatesAutoresizingMaskIntoConstraints: Bool {
         get {
             return true
         }
         set {
-            
+
         }
     }
     

@@ -14,7 +14,7 @@ import DateUtils
 
 private var banHelp:[TelegramChatBannedRightsFlags] {
     var order:[TelegramChatBannedRightsFlags] = []
-    order.append(.banSendMessages)
+    order.append(.banSendText)
     order.append(.banReadMessages)
     order.append(.banChangeInfo)
     order.append(.banSendMedia)
@@ -511,13 +511,13 @@ class ServiceEventLogItem: TableRowItem {
             case .deleteMessage:
                 serviceInfo = ServiceTextInfo(text: strings().eventLogServiceDeletedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
             case let .editMessage(prev, new):
-                if new.effectiveMedia is TelegramMediaImage || new.effectiveMedia is TelegramMediaFile {
+                if new.anyMedia is TelegramMediaImage || new.anyMedia is TelegramMediaFile {
                     if !new.media[0].isSemanticallyEqual(to: prev.media[0]) {
                         serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMedia(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                     } else {
                         serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedCaption(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                     }
-                } else if let media = new.effectiveMedia as? TelegramMediaAction {
+                } else if let media = new.anyMedia as? TelegramMediaAction {
                     switch media.action {
                     case let .groupPhoneCall(_, _, _, duration):
                         if let duration = duration {
@@ -536,7 +536,7 @@ class ServiceEventLogItem: TableRowItem {
                     serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                 }
             case let .sendMessage(new):
-                if let media = new.effectiveMedia as? TelegramMediaAction {
+                if let media = new.extendedMedia as? TelegramMediaAction {
                     switch media.action {
                     case let .groupPhoneCall(_, _, _, duration):
                         if let duration = duration {
@@ -722,9 +722,14 @@ class ServiceEventLogItem: TableRowItem {
                     let text = strings().channelAdminLogRevokedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
                 }
-            case let .participantJoinedViaInvite(invite):
+            case let .participantJoinedViaInvite(invite, joinedViaFolderLink):
                 if let invite = invite._invitation {
-                    let text = strings().channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    let text: String
+                    if joinedViaFolderLink {
+                       text = strings().channelAdminLogJoinedViaInviteLinkViaFolder(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    } else {
+                       text = strings().channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    }
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
                 }
             case let  .participantJoinByRequest(invite, peerId):
@@ -762,10 +767,17 @@ class ServiceEventLogItem: TableRowItem {
                     let text = strings().channelEventLogServiceTopicEdited(peer.displayTitle, newInfo.info.title)
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
                 }
+            case let .toggleAntiSpam(isEnabled):
+                let text: String
+                if isEnabled {
+                    text = strings().channelEventLogServiceAntispamEnabled(peer.displayTitle)
+                } else {
+                    text = strings().channelEventLogServiceAntispamDisabled(peer.displayTitle)
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:
                 break
             }
-            //
             if let serviceInfo = serviceInfo {
                 _ = attributedString.append(string: serviceInfo.text, color: theme.colors.grayText, font: .normal(.text))
                 

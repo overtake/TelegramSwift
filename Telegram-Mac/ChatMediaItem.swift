@@ -19,6 +19,10 @@ class ChatMediaLayoutParameters : Equatable {
     var showMedia:(Message)->Void = {_ in }
     var showMessage:(Message)->Void = {_ in }
     
+    let isRevealed: Bool
+    var forceSpoiler: Bool = false
+    
+    var revealMedia:(Message)->Void = { _ in }
     
     var chatLocationInput:(Message)->ChatLocationInput = { _ in fatalError() }
     var chatMode:ChatMode = .history
@@ -83,12 +87,13 @@ class ChatMediaLayoutParameters : Equatable {
     var automaticDownloadFunc:(Message)->Bool
     
     
-    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings) {
+    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings, isRevealed: Bool? = nil) {
         self.automaticDownloadFunc = { _ in
             return automaticDownload
         }
         self.presentation = presentation
         self.media = media
+        self.isRevealed = isRevealed ?? false
         self.autoplayMedia = autoplayMedia
         self._automaticDownload = automaticDownload
         if let media = media as? TelegramMediaFile {
@@ -103,7 +108,7 @@ class ChatMediaLayoutParameters : Equatable {
     }
     
     
-    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool, isFile: Bool = false, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false, isCopyProtected: Bool = false) -> ChatMediaLayoutParameters {
+    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool, isFile: Bool = false, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false, isCopyProtected: Bool = false, isRevealed: Bool? = nil) -> ChatMediaLayoutParameters {
         if media.isInstantVideo && !isFile {
             var duration:Int = 0
             for attr in media.attributes {
@@ -115,7 +120,7 @@ class ChatMediaLayoutParameters : Equatable {
                 }
             }
             
-            return ChatMediaVideoMessageLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
+            return ChatMediaVideoMessageLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia, isRevealed: isRevealed)
         } else if media.isVoice && !isFile {
             var waveform:AudioWaveform? = nil
             var duration:Int = 0
@@ -167,7 +172,7 @@ class ChatMediaLayoutParameters : Equatable {
             if let name = media.fileName {
                 fileName = name
             }
-            return  ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media, automaticDownload: automaticDownload, isIncoming: isIncoming, autoplayMedia: autoplayMedia, isChatRelated: isChatRelated, isCopyProtected: isCopyProtected)
+            return ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media, automaticDownload: automaticDownload, isIncoming: isIncoming, autoplayMedia: autoplayMedia, isChatRelated: isChatRelated, isCopyProtected: isCopyProtected)
         }
     }
     
@@ -180,9 +185,9 @@ class ChatMediaLayoutParameters : Equatable {
 class ChatMediaGalleryParameters : ChatMediaLayoutParameters {
     let isWebpage: Bool
 
-    init(showMedia:@escaping(Message)->Void = { _ in }, showMessage:@escaping(Message)->Void = { _ in }, isWebpage: Bool, presentation: ChatMediaPresentation = .Empty, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences = AutoplayMediaPreferences.defaultSettings) {
+    init(showMedia:@escaping(Message)->Void = { _ in }, showMessage:@escaping(Message)->Void = { _ in }, isWebpage: Bool, presentation: ChatMediaPresentation = .Empty, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences = AutoplayMediaPreferences.defaultSettings, isRevealed: Bool? = nil) {
         self.isWebpage = isWebpage
-        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia, isRevealed: isRevealed)
         self.showMedia = showMedia
         self.showMessage = showMessage
     }
@@ -203,6 +208,8 @@ class ChatMediaItem: ChatRowItem {
             updateParameters()
         }
     }
+    
+    
     
     private func updateParameters() {
         parameters?.chatLocationInput = chatInteraction.chatLocationInput
@@ -233,6 +240,10 @@ class ChatMediaItem: ChatRowItem {
             } else if let media = media as? TelegramMediaImage {
                 chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
             }
+        }
+        
+        parameters?.revealMedia = { [weak self] message in
+            self?.chatInteraction.revealMedia(message.id)
         }
     }
     
@@ -266,13 +277,16 @@ class ChatMediaItem: ChatRowItem {
     }
     
 
+    var hasUpsideSomething: Bool {
+        return authorText != nil || replyModel != nil || topicLinkLayout != nil || forwardNameLayout != nil
+    }
     
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
         
-        if hasBubble, isBubbleFullFilled, (authorText == nil && replyModel == nil && forwardNameLayout == nil) {
+        if hasBubble, isBubbleFullFilled, !hasUpsideSomething {
             offset.y -= (defaultContentInnerInset + 1)
-        } else if hasBubble, !isBubbleFullFilled, replyModel != nil || forwardNameLayout != nil {
+        } else if hasBubble, !isBubbleFullFilled, hasUpsideSomething {
             offset.y += defaultContentInnerInset
         }
         
@@ -367,7 +381,7 @@ class ChatMediaItem: ChatRowItem {
             
             }, showMessage: { [weak self] message in
                 self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia)
+            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia, isRevealed: entry.isRevealed)
         
         self.parameters = parameters
         
@@ -395,27 +409,42 @@ class ChatMediaItem: ChatRowItem {
                 types.insert(.Commands)
             }
             
+           
+            var text: String = message.text
+            var attributes: [MessageAttribute] = message.attributes
+            var isLoading: Bool = false
+            if let translate = entry.additionalData.translate {
+                switch translate {
+                case .loading:
+                    isLoading = true
+                case let .complete(toLang):
+                    if let attribute = message.translationAttribute(toLang: toLang) {
+                        text = attribute.text
+                        attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
+                    }
+                }
+            }
+            
             var hasEntities: Bool = false
-            for attr in message.attributes {
+            for attr in attributes {
                 if attr is TextEntitiesMessageAttribute {
                     hasEntities = true
                     break
                 }
             }
             var mediaDuration: Double? = nil
-            if let file = message.effectiveMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
+            if let file = message.anyMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
                 mediaDuration = Double(duration)
             }
             
-          
             
-            caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
+            caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
                 self?.parameters?.set_timeCodeInitializer(timecode)
                 self?.parameters?.showMedia(message)
             }, openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
             
             var spoilers:[TextViewLayout.Spoiler] = []
-            for attr in message.attributes {
+            for attr in attributes {
                 if let attr = attr as? TextEntitiesMessageAttribute {
                     for entity in attr.entities {
                         switch entity.type {
@@ -440,7 +469,7 @@ class ChatMediaItem: ChatRowItem {
             }
             if !(self is ChatVideoMessageItem) {
                 
-                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
                 
                 caption.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: caption.range, options: .init(), using: { value, range, stop in
                     if let text = value as? TGInputTextTag {
@@ -456,7 +485,7 @@ class ChatMediaItem: ChatRowItem {
                             $0.withRevealedSpoiler(message.id)
                         })
                     })
-                })))
+                }), isLoading: isLoading))
             }
             
             let interactions = globalLinkExecutor
@@ -503,7 +532,7 @@ class ChatMediaItem: ChatRowItem {
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
             }
-            if authorText == nil && replyModel == nil && forwardNameLayout == nil {
+            if !hasUpsideSomething {
                 positionFlags.insert(.top)
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
@@ -615,7 +644,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
                     var representations: [TelegramMediaImageRepresentation] = []
                     representations.append(contentsOf: file.previewRepresentations)
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                     let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
@@ -778,7 +807,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
         rightView.layer?.cornerRadius = self.rightView.layer!.cornerRadius
         var rect = self.rightView.convert(self.rightView.bounds, to: contentNode)
         
-        if contentNode.visibleRect.minY < rect.midY && contentNode.visibleRect.minY + contentNode.visibleRect.height > rect.midY {
+        if contentNode.effectiveVisibleRect.minY < rect.midY && contentNode.effectiveVisibleRect.minY + contentNode.effectiveVisibleRect.height > rect.midY {
             rect.origin.y = contentNode.frame.height - rect.maxY
             rightView.frame = rect
             view.addSubview(rightView)

@@ -66,7 +66,7 @@ final class InputDataDataSelectorRowView : GeneralContainableRowView {
             guard let item = self?.item as? InputDataDataSelectorRowItem else {return}
             showModal(with: ValuesSelectorModalController(values: item.values, selected: item.values.first(where: {$0.value == item.value}), title: item.placeholderLayout.attributedString.string, onComplete: { [weak item] newValue in
                 item?._value = newValue.value
-                item?.redraw()
+                item?.noteHeightOfRow()
             }), for: mainWindow)
         }, for: .Click)
     }

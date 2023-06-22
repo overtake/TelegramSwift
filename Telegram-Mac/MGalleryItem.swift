@@ -76,8 +76,8 @@ func <(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .photo(lhsIndex, _, _, _, _, _, _):
-        if  case let .photo(rhsIndex, _, _, _, _, _, _) = rhs {
+    case let .photo(lhsIndex, _, _, _, _, _, _, _, _):
+        if  case let .photo(rhsIndex, _, _, _, _, _, _, _, _) = rhs {
             return lhsIndex < rhsIndex
         } else {
             return false
@@ -105,9 +105,9 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
         } else {
             return false
         }
-    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference, lhsPeer, _, lhsDate):
-        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference, rhsPeer, _, rhsDate) = rhs {
-            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference && lhsPeer.isEqual(rhsPeer) && lhsDate == rhsDate
+    case let .photo(lhsIndex, lhsStableId, lhsPhoto, lhsReference, lhsPeer, _, lhsDate, lhsCaption, lhsPublicPhoto):
+        if  case let .photo(rhsIndex, rhsStableId, rhsPhoto, rhsReference, rhsPeer, _, rhsDate, rhsCaption, rhsPublicPhoto) = rhs {
+            return lhsIndex == rhsIndex && lhsStableId == rhsStableId && lhsPhoto.isEqual(to: rhsPhoto) && lhsReference == rhsReference && lhsPeer.isEqual(rhsPeer) && lhsDate == rhsDate && lhsCaption == rhsCaption && lhsPublicPhoto == rhsPublicPhoto
         } else {
             return false
         }
@@ -121,14 +121,14 @@ func ==(lhs: GalleryEntry, rhs: GalleryEntry) -> Bool {
 }
 enum GalleryEntry : Comparable, Identifiable {
     case message(ChatHistoryEntry)
-    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peer: Peer, message: Message?, date: TimeInterval)
+    case photo(index:Int, stableId:AnyHashable, photo:TelegramMediaImage, reference: TelegramMediaImageReference?, peer: Peer, message: Message?, date: TimeInterval, caption: String?, publicPhoto: TelegramMediaImage?)
     case instantMedia(InstantPageMedia, Message?)
     case secureIdDocument(SecureIdDocumentValue, Int)
     var stableId: AnyHashable {
         switch self {
         case let .message(entry):
             return entry.stableId
-        case let .photo(_, stableId, _, _, _, _, _):
+        case let .photo(_, stableId, _, _, _, _, _, _, _):
             return stableId
         case let .instantMedia(media, _):
             return media.index
@@ -151,7 +151,7 @@ enum GalleryEntry : Comparable, Identifiable {
             if let message = message, let peerId = message.effectiveAuthor?.id {
                 return (peerId, TimeInterval(message.timestamp))
             }
-        case let .photo(_, _, _, _, peer, _, date):
+        case let .photo(_, _, _, _, peer, _, date, _, _):
             return (peer.id, date)
         default:
             return nil
@@ -162,7 +162,7 @@ enum GalleryEntry : Comparable, Identifiable {
     var file:TelegramMediaFile? {
         switch self {
         case .message(let entry):
-            if let media = entry.message!.effectiveMedia as? TelegramMediaFile {
+            if let media = entry.message!.anyMedia as? TelegramMediaFile {
                 return media
             } else if let media = entry.message!.media[0] as? TelegramMediaWebpage {
                 switch media.content {
@@ -207,7 +207,7 @@ enum GalleryEntry : Comparable, Identifiable {
     
     var peer: Peer? {
         switch self {
-        case let .photo(_, _, _, _, peer, _, _):
+        case let .photo(_, _, _, _, peer, _, _, _, _):
             return peer
         default:
             return nil
@@ -216,7 +216,7 @@ enum GalleryEntry : Comparable, Identifiable {
     
     func peerPhotoResource() -> MediaResourceReference {
         switch self {
-        case let .photo(_, _, image, _, peer, message, _):
+        case let .photo(_, _, image, _, peer, message, _, _, _):
             if let representation = image.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
                 if let message = message {
                     return .media(media: .message(message: MessageReference(message), media: image), resource: representation.resource)
@@ -252,7 +252,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case let .message(entry):
             return "\(entry.message?.stableId ?? 0)"
-        case .photo(_, let stableId, _, _, _, _, _):
+        case .photo(_, let stableId, _, _, _, _, _, _, _):
             return "\(stableId)"
         case .instantMedia:
             return "\(stableId)"
@@ -284,7 +284,7 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case .message:
             return nil
-        case let .photo(_, _, photo, _, _, _, _):
+        case let .photo(_, _, photo, _, _, _, _, _, _):
             return photo
         default:
             return nil
@@ -295,8 +295,18 @@ enum GalleryEntry : Comparable, Identifiable {
         switch self {
         case .message:
             return nil
-        case let .photo(_, _, _, reference, _, _, _):
+        case let .photo(_, _, _, reference, _, _, _, _, _):
             return reference
+        default:
+            return nil
+        }
+    }
+    var publicPhoto: TelegramMediaImage? {
+        switch self {
+        case .message:
+            return nil
+        case let .photo(_, _, _, _, _, _, _, _, publicPhoto):
+            return publicPhoto
         default:
             return nil
         }
@@ -364,6 +374,12 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     let caption: TextViewLayout?
     
+    struct PublicPhoto {
+        let image: TelegramMediaImage
+        let peer: TelegramUser
+    }
+    var publicPhoto: PublicPhoto?
+    
     var disableAnimations: Bool = false
     
     var modifiedSize: NSSize? = nil
@@ -418,7 +434,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         self.entry = entry
         self.context = context
         self._pagerSize = pagerSize
-        if let message = entry.message, !message.text.isEmpty, !(message.effectiveMedia is TelegramMediaWebpage) {
+        if let message = entry.message, !message.text.isEmpty, !(message.anyMedia is TelegramMediaWebpage) {
             let caption = message.text
             let attr = NSMutableAttributedString()
             _ = attr.append(string: caption.trimmed.fullTrimmed, color: .white, font: .normal(.text))
@@ -488,7 +504,18 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
                 }
             })
         } else {
-            self.caption = nil
+            switch entry {
+            case let .photo(_, _, _, _, _, _, _, caption, _):
+                if let caption = caption, !caption.isEmpty {
+                    let attr = NSMutableAttributedString()
+                    _ = attr.append(string: caption, color: .white, font: .normal(.text))
+                    self.caption = TextViewLayout(attr, alignment: .left)
+                } else {
+                    self.caption = nil
+                }
+            default:
+                self.caption = nil
+            }
         }
        
         super.init()
@@ -530,7 +557,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     var isGraphicFile: Bool {
-        if self.entry.message?.effectiveMedia is TelegramMediaFile {
+        if self.entry.message?.anyMedia is TelegramMediaFile {
             return true
         } else {
             return false

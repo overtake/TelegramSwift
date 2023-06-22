@@ -28,12 +28,12 @@ final class ChatAvatarView : Control {
         addSubview(avatar)
     }
     
-    func setPeer(context: AccountContext, peer: Peer, message: Message? = nil, size: NSSize? = nil, force: Bool = false) {
-        self.avatar.setPeer(account: context.account, peer: peer, message: message, size: size)
-        if peer.isPremium || force, peer.hasVideo {
+    func setPeer(context: AccountContext, peer: Peer, message: Message? = nil, size: NSSize? = nil, force: Bool = false, disableForum: Bool = false) {
+        self.avatar.setPeer(account: context.account, peer: peer, message: message, size: size, disableForum: disableForum)
+        if peer.isPremium || force, peer.hasVideo, !isLite(.animations) {
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             disposable.set(signal.start(next: { [weak self] photos in
-                self?.updatePhotos(photos, context: context, peer: peer)
+                self?.updatePhotos(photos.map { $0.value }, context: context, peer: peer)
             }))
         }
     }
@@ -71,7 +71,7 @@ final class ChatAvatarView : Control {
                     reference = MediaResourceReference.standalone(resource: file.resource)
                 }
                 
-                let mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peer.id), userContentType: .avatar, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                 
                 mediaPlayer.actionAtEnd = .loop(nil)
                 

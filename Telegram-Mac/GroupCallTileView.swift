@@ -214,7 +214,7 @@ private final class LimitView : View {
             })
             
             if let reference = PeerReference(peer) {
-                _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
+                _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .image, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
             }
         } else {
             self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: context.account, peer: peer) |> map { TransformImageResult($0, true) })

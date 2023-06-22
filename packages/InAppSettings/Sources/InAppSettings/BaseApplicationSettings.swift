@@ -11,7 +11,97 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 
+public enum LiteModeKey : String {
+    case any
+    case emoji_effects
+    case emoji
+    case blur
+    case dynamic_background
+    case gif
+    case video
+    case stickers
+    case animations
+    case menu_animations
+}
+
+public struct LiteMode : Codable, Equatable {
+    
+    
+    public static var allKeys: [LiteModeKey] {
+        return [.video, .gif, .stickers, .emoji, .emoji_effects, .animations, .blur, .menu_animations]
+    }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: LiteMode.CodingKeys.self)
+        try container.encode(self.enabled, forKey: LiteMode.CodingKeys.enabled)
+        try container.encode(self.lowBatteryPercent, forKey: LiteMode.CodingKeys.lowBatteryPercent)
+        try container.encode(self.keys.map { $0.rawValue }, forKey: LiteMode.CodingKeys.keys)
+    }
+    
+    enum CodingKeys: CodingKey {
+        case enabled
+        case lowBatteryPercent
+        case keys
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container: KeyedDecodingContainer<LiteMode.CodingKeys> = try decoder.container(keyedBy: LiteMode.CodingKeys.self)
+        self.enabled = try container.decode(Bool.self, forKey: LiteMode.CodingKeys.enabled)
+        self.lowBatteryPercent = try container.decode(Int32.self, forKey: LiteMode.CodingKeys.lowBatteryPercent)
+        let keys = try container.decode([String].self, forKey: LiteMode.CodingKeys.keys)
+        self.keys = keys.compactMap {
+            .init(rawValue: $0)
+        }
+    }
+    
+    init(enabled: Bool, lowBatteryPercent: Int32, keys: [LiteModeKey]) {
+        self.enabled = enabled
+        self.lowBatteryPercent = lowBatteryPercent
+        self.keys = keys
+    }
+    
+    public var enabled: Bool
+    public var lowBatteryPercent: Int32
+    public var keys: [LiteModeKey]
+    
+    public static var standart: LiteMode {
+        return .init(enabled: false, lowBatteryPercent: 100, keys: LiteMode.allKeys)
+    }
+    
+    public func isEnabled(key: LiteModeKey) -> Bool {
+        return self.keys.contains(key)
+    }
+            
+}
+
 public class BaseApplicationSettings: Codable, Equatable {
+    
+    
+    
+    public struct TranslatePaywall : Codable, Equatable {
+        public var timestamp: Int32
+        public var count: Int32
+        
+        public static func initialize() -> TranslatePaywall {
+            return .init(timestamp: Int32(Date().timeIntervalSince1970 - 5), count: 1)
+        }
+        
+        public var show: Bool {
+            if count < 3 {
+                return false
+            }
+            if Int32(Date().timeIntervalSince1970) > timestamp {
+                return true
+            }
+            return false
+        }
+        public func increase() -> TranslatePaywall {
+            return .init(timestamp: self.timestamp, count: self.count + 1)
+        }
+        public func flush() -> TranslatePaywall {
+            return .init(timestamp: Int32(Date().timeIntervalSince1970) + 7 * 24 * 60 * 60, count: 1)
+        }
+    }
+    
     public let handleInAppKeys: Bool
     public let sidebar: Bool
     public let showCallsTab: Bool
@@ -19,11 +109,16 @@ public class BaseApplicationSettings: Codable, Equatable {
     public let predictEmoji: Bool
     public let bigEmoji: Bool
     public let statusBar: Bool
+    public let translateChats: Bool
+    public let doNotTranslate: Set<String>
+    public let paywall: TranslatePaywall?
+    public let liteMode: LiteMode
+    
     public static var defaultSettings: BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: false, sidebar: true, showCallsTab: true, latestArticles: true, predictEmoji: true, bigEmoji: true, statusBar: true)
+        return BaseApplicationSettings(handleInAppKeys: false, sidebar: true, showCallsTab: true, latestArticles: true, predictEmoji: true, bigEmoji: true, statusBar: true, translateChannels: true, doNotTranslate: Set(), paywall: nil, liteMode: .standart)
     }
     
-    init(handleInAppKeys: Bool, sidebar: Bool, showCallsTab: Bool, latestArticles: Bool, predictEmoji: Bool, bigEmoji: Bool, statusBar: Bool) {
+    init(handleInAppKeys: Bool, sidebar: Bool, showCallsTab: Bool, latestArticles: Bool, predictEmoji: Bool, bigEmoji: Bool, statusBar: Bool, translateChannels: Bool, doNotTranslate: Set<String>, paywall: TranslatePaywall?, liteMode: LiteMode) {
         self.handleInAppKeys = handleInAppKeys
         self.sidebar = sidebar
         self.showCallsTab = showCallsTab
@@ -31,6 +126,10 @@ public class BaseApplicationSettings: Codable, Equatable {
         self.predictEmoji = predictEmoji
         self.bigEmoji = bigEmoji
         self.statusBar = statusBar
+        self.translateChats = translateChannels
+        self.doNotTranslate = doNotTranslate
+        self.paywall = paywall
+        self.liteMode = liteMode
     }
     
     public required init(from decoder: Decoder) throws {
@@ -43,6 +142,10 @@ public class BaseApplicationSettings: Codable, Equatable {
         self.predictEmoji = try container.decode(Int32.self, forKey: "pe") != 0
         self.bigEmoji = try container.decode(Int32.self, forKey: "bi") != 0
         self.statusBar = try container.decode(Int32.self, forKey: "sb") != 0
+        self.translateChats = try container.decodeIfPresent(Int32.self, forKey: "tc") ?? 1 != 0
+        self.doNotTranslate = try container.decodeIfPresent(Set<String>.self, forKey: "dnt2") ?? Set()
+        self.paywall = try container.decodeIfPresent(TranslatePaywall.self, forKey: "tp7")
+        self.liteMode = try container.decodeIfPresent(LiteMode.self, forKey: "lm5") ?? LiteMode.standart
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -56,35 +159,55 @@ public class BaseApplicationSettings: Codable, Equatable {
         try container.encode(Int32(self.predictEmoji ? 1 : 0), forKey: "pe")
         try container.encode(Int32(self.bigEmoji ? 1 : 0), forKey: "bi")
         try container.encode(Int32(self.statusBar ? 1 : 0), forKey: "sb")
+        try container.encode(Int32(self.translateChats ? 1 : 0), forKey: "tc")
+        try container.encode(self.doNotTranslate, forKey: "dnt2")
+        try container.encode(self.liteMode, forKey: "lm5")
+        if let paywall = paywall {
+            try container.encode(paywall, forKey: "tp7")
+        }
     }
     
     public func withUpdatedShowCallsTab(_ showCallsTab: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChats, doNotTranslate: self.doNotTranslate, paywall: self.paywall, liteMode: self.liteMode)
     }
     
     public func withUpdatedSidebar(_ sidebar: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChats, doNotTranslate: self.doNotTranslate, paywall: self.paywall, liteMode: self.liteMode)
+    }
+    public func withUpdatedTranslateChannels(_ translateChannels: Bool) -> BaseApplicationSettings {
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: translateChannels, doNotTranslate: self.doNotTranslate, paywall: self.paywall, liteMode: self.liteMode)
     }
     
     public func withUpdatedInAppKeyHandle(_ handleInAppKeys: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
+        return BaseApplicationSettings(handleInAppKeys: handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChats, doNotTranslate: self.doNotTranslate, paywall: self.paywall, liteMode: self.liteMode)
     }
     
     public func withUpdatedLatestArticles(_ latestArticles: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChats, doNotTranslate: self.doNotTranslate, paywall: self.paywall, liteMode: self.liteMode)
     }
     
     public func withUpdatedPredictEmoji(_ predictEmoji: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChats, doNotTranslate: self.doNotTranslate, paywall: self.paywall, liteMode: self.liteMode)
     }
     
     public func withUpdatedBigEmoji(_ bigEmoji: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: bigEmoji, statusBar: self.statusBar)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChats, doNotTranslate: self.doNotTranslate, paywall: self.paywall, liteMode: self.liteMode)
     }
     
     public func withUpdatedStatusBar(_ statusBar: Bool) -> BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: statusBar)
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: statusBar, translateChannels: self.translateChats, doNotTranslate: self.doNotTranslate, paywall: self.paywall, liteMode: self.liteMode)
     }
+    public func withUpdatedDoNotTranslate(_ doNotTranslate: Set<String>) -> BaseApplicationSettings {
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChats, doNotTranslate: doNotTranslate, paywall: self.paywall, liteMode: self.liteMode)
+    }
+    public func withUpdatedPaywall(_ paywall: TranslatePaywall?) -> BaseApplicationSettings {
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChats, doNotTranslate: self.doNotTranslate, paywall: paywall, liteMode: self.liteMode)
+    }
+    
+    public func updateLiteMode(_ f: (LiteMode)->LiteMode) -> BaseApplicationSettings {
+        return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChats, doNotTranslate: self.doNotTranslate, paywall: paywall, liteMode: f(self.liteMode))
+    }
+    
     public static func ==(lhs: BaseApplicationSettings, rhs: BaseApplicationSettings) -> Bool {
         if lhs.showCallsTab != rhs.showCallsTab {
             return false
@@ -105,6 +228,18 @@ public class BaseApplicationSettings: Codable, Equatable {
             return false
         }
         if lhs.statusBar != rhs.statusBar {
+            return false
+        }
+        if lhs.translateChats != rhs.translateChats {
+            return false
+        }
+        if lhs.doNotTranslate != rhs.doNotTranslate {
+            return false
+        }
+        if lhs.paywall != rhs.paywall {
+            return false
+        }
+        if lhs.liteMode != rhs.liteMode {
             return false
         }
         return true

@@ -18,20 +18,6 @@ enum MessageBubbleImageNeighbors {
     case both
 }
 
-func messageSingleBubbleLikeImage(fillColor: NSColor, strokeColor: NSColor) -> CGImage {
-    let diameter: CGFloat = 36.0
-    return generateImage(CGSize(width: 36.0, height: diameter), contextGenerator: { size, context in
-        context.clear(CGRect(origin: CGPoint(), size: size))
-        
-        let lineWidth: CGFloat = 0.5
-        
-        context.setFillColor(strokeColor.cgColor)
-        context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
-        context.setFillColor(fillColor.cgColor)
-        context.fillEllipse(in: CGRect(origin: CGPoint(x: lineWidth, y: lineWidth), size: CGSize(width: size.width - lineWidth * 2.0, height: size.height - lineWidth * 2.0)))
-    })!
-}
-
 
 func messageBubbleImageModern(incoming: Bool, fillColor: NSColor, strokeColor: NSColor, neighbors: MessageBubbleImageNeighbors, mask: Bool = false) -> (CGImage, NSEdgeInsets) {
     
@@ -103,67 +89,3 @@ func messageBubbleImageModern(incoming: Bool, fillColor: NSColor, strokeColor: N
     return (image, NSEdgeInsetsMake(topCapHeight, leftCapWidth, bottomCapHeight, rightCapWidth))
 }
 
-
-func drawNinePartImage(_ context: CGContext, frame: NSRect, topLeftCorner: CGImage, topEdgeFill: CGImage, topRightCorner: CGImage, leftEdgeFill: CGImage, centerFill: CGImage, rightEdgeFill: CGImage, bottomLeftCorner: CGImage, bottomEdgeFill: CGImage, bottomRightCorner: CGImage){
-    
-    let imageWidth: CGFloat = frame.size.width;
-    let imageHeight: CGFloat = frame.size.height;
-    
-    let leftCapWidth: CGFloat = topLeftCorner.backingSize.width;
-    let topCapHeight: CGFloat = topLeftCorner.backingSize.height;
-    let rightCapWidth: CGFloat = bottomRightCorner.backingSize.width;
-    let bottomCapHeight: CGFloat = bottomRightCorner.backingSize.height;
-    
-    let centerSize = NSMakeSize(imageWidth - leftCapWidth - rightCapWidth, imageHeight - topCapHeight - bottomCapHeight);
-    
-    let topLeftCornerRect: NSRect = NSMakeRect(0.0, imageHeight - topCapHeight, leftCapWidth, topCapHeight);
-    let topEdgeFillRect: NSRect = NSMakeRect(leftCapWidth, imageHeight - topCapHeight, centerSize.width, topCapHeight);
-    let topRightCornerRect: NSRect = NSMakeRect(imageWidth - rightCapWidth, imageHeight - topCapHeight, rightCapWidth, topCapHeight);
-    
-    let leftEdgeFillRect: NSRect = NSMakeRect(0.0, bottomCapHeight, leftCapWidth, centerSize.height);
-    let centerFillRect: NSRect = NSMakeRect(leftCapWidth, bottomCapHeight, centerSize.width, centerSize.height);
-    let rightEdgeFillRect: NSRect = NSMakeRect(imageWidth - rightCapWidth, bottomCapHeight, rightCapWidth, centerSize.height);
-    
-    let bottomLeftCornerRect: NSRect = NSMakeRect(0.0, 0.0, leftCapWidth, bottomCapHeight);
-    let bottomEdgeFillRect: NSRect = NSMakeRect(leftCapWidth, 0.0, centerSize.width, bottomCapHeight);
-    let bottomRightCornerRect: NSRect = NSMakeRect(imageWidth - rightCapWidth, 0.0, rightCapWidth, bottomCapHeight);
-    
-    
-    drawStretchedImageInRect(topLeftCorner, context: context, rect: topLeftCornerRect);
-    drawStretchedImageInRect(topEdgeFill, context: context, rect: topEdgeFillRect);
-    drawStretchedImageInRect(topRightCorner, context: context, rect: topRightCornerRect);
-    
-    drawStretchedImageInRect(leftEdgeFill, context: context, rect: leftEdgeFillRect);
-    drawStretchedImageInRect(centerFill, context: context, rect: centerFillRect);
-    drawStretchedImageInRect(rightEdgeFill, context: context, rect: rightEdgeFillRect);
-    
-    drawStretchedImageInRect(bottomLeftCorner, context: context, rect: bottomLeftCornerRect);
-    drawStretchedImageInRect(bottomEdgeFill, context: context, rect: bottomEdgeFillRect);
-    drawStretchedImageInRect(bottomRightCorner, context: context, rect: bottomRightCornerRect);
-    
-}
-
-
-func imageByReferencingRectOfExistingImage(_ image: CGImage, _ rect: NSRect) -> CGImage {
-    if (!NSIsEmptyRect(rect)){
-        
-        let pixelsHigh = CGFloat(image.height)
-        
-        let scaleFactor:CGFloat = pixelsHigh / image.backingSize.height
-        var captureRect = NSMakeRect(scaleFactor * rect.origin.x, scaleFactor * rect.origin.y, scaleFactor * rect.size.width, scaleFactor * rect.size.height)
-        
-        captureRect.origin.y = pixelsHigh - captureRect.origin.y - captureRect.size.height;
-        
-        return image.cropping(to: captureRect)!
-    }
-    return image.cropping(to: NSMakeRect(0, 0, image.size.width, image.size.height))!
-}
-
-func drawStretchedImageInRect(_ image: CGImage, context: CGContext, rect: NSRect) -> Void {
-    context.saveGState()
-    context.setBlendMode(.normal) //NSCompositeSourceOver
-    context.clip(to: rect)
-    
-    context.draw(image, in: rect)
-    context.restoreGState()
-}

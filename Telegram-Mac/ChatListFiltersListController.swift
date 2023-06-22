@@ -77,6 +77,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         }
     }
     
+    let sharedImage = NSImage(named: "Icon_SharedFolder")!.precomposed(theme.colors.grayText.withAlphaComponent(0.8))
 
     for (filter, count) in filtersWithCounts {
         var viewType = bestGeneralViewType(filtersWithCounts.map { $0.0 }, for: filter)
@@ -87,17 +88,16 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
             viewType = .innerItem
         }
         
+        
         switch filter {
         case .allChats:
             entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(emoticon: .allChats).icon(for: .preview), type: .none, viewType: viewType)))
             index += 1
-        case let .filter(_, title, _, _):
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
+        case let .filter(_, title, _, data):
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: data.isShared ? .nextImage(sharedImage) :  .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
                 arguments.openPreset(filter, false)
             }, menuItems: {
-                return [ContextMenuItem(strings().chatListFilterListRemove, handler: {
-                    arguments.removePreset(filter)
-                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)]
+                return filterContextMenuItems(filter, unreadCount: nil, context: arguments.context)
             })))
             index += 1
 
@@ -200,7 +200,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         }).start()
     }, toggleSidebar: { sidebar in
         _ = updateChatListFolderSettings(context.account.postbox, {
-            $0.withUpdatedSidebar(sidebar)
+            $0.withUpdatedSidebar(sidebar).withUpdatedSidebarInteracted(true)
         }).start()
     }, limitExceeded: {
         showModal(with: PremiumLimitController(context: context, type: .folders), for: context.window)

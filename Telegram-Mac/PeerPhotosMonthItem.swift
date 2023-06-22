@@ -13,8 +13,8 @@ import TGUIKit
 import Postbox
 import SwiftSignalKit
 
-private struct LayoutItem : Equatable {
-    static func == (lhs: LayoutItem, rhs: LayoutItem) -> Bool {
+struct MediaCellLayoutItem : Equatable {
+    static func == (lhs: MediaCellLayoutItem, rhs: MediaCellLayoutItem) -> Bool {
         return lhs.message == rhs.message && lhs.corners == rhs.corners && lhs.frame == rhs.frame
     }
     
@@ -22,7 +22,7 @@ private struct LayoutItem : Equatable {
     let frame: NSRect
     let viewType:MediaCell.Type
     let corners:ImageCorners
-    let chatInteraction: ChatInteraction
+    let context: AccountContext
     
     var hasImmediateData: Bool {
         if let image = message.media.first as? TelegramMediaImage {
@@ -39,7 +39,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
     fileprivate let context: AccountContext
     private var contentHeight: CGFloat = 0
     
-    fileprivate private(set) var layoutItems:[LayoutItem] = []
+    fileprivate private(set) var layoutItems:[MediaCellLayoutItem] = []
     fileprivate private(set) var itemSize: NSSize = NSZeroSize
     fileprivate let chatInteraction: ChatInteraction
     fileprivate let galleryType: GalleryAppearType
@@ -98,7 +98,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
         var point: CGPoint = CGPoint(x: self.viewType.innerInset.left, y: self.viewType.innerInset.top + itemSize.height)
         for (i, message) in self.items.enumerated() {
             let viewType: MediaCell.Type
-            if let file = message.effectiveMedia as? TelegramMediaFile {
+            if let file = message.anyMedia as? TelegramMediaFile {
                 if file.isAnimated && file.isVideo {
                     viewType = MediaGifCell.self
                 } else {
@@ -159,7 +159,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
                 }
             }
             let corners = ImageCorners(topLeft: topLeft, topRight: topRight, bottomLeft: bottomLeft, bottomRight: bottomRight)
-            self.layoutItems.append(LayoutItem(message: message, frame: CGRect(origin: point.offsetBy(dx: 0, dy: -itemSize.height), size: itemSize), viewType: viewType, corners: corners, chatInteraction: self.chatInteraction))
+            self.layoutItems.append(MediaCellLayoutItem(message: message, frame: CGRect(origin: point.offsetBy(dx: 0, dy: -itemSize.height), size: itemSize), viewType: viewType, corners: corners, context: context))
             point.x += itemSize.width
             if self.layoutItems.count % rowCount == 0, message != self.items.last {
                 point.y += itemSize.height
@@ -198,7 +198,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
             let message = layoutItem.message
             if canForwardMessage(message, chatInteraction: chatInteraction) {
                 items.append(ContextMenuItem(strings().messageContextForward, handler: { [weak self] in
-                    self?.chatInteraction.forwardMessages([message.id])
+                    self?.chatInteraction.forwardMessages([message])
                 }, itemImage: MenuAnimation.menu_forward.value))
             }
             
@@ -217,11 +217,19 @@ class PeerPhotosMonthItem: GeneralRowItem {
     }
 }
 
-private class MediaCell : Control {
+class MediaCell : Control {
     private var selectionView:SelectingControl?
+    
+    var selecting: Bool? {
+        return selectionView?.isSelected
+    }
+    
     fileprivate let imageView: TransformImageView
-    private(set) var layoutItem: LayoutItem?
+    private(set) var layoutItem: MediaCellLayoutItem?
     fileprivate var context: AccountContext?
+    
+    private var inkView: MediaInkView?
+
     required init(frame frameRect: NSRect) {
         imageView = TransformImageView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
@@ -238,7 +246,7 @@ private class MediaCell : Control {
     override func mouseExited(with event: NSEvent) {
         superview?.superview?.mouseExited(with: event)
     }
-    func update(layout: LayoutItem, context: AccountContext, table: TableView?) {
+    func update(layout: MediaCellLayoutItem, selected: Bool?, context: AccountContext, table: TableView?, animated: Bool) {
         let previousLayout = self.layoutItem
         self.layoutItem = layout
         self.context = context
@@ -247,39 +255,85 @@ private class MediaCell : Control {
             let imageSize: NSSize
             let cacheArguments: TransformImageArguments
             let signal: Signal<ImageDataTransformation, NoError>
-            if let image = layout.message.effectiveMedia as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions.size {
+            if let image = layout.message.anyMedia as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions.size {
                 media = image
+                let imageReference = ImageMediaReference.message(message: MessageReference(layout.message), media: image)
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 cacheArguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: NSMakeSize(150, 150), intrinsicInsets: NSEdgeInsets())
-                signal = mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(layout.message), media: image), scale: backingScaleFactor)
-            } else if let file = layout.message.effectiveMedia as? TelegramMediaFile {
+                
+                if layout.message.isMediaSpoilered || layout.message.containsSecretMedia {
+                    signal = chatSecretPhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor, synchronousLoad: false)
+                } else {
+                    signal = mediaGridMessagePhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor)
+                }
+
+            } else if let file = layout.message.anyMedia as? TelegramMediaFile {
                 media = file
+                let fileReference = FileMediaReference.message(message: MessageReference(layout.message), media: file)
                 let largestSize = file.previewRepresentations.last?.dimensions.size ?? file.imageSize
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 cacheArguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: NSMakeSize(150, 150), intrinsicInsets: NSEdgeInsets())
-                signal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(layout.message), media: file), scale: backingScaleFactor) 
+                if layout.message.isMediaSpoilered || layout.message.containsSecretMedia {
+                    signal = chatSecretMessageVideo(account: context.account, fileReference: fileReference, scale: backingScaleFactor)
+                } else {
+                    signal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor)
+                }
             } else {
                 return
             }
             
-            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: cacheArguments, scale: backingScaleFactor))
+            self.imageView.setSignal(signal: cachedMedia(media: media, arguments: cacheArguments, scale: backingScaleFactor), clearInstantly: previousLayout?.message.id != layout.message.id)
             
            
             if !self.imageView.isFullyLoaded {
-                self.imageView.setSignal(signal, animate: true, cacheImage: { result in
+                self.imageView.setSignal(signal, animate: animated, cacheImage: { result in
                     cacheMedia(result, media: media, arguments: cacheArguments, scale: System.backingScale)
                 })
             }
             self.imageView.set(arguments: cacheArguments)
         }
-        updateSelectionState(animated: false)
+        if layout.message.isMediaSpoilered {
+            let current: MediaInkView
+            if let view = self.inkView {
+                current = view
+            } else {
+                current = MediaInkView(frame: layout.frame.size.bounds)
+                current.userInteractionEnabled = false
+                self.inkView = current
+                
+                self.addSubview(current)
+            }
+            
+            let image: TelegramMediaImage
+            if let current = layout.message.anyMedia as? TelegramMediaImage {
+                image = current
+            } else if let file = layout.message.anyMedia as? TelegramMediaFile {
+                image = TelegramMediaImage(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+            } else {
+                fatalError()
+            }
+            
+            let imageReference = ImageMediaReference.message(message: MessageReference(layout.message), media: image)
+            
+            current.update(isRevealed: false, updated: previousLayout != layout, context: layout.context, imageReference: imageReference, size: layout.frame.size, positionFlags: nil, synchronousLoad: false)
+            current.frame = layout.frame.size.bounds
+        } else {
+            if let view = self.inkView {
+                view.userInteractionEnabled = false
+                performSubviewRemoval(view, animated: animated)
+                self.inkView = nil
+            }
+        }
+        
+        
+        updateSelectionState(animated: animated, selected: selected)
     }
     
     override func copy() -> Any {
         return imageView.copy()
     }
     
-    func innerAction() -> InvokeActionResult {
+    func innerAction() -> MediaCellInvokeActionResult {
         return .gallery
     }
     
@@ -291,37 +345,33 @@ private class MediaCell : Control {
         
     }
     
-    func updateSelectionState(animated: Bool) {
-        if let layoutItem = layoutItem {
-            if let selectionState = layoutItem.chatInteraction.presentation.selectionState {
-                let selected = selectionState.selectedIds.contains(layoutItem.message.id)
-                if let selectionView = self.selectionView {
-                    selectionView.set(selected: selected, animated: animated)
-                } else {
-                    selectionView = SelectingControl(unselectedImage: theme.icons.chatGroupToggleUnselected, selectedImage: theme.icons.chatGroupToggleSelected)
-                   
-                    addSubview(selectionView!)
-                    selectionView?.set(selected: selected, animated: animated)
-                    if animated {
-                        selectionView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                        selectionView?.layer?.animateScaleCenter(from: 0.5, to: 1.0, duration: 0.2)
-                    }
-                }
+    func updateSelectionState(animated: Bool, selected: Bool?) {
+        if let selected = selected {
+            if let selectionView = self.selectionView {
+                selectionView.set(selected: selected, animated: animated)
             } else {
-                if let selectionView = selectionView {
-                    self.selectionView = nil
-                    if animated {
-                        selectionView.layer?.animateScaleCenter(from: 1.0, to: 0.5, duration: 0.2)
-                        selectionView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak selectionView] completion in
-                            selectionView?.removeFromSuperview()
-                        })
-                    } else {
-                        selectionView.removeFromSuperview()
-                    }
+                selectionView = SelectingControl(unselectedImage: theme.icons.chatGroupToggleUnselected, selectedImage: theme.icons.chatGroupToggleSelected)
+                addSubview(selectionView!)
+                selectionView?.set(selected: selected, animated: animated)
+                if animated {
+                    selectionView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    selectionView?.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.2)
                 }
             }
-            needsLayout = true
+        } else {
+            if let selectionView = selectionView {
+                self.selectionView = nil
+                if animated {
+                    selectionView.layer?.animateScaleSpring(from: 1.0, to: 0.1, duration: 0.2)
+                    selectionView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak selectionView] completion in
+                        selectionView?.removeFromSuperview()
+                    })
+                } else {
+                    selectionView.removeFromSuperview()
+                }
+            }
         }
+        needsLayout = true
     }
     
     required init?(coder: NSCoder) {
@@ -334,41 +384,23 @@ private class MediaCell : Control {
         if let selectionView = selectionView {
             selectionView.setFrameOrigin(frame.width - selectionView.frame.width - 5, 5)
         }
+        inkView?.frame = imageView.frame
     }
 }
 
-private final class MediaPhotoCell : MediaCell {
+final class MediaPhotoCell : MediaCell {
     
 }
 
-private enum InvokeActionResult {
+enum MediaCellInvokeActionResult {
     case nothing
     case gallery
 }
 
 
 
-private final class MediaVideoCell : MediaCell {
+class MediaVideoCell : MediaCell {
     
-    
-    private final class VideoAutoplayView {
-        let mediaPlayer: MediaPlayer
-        let view: MediaPlayerView
-        
-        fileprivate var playTimer: SwiftSignalKit.Timer?
-        var status: MediaPlayerStatus?
-        
-        init(mediaPlayer: MediaPlayer, view: MediaPlayerView) {
-            self.mediaPlayer = mediaPlayer
-            self.view = view
-            mediaPlayer.actionAtEnd = .loop(nil)
-        }
-        
-        deinit {
-            view.removeFromSuperview()
-            playTimer?.invalidate()
-        }
-    }
     
     private let mediaPlayerStatusDisposable = MetaDisposable()
     
@@ -379,9 +411,7 @@ private final class MediaVideoCell : MediaCell {
     private let statusDisposable = MetaDisposable()
     private let fetchingDisposable = MetaDisposable()
     private let partDisposable = MetaDisposable()
-    
-    private var videoView:VideoAutoplayView?
-    
+        
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.addSubview(self.videoAccessory)
@@ -393,47 +423,26 @@ private final class MediaVideoCell : MediaCell {
            
     }
     
-    private func updateMediaStatus(_ status: MediaPlayerStatus, animated: Bool = false) {
-        if let videoView = videoView, let media = self.layoutItem?.message.effectiveMedia as? TelegramMediaFile {
-            videoView.status = status
-            updateVideoAccessory(self.authenticStatus ?? .Local, mediaPlayerStatus: status, file: media, animated: animated)
-            
-            switch status.status {
-            case .playing:
-                videoView.playTimer?.invalidate()
-                videoView.playTimer = SwiftSignalKit.Timer(timeout: 0.5, repeat: true, completion: { [weak self] in
-                    self?.updateVideoAccessory(self?.authenticStatus ?? .Local, mediaPlayerStatus: status, file: media, animated: animated)
-                }, queue: .mainQueue())
-                
-                videoView.playTimer?.start()
-            default:
-                videoView.playTimer?.invalidate()
-            }
-            
-            
-        }
-    }
-    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     private func fetch() {
         if let context = context, let layoutItem = self.layoutItem {
-            let file = layoutItem.message.effectiveMedia as! TelegramMediaFile
+            let file = layoutItem.message.anyMedia as! TelegramMediaFile
             fetchingDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: layoutItem.message.id, messageReference: .init(layoutItem.message), file: file, userInitiated: true).start())
         }
     }
       
     private func cancelFetching() {
         if let context = context, let layoutItem = self.layoutItem {
-            let file = layoutItem.message.effectiveMedia as! TelegramMediaFile
+            let file = layoutItem.message.anyMedia as! TelegramMediaFile
             messageMediaFileCancelInteractiveFetch(context: context, messageId: layoutItem.message.id, file: file)
         }
     }
       
-    override func innerAction() -> InvokeActionResult {
-        if let file = layoutItem?.message.effectiveMedia as? TelegramMediaFile, let window = self.window {
+    override func innerAction() -> MediaCellInvokeActionResult {
+        if let file = layoutItem?.message.anyMedia as? TelegramMediaFile, let window = self.window {
             switch progressView.state {
             case .Fetching:
                 if NSPointInRect(self.convert(window.mouseLocationOutsideOfEventStream, from: nil), progressView.frame) {
@@ -451,12 +460,12 @@ private final class MediaVideoCell : MediaCell {
     }
     
     func preloadStreamblePart() {
-        if let layoutItem = self.layoutItem {
-            let context = layoutItem.chatInteraction.context
+        if let layoutItem = self.layoutItem, !isLite(.any) {
+            let context = layoutItem.context
             if context.autoplayMedia.preloadVideos {
-                if let media = layoutItem.message.effectiveMedia as? TelegramMediaFile {
+                if let media = layoutItem.message.anyMedia as? TelegramMediaFile {
                     let reference = FileMediaReference.message(message: MessageReference(layoutItem.message), media: media)
-                    let preload = preloadVideoResource(postbox: context.account.postbox, resourceReference: reference.resourceReference(media.resource), duration: 3.0)
+                    let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(layoutItem.message.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
                     partDisposable.set(preload.start())
                 }
             }
@@ -500,9 +509,9 @@ private final class MediaVideoCell : MediaCell {
         needsLayout = true
     }
     
-    override func update(layout: LayoutItem, context: AccountContext, table: TableView?) {
-        super.update(layout: layout, context: context, table: table)
-        let file = layout.message.effectiveMedia as! TelegramMediaFile
+    override func update(layout: MediaCellLayoutItem, selected: Bool?, context: AccountContext, table: TableView?, animated: Bool) {
+        super.update(layout: layout, selected: selected, context: context, table: table, animated: animated)
+        let file = layout.message.anyMedia as! TelegramMediaFile
         
         let updatedStatusSignal = chatMessageFileStatus(context: context, message: layout.message, file: file) |> deliverOnMainQueue |> map { status -> (MediaResourceStatus, MediaResourceStatus) in
            if file.isStreamable && layout.message.id.peerId.namespace != Namespaces.Peer.SecretChat {
@@ -516,7 +525,7 @@ private final class MediaVideoCell : MediaCell {
        statusDisposable.set(updatedStatusSignal.start(next: { [weak self] status, authentic in
            guard let `self` = self else {return}
            
-            self.updateVideoAccessory(authentic, mediaPlayerStatus: self.videoView?.status, file: file, animated: !first)
+            self.updateVideoAccessory(authentic, mediaPlayerStatus: nil, file: file, animated: !first)
             first = false
             self.status = status
             self.authenticStatus = authentic
@@ -527,14 +536,15 @@ private final class MediaVideoCell : MediaCell {
             default:
                 progressStatus = status
             }
-            switch progressStatus {
-            case let .Fetching(_, progress), let .Paused(progress):
-                self.progressView.state = .Fetching(progress: progress, force: false)
-            case .Remote:
-                self.progressView.state = .Remote
-            case .Local:
-                self.progressView.state = .Play
-            }
+           self.progressView.state = .Play
+//            switch progressStatus {
+//            case let .Fetching(_, progress), let .Paused(progress):
+//                self.progressView.state = .Fetching(progress: progress, force: false)
+//            case .Remote:
+//                self.progressView.state = .Remote
+//            case .Local:
+//                self.progressView.state = .Play
+//            }
         }))
         partDisposable.set(nil)
     }
@@ -559,7 +569,6 @@ private final class MediaVideoCell : MediaCell {
         super.layout()
         progressView.center()
         videoAccessory.setFrameOrigin(5, 5)
-        videoView?.view.frame = self.imageView.frame
     }
     
     deinit {
@@ -572,7 +581,7 @@ private final class MediaVideoCell : MediaCell {
 
 
 
-private final class MediaGifCell : MediaCell {
+class MediaGifCell : MediaCell {
     private let gifView: GIFContainerView = GIFContainerView(frame: .zero)
     private var status:MediaResourceStatus?
     private let statusDisposable = MetaDisposable()
@@ -595,7 +604,7 @@ private final class MediaGifCell : MediaCell {
 
     }
     
-    override func innerAction() -> InvokeActionResult {
+    override func innerAction() -> MediaCellInvokeActionResult {
         return .gallery
     }
     
@@ -604,11 +613,11 @@ private final class MediaGifCell : MediaCell {
         return gifView.copy()
     }
     
-    override func update(layout: LayoutItem, context: AccountContext, table: TableView?) {
+    override func update(layout: MediaCellLayoutItem, selected: Bool?, context: AccountContext, table: TableView?, animated: Bool) {
         let previousLayout = self.layoutItem
-        super.update(layout: layout, context: context, table: table)
+        super.update(layout: layout, selected: selected, context: context, table: table, animated: animated)
         if layout != previousLayout {
-            let file = layout.message.effectiveMedia as! TelegramMediaFile
+            let file = layout.message.anyMedia as! TelegramMediaFile
             
             let messageRefence = MessageReference(layout.message)
             
@@ -703,10 +712,10 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
         }
         let point = containerView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         if let layoutItem = item.layoutItems.first(where: { NSPointInRect(point, $0.frame) }) {
-            if layoutItem.chatInteraction.presentation.state == .selecting {
+            if item.chatInteraction.presentation.state == .selecting {
                 switch event {
                 case .MouseDragging:
-                    layoutItem.chatInteraction.update { current in
+                    item.chatInteraction.update { current in
                         if !haveToSelectOnDrag {
                             return current.withRemovedSelectedMessage(layoutItem.message.id)
                         } else {
@@ -714,8 +723,8 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
                         }
                     }
                 case .Down:
-                    layoutItem.chatInteraction.update { $0.withToggledSelectedMessage(layoutItem.message.id) }
-                    haveToSelectOnDrag = layoutItem.chatInteraction.presentation.isSelectedMessageId(layoutItem.message.id)
+                    item.chatInteraction.update { $0.withToggledSelectedMessage(layoutItem.message.id) }
+                    haveToSelectOnDrag = item.chatInteraction.presentation.isSelectedMessageId(layoutItem.message.id)
                 default:
                     break
                 }
@@ -744,7 +753,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
             for view in views {
                 if let item = view.layoutItem {
                     if (value.state == .selecting) != (oldValue.state == .selecting) || value.isSelectedMessageId(item.message.id) != oldValue.isSelectedMessageId(item.message.id) {
-                        view.updateSelectionState(animated: animated)
+                        view.updateSelectionState(animated: animated, selected: value.state == .selecting ? value.isSelectedMessageId(item.message.id) : nil)
                     }
                 }
             }
@@ -801,7 +810,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
         }
                 
         CATransaction.begin()
-          
+        let presentation = item.chatInteraction.presentation
         for (i, layout) in item.layoutItems.enumerated() {
             var view: MediaCell
             if self.contentViews[i] == nil || !self.contentViews[i]!.isKind(of: layout.viewType) {
@@ -811,7 +820,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
                 view = self.contentViews[i]!
             }
             if view.layoutItem != layout {
-                view.update(layout: layout, context: item.context, table: item.table)
+                view.update(layout: layout, selected: presentation.state == .selecting ? presentation.isSelectedMessageId(layout.message.id) : nil, context: item.context, table: item.table, animated: animated)
             }
 
             view.frame = layout.frame

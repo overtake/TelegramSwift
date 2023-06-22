@@ -227,7 +227,7 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
                 cloudAccents.append(AppearanceAccentColor(accent: settings.accent, cloudTheme: cloudTheme))
             }
         }
-        accentList.insert(contentsOf: cloudAccents, at: 0)
+        accentList.append(contentsOf: cloudAccents)
     }
 
 

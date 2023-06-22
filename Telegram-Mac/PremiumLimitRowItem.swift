@@ -63,7 +63,7 @@ private final class PremiumIncreaseLimitView: GeneralContainableRowView {
 
         if item.updatedHeight != size.height {
             item.updatedHeight = size.height
-            item.redraw()
+            item.noteHeightOfRow()
         }
         
     }

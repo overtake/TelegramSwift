@@ -110,13 +110,13 @@ class WPArticleContentView: WPContentView {
     
     func fetch() {
         if let layout = content as? WPArticleLayout {
+            let mediaBox = layout.context.account.postbox.mediaBox
             if let _ = layout.wallpaper, let file = layout.content.file {
-              
-                fetchDisposable.set(fetchedMediaResource(mediaBox: layout.context.account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(wallpaper: layout.wallpaperReference, resource: file.resource)).start())
+                fetchDisposable.set(fetchedMediaResource(mediaBox: mediaBox, userLocation: .peer(layout.parent.id.peerId), userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: layout.wallpaperReference, resource: file.resource)).start())
             } else if let image = layout.content.image {
                 fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: layout.context.account, imageReference: ImageMediaReference.webPage(webPage: WebpageReference(layout.webPage), media: image)).start())
             } else if layout.isTheme, let file = layout.content.file {
-                fetchDisposable.set(fetchedMediaResource(mediaBox: layout.context.account.postbox.mediaBox, reference: MediaResourceReference.wallpaper(wallpaper: layout.wallpaperReference, resource: file.resource)).start())
+                fetchDisposable.set(fetchedMediaResource(mediaBox: mediaBox, userLocation: .peer(layout.parent.id.peerId), userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: layout.wallpaperReference, resource: file.resource)).start())
             }
         }
     }
@@ -241,7 +241,7 @@ class WPArticleContentView: WPContentView {
             if layout.content.image == nil, let file = layout.content.file, let dimension = layout.imageSize {
                 var representations: [TelegramMediaImageRepresentation] = []
                 representations.append(contentsOf: file.previewRepresentations)
-                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimension), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(dimension), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                 image = TelegramMediaImage(imageId: file.id ?? MediaId(namespace: 0, id: arc4random64()), representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                 
             }
@@ -497,7 +497,6 @@ class WPArticleContentView: WPContentView {
                 downloadIndicator?.center()
                 
                 var origin:NSPoint = NSMakePoint(layout.contentRect.width - imageView.frame.width - 10, 0)
-                
                 if layout.textLayout?.cutout == nil {
                     var y:CGFloat = 0
                     if let textLayout = layout.textLayout {
@@ -505,6 +504,8 @@ class WPArticleContentView: WPContentView {
                     }
                     origin = NSMakePoint(0, y)
                 }
+                
+                
                 
                 imageView.setFrameOrigin(origin.x, origin.y)
                 playIcon?.center()

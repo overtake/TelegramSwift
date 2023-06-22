@@ -136,9 +136,9 @@ private final class Avatar_PatternListView : TableRowView {
             case let .file(_, file, _, _):
                 var representations:[TelegramMediaImageRepresentation] = []
                 if let dimensions = file.dimensions {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                 } else {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(pattern.frame.size), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(pattern.frame.size), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                 }
                 
                 let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: pattern.palette)
@@ -396,8 +396,9 @@ final class Avatar_BgListView : View {
    
 
     
-    private let tableView = TableView()
+    private let tableView: TableView
     required init(frame frameRect: NSRect) {
+        tableView = TableView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         addSubview(tableView)
         tableView.getBackgroundColor = {
@@ -419,7 +420,9 @@ final class Avatar_BgListView : View {
     }
     
     func set(colors: [AvatarColor], context: AccountContext, select: @escaping(AvatarColor)->Void, animated: Bool) {
+        
         tableView.beginTableUpdates()
+        
         
         
         tableView.replace(item: GeneralRowItem(frame.size, height: 20, stableId: "1", backgroundColor: .clear), at: 0, animated: animated)

@@ -80,7 +80,7 @@ class EmptyChatView : View {
         }
         
         toggleTips.set(image: cards != nil ? theme.empty_chat_hidetips : theme.empty_chat_showtips, for: .Normal)
-        if theme.shouldBlurService {
+        if theme.shouldBlurService && !isLite(.blur) {
             toggleTips.set(background: .clear, for: .Normal)
             toggleTips.blurBackground = theme.chatServiceItemColor
         } else {
@@ -177,6 +177,7 @@ class EmptyChatViewController: TelegramGenericViewController<EmptyChatView> {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         updateBackgroundColor(theme.controllerBackgroundMode)
+        self.cards.updateLocalizationAndTheme(theme: theme)
     }
     
     override func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {

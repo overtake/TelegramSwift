@@ -116,7 +116,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 private func translate(context: AccountContext, from: String?, to: String, blocks: [String]) -> Signal<(detect: String?, result: String), Translate.Error> {
     var signals:[Signal<(detect: String?, result: String), Translate.Error>] = []
     for block in blocks {
-        signals.append(context.engine.messages.translate(text: block, fromLang: from, toLang: to) |> castError(Translate.Error.self) |> mapToSignal { value in
+        signals.append(context.engine.messages.translate(text: block, toLang: to) |> `catch` { _ in return .fail(.generic)} |> mapToSignal { value in
             if let value = value {
                 return .single((detect: nil, result: value))
             } else {

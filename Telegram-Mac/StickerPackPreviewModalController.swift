@@ -296,6 +296,8 @@ private class StickersModalView : View {
 
             }, openFeatured: { _ in
 
+            }, selectEmojiCategory: { _ in
+                
             }, mode: .common)
 
 

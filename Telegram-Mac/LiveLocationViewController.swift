@@ -89,7 +89,7 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
     let disposable = messageView.start(next: { message in
         updateState { value in
             var value = value.withUpdatedPeer(message?.effectiveAuthor)
-            if let map = message?.effectiveMedia as? TelegramMediaMap {
+            if let map = message?.anyMedia as? TelegramMediaMap {
                 value = value.withUpdatedMap(map)
             }
             return value

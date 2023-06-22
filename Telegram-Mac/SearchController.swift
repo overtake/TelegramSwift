@@ -511,7 +511,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
             }, unreadBadge: badge)
         case let .savedMessages(peer):
-            return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: false, isLookSavedMessage: true, contextMenuItems: {
+            return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: true, isLookSavedMessage: true, contextMenuItems: {
                 return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
             })
         case let .separator(text, index, state):
@@ -694,13 +694,18 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 }) |> map { result in
                     return Array(result.joined())
                 } |> mapToSignal { peers in
-                    return combineLatest(peers.map { context.account.viewTracker.peerView($0.peerId) |> take(1) }) |> map { ($0, peers) }
+                    return combineLatest(peers.map { context.account.postbox.peerView(id: $0.peerId) |> take(1) }) |> map { ($0, peers) }
                 } |> mapToSignal { peerViews, peers in
-                    return context.account.postbox.unreadMessageCountsView(items: peers.map {.peer(id: $0.peerId, handleThreads: false)}) |> take(1) |> map { values in
+                    
+                    let items: [UnreadMessageCountsItem] = peers.map { peer in
+                        return .peer(id: peer.peerId, handleThreads: peer.peer?.isForum == true)
+                    }
+                    
+                    return context.account.postbox.unreadMessageCountsView(items: items) |> take(1) |> map { values in
                         var unread:[PeerId: UnreadSearchBadge] = [:]
                         for peerView in peerViews {
                             let isMuted = peerView.isMuted
-                            let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: false))
+                            let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: peerViewMainPeer(peerView)?.isForum == true))
                             if let unreadCount = unreadCount, unreadCount > 0 {
                                 unread[peerView.peerId] = isMuted ? .muted(unreadCount) : .unmuted(unreadCount)
                             }
@@ -786,12 +791,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 }
                                 |> mapToSignal { peers -> Signal<([FoundPeer], [FoundPeer], [PeerId : UnreadSearchBadge]), NoError> in
                                     let all = peers.0 + peers.1
-                                    return combineLatest(all.map { context.account.viewTracker.peerView($0.peer.id) |> take(1) }) |> mapToSignal { peerViews in
-                                        return context.account.postbox.unreadMessageCountsView(items: all.map {.peer(id: $0.peer.id, handleThreads: false)}) |> take(1) |> map { values in
+                                return combineLatest(all.map { context.account.postbox.peerView(id: $0.peer.id) |> take(1) }) |> mapToSignal { peerViews in
+                                    return context.account.postbox.unreadMessageCountsView(items: all.map {.peer(id: $0.peer.id, handleThreads: $0.peer.isForum)}) |> take(1) |> map { values in
                                             var unread:[PeerId: UnreadSearchBadge] = [:]
                                             outer: for peerView in peerViews {
                                                 let isMuted = peerView.isMuted
-                                                let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: false))
+                                                let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: peerViewMainPeer(peerView)?.isForum == true))
                                                 if let unreadCount = unreadCount, unreadCount > 0 {
                                                     if let peer = peerViewMainPeer(peerView) {
                                                         if let peer = peer as? TelegramChannel {
@@ -973,7 +978,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             } else if options.contains(.chats), target.isCommon {
 
                 let recently = context.engine.peers.recentlySearchedPeers() |> mapToSignal { recently -> Signal<[PeerView], NoError> in
-                    return combineLatest(recently.map {context.account.viewTracker.peerView($0.peer.peerId)})
+                    return combineLatest(recently.map {context.account.postbox.peerView(id: $0.peer.peerId)})
                 } |> map { peerViews -> [PeerView] in
                     return peerViews.filter { peerView in
                         if let group = peerViewMainPeer(peerView) as? TelegramGroup, group.migrationReference != nil {
@@ -982,12 +987,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return true
                     }
                 } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), NoError> in
-                    return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer(id: $0.peerId, handleThreads: false)}) |> map { values in
+                    return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer(id: $0.peerId, handleThreads: peerViewMainPeer($0)?.isForum == true)}) |> map { values in
                             
                             var unread:[PeerId: UnreadSearchBadge] = [:]
                             for peerView in peerViews {
                                 let isMuted = peerView.isMuted
-                                let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: false))
+                                let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: peerViewMainPeer(peerView)?.isForum == true))
                                 if let unreadCount = unreadCount, unreadCount > 0 {
                                     unread[peerView.peerId] = isMuted ? .muted(unreadCount) : .unmuted(unreadCount)
                                 }
@@ -1002,8 +1007,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     case .disabled:
                         return .single(([], [:], [:]))
                     case let .peers(peers):
-                        return combineLatest(peers.map {context.account.viewTracker.peerView($0.id)}) |> mapToSignal { peerViews -> Signal<([Peer], [PeerId: UnreadSearchBadge], [PeerId : Bool]), NoError> in
-                            return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer(id: $0.peerId, handleThreads: false)}) |> map { values in
+                        return combineLatest(peers.map {context.account.postbox.peerView(id: $0.id)}) |> mapToSignal { peerViews -> Signal<([Peer], [PeerId: UnreadSearchBadge], [PeerId : Bool]), NoError> in
+                            return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer(id: $0.peerId, handleThreads: peerViewMainPeer($0)?.isForum == true)}) |> map { values in
                                     
                                     var peers:[Peer] = []
                                     var unread:[PeerId: UnreadSearchBadge] = [:]
@@ -1016,7 +1021,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                                 (_, isActive, _) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
                                             }
                                             let isMuted = peerView.isMuted
-                                            let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: false))
+                                            let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: peerViewMainPeer(peerView)?.isForum == true))
                                             if let unreadCount = unreadCount, unreadCount > 0 {
                                                 unread[peerView.peerId] = isMuted ? .muted(unreadCount) : .unmuted(unreadCount)
                                             }
@@ -1153,7 +1158,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         genericView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
-                searchMessagesState.set(searchMessagesStateValue.swap(nil))
+                if !target.isForum {
+                    searchMessagesState.set(searchMessagesStateValue.swap(nil))
+                }
             default:
                 break
             }
@@ -1363,7 +1370,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     override func scrollup(force: Bool = false) {
-        genericView.clipView.scroll(to: NSMakePoint(0, frame.minY), animated: false)
+        genericView.clipView.scroll(to: NSMakePoint(0, 0), animated: false)
     }
     
     private var closeNext: Bool = false
@@ -1456,7 +1463,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             storedPeer = .complete()
         }
         
-        if let query = query, let peerId = peerId {
+        if let query = query, let peerId = peerId, messageId == nil {
             let link = inApp(for: query as NSString, context: context, peerId: peerId, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
             switch link {
             case let .followResolvedName(_, _, postId, _, _, _):

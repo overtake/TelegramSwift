@@ -34,15 +34,18 @@ class StickerPackRowItem: TableRowItem {
     let packIndex: Int
     let isPremium: Bool
     let installed: Bool?
-    
-    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?) {
+    let color: NSColor?
+    let isTopic: Bool
+    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, color: NSColor? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?, isTopic: Bool = false) {
         self.context = context
         self.packIndex = packIndex
         self._stableId = stableId
         self.info = info
+        self.color = color
         self.topItem = topItem
         self.isPremium = isPremium
         self.installed = installed
+        self.isTopic = isTopic
         super.init(initialSize)
     }
     
@@ -299,8 +302,18 @@ private final class StickerPackRowView : HorizontalRowView {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
         }
+    }
+    
+    override var isEmojiLite: Bool {
+        if let item = item as? StickerPackRowItem {
+            if item.isTopic {
+                return true
+            }
+            return item.context.isLite(.emoji)
+        }
+        return super.isEmojiLite
     }
 
     
@@ -334,7 +347,7 @@ private final class StickerPackRowView : HorizontalRowView {
                 self.inlineSticker?.removeFromSuperlayer()
                 self.inlineSticker = nil
                 if let file = file {
-                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26))
+                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26), textColor: item.color ?? theme.colors.accent)
                     self.container.layer?.addSublayer(current!)
                     self.inlineSticker = current
                 } else {

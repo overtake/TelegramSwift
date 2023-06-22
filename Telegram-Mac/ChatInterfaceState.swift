@@ -289,14 +289,17 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                 let isItalic = traitSet.contains(.italicFontMask)
                 let isMonospace = font.fontName == "Menlo-Regular"
 
-                if isItalic {
-                    inputAttributes.append(.italic(range.location ..< range.location + range.length))
-                }
-                if isBold {
-                    inputAttributes.append(.bold(range.location ..< range.location + range.length))
-                }
-                if isMonospace {
-                    inputAttributes.append(.code(range.location ..< range.location + range.length))
+                let text = attributed.string.nsstring.substring(with: range)
+                if !text.containsOnlyEmoji {
+                    if isItalic {
+                        inputAttributes.append(.italic(range.location ..< range.location + range.length))
+                    }
+                    if isBold {
+                        inputAttributes.append(.bold(range.location ..< range.location + range.length))
+                    }
+                    if isMonospace {
+                        inputAttributes.append(.code(range.location ..< range.location + range.length))
+                    }
                 }
             } else if let tag = value as? TGInputTextTag {
                 if let uid = tag.attachment as? NSNumber {
@@ -1018,7 +1021,7 @@ final class ChatEditState : Equatable {
     init(message:Message, originalMedia: Media? = nil, state:ChatTextInputState? = nil, loadingState: EditStateLoading = .none, editMedia: RequestEditMessageMedia = .keep, editedData: EditedImageData? = nil) {
         self.message = message
         if originalMedia == nil {
-            self.originalMedia = message.effectiveMedia
+            self.originalMedia = message.anyMedia
         } else {
             self.originalMedia = originalMedia
         }
@@ -1053,7 +1056,7 @@ final class ChatEditState : Equatable {
     }
     func withUpdatedMedia(_ media: Media) -> ChatEditState {
 
-        return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.effectiveMedia, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData)
+        return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.anyMedia, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData)
     }
     func withUpdatedLoadingState(_ loadingState: EditStateLoading) -> ChatEditState {
         return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData)
@@ -1119,15 +1122,23 @@ struct ChatInterfaceState: Codable, Equatable {
         guard let state = state else {
             return nil
         }
-
         guard let opaqueData = state.opaqueData else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
+                return context?.getChatInterfaceTempState(peerId)?.editState
+            })
         }
         guard var decodedState = try? EngineDecoder.decode(ChatInterfaceState.self, from: opaqueData) else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
+                return context?.getChatInterfaceTempState(peerId)?.editState
+            })
         }
-        decodedState = decodedState.withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+        decodedState = decodedState
+            .withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+            .updatedEditState({ _ in
+                return context?.getChatInterfaceTempState(peerId)?.editState
+            })
         return decodedState
+
     }
 
     
@@ -1146,7 +1157,9 @@ struct ChatInterfaceState: Codable, Equatable {
             try container.encodeNil(forKey: "r.i")
         }
 
-        try container.encode(EngineMessage.Id.encodeArrayToData(forwardMessageIds), forKey: "fm")
+        try container.encode(EngineMessage.Id.encodeArrayToData(self.forwardMessageIds), forKey: "fm")
+        try container.encode(self.hideCaptions, forKey: "f.hc")
+        try container.encode(self.hideSendersName, forKey: "f.sn")
 
 
         if self.messageActionsState.isEmpty {
@@ -1169,6 +1182,12 @@ struct ChatInterfaceState: Codable, Equatable {
         } else {
             try container.encodeNil(forKey: "hss")
         }
+
+//        if let forwardOptionsState = self.forwardOptionsState {
+//            try container.encode(forwardOptionsState, forKey: "fo")
+//        } else {
+//            try container.encodeNil(forKey: "fo")
+//        }
 
         if let dismissedForceReplyId = self.dismissedForceReplyId {
             try container.encode(dismissedForceReplyId.peerId.toInt64(), forKey: "d.f.p")
@@ -1197,19 +1216,12 @@ struct ChatInterfaceState: Codable, Equatable {
     func withUpdatedSynchronizeableInputState(_ state: SynchronizeableChatInputState?) -> ChatInterfaceState {
         var result = self
         if let state = state {
-            if !state.entities.isEmpty {
-                var bp = 0
-                bp += 1
-            } else {
-                var bp = 0
-                bp += 1
-            }
             let selectRange = state.textSelection ?? state.text.length ..< state.text.length
             result = result.withUpdatedInputState(ChatTextInputState(inputText: state.text, selectionRange: selectRange, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: state.entities))))
                 .withUpdatedReplyMessageId(state.replyToMessageId)
                 .withUpdatedTimestamp(timestamp)
         } else {
-            return ChatInterfaceState().withUpdatedHistoryScrollState(self.historyScrollState)
+            result = result.withUpdatedHistoryScrollState(self.historyScrollState)
         }
         return result
     }
@@ -1280,6 +1292,16 @@ struct ChatInterfaceState: Codable, Equatable {
         } else {
             self.forwardMessageIds = []
         }
+        if let hideCaptions = try container.decodeIfPresent(Bool.self, forKey: "f.hc") {
+            self.hideCaptions = hideCaptions
+        } else {
+            self.hideCaptions = false
+        }
+        if let hideSendersName = try container.decodeIfPresent(Bool.self, forKey: "f.sn") {
+            self.hideSendersName = hideSendersName
+        } else {
+            self.hideSendersName = false
+        }
 
         if let messageActionsState = try container.decodeIfPresent(ChatInterfaceMessageActionsState.self, forKey: "as") {
             self.messageActionsState = messageActionsState
@@ -1312,9 +1334,7 @@ struct ChatInterfaceState: Codable, Equatable {
         self.editState = nil
         self.replyMessage = nil
         self.forwardMessages = []
-        self.hideSendersName = false
         self.themeEditing = false
-        self.hideCaptions = false
         self.revealedSpoilers = Set()
     }
 
@@ -1352,7 +1372,7 @@ struct ChatInterfaceState: Codable, Equatable {
     }
 
     func withUpdatedForwardMessageIds(_ forwardMessageIds: [MessageId]) -> ChatInterfaceState {
-        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages, hideSendersName: self.hideSendersName, themeEditing: self.themeEditing, hideCaptions: self.hideCaptions, revealedSpoilers: self.revealedSpoilers)
+        return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages, hideSendersName: forwardMessageIds.isEmpty ? false : self.hideSendersName, themeEditing: self.themeEditing, hideCaptions: forwardMessageIds.isEmpty ? false : self.hideCaptions, revealedSpoilers: self.revealedSpoilers)
     }
 
     func withUpdatedForwardMessages(_ forwardMessages: [Message]) -> ChatInterfaceState {

@@ -102,6 +102,14 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         if playOnHover == true {
             accept = true
         }
+        if isLite(.stickers) == true, parent != nil {
+            if !mouseInside(), self.playerView.currentState == .playing {
+                accept = true
+            } else {
+                accept = accept && mouseInside()
+            }
+            
+        }
         
         if NSIsEmptyRect(self.visibleRect) || self.window == nil {
             accept = false
@@ -114,7 +122,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
        
         var signal = Signal<Void, NoError>.single(Void())
         if accept && !nextForceAccept && self.sticker != nil {
-            signal = signal |> delay(0, queue: .mainQueue())
+            signal = signal |> delay(0.01, queue: .mainQueue())
         }
         if accept && self.sticker != nil {
             nextForceAccept = false
@@ -133,7 +141,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 guard let `self` = self else {
                     return
                 }
-                self.playerView.set(accept ? self.sticker : nil)
+                self.playerView.set(accept ? self.sticker : nil, reset: true)
                 self.previousAccept = accept
             }))
         }
@@ -141,6 +149,20 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         self.playerView.updateVisible()
         
     }
+    
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        self.updatePlayerIfNeeded()
+    }
+    
     
     func setColors(_ colors: [LottieColor]) {
         self.playerView.setColors(colors)
@@ -304,8 +326,12 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 return nil
             } |> deliverOnMainQueue).start(next: { [weak self] data in
                 if let data = data, let `self` = self {
+                    
                     var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? .loop : .loop)
                     
+                    if isLite(.stickers), parent != nil {
+                        playPolicy = .toStart(from: 0)
+                    }
                     if self.playOnHover == true {
                         playPolicy = .framesCount(0)
                     }
@@ -401,10 +427,10 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
        
         
-        fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
+        fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: mediaResource).start())
         
         if let premiumResource = premiumResource {
-            fetchPremiumDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: premiumResource).start())
+            fetchPremiumDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: premiumResource).start())
         }
         
         if updated {
@@ -422,9 +448,18 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                         self.playerView.removeFromSuperview()
                         self.addSubview(self.thumbView)
                     }
+                case .finished:
+                    if isLite(.stickers), parent != nil {
+                        DispatchQueue.main.async { [weak self] in
+                            self?.previousAccept = false
+                            self?.updatePlayerIfNeeded()
+                        }
+                    }
+                    
                 default:
                     break
                 }
+                
             }))
         }
         

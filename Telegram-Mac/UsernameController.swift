@@ -76,9 +76,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             if let formatError = formatError {
                 text = formatError.description
             } else {
-                text = availability.description(for: username ?? "")
+                text = availability.description(for: username ?? "", target: .username)
             }
-            entries.append(.desc(sectionId: sectionId, index: 1, text: .plain(text), data: .init(color: theme.colors.redUI, viewType: .textBottomItem)))
+            let color: NSColor
+            switch availability {
+            case .available:
+                color = theme.colors.accent
+            case .purchaseAvailable:
+                color = theme.colors.grayText
+            default:
+                color = theme.colors.redUI
+            }
+            entries.append(.desc(sectionId: sectionId, index: 1, text: .markdown(text, linkHandler: { link in
+                if let username = username {
+                    let link: String = "fragment.com/username/\(username)"
+                    execute(inapp: inApp(for: link.nsstring))
+                }
+            }), data: .init(color: color, viewType: .textBottomItem)))
         }
     case let .success(username):
         if username != state.usernames.username, username?.count != 0 {
@@ -214,9 +228,15 @@ func UsernameController(_ context: AccountContext) -> InputDataController {
                     return .fail(username: username, formatError: .invalidCharacters, availability: availability)
                 case .taken:
                     return .fail(username: username, formatError: nil, availability: availability)
+                case .purchaseAvailable:
+                    return .fail(username: username, formatError: nil, availability: availability)
                 }
             case let .invalidFormat(error):
-                return .fail(username: username, formatError: error, availability: .invalid)
+                if username == "" {
+                    return .none(username: "")
+                } else {
+                    return .fail(username: username, formatError: error, availability: .invalid)
+                }
             case .checking:
                 return .progress(username: username)
             }
@@ -248,7 +268,7 @@ func UsernameController(_ context: AccountContext) -> InputDataController {
         let state = stateValue.with { $0.state }
         
         switch state {
-        case .success:
+        case .success, .none:
             return .fail(.doSomething(next: { f in
                 let isEnabled = stateValue.with { $0.isEnabled }
                 if isEnabled {
@@ -258,7 +278,6 @@ func UsernameController(_ context: AccountContext) -> InputDataController {
                     f(.none)
                 }
             }))
-            
         default:
             return .fail(.none)
         }
@@ -293,7 +312,7 @@ func UsernameController(_ context: AccountContext) -> InputDataController {
                 let toValue = to - range.location
                 var names = stateValue.with { $0.usernames.usernames }
                 names.move(at: fromValue, to: toValue)
-                nextTransactionNonAnimated.swap(true)
+                _ = nextTransactionNonAnimated.swap(true)
                 updateState { current in
                     var current = current
                     current.usernames.usernames = names

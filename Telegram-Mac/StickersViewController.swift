@@ -14,6 +14,12 @@ import InAppSettings
 import Postbox
 import FoundationUtils
 
+private struct State : Equatable {
+    var searchCategories: EmojiSearchCategories?
+    var selectedEmojiCategory: EmojiSearchCategories.Group?
+}
+
+
 final class StickerPanelArguments {
     let context: AccountContext
     let sendMedia:(Media, NSView, Bool, Bool, ItemCollectionId?)->Void
@@ -24,8 +30,9 @@ final class StickerPanelArguments {
     let removePack:(StickerPackCollectionId)->Void
     let closeInlineFeatured:(Int64)->Void
     let openFeatured:(FeaturedStickerPackItem)->Void
+    let selectEmojiCategory:(EmojiSearchCategories.Group?)->Void
     let mode: EntertainmentViewController.Mode
-    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool, Bool, ItemCollectionId?)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void, removePack:@escaping(StickerPackCollectionId)->Void, closeInlineFeatured:@escaping(Int64)->Void, openFeatured:@escaping(FeaturedStickerPackItem)->Void, mode: EntertainmentViewController.Mode) {
+    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool, Bool, ItemCollectionId?)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void, removePack:@escaping(StickerPackCollectionId)->Void, closeInlineFeatured:@escaping(Int64)->Void, openFeatured:@escaping(FeaturedStickerPackItem)->Void, selectEmojiCategory:@escaping(EmojiSearchCategories.Group?)->Void, mode: EntertainmentViewController.Mode) {
         self.context = context
         self.sendMedia = sendMedia
         self.showPack = showPack
@@ -36,6 +43,7 @@ final class StickerPanelArguments {
         self.closeInlineFeatured = closeInlineFeatured
         self.openFeatured = openFeatured
         self.mode = mode
+        self.selectEmojiCategory = selectEmojiCategory
     }
 }
 
@@ -251,7 +259,10 @@ private struct StickerPacksUpdateData {
     let featured: [FeaturedStickerPackItem]
     let settings: StickerSettings
     let mode: EntertainmentViewController.Mode
-    init(view: ItemCollectionsView?, update: StickerPacksUpdate, specificPack: Tuple2<PeerSpecificStickerPackData, Peer>?, searchData: StickerPacksSearchData? = nil, hasUnread: Bool, featured: [FeaturedStickerPackItem], settings: StickerSettings = .defaultSettings, mode: EntertainmentViewController.Mode) {
+    let state: State
+    
+    
+    init(view: ItemCollectionsView?, update: StickerPacksUpdate, specificPack: Tuple2<PeerSpecificStickerPackData, Peer>?, searchData: StickerPacksSearchData? = nil, hasUnread: Bool, featured: [FeaturedStickerPackItem], settings: StickerSettings = .defaultSettings, mode: EntertainmentViewController.Mode, state: State) {
         self.view = view
         self.update = update
         self.specificPack = specificPack
@@ -260,10 +271,11 @@ private struct StickerPacksUpdateData {
         self.featured = featured
         self.settings = settings
         self.mode = mode
+        self.state = state
     }
 
     func withUpdatedHasUnread(_ hasUnread: Bool) -> StickerPacksUpdateData {
-        return .init(view: self.view, update: self.update, specificPack: self.specificPack, searchData: self.searchData, hasUnread: hasUnread, featured: self.featured, settings: self.settings, mode: self.mode)
+        return .init(view: self.view, update: self.update, specificPack: self.specificPack, searchData: self.searchData, hasUnread: hasUnread, featured: self.featured, settings: self.settings, mode: self.mode, state: self.state)
     }
 }
 enum StickerPackInfo : Equatable {
@@ -465,23 +477,23 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                 }
             }
             
-            if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
-                var files:[TelegramMediaFile] = []
-                for item in view.orderedItemListsViews[2].items {
-                    if let entry = item.contents.get(RecentMediaItem.self) {
-                        let file = entry.media
-                        if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
-                            if !file.isPremiumSticker || !context.premiumIsBlocked {
-                                ids[id] = id
-                                files.append(file)
-                            }
-                        }
-                    }
-                }
-                if !files.isEmpty {
-                    entries.append(.pack(index: .premium(2), files: files, packInfo: .premium, collectionId: .premium))
-                }
-            }
+//            if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
+//                var files:[TelegramMediaFile] = []
+//                for item in view.orderedItemListsViews[2].items {
+//                    if let entry = item.contents.get(RecentMediaItem.self) {
+//                        let file = entry.media
+//                        if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
+//                            if !file.isPremiumSticker || !context.premiumIsBlocked {
+//                                ids[id] = id
+//                                files.append(file)
+//                            }
+//                        }
+//                    }
+//                }
+//                if !files.isEmpty {
+//                    entries.append(.pack(index: .premium(2), files: files, packInfo: .premium, collectionId: .premium))
+//                }
+//            }
             
             if let specificPack = specificPack, let info = specificPack._0.packInfo {
                 var files:[TelegramMediaFile] = []
@@ -600,11 +612,11 @@ private func packEntries(view: ItemCollectionsView?, context: AccountContext, sp
         if !view.orderedItemListsViews[0].items.isEmpty {
             entries.append(.recent)
         }
-        if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
-            if context.isPremium || !context.premiumIsBlocked {
-                entries.append(.premium)
-            }
-        }
+//        if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
+//            if context.isPremium || !context.premiumIsBlocked {
+//                entries.append(.premium)
+//            }
+//        }
         if let specificPack = specificPack, let info = specificPack._0.packInfo?.0 {
             entries.append(.specificPack(data: SpecificPackData(info: info, peer: specificPack._1)))
         }
@@ -647,7 +659,7 @@ private func prepareStickersTransition(from:[AppearanceWrapperEntry<StickerPackE
         state = .top(id: index.collectionId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0)
         anim = animated
     }
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: anim, state: state, grouping: !anim)
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: anim, state: state, grouping: !anim, animateVisibleOnly: false)
 }
 
 fileprivate func preparePackTransition(from:[AppearanceWrapperEntry<PackEntry>]?, to:[AppearanceWrapperEntry<PackEntry>], context: AccountContext, initialSize:NSSize) -> TableUpdateTransition {
@@ -686,15 +698,27 @@ class NStickersView : View {
     fileprivate let tabsContainer: View = View()
     private let selectionView: View = View(frame: NSMakeRect(0, 0, 36, 36))
     private let searchBorder = View()
+    
+    fileprivate var categories: AnimatedEmojiesCategories?
+    fileprivate var closeCategories: BackCategoryControl?
 
+
+    private let searchInside = View()
+    
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
         addSubview(tableView)
-        
-        searchContainer.addSubview(searchView)
+                
+        searchView.isLeftOrientated = true
+        searchView.layer?.cornerRadius = 15
+
+        searchInside.addSubview(searchView)
+
         addSubview(searchContainer)
+        
+        searchContainer.addSubview(searchInside)
         searchContainer.addSubview(searchBorder)
         
         emptySearchContainer.addSubview(emptySearchView)
@@ -722,6 +746,8 @@ class NStickersView : View {
         self.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateScrollerSearch()
         }))
+        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     private func updateScrollerSearch() {
@@ -729,14 +755,20 @@ class NStickersView : View {
     }
     
     
-    func updateRestricion(_ peer: Peer?) {
+    func updateRestricion(_ peer: Peer?, animated: Bool) {
         if let peer = peer, let text = permissionText(from: peer, for: .banSendStickers) {
-            restrictedView?.removeFromSuperview()
-            restrictedView = RestrictionWrappedView(text)
-            addSubview(restrictedView!)
-        } else {
-            restrictedView?.removeFromSuperview()
-            restrictedView = nil
+            let current: RestrictionWrappedView
+            if let view = self.restrictedView {
+                current = view
+            } else {
+                current = RestrictionWrappedView(text)
+                self.restrictedView = current
+                addSubview(current)
+            }
+            current.update(text)
+        } else if let view = self.restrictedView {
+            performSubviewRemoval(view, animated: animated)
+            self.restrictedView = nil
         }
         needsLayout = true
     }
@@ -761,6 +793,7 @@ class NStickersView : View {
     private var searchState: SearchState? = nil
     
     func updateSearchState(_ searchState: SearchState, animated: Bool) {
+        let previous = self.searchState
         self.searchState = searchState
 
         let transition: ContainedViewLayoutTransition
@@ -769,10 +802,104 @@ class NStickersView : View {
         } else {
             transition = .immediate
         }
+        updateSelectionState(animated: animated)
         self.updateLayout(size: frame.size, transition: transition)
+
+        if previous?.state != searchState.state {
+            self.tableView.scroll(to: .up(animated))
+            self.moveCategories(nil)
+        }
+        
     }
     
     func updateSelectionState(animated: Bool) {
+        
+      
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        
+        let currentClose: BackCategoryControl
+        if state?.selectedEmojiCategory != nil, let context = context {
+            if let view = self.closeCategories {
+                currentClose = view
+            } else {
+                currentClose = .init(frame: NSMakeRect(searchView.frame.minX, searchView.frame.minY, 30, 30), context: context)
+                self.closeCategories = currentClose
+                searchInside.addSubview(currentClose)
+                
+                currentClose.set(handler: { [weak self] _ in
+                    self?.arguments?.selectEmojiCategory(nil)
+                }, for: .Click)
+            }
+            self.searchView.updateSearchHolderVisibility(visible: false, transition: .immediate)
+        } else {
+            if let view = self.closeCategories {
+                view.close()
+                delay(0.4, closure: { [weak self, weak view] in
+                    view?.removeFromSuperview()
+                    if self?.closeCategories == nil {
+                        self?.searchView.updateSearchHolderVisibility(visible: true, transition: .immediate)
+                    }
+                })
+                self.closeCategories = nil
+            }
+        }
+        
+        if searchState == nil || searchState?.state == .None, let groups = self.state?.searchCategories?.groups, let context = context {
+            let current: AnimatedEmojiesCategories
+            
+            
+            let isNew: Bool
+            if let view = self.categories {
+                current = view
+                isNew = false
+            } else {
+                current = AnimatedEmojiesCategories(frame: categoryRect)
+                self.categories = current
+                searchInside.addSubview(current)
+                
+                current.select = { [weak self] category in
+                    self?.arguments?.selectEmojiCategory(category)
+                }
+                isNew = true
+            }
+            
+            current.userInteractionEnabled = current.selected != nil
+           
+            if current.selected != state?.selectedEmojiCategory, current.selected == nil || state?.selectedEmojiCategory == nil {
+                self.moveCategories(nil)
+            }
+            
+            current.update(categories: groups, context: context, selected: self.state?.selectedEmojiCategory, animated: animated)
+            current.scrollView.applyExternalScroll = { [weak self] event in
+                return self?.moveCategories(event) ?? false
+            }
+            
+            
+            current.updateScroll()
+            
+            
+            self.searchView.externalScroll = { [weak current] event in
+                if current?.mouseInside() == false {
+                    current?.scrollView.scrollWheel(with: event)
+                }
+            }
+            
+        } else if let view = self.categories {
+            performSubviewRemoval(view, animated: animated)
+            if animated {
+                view.layer?.animatePosition(from: view.frame.origin, to: categoryRect.origin, duration: 0.2, removeOnCompletion: false)
+                view.layer?.animateBounds(from: view.frame.size.bounds, to: categoryRect.size.bounds, duration: 0.2, removeOnCompletion: false)
+            }
+            self.categories = nil
+            self.searchView.externalScroll = nil
+            
+        }
         
         var animated = animated
         var item = packsView.selectedItem()
@@ -785,12 +912,6 @@ class NStickersView : View {
             return
         }
         
-        let transition: ContainedViewLayoutTransition
-        if animated {
-            transition = .animated(duration: 0.2, curve: .easeOut)
-        } else {
-            transition = .immediate
-        }
         let point = packsView.clipView.destination ?? packsView.contentOffset
         let rect = NSMakeRect(view.frame.origin.y - point.y, 5, item.height, packsView.frame.height)
         
@@ -800,6 +921,84 @@ class NStickersView : View {
             selectionView.layer?.animateCornerRadius()
         }
         transition.updateFrame(view: selectionView, frame: rect)
+        updateLocalizationAndTheme(theme: theme)
+    }
+    private var state: State?
+    private var context: AccountContext?
+    private var arguments: StickerPanelArguments?
+    fileprivate func update(data: StickerPacksUpdateData, context: AccountContext, arguments: StickerPanelArguments?, animated: Bool) {
+        self.state = data.state
+        self.context = context
+        self.arguments = arguments
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeInOut)
+        } else {
+            transition = .immediate
+        }
+        self.updateLayout(size: self.frame.size, transition: transition)
+    }
+    
+    
+    @discardableResult func moveCategories(_ event: NSEvent?) -> Bool {
+        let transition: ContainedViewLayoutTransition = event == nil ? .animated(duration: 0.2, curve: .easeInOut) : .immediate
+        if let view = self.categories {
+            if let event = event, state?.selectedEmojiCategory == nil {
+                let previous = view.scrollView.contentView.bounds.origin
+                let point = view.scrollView.makeScrollPoint(event)
+                let difference = previous.x - point.x
+                var rect = view.frame.insetBy(dx: difference, dy: 0)
+                
+                var accept: Bool = previous.x == 0
+
+                if accept {
+                    
+                    let minX = searchView.frame.minX + searchView.searchSize.width
+                    
+                    if rect.origin.x < minX {
+                        accept = false
+                    } else if rect.origin.x > searchContainer.frame.width - categoryRect.width - searchView.frame.minX {
+                        accept = false
+                    }
+                    rect.size.width = min(searchView.frame.width - searchView.searchSize.width, max(categoryRect.width, rect.width))
+                    rect.origin.x = max(minX, searchContainer.frame.width - rect.width - searchView.frame.minX)
+                    transition.updateFrame(view: view, frame: rect)
+                    
+                    let maxX = (searchView.frame.minX + searchView.holderSize.width)
+                    
+                    let sInset = maxX - rect.origin.x
+                    let sOpacity: CGFloat = 1 - sInset / minX
+                    searchView.movePlaceholder(-sInset, opacity: sOpacity, transition: transition)
+                }
+                view.updateScroll()
+                
+                return accept
+            } else {
+                if let _ = state?.selectedEmojiCategory {
+                    transition.updateFrame(view: view, frame: revealedCategoryRect)
+                    searchView.movePlaceholder(-((searchView.frame.minX + searchView.holderSize.width) - revealedCategoryRect.minX), opacity: 0, transition: transition)
+                } else {
+                    transition.updateFrame(view: view, frame: categoryRect)
+                    searchView.movePlaceholder(nil, opacity: 1, transition: transition)
+                    view.scrollView.clipView.scroll(to: .zero, animated: transition.isAnimated)
+                }
+                view.updateLayout(size: view.frame.size, transition: transition)
+            }
+        } else {
+            searchView.movePlaceholder(nil, opacity: 1, transition: transition)
+        }
+        return false
+    }
+    
+    var categoryRect: NSRect {
+        let width = searchView.frame.width - searchView.holderSize.width
+        let rect = NSMakeRect(searchContainer.frame.width - (width + searchView.frame.minX), searchView.frame.minY, width, 30)
+        return rect
+    }
+    var revealedCategoryRect: NSRect {
+        let width = searchView.frame.width - searchView.searchSize.width
+        return NSMakeRect(searchContainer.frame.width - (width + searchView.frame.minX), searchView.frame.minY, width, 30)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -819,33 +1018,50 @@ class NStickersView : View {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        let initial: CGFloat = searchState?.state == .Focus ? -46 : 0
+        
+        let inSearch = searchState?.state == .Focus || state?.selectedEmojiCategory != nil
+        
+        let initial: CGFloat = inSearch ? -46 : 0
         
         transition.updateFrame(view: tabsContainer, frame: NSMakeRect(0, initial, size.width, 46))
         transition.updateFrame(view: separator, frame: NSMakeRect(0, tabsContainer.frame.height - .borderSize, tabsContainer.frame.width, .borderSize))
         transition.updateFrame(view: packsView, frame: tabsContainer.focus(NSMakeSize(size.width, 36)))
 
         
-        let searchDest = tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y)
+        let dest = max(0, min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46))
+
+        let searchDest = inSearch ? 0 : dest
                 
-        transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, min(max(tabsContainer.frame.maxY - searchDest, 0), tabsContainer.frame.maxY), size.width, 46))
+        
+        transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, tabsContainer.frame.maxY, size.width, 46 - min(searchDest, 46)))
+
+        
+        let searchInsideRect: CGRect = CGRect(origin: CGPoint(x: 0, y: searchContainer.frame.height - 46), size: NSMakeSize(size.width, 46))
+        transition.updateFrame(view: searchInside, frame: searchInsideRect)
+
+        
+        transition.updateFrame(view: searchView, frame: searchInside.focus(NSMakeSize(size.width - 16, 30)))
         transition.updateFrame(view: searchBorder, frame: NSMakeRect(0, searchContainer.frame.height - .borderSize, size.width, .borderSize))
+        let alpha: CGFloat = inSearch && tableView.documentOffset.y > 0 ? 1 : 0
+        transition.updateAlpha(view: searchBorder, alpha: alpha)
+        
+        if let categories = categories {
+            transition.updateFrame(view: categories, frame: categories.centerFrameY(x: searchInside.frame.width - categories.frame.width - searchView.frame.minX))
+            categories.updateLayout(size: categories.frame.size, transition: transition)
+        }
 
-        transition.updateFrame(view: searchView, frame: searchContainer.focus(NSMakeSize(size.width - 10, 30)))
-
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabsContainer.frame.maxY, size.width, size.height))
-
+        
+        
         if let restrictedView = restrictedView {
             transition.updateFrame(view: restrictedView, frame: size.bounds)
         }
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabsContainer.frame.maxY, size.width, size.height))
+
                 
         transition.updateFrame(view: emptySearchContainer, frame: size.bounds)
         
-        let alpha: CGFloat = searchState?.state == .Focus && tableView.documentOffset.y > 0 ? 1 : 0
-        transition.updateAlpha(view: searchBorder, alpha: alpha)
-
         
-        self.updateSelectionState(animated: false)
+        self.updateSelectionState(animated: transition.isAnimated)
 
     }
     
@@ -875,10 +1091,14 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     private let position = ValuePromise<StickerPacksScrollState>(ignoreRepeated: true)
     private let disposable = MetaDisposable()
     private let searchStateDisposable = MetaDisposable()
+    private let actionsDisposable = DisposableSet()
     private let specificPeerId = ValuePromise<PeerId>(PeerId(0), ignoreRepeated: true)
     private var listener: TableScrollListener!
     private var interactions: EntertainmentInteractions?
     private weak var chatInteraction: ChatInteraction?
+    
+    private var updateState: (((State) -> State) -> Void)? = nil
+    
     var makeSearchCommand:((ESearchCommand)->Void)?
     
     
@@ -906,6 +1126,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     deinit {
         disposable.dispose()
         searchStateDisposable.dispose()
+        actionsDisposable.dispose()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -919,7 +1140,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         self.chatInteraction = chatInteraction
         chatInteraction.add(observer: self)
         if isLoaded() {
-            genericView.updateRestricion(chatInteraction.presentation.peer)
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
         }
         self.specificPeerId.set(chatInteraction.peerId)
     }
@@ -928,10 +1149,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             if let peer = value.peer, let oldPeer = oldValue.peer {
                 if permissionText(from: peer, for: .banSendStickers) != permissionText(from: oldPeer, for: .banSendStickers) {
-                    genericView.updateRestricion(peer)
+                    genericView.updateRestricion(peer, animated: animated)
                 }
             } else if (oldValue.peer != nil) != (value.peer != nil), let peer = value.peer {
-                genericView.updateRestricion(peer)
+                genericView.updateRestricion(peer, animated: animated)
             }
         }
     }
@@ -1002,14 +1223,35 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     }
     
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let chatInteraction = chatInteraction {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
+    }
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.genericView.updateSelectionState(animated: false)
+        if let chatInteraction = chatInteraction {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
     }
     override func viewDidLoad() {
         super.viewDidLoad()
         let context = self.context
         let initialSize = self.atomicSize
+        
+        let initialState = State()
+        
+        let statePromise = ValuePromise<State>(ignoreRepeated: true)
+        let stateValue = Atomic(value: initialState)
+        let updateState: ((State) -> State) -> Void = { f in
+            statePromise.set(stateValue.modify (f))
+        }
+        
+        self.updateState = { f in
+            updateState(f)
+        }
         
         genericView.tableView.addScroll(listener: TableScrollListener.init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
             self?.shouldSendActivity(true)
@@ -1107,6 +1349,19 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             }).start()
         }, openFeatured: { [weak self] featured in
             self?.genericView.searchView.change(state: .Focus, true)
+        }, selectEmojiCategory: { [weak self] category in
+            updateState { current in
+                var current = current
+                current.selectedEmojiCategory = category
+                return current
+            }
+            let searchState: SearchState
+            if let category = category {
+                searchState = .init(state: .None, request: category.identifiers.joined(separator: ""))
+            } else {
+                searchState = .init(state: .None, request: nil)
+            }
+            self?.updateSearchState(searchState)
         }, mode: mode)
         
         let specificPackData: Signal<Tuple2<PeerSpecificStickerPackData, Peer>?, NoError> = self.specificPeerId.get() |> mapToSignal { peerId -> Signal<Peer?, NoError> in
@@ -1128,34 +1383,42 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         }
         let mode = self.mode
         
+        let searchCategories: Signal<EmojiSearchCategories?, NoError>
+        if mode == .selectAvatar {
+            searchCategories = .single(nil)
+        } else {
+            searchCategories = context.engine.stickers.emojiSearchCategories(kind: .emoji)
+        }
+
+        
         let signal = combineLatest(queue: prepareQueue, self.searchValue.get(), self.position.get()) |> mapToSignal { values -> Signal<StickerPacksUpdateData, NoError> in
             
             let count = initialSize.with { size -> Int in
                 return max(100, Int(round((size.height * (values.1 == .initial ? 2 : 20)) / 60 * 5)))
             }
-            if values.0.state == .None {
+            if values.0.request.isEmpty {
                 var firstTime: Bool = true
                 
                 let settings = stickerSettings(postbox: context.account.postbox)
                 switch values.1 {
                 case .initial:
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
                     
-                    return combineLatest(packsView, featuredView, settings) |> mapToSignal { view, featured, settings in
+                    return combineLatest(packsView, featuredView, settings, statePromise.get()) |> mapToSignal { view, featured, settings, state in
                             return specificPackData |> map { specificPack in
                                 let scrollToTop = firstTime
                                 firstTime = false
-                                return StickerPacksUpdateData(view: view, update: .generic(animated: scrollToTop, scrollToTop: scrollToTop), specificPack: specificPack, hasUnread: false, featured: featured, settings: settings, mode: mode)
+                                return StickerPacksUpdateData(view: view, update: .generic(animated: scrollToTop, scrollToTop: scrollToTop), specificPack: specificPack, hasUnread: false, featured: featured, settings: settings, mode: mode, state: state)
                             }
                     }
                 case let .scroll(aroundIndex):
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
 
                     
-                    return combineLatest(packsView, featuredView, settings)
-                        |> mapToSignal { view, featured, settings in
+                    return combineLatest(packsView, featuredView, settings, statePromise.get())
+                        |> mapToSignal { view, featured, settings, state in
                             return specificPackData |> map { specificPack in
                                 let update: StickerPacksUpdate
                                 if firstTime {
@@ -1164,23 +1427,23 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                 } else {
                                     update = .generic(animated: false, scrollToTop: false)
                                 }
-                                return StickerPacksUpdateData(view: view, update: update, specificPack: specificPack, hasUnread: false, featured: featured, settings: settings, mode: mode)
+                                return StickerPacksUpdateData(view: view, update: update, specificPack: specificPack, hasUnread: false, featured: featured, settings: settings, mode: mode, state: state)
                             }
                     }
                 case let .navigate(index):
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
-                    return combineLatest(packsView, featuredView)
-                        |> mapToSignal { view, featured in
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
+                    return combineLatest(packsView, featuredView, statePromise.get())
+                        |> mapToSignal { view, featured, state in
                             return specificPackData |> map { specificPack in
                                 let update: StickerPacksUpdate
                                 if firstTime {
                                     firstTime = false
                                     update = .navigate(index, animated: true)
                                 } else {
-                                    update = .generic(animated: false, scrollToTop: false)
+                                    update = .generic(animated: true, scrollToTop: false)
                                 }
-                                return StickerPacksUpdateData(view: view, update: update, specificPack: specificPack, hasUnread: false, featured: featured, mode: mode)
+                                return StickerPacksUpdateData(view: view, update: update, specificPack: specificPack, hasUnread: false, featured: featured, mode: mode, state: state)
                             }
                     } 
                 case .loadFeaturedMore:
@@ -1192,7 +1455,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     switch values.1 {
                     case .initial:
                         var firstTime = true
-                        return combineLatest(context.account.viewTracker.featuredStickerPacks(), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])) |> map { value, view in
+                        return combineLatest(context.account.viewTracker.featuredStickerPacks(), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]), statePromise.get()) |> map { value, view, state in
                             var found = FoundStickerSets()
                             
                             var installedPacks = Set<ItemCollectionId>()
@@ -1217,10 +1480,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                             let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: found.infos.count, emojiRelated: [])
                             let scrollToTop = firstTime
                             firstTime = false
-                            return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: scrollToTop), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode)
+                            return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: scrollToTop), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode, state: state)
                         }
                     case let .loadFeaturedMore(current):
-                        return combineLatest(requestOldFeaturedStickerPacks(network: context.account.network, postbox: context.account.postbox, offset: current.sets.infos.count - current.basicFeaturedCount, limit: 50), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])) |> map { values, view in
+                        return combineLatest(requestOldFeaturedStickerPacks(network: context.account.network, postbox: context.account.postbox, offset: current.sets.infos.count - current.basicFeaturedCount, limit: 50), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]), statePromise.get()) |> map { values, view, state in
                             var found = current.sets
                             
                             
@@ -1252,7 +1515,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                 }
                             }
                             let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: current.basicFeaturedCount, emojiRelated: [])
-                            return StickerPacksUpdateData(view: nil, update: .generic(animated: false, scrollToTop: nil), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode)
+                            return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: nil), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode, state: state)
                         }
                     default:
                         fatalError()
@@ -1265,7 +1528,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     let emojiRelated: Signal<[FoundStickerItem], NoError> = context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: searchText, completeMatch: true, checkPrediction: false) |> mapToSignal { emojis in
                         
                         let signals = emojis.map {
-                            context.engine.stickers.searchStickers(query: $0, scope: [.installed])
+                            context.engine.stickers.searchStickers(query: [$0], scope: [.installed]) |> map { $0.items }
                         }
                         return combineLatest(signals) |> map {
                             $0.reduce([], { current, value in
@@ -1274,7 +1537,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                         }
                     } |> delay(0.2, queue: prepareQueue)
 
-                    return combineLatest(searchLocal, searchRemote, emojiRelated) |> map { local, remote, emojiRelated in
+                    return combineLatest(searchLocal, searchRemote, emojiRelated, statePromise.get()) |> map { local, remote, emojiRelated, state in
                         var value = FoundStickerSets()
                         if let local = local {
                             value = value.merge(with: local)
@@ -1284,7 +1547,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                         }
                         
                         let searchData = StickerPacksSearchData(sets: value, loading: remote == nil && value.entries.isEmpty, basicFeaturedCount: 0, emojiRelated: emojiRelated)
-                        return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: nil), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode)
+                        return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: nil), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode, state: state)
                     }
                 }
                 
@@ -1301,10 +1564,12 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         }
         
         let transition = combineLatest(queue: prepareQueue, appearanceSignal, signal)
-             |> map { appearance, data -> (TableUpdateTransition, TableUpdateTransition, [AppearanceWrapperEntry<PackEntry>]) in
+             |> map { appearance, data -> (TableUpdateTransition, TableUpdateTransition, [AppearanceWrapperEntry<PackEntry>], StickerPacksUpdateData) in
                 
                 _ = foundPacks.swap(data.searchData)
                 
+                 
+                 
                  let entries = stickersEntries(view: data.view, context: context, featured: data.featured, settings: data.settings, searchData: data.searchData, specificPack: data.specificPack, mode: mode).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
                 let from = previous.swap(entries)
                 
@@ -1314,19 +1579,22 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let transition = prepareStickersTransition(from: from, to: entries, initialSize: initialSize.with { $0 }, arguments: arguments, update: data.update)
                 let packTransition = preparePackTransition(from: fromPacks, to: entriesPack, context: context, initialSize: initialSize.with { $0 })
                 
-                return (transition, packTransition, entriesPack)
+                return (transition, packTransition, entriesPack, data)
         } |> deliverOnMainQueue
         
         var first: Bool = true
         
-        disposable.set(transition.start(next: { [weak self] (transition, packTransition, entriesPack) in
+        disposable.set(transition.start(next: { [weak self] (transition, packTransition, entriesPack, data) in
             guard let `self` = self else { return }
+            
             
             self.genericView.tableView.removeScroll(listener: self.listener)
             self.genericView.tableView.merge(with: transition)
             self.genericView.packsView.merge(with: packTransition)
             self.genericView.updateEmpties(isEmpty: self.genericView.tableView.isEmpty, animated: !first)
             self.genericView.tableView.addScroll(listener: self.listener)
+            
+            
             first = false
             
             var visibleRows = self.genericView.tableView.visibleRows()
@@ -1339,11 +1607,13 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 self.genericView.packsView.changeSelection(stableId: item.stableId)
             }
             
-            self.genericView.updateSelectionState(animated: transition.animated)
             
             self.makeSearchCommand?(.normal)
             
-           
+            self.genericView.update(data: data, context: context, arguments: arguments, animated: !first)
+            
+            self.genericView.updateSelectionState(animated: transition.animated)
+
             if !packTransition.isEmpty {
                 var resortRange: NSRange = NSMakeRange(0, 0)
                 let entries = entriesPack.map( {$0.entry })
@@ -1445,7 +1715,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let entries = previous.with ({ $0 })
                 let index:StickerPacksIndex?
                 
-                if let foundPacks = foundPacks.with ({ $0 }), self.searchState.state == .Focus {
+                if let foundPacks = foundPacks.with ({ $0 }), !self.searchState.request.isEmpty {
                     self.position.set(.loadFeaturedMore(foundPacks))
                 } else {
                     switch position.direction {
@@ -1456,20 +1726,29 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     case .none:
                         index = nil
                     }
-                    if let index = index, self.searchState.state == .None {
+                    if let index = index, self.searchState.request.isEmpty {
                         self.position.set(.scroll(aroundIndex: index))
                     }
                 }
             }
         }
         
+        actionsDisposable.add(searchCategories.start(next: { categories in
+            updateState { current in
+                var current = current
+                current.searchCategories = categories
+                return current
+            }
+        }))
+        
         self.position.set(.initial)
         
     }
     override func scrollup(force: Bool = false) {
+        self.makeSearchCommand?(.close)
         self.position.set(.initial)
         self.genericView.packsView.scroll(to: .up(true))
-      //  self.genericView.tableView.scroll(to: .up(true))
+        self.genericView.tableView.scroll(to: .up(true))
     }
     
     override func viewDidDisappear(_ animated: Bool) {
@@ -1478,6 +1757,27 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     
     override var supportSwipes: Bool {
         return !self.genericView.packsView._mouseInside()
+    }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        var cancelled: Bool = false
+        self.updateState? { current in
+            var current = current
+            if current.selectedEmojiCategory != nil {
+                cancelled = true
+                current.selectedEmojiCategory = nil
+            }
+            return current
+        }
+        if searchState.state == .Focus {
+            cancelled = true
+        }
+        if cancelled {
+            self.updateSearchState(.init(state: .None, request: nil))
+            return .invoked
+        } else {
+            return super.escapeKeyAction()
+        }
     }
     
 }

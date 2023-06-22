@@ -78,7 +78,7 @@ fileprivate let vimeoIcon = #imageLiteral(resourceName: "Icon_VimeoPlay").precom
 
 class ExternalVideoLoader {
     
-    private let statusQueue = Queue()
+    private let statusQueue = resourcesQueue
     private let concurrentQueue = Queue.concurrentDefaultQueue()
     private var statusContexts: [WrappedExternalVideoId: ExternalVideoStatusContext] = [:]
    

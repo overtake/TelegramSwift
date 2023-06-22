@@ -174,15 +174,15 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
         }
         
     }
-    interaction.forwardMessages = { ids in
-        showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: ids)), for: context.window)
+    interaction.forwardMessages = { messages in
+        showModal(with: ShareModalController(ForwardMessagesObject(context, messages: messages)), for: context.window)
     }
     interaction.deleteMessages = { ids in
         let signal = context.account.postbox.transaction { transaction -> [Message] in
             return ids.compactMap { transaction.getMessage($0) }
         } |> mapToSignal { messages ->Signal<Float, NoError> in
             let ids = messages.compactMap { $0.file?.resource.id }
-            return context.account.postbox.mediaBox.removeCachedResources(Set(ids), force: true, notify: true)
+            return context.account.postbox.mediaBox.removeCachedResources(ids, force: true, notify: true)
         }
         _ = signal.start()
     }

@@ -81,6 +81,10 @@ final class PremiumStatusController : TelegramViewController {
             delay += itemDelay
         }
     }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        return emojis.escapeKeyAction()
+    }
 }
 
 
@@ -92,7 +96,7 @@ final class SetupQuickReactionController : TelegramViewController {
     
     let callback: (TelegramMediaFile)->Void
     init(_ context: AccountContext, callback: @escaping(TelegramMediaFile)->Void) {
-        self.emojis = .init(context, mode: .reactions)
+        self.emojis = .init(context, mode: .quickReaction)
         self.callback = callback
         super.init(context)
         bar = .init(height: 0)
@@ -146,5 +150,9 @@ final class SetupQuickReactionController : TelegramViewController {
             section.animateAppearance(delay: delay, duration: duration, initialPlayers: [:])
             delay += itemDelay
         }
+    }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        return emojis.escapeKeyAction()
     }
 }

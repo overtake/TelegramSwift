@@ -14,7 +14,7 @@ import SwiftSignalKit
 import TGUIKit
 import ApiCredentials
 
-private let enableDifference = true
+private let enableDifference = false
 
 private let maxFrameBufferSizeCache = 7200
 
@@ -48,7 +48,7 @@ private struct DstData : Codable {
 }
 
 
-private let version = 65
+private let version = 66
 
 final class TRLotData {
     

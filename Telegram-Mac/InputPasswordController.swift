@@ -15,6 +15,7 @@ import TGUIKit
 enum InputPasswordValueError {
     case generic
     case wrong
+    case custom(String)
 }
 
 
@@ -93,6 +94,8 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
                     switch error {
                     case .wrong:
                         text = strings().inputPasswordControllerErrorWrongPassword
+                    case let .custom(value):
+                        text = value
                     case .generic:
                         text = strings().unknownError
                     }
@@ -116,6 +119,8 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
     }, afterDisappear: {
         checkPassword.dispose()
     }, hasDone: true)
+    
+    controller.autoInputAction = true
     
     let interactions = ModalInteractions(acceptTitle: strings().navigationDone, accept: { [weak controller] in
         

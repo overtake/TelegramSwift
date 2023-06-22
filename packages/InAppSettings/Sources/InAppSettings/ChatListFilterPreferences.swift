@@ -42,7 +42,7 @@ public extension ChatListFilter {
                 id = tempId
             }
         }
-        return .filter(id: id, title: "", emoticon: nil, data: ChatListFilterData(categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: ChatListFilterIncludePeers(), excludePeers: []))
+        return .filter(id: id, title: "", emoticon: nil, data: ChatListFilterData(isShared: false, hasSharedLinks: false, categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: ChatListFilterIncludePeers(), excludePeers: []))
     }
 }
 
@@ -52,13 +52,14 @@ public extension ChatListFilter {
 public struct ChatListFoldersSettings: Codable {
     
     public let sidebar: Bool
-    
+    public let interacted: Bool
     public static var defaultValue: ChatListFoldersSettings {
-        return ChatListFoldersSettings(sidebar: false)
+        return ChatListFoldersSettings(sidebar: false, interacted: false)
     }
     
-    public init(sidebar: Bool) {
+    public init(sidebar: Bool, interacted: Bool) {
         self.sidebar = sidebar
+        self.interacted = interacted
     }
     
     
@@ -66,17 +67,22 @@ public struct ChatListFoldersSettings: Codable {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
 
         self.sidebar = try container.decode(Int32.self, forKey: "t") == 1
+        self.interacted = try container.decodeIfPresent(Int32.self, forKey: "i") == 1
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StringCodingKey.self)
 
         try container.encode(Int32(self.sidebar ? 1 : 0), forKey: "t")
+        try container.encode(Int32(self.interacted ? 1 : 0), forKey: "i")
     }
     
     
     public func withUpdatedSidebar(_ sidebar: Bool) -> ChatListFoldersSettings {
-        return ChatListFoldersSettings(sidebar: sidebar)
+        return ChatListFoldersSettings(sidebar: sidebar, interacted: self.interacted)
+    }
+    public func withUpdatedSidebarInteracted(_ interacted: Bool) -> ChatListFoldersSettings {
+        return ChatListFoldersSettings(sidebar: sidebar, interacted: interacted)
     }
 }
 
@@ -208,12 +214,24 @@ public func chatListFilterItems(engine: TelegramEngine, accountManager: AccountM
                                     if state.isUnread {
                                         peerCount = max(1, peerCount)
                                     }
-                                    
-                                    if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, case .muted = notificationSettings.muteState {
-                                        peerTagAndCount[peerId] = (tag, peerCount, false)
-                                    } else {
-                                        peerTagAndCount[peerId] = (tag, peerCount, true)
+                                    var peerIsNotMember: Bool = false
+                                    if let peer = peer as? TelegramChannel {
+                                        if peer.participationStatus != .member {
+                                            peerIsNotMember = true
+                                        }
+                                    } else if let peer = peer as? TelegramGroup {
+                                        if peer.membership != .Member {
+                                            peerIsNotMember = true
+                                        }
                                     }
+                                    if !peerIsNotMember {
+                                        if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, case .muted = notificationSettings.muteState {
+                                            peerTagAndCount[peerId] = (tag, peerCount, false)
+                                        } else {
+                                            peerTagAndCount[peerId] = (tag, peerCount, true)
+                                        }
+                                    }
+                                    
                                 }
                             }
                         }

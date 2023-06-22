@@ -100,16 +100,18 @@ private final class StickerToMp4Context {
         private let path: String
         private let adaptor: AVAssetWriterInputPixelBufferAdaptor
 
-        init() throws {
+        init(codec: String) throws {
             self.path = NSTemporaryDirectory() + "tgs_\(arc4random()).mp4"
             self.writter = try .init(url: URL.init(fileURLWithPath: path), fileType: .mov)
-            var settings:[String: Any] = [AVVideoWidthKey: NSNumber(value: 640), AVVideoHeightKey: NSNumber(value: 640), AVVideoCodecKey: AVVideoCodecH264];
+            var settings:[String: Any] = [AVVideoWidthKey: NSNumber(value: 640), AVVideoHeightKey: NSNumber(value: 640), AVVideoCodecKey: codec];
             
-            let videoCompressionProps: Dictionary<String, Any> = [
-                AVVideoAverageBitRateKey : 1500000,
-                AVVideoMaxKeyFrameIntervalKey : 3,
-            ]
-            settings[AVVideoCompressionPropertiesKey] = videoCompressionProps
+            if codec == AVVideoCodecH264 {
+                let videoCompressionProps: Dictionary<String, Any> = [
+                    AVVideoAverageBitRateKey : 1500000,
+                    AVVideoMaxKeyFrameIntervalKey : 3,
+                ]
+                settings[AVVideoCompressionPropertiesKey] = videoCompressionProps
+            }
             
             self.writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
             self.adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: writerInput, sourcePixelBufferAttributes: nil)
@@ -147,8 +149,8 @@ private final class StickerToMp4Context {
     private let background: Signal<CGImage, NoError>
     private let zoom: CGFloat
     private let offset: CGPoint
-    init(context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, offset: CGPoint, fileReference: FileMediaReference) {
-        self.export = try? Export()
+    init(context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, offset: CGPoint, fileReference: FileMediaReference, codec: String) {
+        self.export = try? Export(codec: codec)
         self.context = context
         self.background = background
         self.fileReference = fileReference
@@ -284,9 +286,9 @@ private final class StickerToMp4 {
     }
     
     private let context:QueueLocalObject<StickerToMp4Context>
-    init(context _context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, offset: CGPoint, fileReference: FileMediaReference) {
+    init(context _context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, offset: CGPoint, fileReference: FileMediaReference, codec: String) {
         self.context = .init(queue: StickerToMp4Context.queue, generate: {
-            return StickerToMp4Context(context: _context, background: background, zoom: zoom, offset: offset, fileReference: fileReference)
+            return StickerToMp4Context(context: _context, background: background, zoom: zoom, offset: offset, fileReference: fileReference, codec: codec)
         })
     }
     
@@ -454,10 +456,12 @@ final class MediaObjectToAvatar {
     private let context: AccountContext
     
     private var holder: MediaObjectToAvatar?
+    private let codec: String
     
-    init(context: AccountContext, object: Object) {
+    init(context: AccountContext, object: Object, codec: String = AVVideoCodecH264) {
         self.object = object
         self.context = context
+        self.codec = codec
     }
   
     deinit {
@@ -480,7 +484,7 @@ final class MediaObjectToAvatar {
                     if colors.count == 1, let color = colors.first {
                         ctx.setFillColor(color.cgColor)
                         ctx.fill(imageRect)
-                    } else {
+                    } else if colors.count > 1 {
                         let gradientColors = colors.map { $0.cgColor } as CFArray
                         let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
                         
@@ -524,9 +528,9 @@ final class MediaObjectToAvatar {
             case let .file(_, file, _, _):
                 var representations:[TelegramMediaImageRepresentation] = []
                 if let dimensions = file.dimensions {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                 } else {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(640, 640)), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(640, 640)), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                 }
 
                 let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: 2, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: palette)
@@ -544,7 +548,7 @@ final class MediaObjectToAvatar {
         let zoom = object.foreground.zoom
         switch object.foreground.type {
         case let .animated(file):
-            let stickerToMp4: StickerToMp4 = .init(context: context, background: background, zoom: object.foreground.zoom, offset: object.foreground.offset, fileReference: .standalone(media: file))
+            let stickerToMp4: StickerToMp4 = .init(context: context, background: background, zoom: object.foreground.zoom, offset: object.foreground.offset, fileReference: .standalone(media: file), codec: codec)
             self.animated_c = stickerToMp4
             
             signal = stickerToMp4.status |> map { value -> Result in

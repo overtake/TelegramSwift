@@ -32,11 +32,14 @@ enum PremiumLogEventsSource : Equatable {
         case dialog_filters_chats
         case dialog_filters_pinned
         case dialog_pinned
+        case topics_pin
         case caption_length
         case upload_max_fileparts
         case dialogs_folder_pinned
         case accounts
         case about
+        case community_invites
+        case communities_joined
     }
     
     case deeplink(String?)
@@ -49,6 +52,7 @@ enum PremiumLogEventsSource : Equatable {
     case profile(PeerId)
     case gift(from: PeerId, to: PeerId, months: Int32)
     case send_as
+    case translations
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -75,6 +79,8 @@ enum PremiumLogEventsSource : Equatable {
             return "gift"
         case .send_as:
             return "send_as"
+        case .translations:
+            return "translations"
         }
     }
     var subsource: String? {
@@ -160,7 +166,7 @@ enum PremiumValue : String {
     case advanced_chat_management
     case profile_badge
     case animated_userpics
-    
+    case translations
     func gradient(_ index: Int) -> [NSColor] {
         let colors:[NSColor] = [ NSColor(rgb: 0xF27C30),
                                  NSColor(rgb: 0xE36850),
@@ -174,7 +180,8 @@ enum PremiumValue : String {
                                  NSColor(rgb: 0x5A6EEE),
                                  NSColor(rgb: 0x548DFF),
                                  NSColor(rgb: 0x54A3FF),
-                                 NSColor(rgb: 0x54bdff)]
+                                 NSColor(rgb: 0x54bdff),
+                                 NSColor(rgb: 0x71c8ff)]
         return [colors[index]]
     }
     
@@ -243,6 +250,8 @@ enum PremiumValue : String {
             return NSImage(named: "Icon_Premium_Boarding_Badge")!.precomposed(theme.colors.accent)
         case .animated_userpics:
             return NSImage(named: "Icon_Premium_Boarding_Profile")!.precomposed(theme.colors.accent)
+        case .translations:
+            return NSImage(named: "Icon_Premium_Boarding_Translations")!.precomposed(theme.colors.accent)
         }
     }
     
@@ -272,6 +281,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBadgeTitle
         case .animated_userpics:
             return strings().premiumBoardingAvatarTitle
+        case .translations:
+            return strings().premiumBoardingTranslateTitle
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -300,6 +311,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBadgeInfo
         case .animated_userpics:
             return strings().premiumBoardingAvatarInfo
+        case .translations:
+            return strings().premiumBoardingTranslateInfo
         }
     }
 }
@@ -307,18 +320,19 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics]
+    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations]
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?
+    var products: [InAppPurchaseManager.Product] = []
     var isPremium: Bool
     var peer: PeerEquatable?
     var premiumConfiguration: PremiumPromoConfiguration
     var stickers: [TelegramMediaFile]
     var canMakePayment: Bool
     var status: PremiumEmojiStatusInfo?
-    var periods: [PremiumPeriod] = [.init(period: .month, price: 0, currency: "usd"), .init(period: .year, price: 100000, currency: "usd")]
-    var period: PremiumPeriod = .init(period: .month, price: 0, currency: "usd")
+    var period: PremiumPeriod?
+    var periods: [PremiumPeriod] = []
 }
 
 
@@ -342,19 +356,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     
-//    if !state.periods.isEmpty, !state.isPremium {
-//        let period = state.period
-//        let periods = state.periods
-//        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_periods"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-//            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, periods: periods, selectedPeriod: period, viewType: .singleItem, callback: { period in
-//                arguments.togglePeriod(period)
-//            })
-//        }))
-//        index += 1
-//
-//        entries.append(.sectionId(sectionId, type: .customModern(15)))
-//        sectionId += 1
-//    }
+    
+    if !state.periods.isEmpty, !state.isPremium {
+        let period = state.period ?? state.periods[0]
+                
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_periods"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, periods: state.periods, selectedPeriod: period, viewType: .singleItem, callback: { period in
+                arguments.togglePeriod(period)
+            })
+        }))
+        index += 1
+
+        entries.append(.sectionId(sectionId, type: .customModern(15)))
+        sectionId += 1
+    }
     
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
@@ -431,19 +446,15 @@ private final class PremiumBoardingView : View {
         }
         
         func update(animated: Bool, state: State) -> NSSize {
-            let price: String
-            let product = state.premiumConfiguration.premiumProductOptions.first(where: { $0.months == 1
-           })
-            if let product = state.premiumProduct {
-                price = product.price
-            } else if let product = product {
-                price = formatCurrencyAmount(product.amount, currency: product.currency)
-            } else {
-                price = ""
+            
+            let option = state.period
+            guard let option = state.period else {
+                return .zero
             }
+
             let text: String
             if state.canMakePayment {
-                text = strings().premiumBoardingSubscribe(price)
+                text = option.buyString
             } else {
                 text = strings().premiumBoardingPaymentNotAvailalbe
             }
@@ -623,7 +634,7 @@ private final class PremiumBoardingView : View {
         
         
         if state.isPremium != previousState?.isPremium {
-            if state.peer == nil && !state.isPremium {
+            if !state.isPremium {
                 let bottomView = View(frame: NSMakeRect(0, frame.height - bottomHeight, frame.width, bottomHeight))
                 containerView.addSubview(bottomView)
                 
@@ -640,7 +651,7 @@ private final class PremiumBoardingView : View {
                     bottomView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-        } else if let bottomView = bottomView {
+        } else if let bottomView = bottomView, state.isPremium {
             if state.peer != nil || state.isPremium {
                 self.bottomView = nil
                 performSubviewRemoval(bottomView, animated: animated)
@@ -748,9 +759,11 @@ final class PremiumBoardingController : ModalViewController {
 
     private let context: AccountContext
     private let source: PremiumLogEventsSource
-    init(context: AccountContext, source: PremiumLogEventsSource = .settings) {
+    private let openFeatures: Bool
+    init(context: AccountContext, source: PremiumLogEventsSource = .settings, openFeatures: Bool = false) {
         self.context = context
         self.source = source
+        self.openFeatures = openFeatures
         super.init(frame: NSMakeRect(0, 0, 380, 300))
     }
     
@@ -776,6 +789,17 @@ final class PremiumBoardingController : ModalViewController {
         return PremiumBoardingView.self
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if self.openFeatures {
+            if let value = PremiumValue(rawValue: self.source.value) {
+                arguments?.openFeature(value)
+            }
+        }
+    }
+    
+    private var arguments: Arguments?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -786,6 +810,7 @@ final class PremiumBoardingController : ModalViewController {
         let activationDisposable = MetaDisposable()
         let context = self.context
         let source = self.source
+        let openFeatures = self.openFeatures
         
         PremiumLogEvents.promo_screen_show(source).send(context: context)
         
@@ -826,20 +851,11 @@ final class PremiumBoardingController : ModalViewController {
             guard let strongSelf = self else {
                 return
             }
-            switch value {
-            case .double_limits:
-                strongSelf.genericView.append(PremiumBoardingDoubleController(context, back: { [weak strongSelf] in
-                    _ = strongSelf?.escapeKeyAction()
-                }, makeAcceptView: { [weak strongSelf] in 
-                    return strongSelf?.genericView.makeAcceptView()
-                }), animated: true)
-            default:
-                strongSelf.genericView.append(PremiumBoardingFeaturesController(context, value: value, stickers: stateValue.with { $0.stickers }, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
-                    _ = strongSelf?.escapeKeyAction()
-                }, makeAcceptView: { [weak strongSelf] in
-                    return strongSelf?.genericView.makeAcceptView()
-                }), animated: true)
-            }
+            strongSelf.genericView.append(PremiumBoardingFeaturesController(context, value: value, stickers: stateValue.with { $0.stickers }, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
+                _ = strongSelf?.escapeKeyAction()
+            }, makeAcceptView: { [weak strongSelf] in
+                return strongSelf?.genericView.makeAcceptView()
+            }), animated: true)
         }, togglePeriod: { period in
             updateState { current in
                 var current = current
@@ -847,6 +863,10 @@ final class PremiumBoardingController : ModalViewController {
                 return current
             }
         })
+        
+        self.arguments = arguments
+        
+        
         
         let peer: Signal<(Peer?, PremiumEmojiStatusInfo?), NoError>
         switch source {
@@ -867,7 +887,7 @@ final class PremiumBoardingController : ModalViewController {
                                         }
                                     } |> filter {
                                         return $0.1 != nil
-                                    }
+                                    } |> take(1)
                                 } else {
                                     return .single((peer, .init(status: status, file: file, info: nil, items: [])))
                                 }
@@ -921,7 +941,7 @@ final class PremiumBoardingController : ModalViewController {
         |> deliverOnMainQueue
         
         let products: Signal<[InAppPurchaseManager.Product], NoError>
-        #if APP_STORE
+        #if APP_STORE || DEBUG
         products = inAppPurchaseManager.availableProducts |> map {
             $0.filter { $0.isSubscription }
         }
@@ -941,9 +961,19 @@ final class PremiumBoardingController : ModalViewController {
                 updateState { current in
                     var current = current
                     current.premiumProduct = products.first
+                    current.products = products
                     current.isPremium = isPremium
                     current.premiumConfiguration = promoConfiguration
                     current.stickers = stickers
+                    current.periods = promoConfiguration.premiumProductOptions.compactMap { period in
+                        if let value = PremiumPeriod.Period(rawValue: period.months) {
+                            return .init(period: value, options: promoConfiguration.premiumProductOptions, storeProducts: products, storeProduct: products.first(where: { $0.id == period.storeProductId }), option: period)
+                        }
+                        return nil
+                    }
+                    if current.period == nil {
+                        current.period = current.periods.first
+                    }
                     if let peer = peerAndStatus.0 {
                         current.peer = .init(peer)
                         current.status = peerAndStatus.1
@@ -951,8 +981,24 @@ final class PremiumBoardingController : ModalViewController {
                     
                     return current
                 }
+                var videos = promoConfiguration.videos.map {
+                    (key: $0.key, value: $0.value)
+                }
+                if openFeatures {
+                    videos = videos.sorted(by: { lhs, rhs in
+                        if source.value == lhs.key {
+                            return true
+                        }
+                        return false
+                    })
+                }
+                var delayValue: CGFloat = 0
                 for (_, video) in promoConfiguration.videos {
-                    actionsDisposable.add(preloadVideoResource(postbox: context.account.postbox, resourceReference: .standalone(resource: video.resource), duration: 3.0).start())
+                    let signal = preloadVideoResource(postbox: context.account.postbox, userLocation: .other, userContentType: .init(file: video), resourceReference: .standalone(resource: video.resource), duration: 3.0) |> delay(delayValue, queue: .concurrentBackgroundQueue())
+                    actionsDisposable.add(signal.start())
+                    if openFeatures {
+                        delayValue += 1
+                    }
                 }
         }))
 
@@ -1009,8 +1055,8 @@ final class PremiumBoardingController : ModalViewController {
                 }, error: { error in
                     showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
                 })
-            } else if let username = context.premiumBuyConfig.botUsername {
-                let inApp = inApp(for: "https://t.me/\(username)?start=\(source.value)".nsstring, context: context, openInfo: arguments.openInfo)
+            } else if let url = stateValue.with ({ $0.period?.option.botUrl }) {
+                let inApp = inApp(for: url.nsstring, context: context, openInfo: arguments.openInfo)
                 execute(inapp: inApp)
                 close()
             }
@@ -1019,7 +1065,7 @@ final class PremiumBoardingController : ModalViewController {
         
         let buyAppStore = {
             
-            let premiumProduct = stateValue.with { $0.premiumProduct }
+            let premiumProduct = stateValue.with { $0.period?.storeProduct }
 
             guard let premiumProduct = premiumProduct else {
                 buyNonStore()
@@ -1102,7 +1148,7 @@ final class PremiumBoardingController : ModalViewController {
             
             addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_accept.value)
             
-            #if APP_STORE 
+            #if APP_STORE || DEBUG
             buyAppStore()
             #else
             buyNonStore()

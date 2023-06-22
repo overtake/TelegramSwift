@@ -134,7 +134,7 @@ class APSongItem : APItem {
 
     override init(_ entry:APEntry, _ account:Account) {
         if case let .song(message) = entry {
-            let file = (message.effectiveMedia as! TelegramMediaFile)
+            let file = (message.anyMedia as! TelegramMediaFile)
             resource = file.resource
             if let _ = file.mimeType.range(of: "m4a") {
                 self.ext = "m4a"
@@ -235,7 +235,7 @@ class APSongItem : APItem {
     var reference: MediaResourceReference {
         switch entry {
         case let .song(message):
-            return FileMediaReference.message(message: MessageReference(message), media: message.effectiveMedia as! TelegramMediaFile).resourceReference(resource)
+            return FileMediaReference.message(message: MessageReference(message), media: message.anyMedia as! TelegramMediaFile).resourceReference(resource)
         default:
             return MediaResourceReference.standalone(resource: resource)
         }
@@ -243,7 +243,7 @@ class APSongItem : APItem {
     
     var coverImageMediaReference: ImageMediaReference? {
         if let resource = coverResource {
-            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(PeerMediaIconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(PeerMediaIconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
             
             switch self.entry {
             case let .song(message):
@@ -258,7 +258,7 @@ class APSongItem : APItem {
     var coverResource: TelegramMediaResource? {
         switch entry {
         case let .song(message):
-            if let file = message.effectiveMedia as? TelegramMediaFile {
+            if let file = message.anyMedia as? TelegramMediaFile {
                 if file.previewRepresentations.isEmpty {
                     if ext == "mp3" {
                         return ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
@@ -287,14 +287,23 @@ class APSongItem : APItem {
     var duration: Int32? {
         switch entry {
         case let .song(message):
-            return (message.effectiveMedia as? TelegramMediaFile)?.duration
+            return (message.anyMedia as? TelegramMediaFile)?.duration
         case let .single(wrapper):
             return wrapper.duration
         }
     }
+    
+    var userLocation: MediaResourceUserLocation {
+        switch entry {
+        case let .song(message):
+            return .peer(message.id.peerId)
+        default:
+            return .other
+        }
+    }
 
     private func fetch() {
-        fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: reference).start())
+        fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: userLocation, userContentType: .audio, reference: reference).start())
     }
 
     private func cancelFetching() {
@@ -939,7 +948,7 @@ class APController : NSResponder {
     fileprivate func play(with item:APSongItem) {
         self.mediaPlayer?.seek(timestamp: 0)
 
-        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, volume: self.volume, fetchAutomatically: false)
+        let player = MediaPlayer(postbox: account.postbox, userLocation: item.userLocation, userContentType: .audio, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, volume: self.volume, fetchAutomatically: false)
         
         player.play()
         state.status = .playing
@@ -983,14 +992,15 @@ class APController : NSResponder {
                 if let strongSelf = self {
                     if resource.complete {
                         let items = strongSelf.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
+                        let mediaBox = strongSelf.account.postbox.mediaBox
                         if let index = items.firstIndex(of: item) {
                             let previous = index - 1
                             let next = index + 1
                             if previous >= 0 {
-                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: strongSelf.account.postbox.mediaBox, reference: items[previous].reference, statsCategory: .audio).start())
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: items[previous].userLocation, userContentType: .audio, reference: items[previous].reference, statsCategory: .audio).start())
                             }
                             if next < items.count {
-                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: strongSelf.account.postbox.mediaBox, reference: items[next].reference, statsCategory: .audio).start())
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: items[next].userLocation, userContentType: .audio, reference: items[next].reference, statsCategory: .audio).start())
                             }
                         }
                         
@@ -1183,7 +1193,7 @@ class APChatController : APController {
                 } |> map { view -> (APHistory?,APHistory) in
                     var entries:[APEntry] = []
                     for viewEntry in view.0.entries {
-                        if let media = viewEntry.message.effectiveMedia as? TelegramMediaFile, media.isMusicFile || media.isInstantVideo || media.isVoice {
+                        if let media = viewEntry.message.anyMedia as? TelegramMediaFile, media.isMusicFile || media.isInstantVideo || media.isVoice {
                             entries.append(.song(viewEntry.message))
                         }
                     }

@@ -52,8 +52,8 @@ private func mediaEntires(state: PeerMediaGifsState, initialSize: NSSize) -> [In
     let values = makeChatGridMediaEnties(state.messages, initialSize: NSMakeSize(initialSize.width, 100))
     
     var wrapped:[InputContextEntry] = []
-    for value in values {
-        wrapped.append(InputContextEntry.contextMediaResult(nil, value, Int64(arc4random()) | ((Int64(wrapped.count) << 40))))
+    for (i, value) in values.enumerated() {
+        wrapped.append(InputContextEntry.contextMediaResult(Int64(i), nil, value, Int64(value.hashValue)))
     }
     
     return wrapped
@@ -138,7 +138,7 @@ private final class PeerMediaGifsSupplyment : InteractionContentViewProtocol {
 fileprivate func prepareTransition(left:[AppearanceWrapperEntry<InputContextEntry>], right: [AppearanceWrapperEntry<InputContextEntry>], animated: Bool, initialSize:NSSize, arguments: PeerMediaGifsArguments) -> TableUpdateTransition {
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         switch entry.entry {
-        case let .contextMediaResult(_, row, index):
+        case let .contextMediaResult(_, _, row, index):
             return ContextMediaRowItem(initialSize, row, index, arguments.context, ContextMediaArguments(openMessage: arguments.openMessage, messageMenuItems: arguments.menuItems))
         default:
             fatalError("not supported")

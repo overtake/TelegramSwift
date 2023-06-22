@@ -35,7 +35,7 @@ class ChatGroupedItem: ChatRowItem {
         if case let .groupedPhotos(messages, _) = entry {
             
             let messages = messages.map{$0.message!}.filter({!$0.media.isEmpty})
-            let prettyCount = messages.filter { $0.effectiveMedia!.isInteractiveMedia }.count
+            let prettyCount = messages.filter { $0.anyMedia!.isInteractiveMedia }.count
             self.layout = GroupedLayout(messages, type: prettyCount != messages.count ? .files : .photoOrVideo)
             
             var captionMessages: [Message] = []
@@ -59,9 +59,23 @@ class ChatGroupedItem: ChatRowItem {
                 
                 let isIncoming: Bool = message.isIncoming(context.account, entry.renderType == .bubble)
 
+                var text: String = message.text
+                var attributes: [MessageAttribute] = message.attributes
+                var isLoading: Bool = false
+                if let translate = entry.additionalData(message.id).translate {
+                    switch translate {
+                    case .loading:
+                        isLoading = true
+                    case let .complete(toLang):
+                        if let attribute = message.translationAttribute(toLang: toLang) {
+                            text = attribute.text
+                            attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
+                        }
+                    }
+                }
                 var caption:NSMutableAttributedString = NSMutableAttributedString()
                 NSAttributedString.initialize()
-                _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: NSFont.normal(theme.fontSize))
+                _ = caption.append(string: text, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: NSFont.normal(theme.fontSize))
                 var types:ParsingType = [.Links, .Mentions, .Hashtags]
                 
                 if let peer = coreMessageMainPeer(message) as? TelegramUser {
@@ -80,14 +94,15 @@ class ChatGroupedItem: ChatRowItem {
                 }
                 
                 var hasEntities: Bool = false
-                for attr in message.attributes {
+                for attr in attributes {
                     if attr is TextEntitiesMessageAttribute {
                         hasEntities = true
                         break
                     }
                 }
                 if hasEntities {
-                    caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
+                    
+                    caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
                 }
                 
                 if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
@@ -95,7 +110,7 @@ class ChatGroupedItem: ChatRowItem {
                 }
                 
                 var spoilers:[TextViewLayout.Spoiler] = []
-                for attr in message.attributes {
+                for attr in attributes {
                     if let attr = attr as? TextEntitiesMessageAttribute {
                         for entity in attr.entities {
                             switch entity.type {
@@ -122,7 +137,7 @@ class ChatGroupedItem: ChatRowItem {
                 default:
                     break
                 }
-                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
 
                 
                 caption.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: caption.range, options: .init(), using: { value, range, stop in
@@ -139,7 +154,7 @@ class ChatGroupedItem: ChatRowItem {
                             $0.withRevealedSpoiler(message.id)
                         })
                     })
-                }))
+                }), isLoading: isLoading)
                 layout.layout.interactions = globalLinkExecutor
                 
                 captionLayouts.append(layout)
@@ -168,21 +183,20 @@ class ChatGroupedItem: ChatRowItem {
             switch layout.type {
             case .files:
                 
-               // self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), isFile: true, autoplayMedia: entry.autoplayMedia, isChatRelated: true))
-
-                let parameters = ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia)
+                let parameters = ChatMediaLayoutParameters.layout(for: (message.anyMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia, isRevealed: entry.additionalData.isRevealed)
                 
                 parameters.showMedia = { [weak self] message in
                     guard let `self` = self else {return}
                     
                     var type:GalleryAppearType = .history
-                    if let parameters = self.parameters[i] as? ChatMediaGalleryParameters, parameters.isWebpage {
+                    let parameters = self.parameters[i] as? ChatMediaGalleryParameters
+                    if let parameters = parameters, parameters.isWebpage {
                         type = .alone
                     } else if message.containsSecretMedia {
                         type = .secret
                     }
                                 
-                    showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
+                    showChatGallery(context: context, message: message, self.table, parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
                 }
                 
                 self.parameters.append(parameters)
@@ -203,11 +217,13 @@ class ChatGroupedItem: ChatRowItem {
                     
                     }, showMessage: { [weak self] message in
                         self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.effectiveMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia))
-                
-                self.parameters[i].automaticDownloadFunc = { message in
-                    return downloadSettings.isDownloable(message)
-                }
+                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.anyMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia, isRevealed: entry.isRevealed))
+            }
+            self.parameters[i].automaticDownloadFunc = { message in
+                return downloadSettings.isDownloable(message)
+            }
+            self.parameters[i].revealMedia = { message in
+                chatInteraction.revealMedia(message.id)
             }
             self.parameters[i].chatLocationInput = chatInteraction.chatLocationInput
             self.parameters[i].chatMode = chatInteraction.mode
@@ -258,7 +274,7 @@ class ChatGroupedItem: ChatRowItem {
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
             }
-            if authorText == nil && replyModel == nil && forwardNameLayout == nil {
+            if !hasUpsideSomething {
                 positionFlags.insert(.top)
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
@@ -279,6 +295,10 @@ class ChatGroupedItem: ChatRowItem {
         }
     }
     
+    var hasUpsideSomething: Bool {
+        return authorText != nil || replyModel != nil || topicLinkLayout != nil || forwardNameLayout != nil
+    }
+    
     override func share() {
         if let message = message {
             showModal(with: ShareModalController(ShareMessageObject(context, message, layout.messages)), for: context.window)
@@ -292,9 +312,8 @@ class ChatGroupedItem: ChatRowItem {
         }
         switch self.layoutType {
         case .files:
-            let file = self.messages[self.messages.count - 1].effectiveMedia as! TelegramMediaFile
-            if file.previewRepresentations.isEmpty {
-                if let parameters = self.parameters[messages.count - 1] as? ChatFileLayoutParameters {
+            if let file = self.layout.messages.last?.anyMedia as? TelegramMediaFile, file.previewRepresentations.isEmpty {
+                if let parameters = self.parameters[layout.messages.count - 1] as? ChatFileLayoutParameters {
                     let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
                     let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50
                     return ChatRowItem.LastLineData(width: width, single: true)
@@ -329,6 +348,9 @@ class ChatGroupedItem: ChatRowItem {
     }
     
     override var bubbleFrame: NSRect {
+        if let frame = _bubbleFrame {
+            return frame
+        }
         var frame = super.bubbleFrame
         
         if isBubbleFullFilled {
@@ -337,7 +359,7 @@ class ChatGroupedItem: ChatRowItem {
                 frame.size.width += self.mediaBubbleCornerInset * 2
             }
         }
-        
+        _bubbleFrame = frame
         return frame
     }
     
@@ -353,9 +375,9 @@ class ChatGroupedItem: ChatRowItem {
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
         
-        if hasBubble, isBubbleFullFilled, (authorText == nil && replyModel == nil && forwardNameLayout == nil) {
+        if hasBubble, isBubbleFullFilled, !hasUpsideSomething {
             offset.y -= (defaultContentInnerInset + 1)
-        } else if hasBubble, !isBubbleFullFilled, replyModel != nil || forwardNameLayout != nil {
+        } else if hasBubble, !isBubbleFullFilled, hasUpsideSomething {
             offset.y += defaultContentInnerInset
         }
         
@@ -371,7 +393,7 @@ class ChatGroupedItem: ChatRowItem {
     
     override var _defaultHeight: CGFloat {
         if hasBubble && isBubbleFullFilled && captionLayouts.isEmpty {
-            return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2
+            return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2 - 1
         } else if hasBubble && !isBubbleFullFilled {
             return super._defaultHeight
         }
@@ -411,6 +433,9 @@ class ChatGroupedItem: ChatRowItem {
         }
         for layout in captionLayouts {
             layout.layout.measure(width: maxContentWidth)
+            if layout.isLoading {
+                layout.block = layout.layout.generateBlock(backgroundColor: .blackTransparent)
+            }
         }
         self.captionLayouts = layout.applyCaptions(captionLayouts)
         return layout.dimensions
@@ -434,18 +459,26 @@ class ChatGroupedItem: ChatRowItem {
         var _message: Message? = nil
         
         for i in 0 ..< layout.count {
-            if NSPointInRect(location, layout.frame(at: i)) {
+            if NSPointInRect(location, layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 _message = layout.messages[i]
                 break
             }
         }
-        _message = _message ?? self.message
+        if _message == nil {
+            let withText = layout.messages.filter { !$0.text.isEmpty }
+            if withText.count == 1 {
+                _message = withText[0]
+            }
+        }
         
-        let caption = self.captionLayouts.first(where: { $0.id == _message?.stableId })?.layout
+        
+        let msg = _message ?? self.message
+        
+        let caption = self.captionLayouts.first(where: { $0.id == msg?.stableId })?.layout
 
 
-        if let message = _message {
-            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction)
+        if let message = msg {
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil)
         }
         return super.menuItems(in: location)
     }
@@ -463,18 +496,13 @@ class ChatGroupedItem: ChatRowItem {
 class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     
     private(set) var contents: [ChatMediaContentView] = []
-    private var selectionBackground: CornerView = CornerView()
+    private var selectionBackground: CornerView?
     
     
     private var forceClearContentBackground: Bool = false
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        selectionBackground.isDynamicColorUpdateLocked = true
-        selectionBackground.didChangeSuperview = { [weak self] in
-            self?.forceClearContentBackground = self?.selectionBackground.superview != nil
-            self?.updateColors()
-        }
     }
     
     required init?(coder: NSCoder) {
@@ -495,7 +523,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         let location = contentView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         
         for i in 0 ..< item.layout.count {
-            if NSPointInRect(location, item.layout.frame(at: i)) {
+            if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 let contentNode = contents[i]
                 if contentNode is VideoStickerContentView {
                     if let file = contentNode.media as? TelegramMediaFile {
@@ -529,7 +557,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         
         if contentView.mouseInside() {
             for i in 0 ..< item.layout.count {
-                if NSPointInRect(location, item.layout.frame(at: i)) {
+                if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                     let result = contents[i].previewMediaIfPossible()
                     return result
                 }
@@ -705,7 +733,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 if !item.captionLayouts.isEmpty || item.commentsBubbleData != nil {
                     positionFlags.remove(.bottom)
                 }
-                if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
+                if item.hasUpsideSomething {
                     positionFlags.remove(.top)
                 }
             }
@@ -752,9 +780,9 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         
         let location = contentView.convert(point, from: nil)
         var applied: Bool = contentView.mouseInside()
-        if contentView.mouseInside() {
+        if applied {
             for i in 0 ..< item.layout.count {
-                if NSPointInRect(location, item.layout.frame(at: i)) {
+                if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                     let id = item.layout.messages[i].id
                     item.chatInteraction.withToggledSelectedMessage({ current in
                         if (select && !current.isSelectedMessageId(id)) || (!select && current.isSelectedMessageId(id)) {
@@ -806,7 +834,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         var selected: Bool = contentView.mouseInside()
         if contentView.mouseInside() {
             for i in 0 ..< item.layout.count {
-                if NSPointInRect(location, item.layout.frame(at: i)) {
+                if NSPointInRect(location, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                     item.chatInteraction.withToggledSelectedMessage({
                         $0.withToggledSelectedMessage(item.layout.messages[i].id)
                     })
@@ -907,7 +935,10 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 return item.chatInteraction.presentation.isSelectedMessageId(item.layout.messages[i].id)
             }
         }
-        return false
+        let selected = item.layout.messages.filter {
+            item.chatInteraction.presentation.isSelectedMessageId($0.id)
+        }
+        return selected.count == item.layout.messages.count
     }
     
     private var isHasSelectedItem: Bool {
@@ -1021,7 +1052,14 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     
                     let data = highlightFrameAndColor(item, at: i)
                     
-                    selectionBackground.removeFromSuperview()
+                    let selectionBackground = CornerView()
+                    selectionBackground.isDynamicColorUpdateLocked = true
+                    selectionBackground.didChangeSuperview = { [weak selectionBackground, weak self] in
+                        self?.forceClearContentBackground = selectionBackground?.superview != nil
+                        self?.updateColors()
+                    }
+                                        
+                    
                     selectionBackground.frame = data.frame
                     selectionBackground.backgroundColor = data.color
                     
@@ -1031,29 +1069,27 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                         if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) == nil {
                             positionFlags.remove(.bottom)
                         }
-                        if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
+                        if item.hasUpsideSomething {
                             positionFlags.remove(.top)
                         }
                     }
-                    selectionBackground.layer?.opacity = 0
 
                     selectionBackground.positionFlags = positionFlags
                     data.superview.addSubview(selectionBackground)
-                    
+                                        
                     let animation: CABasicAnimation = makeSpringAnimation("opacity")
                     
-                    animation.fromValue = selectionBackground.layer?.presentation()?.opacity ?? 0
-                    animation.toValue = 1.0
-                    animation.autoreverses = true
-                    animation.isRemovedOnCompletion = true
-                    animation.fillMode = .forwards
-                    animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
-                        self?.selectionBackground.removeFromSuperview()
+                    animation.fromValue = 0
+                    animation.toValue = 1
+                    animation.duration = 0.5
+                    animation.isRemovedOnCompletion = false
+                    animation.delegate = CALayerAnimationDelegate(completion: { [weak selectionBackground] completed in
+                        if let selectionBackground = selectionBackground {
+                            performSubviewRemoval(selectionBackground, animated: true, duration: 0.35, timingFunction: .spring)
+                        }
                     })
-                    animation.isAdditive = false
                     
                     selectionBackground.layer?.add(animation, forKey: "opacity")
-                    
                     break
                 }
             }
@@ -1071,12 +1107,21 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         
         var selected: Bool = false
         
+        if let selectionBackground = selectionBackground {
+            performSubviewRemoval(selectionBackground, animated: true)
+            self.selectionBackground = nil
+        }
+        
         for i in 0 ..< item.layout.count {
-            if NSPointInRect(point, item.layout.frame(at: i)) {
+            if NSPointInRect(point, item.layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 
                 let data = highlightFrameAndColor(item, at: i)
-                selectionBackground.removeFromSuperview()
-                selectionBackground.layer?.opacity = 1.0
+                let selectionBackground = CornerView()
+                selectionBackground.isDynamicColorUpdateLocked = true
+                selectionBackground.didChangeSuperview = { [weak self, weak selectionBackground] in
+                    self?.forceClearContentBackground = selectionBackground?.superview != nil
+                    self?.updateColors()
+                }
                 selectionBackground.frame = data.frame
                 selectionBackground.backgroundColor = data.color
                 var positionFlags: LayoutPositionFlags = data.flags
@@ -1085,13 +1130,17 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) != nil {
                         positionFlags.remove(.bottom)
                     }
-                    if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
+                    if item.hasUpsideSomething{
                         positionFlags.remove(.top)
                     }
                 }
                 
                 selectionBackground.positionFlags = positionFlags
                 data.superview.addSubview(selectionBackground)
+                
+                self.selectionBackground = selectionBackground
+                selectionBackground.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                
                 selected = true
                 break
             }
@@ -1104,7 +1153,11 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
     
     override func onCloseContextMenu() {
         super.onCloseContextMenu()
-        selectionBackground.removeFromSuperview()
+        
+        if let selectionBackground = selectionBackground {
+            performSubviewRemoval(selectionBackground, animated: true)
+            self.selectionBackground = nil
+        }
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {

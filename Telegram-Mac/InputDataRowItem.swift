@@ -84,7 +84,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
              _currentText = copy
             
             if copy != newValue {
-                self.redraw()
+                self.noteHeightOfRow()
             }
         }
         get {
@@ -403,8 +403,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             effectiveRange = range
         }
         
-        showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] url in
-            self?.textView.addLink(url, range: effectiveRange)
+        showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] text, url in
+            self?.textView.addLink(url, text: text, range: effectiveRange)
         }), for: window)
         
     }
@@ -763,8 +763,13 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        self.secureField.delegate = self
-        self.textView.delegate = self
+        if window != nil {
+            self.secureField.delegate = self
+            self.textView.delegate = self
+        } else {
+            self.secureField.delegate = self
+            self.textView.delegate = self
+        }
     }
     
     override func set(item: TableRowItem, animated: Bool) {

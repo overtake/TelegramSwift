@@ -23,10 +23,10 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     private(set) var actionLayoutLocal:TextViewLayout
     private(set) var iconArguments:TransformImageArguments?
     private(set) var icon:TelegramMediaImage?
-    
+    private(set) var docIcon:CGImage?
+
     private(set) var file:TelegramMediaFile?
     
-    private(set) var docIcon:CGImage?
     private(set) var docTitle:NSAttributedString?
     override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
         
@@ -37,8 +37,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         
         nameLayout = TextViewLayout(.initialize(string: file.fileName ?? "Unknown", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
         
-        let dateFormatter = makeNewDateFormatter()
-        dateFormatter.dateFormat = "MMM d, yyyy, h a"
+        let dateFormatter = DateSelectorUtil.mediaFileDate
         
         let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: Double(TimeInterval(message.timestamp) - interface.context.timeDifference)))
         

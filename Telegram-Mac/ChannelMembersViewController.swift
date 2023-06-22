@@ -13,7 +13,18 @@ import TelegramCore
 
 import SwiftSignalKit
 
-
+struct ChannelMembersConfiguration {
+    
+    let hidden_members_group_size_min: Int32
+    
+    static func with(appConfiguration: AppConfiguration) -> ChannelMembersConfiguration {
+        if let data = appConfiguration.data, let rawType = data["hidden_members_group_size_min"] as? String, let value = Int32(rawType) {
+            return .init(hidden_members_group_size_min: value)
+        } else {
+            return .init(hidden_members_group_size_min: 1)
+        }
+    }
+}
 
 private final class ChannelMembersControllerArguments {
     let context: AccountContext
@@ -22,17 +33,21 @@ private final class ChannelMembersControllerArguments {
     let addMembers:()-> Void
     let inviteLink:()-> Void
     let openInfo:(Peer)->Void
-    init(context: AccountContext, removePeer: @escaping (PeerId) -> Void, addMembers:@escaping()->Void, inviteLink:@escaping()->Void, openInfo:@escaping(Peer)->Void) {
+    let toggleHideMembers:(Bool)-> Void
+    init(context: AccountContext, removePeer: @escaping (PeerId) -> Void, addMembers:@escaping()->Void, inviteLink:@escaping()->Void, openInfo:@escaping(Peer)->Void, toggleHideMembers:@escaping(Bool)-> Void) {
         self.context = context
         self.removePeer = removePeer
         self.addMembers = addMembers
         self.inviteLink = inviteLink
         self.openInfo = openInfo
+        self.toggleHideMembers = toggleHideMembers
     }
 }
 
 private enum ChannelMembersEntryStableId: Hashable {
     case peer(PeerId)
+    case hideMembers
+    case hideMembersInfo
     case addMembers
     case inviteLink
     case membersDesc
@@ -44,18 +59,22 @@ private enum ChannelMembersEntryStableId: Hashable {
         switch self {
         case let .peer(peerId):
             return peerId.hashValue
-        case .addMembers:
+        case .hideMembers:
             return 0
-        case .inviteLink:
+        case .hideMembersInfo:
             return 1
-        case .membersDesc:
+        case .addMembers:
             return 2
-        case .loading:
+        case .inviteLink:
             return 3
-        case .contactsHeader:
+        case .membersDesc:
             return 4
-        case .otherHeader:
+        case .loading:
             return 5
+        case .contactsHeader:
+            return 6
+        case .otherHeader:
+            return 7
         case let .section(sectionId):
             return -(sectionId)
         }
@@ -65,11 +84,13 @@ private enum ChannelMembersEntryStableId: Hashable {
 
 private enum ChannelMembersEntry: Identifiable, Comparable {
     case peerItem(sectionId:Int, Int32, RenderedChannelParticipant, ShortPeerDeleting?, Bool, GeneralViewType)
+    case hideMembers(sectionId:Int, Bool, GeneralViewType)
+    case hideMembersInfo(sectionId:Int, String, GeneralViewType)
     case addMembers(sectionId:Int, Bool, GeneralViewType)
     case inviteLink(sectionId:Int, GeneralViewType)
-    case membersDesc(sectionId:Int, GeneralViewType)
-    case contactsHeader(sectionId:Int, GeneralViewType)
-    case otherHeader(sectionId:Int, GeneralViewType)
+    case membersDesc(sectionId:Int, String, GeneralViewType)
+    case contactsHeader(sectionId:Int, String, GeneralViewType)
+    case otherHeader(sectionId:Int, String, GeneralViewType)
     case section(sectionId:Int)
     case loading(sectionId: Int)
     
@@ -77,6 +98,10 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
         switch self {
         case let .peerItem(_, _, participant, _, _, _):
             return .peer(participant.peer.id)
+        case .hideMembers:
+            return .hideMembers
+        case .hideMembersInfo:
+            return .hideMembersInfo
         case .addMembers:
             return .addMembers
         case .inviteLink:
@@ -101,13 +126,17 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             return (sectionId * 1000) + Int(index) + 100
         case let .addMembers(sectionId, _, _):
             return (sectionId * 1000) + 0
+        case let .hideMembers(sectionId, _, _):
+            return (sectionId * 1000) + 0
+        case let .hideMembersInfo(sectionId, _, _):
+            return (sectionId * 1000) + 0
         case let .inviteLink(sectionId, _):
             return (sectionId * 1000) + 1
-        case let .membersDesc(sectionId, _):
+        case let .membersDesc(sectionId, _, _):
             return (sectionId * 1000) + 2
-        case let .contactsHeader(sectionId, _):
+        case let .contactsHeader(sectionId, _, _):
             return (sectionId * 1000) + 3
-        case let .otherHeader(sectionId, _):
+        case let .otherHeader(sectionId, _, _):
             return (sectionId * 1000) + 4
         case let .loading(sectionId):
             return (sectionId * 1000) + 5
@@ -141,20 +170,26 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
                     arguments.openInfo(participant.peer)
                 }
             })
+        case let .hideMembers(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelMembersGroupHideMembers, type: .switchable(value), viewType: viewType, action: {
+                arguments.toggleHideMembers(!value)
+            })
+        case let .hideMembersInfo(_, string, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: string, viewType: viewType)
         case let .addMembers(_, isChannel, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: isChannel ? strings().channelMembersAddSubscribers : strings().channelMembersAddMembers, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: isChannel ? strings().channelMembersAddSubscribers : strings().channelMembersAddMembers, icon: theme.icons.peerInfoAddMember, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.addMembers()
             })
         case let .inviteLink(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelMembersInviteLink, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.inviteLink()
             })
-        case let .membersDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersMembersListDesc, viewType: viewType)
-        case let .contactsHeader(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersContacts, viewType: viewType)
-        case let .otherHeader(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersOtherMembers, viewType: viewType)
+        case let .membersDesc(_, string, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: string, viewType: viewType)
+        case let .contactsHeader(_, string, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: string, viewType: viewType)
+        case let .otherHeader(_, string, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: string, viewType: viewType)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case .section:
@@ -162,6 +197,7 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
         }
     }
 }
+
 
 private struct ChannelMembersControllerState: Equatable {
     let editing: Bool
@@ -219,16 +255,36 @@ private func channelMembersControllerEntries(view: PeerView, context: AccountCon
         
         if let peer = peerViewMainPeer(view) as? TelegramChannel {
             
+            let configuration = ChannelMembersConfiguration.with(appConfiguration: context.appConfiguration)
+            
+            if peer.groupAccess.canAddMembers, !peer.isChannel, let cachedData = view.cachedData as? CachedChannelData, let value = cachedData.membersHidden.knownValue?.value {
+                let members = cachedData.participantsSummary.memberCount ?? 1
+                if members >= configuration.hidden_members_group_size_min {
+                    entries.append(.hideMembers(sectionId: sectionId, value, .singleItem))
+                    entries.append(.hideMembersInfo(sectionId: sectionId, strings().channelMembersGroupHideMembersInfo, .textBottomItem))
+                    entries.append(.section(sectionId: sectionId))
+                    sectionId += 1
+                }
+            }
+            
             if peer.hasPermission(.inviteMembers) {
                 entries.append(.addMembers(sectionId: sectionId, peer.isChannel, .singleItem))
-                entries.append(.membersDesc(sectionId: sectionId, .textBottomItem))
+                if peer.isChannel {
+                    entries.append(.membersDesc(sectionId: sectionId, strings().channelMembersMembersListDesc, .textBottomItem))
+                }
                 entries.append(.section(sectionId: sectionId))
                 sectionId += 1
             }
             
             if !contacts.isEmpty {
                 
-                entries.append(.contactsHeader(sectionId: sectionId, .textTopItem))
+                let contactsHeader: String
+                if peer.isChannel {
+                    contactsHeader = strings().channelMembersContacts
+                } else {
+                    contactsHeader = strings().channelMembersGroupContacts
+                }
+                entries.append(.contactsHeader(sectionId: sectionId, contactsHeader, .textTopItem))
                 
                 var index: Int32 = 0
                 for (i, participant) in contacts.sorted(by: <).enumerated() {
@@ -259,7 +315,15 @@ private func channelMembersControllerEntries(view: PeerView, context: AccountCon
             }
 
             if !contacts.isEmpty && participants.count > 0 {
-                entries.append(.otherHeader(sectionId: sectionId, .textTopItem))
+                
+                let otherHeader: String
+                if peer.isChannel {
+                    otherHeader = strings().channelMembersOtherMembers
+                } else {
+                    otherHeader = strings().channelMembersGroupOtherMembers
+                }
+                
+                entries.append(.otherHeader(sectionId: sectionId, otherHeader, .textTopItem))
             }
            
             var index: Int32 = 0
@@ -421,6 +485,10 @@ class ChannelMembersViewController: EditableViewController<TableView> {
             }
         }, openInfo: { [weak self] peer in
              self?.navigationController?.push(PeerInfoController(context: context, peerId: peer.id))
+        }, toggleHideMembers: { value in
+            let signal = context.engine.peers.updateChannelMembersHidden(peerId: peerId, value: value)
+
+            actionsDisposable.add(signal.start())
         })
         
         let peerView = context.account.viewTracker.peerView(peerId)

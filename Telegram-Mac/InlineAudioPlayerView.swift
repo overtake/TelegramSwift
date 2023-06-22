@@ -15,6 +15,68 @@ import SwiftSignalKit
 import RangeSet
 
 
+private func effectivePlayingRate(for controller: APController) -> Double {
+    if controller is APChatMusicController {
+        return FastSettings.playingMusicRate
+    } else {
+        return FastSettings.playingRate
+    }
+}
+private func setPlayingRate(_ rate: Double, for controller: APController) {
+    if controller is APChatMusicController {
+        FastSettings.setPlayingMusicRate(rate)
+    } else {
+        FastSettings.setPlayingRate(rate)
+    }
+}
+
+func optionsRateImage(rate: String, color: NSColor, isLarge: Bool) -> CGImage {
+    return generateImage(isLarge ? CGSize(width: 30, height: 30) : CGSize(width: 24.0, height: 24.0), rotatedContext: { size, context in
+        context.clear(CGRect(origin: CGPoint(), size: size))
+
+        let imageName: String = isLarge ? "playspeed_30" : "playspeed_24"
+        
+        if let image = NSImage(named: imageName )?.precomposed(color) {
+            context.draw(image, in: size.bounds)
+        }
+
+
+        let string = NSMutableAttributedString(string: rate, font: NSFont.semibold(isLarge ? 11 : 10), textColor: color)
+
+        var offset = CGPoint(x: 1.0, y: 0.0)
+        if rate.count >= 3 {
+            if rate == "0.5x" {
+                string.addAttribute(.kern, value: -0.8 as NSNumber, range: NSRange(string.string.startIndex ..< string.string.endIndex, in: string.string))
+                offset.x += -0.5
+            } else {
+                string.addAttribute(.kern, value: -0.5 as NSNumber, range: NSRange(string.string.startIndex ..< string.string.endIndex, in: string.string))
+                offset.x += -0.3
+            }
+        } else {
+            offset.x += -0.3
+        }
+
+        offset.x *= 0.5
+        offset.y *= 0.5
+
+        
+        let layout = TextViewLayout(string, maximumNumberOfLines: 1, truncationType: .middle)
+        layout.measure(width: size.width)
+        let line = layout.lines[0]
+        
+        context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
+        context.textPosition = size.bounds.focus(line.frame.size).origin.offsetBy(dx: 0, dy: isLarge ? 10 : 8)
+        CTLineDraw(line.line, context)
+
+        
+//        let boundingRect = string.boundingRect(with: size, options: [], context: nil)
+    //    string.draw(at: CGPoint(x: offset.x + floor((size.width - boundingRect.width) / 2.0), y: offset.y + floor((size.height - boundingRect.height) / 2.0)))
+
+    })!
+}
+
+
+
 class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
 
@@ -180,10 +242,46 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             self?.gotoMessage()
         }, for: .SingleClick)
         
-        playingSpeed.set(handler: { [weak self] control in
-            FastSettings.setPlayingRate(FastSettings.playingRate != 1 ? 1.0 : 1.75)
-            self?.controller?.baseRate = FastSettings.playingRate
-        }, for: .Click)
+        
+        playingSpeed.contextMenu = { [weak self] in
+            
+            let menu = ContextMenu()
+            
+            guard let controller = self?.controller else {
+                return menu
+            }
+
+            let customItem = ContextMenuItem(String(format: "%.1fx", effectivePlayingRate(for: controller)), image: NSImage(cgImage: generateEmptySettingsIcon(), size: NSMakeSize(24, 24)))
+            
+            menu.addItem(SliderContextMenuItem(volume: effectivePlayingRate(for: controller), minValue: 0.2, maxValue: 2.5, midValue: 1, drawable: MenuAnimation.menu_speed, drawable_muted: MenuAnimation.menu_speed, { [weak self] value, _ in
+                customItem.title = String(format: "%.1fx", value)
+                if let controller = self?.controller {
+                    setPlayingRate(value, for: controller)
+                    self?.controller?.baseRate = effectivePlayingRate(for: controller)
+                }
+            }))
+            
+            
+            menu.addItem(customItem)
+            
+            if effectivePlayingRate(for: controller) != 1.0 {
+                menu.addItem(ContextSeparatorItem())
+                menu.addItem(ContextMenuItem(strings().playbackSpeedSetToDefault, handler: { [weak self] in
+                    if let controller = self?.controller {
+                        setPlayingRate(1.0, for: controller)
+                        controller.baseRate = effectivePlayingRate(for: controller)
+                    }
+                }, itemImage: MenuAnimation.menu_reset.value))
+            }
+
+            
+            return menu
+        }
+        
+//        playingSpeed.set(handler: { [weak self] control in
+//            FastSettings.setPlayingRate(FastSettings.playingRate != 1 ? 1.0 : 1.75)
+//            self?.controller?.baseRate = FastSettings.playingRate
+//        }, for: .Click)
         
         
         volumeControl.set(handler: { [weak self] control in
@@ -282,9 +380,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                     self?.updateStatus(status.0, status.1)
                 }
             }))
-        controller.baseRate = (controller is APChatVoiceController) ? FastSettings.playingRate : 1.0
+        controller.baseRate = effectivePlayingRate(for: controller)
 
-        self.playingSpeed.isHidden = !(controller is APChatVoiceController)
 
         controller.add(listener: self)
         self.ready.set(controller.ready.get())
@@ -329,6 +426,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                     controller.add(listener: view)
                 } else if let view = view as? PeerMediaVoiceRowView {
                     controller.add(listener: view)
+                } else if let view = view as? StorageUsageMediaItemView {
+                    controller.add(listener: view)
                 }
                 return true
             })
@@ -358,6 +457,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
         return (trackName, artistName)
     }
+    
     
     private func update(_ song: APSongItem, controller: APController, animated: Bool) {
         
@@ -423,12 +523,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             }
         }
         
-        switch FastSettings.playingRate {
-        case 1.0:
-            playingSpeed.set(image: theme.icons.audioplayer_speed_x1, for: .Normal)
-        default:
-            playingSpeed.set(image: theme.icons.audioplayer_speed_x2, for: .Normal)
-        }
+        playingSpeed.set(image: optionsRateImage(rate: String(format: "%.1fx", effectivePlayingRate(for: controller)), color: effectivePlayingRate(for: controller) == 1.0 ? theme.colors.grayIcon : theme.colors.accent, isLarge: true), for: .Normal)
         
         switch FastSettings.volumeRate {
         case 0:
@@ -456,7 +551,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             progressView.set(progress: 0, animated: animated)
         case let .playing(_, _, progress), let .paused(_, _, progress):
             progressView.style = playProgressStyle
-            progressView.set(progress: CGFloat(progress == .nan ? 0 : progress), animated: animated, duration: 0.2)
+            progressView.set(progress: CGFloat(progress.isNaN ? 0 : progress), animated: animated, duration: 0.2)
         case let .fetching(progress):
             progressView.style = fetchProgressStyle
             progressView.set(progress: CGFloat(progress), animated:animated)
@@ -513,7 +608,6 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
 
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        repeatControl.centerY(x: dismiss.frame.minX - 10 - repeatControl.frame.width)
         
        
         progressView.frame = NSMakeRect(0, frame.height - 6, frame.width, 6)
@@ -528,9 +622,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         
         textViewContainer.setFrameSize(NSMakeSize(effectiveWidth, 40))
         textViewContainer.centerY(x: next.frame.maxX + 20)
-        
-        playingSpeed.centerY(x: dismiss.frame.minX - playingSpeed.frame.width - 10)
-        
+                
         
         if let artistNameView = artistNameView {
             trackNameView.setFrameOrigin(NSMakePoint(0, 4))
@@ -539,11 +631,24 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             trackNameView.centerY(x: 0)
         }
         
-        if repeatControl.isHidden {
-            volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
-        } else {
-            volumeControl.centerY(x: repeatControl.frame.minX - 10 - volumeControl.frame.width)
+        let controls = [volumeControl, playingSpeed, repeatControl].filter { !$0.isHidden }
+        
+        var x: CGFloat = dismiss.frame.minX - 10
+        for control in controls {
+            x = x - control.frame.width
+            control.centerY(x: x)
+            x -= 10
         }
+        
+//        if repeatControl.isHidden {
+//            if playingSpeed.isHidden {
+//                volumeControl.centerY(x: dismiss.frame.minX - 10 - volumeControl.frame.width)
+//            } else {
+//                volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
+//            }
+//        } else {
+//            volumeControl.centerY(x: repeatControl.frame.minX - 10 - volumeControl.frame.width)
+//        }
         
         
         separator.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)

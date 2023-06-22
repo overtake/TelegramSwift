@@ -13,7 +13,11 @@ import SwiftSignalKit
 class ChatAccessoryView : Button {
     var imageView: TransformImageView?
     let headerView = TextView()
-    let textView = TextView()
+    var textView: TextView?
+    
+    private var shimmerEffect: ShimmerView?
+    private var shimmerMask: SimpleLayer?
+
     
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
@@ -31,9 +35,7 @@ class ChatAccessoryView : Button {
         headerView.isSelectable = false
         addSubview(headerView)
                 
-        textView.userInteractionEnabled = false
-        textView.isSelectable = false
-        addSubview(textView)
+       
         self.layer?.addSublayer(borderLayer)
     }
     
@@ -63,9 +65,14 @@ class ChatAccessoryView : Button {
         let headerRect = CGRect(origin: NSMakePoint(x, (model.isSideAccessory ? 5 : 0) + model.topOffset), size: headerView.frame.size)
         transition.updateFrame(view: headerView, frame: headerRect)
         
-        let textRect = CGRect(origin: NSMakePoint(x, headerRect.height + model.yInset + (model.isSideAccessory ? 5 : 0) + model.topOffset), size: textView.frame.size)
-        
-        transition.updateFrame(view: textView, frame: textRect)
+        if let textView = textView {
+            let textRect = CGRect(origin: NSMakePoint(x, headerRect.height + model.yInset + (model.isSideAccessory ? 5 : 0) + model.topOffset), size: textView.frame.size)
+            transition.updateFrame(view: textView, frame: textRect)
+            if let view = shimmerEffect {
+                let rect = CGRect(origin: textRect.origin, size: view.frame.size)
+                transition.updateFrame(view: view, frame: rect.offsetBy(dx: -5, dy: -1))
+            }
+        }
                 
     }
     
@@ -83,11 +90,73 @@ class ChatAccessoryView : Button {
         }
                 
         headerView.update(model.header)
-        textView.update(model.message)
-     
-        if let message = model.message {
-            updateInlineStickers(context: model.context, view: self.textView, textLayout: message)
+        
+        if let view = self.textView {
+            view.update(model.message)
+        } else {
+            if let view = self.textView {
+                performSubviewRemoval(view, animated: animated)
+            }
+            let previous = self.textView != nil
+            let current: TextView = TextView()
+            current.update(model.message)
+            current.userInteractionEnabled = false
+            current.isSelectable = false
+            addSubview(current)
+            self.textView = current
+            self.updateLayout(self.frame.size, transition: .immediate)
+            if animated, previous {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
         }
+     
+        if let message = model.message, let view = self.textView {
+            updateInlineStickers(context: model.context, view: view, textLayout: message)
+        }
+        
+        if let blockImage = model.shimm.1 {
+            let size = blockImage.size
+            let current: ShimmerView
+            if let view = self.shimmerEffect {
+                current = view
+            } else {
+                current = ShimmerView()
+                self.shimmerEffect = current
+                self.addSubview(current, positioned: .above, relativeTo: textView)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.update(backgroundColor: .blackTransparent, data: nil, size: size, imageSize: size)
+            current.updateAbsoluteRect(size.bounds, within: size)
+            
+            current.frame = blockImage.backingSize.bounds
+            
+            if shimmerMask == nil {
+                shimmerMask = SimpleLayer()
+            }
+            var fr = CATransform3DIdentity
+            fr = CATransform3DTranslate(fr, blockImage.backingSize.width / 2, 0, 0)
+            fr = CATransform3DScale(fr, 1, -1, 1)
+            fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
+            
+            shimmerMask?.transform = fr
+            shimmerMask?.contentsScale = 2.0
+            shimmerMask?.contents = blockImage
+            shimmerMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
+            current.layer?.mask = shimmerMask
+        } else {
+            if let view = self.shimmerEffect {
+                let shimmerMask = self.shimmerMask
+                performSubviewRemoval(view, animated: animated, completed: { [weak shimmerMask] _ in
+                    shimmerMask?.removeFromSuperlayer()
+                })
+                self.shimmerEffect = nil
+                self.shimmerMask = nil
+            }
+        }
+        
         
         let transition: ContainedViewLayoutTransition
         if animated {
@@ -125,15 +194,26 @@ class ChatAccessoryView : Button {
     @objc func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
             if let superview = value.superview {
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow && !isLite
             }
         }
     }
     
+    private var isLite: Bool = false
     
     func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var index: Int = textView.hashValue
+        self.isLite = context.isLite(.emoji)
+        
+        let textColor: NSColor
+        if textLayout.attributedString.length > 0 {
+            var range:NSRange = NSMakeRange(NSNotFound, 0)
+            let attrs = textLayout.attributedString.attributes(at: 0, effectiveRange: &range)
+            textColor = attrs[.foregroundColor] as? NSColor ?? theme.colors.text
+        } else {
+            textColor = theme.colors.text
+        }
 
         for item in textLayout.embeddedItems {
             if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
@@ -148,14 +228,13 @@ class ChatAccessoryView : Button {
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)
                 }
                 index += 1
                 
-                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && window != nil && window!.isKeyWindow
                 view.frame = rect
             }
         }
@@ -170,6 +249,7 @@ class ChatAccessoryView : Button {
         for key in removeKeys {
             self.inlineStickerItemViews.removeValue(forKey: key)
         }
+        updateAnimatableContent()
     }
 
     deinit {
@@ -212,6 +292,10 @@ class ChatAccessoryModel: NSObject {
     
     public let nodeReady = Promise<Bool>()
     
+    public var shimm: (NSPoint, CGImage?) {
+        return (.zero, nil)
+    }
+    
     var updateImageSignal: Signal<ImageDataTransformation, NoError>?
 
     
@@ -240,10 +324,12 @@ class ChatAccessoryModel: NSObject {
             if let view = view {
                 view.imageView?.removeFromSuperview()
                 view.imageView = nil
-                view.updateModel(self, animated: false)
+                view.updateModel(self, animated: self.animates)
             }
         }
     }
+    
+    var animates: Bool = false
     
     open var size:NSSize = NSZeroSize
     let drawLine: Bool
@@ -299,7 +385,7 @@ class ChatAccessoryModel: NSObject {
     
     let yInset:CGFloat = 2
     var leftInset:CGFloat {
-        return drawLine ? 6 : 8
+        return drawLine ? 8 : 8
     }
     
     var header:TextViewLayout?
@@ -313,6 +399,7 @@ class ChatAccessoryModel: NSObject {
         
         header?.measure(width: width - leftInset)
         message?.measure(width: width - leftInset)
+        
         
         
         if let header = header, let message = message {            

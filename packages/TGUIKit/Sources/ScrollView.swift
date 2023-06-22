@@ -31,6 +31,19 @@ public func ==(lhs:ScrollPosition, rhs:ScrollPosition) -> Bool {
     return NSEqualRects(lhs.rect, rhs.rect) && lhs.direction == rhs.direction && NSEqualRanges(lhs.visibleRows, rhs.visibleRows)
 }
 
+final class Scroller : NSScroller {
+    weak var scrollView: NSScrollView?
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor.clear.set()
+        dirtyRect.fill()
+        if let scrollView = self.scrollView {
+            if scrollView.contentView.documentRect.height > scrollView.frame.height {
+                self.drawKnob()
+            }
+        }
+    }
+}
+
 open class ScrollView: NSScrollView{
     private var currentpos:ScrollPosition = ScrollPosition()
     public var deltaCorner:Int64 = 60
@@ -39,6 +52,15 @@ open class ScrollView: NSScrollView{
   
     override public static var isCompatibleWithResponsiveScrolling: Bool {
         return true
+    }
+    
+    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+        get {
+            return false
+        }
+        set {
+
+        }
     }
 
     public func scrollPosition(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0))  -> (current: ScrollPosition, previous: ScrollPosition) {
@@ -63,12 +85,16 @@ open class ScrollView: NSScrollView{
         return currentpos
     }
     
+    open override func isAccessibilityElement() -> Bool {
+        return false
+    }
+    
     func resetScroll(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
         self.currentpos = ScrollPosition(NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height), self.currentpos.direction, visibleRange)
     }
     
     public var documentOffset:NSPoint {
-        return NSMakePoint(NSMinX(self.contentView.bounds), NSMinY(self.contentView.bounds))
+        return clipView.documentOffset
     }
     
     open override func knowsPageRange(_ range: NSRangePointer) -> Bool {
@@ -128,8 +154,15 @@ open class ScrollView: NSScrollView{
         //self.hasVerticalScroller = false
         
        // self.scrollerStyle = .overlay
+         if NSScroller.preferredScrollerStyle == .legacy {
+             let scroller = Scroller()
+             scroller.scrollView = self
+             self.verticalScroller = scroller
+         }
  
     }
+    
+    
     
     open override func draw(_ dirtyRect: NSRect) {
         

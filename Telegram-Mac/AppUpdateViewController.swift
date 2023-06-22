@@ -563,7 +563,7 @@ private func resetUpdater() {
     
     #if !GITHUB
         let update:()->Void = {
-            let url = updater.domain ?? Bundle.main.infoDictionary!["SUFeedURL"] as! String
+            let url = Bundle.main.infoDictionary!["SUFeedURL"] as! String
             let state = stateValue.with { $0.loadingState }
             switch state {
             case .readyToInstall, .installing, .unarchiving, .loading:
@@ -571,6 +571,7 @@ private func resetUpdater() {
             default:
                 driver?.checkForUpdates(at: URL(string: url)!, host: host, domain: updater.host)
             }
+            NSLog("check updates: \(url)")
         }
     
     

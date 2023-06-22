@@ -154,6 +154,10 @@ final class EmojiScreenEffect {
     
     func addAnimation(_ emoji: String, index: Int?, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
         
+        if context.isLite(.emoji_effects) {
+            return
+        }
+        
         if !isLimitExceed(messageId), let item = takeTableItem(messageId), checkItem(item, messageId, with: emoji) {
             let signal: Signal<LottieAnimation?, NoError> = context.diceCache.animationEffect(for: emoji.emojiUnmodified)
             |> map { value -> LottieAnimation? in
@@ -180,11 +184,15 @@ final class EmojiScreenEffect {
         let context = self.context
         let onair = animations.filter { $0.key.messageId == messageId }
 
+        if context.isLite(.emoji_effects) {
+            return
+        }
+        
         if onair.isEmpty, let item = takeTableItem(messageId) {
             let animationSize = NSMakeSize(item.contentSize.width * 1.5, item.contentSize.height * 1.5)
             let signal: Signal<(LottieAnimation, String)?, NoError> = context.account.postbox.messageAtId(messageId)
             |> mapToSignal { message in
-                if let message = message, let file = message.effectiveMedia as? TelegramMediaFile {
+                if let message = message, let file = message.anyMedia as? TelegramMediaFile {
                     if let effect = file.premiumEffect {
                         return context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
                             if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
@@ -212,6 +220,10 @@ final class EmojiScreenEffect {
     func addReactionAnimation(_ value: MessageReaction.Reaction, index: Int?, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
         
         let context = self.context
+        
+        if context.isLite(.emoji_effects) {
+            return
+        }
         
         switch value {
         case let .custom(fileId):

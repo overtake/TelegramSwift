@@ -141,6 +141,7 @@ class FastSettings {
     
     private static let kNoticeAdChannel = "kNoticeAdChannel"
     private static let kPlayingRate = "kPlayingRate2"
+    private static let kPlayingMusicRate = "kPlayingMusicRate"
     private static let kPlayingVideoRate = "kPlayingVideoRate"
 
     private static let kSVCShareMicro = "kSVCShareMicro"
@@ -163,7 +164,7 @@ class FastSettings {
     private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
 
     
-    
+
     
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
@@ -226,15 +227,35 @@ class FastSettings {
     
         
     static var playingRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 2.0)
+        let double = UserDefaults.standard.double(forKey: kPlayingRate)
+        if double == 0 {
+            return 1.0
+        }
+        return min(max(double, 0.2), 2.5)
     }
     
     static func setPlayingRate(_ rate: Double) {
         UserDefaults.standard.set(rate, forKey: kPlayingRate)
     }
     
+    static var playingMusicRate: Double {
+        let double = UserDefaults.standard.double(forKey: kPlayingMusicRate)
+        if double == 0 {
+            return 1.0
+        }
+        return min(max(double, 0.2), 2.5)
+    }
+    
+    static func setPlayingMusicRate(_ rate: Double) {
+        UserDefaults.standard.set(rate, forKey: kPlayingMusicRate)
+    }
+    
     static var playingVideoRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingVideoRate), 1), 2.0)
+        let double = UserDefaults.standard.double(forKey: kPlayingVideoRate)
+        if double == 0 {
+            return 1.0
+        }
+        return min(max(double, 0.2), 2.5)
     }
     
     static func setPlayingVideoRate(_ rate: Double) {
@@ -325,7 +346,20 @@ class FastSettings {
         UserDefaults.standard.setValue(value, forKey: kShowEmptyTips)
     }
     
-    
+    static func systemUnsupported(_ time: Int32?) -> Bool {
+        if #available(macOS 10.13, *) {
+            return false
+        } else {
+            if let time = time {
+                return time < Int(Date().timeIntervalSince1970)
+            } else {
+                return true
+            }
+        }
+    }
+    static func hideUnsupported() {
+        UserDefaults.standard.setValue(Int(Date().timeIntervalSince1970) + 7 * 24 * 60 * 60, forKey: "unsupported")
+    }
     
     
     static func toggleRecordingState() {
@@ -448,10 +482,10 @@ class FastSettings {
         return !UserDefaults.standard.bool(forKey: kAutomaticallyPlayGifs)
     }
     
-    static var archiveStatus: HiddenArchiveStatus {
+    static var archiveStatus: ItemHideStatus {
         get {
             let value = UserDefaults.standard.integer(forKey: kArchiveIsHidden)
-            return HiddenArchiveStatus(rawValue: min(value, 3))!
+            return ItemHideStatus(rawValue: min(value, 3))!
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: kArchiveIsHidden)
@@ -481,6 +515,32 @@ class FastSettings {
     
     static func setSecretChatWebPreviewAvailable(for accountId: Int64, value: Bool) -> Void {
         UserDefaults.standard.set(value, forKey: "IsSecretChatWebPreviewAvailable_\(accountId)")
+        UserDefaults.standard.synchronize()
+    }
+    
+    
+    private static let kDefaultScreenShareKey = "kDefaultScreenShare"
+    private static let kDefaultVideoShare = "kDefaultVideoShare"
+    static func defaultScreenShare() -> String? {
+        return UserDefaults.standard.value(forKey: kDefaultScreenShareKey) as? String
+    }
+    static func setDefaultScreenShare(_ uniqueId: String?) -> Void {
+        if let uniqueId = uniqueId {
+            UserDefaults.standard.set(uniqueId, forKey: kDefaultScreenShareKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: kDefaultScreenShareKey)
+        }
+        UserDefaults.standard.synchronize()
+    }
+    static func defaultVideoShare() -> String? {
+        return UserDefaults.standard.value(forKey: kDefaultVideoShare) as? String
+    }
+    static func setDefaultVideoShare(_ uniqueId: String?) -> Void {
+        if let uniqueId = uniqueId {
+            UserDefaults.standard.set(uniqueId, forKey: kDefaultVideoShare)
+        } else {
+            UserDefaults.standard.removeObject(forKey: kDefaultVideoShare)
+        }
         UserDefaults.standard.synchronize()
     }
     
@@ -663,6 +723,13 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bo
         }
         
         try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+
+        let quarantineData = "does not really matter what is here".cString(using: String.Encoding.utf8)!
+        let quarantineDataLength = Int(strlen(quarantineData))
+        
+//        setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
+        
+       // removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
         
         let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
         
@@ -760,7 +827,7 @@ func fileFinderPath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<Str
 func showInFinder(_ file:TelegramMediaFile, account:Account)  {
     let path = downloadFilePath(file, account.postbox) |> deliverOnMainQueue
     
-    _ = combineLatest(path, downloadedFilePaths(account.postbox)).start(next: { (expanded, paths) in
+    _ = combineLatest(queue: .mainQueue(), path, downloadedFilePaths(account.postbox)).start(next: { (expanded, paths) in
         
         guard let (boxPath, adopted) = expanded else {
             return
@@ -788,6 +855,14 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 
                 try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
            
+                let quarantineData = "does not really matter what is here".cString(using: String.Encoding.utf8)!
+                let quarantineDataLength = Int(strlen(quarantineData))
+                
+//                setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
+
+              //  removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
+
+                
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
                 
                 let fs = fileSize(boxPath)

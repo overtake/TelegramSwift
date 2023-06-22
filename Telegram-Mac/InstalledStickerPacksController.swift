@@ -38,7 +38,8 @@ private final class InstalledStickerPacksControllerArguments {
     let toggleLoopAnimated: (Bool)->Void
     let quickSetup:(Control)->Void
     let customEmoji: () -> Void
-    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickersBot: @escaping () -> Void, openFeatured: @escaping () -> Void, openArchived: @escaping ([ArchivedStickerPackItem]?) -> Void, openSuggestionOptions: @escaping() -> Void, toggleLoopAnimated: @escaping(Bool)->Void, quickSetup:@escaping(Control)->Void, customEmoji: @escaping() -> Void) {
+    let toggleDynamicPackOrder:()->Void
+    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickersBot: @escaping () -> Void, openFeatured: @escaping () -> Void, openArchived: @escaping ([ArchivedStickerPackItem]?) -> Void, openSuggestionOptions: @escaping() -> Void, toggleLoopAnimated: @escaping(Bool)->Void, quickSetup:@escaping(Control)->Void, customEmoji: @escaping() -> Void, toggleDynamicPackOrder:@escaping()->Void) {
         self.context = context
         self.openStickerPack = openStickerPack
         self.removePack = removePack
@@ -49,6 +50,7 @@ private final class InstalledStickerPacksControllerArguments {
         self.toggleLoopAnimated = toggleLoopAnimated
         self.quickSetup = quickSetup
         self.customEmoji = customEmoji
+        self.toggleDynamicPackOrder = toggleDynamicPackOrder
     }
 }
 
@@ -132,6 +134,9 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     case quickReaction(sectionId:Int32, ContextReaction, GeneralViewType)
     case customEmoji(sectionId:Int32, GeneralViewType)
     case loopAnimated(sectionId: Int32, Bool, GeneralViewType)
+    case dynamicPackOrder(sectionId: Int32, Bool, GeneralViewType)
+    case dynamicPackOrderInfo(sectionId: Int32, GeneralViewType)
+
     case packsTitle(sectionId:Int32, String, GeneralViewType)
     case pack(sectionId:Int32, Int32, StickerPackCollectionInfo, StickerPackItem?, Int32, Bool, Bool, ItemListStickerPackItemEditing, GeneralViewType)
     case packsInfo(sectionId:Int32, String, GeneralViewType)
@@ -141,22 +146,26 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
         switch self {
         case .suggestOptions:
             return .index(0)
-        case .trending:
+        case .loopAnimated:
             return .index(1)
-        case .archived:
+        case .trending:
             return .index(2)
-        case .quickReaction:
+        case .archived:
             return .index(3)
         case .customEmoji:
             return .index(4)
-        case .loopAnimated:
+        case .quickReaction:
             return .index(5)
-        case .packsTitle:
+        case .dynamicPackOrder:
             return .index(6)
+        case .dynamicPackOrderInfo:
+            return .index(7)
+        case .packsTitle:
+            return .index(8)
         case let .pack(_, _, info, _, _, _, _, _, _):
             return .pack(info.id)
         case .packsInfo:
-            return .index(7)
+            return .index(9)
         case let .section(sectionId):
             return .index((sectionId + 1) * 1000 - sectionId)
         }
@@ -167,22 +176,26 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
         switch self {
         case .suggestOptions:
             return 0
-        case .trending:
+        case .loopAnimated:
             return 1
-        case .archived:
+        case .trending:
             return 2
-        case .quickReaction:
+        case .archived:
             return 3
         case .customEmoji:
             return 4
-        case .loopAnimated:
-            return 6
-        case .packsTitle:
+        case .quickReaction:
+            return 5
+        case .dynamicPackOrder:
             return 7
+        case .dynamicPackOrderInfo:
+            return 8
+        case .packsTitle:
+            return 9
         case .pack:
             fatalError("")
         case .packsInfo:
-            return 8
+            return 10
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -202,6 +215,10 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + stableIndex
         case let .loopAnimated(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
+        case let .dynamicPackOrder(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .dynamicPackOrderInfo(sectionId, _):
+            return (sectionId * 1000) + stableIndex
         case let .packsTitle(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .pack( sectionId, index, _, _, _, _, _, _, _):
@@ -220,25 +237,29 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
     func item(_ arguments: InstalledStickerPacksControllerArguments, initialSize:NSSize) -> TableRowItem {
         switch self {
         case let .suggestOptions(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().stickersSuggestStickers, type: .context(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().stickersSuggestStickers, icon: theme.icons.installed_stickers_suggest, type: .context(value), viewType: viewType, action: {
                 arguments.openSuggestionOptions()
             })
         case let .trending(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersTranding, type: .context(count > 0 ? "\(count)" : ""), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersTranding, icon: theme.icons.installed_stickers_trending, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: {
                 arguments.openFeatured()
             })
         case let .archived(_, archived, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersArchived, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersArchived, icon: theme.icons.installed_stickers_archive, type: .next, viewType: viewType, action: {
                 arguments.openArchived(archived.archived)
             })
         case let .quickReaction(_, reaction, viewType):
             return QuickReactionRowItem(initialSize, stableId: stableId, context: arguments.context, reaction: reaction, viewType: viewType, select: arguments.quickSetup)
         case let .loopAnimated(_, value, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersLoopAnimated, type: .switchable(value), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersLoopAnimated, icon: theme.icons.installed_stickers_loop, type: .switchable(value), viewType: viewType, action: {
                 arguments.toggleLoopAnimated(!value)
             })
         case let .customEmoji(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersCustomEmoji, type: .next, viewType: viewType, action: arguments.customEmoji)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersCustomEmoji, icon: theme.icons.installed_stickers_custom_emoji, type: .next, viewType: viewType, action: arguments.customEmoji)
+        case let .dynamicPackOrder(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().installedStickersDynamicPackOrder, icon: theme.icons.installed_stickers_dynamic_order, type: .switchable(value), viewType: viewType, action: arguments.toggleDynamicPackOrder)
+        case let .dynamicPackOrderInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().installedStickersDynamicPackOrderInfo, viewType: viewType)
         case let .packsTitle(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .pack(_, _, info, topItem, count, enabled, _, editing, viewType):
@@ -249,7 +270,6 @@ private enum InstalledStickerPacksEntry: TableItemListNodeEntry {
             }, removePack: {
                 arguments.removePack(info.id)
             })
-
         case let .packsInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case .section:
@@ -283,6 +303,13 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
     }
     entries.append(.suggestOptions(sectionId: sectionId, suggestString, .firstItem))
     
+    
+    entries.append(.loopAnimated(sectionId: sectionId, autoplayMedia.loopAnimatedStickers, .lastItem))
+    
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    
+    
     if featured.count != 0 {
         var unreadCount: Int32 = 0
         for item in featured {
@@ -290,16 +317,23 @@ private func installedStickerPacksControllerEntries(state: InstalledStickerPacks
                 unreadCount += 1
             }
         }
-        entries.append(.trending(sectionId: sectionId, unreadCount, .innerItem))
+        entries.append(.trending(sectionId: sectionId, unreadCount, .firstItem))
     }
     entries.append(.archived(sectionId: sectionId, ArchivedListContainer(archived: archived), .innerItem))
-    if let quick = state.quick {
-        entries.append(.quickReaction(sectionId: sectionId, quick, .innerItem))
-    }
+    
     if hasEmojies {
-        entries.append(.customEmoji(sectionId: sectionId, .innerItem))
+        entries.append(.customEmoji(sectionId: sectionId, state.quick == nil ? .lastItem : .innerItem))
     }
-    entries.append(.loopAnimated(sectionId: sectionId, autoplayMedia.loopAnimatedStickers, .lastItem))
+    if let quick = state.quick {
+        entries.append(.quickReaction(sectionId: sectionId, quick, .lastItem))
+    }
+    entries.append(.section(sectionId: sectionId))
+    sectionId += 1
+    
+    
+    entries.append(.dynamicPackOrder(sectionId: sectionId, stickerSettings.dynamicPackOrder, .singleItem))
+    entries.append(.dynamicPackOrderInfo(sectionId: sectionId, .textBottomItem))
+
     
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
@@ -445,6 +479,10 @@ class InstalledStickerPacksController: TableViewController {
             }
         }, customEmoji: {
             context.bindings.rootNavigation().push(CustomEmojiController(context: context))
+        }, toggleDynamicPackOrder: {
+            _ = updateStickerSettingsInteractively(postbox: context.account.postbox, {
+                $0.withUpdatedDynamicPackOrder(!$0.dynamicPackOrder)
+            }).start()
         })
         let stickerPacks = context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])
         
@@ -491,7 +529,7 @@ class InstalledStickerPacksController: TableViewController {
         
         
       
-        let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
+        let emojies = context.diceCache.emojies
 
         
         let signal = combineLatest(queue: prepareQueue, statePromise.get(), stickerPacks, featured, archivedPromise.get(), appearanceSignal, preferencesView, context.reactions.stateValue, emojies)

@@ -224,13 +224,13 @@ fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<P
         
         switch entry.entry {
         case let .messageEntry(message, _, _, viewType):
-            if tags == .file, message.effectiveMedia is TelegramMediaFile {
+            if tags == .file, message.anyMedia is TelegramMediaFile {
                 return PeerMediaFileRowItem(initialSize, interaction, entry.entry, gallery: arguments.gallery, viewType: viewType)
             } else if tags == .webPage {
                 return PeerMediaWebpageRowItem(initialSize,interaction, entry.entry, gallery: arguments.gallery, viewType: viewType)
-            } else if tags == .music, message.effectiveMedia is TelegramMediaFile {
+            } else if tags == .music, message.anyMedia is TelegramMediaFile {
                 return PeerMediaMusicRowItem(initialSize, interaction, entry.entry, gallery: arguments.gallery, music: arguments.music, viewType: viewType)
-            } else if tags == .voiceOrInstantVideo, message.effectiveMedia is TelegramMediaFile {
+            } else if tags == .voiceOrInstantVideo, message.anyMedia is TelegramMediaFile {
                 return PeerMediaVoiceRowItem(initialSize,interaction, entry.entry, gallery: arguments.gallery, music: arguments.music, viewType: viewType)
             } else {
                 return GeneralRowItem(initialSize, height: 1, stableId: entry.stableId)
@@ -510,7 +510,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
             if let file = message.media.first as? TelegramMediaFile  {
                 let controller: APController
                 if file.isMusic {
-                    controller = APChatMusicController(context: context, chatLocationInput: chatLocationInput, mode: mode, index: MessageIndex(message), messages: messages)
+                    controller = APChatMusicController(context: context, chatLocationInput: chatLocationInput, mode: mode, index: MessageIndex(message), baseRate: FastSettings.playingMusicRate, messages: messages)
                 } else {
                     controller = APChatVoiceController(context: context, chatLocationInput: chatLocationInput, mode: mode, index: MessageIndex(message), baseRate: FastSettings.playingRate, volume: FastSettings.volumeRate)
                 }
