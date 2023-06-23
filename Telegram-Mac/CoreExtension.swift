@@ -451,8 +451,8 @@ public extension Message {
     }
     
     var isExpiredStory: Bool {
-        if let media = media.first as? TelegramMediaStory, let data = associatedStories[media.storyId]?.data {
-            return data.isEmpty
+        if let media = media.first as? TelegramMediaStory, let data = associatedStories[media.storyId] {
+            return data.get(Stories.StoredItem.self) == nil
         }
         return false
     }
