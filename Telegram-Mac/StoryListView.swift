@@ -703,8 +703,8 @@ final class StoryListView : Control, Notifable {
         
         
         if control is AvatarControl {
-            layer.cornerRadius = oldRect.height / 2
-            layer.animateCornerRadius(duration: duration)
+            layer.cornerRadius = control.frame.height / 2
+            layer.animateCornerRadius(duration: duration, timingFunction: .default)
         }
         
        
@@ -756,8 +756,9 @@ final class StoryListView : Control, Notifable {
             
             if let current = self.current, !current.isEqual(to: entry.item.id.base as? Int32) {
                 self.redraw()
-            } else if let current = self.current {
+            } else if let current = self.current, let arguments = arguments {
                 self.updateStoryState(current.state)
+                self.controls.update(context: context, arguments: arguments, groupId: entry.peer.id, peer: entry.peer._asPeer(), story: entry.item, animated: true)
                 self.inputView.update(entry.item, animated: true)
                 self.arguments?.markAsRead(entry.peer.id, entry.item.storyItem.id)
             } else {
