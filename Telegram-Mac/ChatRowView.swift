@@ -487,7 +487,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
             replyView?.removeAllHandlers()
             replyView?.set(handler: { [weak item, weak reply] _ in
-                if reply is StoryReplyModel {
+                if reply is ExpiredStoryReplyModel {
+                    item?.showExpiredStoryError()
+                } else if reply is StoryReplyModel {
                     item?.openStory()
                 } else {
                     item?.chatInteraction.focusInputField()

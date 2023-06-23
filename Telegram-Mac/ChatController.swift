@@ -1656,6 +1656,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let reactionsMessageProcessingManager = ChatMessageThrottledProcessingManager(submitInterval: 4.0)
     private let messageMentionProcessingManager = ChatMessageThrottledProcessingManager(delay: 0.2)
     private let messageReactionsMentionProcessingManager = ChatMessageThrottledProcessingManager(delay: 0.2)
+    private let refreshStoriesProcessingManager = ChatMessageThrottledProcessingManager()
+    private let extendedMediaProcessingManager = ChatMessageVisibleThrottledProcessingManager()
+    private let seenLiveLocationProcessingManager = ChatMessageThrottledProcessingManager()
+    private let refreshMediaProcessingManager = ChatMessageThrottledProcessingManager()
+
+
+
+
+
     var historyState:ChatHistoryState = ChatHistoryState() {
         didSet {
             //if historyState != oldValue {
@@ -5574,6 +5583,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var unsupportedMessagesIds: [MessageId] = []
                 var topVisibleMessageRange: ChatTopVisibleMessageRange?
  
+                var messageIdsWithUnsupportedMedia: [MessageId] = []
+                var messageIdsWithRefreshMedia: [MessageId] = []
+                var messageIdsWithRefreshStories: [MessageId] = []
+                var messageIdsWithLiveLocation: [MessageId] = []
+                var messageIdsWithInactiveExtendedMedia = Set<MessageId>()
+
+
+
                 var messagesToTranslate: [Message] = []
 
                 
@@ -5591,6 +5608,68 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         for message in item.messages {
                             var hasUncocumedMention: Bool = false
                             var hasUncosumedContent: Bool = false
+                            
+                            var contentRequiredValidation = false
+                            var mediaRequiredValidation = false
+                            var storiesRequiredValidation = false
+
+                            
+                            for attribute in message.attributes {
+                                if let _ = attribute as? ContentRequiresValidationMessageAttribute {
+                                    contentRequiredValidation = true
+                                }  else if let _ = attribute as? ReplyStoryAttribute {
+                                    storiesRequiredValidation = true
+                                }
+                            }
+                            
+                            for media in message.media {
+                                if let _ = media as? TelegramMediaUnsupported {
+                                    contentRequiredValidation = true
+                                } else if message.flags.contains(.Incoming), let media = media as? TelegramMediaMap, let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
+                                    let timestamp = Int32(CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970)
+                                    if message.timestamp + liveBroadcastingTimeout > timestamp {
+                                        messageIdsWithLiveLocation.append(message.id)
+                                    }
+                                } else if let telegramFile = media as? TelegramMediaFile {
+                                    if telegramFile.isAnimatedSticker, (message.id.peerId.namespace == Namespaces.Peer.SecretChat || !telegramFile.previewRepresentations.isEmpty), let size = telegramFile.size, size > 0 && size <= 128 * 1024 {
+                                        if message.id.peerId.namespace == Namespaces.Peer.SecretChat {
+                                            if telegramFile.fileId.namespace == Namespaces.Media.CloudFile {
+                                                var isValidated = false
+                                                attributes: for attribute in telegramFile.attributes {
+                                                    if case .hintIsValidated = attribute {
+                                                        isValidated = true
+                                                        break attributes
+                                                    }
+                                                }
+                                                
+                                                if !isValidated {
+                                                    mediaRequiredValidation = true
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else if let invoice = media as? TelegramMediaInvoice, let extendedMedia = invoice.extendedMedia, case .preview = extendedMedia {
+                                    messageIdsWithInactiveExtendedMedia.insert(message.id)
+                                    if invoice.version != TelegramMediaInvoice.lastVersion {
+                                        contentRequiredValidation = true
+                                    }
+                                } else if let _ = media as? TelegramMediaStory {
+                                    storiesRequiredValidation = true
+                                } else if let webpage = media as? TelegramMediaWebpage, case let .Loaded(content) = webpage.content, let _ = content.story {
+                                    storiesRequiredValidation = true
+                                }
+                            }
+
+                            if contentRequiredValidation {
+                                messageIdsWithUnsupportedMedia.append(message.id)
+                            }
+                            if mediaRequiredValidation {
+                                messageIdsWithRefreshMedia.append(message.id)
+                            }
+                            if storiesRequiredValidation {
+                                messageIdsWithRefreshStories.append(message.id)
+                            }
+
                             
                             if message.tags.contains(.unseenPersonalMessage) {
                                 for attribute in message.attributes {
@@ -5686,7 +5765,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if !messageIdsWithViewCount.isEmpty {
                     strongSelf.messageProcessingManager.add(messageIdsWithViewCount)
                 }
-                
+                if !messageIdsWithLiveLocation.isEmpty {
+                    strongSelf.seenLiveLocationProcessingManager.add(messageIdsWithLiveLocation)
+                }
+                if !messageIdsWithUnsupportedMedia.isEmpty {
+                    strongSelf.unsupportedMessageProcessingManager.add(messageIdsWithUnsupportedMedia)
+                }
+                if !messageIdsWithRefreshMedia.isEmpty {
+                    strongSelf.refreshMediaProcessingManager.add(messageIdsWithRefreshMedia)
+                }
+                if !messageIdsWithRefreshStories.isEmpty {
+                    strongSelf.refreshStoriesProcessingManager.add(messageIdsWithRefreshStories)
+                }
+
                 if !messageIdsWithUnseenPersonalMention.isEmpty {
                     strongSelf.messageMentionProcessingManager.add(messageIdsWithUnseenPersonalMention)
                 }
@@ -7200,6 +7291,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             context.account.viewTracker.updateMarkReactionsSeenForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
             self?.playUnseenReactions(messageIds, checkUnseen: true)
         }
+        self.refreshStoriesProcessingManager.process = { [weak self] messageIds in
+            self?.context.account.viewTracker.refreshStoriesForMessageIds(messageIds: messageIds)
+        }
+        self.refreshMediaProcessingManager.process = { [weak self] messageIds in
+            self?.context.account.viewTracker.refreshSecretMediaMediaForMessageIds(messageIds: messageIds)
+        }
+        self.seenLiveLocationProcessingManager.process = { [weak self] messageIds in
+            self?.context.account.viewTracker.updateSeenLiveLocationForMessageIds(messageIds: messageIds)
+        }
+
+
         self.reactionsMessageProcessingManager.process = { messageIds in
             context.account.viewTracker.updateReactionsForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
         }

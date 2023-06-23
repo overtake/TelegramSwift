@@ -9742,6 +9742,45 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var message_story_expired: CGImage {
+      if let image = cached.with({ $0["message_story_expired"] }) {
+          return image
+      } else {
+          let image = _message_story_expired()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_story_expired"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_story_expired_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["message_story_expired_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _message_story_expired_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_story_expired_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_story_expired_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["message_story_expired_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _message_story_expired_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_story_expired_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10492,6 +10531,9 @@ public final class TelegramIconsTheme {
   private let _story_view_reaction: ()->CGImage
   private let _story_chatlist_reply: ()->CGImage
   private let _story_chatlist_reply_active: ()->CGImage
+  private let _message_story_expired: ()->CGImage
+  private let _message_story_expired_bubble_incoming: ()->CGImage
+  private let _message_story_expired_bubble_outgoing: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11242,7 +11284,10 @@ public final class TelegramIconsTheme {
       story_view_read: @escaping()->CGImage,
       story_view_reaction: @escaping()->CGImage,
       story_chatlist_reply: @escaping()->CGImage,
-      story_chatlist_reply_active: @escaping()->CGImage
+      story_chatlist_reply_active: @escaping()->CGImage,
+      message_story_expired: @escaping()->CGImage,
+      message_story_expired_bubble_incoming: @escaping()->CGImage,
+      message_story_expired_bubble_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11993,5 +12038,8 @@ public final class TelegramIconsTheme {
       self._story_view_reaction = story_view_reaction
       self._story_chatlist_reply = story_chatlist_reply
       self._story_chatlist_reply_active = story_chatlist_reply_active
+      self._message_story_expired = message_story_expired
+      self._message_story_expired_bubble_incoming = message_story_expired_bubble_incoming
+      self._message_story_expired_bubble_outgoing = message_story_expired_bubble_outgoing
   }
 }

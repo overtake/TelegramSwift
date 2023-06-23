@@ -2712,8 +2712,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               story_view_read: { NSImage(named: "Icon_StoryViewRead")!.precomposed(palette.grayIcon) },
                               story_view_reaction: { NSImage(named: "Icon_StoryViewReaction")!.precomposed(palette.grayIcon) },
                               story_chatlist_reply: { NSImage(named: "Icon_StoryReply")!.precomposed(palette.grayIcon) },
-                              story_chatlist_reply_active: { NSImage(named: "Icon_StoryReply")!.precomposed(palette.underSelectedColor) }
-
+                              story_chatlist_reply_active: { NSImage(named: "Icon_StoryReply")!.precomposed(palette.underSelectedColor) },
+                              message_story_expired: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitle) },
+                              message_story_expired_bubble_incoming: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitleBubble_incoming) },
+                              message_story_expired_bubble_outgoing: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitleBubble_outgoing) }
 
     )
 

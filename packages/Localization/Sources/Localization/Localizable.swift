@@ -3113,6 +3113,10 @@ public final class L10n {
   public static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
   /// This chat helps you keep track of replies to your comments in Channels.
   public static var chatRepliesDesc: String  { return L10n.tr("Localizable", "Chat.Replies.Desc") }
+  /// Expired Story
+  public static var chatReplyExpiredStory: String  { return L10n.tr("Localizable", "Chat.Reply.ExpiredStory") }
+  /// Story is expired.
+  public static var chatReplyExpiredStoryError: String  { return L10n.tr("Localizable", "Chat.Reply.ExpiredStory.Error") }
   /// Reminder
   public static var chatRightContextReminder: String  { return L10n.tr("Localizable", "Chat.Right.Context.Reminder") }
   /// Scheduled Messages

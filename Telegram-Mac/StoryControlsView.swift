@@ -71,15 +71,38 @@ final class StoryControlsView : Control {
         more.contextMenu = { [weak self] in
             
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
-            if let story = self?.story, story.sharable {
-                menu.addItem(ContextMenuItem("Share", handler: { [weak self] in
-                    self?.arguments?.share(story)
-                }, itemImage: MenuAnimation.menu_share.value))
-            }
-            menu.addItem(ContextMenuItem("Hide", itemImage: MenuAnimation.menu_hide.value))
+            if let story = self?.story, story.sharable, let peer = story.peer, let peerId = story.peerId {
+//                menu.addItem(ContextMenuItem("Share", handler: { [weak self] in
+//                    self?.arguments?.share(story)
+//                }, itemImage: MenuAnimation.menu_share.value))
+//
+                if peer._asPeer().storyArchived {
+                    menu.addItem(ContextMenuItem("Unhide \(peer._asPeer().compactDisplayTitle)", handler: { [weak self] in
+                        self?.arguments?.toggleHide(peer._asPeer(), false)
+                    }, itemImage: MenuAnimation.menu_unarchive.value))
 
-            menu.addItem(ContextSeparatorItem())
-            menu.addItem(ContextMenuItem("Report", itemMode: .destruct, itemImage: MenuAnimation.menu_report.value))
+                } else {
+                    menu.addItem(ContextMenuItem("Hide \(peer._asPeer().compactDisplayTitle)", handler: {
+                        self?.arguments?.toggleHide(peer._asPeer(), true)
+                    }, itemImage: MenuAnimation.menu_archive.value))
+                }
+
+                let report = ContextMenuItem("Report", itemImage: MenuAnimation.menu_report.value)
+                
+                let submenu = ContextMenu()
+                            
+                let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+                let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
+                
+                for i in 0 ..< options.count {
+                    submenu.addItem(ContextMenuItem(options[i].title, handler: { [weak self] in
+                        self?.arguments?.report(peerId, story.storyItem.id, options[i])
+                    }, itemImage: animation[i].value))
+                }
+                report.submenu = submenu
+                menu.addItem(report)
+            }
+            
 
             return menu
         }

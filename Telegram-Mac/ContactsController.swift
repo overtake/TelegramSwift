@@ -364,7 +364,7 @@ class ContactsController: PeersListController {
     }
     
     init(_ context:AccountContext) {
-        self.storyList = context.engine.messages.storySubscriptions(isHidden: false)
+        self.storyList = context.engine.messages.storySubscriptions(isHidden: true)
         super.init(context, searchOptions: [.chats])
     }
     
