@@ -811,7 +811,10 @@ private final class StoryViewController: Control, Notifable {
             
             self.media.layer?.addSublayer(mediaLayer)
             
-            let layout = TextViewLayout(.initialize(string: title, color: storyTheme.colors.text, font: .normal(.text)))
+            let attr = NSMutableAttributedString()
+            _ = attr.append(.initialize(string: title, color: storyTheme.colors.text, font: .normal(.text)))
+            attr.detectBoldColorInString(with: .medium(.text))
+            let layout = TextViewLayout(attr)
             
             self.button.isHidden = !hasButton
             
@@ -2041,9 +2044,9 @@ final class StoryModalController : ModalViewController, Notifable {
             context.engine.peers.updatePeerStoriesHidden(id: peer.id, isHidden: value)
             let text: String
             if !value {
-                text = "Stories from \(peer.compactDisplayTitle) will now be shown in Chats, not Contacts."
+                text = "Stories from **\(peer.compactDisplayTitle)** will now be shown in Chats, not Contacts."
             } else {
-                text = "Stories from \(peer.compactDisplayTitle) will now be shown in Contacts, not Chats."
+                text = "Stories from **\(peer.compactDisplayTitle)** will now be shown in Contacts, not Chats."
             }
             self?.genericView.showTooltip(.justText(text))
         })
