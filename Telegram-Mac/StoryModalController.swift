@@ -812,7 +812,7 @@ private final class StoryViewController: Control, Notifable {
             self.media.layer?.addSublayer(mediaLayer)
             
             let attr = NSMutableAttributedString()
-            _ = attr.append(.initialize(string: title, color: storyTheme.colors.text, font: .normal(.text)))
+            _ = attr.append(string: title, color: storyTheme.colors.text, font: .normal(.text))
             attr.detectBoldColorInString(with: .medium(.text))
             let layout = TextViewLayout(attr)
             
