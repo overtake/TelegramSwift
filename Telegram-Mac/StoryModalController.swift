@@ -2040,10 +2040,10 @@ final class StoryModalController : ModalViewController, Notifable {
         }, toggleHide: { [weak self] peer, value in
             context.engine.peers.updatePeerStoriesHidden(id: peer.id, isHidden: value)
             let text: String
-            if value {
-                text = "\(peer.compactDisplayTitle) is hidden"
+            if !value {
+                text = "Stories from \(peer.compactDisplayTitle) will now be shown in Chats, not Contacts."
             } else {
-                text = "\(peer.compactDisplayTitle) is unhidden"
+                text = "Stories from \(peer.compactDisplayTitle) will now be shown in Contacts, not Chats."
             }
             self?.genericView.showTooltip(.justText(text))
         })
@@ -2285,6 +2285,9 @@ final class StoryModalController : ModalViewController, Notifable {
         
         window?.set(handler: { [weak self] _ in
             guard self?.genericView.isInputFocused == false else {
+                return .rejected
+            }
+            if self?.interactions.presentation.hasModal == true {
                 return .rejected
             }
             if timer == nil {

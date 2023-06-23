@@ -671,18 +671,12 @@ private final class StoryListEntryRowItem : TableRowItem {
         }, itemImage: MenuAnimation.menu_open_profile.value))
         
         
-        if self.entry.item.peer._asPeer().storyArchived {
-            items.append(.init("Unarchive", handler: {
-                context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: false)
-            }, itemImage: MenuAnimation.menu_show.value))
-            
-        } else {
-            if !archive {
-                items.append(.init("Archive", handler: {
-                    context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
-                }, itemImage: MenuAnimation.menu_hide.value))
-            }
-        }
+        let peer = self.entry.item.peer._asPeer()
+
+        items.append(.init("Archive", handler: {
+            context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
+            showModalText(for: context.window, text: "Stories from \(peer.compactDisplayTitle) will now be shown in Contacts, not Chats.")
+        }, itemImage: MenuAnimation.menu_hide.value))
        
 
         return .single(items)
