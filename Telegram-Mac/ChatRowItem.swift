@@ -694,6 +694,9 @@ class ChatRowItem: TableRowItem {
             }
         }
     }
+    func showExpiredStoryError() {
+        showModalText(for: context.window, text: strings().chatReplyExpiredStoryError)
+    }
     
     func gotoSourceMessage() {
         if let message = message {
@@ -1869,7 +1872,7 @@ class ChatRowItem: TableRowItem {
                 }
             }
             
-            if let story = message.media.first as? TelegramMediaStory, let author = message.peers[story.storyId.peerId] {
+            if !message.isExpiredStory, let story = message.media.first as? TelegramMediaStory, let author = message.peers[story.storyId.peerId] {
                 let forwardNameColor: NSColor
                 if isForwardScam {
                     forwardNameColor = theme.chat.redUI(isIncoming, object.renderType == .bubble)
@@ -2079,7 +2082,7 @@ class ChatRowItem: TableRowItem {
                 let formatterEdited = DateSelectorUtil.chatFullDateFormatter
                 fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date)))))"
             }
-            let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
+            let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self), app: presentation)
 
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId] {
@@ -2089,8 +2092,11 @@ class ChatRowItem: TableRowItem {
                         ignore = true
                     }
                     if !ignore {
-                        
-                        self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, translate: entry.additionalData.replyTranslate)
+                        if replyMessage.isExpiredStory, let media = replyMessage.media.first as? TelegramMediaStory {
+                            self.replyModel = ExpiredStoryReplyModel(message: message, storyId: media.storyId, bubbled: renderType == .bubble, context: context, presentation: replyPresentation)
+                        } else {
+                            self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, translate: entry.additionalData.replyTranslate)
+                        }
                         replyModel?.isSideAccessory = isBubbled && !hasBubble
                     }
                 }
@@ -2121,6 +2127,10 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                
+                if let story = message.media.first as? TelegramMediaStory, message.isExpiredStory {
+                    self.replyModel = ExpiredStoryReplyModel(message: message, storyId: story.storyId, bubbled: renderType == .bubble, context: context, presentation: replyPresentation)
+                    replyModel?.isSideAccessory = isBubbled && !hasBubble
+                }
                 
                 let paid: Bool
                 if let invoice = message.anyMedia as? TelegramMediaInvoice {
@@ -2252,7 +2262,11 @@ class ChatRowItem: TableRowItem {
                     }
                     return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaStory {
-                    return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    if message.isExpiredStory {
+                        return ChatRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    } else {
+                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    }
                 } else if message.media[0] is TelegramMediaMap {
                     return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaContact {
@@ -2414,7 +2428,11 @@ class ChatRowItem: TableRowItem {
                 if !hasBubble {
                     replyModel.measureSize(min(width - _contentSize.width - contentOffset.x - 80, 300), sizeToFit: true)
                 } else {
-                    replyModel.measureSize(_contentSize.width - bubbleDefaultInnerInset, sizeToFit: true)
+                    if _contentSize.width == 0 {
+                        replyModel.measureSize(200, sizeToFit: true)
+                    } else {
+                        replyModel.measureSize(_contentSize.width - bubbleDefaultInnerInset, sizeToFit: true)
+                    }
                 }
             }
         }
@@ -2679,6 +2697,9 @@ class ChatRowItem: TableRowItem {
         }
         if isBigEmoji {
             return rightSize.height
+        }
+        if message?.isExpiredStory == true {
+             return rightSize.height / 2
         }
         // if uncomment, check media with single emoji caption before!
 //        if let message = message, let entities = message.textEntities {

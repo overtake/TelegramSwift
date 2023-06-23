@@ -1713,15 +1713,12 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .theme(link: urlString, context: context, name: userAndPost[1])
                         }
                     } else {
-                        var postIndex: Int = userAndPost.count - 1
+                        let postIndex: Int = userAndPost.count - 1
                         let postText = userAndPost[postIndex]
                         var post = postText.isEmpty ? nil : Int32(postText)
                         var storyId: Int32? = nil
                         if let range = postText.range(of: "?") {
                             post = Int32(postText[..<range.lowerBound])
-                        } else if postText.hasPrefix("s") {
-                            let indexAfter = postText.index(after: postText.startIndex)
-                            storyId = Int32(postText[indexAfter...])
                         }
                         if name.hasPrefix("iv?") {
                             return .external(link: urlString, false)
@@ -1751,8 +1748,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             if action == nil, let messageId = messageId {
                                 action = .source(messageId)
                             }
-                            
-                            if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {
+                            if userAndPost.count == 3, let storyId = post, userAndPost[1] == "s" {
+                                return .story(link: urlString, username: name, storyId: storyId, messageId: messageId, context: context)
+                            } else if let comment = params[keyURLCommentId]?.nsstring.intValue, let post = post {
                                 return .comments(link: urlString, username: name, context: context, threadId: post, commentId: comment)
                             } else if let thread = params[keyURLThreadId]?.nsstring.intValue, let comment = post {
                                  return .comments(link: urlString, username: name, context: context, threadId: thread, commentId: comment)

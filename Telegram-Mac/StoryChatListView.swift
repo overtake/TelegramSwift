@@ -491,7 +491,7 @@ private final class StoryListChatListRowView: TableRowView {
     private var listener: TableScrollListener!
     
     required init(frame frameRect: NSRect) {
-        self.interfaceView = StoryListContainer(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        self.interfaceView = StoryListContainer(frame: NSMakeRect(0, 0, max(frameRect.width, 300), frameRect.height))
         super.init(frame: frameRect)
         addSubview(interfaceView)
         addSubview(borderView)
@@ -633,10 +633,10 @@ private final class StoryListChatListRowView: TableRowView {
     
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         super.updateLayout(size: size, transition: transition)
-        transition.updateFrame(view: interfaceView, frame: size.bounds)
-        interfaceView.updateLayout(size: size, transition: transition)
-        transition.updateFrame(view: borderView, frame: NSMakeRect(0, size.height - .borderSize, size.width, .borderSize))
-        interfaceView.updateLayout(size: size, transition: transition)
+        let rect = NSMakeSize(max(300, size.width), size.height).bounds
+        transition.updateFrame(view: interfaceView, frame: rect)
+        interfaceView.updateLayout(size: rect.size, transition: transition)
+        transition.updateFrame(view: borderView, frame: NSMakeRect(0, size.height - .borderSize, rect.width, .borderSize))
     }
 }
 
@@ -670,9 +670,6 @@ private final class StoryListEntryRowItem : TableRowItem {
             
         }, itemImage: MenuAnimation.menu_open_profile.value))
         
-        items.append(.init("Mute", handler: {
-            
-        }, itemImage: MenuAnimation.menu_mute.value))
         
         if self.entry.item.peer._asPeer().storyArchived {
             items.append(.init("Unarchive", handler: {
@@ -880,70 +877,3 @@ private final class ItemView : Control {
 
 
 
-
-
-
-
-
-
-
-/*
- 
- private final class StoryListEntryRowView : HorizontalRowView {
-     
-     private let view = View(frame: NSMakeRect(0, 0, 50, 66))
-     private let overlay = Control(frame: NSMakeRect(0, 0, 70, 86))
-     private let itemView: ItemView = ItemView(frame: NSMakeRect(0, 0, 50, 66))
-     required init(frame frameRect: NSRect) {
-         super.init(frame: frameRect)
-         
-         addSubview(overlay)
-         
-         view.isEventLess = true
-         overlay.addSubview(view)
-         view.addSubview(itemView)
-         
-         overlay.scaleOnClick = true
-         
-         overlay.set(handler: { [weak self] _ in
-             if let item = self?.item as? StoryListEntryRowItem {
-                 item.callopenStory()
-             }
-         }, for: .Click)
-     }
-     
-     override var backdorColor: NSColor {
-         return .clear
-     }
-     
-     func takeControl(_ peerId: PeerId) -> NSView? {
-         if let tableView = self.item?.table {
-             let view = tableView.item(stableId: AnyHashable(peerId))?.view as? StoryListEntryRowView
-             return view?.itemView.imageView
-         }
-         return nil
-     }
-     
-     required init?(coder: NSCoder) {
-         fatalError("init(coder:) has not been implemented")
-     }
-     
-     
-     override func set(item: TableRowItem, animated: Bool) {
-         super.set(item: item, animated: animated)
-         
-         guard let item = item as? StoryListEntryRowItem else {
-             return
-         }
-         itemView.set(item: item, open: { _ in }, progress: 1.0, animated: animated)
-     }
-     
-     override func layout() {
-         super.layout()
-         view.centerX(y: 10)
-         itemView.center()
-     }
-     
- }
-
- */

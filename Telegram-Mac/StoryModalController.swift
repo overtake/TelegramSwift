@@ -153,6 +153,7 @@ final class StoryInteraction : InterfaceObserver {
         var closed: Bool = false
         
         var canRecordVoice: Bool = true
+        var isProfileIntended: Bool = false
         var emojiState: EntertainmentState = FastSettings.entertainmentState
         var inputRecording: ChatRecordingState?
         var recordType: RecordingStateSettings = FastSettings.recordingState
@@ -309,7 +310,9 @@ final class StoryArguments {
     let startRecording: (Bool)->Void
     let togglePinned:(StoryContentItem)->Void
     let hashtag:(String)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void) {
+    let report:(PeerId, Int32, ReportReason)->Void
+    let toggleHide:(Peer, Bool)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -332,6 +335,8 @@ final class StoryArguments {
         self.startRecording = startRecording
         self.togglePinned = togglePinned
         self.hashtag = hashtag
+        self.report = report
+        self.toggleHide = toggleHide
     }
     
     func longDown() {
@@ -704,6 +709,7 @@ private final class StoryViewController: Control, Notifable {
             case addedToProfile
             case removedFromProfile
             case linkCopied
+            case justText(String)
         }
         private let textView = TextView()
         private let button = TitleButton()
@@ -788,6 +794,10 @@ private final class StoryViewController: Control, Notifable {
                 title = "Copied to clipboard."
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = false
+            case let .justText(text):
+                title = text
+                mediaFile = MenuAnimation.menu_success.file
+                hasButton = false
             }
             
             let mediaLayer = InlineStickerItemLayer(account: context.account, file: mediaFile, size: NSMakeSize(24, 24), playPolicy: .toEnd(from: 0), getColors: { file in
@@ -854,6 +864,32 @@ private final class StoryViewController: Control, Notifable {
     
     private var storyContext: StoryContentContext?
     
+    private var textInputSuggestionsView: InputSwapSuggestionsPanel?
+
+    var hasEmojiSwap: Bool {
+        return self.textInputSuggestionsView != nil
+    }
+    
+    func updateTextInputSuggestions(_ files: [TelegramMediaFile], chatInteraction: ChatInteraction, range: NSRange, animated: Bool) {
+        if !files.isEmpty, let textView = self.current?.inputTextView {
+            let context = chatInteraction.context
+            let current: InputSwapSuggestionsPanel
+            let isNew: Bool
+            if let view = self.textInputSuggestionsView {
+                current = view
+                isNew = false
+            } else {
+                current = InputSwapSuggestionsPanel(textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction)
+                self.textInputSuggestionsView = current
+                isNew = true
+            }
+            current.apply(files, range: range, animated: animated, isNew: isNew)
+        } else if let view = self.textInputSuggestionsView {
+            view.close(animated: animated)
+            self.textInputSuggestionsView = nil
+        }
+    }
+
     
     private let container = View()
     
@@ -1077,6 +1113,8 @@ private final class StoryViewController: Control, Notifable {
             let updated = current.storyId != state.slice?.item.storyItem.id
             current.entryId = state.slice?.peer.id
             current.storyId = state.slice?.item.storyItem.id
+            current.canRecordVoice = state.slice?.additionalPeerData.areVoiceMessagesAvailable == true
+            current.isProfileIntended = state.isProfileView
             if updated {
                 current.magnified = false
                 current.readingText = false
@@ -1723,7 +1761,7 @@ final class StoryModalController : ModalViewController, Notifable {
     
     private let disposable = MetaDisposable()
     private let updatesDisposable = MetaDisposable()
-    private let permissionDisposable = MetaDisposable()
+    private let inputSwapDisposable = MetaDisposable()
     private var overlayTimer: SwiftSignalKit.Timer?
     
     private var arguments: StoryArguments?
@@ -1787,6 +1825,39 @@ final class StoryModalController : ModalViewController, Notifable {
                 self.genericView.closeReactions()
                 self.genericView.closeTooltip()
             }
+            
+            if value.input != oldValue.input {
+                let input = value.input
+                let textInputContextState = textInputStateContextQueryRangeAndType(input, includeContext: false)
+                
+                var cleanup = true
+                
+                if let textInputContextState = textInputContextState {
+                    if textInputContextState.1.contains(.swapEmoji) {
+                        let stringRange = textInputContextState.0
+                        let range = NSRange(string: input.inputText, range: stringRange)
+                        let accept = self.genericView.hasEmojiSwap || !input.isEmojiHolder(at: range)
+                        if !input.isAnimatedEmoji(at: range) && accept {
+                            let query = String(input.inputText[stringRange])
+                            let signal = InputSwapSuggestionsPanelItems(query, peerId: chatInteraction.peerId, context: chatInteraction.context)
+                            |> deliverOnMainQueue
+                            self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
+                                if let chatInteraction = self?.chatInteraction {
+                                    self?.genericView.updateTextInputSuggestions(files, chatInteraction: chatInteraction, range: range, animated: animated)
+                                }
+                            }))
+                            cleanup = false
+                        }
+                    }
+                }
+                if cleanup {
+                    self.genericView.updateTextInputSuggestions([], chatInteraction: chatInteraction, range: NSMakeRange(0, 0), animated: animated)
+                    self.inputSwapDisposable.set(nil)
+                }
+                
+
+            }
+            
         }
     }
     
@@ -1963,6 +2034,18 @@ final class StoryModalController : ModalViewController, Notifable {
         }, hashtag: { [weak self] string in
             self?.close()
             self?.context.bindings.globalSearch(string)
+        }, report: { [weak self] peerId, storyId, reason in
+            _ = context.engine.peers.reportPeerStory(peerId: peerId, storyId: storyId, reason: reason, message: "").start()
+            self?.genericView.showTooltip(.justText("Telegram moderators will review your report. Thank you!"))
+        }, toggleHide: { [weak self] peer, value in
+            context.engine.peers.updatePeerStoriesHidden(id: peer.id, isHidden: value)
+            let text: String
+            if value {
+                text = "\(peer.compactDisplayTitle) is hidden"
+            } else {
+                text = "\(peer.compactDisplayTitle) is unhidden"
+            }
+            self?.genericView.showTooltip(.justText(text))
         })
         
         self.arguments = arguments
@@ -2116,14 +2199,6 @@ final class StoryModalController : ModalViewController, Notifable {
                 self?.genericView.update(context: context, storyContext: stories, initial: initialId)
                 if let slice = state.slice, currentPeerId != slice.peer.id {
                     let signal = context.account.viewTracker.peerView(slice.peer.id) |> deliverOnMainQueue
-                    self?.permissionDisposable.set(signal.start(next: { view in
-                        let cachedData = view.cachedData as? CachedUserData
-                        self?.interactions.update { current in
-                            var current = current
-                            current.canRecordVoice = cachedData?.voiceMessagesAvailable ?? false
-                            return current
-                        }
-                    }))
                     currentPeerId = slice.peer.id
                 }
                 if ready {
@@ -2368,7 +2443,7 @@ final class StoryModalController : ModalViewController, Notifable {
     deinit {
         disposable.dispose()
         updatesDisposable.dispose()
-        permissionDisposable.dispose()
+        inputSwapDisposable.dispose()
     }
     
     override var containerBackground: NSColor {
@@ -2411,7 +2486,7 @@ final class StoryModalController : ModalViewController, Notifable {
     }
     
     static func ShowStories(context: AccountContext, includeHidden: Bool, initialId: StoryInitialIndex?, singlePeer: Bool = false) {
-        let storyContent = StoryContentContextImpl(context: context, includeHidden: includeHidden, focusedPeerId: initialId?.peerId, singlePeer: singlePeer)
+        let storyContent = StoryContentContextImpl(context: context, isHidden: includeHidden, focusedPeerId: initialId?.peerId, singlePeer: singlePeer)
         let _ = (storyContent.state
         |> filter { $0.slice != nil }
         |> take(1)

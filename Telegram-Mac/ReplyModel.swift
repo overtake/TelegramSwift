@@ -510,6 +510,119 @@ class StoryReplyModel: ChatAccessoryModel {
     override var shimm: (NSPoint, CGImage?) {
         return _shimm
     }
+}
+
+
+
+class ExpiredStoryReplyModel: ChatAccessoryModel {
+
+    private let msg:Message
+    private var disposable:MetaDisposable = MetaDisposable()
+    private var previousMedia: Media?
+    private let fetchDisposable = MetaDisposable()
+    private let makesizeCallback:(()->Void)?
+    private let storyId: StoryId
+    private let bubbled: Bool
+    init(message: Message, storyId: StoryId, bubbled: Bool, context: AccountContext, presentation: ChatAccessoryPresentation? = nil, makesizeCallback: (()->Void)? = nil) {
+        self.makesizeCallback = makesizeCallback
+        self.msg = message
+        self.bubbled = bubbled
+        self.storyId = storyId
+        super.init(context: context, presentation: presentation, drawLine: true)
+        
+        self.make(message: message, display: true)
+       
+    }
+    
+    override weak var view:ChatAccessoryView? {
+        didSet {
+            updateImageIfNeeded()
+        }
+    }
+    
+    override var frame: NSRect {
+        didSet {
+            updateImageIfNeeded()
+        }
+    }
+    
+    
+    override var leftInset: CGFloat {
+        return 30 + super.leftInset * 2
+    }
+    
+    deinit {
+        disposable.dispose()
+        fetchDisposable.dispose()
+    }
+    
+    func update() {
+        self.make(message: self.msg, display: true)
+    }
+    
+    private func updateImageIfNeeded() {
+        
+        guard let view = self.view else {
+            return
+        }
+        if view.imageView == nil {
+            view.imageView = TransformImageView()
+        }
+        
+        if bubbled, !isSideAccessory {
+            if msg.isIncoming(context.account, bubbled) {
+                view.imageView?.image = presentation.app.icons.message_story_expired_bubble_incoming
+            } else {
+                view.imageView?.image = presentation.app.icons.message_story_expired_bubble_outgoing
+            }
+        } else {
+            view.imageView?.image = presentation.app.icons.message_story_expired
+        }
+        view.imageView?.background = presentation.border.withAlphaComponent(0.5)
+        view.imageView?.layer?.cornerRadius = 3
+        view.imageView?.setFrameSize(NSMakeSize(30, 30))
+        view.imageView?.layer?.contentsGravity = .center
+        view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), floorToScreenPixels(System.backingScale, self.topOffset + (max(30, self.size.height) - self.topOffset - 30)/2))
+
+        if view.imageView?.superview == nil {
+            view.addSubview(view.imageView!)
+        }
+        
+        self.view?.updateModel(self, animated: false)
+    }
+    
+    func make(message: Message, display: Bool) -> Void {
+        
+        guard let peer = message.peers[storyId.peerId] else {
+            return
+        }
+        
+        var display: Bool = display
+        updateImageIfNeeded()
+        
+        let title: String = peer.displayTitle
+        let text: NSAttributedString = .initialize(string: strings().chatReplyExpiredStory, color: presentation.disabledText, font: .normal(.text))
+        self.header = .init(.initialize(string: title, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.message = .init(text, maximumNumberOfLines: 1)
+        
+        measureSize(width, sizeToFit: sizeToFit)
+        display = true
+        
+
+        if display {
+            self.view?.setFrameSize(self.size)
+            self.setNeedDisplay()
+        }
+    }
+    
+    override func measureSize(_ width: CGFloat = 0, sizeToFit: Bool = false) {
+        super.measureSize(width, sizeToFit: sizeToFit)
+    }
+    
+    private var _shimm: (NSPoint, CGImage?) = (.zero, nil)
+    override var shimm: (NSPoint, CGImage?) {
+        return _shimm
+    }
 
     
 }

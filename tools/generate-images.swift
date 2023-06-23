@@ -873,6 +873,11 @@ func initialize() -> [String] {
     
     array.append("story_chatlist_reply")
     array.append("story_chatlist_reply_active")
+    
+    
+    array.append("message_story_expired")
+    array.append("message_story_expired_bubble_incoming")
+    array.append("message_story_expired_bubble_outgoing")
 
 
     return array

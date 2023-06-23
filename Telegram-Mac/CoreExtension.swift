@@ -450,6 +450,13 @@ public extension Message {
         return nil
     }
     
+    var isExpiredStory: Bool {
+        if let media = media.first as? TelegramMediaStory, let data = associatedStories[media.storyId]?.data {
+            return data.isEmpty
+        }
+        return false
+    }
+    
     func translationAttribute(toLang: String) -> TranslationMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? TranslationMessageAttribute, attr.toLang == toLang {
@@ -955,6 +962,10 @@ func uniquePeers(from peers:[Peer], defaultExculde:[PeerId] = []) -> [Peer] {
 func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> Bool {
         
     if message.peers[message.id.peerId] is TelegramSecretChat {
+        return false
+    }
+    
+    if message.isExpiredStory {
         return false
     }
     
