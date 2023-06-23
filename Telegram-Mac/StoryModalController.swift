@@ -2247,10 +2247,16 @@ final class StoryModalController : ModalViewController, Notifable {
         let context = self.context
         
         window?.set(handler: { [weak self] _ in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             return self?.previous() ?? .invoked
         }, with: self, for: .LeftArrow, priority: .modal)
         
         window?.set(handler: { [weak self] _ in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             if let story = self?.genericView.current?.story, story.peerId == context.peerId {
                 if story.storyItem.views?.seenCount != 0, findModal(InputDataModalController.self) == nil {
                     self?.arguments?.showViewers(story)
@@ -2267,6 +2273,9 @@ final class StoryModalController : ModalViewController, Notifable {
         }, with: self, for: .UpArrow, priority: .modal)
         
         window?.set(handler: { [weak self] _ in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             if self?.genericView.isInputFocused == true || self?.interactions.presentation.input.inputText.isEmpty == true {
                 self?.genericView.processGroupResult(.moveBack, animated: true)
             }
@@ -2275,10 +2284,16 @@ final class StoryModalController : ModalViewController, Notifable {
         
         
         window?.set(handler: { [weak self] _ in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             return self?.next() ?? .invoked
         }, with: self, for: .RightArrow, priority: .modal)
         
         window?.set(handler: { [weak self] _ in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             return self?.delete() ?? .invoked
         }, with: self, for: .Delete, priority: .modal)
         
@@ -2287,6 +2302,9 @@ final class StoryModalController : ModalViewController, Notifable {
         var spaceIsLong = false
         
         window?.set(handler: { [weak self] _ in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             guard self?.genericView.isInputFocused == false else {
                 return .rejected
             }
@@ -2313,6 +2331,9 @@ final class StoryModalController : ModalViewController, Notifable {
         }, with: self, for: .Space, priority: .modal)
         
         window?.keyUpHandler = { [weak self] event in
+            if self?.isNotMainScreen == true {
+                return
+            }
             timer?.invalidate()
             timer = nil
             if spaceIsLong, self?.arguments?.interaction.presentation.isSpacePaused == true {
@@ -2327,6 +2348,9 @@ final class StoryModalController : ModalViewController, Notifable {
         
         
         window?.set(handler: { [weak self] _ in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             guard let `self` = self, self.genericView.isTextEmpty else {
                 return .rejected
             }
@@ -2341,57 +2365,92 @@ final class StoryModalController : ModalViewController, Notifable {
        
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.genericView.inputTextView?.boldWord()
             return .invoked
         }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.genericView.zoomIn()
             return .invoked
         }, with: self, for: .Equal, priority: .modal, modifierFlags: [.command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.genericView.zoomOut()
             return .invoked
         }, with: self, for: .Minus, priority: .modal, modifierFlags: [.command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.genericView.inputTextView?.underlineWord()
             return .invoked
         }, with: self, for: .U, priority: .modal, modifierFlags: [.shift, .command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.genericView.inputTextView?.spoilerWord()
             return .invoked
         }, with: self, for: .P, priority: .modal, modifierFlags: [.shift, .command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.genericView.inputTextView?.strikethroughWord()
             return .invoked
         }, with: self, for: .X, priority: .modal, modifierFlags: [.shift, .command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.genericView.inputTextView?.removeAllAttributes()
             return .invoked
         }, with: self, for: .Backslash, priority: .modal, modifierFlags: [.command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.genericView.makeUrl()
             return .invoked
         }, with: self, for: .U, priority: .modal, modifierFlags: [.command])
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.genericView.inputTextView?.italicWord()
             return .invoked
         }, with: self, for: .I, priority: .modal, modifierFlags: [.command])
         
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
+            if self?.isNotMainScreen == true {
+                return .rejected
+            }
             self?.close()
             self?.openCurrentMedia()
             return .invoked
         }, with: self, for: .E, priority: .modal, modifierFlags: [.command])
     }
+    
+    private var isNotMainScreen: Bool {
+        return interactions.presentation.hasModal || interactions.presentation.hasPopover || interactions.presentation.hasMenu
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         window?.removeObserver(for: self)

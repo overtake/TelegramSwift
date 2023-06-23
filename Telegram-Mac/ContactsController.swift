@@ -213,7 +213,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                     
                     var items: [ContextMenuItem] = []
                     
-                    items.append(.init("Unarchive", handler: {
+                    items.append(.init("Unhide", handler: {
                         context.engine.peers.updatePeerStoriesHidden(id: story.peer.id, isHidden: false)
                         showModalText(for: context.window, text: "Stories from \(story.peer._asPeer().compactDisplayTitle) will now be shown in Chats, not Contacts.")
                     }, itemImage: MenuAnimation.menu_show.value))

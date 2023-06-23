@@ -673,7 +673,7 @@ private final class StoryListEntryRowItem : TableRowItem {
         
         let peer = self.entry.item.peer._asPeer()
 
-        items.append(.init("Archive", handler: {
+        items.append(.init("Hide", handler: {
             context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
             showModalText(for: context.window, text: "Stories from \(peer.compactDisplayTitle) will now be shown in Contacts, not Chats.")
         }, itemImage: MenuAnimation.menu_hide.value))
