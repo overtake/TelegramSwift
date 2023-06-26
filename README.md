@@ -18,6 +18,10 @@
 ### Using Homebrew
 
 ```
+# for newer version of homebrew
+brew install --cask telegram
+
+# for older version of homebrew
 brew cask install telegram
 ```
 
