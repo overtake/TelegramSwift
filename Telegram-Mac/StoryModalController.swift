@@ -1384,7 +1384,7 @@ private final class StoryViewController: Control, Notifable {
             file = f
             effectFileId = f?.fileId.id
         case let .builtin(string):
-            let reaction = context.reactions.available?.reactions.first(where: { $0.value.string == string })
+            let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
             file = reaction?.selectAnimation
             effectFile = reaction?.aroundAnimation
         }
@@ -1399,10 +1399,10 @@ private final class StoryViewController: Control, Notifable {
         
         let overlay = View(frame: NSMakeRect(0, 0, 300, 300))
         overlay.isEventLess = true 
-        current.contentView.addSubview(overlay)
+        current.addSubview(overlay)
         overlay.center()
         overlay.setFrameOrigin(NSMakePoint(overlay.frame.minX, overlay.frame.minY - 50))
-        
+                
         let finish:()->Void = { [weak overlay] in
             if let overlay = overlay {
                 performSubviewRemoval(overlay, animated: true, scale: true)
@@ -1434,7 +1434,7 @@ private final class StoryViewController: Control, Notifable {
             } else if let effectFile = effectFile {
                 let player = InlineStickerItemLayer(account: context.account, file: effectFile, size: NSMakeSize(300, 300), playPolicy: .playCount(1))
                 player.isPlayable = true
-                player.frame = NSMakeRect(0, 0, player.frame.width, player.frame.height)
+                player.frame = NSMakeRect((container.frame.width - player.frame.width) / 2, (container.frame.height - player.frame.height) / 2, player.frame.width, player.frame.height)
                 
                 container.layer?.addSublayer(player)
                 player.triggerOnState = (.finished, { [weak player] state in

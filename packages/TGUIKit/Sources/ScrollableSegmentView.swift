@@ -364,34 +364,6 @@ public struct ScrollableSegmentTheme : Equatable {
 private let duration: Double = 0.2
 
 
-private class Scroll : ScrollView {
-    override func scrollWheel(with event: NSEvent) {
-        
-        var scrollPoint = contentView.bounds.origin
-        let isInverted: Bool = System.isScrollInverted
-        if event.scrollingDeltaY != 0 {
-            if isInverted {
-                scrollPoint.x += -event.scrollingDeltaY
-            } else {
-                scrollPoint.x -= event.scrollingDeltaY
-            }
-        }
-        if event.scrollingDeltaX != 0 {
-            if !isInverted {
-                scrollPoint.x += -event.scrollingDeltaX
-            } else {
-                scrollPoint.x -= event.scrollingDeltaX
-            }
-        }
-        if documentView!.frame.width > frame.width {
-            scrollPoint.x = min(max(0, scrollPoint.x), documentView!.frame.width - frame.width)
-            clipView.scroll(to: scrollPoint)
-        } else {
-            superview?.scrollWheel(with: event)
-        }
-    }
-}
-
 private struct ResortData {
     let point: NSPoint
     let item: ScrollableSegmentItem
@@ -400,7 +372,7 @@ private struct ResortData {
 }
 
 public class ScrollableSegmentView: View {
-    public let scrollView:ScrollView = Scroll()
+    public let scrollView:ScrollView = HorizontalScrollView()
     
     private let selectorView: SelectorView = SelectorView(frame: NSZeroRect)
     private let borderView = View()

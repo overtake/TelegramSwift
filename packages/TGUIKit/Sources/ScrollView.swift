@@ -144,8 +144,8 @@ open class ScrollView: NSScrollView{
         layerContentsRedrawPolicy = .never
         
         self.hasHorizontalScroller = false 
-        self.horizontalScrollElasticity = .none
-        self.verticalScroller?.scrollerStyle = .overlay
+        self.horizontalScrollElasticity = .automatic
+      //  self.verticalScroller?.scrollerStyle = .overlay
         autoresizingMask = []
         self.wantsLayer = true;
         layer?.backgroundColor = presentation.colors.background.cgColor
