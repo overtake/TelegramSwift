@@ -22,7 +22,8 @@ class ChatListRevealItem: TableStickItem {
     fileprivate let counters: ChatListFilterBadges
     fileprivate let presentation: TelegramPresentationTheme
     fileprivate let _menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])?
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])? = nil, presentation: TelegramPresentationTheme = theme) {
+    fileprivate let getCurrentStoriesState:()->(StoryListChatListRowItem.InterfaceState, NSView)?
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter, Int?, Bool?)->[ContextMenuItem])? = nil, presentation: TelegramPresentationTheme = theme, getCurrentStoriesState:@escaping()->(StoryListChatListRowItem.InterfaceState, NSView)? = { return nil }) {
         self.action = action
         self.context = context
         self.tabs = tabs
@@ -31,6 +32,7 @@ class ChatListRevealItem: TableStickItem {
         self.openSettings = openSettings
         self.counters = counters
         self._menuItems = menuItems
+        self.getCurrentStoriesState = getCurrentStoriesState
         super.init(initialSize)
     }
     
@@ -42,6 +44,7 @@ class ChatListRevealItem: TableStickItem {
         self.selected = .allChats
         self.openSettings = nil
         self._menuItems = nil
+        self.getCurrentStoriesState = { return nil }
         self.counters = ChatListFilterBadges(total: 0, filters: [])
         super.init(initialSize)
     }
@@ -125,6 +128,21 @@ final class ChatListRevealView : TableStickView {
         addSubview(containerView)
         containerView.addSubview(segmentView)
         border = [.Right]
+        
+        segmentView.scrollView.applyExternalScroll = { [weak self] event in
+            if let item = self?.item as? ChatListRevealItem {
+                if let (state, view) = item.getCurrentStoriesState() {
+                    switch state {
+                    case .progress:
+                        view.scrollWheel(with: event)
+                        return true
+                    default:
+                        return false
+                    }
+                }
+            }
+            return false
+        }
         
         NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: segmentView.scrollView.contentView, queue: OperationQueue.main, using: { [weak self] notification  in
             guard let `self` = self else {

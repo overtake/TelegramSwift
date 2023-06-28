@@ -230,7 +230,7 @@ public extension ContainedViewLayoutTransition {
     func updateAlpha(view: NSView, alpha: CGFloat, completion: ((Bool) -> Void)? = nil) {
         switch self {
         case .immediate:
-            view.alphaValue = alpha
+            view.layer?.opacity = Float(alpha)
             if let completion = completion {
                 completion(true)
             }

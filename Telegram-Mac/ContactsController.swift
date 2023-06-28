@@ -122,7 +122,7 @@ private func <(lhs: ContactsEntry, rhs: ContactsEntry) -> Bool {
 }
 
 
-private func entriesForView(_ view: EngineContactList, storyList: EngineStorySubscriptions, accountPeer: Peer?) -> [ContactsEntry] {
+private func entriesForView(_ view: EngineContactList, storyList: EngineStorySubscriptions?, accountPeer: Peer?) -> [ContactsEntry] {
     var entries: [ContactsEntry] = []
     if let accountPeer = accountPeer {
         
@@ -144,27 +144,30 @@ private func entriesForView(_ view: EngineContactList, storyList: EngineStorySub
             return lhsPeer.id < rhsPeer.id
         })
         
-        entries.append(.addContact)
+        //entries.append(.addContact)
         var index: Int32 = 0
-        let storyItems = storyList.items
-        if !storyItems.isEmpty {
-            entries.append(.separator("HIDDEN STORIES", index))
-            index += 1
-            for item in storyItems {
-                entries.append(.story(item, index))
+        if let storyList = storyList {
+            let storyItems = storyList.items
+            if !storyItems.isEmpty {
+                entries.append(.separator("HIDDEN STORIES", index))
                 index += 1
-            }
-            
-            if !orderedPeers.isEmpty {
-                entries.append(.separator("CONTACTS", index))
-                index += 1
+                for item in storyItems {
+                    entries.append(.story(item, index))
+                    index += 1
+                }
+                
+                if !orderedPeers.isEmpty {
+                    entries.append(.separator("CONTACTS", index))
+                    index += 1
+                }
             }
         }
+        
     
         
         for peer in orderedPeers {
             if !peer.isEqual(accountPeer), !peerIds.contains(peer.id) {
-                entries.append(.peer(peer, view.presences[peer.id]?._asPresence(), index, storyList.items.first(where: { $0.peer.id == peer.id })))
+                entries.append(.peer(peer, view.presences[peer.id]?._asPresence(), index, storyList?.items.first(where: { $0.peer.id == peer.id })))
                 peerIds.insert(peer.id)
                 index += 1
             }
@@ -292,7 +295,6 @@ class ContactsController: PeersListController {
     private var previousEntries:Atomic<[AppearanceWrapperEntry<ContactsEntry>]?> = Atomic(value:nil)
     private let index: PeerNameIndex = .lastNameFirst
     private let disposable = MetaDisposable()
-    private let storyList: Signal<EngineStorySubscriptions, NoError>
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -330,7 +332,14 @@ class ContactsController: PeersListController {
             TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId)
         ) |> map { $0?._asPeer() }
         
-        let transition = combineLatest(queue: prepareQueue, contacts, accountPeer, appearanceSignal, storyList)
+        let storyState: Signal<EngineStorySubscriptions?, NoError>
+        if let storyList = storyList {
+            storyState = storyList |> map(Optional.init)
+        } else {
+            storyState = .single(nil)
+        }
+        
+        let transition = combineLatest(queue: prepareQueue, contacts, accountPeer, appearanceSignal, storyState)
             |> mapToQueue { view, accountPeer, appearance, storyList -> Signal<TableUpdateTransition, NoError> in
                 let first:Bool = !first.swap(true)
                 let entries = entriesForView(view, storyList: storyList, accountPeer: accountPeer).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
@@ -343,8 +352,15 @@ class ContactsController: PeersListController {
         disposable.set(transition.start(next: { [weak self] transition in
             self?.genericView.tableView.merge(with: transition)
             self?.readyOnce()
+            self?.afterTransaction(transition)
         }))
+        genericView.tableView.contentInsets = .init(top: 90)
         
+    }
+    
+    override func afterTransaction(_ transition: TableUpdateTransition) {
+        super.afterTransaction(transition)
+        self.updateLocalizationAndTheme(theme: theme)
     }
     
     override func scrollup(force: Bool = false) {
@@ -365,8 +381,7 @@ class ContactsController: PeersListController {
     }
     
     init(_ context:AccountContext) {
-        self.storyList = context.engine.messages.storySubscriptions(isHidden: true)
-        super.init(context, searchOptions: [.chats])
+        super.init(context, isContacts: true, searchOptions: [.chats])
     }
     
     override func changeSelection(_ location: ChatLocation?, globalForumId: PeerId?) {

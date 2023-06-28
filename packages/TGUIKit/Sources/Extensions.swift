@@ -433,9 +433,14 @@ public extension CALayer {
         self.add(animation, forKey: "borderColor")
     }
     func animateCornerRadius(duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut) ->Void {
-        let animation = CABasicAnimation(keyPath: "cornerRadius")
+        let animation: CABasicAnimation
+        if timingFunction == .spring {
+            animation = makeSpringAnimation("cornerRadius")
+        } else {
+            animation = CABasicAnimation(keyPath: "cornerRadius")
+            animation.timingFunction = .init(name: timingFunction)
+        }
         animation.duration = duration
-        animation.timingFunction = .init(name: timingFunction)
         self.add(animation, forKey: "cornerRadius")
     }
     
@@ -459,6 +464,15 @@ public extension NSView {
         image.addRepresentation(bitmapRep)
         bitmapRep.size = bounds.size
         return NSImage(data: dataWithPDF(inside: bounds))!
+    }
+    
+    func setCenterScale(_ scale: CGFloat) {
+        let rect = self.bounds
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+        fr = CATransform3DScale(fr, scale, scale, 1)
+        fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+        self.layer?.transform = fr
     }
     
     var subviewsSize: NSSize {
@@ -545,6 +559,9 @@ public extension NSView {
         } else {
             return System.backingScale
         }
+    }
+    var bsc: CGFloat {
+        return backingScaleFactor
     }
     
     func removeAllSubviews() -> Void {

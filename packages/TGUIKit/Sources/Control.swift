@@ -508,6 +508,16 @@ open class Control: View {
         }
     }
     
+    public var handleScrollEventOnInteractionEnabled: Bool = false
+    
+    open override func scrollWheel(with event: NSEvent) {
+        if userInteractionEnabled, handleScrollEventOnInteractionEnabled {
+            
+        } else {
+            super.scrollWheel(with: event)
+        }
+    }
+    
     
     open override func rightMouseDown(with event: NSEvent) {
         if let menu = self.contextMenu?(), event.clickCount == 1, userInteractionEnabled {

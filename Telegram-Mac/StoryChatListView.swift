@@ -64,23 +64,32 @@ final class StoryListChatListRowItem : TableRowItem {
         
         case revealed
         case concealed
+        case empty
         case progress(CGFloat, From)
         
         var height: CGFloat {
             switch self {
             case .revealed:
-                return 86
+                return 66
             case .concealed:
                 return 30
+            case .empty:
+                return 0
             case let .progress(progress, _):
-                return 30 + 56 * progress
+                return 30 + 36 * progress
             }
+        }
+        
+        var navigationHeight: CGFloat {
+            InterfaceState.revealed.height * self.progress
         }
         var progress: CGFloat {
             switch self {
             case .revealed:
                 return 1.0
             case .concealed:
+                return 0.0
+            case .empty:
                 return 0.0
             case let .progress(progress, _):
                 return progress
@@ -91,7 +100,7 @@ final class StoryListChatListRowItem : TableRowItem {
             return 30
         }
         static var full: CGFloat {
-            return 86
+            return 66
         }
     }
     
@@ -99,14 +108,12 @@ final class StoryListChatListRowItem : TableRowItem {
     let context: AccountContext
     let state: EngineStorySubscriptions
     let open: (StoryInitialIndex?, Bool)->Void
-    let archive: Bool
     let getInterfaceState: ()->InterfaceState
     let reveal: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, archive: Bool, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?, Bool)->Void, getInterfaceState: @escaping()->InterfaceState = { return .revealed }, reveal: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?, Bool)->Void, getInterfaceState: @escaping()->InterfaceState = { return .revealed }, reveal: @escaping()->Void) {
         self._stableId = stableId
         self.context = context
         self.state = state
-        self.archive = archive
         self.open = open
         self.reveal = reveal
         self.getInterfaceState = getInterfaceState
@@ -121,6 +128,14 @@ final class StoryListChatListRowItem : TableRowItem {
     
     override var height: CGFloat {
         return getInterfaceState().height
+    }
+    
+    var progress: CGFloat {
+        return getInterfaceState().progress
+    }
+    
+    var navigationHeight: CGFloat {
+        return getInterfaceState().navigationHeight
     }
     
     override func viewClass() -> AnyClass {
@@ -151,7 +166,7 @@ private final class StoryListContainer : Control {
         
         
         scrollView.background = .clear
-        self.scaleOnClick = true
+        //self.scaleOnClick = true
         
         set(handler: { [weak self] _ in
             self?.item?.reveal()
@@ -327,41 +342,41 @@ private final class StoryListContainer : Control {
             }
 //            scrollView.clipView.scroll(to: NSMakePoint(scrollView.documentOffset.x * progress, 0), animated: animated)
             
-            let shortTextView: TextView
-            let isNew: Bool
-            if let view = self.shortTextView {
-                shortTextView = view
-                isNew = false
-            } else {
-                shortTextView = TextView()
-                shortTextView.userInteractionEnabled = false
-                shortTextView.isSelectable = false
-                addSubview(shortTextView, positioned: .below, relativeTo: self.scrollView)
-                self.shortTextView = shortTextView
-                isNew = true
-            }
-            let text = "Show Stories"
-            
-            let color: NSColor?
-            let string: String?
-            if let attr = shortTextView.textLayout?.attributedString, !attr.string.isEmpty {
-                color = attr.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
-                string = attr.string
-            } else {
-                string = nil
-                color = nil
-            }
-            let newColor = theme.colors.text
-            if string != text || color != newColor {
-                let layout = TextViewLayout(.initialize(string: text, color: newColor, font: .medium(.text)))
-                layout.measure(width: frame.width - 80)
-                shortTextView.update(layout)
-            }
-            if isNew {
-                shortTextView.frame = getTextRect()
-                shortTextView.layer?.opacity = Float(getTextAlpha())
-                shortTextView.layer?.transform = CATransform3DMakeScale(getTextScale(), getTextScale(), 1.0)
-            }
+//            let shortTextView: TextView
+//            let isNew: Bool
+//            if let view = self.shortTextView {
+//                shortTextView = view
+//                isNew = false
+//            } else {
+//                shortTextView = TextView()
+//                shortTextView.userInteractionEnabled = false
+//                shortTextView.isSelectable = false
+//                addSubview(shortTextView, positioned: .below, relativeTo: self.scrollView)
+//                self.shortTextView = shortTextView
+//                isNew = true
+//            }
+//            let text = "Show Stories"
+//
+//            let color: NSColor?
+//            let string: String?
+//            if let attr = shortTextView.textLayout?.attributedString, !attr.string.isEmpty {
+//                color = attr.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+//                string = attr.string
+//            } else {
+//                string = nil
+//                color = nil
+//            }
+//            let newColor = theme.colors.text
+//            if string != text || color != newColor {
+//                let layout = TextViewLayout(.initialize(string: text, color: newColor, font: .medium(.text)))
+//                layout.measure(width: frame.width - 80)
+//                shortTextView.update(layout)
+//            }
+//            if isNew {
+//                shortTextView.frame = getTextRect()
+//                shortTextView.layer?.opacity = Float(getTextAlpha())
+//                shortTextView.layer?.transform = CATransform3DMakeScale(getTextScale(), getTextScale(), 1.0)
+//            }
         }
         
         self.updateLayout(size: frame.size, transition: transition)
@@ -390,7 +405,8 @@ private final class StoryListContainer : Control {
     }
     
     var visibleRange: NSRange {
-        return NSMakeRange(0, Int(ceil(scrollView.documentOffset.x + frame.width / 70)))
+        let range = NSMakeRange(0, Int(ceil(max(0, floor(scrollView.documentOffset.x)) + frame.width / 70)))
+        return range
     }
     
     var documentSize: NSSize {
@@ -399,6 +415,7 @@ private final class StoryListContainer : Control {
         }
         return frame.size
     }
+    
     
     var unitDocumentSize: NSSize {
         let count = CGFloat(views.count)
@@ -483,22 +500,15 @@ private final class StoryListContainer : Control {
     }
 }
 
-private final class StoryListChatListRowView: TableRowView {
+final class StoryListChatListRowView: TableRowView {
         
     private let interfaceView: StoryListContainer
-    private let borderView = View()
     
-    private var listener: TableScrollListener!
     
     required init(frame frameRect: NSRect) {
         self.interfaceView = StoryListContainer(frame: NSMakeRect(0, 0, max(frameRect.width, 300), frameRect.height))
         super.init(frame: frameRect)
         addSubview(interfaceView)
-        addSubview(borderView)
-        
-        self.listener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
-            self?.updateOverscroll()
-        })
         
 
         interfaceView.loadMore = { [weak self] direction in
@@ -506,42 +516,12 @@ private final class StoryListChatListRowView: TableRowView {
             case .bottom:
                 if let item = self?.item as? StoryListChatListRowItem {
                     if let _ = item.state.hasMoreToken {
-                        if !item.archive {
-                            item.context.account.filteredStorySubscriptionsContext?.loadMore()
-                        } else {
-                            item.context.account.hiddenStorySubscriptionsContext?.loadMore()
-                        }
+                        item.context.account.filteredStorySubscriptionsContext?.loadMore()
                     }
                 }
             default:
                 break
             }
-        }
-    }
-    
-    private func updateOverscroll() {
-        guard let item = self.item as? StoryListChatListRowItem, let table = item.table else {
-            return
-        }
-        let state = item.getInterfaceState()
-        let value = table.documentOffset.y
-        switch state {
-        case .revealed:
-            let progress: CGFloat
-            if value < 0 {
-                let dest: CGFloat = 700
-                let unit = log(dest)
-                let current = log(abs(value))
-                
-                let result = current / unit * value
-                
-                progress = (item.height + min(abs(result), 9.0)) / item.height
-            } else {
-                progress = 1.0
-            }
-            interfaceView.scaleItems(scale: progress, animated: false)
-        default:
-            break
         }
     }
     
@@ -568,7 +548,6 @@ private final class StoryListChatListRowView: TableRowView {
         
         var entries:[StoryChatListEntry] = []
         var index: Int = 0
-        let isArchive = item.archive
         if let item = item.state.accountItem, item.storyCount > 0 {
             entries.append(.init(item: item, index: index, appearance: appAppearance))
             index += 1
@@ -576,11 +555,6 @@ private final class StoryListChatListRowView: TableRowView {
         
         for item in item.state.items {
             if item.storyCount > 0 {
-                if !isArchive {
-                    if item.peer._asPeer().storyArchived {
-                        continue
-                    }
-                }
                 entries.append(.init(item: item, index: index, appearance: appAppearance))
                 index += 1
             }
@@ -592,23 +566,19 @@ private final class StoryListChatListRowView: TableRowView {
         let interfaceState = item.getInterfaceState()
         self.interfaceState = interfaceState
                 
-        borderView.backgroundColor = .clear//theme.colors.border
         
-
 
         let initialSize = NSMakeSize(item.height, item.height)
         let context = item.context
-        let archive = item.archive
 
         let (deleted, inserted, updated) = proccessEntriesWithoutReverse(self.current, right: entries, { entry in
-            return StoryListEntryRowItem(initialSize, entry: entry, context: context, archive: archive, open: item.open)
+            return StoryListEntryRowItem(initialSize, entry: entry, context: context, open: item.open)
         })
         let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, grouping: false, animateVisibleOnly: false)
 
         CATransaction.begin()
 
         self.interfaceView.set(transition: transition, item: item, context: item.context, progress: interfaceState.progress, animated: animated)
-        self.updateOverscroll()
 
         CATransaction.commit()
 
@@ -616,17 +586,10 @@ private final class StoryListChatListRowView: TableRowView {
         
         if interfaceView.unitDocumentSize.width < interfaceView.frame.width * 4 {
             if let _ = item.state.hasMoreToken {
-                if !archive {
-                    item.context.account.filteredStorySubscriptionsContext?.loadMore()
-                } else {
-                    item.context.account.hiddenStorySubscriptionsContext?.loadMore()
-                }
+                item.context.account.filteredStorySubscriptionsContext?.loadMore()
             }
         }
         
-        if let table = item.table {
-            table.addScroll(listener: self.listener)
-        }
     }
     
     
@@ -636,20 +599,17 @@ private final class StoryListChatListRowView: TableRowView {
         let rect = NSMakeSize(max(300, size.width), size.height).bounds
         transition.updateFrame(view: interfaceView, frame: rect)
         interfaceView.updateLayout(size: rect.size, transition: transition)
-        transition.updateFrame(view: borderView, frame: NSMakeRect(0, size.height - .borderSize, rect.width, .borderSize))
     }
 }
 
 private final class StoryListEntryRowItem : TableRowItem {
     let entry: StoryChatListEntry
     let context: AccountContext
-    let archive: Bool
     let open:(StoryInitialIndex?, Bool)->Void
-    init(_ initialSize: NSSize, entry: StoryChatListEntry, context: AccountContext, archive: Bool, open: @escaping(StoryInitialIndex?, Bool)->Void) {
+    init(_ initialSize: NSSize, entry: StoryChatListEntry, context: AccountContext, open: @escaping(StoryInitialIndex?, Bool)->Void) {
         self.entry = entry
         self.context = context
         self.open = open
-        self.archive = archive
         super.init(initialSize)
     }
     

@@ -1946,7 +1946,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 view.set(item: item, animated: animated)
                 view.updateLayout(size: rect.size, transition: transition)
                 transition.updateFrame(view: view, frame: rect)
-                
                 NSAnimationContext.current.duration = animated ? duration : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
