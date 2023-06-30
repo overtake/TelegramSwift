@@ -119,6 +119,7 @@ struct PeerListState : Equatable {
     var stories: EngineStorySubscriptions?
     var isContacts: Bool
     var filterData: FilterData
+    var presentation: TelegramPresentationTheme
     
     var hasStories: Bool {
         if let stories = self.stories, !isContacts {
@@ -133,7 +134,7 @@ struct PeerListState : Equatable {
     }
     
     static var initialize: PeerListState {
-        return .init(proxySettings: .defaultSettings, connectionStatus: .waitingForNetwork, splitState: .dual, searchState: .None, peer: nil, forumPeer: nil, mode: .plain, activities: .init(activities: [:]), appear: .normal, controllerAppear: .normal, hiddenItems: .default, selectedForum: nil, stories: nil, isContacts: false, filterData: FilterData())
+        return .init(proxySettings: .defaultSettings, connectionStatus: .waitingForNetwork, splitState: .dual, searchState: .None, peer: nil, forumPeer: nil, mode: .plain, activities: .init(activities: [:]), appear: .normal, controllerAppear: .normal, hiddenItems: .default, selectedForum: nil, stories: nil, isContacts: false, filterData: FilterData(), presentation: theme)
 
     }
 }
@@ -394,9 +395,9 @@ class PeerListContainerView : Control {
             var text: String {
                 switch self {
                 case .contacts:
-                    return "Contacts"
+                    return strings().peerListTitleContacts
                 case .chats:
-                    return "Chats"
+                    return strings().peerListTitleChats
                 case .settings:
                     return "Settings"
                 }
@@ -484,6 +485,7 @@ class PeerListContainerView : Control {
     
     private var callView: ChatGroupCallView?
     private var header: NSView?
+    fileprivate var isContacts: Bool = false
     
     let backgroundView = View(frame: NSZeroRect)
     
@@ -605,7 +607,7 @@ class PeerListContainerView : Control {
             self.storiesItem = nil
         }
         
-        if !state.filterData.isEmpty && !state.filterData.sidebar, state.splitState != .minimisize {
+        if !state.filterData.isEmpty && !state.filterData.sidebar, state.splitState != .minimisize, state.searchState == .None {
             self.foldersItem = .init(frame.size, context: arguments.context, tabs: state.filterData.tabs, selected: state.filterData.filter, counters: state.filterData.badges, action: arguments.setupFilter, openSettings: {
                 arguments.openFilterSettings(.allChats)
             }, menuItems: arguments.tabsMenuItems, getCurrentStoriesState: { [weak self] in
@@ -724,7 +726,7 @@ class PeerListContainerView : Control {
             if let view = self.storiesView {
                 current = view 
             } else {
-                current = StoryListChatListRowView(frame: NSMakeRect(0, 45, frame.width, item.height))
+                current = StoryListChatListRowView(frame: NSMakeRect(0, 50, frame.width, item.height))
                 containerView.addSubview(current, positioned: .below, relativeTo: statusContainer)
                 self.storiesView = current
                 if animated {
@@ -976,10 +978,7 @@ class PeerListContainerView : Control {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let theme = (theme as! TelegramPresentationTheme)
         
-        guard let state = self.state else {
-            return
-        }
-        
+
         borderView.backgroundColor = theme.colors.border
                 
         self.backgroundColor = theme.colors.background
@@ -988,12 +987,11 @@ class PeerListContainerView : Control {
         compose.set(background: .clear, for: .Normal)
         compose.set(background: .clear, for: .Hover)
 
-        if state.isContacts {
+        if isContacts {
             compose.set(background: .clear, for: .Highlight)
             compose.set(image: theme.icons.contactsNewContact, for: .Normal)
             compose.set(image: theme.icons.contactsNewContact, for: .Hover)
             compose.set(image: theme.icons.contactsNewContact, for: .Highlight)
-
         } else {
             compose.set(background: theme.colors.accent, for: .Highlight)
             compose.set(image: theme.icons.composeNewChat, for: .Normal)
@@ -1001,7 +999,7 @@ class PeerListContainerView : Control {
             compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
             
         }
-     
+             
         compose.layer?.cornerRadius = .cornerRadius
         compose.sizeToFit()
         
@@ -1011,6 +1009,8 @@ class PeerListContainerView : Control {
         
         self.containerView.backgroundColor = theme.colors.background
         self.containerBackground.backgroundColor = theme.colors.listBackground
+        
+        
         super.updateLocalizationAndTheme(theme: theme)
         
         updateLayout(self.frame.size, transition: .immediate)
@@ -1129,7 +1129,7 @@ class PeerListContainerView : Control {
         var searchY: CGFloat = statusHeight
         
         if let storiesItem = storiesItem {
-            searchY += (StoryListChatListRowItem.InterfaceState.revealed.height * storiesItem.progress)
+            searchY += (StoryListChatListRowItem.InterfaceState.revealed.height * storiesItem.progress) + 9 * storiesItem.progress
         }
         
         let searchRect = NSMakeRect(10, searchY, (size.width - 10 * 2), componentSize.height * progress)
@@ -1176,7 +1176,7 @@ class PeerListContainerView : Control {
         
         titleOffset -= (1 - progress) * (size.width - 70)
         
-        transition.updateFrame(view: titleView, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(bsc, titleOffset + (size.width - titleView.size.width) / 2), y: floorToScreenPixels(bsc, (statusHeight - titleView.size.height) / 2)), size: titleView.size))
+        transition.updateFrame(view: titleView, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(bsc, titleOffset + (size.width - titleView.size.width) / 2), y: floorToScreenPixels(bsc, (statusHeight - titleView.size.height) / 2) - 2), size: titleView.size))
         titleView.updateLayout(size: titleView.size, transition: transition)
         
         if let storiesItem = storiesItem, let view = storiesView {
@@ -1185,9 +1185,13 @@ class PeerListContainerView : Control {
             
             let middle = size.width / 2
             
-            var rect = CGRect(origin: NSMakePoint(reversed * (middle - 70 - 10), 10 + storiesItem.getInterfaceState().progress * 35), size: size)
+            var rect = CGRect(origin: NSMakePoint(reversed * (middle - 70 - 15), 10 + storiesItem.getInterfaceState().progress * 40), size: size)
             
             rect.origin.x -= (1 - progress) * (size.width - 70)
+            
+            if storiesItem.itemsCount < 3 {
+                rect.origin.x += (1 - storiesItem.getInterfaceState().progress) * (StoryListChatListRowItem.smallSize.width / 2 * CGFloat(3 - storiesItem.itemsCount))
+            }
             
             transition.updateFrame(view: view, frame: rect)
             view.set(item: storiesItem, animated: transition.isAnimated)
@@ -1273,10 +1277,7 @@ class PeerListContainerView : Control {
     func updateScrollerInset(animated: Bool) {
         var top: CGFloat = 0
         self.tableView.enumerateItems(with: { item in
-            if let item = item as? ChatListRevealItem {
-                top += item.height
-                item.redraw(animated: animated)
-            } else if let item = item as? ChatListSpaceItem {
+            if let item = item as? ChatListSpaceItem {
                 top += item.height
                 item.redraw(animated: animated)
             }
@@ -1430,6 +1431,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     let topics: ForumChannelTopics?
     let isContacts: Bool
+    var revealListener: TableScrollListener!
+
     
     init(_ context: AccountContext, isContacts: Bool = false, followGlobal:Bool = true, mode: PeerListMode = .plain, searchOptions: AppSearchOptions = [.chats, .messages]) {
         self.followGlobal = followGlobal
@@ -1523,6 +1526,17 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let mode = self.mode
         let isContacts = self.isContacts
         
+        genericView.isContacts = isContacts
+        
+        revealListener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            self?.processScroll()
+        })
+        
+        genericView.tableView.applyExternalScroll = { [weak self] event in
+            return self?.processScroll(event) ?? false
+        }
+
+        genericView.tableView.addScroll(listener: revealListener)
         
         genericView.showDownloads = { [weak self] in
             self?.showDownloads(animated: true)
@@ -1749,7 +1763,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             storyState = .single(nil)
         }
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, _ in
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, appearance in
             updateState { value in
                 var current: PeerListState = value
                 current.proxySettings = pref.0
@@ -1763,6 +1777,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 current.stories = storyState
                 current.appear = layout == .minimisize ? .normal : appearMode
                 current.isContacts = isContacts
+                current.presentation = appearance.presentation
                 return current
             }
         }))
@@ -1835,6 +1850,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
+            updateState { current in
+                var current = current
+                current.searchState = state.state
+                return current
+            }
             switch state.state {
             case .Focus:
                 assert(self?.searchController == nil)
@@ -1842,11 +1862,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 
             case .None:
                 self?.hideSearchController(animated: animated)
-            }
-            updateState { current in
-                var current = current
-                current.searchState = state.state
-                return current
             }
         }, { [weak self] state in
             updateState { current in
@@ -2708,6 +2723,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private var deltaY: CGFloat = 0
+    private var initFromEvent: Bool? = nil
+    
     private var _storyInterfaceState: StoryListChatListRowItem.InterfaceState = .concealed
     private var storyInterfaceState: StoryListChatListRowItem.InterfaceState {
         get {
@@ -2736,111 +2753,180 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.getDeltaProgress()
     }
     
-     func processScroll(_ event: NSEvent) -> Bool {
+    @discardableResult private func updateOverscrollWithDelta(_ scrollingDeltaY: CGFloat) -> Bool {
+        
         let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
-         guard let item = optional, genericView.tableView.documentOffset.y <= 2, storyInterfaceState != .empty else {
+        guard let item = optional, storyInterfaceState != .empty else {
             return false
         }
         
+        deltaY -= scrollingDeltaY
         
-        switch event.phase {
-        case .began:
-            if event.scrollingDeltaY != 0 {
-                switch storyInterfaceState {
-                case .revealed:
-                    deltaY = 0
-                    if event.scrollingDeltaY < 0 {
-                        self.storyInterfaceState = .progress(1.0, .revealed)
-                    } else {
-                        return false
-                    }
-                case .concealed:
-                    deltaY = StoryListChatListRowItem.InterfaceState.small
-                    if event.scrollingDeltaY > 0 {
-                        self.storyInterfaceState = .progress(0.0, .concealed)
-                    } else {
-                        return false
-                    }
-                case .progress:
-                    break
-                case .empty:
-                    fatalError("not supported")
-                }
-                return true
-            } else {
-                return false
-            }
-        case .changed, .stationary:
-            deltaY -= event.scrollingDeltaY
+        switch storyInterfaceState {
+        case let .progress(_, from, fromEvent):
             
-            switch storyInterfaceState {
-            case let .progress(_, from):
+            var optimized: CGFloat = deltaY
+            let autofinish: Bool
+            switch from {
+            case .concealed:
                 
-                var optimized: CGFloat = deltaY
-                let autofinish: Bool
-                switch from {
-                case .concealed:
+                if fromEvent {
                     let value = StoryListChatListRowItem.InterfaceState.small
-                    
                     let current = log(max(1, StoryListChatListRowItem.InterfaceState.small - optimized))
-                    
                     let result = value - current
-
                     optimized = result
                     autofinish = current > 5.1
-                case .revealed:
-                    autofinish = optimized >= StoryListChatListRowItem.InterfaceState.small
+                } else {
+                    autofinish = optimized <= (StoryListChatListRowItem.InterfaceState.small + 10) / 2
                 }
                 
-                let progress: CGFloat = max(0.0, min(1.0 - optimized / StoryListChatListRowItem.InterfaceState.small, 1.0))
-                if autofinish {
-                    switch storyInterfaceState {
-                    case let .progress(_, from):
-                        switch from {
-                        case .revealed:
-                            storyInterfaceState = .concealed
-                        case .concealed:
-                            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .drawCompleted)
-                            storyInterfaceState = .revealed
-                        }
-                        let transition: ContainedViewLayoutTransition
-                        if progress != 0 {
-                            transition = .animated(duration: 0.2, curve: .easeOut)
-                        } else {
-                            transition = .immediate
-                        }
-                        self.genericView.tableView.reloadData(row: item.index, animated: transition.isAnimated)
-                        self.genericView.updateLayout(frame.size, transition: transition)
-                        return false
-                    default:
-                        fatalError("state not inited")
+            case .revealed:
+                autofinish = optimized >= StoryListChatListRowItem.InterfaceState.small
+            }
+            
+            if autofinish  {
+                initFromEvent = nil
+                scrollPositions = [-1000, 1000]
+            }
+            let progress: CGFloat = max(0.0, min(1.0 - optimized / StoryListChatListRowItem.InterfaceState.small, 1.0))
+            if autofinish {
+                switch storyInterfaceState {
+                case let .progress(_, from, fromEvent):
+                    switch from {
+                    case .revealed:
+                        storyInterfaceState = .concealed
+                    case .concealed:
+                        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .drawCompleted)
+                        storyInterfaceState = .revealed
                     }
-                } else {
-                    storyInterfaceState = .progress(progress, from)
-                    genericView.tableView.reloadData(row: item.index)
-                    self.genericView.updateLayout(frame.size, transition: .immediate)
-                    return true
+                    let transition: ContainedViewLayoutTransition
+                    if progress != 0 {
+                        transition = .animated(duration: 0.2, curve: .easeOut)
+                    } else {
+                        transition = .immediate
+                    }
+                    self.genericView.tableView.reloadData(row: item.index, animated: transition.isAnimated)
+                    self.genericView.updateLayout(frame.size, transition: transition)
+                    return false
+                default:
+                    return false
                 }
-            default:
-                return false
+            } else {
+                storyInterfaceState = .progress(progress, from, fromEvent)
+                CATransaction.begin()
+                genericView.tableView.reloadData(row: item.index)
+                self.genericView.updateLayout(frame.size, transition: .immediate)
+                CATransaction.commit()
+                return true
             }
-        case .ended, .cancelled, .mayBegin:
-            switch storyInterfaceState {
-            case let .progress(value, _):
-                if value > 0.5 {
-                    self.storyInterfaceState = .revealed
-                } else {
-                    self.storyInterfaceState = .concealed
-                }
-                self.genericView.tableView.reloadData(row: item.index, animated: true)
-                self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
-            default:
-                break
-            }
-            return false
         default:
             return false
         }
+    }
+    
+    @discardableResult private func initOverscrollWithDelta(_ scrollingDeltaY: CGFloat, fromEvent: Bool) -> Bool {
+        
+        
+        switch storyInterfaceState {
+        case .revealed:
+            deltaY = 0
+            if scrollingDeltaY < 0 {
+                initFromEvent = fromEvent
+                self.storyInterfaceState = .progress(1.0, .revealed, fromEvent)
+            } else {
+                initFromEvent = nil
+                return false
+            }
+        case .concealed:
+            deltaY = StoryListChatListRowItem.InterfaceState.small
+            if scrollingDeltaY > 0 {
+                initFromEvent = fromEvent
+                self.storyInterfaceState = .progress(0.0, .concealed, fromEvent)
+            } else {
+                initFromEvent = nil
+                return false
+            }
+        case .progress:
+            initFromEvent = nil
+        case .empty:
+            fatalError("not supported")
+        }
+        return true
+    }
+    @discardableResult private func finishOverscroll() -> Bool {
+        
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
+        guard let item = optional else {
+            return false
+        }
+        switch storyInterfaceState {
+        case let .progress(value, _, _):
+            if value > 0.5 {
+                self.storyInterfaceState = .revealed
+            } else {
+                self.storyInterfaceState = .concealed
+            }
+            self.genericView.tableView.reloadData(row: item.index, animated: true)
+            self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+        default:
+            break
+        }
+        initFromEvent = nil
+        return false
+    }
+    
+    private var scrollPositions: [CGFloat] = []
+    private func processScroll() {
+        
+        guard storyInterfaceState != .empty, storyInterfaceState != .revealed, initFromEvent == nil || initFromEvent == false else {
+            return
+        }
+        CATransaction.begin()
+        let position = genericView.tableView.documentOffset.y
+        let last = scrollPositions.last ?? 0
+        if last != position {
+            self.scrollPositions.append(position)
+            if position <= 0 {
+                let previous = last
+                let speed = calculateScrollSpeed(scrollPositions: scrollPositions)
+                let acceptSpeed = speed != nil && abs(speed!) < 1.5
+                if acceptSpeed || storyInterfaceState.isProgress {
+                    let value = previous - position
+                    if position == 0 {
+                        finishOverscroll()
+                    } else {
+                        initOverscrollWithDelta(value, fromEvent: false)
+                        updateOverscrollWithDelta(value)
+                    }
+                }
+            } else if position > last {
+                self.scrollPositions = []
+            }
+        }
+        CATransaction.commit()
+    }
+        
+     func processScroll(_ event: NSEvent) -> Bool {
+         scrollPositions = []
+
+         guard genericView.tableView.documentOffset.y <= 2, storyInterfaceState != .empty else {
+             return false
+         }
+        
+         switch event.phase {
+         case .began:
+             if event.scrollingDeltaY != 0 {
+                 return initOverscrollWithDelta(event.scrollingDeltaY, fromEvent: true)
+             } else {
+                 return false
+             }
+         case .changed, .stationary:
+             return updateOverscrollWithDelta(event.scrollingDeltaY)
+         case .ended, .cancelled, .mayBegin:
+             return finishOverscroll()
+         default:
+             return false
+         }
     }
     
     @discardableResult func revealStoriesState() -> Bool {

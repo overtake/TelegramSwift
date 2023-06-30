@@ -290,6 +290,10 @@ public class TGClipView: NSClipView,CALayerDelegate {
     var documentOffset: NSPoint {
         return self.point ?? self.bounds.origin
     }
+    
+    public func updateBounds(to point: NSPoint) {
+        self.bounds.origin = point
+    }
         
     private(set) var point: NSPoint?
     
@@ -323,29 +327,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
             self.scrollCompletion?(false)
         }
         
-//        self.scrollCompletion?(false)
-//        self.shouldAnimateOriginChange = animated
-//        self.scrollCompletion = completion
-        
-//        if animated {
-//            self.layer?.removeAllAnimations()
-//            beginScroll()
-//        }
-//        if animated && abs(bounds.minY - point.y) > frame.height {
-//            let y:CGFloat
-//            if bounds.minY < point.y {
-//                y = point.y - floor(frame.height / 2)
-//            } else {
-//                y = point.y + floor(frame.height / 2)
-//            }
-//            super.scroll(to: NSMakePoint(point.x,y))
-//            DispatchQueue.main.async(execute: { [weak self] in
-//                self?.scroll(to: point)
-//            })
-//        } else {
-//            self.scroll(to: point)
-//        }
-        
     }
     
     public func justScroll(to newOrigin:NSPoint) {
@@ -354,8 +335,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
-        let newOrigin = NSMakePoint(round(newOrigin.x), round(newOrigin.y))
+        CATransaction.begin()
         self.scroll(to: newOrigin, animated: false)
+        CATransaction.commit()
         
     }
     

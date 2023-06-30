@@ -209,7 +209,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     private let photoContainer: Control = Control(frame: NSMakeRect(0, 0, 36, 36))
     
-    private var storyState: ImageView? = nil
+    private var storyState: AvatarStoryIndicatorComponent.IndicatorView? = nil
 
     
     var connectionStatus:ConnectionStatus = .online(proxyAddress: nil) {
@@ -342,20 +342,21 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         if let storyState = story, !storyState.items.isEmpty {
             let hasUnseen = storyState.hasUnseen
 
-            let current: ImageView
+            let current: AvatarStoryIndicatorComponent.IndicatorView
             let isNew: Bool
             if let view = self.storyState {
                 current = view
                 isNew = false
             } else {
-                current = ImageView(frame: NSMakeRect(0, 0, 36, 36))
+                current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, 36, 36))
                 self.storyState = current
                 photoContainer.addSubview(current)
                 isNew = true
             }
             
-            current.image = !hasUnseen ? theme.icons.story_seen_chat : theme.icons.story_unseen_chat
-
+            let compoment = AvatarStoryIndicatorComponent(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount))
+            
+            _ = current.update(component: compoment, availableSize: NSMakeSize(30, 30), transition: .immediate)
             
             if animated, isNew {
                 current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)

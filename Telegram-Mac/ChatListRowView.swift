@@ -910,7 +910,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var statusControl: PremiumStatusControl?
     
     private var avatarTimerBadge: AvatarBadgeView?
-    private var storyStateView: ImageView?
+    private var storyStateView: AvatarStoryIndicatorComponent.IndicatorView?
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [(message: Message, media: Media, size: CGSize)] = []
@@ -2012,27 +2012,23 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 self.inputActivities = nil
             }
              
-             photoContainer.userInteractionEnabled = item.lastStory != nil
+             photoContainer.userInteractionEnabled = item.avatarStoryIndicator != nil
              photoContainer.scaleOnClick = true
              
-             if let storyData = item.lastStory {
-                 let isUnseen = storyData.1
-                 let current: ImageView
+             if let component = item.avatarStoryIndicator {
+                 let current: AvatarStoryIndicatorComponent.IndicatorView
                  let isNew: Bool
                  if let view = self.storyStateView {
                      current = view
                      isNew = false
                  } else {
-                     current = ImageView(frame: NSMakeRect(0, 0, 50, 50))
+                     current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, 50, 50))
                      self.storyStateView = current
                      photoContainer.addSubview(current)
                      isNew = true
                  }
-                 if isSelect {
-                     current.image = theme.icons.story_selected
-                 } else {
-                     current.image = !isUnseen ? theme.icons.story_seen : theme.icons.story_unseen
-                 }
+                 _ = current.update(component: component, availableSize: NSMakeSize(44, 4), transition: .immediate)
+                 
                  if animated, isNew {
                      current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
                      current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

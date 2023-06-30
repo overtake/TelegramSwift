@@ -415,6 +415,7 @@ class ChatListRowItem: TableRowItem {
         self.reactionsCount = nil
         self.selectedForum = nil
         self.story = nil
+        self.avatarStoryIndicator = nil
         self.openStory = { _, _ in }
         self._stableId = stableId
         self.pinnedType = pinnedType
@@ -579,15 +580,11 @@ class ChatListRowItem: TableRowItem {
     
     
     let story: EngineStorySubscriptions.Item?
+    let avatarStoryIndicator: AvatarStoryIndicatorComponent?
+    
     let openStory:(StoryInitialIndex?, Bool)->Void
 
-    var lastStory: (EngineStorySubscriptions.Item, Bool)? {
-        if let item = story {
-            return (item, item.hasUnseen)
-        }
-        return nil
-    }
-    
+
     
 
     var isSelectedForum: Bool {
@@ -680,6 +677,12 @@ class ChatListRowItem: TableRowItem {
        
         self.isMuted = isMuted
         self.readState = readState
+        
+        if let story = story {
+            self.avatarStoryIndicator = .init(story: story, presentation: theme)
+        } else {
+            self.avatarStoryIndicator = nil
+        }
         
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()

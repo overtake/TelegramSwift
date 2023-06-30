@@ -19,7 +19,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     private let image:AvatarControl = AvatarControl(font: .avatar(.text))
     private let photoContainer = Control()
-    private var storyStateView: ImageView?
+    private var storyStateView: AvatarStoryIndicatorComponent.IndicatorView?
 
     private var deleteControl:ImageButton?
     private var selectControl:SelectingControl?
@@ -657,24 +657,19 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     
         photoContainer.userInteractionEnabled = item.story != nil
         
-        if let story = item.story {
-            let isUnseen = story.hasUnseen
-            let current: ImageView
+        if let indicator = item.avatarStoryIndicator {
+            let current: AvatarStoryIndicatorComponent.IndicatorView
             let isNew: Bool
             if let view = self.storyStateView {
                 current = view
                 isNew = false
             } else {
-                current = ImageView(frame: item.photoSize.bounds)
+                current = AvatarStoryIndicatorComponent.IndicatorView(frame: item.photoSize.bounds)
                 self.storyStateView = current
                 photoContainer.addSubview(current)
                 isNew = true
             }
-            if item.isHighlighted || isRowSelected {
-                current.image = theme.icons.story_seen_chat
-            } else {
-                current.image = !isUnseen ? theme.icons.story_seen_chat : theme.icons.story_unseen_chat
-            }
+            _ = current.update(component: indicator, availableSize: item.photoSize.bounds.insetBy(dx: 3, dy: 3).size, transition: .immediate)
             if animated, isNew {
                 current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

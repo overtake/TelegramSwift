@@ -475,6 +475,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate let threadData: MessageHistoryThreadData?
     fileprivate let threadId: Int64?
     fileprivate let stories: PeerExpiringStoryListContext.State?
+    fileprivate let avatarStoryComponent: AvatarStoryIndicatorComponent?
     let canEditPhoto: Bool
     
     
@@ -499,6 +500,12 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.updatingPhotoState = updatingPhotoState
         self.updatePhoto = updatePhoto
         
+        if let storyState = stories {
+            let compoment = AvatarStoryIndicatorComponent(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount))
+            self.avatarStoryComponent = compoment
+        } else {
+            self.avatarStoryComponent = nil
+        }
         
         let canEditPhoto: Bool
         if let peer = peer as? TelegramUser {
@@ -879,7 +886,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     private let photoView: AvatarControl = AvatarControl(font: .avatar(30))
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
-    private var storyStateView: ImageView?
+    private var storyStateView: AvatarStoryIndicatorComponent.IndicatorView?
 
     
     
@@ -1276,20 +1283,19 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         photoContainer.scaleOnClick = true
         
-        if let storyData = item.stories, !storyData.items.isEmpty {
-            let isUnseen = storyData.hasUnseen
-            let current: ImageView
+        if let storyData = item.avatarStoryComponent {
+            let current: AvatarStoryIndicatorComponent.IndicatorView
             let isNew: Bool
             if let view = self.storyStateView {
                 current = view
                 isNew = false
             } else {
-                current = ImageView(frame: NSMakeRect(0, 0, item.photoDimension, item.photoDimension))
+                current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, item.photoDimension, item.photoDimension))
                 self.storyStateView = current
                 photoContainer.addSubview(current)
                 isNew = true
             }
-            current.image = isUnseen ? theme.icons.story_unseen_profile : theme.icons.story_seen_profile
+            _ = current.update(component: storyData, availableSize: NSMakeSize(item.photoDimension - 6, item.photoDimension - 6), transition: .immediate)
 
             if animated, isNew {
                 current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)

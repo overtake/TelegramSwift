@@ -15,6 +15,9 @@ import DateUtils
 
 private let more_image = NSImage(named: "Icon_StoryMore")!.precomposed(NSColor.white)
 private let muted_image = NSImage(named: "Icon_StoryMute")!.precomposed(NSColor.white)
+private let cant_unmute = NSImage(named: "Icon_StoryMute")!.precomposed(NSColor.white.withAlphaComponent(0.75))
+
+
 private let unmuted_image = NSImage(named: "Icon_StoryUnmute")!.precomposed(NSColor.white)
 
 
@@ -25,7 +28,8 @@ final class StoryControlsView : Control {
     private let userContainer = View()
     private let more = ImageButton()
     private let muted = ImageButton()
-    
+    private let closeFriends = ImageButton()
+
     private let avatarAndText = Control()
     
     private var arguments: StoryArguments?
@@ -42,7 +46,10 @@ final class StoryControlsView : Control {
         avatarAndText.addSubview(dateView)
         avatarAndText.addSubview(textView)
         userContainer.addSubview(more)
+        userContainer.addSubview(closeFriends)
         userContainer.addSubview(muted)
+        
+
         addSubview(userContainer)
         shadowView.direction = .vertical(false)
         shadowView.shadowBackground = NSColor.black.withAlphaComponent(0.5)
@@ -57,34 +64,40 @@ final class StoryControlsView : Control {
         muted.scaleOnClick = true
         muted.autohighlight = false
 
+        closeFriends.scaleOnClick = true
+        closeFriends.autohighlight = false
         
         more.set(image: more_image, for: .Normal)
         more.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
         
         muted.set(image: muted_image, for: .Normal)
         muted.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
+        
+        
+        closeFriends.set(image: NSImage(named: "Icon_StoryCloseFriends")!.precomposed(), for: .Normal)
+        closeFriends.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
 
         muted.set(handler: { [weak self] _ in
-            self?.arguments?.interaction.toggleMuted()
+            if self?.hasNoSound == true {
+                self?.arguments?.showTooltipText("This video has no sound", MenuAnimation.menu_speaker_muted)
+            } else {
+                self?.arguments?.interaction.toggleMuted()
+            }
         }, for: .Click)
         
         more.contextMenu = { [weak self] in
             
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
-            if let story = self?.story, story.sharable, let peer = story.peer, let peerId = story.peerId {
-//                menu.addItem(ContextMenuItem("Share", handler: { [weak self] in
-//                    self?.arguments?.share(story)
-//                }, itemImage: MenuAnimation.menu_share.value))
-//
+            if let story = self?.story, let peer = story.peer, let peerId = story.peerId {
                 if peer._asPeer().storyArchived {
                     menu.addItem(ContextMenuItem("Unhide \(peer._asPeer().compactDisplayTitle)", handler: { [weak self] in
                         self?.arguments?.toggleHide(peer._asPeer(), false)
-                    }, itemImage: MenuAnimation.menu_unarchive.value))
+                    }, itemImage: MenuAnimation.menu_show_message.value))
 
                 } else {
                     menu.addItem(ContextMenuItem("Hide \(peer._asPeer().compactDisplayTitle)", handler: {
                         self?.arguments?.toggleHide(peer._asPeer(), true)
-                    }, itemImage: MenuAnimation.menu_archive.value))
+                    }, itemImage: MenuAnimation.menu_move_to_contacts.value))
                 }
 
                 let report = ContextMenuItem("Report", itemImage: MenuAnimation.menu_report.value)
@@ -117,11 +130,31 @@ final class StoryControlsView : Control {
         
         avatar.userInteractionEnabled = false
         textView.userInteractionEnabled = false
+     
+        closeFriends.set(handler: { [weak self] control in
+            if let peer = self?.story?.peer {
+                self?.arguments?.showFriendsTooltip(control, peer._asPeer())
+            }
+        }, for: .Click)
         
     }
     
+    var hasNoSound: Bool {
+        guard let story = self.story, let arguments = self.arguments else {
+            return false
+        }
+        return arguments.interaction.hasNoSound(story.storyItem)
+    }
+    
     func updateMuted(isMuted: Bool) {
-        muted.set(image: isMuted ? muted_image : unmuted_image, for: .Normal)
+        guard let story = self.story, let arguments = self.arguments else {
+            return
+        }
+        if arguments.interaction.hasNoSound(story.storyItem) {
+            muted.set(image: cant_unmute, for: .Normal)
+        } else {
+            muted.set(image: isMuted ? muted_image : unmuted_image, for: .Normal)
+        }
     }
     
     func update(context: AccountContext, arguments: StoryArguments, groupId: PeerId, peer: Peer?, story: StoryContentItem, animated: Bool) {
@@ -133,7 +166,7 @@ final class StoryControlsView : Control {
         self.arguments = arguments
         avatar.setPeer(account: context.account, peer: peer)
         
-
+        closeFriends.isHidden = !story.storyItem.isCloseFriends
         
         let date = NSMutableAttributedString()
         date.append(string: " \(strings().bullet) ", color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
@@ -142,13 +175,16 @@ final class StoryControlsView : Control {
         let dateLayout = TextViewLayout(date, maximumNumberOfLines: 1)
         dateLayout.measure(width: frame.width / 2)
 
-        
-        muted.set(image: arguments.interaction.presentation.isMuted ? muted_image : unmuted_image, for: .Normal)
+        if hasNoSound {
+            muted.set(image: cant_unmute, for: .Normal)
+        } else {
+            muted.set(image: arguments.interaction.presentation.isMuted ? muted_image : unmuted_image, for: .Normal)
+        }
         muted.isHidden = !arguments.interaction.canBeMuted(story.storyItem)
         more.isHidden = context.peerId == groupId
-
+        closeFriends.isHidden = !story.storyItem.isCloseFriends
         
-        let authorWidth = frame.width - dateLayout.layoutSize.width - more.frame.width - muted.frame.width - avatar.frame.width - 10 - (muted.isHidden ? 0 : 12) - (more.isHidden ? 0 : 12)
+        let authorWidth = frame.width - dateLayout.layoutSize.width - more.frame.width - muted.frame.width - avatar.frame.width - 10 - (muted.isHidden ? 0 : 12) - (more.isHidden ? 0 : 12) - (closeFriends.isHidden ? 0 : 12)
         
         let authorName = NSMutableAttributedString()
         authorName.append(string: context.peerId == groupId ? "My Story" : peer.compactDisplayTitle, color: .white, font: .medium(.title))
@@ -187,9 +223,18 @@ final class StoryControlsView : Control {
         transition.updateFrame(view: textView, frame: textView.centerFrameY(x: avatar.frame.maxX + 8))
         transition.updateFrame(view: dateView, frame: dateView.centerFrameY(x: textView.frame.maxX))
 
-        transition.updateFrame(view: more, frame: more.centerFrameY(x: size.width - more.frame.width - 5))
-        transition.updateFrame(view: muted, frame: more.centerFrameY(x: (more.isHidden ? size.width : more.frame.minX) - muted.frame.width - 5))
-
+        var controlX = size.width - more.frame.width - 5
+        
+        transition.updateFrame(view: more, frame: more.centerFrameY(x: controlX))
+        
+        if !closeFriends.isHidden {
+            controlX -= (closeFriends.frame.width + 5)
+            transition.updateFrame(view: closeFriends, frame: closeFriends.centerFrameY(x: controlX))
+        }
+        if !muted.isHidden {
+            controlX -= (muted.frame.width + 5)
+            transition.updateFrame(view: muted, frame: muted.centerFrameY(x: controlX))
+        }
     }
     
     override func layout() {

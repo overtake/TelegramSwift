@@ -56,7 +56,7 @@ final class StoryListNavigationView : View {
                 if playing {
                     var rect = part.frame
                     rect.size.width = part.frame.width * min(current / duration, 1)
-                    selector.frame = rect
+                    selector.frame = part.frame
                     selector.layer?.animateBounds(from: NSMakeSize(rect.size.width, 2).bounds, to: part.frame.size.bounds, duration: duration - current, timingFunction: .linear, removeOnCompletion: false)
                 } else {
                     selector.layer?.removeAnimation(forKey: "bounds")
@@ -77,10 +77,15 @@ final class StoryListNavigationView : View {
         let partSize = (size.width - 12 - CGFloat(parts.count - 1) * 2) / CGFloat(parts.count)
         let itemSize = NSMakeSize(max(2, partSize), 2)
         
+        
         var x: CGFloat = 6
-        for part in parts {
-            transition.updateFrame(view: part, frame: CGRect(origin: CGPoint(x: x, y: 0), size: itemSize))
+        for (i, part) in parts.enumerated() {
+            let rect = CGRect(origin: CGPoint(x: x, y: 0), size: itemSize)
+            transition.updateFrame(view: part, frame: rect)
             x += itemSize.width + 2
+            if selected == i {
+                self.selector.frame = rect
+            }
         }
     }
 }

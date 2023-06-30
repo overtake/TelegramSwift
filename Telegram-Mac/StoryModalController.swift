@@ -231,6 +231,12 @@ final class StoryInteraction : InterfaceObserver {
     func canBeMuted(_ story: EngineStoryItem) -> Bool {
         return story.media._asMedia() is TelegramMediaFile
     }
+    func hasNoSound(_ story: EngineStoryItem) -> Bool {
+        if let media = story.media._asMedia() as? TelegramMediaFile {
+            return media.hasNoSound
+        }
+        return true
+    }
     
     func updateInput(with text:String, resetFocus: Bool = false) {
         let state = ChatTextInputState(inputText: text, selectionRange: text.length ..< text.length, attributes: [])
@@ -312,7 +318,9 @@ final class StoryArguments {
     let hashtag:(String)->Void
     let report:(PeerId, Int32, ReportReason)->Void
     let toggleHide:(Peer, Bool)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void) {
+    let showFriendsTooltip:(Control, Peer)->Void
+    let showTooltipText:(String, MenuAnimation)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -337,6 +345,8 @@ final class StoryArguments {
         self.hashtag = hashtag
         self.report = report
         self.toggleHide = toggleHide
+        self.showFriendsTooltip = showFriendsTooltip
+        self.showTooltipText = showTooltipText
     }
     
     func longDown() {
@@ -710,10 +720,14 @@ private final class StoryViewController: Control, Notifable {
             case removedFromProfile
             case linkCopied
             case justText(String)
+            case tooltip(String, MenuAnimation)
         }
+        private let bg = Control()
         private let textView = TextView()
         private let button = TitleButton()
         private let media = View(frame: NSMakeRect(0, 0, 24, 24))
+        
+        private var close:(()->Void)?
         
         required override init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
@@ -724,17 +738,23 @@ private final class StoryViewController: Control, Notifable {
             textView.userInteractionEnabled = false
             textView.isSelectable = false
             addSubview(textView)
-            addSubview(button)
             addSubview(media)
+            addSubview(bg)
+            addSubview(button)
             button.autohighlight = false
             button.scaleOnClick = true
             self.layer?.cornerRadius = 10
+            
+            bg.set(handler: { [weak self] _ in
+                self?.close?()
+            }, for: .Click)
         }
         
-        func update(source: Source, size: NSSize, context: AccountContext, callback: @escaping()->Void) {
+        func update(source: Source, size: NSSize, context: AccountContext, callback: @escaping()->Void, close: @escaping()->Void) {
             let title: String
             var mediaFile: TelegramMediaFile
             let hasButton: Bool
+            self.close = close
             switch source {
             case let .media(medias):
                 if medias.count > 1 {
@@ -798,13 +818,17 @@ private final class StoryViewController: Control, Notifable {
                 title = text
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = false
+            case let .tooltip(text, animation):
+                title = text
+                mediaFile = animation.file
+                hasButton = false
             }
             
             let mediaLayer = InlineStickerItemLayer(account: context.account, file: mediaFile, size: NSMakeSize(24, 24), playPolicy: .toEnd(from: 0), getColors: { file in
                 if file == MenuAnimation.menu_success.file {
                     return []
                 } else {
-                    return []
+                    return [.init(keyPath: "", color: NSColor(0xffffff))]
                 }
             })
             mediaLayer.isPlayable = true
@@ -831,11 +855,19 @@ private final class StoryViewController: Control, Notifable {
                 callback()
             }, for: .Click)
             
-            self.setFrameSize(NSMakeSize(size.width, max(size.height, layout.layoutSize.height + 10)))
+            let width: CGFloat
+            if hasButton {
+                width = size.width
+            } else {
+                width = 16 + media.frame.width + 10 + layout.layoutSize.width + 16
+            }
+            
+            self.setFrameSize(NSMakeSize(width, max(size.height, layout.layoutSize.height + 10)))
             self.updateLayout(size: size, transition: .immediate)
         }
         
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: bg, frame: size.bounds)
             transition.updateFrame(view: media, frame: media.centerFrameY(x: 16))
             transition.updateFrame(view: textView, frame: textView.centerFrameY(x: media.frame.maxX + 10))
             transition.updateFrame(view: button, frame: button.centerFrameY(x: size.width - button.frame.width - 16))
@@ -1117,7 +1149,7 @@ private final class StoryViewController: Control, Notifable {
             current.entryId = state.slice?.peer.id
             current.storyId = state.slice?.item.storyItem.id
             current.canRecordVoice = state.slice?.additionalPeerData.areVoiceMessagesAvailable == true
-            current.isProfileIntended = state.isProfileView
+            current.isProfileIntended = false
             if updated {
                 current.magnified = false
                 current.readingText = false
@@ -1530,9 +1562,17 @@ private final class StoryViewController: Control, Notifable {
         
         let tooltip = TooptipView(frame: .zero)
         
+        let close:()->Void = { [weak self] in
+            self?.tooltipDisposable.set(nil)
+            if let view = self?.currentTooltip {
+                performSubviewRemoval(view, animated: true)
+                self?.currentTooltip = nil
+            }
+        }
+        
         tooltip.update(source: source, size: NSMakeSize(current.contentRect.width - 20, 40), context: arguments.context, callback: { [weak arguments] in
             arguments?.openChat(entryId, nil, nil)
-        })
+        }, close: close)
         
         self.addSubview(tooltip)
         tooltip.centerX(y: current.storyRect.maxY - tooltip.frame.height - 10)
@@ -1540,12 +1580,7 @@ private final class StoryViewController: Control, Notifable {
         tooltip.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         tooltip.layer?.animatePosition(from: tooltip.frame.origin.offsetBy(dx: 0, dy: 20), to: tooltip.frame.origin)
         let signal = Signal<Void, NoError>.single(Void()) |> delay(4.5, queue: .mainQueue())
-        self.tooltipDisposable.set(signal.start(completed: { [weak self] in
-            if let view = self?.currentTooltip {
-                performSubviewRemoval(view, animated: true)
-                self?.currentTooltip = nil
-            }
-        }))
+        self.tooltipDisposable.set(signal.start(completed: close))
         
         self.currentTooltip = tooltip
     }
@@ -2049,6 +2084,10 @@ final class StoryModalController : ModalViewController, Notifable {
                 text = "Stories from **\(peer.compactDisplayTitle)** will now be shown in Contacts, not Chats."
             }
             self?.genericView.showTooltip(.justText(text))
+        }, showFriendsTooltip: { [weak self] control, peer in
+            self?.genericView.showTooltip(.tooltip(strings().storyTooltipCloseFriends(peer.compactDisplayTitle), MenuAnimation.menu_clear_history))
+        }, showTooltipText: { [weak self] text, animation in
+            self?.genericView.showTooltip(.tooltip(text, animation))
         })
         
         self.arguments = arguments

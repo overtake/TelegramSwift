@@ -2675,9 +2675,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             inserted.0.view?.onInsert(inserted.1, appearAnimated: appearAnimated && accept)
         }
-        
-        self.tableView.tile()
-        
+                
         let state: TableScrollState
         
         if case .none = transition.state, !transition.deleted.isEmpty || !transition.inserted.isEmpty {
@@ -2754,7 +2752,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     } else {
                         y = nrect.minY - visible.1
                     }
-                    self.clipView.scroll(to: NSMakePoint(0, y), animated: false)
+                    self.clipView.updateBounds(to: NSMakePoint(0, y))
                     break
                 }
             }
@@ -2815,9 +2813,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
        // self.endTableUpdates()
         
-        self.tableView.tile()
-        self.reflectScrolledClipView(clipView)
-
+//        self.tableView.tile()
+//        self.reflectScrolledClipView(clipView)
+//
         
 //        if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {
 //            if let y = getScrollY(visible) {
@@ -3169,7 +3167,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if !tableView.isFlipped {
                 rowRect.origin = NSMakePoint(0, max(documentSize.height,frame.height))
             } else {
-                rowRect.origin = NSZeroPoint
+                rowRect.origin = NSMakePoint(0,  -contentInsets.top)
             }
             relativeInset = offset
         default:
@@ -3234,7 +3232,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
-        rowRect.origin.y = round(min(max(rowRect.minY + relativeInset, 0), documentSize.height - height) + inset.top)
+        rowRect.origin.y = round(min(max(rowRect.minY + relativeInset, -contentInsets.top), documentSize.height - height) + inset.top)
         
         if self.tableView.isFlipped {
             rowRect.origin.y = min(rowRect.origin.y, documentSize.height - clipView.bounds.height)
@@ -3269,8 +3267,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     }
                 })
             } else {
-                self.contentView.scroll(to: bounds.origin)
-                reflectScrolledClipView(clipView)
+                self.clipView.updateBounds(to: bounds.origin)
                 removeScroll(listener: scrollListener)
                 scrollListener.handler(self.scrollPosition().current)
             }

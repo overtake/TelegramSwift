@@ -8565,6 +8565,10 @@ public final class L10n {
   }
   /// Verified Account
   public static var peerInfoVerifiedTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Verified.Tooltip") }
+  /// Chats
+  public static var peerListTitleChats: String  { return L10n.tr("Localizable", "PeerList.Title.Chats") }
+  /// Contacts
+  public static var peerListTitleContacts: String  { return L10n.tr("Localizable", "PeerList.Title.Contacts") }
   /// Audio
   public static var peerMediaAudio: String  { return L10n.tr("Localizable", "PeerMedia.Audio") }
   /// Groups
@@ -11913,6 +11917,10 @@ public final class L10n {
   }
   /// This story is not supported by your version of Telegram. Please update the app to the latest version.
   public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }
+  /// You are seeing this story because you have been added to %@'s list of close friends.
+  public static func storyTooltipCloseFriends(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Story.Tooltip.CloseFriends", p1)
+  }
   /// Only you can see archived stories unless you choose to save them to your profile
   public static var storyMediaArchiveText: String  { return L10n.tr("Localizable", "StoryMedia.ArchiveText") }
   /// Suggest Frequent Contacts

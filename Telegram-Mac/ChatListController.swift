@@ -420,7 +420,7 @@ class ChatListController : PeersListController {
             self.folderUpdatesDisposable.set(context.engine.peers.pollChatFolderUpdates(folderId: data.filter.id).start())
         }
 
-        self.genericView.searchView.change(state: .None,  true)
+       // self.genericView.searchView.change(state: .None,  true)
         setCenterTitle(self.defaultBarTitle)
     }
     
@@ -477,10 +477,7 @@ class ChatListController : PeersListController {
             storyState = .single(nil)
         }
         
-        genericView.tableView.applyExternalScroll = { [weak self] event in
-            return self?.processScroll(event) ?? false
-        }
-
+        
         self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(isHidden: false)
         |> deliverOnMainQueue).start(next: { [weak self] resources in
             
@@ -793,8 +790,9 @@ class ChatListController : PeersListController {
             
         })
         
-        let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue
-        let filterBadges = chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue
+        let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue |> distinctUntilChanged
+        let filterBadges = chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue |> distinctUntilChanged
+        
         switch mode {
         case .folder, .forum:
             self.updateFilter( {

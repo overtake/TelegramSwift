@@ -16,6 +16,7 @@ import TelegramCore
 private enum ContactsControllerEntryId: Hashable {
     case peerId(Int64)
     case addContact
+    case space
     case story(Int64)
     case separator(Int32)
     func hash(into hasher: inout Hasher) {
@@ -31,7 +32,8 @@ private enum ContactsControllerEntryId: Hashable {
         case let .separator(index):
             hasher.combine(3)
             hasher.combine(index)
-
+        case .space:
+            hasher.combine(4)
         }
     }
     
@@ -39,6 +41,7 @@ private enum ContactsControllerEntryId: Hashable {
 
 
 private enum ContactsEntry: Comparable, Identifiable {
+    case space
     case separator(String, Int32)
     case story(EngineStorySubscriptions.Item, Int32)
     case peer(Peer, PeerPresence?, Int32, EngineStorySubscriptions.Item?)
@@ -49,6 +52,8 @@ private enum ContactsEntry: Comparable, Identifiable {
             return .story(item.peer.id.toInt64())
         case .addContact:
             return .addContact
+        case .space:
+            return .space
         case let .peer(peer,_, _, _):
             return .peerId(peer.id.toInt64())
         case let .separator(_, index):
@@ -60,6 +65,8 @@ private enum ContactsEntry: Comparable, Identifiable {
         switch self {
         case let .story(_, index):
             return index
+        case .space:
+            return -2
         case .addContact:
             return -1
         case let .peer(_, _, index, _):
@@ -75,6 +82,12 @@ private func ==(lhs: ContactsEntry, rhs: ContactsEntry) -> Bool {
     switch lhs {
     case .addContact:
         if case .addContact = rhs {
+            return true
+        } else {
+            return false
+        }
+    case .space:
+        if case .space = rhs {
             return true
         } else {
             return false
@@ -124,6 +137,9 @@ private func <(lhs: ContactsEntry, rhs: ContactsEntry) -> Bool {
 
 private func entriesForView(_ view: EngineContactList, storyList: EngineStorySubscriptions?, accountPeer: Peer?) -> [ContactsEntry] {
     var entries: [ContactsEntry] = []
+    
+    entries.append(.space)
+    
     if let accountPeer = accountPeer {
         
         var peerIds: Set<PeerId> = Set()
@@ -153,12 +169,12 @@ private func entriesForView(_ view: EngineContactList, storyList: EngineStorySub
                 index += 1
                 for item in storyItems {
                     entries.append(.story(item, index))
-                    index += 1
+                  //  index += 1
                 }
                 
                 if !orderedPeers.isEmpty {
                     entries.append(.separator("CONTACTS", index))
-                    index += 1
+                  //  index += 1
                 }
             }
         }
@@ -203,13 +219,15 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right], highlightVerified: true, story: story, openStory: { initialId in
+                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right], highlightVerified: true, story: nil, openStory: { initialId in
                     arguments.openStory(initialId, true)
                 })
             case .addContact:
                 item = AddContactTableItem(initialSize, stableId: entry.stableId, addContact: {
                     arguments.addContact()
                 })
+            case .space:
+                item = GeneralRowItem(initialSize, height: 90, stableId: entry.stableId)
             case let .story(story, _):
                 let string = "\(story.storyCount) stories"
                 item = ShortPeerRowItem(initialSize, peer: story.peer._asPeer(), account: context.account, context: context, stableId: entry.stableId, statusStyle: ControlStyle(foregroundColor: theme.colors.grayText), status: string, borderType: [.Right], contextMenuItems: {
@@ -219,7 +237,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                     items.append(.init("Unhide", handler: {
                         context.engine.peers.updatePeerStoriesHidden(id: story.peer.id, isHidden: false)
                         showModalText(for: context.window, text: "Stories from \(story.peer._asPeer().compactDisplayTitle) will now be shown in Chats, not Contacts.")
-                    }, itemImage: MenuAnimation.menu_show.value))
+                    }, itemImage: MenuAnimation.menu_show_message.value))
                     
                     return .single(items)
                 }, highlightVerified: true, story: story, openStory: { initialId in
@@ -354,7 +372,6 @@ class ContactsController: PeersListController {
             self?.readyOnce()
             self?.afterTransaction(transition)
         }))
-        genericView.tableView.contentInsets = .init(top: 90)
         
     }
     
