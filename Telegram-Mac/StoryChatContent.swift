@@ -1317,7 +1317,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 var resultResources: [EngineMediaResource.Id: StoryPreloadInfo] = [:]
                 var pollItems: [StoryKey] = []
                 
-                if let focusedIndex, let slice = stateValue.slice {
+                if let focusedIndex = focusedIndex, let slice = stateValue.slice {
                     var possibleItems: [(EnginePeer, EngineStoryItem)] = []
                     if peer.id == self.context.account.peerId {
                         pollItems.append(StoryKey(peerId: peer.id, id: slice.item.storyItem.id))
