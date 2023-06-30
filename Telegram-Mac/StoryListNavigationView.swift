@@ -83,9 +83,6 @@ final class StoryListNavigationView : View {
             let rect = CGRect(origin: CGPoint(x: x, y: 0), size: itemSize)
             transition.updateFrame(view: part, frame: rect)
             x += itemSize.width + 2
-            if selected == i {
-                self.selector.frame = rect
-            }
         }
     }
 }
