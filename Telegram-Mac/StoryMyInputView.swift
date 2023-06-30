@@ -300,7 +300,7 @@ final class StoryMyInputView : Control, StoryInput {
                 if let views = story.storyItem.views {
                     for peer in views.seenPeers {
                         menu.addItem(makeItem(peer._asPeer(), context: arguments.context, callback: { peerId in
-                            arguments.openPeerInfo(peerId)
+                            arguments.openPeerInfo(peerId, nil)
                         }))
                     }
                 }

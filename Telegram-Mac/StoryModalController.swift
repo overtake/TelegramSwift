@@ -304,7 +304,7 @@ final class StoryArguments {
     let nextStory:()->Void
     let prevStory:()->Void
     let close:()->Void
-    let openPeerInfo:(PeerId)->Void
+    let openPeerInfo:(PeerId, NSView?)->Void
     let openChat:(PeerId, MessageId?, ChatInitialAction?)->Void
     let sendMessage:(PeerId, Int32)->Void
     let toggleRecordType:()->Void
@@ -320,7 +320,7 @@ final class StoryArguments {
     let toggleHide:(Peer, Bool)->Void
     let showFriendsTooltip:(Control, Peer)->Void
     let showTooltipText:(String, MenuAnimation)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void) {
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -1914,20 +1914,6 @@ final class StoryModalController : ModalViewController, Notifable {
         
         let stories = self.stories
         
-        
-        
-        let openPeerInfo:(PeerId)->Void = { [weak self] peerId in
-            let controller = context.bindings.rootNavigation().controller as? PeerInfoController
-            if peerId != context.peerId {
-                if controller?.peerId != peerId {
-                    context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
-                }
-                self?.close()
-            } else {
-                context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true))
-                self?.close()
-            }
-        }
         let openChat:(PeerId, MessageId?, ChatInitialAction?)->Void = { [weak self] peerId, messageId, initial in
             let controller = context.bindings.rootNavigation().controller as? ChatController
             if controller?.chatLocation.peerId != peerId {
@@ -1935,6 +1921,91 @@ final class StoryModalController : ModalViewController, Notifable {
             }
             self?.close()
         }
+        
+        let openPeerInfo:(PeerId, NSView?)->Void = { [weak self] peerId, view in
+            if peerId != context.peerId {
+                
+                let openforce:()->Void = {
+                    let controller = context.bindings.rootNavigation().controller as? PeerInfoController
+
+                    if controller?.peerId != peerId {
+                        context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
+                    }
+                    self?.close()
+                }
+                
+                if let view = view, let event = NSApp.currentEvent {
+                    
+                    let data = context.engine.data.subscribe(
+                        TelegramEngine.EngineData.Item.Peer.Peer(id: peerId),
+                        TelegramEngine.EngineData.Item.Peer.AboutText(id: peerId)
+                    ) |> take(1) |> deliverOnMainQueue
+                    
+                    _ = data.start(next: { [weak view] data in
+                        
+                        guard let peer = data.0, let view = view else {
+                            return
+                        }
+                        
+                        var firstBlock:[ContextMenuItem] = []
+                        var secondBlock:[ContextMenuItem] = []
+                        let thirdBlock: [ContextMenuItem] = []
+                        
+                        firstBlock.append(GroupCallAvatarMenuItem(peer._asPeer(), context: context))
+                        
+                        firstBlock.append(ContextMenuItem(peer._asPeer().displayTitle, handler: {
+                            openforce()
+                        }, itemImage: MenuAnimation.menu_open_profile.value))
+                        
+                        if let username = peer.addressName {
+                            firstBlock.append(ContextMenuItem("\(username)", handler: {
+                                openforce()
+                            }, itemImage: MenuAnimation.menu_atsign.value))
+                        }
+                        
+                        switch data.1 {
+                        case let .known(about):
+                            if let about = about {
+                                firstBlock.append(ContextMenuItem(about, handler: {
+                                    openforce()
+                                }, itemImage: MenuAnimation.menu_bio.value, removeTail: false, overrideWidth: 200))
+                            }
+                        default:
+                            break
+                        }
+                        
+                        secondBlock.append(ContextMenuItem("Send Message", handler: {
+                            openChat(peerId, nil, nil)
+                        }, itemImage: MenuAnimation.menu_send_now.value))
+                        
+                        let blocks:[[ContextMenuItem]] = [firstBlock,
+                                                          secondBlock,
+                                                          thirdBlock].filter { !$0.isEmpty }
+                        var items: [ContextMenuItem] = []
+
+                        for (i, block) in blocks.enumerated() {
+                            if i != 0 {
+                                items.append(ContextSeparatorItem())
+                            }
+                            items.append(contentsOf: block)
+                        }
+                        
+                        let menu = ContextMenu(presentation: AppMenu.Presentation(colors: storyTheme.colors))
+                        
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                        AppMenu.show(menu: menu, event: event, for: view)
+                    })
+                } else {
+                    openforce()
+                }
+            } else {
+                context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true))
+                self?.close()
+            }
+        }
+        
         
         let beforeCompletion:()->Void = { [weak interactions] in
             interactions?.update({ current in
@@ -2002,8 +2073,8 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.previous()
         }, close: { [weak self] in
             self?.close()
-        }, openPeerInfo: { peerId in
-            openPeerInfo(peerId)
+        }, openPeerInfo: { peerId, view in
+            openPeerInfo(peerId, view)
         }, openChat: { peerId, messageId, initial in
             openChat(peerId, messageId, initial)
         }, sendMessage: { [weak self] peerId, id in
@@ -2037,11 +2108,13 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.stories.markAsSeen(id: .init(peerId: peerId, id: storyId))
         }, showViewers: { story in
             if let peerId = story.peer?.id {
-                showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: openPeerInfo), for: context.window)
+                showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
+                    openPeerInfo(peerId, nil)
+                }), for: context.window)
             }
         }, share: { [weak self] story in
             if let peerId = story.peerId, story.sharable {
-                let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id))
+                let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id), isMention: false)
                 showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id)), presentation: storyTheme), for: context.window)
             } else {
                 self?.genericView.showShareError()

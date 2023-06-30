@@ -307,7 +307,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         isPublic: item.isPublic,
                         isPending: false,
                         isCloseFriends: item.isCloseFriends,
-                        isForwardingDisabled: item.isForwardingDisabled
+                        isForwardingDisabled: item.isForwardingDisabled,
+                        isEdited: item.isEdited
                     )
                 }
                 if peerId == context.account.peerId, let stateView = views.views[PostboxViewKey.storiesState(key: .local)] as? StoryStatesView, let localState = stateView.value?.get(Stories.LocalState.self) {
@@ -326,7 +327,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             isPublic: false,
                             isPending: true,
                             isCloseFriends: false,
-                            isForwardingDisabled: false
+                            isForwardingDisabled: false,
+                            isEdited: false
                         ))
                     }
                 }
@@ -675,45 +677,64 @@ final class StoryContentContextImpl: StoryContentContext {
                     return
                 }
                 
+                var preFilterOrder = false
+                                
                 let startedWithUnseen: Bool
                 if let current = self.startedWithUnseen {
                     startedWithUnseen = current
                 } else {
                     var startedWithUnseenValue = false
                     
-                    var centralIndex: Int?
-                    if let (focusedPeerId, _) = self.focusedItem {
-                        if let index = storySubscriptions.items.firstIndex(where: { $0.peer.id == focusedPeerId }) {
-                            centralIndex = index
+                    if let (focusedPeerId, _) = self.focusedItem, focusedPeerId == self.context.account.peerId, let accountItem = storySubscriptions.accountItem {
+                        startedWithUnseenValue = accountItem.hasUnseen || accountItem.hasPending
+                    } else {
+                        var centralIndex: Int?
+                        
+                        if let (focusedPeerId, _) = self.focusedItem {
+                            if let index = storySubscriptions.items.firstIndex(where: { $0.peer.id == focusedPeerId }) {
+                                centralIndex = index
+                            }
                         }
-                    }
-                    if centralIndex == nil {
-                        if let index = storySubscriptions.items.firstIndex(where: { $0.hasUnseen }) {
-                            centralIndex = index
+                        if centralIndex == nil {
+                            if let index = storySubscriptions.items.firstIndex(where: { $0.hasUnseen }) {
+                                centralIndex = index
+                            }
                         }
-                    }
-                    if centralIndex == nil {
-                        if !storySubscriptions.items.isEmpty {
-                            centralIndex = 0
+                        if centralIndex == nil {
+                            if !storySubscriptions.items.isEmpty {
+                                centralIndex = 0
+                            }
                         }
-                    }
-                    
-                    if let centralIndex = centralIndex {
-                        if storySubscriptions.items[centralIndex].hasUnseen {
-                            startedWithUnseenValue = true
+                        
+                        if let centralIndex = centralIndex {
+                            if storySubscriptions.items[centralIndex].hasUnseen {
+                                startedWithUnseenValue = true
+                            }
                         }
                     }
                     
                     self.startedWithUnseen = startedWithUnseenValue
                     startedWithUnseen = startedWithUnseenValue
+                    preFilterOrder = true
                 }
-                
+
                 var sortedItems: [EngineStorySubscriptions.Item] = []
-                if !startedWithUnseen, let accountItem = storySubscriptions.accountItem, accountItem.storyCount != 0 {
-                    sortedItems.append(accountItem)
+                if let accountItem = storySubscriptions.accountItem {
+                    if startedWithUnseen {
+                        if accountItem.hasUnseen || accountItem.hasPending {
+                            sortedItems.append(accountItem)
+                        }
+                    } else {
+                        sortedItems.append(accountItem)
+                    }
                 }
                 for peerId in self.fixedSubscriptionOrder {
                     if let index = storySubscriptions.items.firstIndex(where: { $0.peer.id == peerId }) {
+                        if preFilterOrder {
+                            if startedWithUnseen && !storySubscriptions.items[index].hasUnseen {
+                                continue
+                            }
+                        }
                         sortedItems.append(storySubscriptions.items[index])
                     }
                 }
@@ -1123,7 +1144,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     isPublic: itemValue.isPublic,
                     isPending: false,
                     isCloseFriends: itemValue.isCloseFriends,
-                    isForwardingDisabled: itemValue.isForwardingDisabled
+                    isForwardingDisabled: itemValue.isForwardingDisabled,
+                    isEdited: itemValue.isEdited
                 )
                 
                 let mainItem = StoryContentItem(
