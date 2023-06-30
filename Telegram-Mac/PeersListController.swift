@@ -458,6 +458,10 @@ class PeerListContainerView : Control {
             }
         }
         
+        var hasPremium: Bool {
+            return premiumStatus != nil
+        }
+        
         var size: NSSize {
             var width: CGFloat = textView.frame.width
             if let premiumStatus = self.premiumStatus {
@@ -1185,9 +1189,11 @@ class PeerListContainerView : Control {
             
             let middle = size.width / 2
             
-            var rect = CGRect(origin: NSMakePoint(reversed * (middle - 70 - 15), 10 + storiesItem.getInterfaceState().progress * 40), size: size)
+            let add: CGFloat = titleView.hasPremium ? 0 : 15
             
-            rect.origin.x -= (1 - progress) * (size.width - 70)
+            var rect = CGRect(origin: NSMakePoint(reversed * (middle - 70 - 15 + add), 10 + storiesItem.getInterfaceState().progress * 40), size: size)
+            
+            rect.origin.x -= (1 - progress) * (size.width - 70 + add)
             
             if storiesItem.itemsCount < 3 {
                 rect.origin.x += (1 - storiesItem.getInterfaceState().progress) * (StoryListChatListRowItem.smallSize.width / 2 * CGFloat(3 - storiesItem.itemsCount))
