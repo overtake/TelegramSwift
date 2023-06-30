@@ -122,9 +122,9 @@ final class StoryControlsView : Control {
         
         avatarAndText.scaleOnClick = true
         
-        avatarAndText.set(handler: { [weak self] _ in
+        avatarAndText.set(handler: { [weak self] control in
             if let groupId = self?.groupId {
-                self?.arguments?.openPeerInfo(groupId)
+                self?.arguments?.openPeerInfo(groupId, control)
             }
         }, for: .Click)
         

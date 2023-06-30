@@ -43,8 +43,9 @@ public final class AvatarStoryIndicatorComponent {
         self.inactiveLineWidth = inactiveLineWidth
         self.counters = counters
     }
-    public convenience init(story: EngineStorySubscriptions.Item, presentation: PresentationTheme) {
-        self.init(hasUnseen: story.hasUnseen, hasUnseenCloseFriendsItems: story.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: story.storyCount, unseenCount: story.unseenCount))
+    public convenience init(story: EngineStorySubscriptions.Item, presentation: PresentationTheme, active: Bool = false) {
+        let hasUnseen = story.hasUnseen || story.hasUnseenCloseFriends
+        self.init(hasUnseen: story.hasUnseen, hasUnseenCloseFriendsItems: story.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: story.storyCount, unseenCount: active && hasUnseen ? story.storyCount : story.unseenCount))
     }
     
     public static func ==(lhs: AvatarStoryIndicatorComponent, rhs: AvatarStoryIndicatorComponent) -> Bool {
@@ -97,6 +98,7 @@ public final class AvatarStoryIndicatorComponent {
                 guard let component = self.component else {
                     return
                 }
+                let progress = self.progress
                 
                 let size = layer.frame.size
                 
@@ -115,32 +117,34 @@ public final class AvatarStoryIndicatorComponent {
                 
                 context.clear(CGRect(origin: CGPoint(), size: size))
                 
-                let activeColors: [CGColor]
-                let inactiveColors: [CGColor]
+                let activeColors: [NSColor]
+                let inactiveColors: [NSColor]
                 
                 if component.hasUnseenCloseFriendsItems {
                     activeColors = [
-                        NSColor(rgb: 0x7CD636).cgColor,
-                        NSColor(rgb: 0x26B470).cgColor
+                        NSColor(rgb: 0x7CD636),
+                        NSColor(rgb: 0x26B470)
                     ]
                 } else {
                     activeColors = [
-                        NSColor(rgb: 0x34C76F).cgColor,
-                        NSColor(rgb: 0x3DA1FD).cgColor
+                        NSColor(rgb: 0x34C76F),
+                        NSColor(rgb: 0x3DA1FD)
                     ]
                 }
                 
                 if component.theme.colors.isDark {
-                    inactiveColors = [component.theme.colors.grayIcon.withAlphaComponent(0.5).cgColor, component.theme.colors.grayIcon.withAlphaComponent(0.5).cgColor]
+                    inactiveColors = [component.theme.colors.grayIcon.withAlphaComponent(0.5), component.theme.colors.grayIcon.withAlphaComponent(0.5)]
                 } else {
-                    inactiveColors = [NSColor(rgb: 0xD8D8E1).cgColor, NSColor(rgb: 0xD8D8E1).cgColor]
+                    inactiveColors = [NSColor(rgb: 0xD8D8E1), NSColor(rgb: 0xD8D8E1)]
                 }
+                
                 
                 var locations: [CGFloat] = [0.0, 1.0]
                 
                 context.setLineWidth(lineWidth)
                 
                 if let counters = component.counters, counters.totalCount > 1 {
+                                        
                     let center = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
                     let radius = (diameter - lineWidth) * 0.5
                     let spacing: CGFloat = 3.0 * progress
@@ -149,7 +153,12 @@ public final class AvatarStoryIndicatorComponent {
                     let segmentLength = (circleLength - spacing * CGFloat(counters.totalCount)) / CGFloat(counters.totalCount)
                     let segmentAngle = segmentLength / radius
                     
-                    for pass in 0 ..< 2 {
+                    var passCount = 2
+                    if counters.unseenCount > 0 {
+                        passCount = 3
+                    }
+                    
+                    for pass in 0 ..< passCount {
                         context.resetClip()
                         
                         let startIndex: Int
@@ -157,9 +166,12 @@ public final class AvatarStoryIndicatorComponent {
                         if pass == 0 {
                             startIndex = 0
                             endIndex = counters.totalCount - counters.unseenCount
-                        } else {
+                        } else if pass == 1 {
                             startIndex = counters.totalCount - counters.unseenCount
                             endIndex = counters.totalCount
+                        } else {
+                            startIndex = 0
+                            endIndex = counters.totalCount - counters.unseenCount
                         }
                         if startIndex < endIndex {
                             for i in startIndex ..< endIndex {
@@ -174,9 +186,11 @@ public final class AvatarStoryIndicatorComponent {
                             
                             let colors: [CGColor]
                             if pass == 1 {
-                                colors = activeColors
+                                colors = activeColors.map { $0.cgColor }
+                            } else if pass == 0 {
+                                colors = inactiveColors.map { $0.cgColor }
                             } else {
-                                colors = inactiveColors
+                                colors = activeColors.map { $0.withAlphaComponent(1 - progress) }.map { $0.cgColor }
                             }
                             
                             let colorSpace = CGColorSpaceCreateDeviceRGB()
@@ -194,9 +208,9 @@ public final class AvatarStoryIndicatorComponent {
                     
                     let colors: [CGColor]
                     if component.hasUnseen {
-                        colors = activeColors
+                        colors = activeColors.map { $0.cgColor }
                     } else {
-                        colors = inactiveColors
+                        colors = inactiveColors.map { $0.cgColor }
                     }
                     
                     let colorSpace = CGColorSpaceCreateDeviceRGB()

@@ -129,11 +129,11 @@ final class StoryListView : Control, Notifable {
             self.state = state
             self.arguments = arguments
             
-            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: storyTheme.fontSize, openInfo: { [weak arguments] peerId, toChat, messageId, initialAction in
+            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: storyTheme.fontSize, openInfo: { [weak arguments, weak self] peerId, toChat, messageId, initialAction in
                 if toChat {
                     arguments?.openChat(peerId, messageId, initialAction)
-                } else {
-                    arguments?.openPeerInfo(peerId)
+                } else if let view = self {
+                    arguments?.openPeerInfo(peerId, view)
                 }
             }, hashtag: arguments?.hashtag ?? { _ in }, textColor: storyTheme.colors.text, linkColor: storyTheme.colors.text, monospacedPre: storyTheme.colors.text, monospacedCode: storyTheme.colors.text, underlineLinks: true).mutableCopy() as! NSMutableAttributedString
             
