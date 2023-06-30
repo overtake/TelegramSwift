@@ -42,7 +42,7 @@ final class StoryListView : Control, Notifable {
 
     var storyId: AnyHashable? {
         if let entry = entry {
-            return entry.item.id
+            return entry.item.storyItem.id
         }
         return nil
     }
@@ -754,7 +754,7 @@ final class StoryListView : Control, Notifable {
                 self.inputView.setArguments(self.arguments, groupId: entry.peer.id)
             }
             
-            if let current = self.current, !current.isEqual(to: entry.item.id.base as? Int32) {
+            if let current = self.current, !current.isEqual(to: entry.item.storyItem.id) {
                 self.redraw()
             } else if let current = self.current, let arguments = arguments {
                 self.updateStoryState(current.state)
@@ -917,11 +917,11 @@ final class StoryListView : Control, Notifable {
         }
         switch state {
         case .playing:
-            self.navigator.set(entry.item.position, current: view.currentTimestamp, duration: view.duration, playing: true)
+            self.navigator.set(entry.item.position ?? 0, current: view.currentTimestamp, duration: view.duration, playing: true)
         case .finished:
             self.arguments?.nextStory()
         default:
-            self.navigator.set(entry.item.position, current: view.currentTimestamp, duration: view.duration, playing: false)
+            self.navigator.set(entry.item.position ?? 0, current: view.currentTimestamp, duration: view.duration, playing: false)
         }
     }
     

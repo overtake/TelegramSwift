@@ -18,11 +18,9 @@ private struct StoryKey: Hashable {
 
 final class StoryContentItem {
     
-    let id: AnyHashable
-    let position: Int
+    let position: Int?
     let peer: EnginePeer?
     let storyItem: EngineStoryItem
-    let isMy: Bool
     
     var peerId: EnginePeer.Id? {
         return self.peer?.id
@@ -39,17 +37,12 @@ final class StoryContentItem {
     }
 
     init(
-        id: AnyHashable,
-        position: Int,
+        position: Int?,
         peer: EnginePeer?,
-        storyItem: EngineStoryItem,
-        isMy: Bool
-    ) {
-        self.id = id
+        storyItem: EngineStoryItem) {
         self.position = position
         self.peer = peer
         self.storyItem = storyItem
-        self.isMy = isMy
     }
 }
 
@@ -108,22 +101,23 @@ final class StoryContentContextState {
         let totalCount: Int
         let previousItemId: Int32?
         let nextItemId: Int32?
-
+        let allItems: [StoryContentItem]
         init(
             peer: EnginePeer,
             additionalPeerData: AdditionalPeerData,
             item: StoryContentItem,
             totalCount: Int,
             previousItemId: Int32?,
-            nextItemId: Int32?
-        ) {
-            self.peer = peer
-            self.additionalPeerData = additionalPeerData
-            self.item = item
-            self.totalCount = totalCount
-            self.previousItemId = previousItemId
-            self.nextItemId = nextItemId
-        }
+            nextItemId: Int32?,
+            allItems: [StoryContentItem]) {
+                self.peer = peer
+                self.additionalPeerData = additionalPeerData
+                self.item = item
+                self.totalCount = totalCount
+                self.previousItemId = previousItemId
+                self.nextItemId = nextItemId
+                self.allItems = allItems
+            }
         
         static func ==(lhs: FocusedSlice, rhs: FocusedSlice) -> Bool {
             if lhs.peer != rhs.peer {
@@ -148,29 +142,31 @@ final class StoryContentContextState {
     let slice: FocusedSlice?
     let previousSlice: FocusedSlice?
     let nextSlice: FocusedSlice?
-    let isProfileView: Bool
 
     init(
         slice: FocusedSlice?,
         previousSlice: FocusedSlice?,
-        nextSlice: FocusedSlice?,
-        isProfileView: Bool
-    ) {
+        nextSlice: FocusedSlice?) {
         self.slice = slice
         self.previousSlice = previousSlice
         self.nextSlice = nextSlice
-        self.isProfileView = isProfileView
     }
 }
 
-enum StoryContentContextNavigation {
-    enum Direction {
+public enum StoryContentContextNavigation {
+    public enum ItemDirection {
+        case previous
+        case next
+        case id(Int32)
+    }
+    
+    public enum PeerDirection {
         case previous
         case next
     }
     
-    case item(Direction)
-    case peer(Direction)
+    case item(ItemDirection)
+    case peer(PeerDirection)
 }
 
 protocol StoryContentContext: AnyObject {
@@ -187,7 +183,7 @@ protocol StoryContentContext: AnyObject {
 final class StoryContentContextImpl: StoryContentContext {
     private final class PeerContext {
         private let context: AccountContext
-        private let peerId: EnginePeer.Id
+        let peerId: EnginePeer.Id
         
         private(set) var sliceValue: StoryContentContextState.FocusedSlice?
         fileprivate var nextItems: [EngineStoryItem] = []
@@ -272,10 +268,10 @@ final class StoryContentContextImpl: StoryContentContext {
                 let additionalPeerData: StoryContentContextState.AdditionalPeerData
                 if let cachedPeerDataView = views.views[PostboxViewKey.cachedPeerData(peerId: peerId)] as? CachedPeerDataView, let cachedUserData = cachedPeerDataView.cachedPeerData as? CachedUserData {
                     var isMuted = false
-                    if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, let storiesMuted = notificationSettings.storiesMuted {
-                        isMuted = storiesMuted
+                    if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings {
+                        isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings)
                     } else {
-                        isMuted = globalNotificationSettings.privateChats.storiesMuted
+                        isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: nil)
                     }
                     additionalPeerData = StoryContentContextState.AdditionalPeerData(isMuted: isMuted, areVoiceMessagesAvailable: cachedUserData.voiceMessagesAvailable)
                 } else {
@@ -418,20 +414,27 @@ final class StoryContentContextImpl: StoryContentContext {
                             }
                         }
                         
+                        let allItems = mappedItems.map { item in
+                            return StoryContentItem(
+                                position: nil,
+                                peer: peer,
+                                storyItem: item
+                            )
+                        }
+                        
                         self.nextItems = nextItems
                         self.sliceValue = StoryContentContextState.FocusedSlice(
                             peer: peer,
                             additionalPeerData: additionalPeerData,
                             item: StoryContentItem(
-                                id: AnyHashable(mappedItem.id),
                                 position: focusedIndex,
                                 peer: peer,
-                                storyItem: mappedItem,
-                                isMy: peerId == context.account.peerId
+                                storyItem: mappedItem
                             ),
                             totalCount: mappedItems.count,
                             previousItemId: previousItemId,
-                            nextItemId: nextItemId
+                            nextItemId: nextItemId,
+                            allItems: allItems
                         )
                         self.isReady = true
                         self.updated.set(.single(Void()))
@@ -564,13 +567,15 @@ final class StoryContentContextImpl: StoryContentContext {
         context: AccountContext,
         isHidden: Bool,
         focusedPeerId: EnginePeer.Id?,
-        singlePeer: Bool
+        singlePeer: Bool,
+        fixedOrder: [EnginePeer.Id] = []
     ) {
         self.context = context
         self.isHidden = isHidden
         if let focusedPeerId = focusedPeerId {
             self.focusedItem = (focusedPeerId, nil)
         }
+        self.fixedSubscriptionOrder = fixedOrder
         
         if singlePeer {
             guard let focusedPeerId = focusedPeerId else {
@@ -676,29 +681,26 @@ final class StoryContentContextImpl: StoryContentContext {
                 } else {
                     var startedWithUnseenValue = false
                     
-                    if let (focusedPeerId, _) = self.focusedItem, focusedPeerId == self.context.account.peerId {
-                    } else {
-                        var centralIndex: Int?
-                        if let (focusedPeerId, _) = self.focusedItem {
-                            if let index = storySubscriptions.items.firstIndex(where: { $0.peer.id == focusedPeerId }) {
-                                centralIndex = index
-                            }
+                    var centralIndex: Int?
+                    if let (focusedPeerId, _) = self.focusedItem {
+                        if let index = storySubscriptions.items.firstIndex(where: { $0.peer.id == focusedPeerId }) {
+                            centralIndex = index
                         }
-                        if centralIndex == nil {
-                            if let index = storySubscriptions.items.firstIndex(where: { $0.hasUnseen }) {
-                                centralIndex = index
-                            }
+                    }
+                    if centralIndex == nil {
+                        if let index = storySubscriptions.items.firstIndex(where: { $0.hasUnseen }) {
+                            centralIndex = index
                         }
-                        if centralIndex == nil {
-                            if !storySubscriptions.items.isEmpty {
-                                centralIndex = 0
-                            }
+                    }
+                    if centralIndex == nil {
+                        if !storySubscriptions.items.isEmpty {
+                            centralIndex = 0
                         }
-                        
-                        if let centralIndex = centralIndex {
-                            if storySubscriptions.items[centralIndex].hasUnseen {
-                                startedWithUnseenValue = true
-                            }
+                    }
+                    
+                    if let centralIndex = centralIndex {
+                        if storySubscriptions.items[centralIndex].hasUnseen {
+                            startedWithUnseenValue = true
                         }
                     }
                     
@@ -748,9 +750,11 @@ final class StoryContentContextImpl: StoryContentContext {
     }
     
     private func updatePeerContexts() {
-        if let currentState = self.currentState {
-            let _ = currentState
-        } else {
+        if let currentState = self.currentState, let storySubscriptions = self.storySubscriptions, !storySubscriptions.items.contains(where: { $0.peer.id == currentState.centralPeerContext.peerId }) {
+            self.currentState = nil
+        }
+        
+        if self.currentState == nil {
             self.switchToFocusedPeerId()
         }
     }
@@ -858,8 +862,7 @@ final class StoryContentContextImpl: StoryContentContext {
         let stateValue = StoryContentContextState(
             slice: currentState.centralPeerContext.sliceValue,
             previousSlice: currentState.previousPeerContext?.sliceValue,
-            nextSlice: currentState.nextPeerContext?.sliceValue,
-            isProfileView: false
+            nextSlice: currentState.nextPeerContext?.sliceValue
         )
         self.stateValue = stateValue
         self.statePromise.set(.single(stateValue))
@@ -1007,6 +1010,10 @@ final class StoryContentContextImpl: StoryContentContext {
                     if let nextItemId = slice.nextItemId {
                         currentState.centralPeerContext.currentFocusedId = nextItemId
                     }
+                case let .id(id):
+                    if slice.allItems.contains(where: { $0.storyItem.id == id }) {
+                        currentState.centralPeerContext.currentFocusedId = id
+                    }
                 }
             }
         }
@@ -1074,12 +1081,11 @@ final class SingleStoryContentContextImpl: StoryContentContext {
             let (peer, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
             let (item, peers) = itemAndPeers
             
-            var isMuted = false
-            if let storiesMuted = notificationSettings.storiesMuted {
-                isMuted = storiesMuted
-            } else {
-                isMuted = globalNotificationSettings.privateChats.storiesMuted
+            guard let peer = peer else {
+                return
             }
+            
+            let isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings._asNotificationSettings())
             
             let additionalPeerData = StoryContentContextState.AdditionalPeerData(
                 isMuted: isMuted,
@@ -1095,7 +1101,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 }
             }
             
-            if let item = item, case let .item(itemValue) = item, let media = itemValue.media, let peer = peer {
+            if let item = item, case let .item(itemValue) = item, let media = itemValue.media {
                 let mappedItem = EngineStoryItem(
                     id: itemValue.id,
                     timestamp: itemValue.timestamp,
@@ -1120,24 +1126,23 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     isForwardingDisabled: itemValue.isForwardingDisabled
                 )
                 
+                let mainItem = StoryContentItem(
+                    position: 0,
+                    peer: peer,
+                    storyItem: mappedItem
+                )
                 let stateValue = StoryContentContextState(
                     slice: StoryContentContextState.FocusedSlice(
                         peer: peer,
                         additionalPeerData: additionalPeerData,
-                        item: StoryContentItem(
-                            id: AnyHashable(item.id),
-                            position: 0,
-                            peer: peer,
-                            storyItem: mappedItem,
-                            isMy: peer.id == context.account.peerId
-                        ),
+                        item: mainItem,
                         totalCount: 1,
                         previousItemId: nil,
-                        nextItemId: nil
+                        nextItemId: nil,
+                        allItems: [mainItem]
                     ),
                     previousSlice: nil,
-                    nextSlice: nil,
-                    isProfileView: false
+                    nextSlice: nil
                 )
                 
                 if self.stateValue == nil || self.stateValue?.slice != stateValue.slice {
@@ -1149,8 +1154,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 let stateValue = StoryContentContextState(
                     slice: nil,
                     previousSlice: nil,
-                    nextSlice: nil,
-                    isProfileView: false
+                    nextSlice: nil
                 )
                 
                 if self.stateValue == nil || self.stateValue?.slice != stateValue.slice {
@@ -1225,12 +1229,11 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
             
             let (peer, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
             
-            var isMuted = false
-            if let storiesMuted = notificationSettings.storiesMuted {
-                isMuted = storiesMuted
-            } else {
-                isMuted = globalNotificationSettings.privateChats.storiesMuted
+            guard let peer = peer else {
+                return
             }
+            
+            let isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings._asNotificationSettings())
             
             let additionalPeerData = StoryContentContextState.AdditionalPeerData(
                 isMuted: isMuted,
@@ -1267,28 +1270,34 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
             }
             
             let stateValue: StoryContentContextState
-            if let focusedIndex = focusedIndex, let peer = peer {
+            if let focusedIndex = focusedIndex {
                 let item = state.items[focusedIndex]
                 self.focusedId = item.id
+                
+                let allItems = state.items.map { stateItem -> StoryContentItem in
+                    return StoryContentItem(
+                        position: nil,
+                        peer: peer,
+                        storyItem: stateItem
+                    )
+                }
                 
                 stateValue = StoryContentContextState(
                     slice: StoryContentContextState.FocusedSlice(
                         peer: peer,
                         additionalPeerData: additionalPeerData,
                         item: StoryContentItem(
-                            id: AnyHashable(item.id),
-                            position: focusedIndex,
+                            position: nil,
                             peer: peer,
-                            storyItem: item,
-                            isMy: peerId == self.context.account.peerId
+                            storyItem: item
                         ),
                         totalCount: state.totalCount,
                         previousItemId: focusedIndex == 0 ? nil : state.items[focusedIndex - 1].id,
-                        nextItemId: (focusedIndex == state.items.count - 1) ? nil : state.items[focusedIndex + 1].id
+                        nextItemId: (focusedIndex == state.items.count - 1) ? nil : state.items[focusedIndex + 1].id,
+                        allItems: allItems
                     ),
                     previousSlice: nil,
-                    nextSlice: nil,
-                    isProfileView: true
+                    nextSlice: nil
                 )
             } else {
                 self.focusedId = nil
@@ -1296,8 +1305,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 stateValue = StoryContentContextState(
                     slice: nil,
                     previousSlice: nil,
-                    nextSlice: nil,
-                    isProfileView: true
+                    nextSlice: nil
                 )
             }
             
@@ -1309,7 +1317,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 var resultResources: [EngineMediaResource.Id: StoryPreloadInfo] = [:]
                 var pollItems: [StoryKey] = []
                 
-                if let peer = peer, let focusedIndex = focusedIndex, let slice = stateValue.slice {
+                if let focusedIndex, let slice = stateValue.slice {
                     var possibleItems: [(EnginePeer, EngineStoryItem)] = []
                     if peer.id == self.context.account.peerId {
                         pollItems.append(StoryKey(peerId: peer.id, id: slice.item.storyItem.id))
@@ -1418,15 +1426,19 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
         case .peer:
             break
         case let .item(direction):
-            let indexDifference: Int
+            var indexDifference: Int?
             switch direction {
             case .next:
                 indexDifference = 1
             case .previous:
                 indexDifference = -1
+            case let .id(id):
+                if let listState = self.listState, let focusedId = self.focusedId, let index = listState.items.firstIndex(where: { $0.id == focusedId }), let nextIndex = listState.items.firstIndex(where: { $0.id == id }) {
+                    indexDifference = nextIndex - index
+                }
             }
             
-            if let listState = self.listState, let focusedId = self.focusedId {
+            if let indexDifference = indexDifference, let listState = self.listState, let focusedId = self.focusedId {
                 if let index = listState.items.firstIndex(where: { $0.id == focusedId }) {
                     var nextIndex = index + indexDifference
                     if nextIndex < 0 {

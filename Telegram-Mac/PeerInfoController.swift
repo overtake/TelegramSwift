@@ -290,6 +290,13 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     let stories: PeerExpiringStoryListContext?
     
     
+    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId) {
+        if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
+            return
+        }
+        navigation.push(PeerInfoController(context: context, peerId: peerId))
+    }
+    
     init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
         self.peerId = peerId
         self.source = source

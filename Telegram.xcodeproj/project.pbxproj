@@ -366,6 +366,10 @@
 		2796FF1027424BA800DA653C /* DateUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 2796FF0F27424BA800DA653C /* DateUtils */; };
 		279A1E0D25E90D13007D48E7 /* PaymentWebInteractionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */; };
 		279A1E2825E945A2007D48E7 /* PaymentsReceiptController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */; };
+		279B03542A4ECCC3007D2AB9 /* menu_move_to_contacts.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 279B03532A4ECCC3007D2AB9 /* menu_move_to_contacts.tgs */; };
+		279B03562A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279B03552A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift */; };
+		279B03572A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279B03552A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift */; };
+		279B03592A4F1CB3007D2AB9 /* menu_stories.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 279B03582A4F1CB3007D2AB9 /* menu_stories.tgs */; };
 		279BD40629B1D79000A8B640 /* ContextInlineWebViewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */; };
 		279BD40E29BB283700A8B640 /* menu_atsign.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 279BD40D29BB283700A8B640 /* menu_atsign.tgs */; };
 		279BD41029BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279BD40F29BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift */; };
@@ -1828,6 +1832,9 @@
 		2796FF0E27424A7C00DA653C /* DateUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DateUtils; path = packages/DateUtils; sourceTree = "<group>"; };
 		279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentWebInteractionController.swift; sourceTree = "<group>"; };
 		279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsReceiptController.swift; sourceTree = "<group>"; };
+		279B03532A4ECCC3007D2AB9 /* menu_move_to_contacts.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_move_to_contacts.tgs; sourceTree = "<group>"; };
+		279B03552A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarStoryIndicatorComponent.swift; sourceTree = "<group>"; };
+		279B03582A4F1CB3007D2AB9 /* menu_stories.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_stories.tgs; sourceTree = "<group>"; };
 		279BD40529B1D79000A8B640 /* ContextInlineWebViewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextInlineWebViewRowItem.swift; sourceTree = "<group>"; };
 		279BD40B29B71FA200A8B640 /* Network.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Network.framework; path = System/Library/Frameworks/Network.framework; sourceTree = SDKROOT; };
 		279BD40D29BB283700A8B640 /* menu_atsign.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_atsign.tgs; sourceTree = "<group>"; };
@@ -3070,6 +3077,7 @@
 				2719D8132A1774BC00081079 /* StoryViewersModalController.swift */,
 				2719D8152A1F555500081079 /* StoryChatContent.swift */,
 				27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */,
+				279B03552A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift */,
 			);
 			name = stories;
 			sourceTree = "<group>";
@@ -3462,12 +3470,14 @@
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
 				27E60C1029ED35E200E10E39 /* menu_online.tgs */,
+				279B03582A4F1CB3007D2AB9 /* menu_stories.tgs */,
 				27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */,
 				2747FD3A2927BFBE0045B95C /* menu_hide.tgs */,
 				276279D5298D32EF0096F904 /* menu_more.tgs */,
 				2718244C2A0507A300AFBD4C /* menu_success.tgs */,
 				2751015029C86A15004CEFF3 /* menu_speed.tgs */,
 				279BD40D29BB283700A8B640 /* menu_atsign.tgs */,
+				279B03532A4ECCC3007D2AB9 /* menu_move_to_contacts.tgs */,
 				2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */,
 				27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */,
 				2747FD392927BFBD0045B95C /* menu_show.tgs */,
@@ -6285,6 +6295,7 @@
 				27D91320283BC0EB007CF40F /* texture.jpg in Resources */,
 				27672EC326F8D65800297DB4 /* 111.m4a in Resources */,
 				2764A5AE25DFBDE700F9A20D /* police.tgs in Resources */,
+				279B03542A4ECCC3007D2AB9 /* menu_move_to_contacts.tgs in Resources */,
 				27CE1569297966D8001F8CE8 /* emoji_category_study.tgs in Resources */,
 				2738A2E228A124F700EC1010 /* gift.scn in Resources */,
 				27D6043B2955A20A00588C21 /* menu_add.tgs in Resources */,
@@ -6389,6 +6400,7 @@
 				27D91323283BC0EB007CF40F /* star in Resources */,
 				27916F29287D77660046DB44 /* symbols.tgs in Resources */,
 				2773A56C25FAA63E00AB45E9 /* voice_chat_hand_on_unmuted.tgs in Resources */,
+				279B03592A4F1CB3007D2AB9 /* menu_stories.tgs in Resources */,
 				27F37A262850F8F200AC8B90 /* voice_dots.tgs in Resources */,
 				27803C0727A3E944007B0FA9 /* menu_folder_personal.tgs in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
@@ -6677,6 +6689,7 @@
 				C232EABC1E1D134C00C4D38C /* AvatarLayer.swift in Sources */,
 				C232EABA1E1D12B100C4D38C /* GeneralRowItem.swift in Sources */,
 				C232EABB1E1D12B100C4D38C /* GeneralRowView.swift in Sources */,
+				279B03572A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift in Sources */,
 				C291E2731E8AFA2C00D397BA /* ShareApplicationContext.swift in Sources */,
 				C232EAB81E1D12A300C4D38C /* ShortPeerRowItem.swift in Sources */,
 				C232EAB91E1D12A300C4D38C /* ShortPeerRowView.swift in Sources */,
@@ -6825,6 +6838,7 @@
 				9FC4DAA821DE0626003E2A62 /* ChannelPermissionsController.swift in Sources */,
 				27C2B1A827C3D54F004BC87B /* StoreDownloadedMedia.swift in Sources */,
 				C2E0646B1ECF137300387BB8 /* ChatInvoiceItem.swift in Sources */,
+				279B03562A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift in Sources */,
 				C232234D1DE20E610078D738 /* ChatMessageDateHeader.swift in Sources */,
 				A76C8AB3242366EC00FDB071 /* PeerMediaBlockRowItem.swift in Sources */,
 				C20D5AB31DA9965B0042616A /* EBlockRowView.swift in Sources */,

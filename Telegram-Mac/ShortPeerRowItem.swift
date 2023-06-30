@@ -197,6 +197,9 @@ class ShortPeerRowItem: GeneralRowItem {
     
     
     let story: EngineStorySubscriptions.Item?
+    
+    let avatarStoryIndicator: AvatarStoryIndicatorComponent?
+
     let openStory:(StoryInitialIndex?)->Void
 
     
@@ -236,6 +239,12 @@ class ShortPeerRowItem: GeneralRowItem {
         self.isLookSavedMessage = isLookSavedMessage
         self.highlightVerified = highlightVerified
 
+        if let story = story {
+            self.avatarStoryIndicator = .init(story: story, presentation: theme)
+        } else {
+            self.avatarStoryIndicator = nil
+        }
+        
         
         let tAttr:NSMutableAttributedString = NSMutableAttributedString()
         if isLookSavedMessage && account.peerId == peer.id {

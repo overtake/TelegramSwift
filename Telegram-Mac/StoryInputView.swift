@@ -97,27 +97,6 @@ private final class StoryReplyActionButton : View {
             }
             let current: ImageButton = ImageButton()
             
-            current.set(handler: { [weak arguments, weak self] _ in
-                if state == .text {
-                    if let story = self?.story, let peerId = story.peerId {
-                        arguments?.sendMessage(peerId, story.storyItem.id)
-                    }
-                } else if state == .share {
-                    if let story = self?.story {
-                        arguments?.share(story)
-                    }
-                } else {
-                    arguments?.toggleRecordType()
-                }
-            }, for: .Click)
-            
-            current.set(handler: { [weak arguments] _ in
-                if state == .text {
-                } else {
-                    arguments?.startRecording(false)
-                }
-            }, for: .LongMouseDown)
-            
             current.autohighlight = false
             current.animates = false
             switch state {
@@ -139,7 +118,55 @@ private final class StoryReplyActionButton : View {
                 current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
             }
         }
+        
         self.state = state
+
+        guard let current = self.current else {
+            return
+        }
+        current.removeAllHandlers()
+        
+        if state == .share, story?.storyItem.isForwardingDisabled == true {
+            if story?.canCopyLink == false {
+                tooltip(for: current, text: "You can't share this story")
+            } else {
+                current.contextMenu = {
+                    let menu = ContextMenu()
+                    menu.addItem(ContextMenuItem(strings().modalCopyLink, handler: { [weak arguments, weak story] in
+                        if let story = story {
+                            arguments?.copyLink(story)
+                        }
+                    }, itemImage: MenuAnimation.menu_copy_link.value))
+                    return menu
+                }
+            }
+            
+        } else {
+            current.contextMenu = nil
+            
+            current.set(handler: { [weak arguments, weak self] _ in
+                if state == .text {
+                    if let story = self?.story, let peerId = story.peerId {
+                        arguments?.sendMessage(peerId, story.storyItem.id)
+                    }
+                } else if state == .share {
+                    if let story = self?.story {
+                        arguments?.share(story)
+                    }
+                } else {
+                    arguments?.toggleRecordType()
+                }
+            }, for: .Click)
+            
+            if case .empty = state {
+                current.set(handler: { [weak arguments] _ in
+                    if state == .text {
+                    } else {
+                        arguments?.startRecording(false)
+                    }
+                }, for: .LongMouseDown)
+            }
+        }
     }
 }
 

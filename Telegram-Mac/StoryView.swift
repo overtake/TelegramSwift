@@ -13,8 +13,6 @@ import SwiftSignalKit
 import Postbox
 
 
-
-
 class StoryView : Control {
     
     fileprivate var magnifyView: MagnifyView!
@@ -230,6 +228,7 @@ class StoryView : Control {
         
         if let shimmer = self.shimmer {
             transition.updateFrame(layer: shimmer, frame: size.bounds)
+            shimmer.updateAbsoluteRect(size.bounds, within: size)
         }
     }
     
