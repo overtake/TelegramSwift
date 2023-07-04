@@ -540,7 +540,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     var blurBackground: Bool {
-        return (parent != nil && parent?.groupingKey == nil) || parent == nil
+        return ((parent != nil && parent?.groupingKey == nil) || parent == nil) && self.parameters != nil
     }
 
     override func update(size: NSSize) {
@@ -643,8 +643,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
             dimensions = file.dimensions?.size ?? size
         }
         
-        let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
-
 
         
 

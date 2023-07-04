@@ -336,7 +336,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
         CATransaction.begin()
-        self.scroll(to: newOrigin, animated: false)
+        self.bounds = CGRect(x: newOrigin.x, y: newOrigin.y, width: bounds.width, height: bounds.height)
         CATransaction.commit()
         
     }

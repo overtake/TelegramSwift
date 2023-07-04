@@ -388,8 +388,6 @@ final class StoryListView : Control, Notifable {
     private let controls = StoryControlsView(frame: .zero)
     private let navigator = StoryListNavigationView(frame: .zero)
     private var text: Text?
-    private let container = View()
-    private var animationMask: SimpleLayer?
     
     private var prevStoryView: ShadowView?
     private var nextStoryView: ShadowView?
@@ -398,7 +396,10 @@ final class StoryListView : Control, Notifable {
         
     var storyDidUpdate:((Message)->Void)?
     
-    private var inputView: (NSView & StoryInput)!
+    private(set) var inputView: (NSView & StoryInput)!
+    let container = View()
+
+    
     
     var textView: NSTextView? {
         return self.inputView.input
@@ -455,11 +456,12 @@ final class StoryListView : Control, Notifable {
         }, for: .Click)
         
         
-        
-        set(handler: { [weak self] _ in
-            self?.resetInputView()
-        }, for: .Click)
+//        
+//        set(handler: { [weak self] _ in
+//            self?.resetInputView()
+//        }, for: .Click)
              
+        self.userInteractionEnabled = false
     }
     
     private func updateSides(animated: Bool = true) {

@@ -466,7 +466,7 @@ open class Control: View {
                 }
             } else {
                 if mouseInside() && !longInvoked {
-                    NSSound.beep()
+                    //NSSound.beep()
                 }
             }
             

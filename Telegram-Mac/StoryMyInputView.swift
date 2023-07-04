@@ -338,6 +338,10 @@ final class StoryMyInputView : Control, StoryInput {
         
     }
     
+    func updateInputContext(with result:ChatPresentationInputQueryResult?, context: InputContextHelper, animated:Bool) {
+        
+    }
+    
     func makeUrl() {
         
     }
@@ -398,5 +402,7 @@ final class StoryMyInputView : Control, StoryInput {
         super.layout()
         self.updateLayout(size: self.frame.size, transition: .immediate)
     }
+    
+    
     
 }

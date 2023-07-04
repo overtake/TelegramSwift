@@ -2118,7 +2118,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
         }
         if let hash = selectedhash, scroll {
-            self.scroll(to: .top(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), toVisible: true)
+            self.scroll(to: .top(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), toVisible: true)
         }
     }
     
@@ -2168,7 +2168,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         if let hash = selectedhash, scroll {
-            self.scroll(to: .bottom(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: previousInset), inset: NSEdgeInsets(), toVisible: true)
+            self.scroll(to: .bottom(id: hash, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0), inset: NSEdgeInsets(), toVisible: true)
         }
     }
     

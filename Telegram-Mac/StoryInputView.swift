@@ -27,7 +27,8 @@ protocol StoryInput {
     func installInputStateUpdate(_ f: ((StoryInputState)->Void)?) -> Void
     func makeUrl()
     func resetInputView()
-    
+    func updateInputContext(with result:ChatPresentationInputQueryResult?, context: InputContextHelper, animated:Bool)
+
     func update(_ story: StoryContentItem, animated: Bool)
     
     var isFirstResponder: Bool { get }
@@ -252,6 +253,11 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 
         let wSize = NSMakeSize(window.contentView!.frame.width - 100, window.contentView!.frame.height - 110)
         let aspect = StoryView.size.aspectFitted(wSize)
+        
+        var size = size
+        if self.inputState == .focus, let inputContextSize = self.inputContextSize {
+            size.height += inputContextSize.height
+        }
 
         transition.updateFrame(view: self, frame: CGRect(origin: CGPoint(x: 0, y: aspect.height + 10 - size.height + 50), size: size))
         self.updateLayout(size: size, transition: transition)
@@ -410,6 +416,8 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         guard let window = self.window, let arguments = self.arguments else {
             return
         }
+        
+        
         let maxSize = NSMakeSize(window.contentView!.frame.width - 100, window.contentView!.frame.height - 110)
         let supersize = StoryView.size.aspectFitted(maxSize)
         let size: NSSize
@@ -435,6 +443,8 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 textView.inputView.isEditable = !arguments.interaction.presentation.inTransition
             }
         }
+        
+        
         self.action.update(state: !isFirstResponder && self.story?.sharable == true ? .share : textView.string().isEmpty ? .empty(isVoice: arguments.interaction.presentation.recordType == .voice) : .text, arguments: arguments, story: self.story, animated: animated)
         self.updateInputSize(size: size, animated: animated)
         
@@ -458,6 +468,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     }
     
     let textView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 100, 34))
+    private let textContainer = View()
     private let visualEffect: VisualEffect
     private let attach = ImageButton()
     private let action = StoryReplyActionButton(frame: NSMakeRect(0, 0, 50, 50))
@@ -477,7 +488,8 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         addSubview(attach)
         addSubview(action)
         addSubview(stickers)
-        addSubview(textView)
+        addSubview(textContainer)
+        textContainer.addSubview(textView)
         
         self.set(handler: { [weak self] _ in
             self?.window?.makeFirstResponder(self?.input)
@@ -591,6 +603,30 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         }
     }
     
+    private var inputContextSize: NSSize? = nil
+    
+    func updateInputContext(with result:ChatPresentationInputQueryResult?, context: InputContextHelper, animated:Bool) {
+        context.updatedSize = { [weak self] size, animated in
+            NSLog("inputContextSize: \(size), animated: \(animated)")
+            self?.inputContextSize = size
+            self?.updateInputState(animated: animated)
+        }
+        context.getHeight = {
+            return 150
+        }
+        context.getPresentation = {
+            storyTheme
+        }
+        context.getBackground = {
+            .clear
+        }
+        context.onDisappear = { [weak self] in
+            self?.inputContextSize = nil
+            self?.updateInputState(animated: animated)
+        }
+        context.context(with: result, for: self, relativeView: self.textContainer, position: .above, animated: animated)
+    }
+    
     
     deinit {
         rtfAttachmentsDisposable.dispose()
@@ -607,10 +643,14 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         transition.updateFrame(view: attach, frame: NSMakeRect(0, size.height - attach.frame.height, attach.frame.width, attach.frame.height))
         transition.updateFrame(view: visualEffect, frame: focus(window.frame.size))
         
-       
-        var textRect = focus(NSMakeSize(size.width - 150, textView.frame.height))
+        
+        var textRect = NSMakeSize(size.width - 150, textView.frame.height + 16).bounds
         textRect.origin.x = 50
-        transition.updateFrame(view: textView, frame: textRect)
+        textRect.origin.y = size.height - textRect.height
+        
+        transition.updateFrame(view: textContainer, frame: textRect)
+
+        transition.updateFrame(view: textView, frame: textContainer.bounds.insetBy(dx: 0, dy: 8))
     }
     
     override func layout() {

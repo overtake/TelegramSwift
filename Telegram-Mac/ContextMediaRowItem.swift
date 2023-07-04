@@ -258,6 +258,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         } else {
                             view = MediaAnimatedStickerView(frame: NSZeroRect)
                         }
+                        view.backgroundColor = .clear
                         let size = NSMakeSize(round(item.result.sizes[i].width), round(item.result.sizes[i].height))
                         view.update(with: file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
                         view.userInteractionEnabled = false

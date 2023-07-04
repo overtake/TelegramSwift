@@ -500,7 +500,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.updatingPhotoState = updatingPhotoState
         self.updatePhoto = updatePhoto
         
-        if let storyState = stories {
+        if let storyState = stories, !storyState.items.isEmpty {
             let compoment = AvatarStoryIndicatorComponent(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount))
             self.avatarStoryComponent = compoment
         } else {

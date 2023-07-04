@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import TelegramCore
 
-public final class AvatarStoryIndicatorComponent {
+public final class AvatarStoryIndicatorComponent : Equatable {
     public struct Counters: Equatable {
         public var totalCount: Int
         public var unseenCount: Int
@@ -98,6 +98,8 @@ public final class AvatarStoryIndicatorComponent {
                 guard let component = self.component else {
                     return
                 }
+                
+                
                 let progress = self.progress
                 
                 let size = layer.frame.size
@@ -142,8 +144,9 @@ public final class AvatarStoryIndicatorComponent {
                 var locations: [CGFloat] = [0.0, 1.0]
                 
                 context.setLineWidth(lineWidth)
-                
-                if let counters = component.counters, counters.totalCount > 1 {
+                context.setLineCap(.round)
+
+                if let counters = component.counters, counters.totalCount > 1, progress != 0 {
                                         
                     let center = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
                     let radius = (diameter - lineWidth) * 0.5
@@ -152,72 +155,72 @@ public final class AvatarStoryIndicatorComponent {
                     let circleLength = CGFloat.pi * 2.0 * radius
                     let segmentLength = (circleLength - spacing * CGFloat(counters.totalCount)) / CGFloat(counters.totalCount)
                     let segmentAngle = segmentLength / radius
-                    
-                    var passCount = 2
-                    if counters.unseenCount > 0 {
-                        passCount = 3
-                    }
-                    
-                    for pass in 0 ..< passCount {
-                        context.resetClip()
+                    if segmentLength >= 1 {
+                        var passCount = 2
+                        if counters.unseenCount > 0 {
+                            passCount = 3
+                        }
                         
-                        let startIndex: Int
-                        let endIndex: Int
-                        if pass == 0 {
-                            startIndex = 0
-                            endIndex = counters.totalCount - counters.unseenCount
-                        } else if pass == 1 {
-                            startIndex = counters.totalCount - counters.unseenCount
-                            endIndex = counters.totalCount
-                        } else {
-                            startIndex = 0
-                            endIndex = counters.totalCount - counters.unseenCount
-                        }
-                        if startIndex < endIndex {
-                            for i in startIndex ..< endIndex {
-                                let startAngle = CGFloat(i) * (angularSpacing + segmentAngle) - CGFloat.pi * 0.5 + angularSpacing * 0.5
-                                context.move(to: CGPoint(x: center.x + cos(startAngle) * radius, y: center.y + sin(startAngle) * radius))
-                                context.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: startAngle + segmentAngle, clockwise: false)
-                            }
-                            context.setLineCap(.round)
-
-                            context.replacePathWithStrokedPath()
-                            context.clip()
+                        for pass in 0 ..< passCount {
+                            context.resetClip()
                             
-                            let colors: [CGColor]
-                            if pass == 1 {
-                                colors = activeColors.map { $0.cgColor }
-                            } else if pass == 0 {
-                                colors = inactiveColors.map { $0.cgColor }
+                            let startIndex: Int
+                            let endIndex: Int
+                            if pass == 0 {
+                                startIndex = 0
+                                endIndex = counters.totalCount - counters.unseenCount
+                            } else if pass == 1 {
+                                startIndex = counters.totalCount - counters.unseenCount
+                                endIndex = counters.totalCount
                             } else {
-                                colors = activeColors.map { $0.withAlphaComponent(1 - progress) }.map { $0.cgColor }
+                                startIndex = 0
+                                endIndex = counters.totalCount - counters.unseenCount
                             }
-                            
-                            let colorSpace = CGColorSpaceCreateDeviceRGB()
-                            let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
-                            
-                            context.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+                            if startIndex < endIndex {
+                                for i in startIndex ..< endIndex {
+                                    let startAngle = CGFloat(i) * (angularSpacing + segmentAngle) - CGFloat.pi * 0.5 + angularSpacing * 0.5
+                                    context.move(to: CGPoint(x: center.x + cos(startAngle) * radius, y: center.y + sin(startAngle) * radius))
+                                    context.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: startAngle + segmentAngle, clockwise: false)
+                                }
+
+                                context.replacePathWithStrokedPath()
+                                context.clip()
+                                
+                                let colors: [CGColor]
+                                if pass == 1 {
+                                    colors = activeColors.map { $0.cgColor }
+                                } else if pass == 0 {
+                                    colors = inactiveColors.map { $0.cgColor }
+                                } else {
+                                    colors = activeColors.map { $0.withAlphaComponent(1 - progress) }.map { $0.cgColor }
+                                }
+                                
+                                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
+                                
+                                context.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+                            }
                         }
+                        return
                     }
-                } else {
-                    let ellipse = CGRect(origin: CGPoint(x: size.width * 0.5 - diameter * 0.5, y: size.height * 0.5 - diameter * 0.5), size: size).insetBy(dx: lineWidth * 0.5, dy: lineWidth * 0.5)
-                    context.addEllipse(in: ellipse)
-                    
-                    context.replacePathWithStrokedPath()
-                    context.clip()
-                    
-                    let colors: [CGColor]
-                    if component.hasUnseen {
-                        colors = activeColors.map { $0.cgColor }
-                    } else {
-                        colors = inactiveColors.map { $0.cgColor }
-                    }
-                    
-                    let colorSpace = CGColorSpaceCreateDeviceRGB()
-                    let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
-                    
-                    context.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
                 }
+                let ellipse = CGRect(origin: CGPoint(x: size.width * 0.5 - diameter * 0.5, y: size.height * 0.5 - diameter * 0.5), size: size).insetBy(dx: lineWidth * 0.5, dy: lineWidth * 0.5)
+                context.addEllipse(in: ellipse)
+                
+                context.replacePathWithStrokedPath()
+                context.clip()
+                
+                let colors: [CGColor]
+                if component.hasUnseen {
+                    colors = activeColors.map { $0.cgColor }
+                } else {
+                    colors = inactiveColors.map { $0.cgColor }
+                }
+                
+                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
+                
+                context.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
             }
         }
     
@@ -225,6 +228,8 @@ public final class AvatarStoryIndicatorComponent {
         private let indicatorView: Drawer = Drawer(frame: .zero)
         
         private var component: AvatarStoryIndicatorComponent?
+        private var availableSize: NSSize? = nil
+        private var progress: CGFloat? = nil
         
         required init(frame: CGRect) {
             super.init(frame: frame)
@@ -235,16 +240,21 @@ public final class AvatarStoryIndicatorComponent {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func update(component: AvatarStoryIndicatorComponent, availableSize: CGSize, progress: CGFloat = 1.0, transition: ContainedViewLayoutTransition) -> CGSize {
-            self.component = component
+        func update(component: AvatarStoryIndicatorComponent, availableSize: CGSize, progress: CGFloat = 1.0, transition: ContainedViewLayoutTransition)  {
             
+            if component == self.component, availableSize == self.availableSize, progress == self.progress {
+                return
+            }
+            self.component = component
+            self.availableSize = availableSize
+            self.progress = progress
             let maxOuterInset = component.activeLineWidth + component.activeLineWidth
             let imageDiameter = availableSize.width + maxOuterInset * 2.0
 
             let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: imageDiameter, height: imageDiameter))
             transition.updateFrame(view: self.indicatorView, frame: rect)
             
-            return self.indicatorView.update(component: component, progress: progress, availableSize: availableSize)
+            _ = self.indicatorView.update(component: component, progress: progress, availableSize: availableSize)
         }
     }
     
