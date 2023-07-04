@@ -511,7 +511,7 @@ private final class StoryListContainer : Control {
                 let frame = getFrame(item, index: i, progress: progress)
                 transition.updateFrame(view: view, frame: frame)
                 transition.updateAlpha(view: view, alpha: getAlpha(item, index: i, progress: progress))
-                view.set(progress: progress, nextIntersection: nextIntersection, transition: transition)
+                view.set(progress: progress, nextIntersection: nil, transition: transition)
             }
         }
         
