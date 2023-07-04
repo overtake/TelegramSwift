@@ -2261,11 +2261,15 @@ class ChatRowItem: TableRowItem {
                         return ChatAnimatedStickerItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                     }
                     return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
-                } else if message.media[0] is TelegramMediaStory {
+                } else if let story = message.media[0] as? TelegramMediaStory {
                     if message.isExpiredStory {
                         return ChatRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                     } else {
-                        return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        if story.isMention {
+                            return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
+                        } else {
+                            return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        }
                     }
                 } else if message.media[0] is TelegramMediaMap {
                     return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)

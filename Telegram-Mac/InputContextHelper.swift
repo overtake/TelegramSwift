@@ -171,7 +171,7 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
     }
 }
 
-fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]?, right:[AppearanceWrapperEntry<InputContextEntry>], context: AccountContext, initialSize:NSSize, chatInteraction:ChatInteraction) -> TableUpdateTransition {
+fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]?, right:[AppearanceWrapperEntry<InputContextEntry>], context: AccountContext, initialSize:NSSize, chatInteraction:ChatInteraction, getPresentation:(()->TelegramPresentationTheme)?) -> TableUpdateTransition {
     
     let (removed,inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
     
@@ -209,11 +209,11 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
         case let .command(command,_, stableId):
             return ContextCommandRowItem(initialSize, context.account, command, stableId)
         case let .emoji(clues, animated, selected, firstWord, _):
-            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, animated: animated, selected: selected, canDisablePrediction: firstWord)
+            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, animated: animated, selected: selected, canDisablePrediction: firstWord, presentation: getPresentation?())
         case let .hashtag(hashtag, _):
             return ContextHashtagRowItem(initialSize, hashtag: "#\(hashtag)")
         case let .sticker(result, stableId):
-            return ContextStickerRowItem(initialSize, context, result, stableId, chatInteraction)
+            return ContextStickerRowItem(initialSize, context, result, stableId, chatInteraction, presentation: getPresentation?())
         case .showPeers:
             return ContextShowPeersHolderItem(initialSize, stableId: entry.stableId, action: {
                 
@@ -256,14 +256,16 @@ class InputContextView : TableView {
         super.init(frame: frameRect)
         // addSubview(tableView)
         addSubview(separatorView)
-        separatorView.autoresizingMask = [.width, .maxYMargin]
         updateLocalizationAndTheme(theme: theme)
+        
+        
 
     }
     
     
      override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        separatorView.backgroundColor = theme.colors.border
+         separatorView.backgroundColor = theme.colors.border
+         
        // backgroundColor = theme.colors.background
     }
     
@@ -274,7 +276,7 @@ class InputContextView : TableView {
         super.layout()
         switch position {
         case .above:
-            separatorView.setFrameOrigin(0, 0)
+            separatorView.frame = NSMakeRect(0, 0, frame.width, .borderSize)
         case .below:
             separatorView.frame = NSMakeRect(0, frame.height - separatorView.frame.height, frame.width, .borderSize)
         }
@@ -312,23 +314,35 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     private let context:AccountContext
     private let chatInteraction:ChatInteraction
     private let highlightInsteadOfSelect: Bool
+    private let hasSeparator: Bool
     
     private var escapeTextMarked: String?
+    
+    var updatedSize:((NSSize, Bool)->Void)?
+    var getHeight: (()->CGFloat)?
+    var onDisappear:(()->Void)?
+    var getBackground:(()->NSColor)?
     
     fileprivate var result:ChatPresentationInputQueryResult?
     
     fileprivate weak var superview: NSView?
     override func loadView() {
         super.loadView()
-        genericView.delegate = self
-        view.layer?.opacity = 0
+        self.genericView.delegate = self
+        self.genericView.getBackgroundColor = { [weak self] in
+            return self?.getBackground?() ?? theme.colors.background
+        }
+        self.genericView.layer?.opacity = 0
     }
     
-    init(context: AccountContext, chatInteraction: ChatInteraction, highlightInsteadOfSelect: Bool) {
+    
+    init(context: AccountContext, chatInteraction: ChatInteraction, highlightInsteadOfSelect: Bool, hasSeparator: Bool) {
         self.chatInteraction = chatInteraction
         self.context = context
+        self.hasSeparator = hasSeparator
         self.highlightInsteadOfSelect = highlightInsteadOfSelect
         super.init()
+        bar = .init(height: 0)
     }
     
     override func viewDidLoad() {
@@ -337,6 +351,9 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        
+        genericView.separatorView.isHidden = !hasSeparator
+
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
@@ -669,6 +686,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        self.onDisappear?()
         cleanup()
     }
     
@@ -741,16 +759,15 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         }
     }
     
+
+    
     func layout(_ animated:Bool) {
         if let superview = superview, let relativeView = genericView.relativeView {
-            var height = min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 2))
+            var height = getHeight?() ?? min(superview.frame.height - 50 - relativeView.frame.height, floor(superview.frame.height / 2))
             if genericView.firstItem is ContextClueRowItem {
                 height = min(height, 120)
             }
             let future = NSMakeSize(frame.width, min(genericView.listHeight, height))
-            //  genericView.change(size: future, animated: animated)
-            //  genericView.change(pos: NSMakePoint(0, 0), animated: animated)
-            CATransaction.begin()
             genericView.change(size: future, animated: animated, duration: future.height > frame.height || genericView.position == .below ? 0 : 0.5)
             
             switch genericView.position {
@@ -759,11 +776,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             case .below:
                 genericView.separatorView.change(pos: NSMakePoint(0, frame.height - genericView.separatorView.frame.height), animated: animated)
             }
-            
-//            let y = genericView.position == .above ? relativeView.frame.minY - frame.height : relativeView.frame.maxY
-//            genericView.change(pos: NSMakePoint(0, y), animated: animated)
-            
-            CATransaction.commit()
+            self.updatedSize?(future, animated)
         }
         
     }
@@ -787,12 +800,23 @@ class InputContextHelper: NSObject {
     private let loadMoreDisposable = MetaDisposable()
     
     
+    var updatedSize: ((NSSize, Bool)->Void)?
+    var getHeight: (()->CGFloat)?
     var didScroll:(()->Void)?
+    var onDisappear:(()->Void)?
+    var getPresentation:(()->TelegramPresentationTheme)?
+    var getBackground:(()->NSColor)?
+    private var listener: TableScrollListener!
     
-    init(chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool = false) {
+    init(chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool = false, hasSeparator: Bool = true) {
         self.chatInteraction = chatInteraction
         self.context = chatInteraction.context
-        controller = InputContextViewController(context: chatInteraction.context, chatInteraction: chatInteraction, highlightInsteadOfSelect: highlightInsteadOfSelect)
+        controller = InputContextViewController(context: chatInteraction.context, chatInteraction: chatInteraction, highlightInsteadOfSelect: highlightInsteadOfSelect, hasSeparator: hasSeparator)
+        super.init()
+        
+        self.listener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            self?.didScroll?()
+        })
     }
 
     public var accessoryView:NSView? {
@@ -803,23 +827,36 @@ class InputContextHelper: NSObject {
         self.controller.viewWillDisappear(false)
     }
     
+    func reset() {
+        self.disposable.set(nil)
+        _ = self.entries.swap([])
+    }
+    
     func context(with result:ChatPresentationInputQueryResult?, for view: NSView, relativeView: NSView, position: InputContextPosition = .above, selectIndex:Int? = nil, animated:Bool) {
-        controller._frameRect = NSMakeRect(0, 0, view.frame.width, floor(view.frame.height / 3))
+        controller._frameRect = NSMakeRect(0, 0, view.frame.width, view.frame.height)
+        
+        controller.updatedSize = self.updatedSize
+        controller.getHeight = self.getHeight
+        controller.onDisappear = self.onDisappear
+        controller.getBackground = self.getBackground
+
+        
         controller.loadViewIfNeeded()
         controller.superview = view
         controller.genericView.relativeView = relativeView
         controller.genericView.position = position
-        controller.updateLocalizationAndTheme(theme: theme)
         var currentResult = result
         
-        controller.genericView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
-            self?.didScroll?()
-        }))
+        controller.genericView.addScroll(listener: listener)
         
         let initialSize = controller.atomicSize
         let previosEntries = self.entries
         let context = self.chatInteraction.context
         let chatInteraction = self.chatInteraction
+        let getPresentation = self.getPresentation
+        
+        //controller.updateLocalizationAndTheme(theme: getPresentation?() ?? theme)
+
         
         let entriesValue: Promise<[InputContextEntry]> = Promise()
         
@@ -858,7 +895,7 @@ class InputContextHelper: NSObject {
             let entries = entries.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             let previous = previosEntries.swap(entries)
             let previousIsEmpty:Bool = previous?.isEmpty ?? true
-            return (prepareEntries(left: previous, right: entries, context: context, initialSize: initialSize.modify({$0}), chatInteraction:chatInteraction),!entries.isEmpty, previousIsEmpty)
+            return (prepareEntries(left: previous, right: entries, context: context, initialSize: initialSize.modify({$0}), chatInteraction:chatInteraction, getPresentation: getPresentation),!entries.isEmpty, previousIsEmpty)
         } |> deliverOnMainQueue
         
         disposable.set((makeSignal |> map { [weak self, weak view, weak relativeView] transition, show, previousIsEmpty in
@@ -882,9 +919,8 @@ class InputContextHelper: NSObject {
                     controller.genericView.isHidden = false
                     controller.genericView.change(opacity: 1, animated: animated)
                     let y = position == .above ? relativeView.frame.minY - controller.frame.height : relativeView.frame.maxY
-                    if y != controller.genericView.frame.minY {
-                        controller.genericView._change(pos: NSMakePoint(0, y), animated: animated, duration: 0.4, timingFunction: CAMediaTimingFunctionName.spring, forceAnimateIfHasAnimation: true)
-                    }
+                    controller.genericView._change(pos: NSMakePoint(0, y), animated: animated, duration: 0.4, timingFunction: .spring, forceAnimateIfHasAnimation: true)
+
                 }
                 
             } else if let controller = self?.controller, let relativeView = relativeView {

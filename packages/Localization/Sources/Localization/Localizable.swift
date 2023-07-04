@@ -3269,6 +3269,10 @@ public final class L10n {
   public static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
   }
+  /// %@ mentioned you in a story
+  public static func chatServiceStoryMentioned(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StoryMentioned", p1)
+  }
   /// %@ suggests you profile photo
   public static func chatServiceSuggestedPhoto(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SuggestedPhoto", p1)
@@ -3522,6 +3526,10 @@ public final class L10n {
   /// %@ received the following documents: %@
   public static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
+  }
+  /// You mentioned %@ in a story
+  public static func chatServiceStoryMentionedYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StoryMentioned.You", p1)
   }
   /// %@ suggests you to use this photo for your Telegram account.
   public static func chatServiceSuggestPhotoInfo(_ p1: String) -> String {
@@ -3971,6 +3979,8 @@ public final class L10n {
   public static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
   /// Story
   public static var chatListStory: String  { return L10n.tr("Localizable", "ChatList.Story") }
+  /// mentioned you in story
+  public static var chatListStoryMentioned: String  { return L10n.tr("Localizable", "ChatList.StoryMentioned") }
   /// Feed
   public static var chatListTitleFeed: String  { return L10n.tr("Localizable", "ChatList.TitleFeed") }
   /// Unhide Muted

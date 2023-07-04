@@ -2134,7 +2134,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    var storyControl: NSView? {
+    func storyControl(_ storyId: StoryId) -> NSView? {
         return replyView?.imageView
     }
     

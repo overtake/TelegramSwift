@@ -132,7 +132,7 @@ final class StoryInteraction : InterfaceObserver {
             }
             return ChatTextInputState()
         }
-        
+                
         var mouseDown: Bool = false
         var inputInFocus: Bool = false
         var hasPopover: Bool = false
@@ -900,7 +900,8 @@ private final class StoryViewController: Control, Notifable {
     private var storyContext: StoryContentContext?
     
     private var textInputSuggestionsView: InputSwapSuggestionsPanel?
-
+    fileprivate var inputContextHelper: InputContextHelper!
+    
     var hasEmojiSwap: Bool {
         return self.textInputSuggestionsView != nil
     }
@@ -914,7 +915,7 @@ private final class StoryViewController: Control, Notifable {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction)
+                current = InputSwapSuggestionsPanel(textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: storyTheme)
                 self.textInputSuggestionsView = current
                 isNew = true
             }
@@ -930,16 +931,19 @@ private final class StoryViewController: Control, Notifable {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(container)
-        
-        
-        addSubview(prev_button)
-        addSubview(next_button)
         
         addSubview(leftTop)
         addSubview(leftBottom)
         addSubview(rightTop)
         addSubview(rightBottom)
+
+        addSubview(container)
+        
+
+        addSubview(prev_button)
+        addSubview(next_button)
+        
+
 
         next_button.controlOpacityEventIgnored = true
         prev_button.controlOpacityEventIgnored = true
@@ -956,22 +960,38 @@ private final class StoryViewController: Control, Notifable {
             self?.arguments?.close()
         }, for: .Click)
         
-        leftTop.set(handler: { [weak self] _ in
-            self?.close.send(event: .Click)
-        }, for: .Click)
+        let processClose:(Control)->Void = { [weak self] control in
+            guard let `self` = self else {
+                return
+            }
+            if let event = NSApp.currentEvent {
+                let point = self.convert(event.locationInWindow, from: nil)
+                if NSPointInRect(point, control.frame) {
+                    if self.isInputFocused {
+                        self.resetInputView()
+                    } else {
+                        self.close.send(event: .Click)
+                    }
+                }
+            }
+        }
         
-        leftBottom.set(handler: { [weak self] _ in
-            self?.close.send(event: .Click)
-        }, for: .Click)
+        leftTop.set(handler: { control in
+            processClose(control)
+        }, for: .Up)
         
-        rightTop.set(handler: { [weak self] _ in
-            self?.close.send(event: .Click)
-        }, for: .Click)
+        leftBottom.set(handler: { control in
+            processClose(control)
+        }, for: .Up)
         
-        rightBottom.set(handler: { [weak self] _ in
-            self?.close.send(event: .Click)
-        }, for: .Click)
+        rightTop.set(handler: { control in
+            processClose(control)
+        }, for: .Up)
         
+        rightBottom.set(handler: { control in
+            processClose(control)
+        }, for: .Up)
+
         
         addSubview(close)
        
@@ -995,6 +1015,7 @@ private final class StoryViewController: Control, Notifable {
                 _ = self?.next()
             }
         }
+        
         
     }
     
@@ -1062,19 +1083,22 @@ private final class StoryViewController: Control, Notifable {
 
         let point = self.convert(event.locationInWindow, from: nil)
         
-        if point.x < current.contentRect.minX, point.y > leftTop.frame.maxY, point.y < leftBottom.frame.minY {
+        if prev_button.mouseInside() {
             self.prev_button.change(opacity: hasPrevGroup ? 1 : 0, animated: animated)
             self.next_button.change(opacity: 0, animated: animated)
         } else {
             self.prev_button.change(opacity: 0, animated: animated)
         }
         
-        if point.x > current.contentRect.maxX, point.y > rightTop.frame.maxY, point.y < rightBottom.frame.minY {
+        if next_button.mouseInside() {
             self.next_button.change(opacity: hasNextGroup ? 1 : 0, animated: animated)
             self.prev_button.change(opacity: 0, animated: animated)
         } else {
             self.next_button.change(opacity: 0, animated: animated)
         }
+        
+        self.prev_button.isHidden = self.reactions != nil || self.isInputFocused
+        self.next_button.isHidden = self.reactions != nil || self.isInputFocused
         
         let close_rects = [leftTop.frame, leftBottom.frame, rightTop.frame, rightBottom.frame]
         
@@ -1083,9 +1107,8 @@ private final class StoryViewController: Control, Notifable {
         } else {
             close.set(image: close_image, for: .Normal)
         }
+
         
-        self.prev_button.isHidden = self.reactions != nil
-        self.next_button.isHidden = self.reactions != nil
     }
     
     
@@ -1314,15 +1337,28 @@ private final class StoryViewController: Control, Notifable {
             current.updateLayout(size: size, transition: transition)
 
             let halfSize = (size.width - current.contentRect.width) / 2
+            let halfHeight = max(200, size.height / 3)
+            transition.updateFrame(view: prev_button, frame: NSMakeRect(0, (size.height - halfHeight) / 2, halfSize, halfHeight))
+            transition.updateFrame(view: next_button, frame: NSMakeRect(halfSize + current.contentRect.width, (size.height - halfHeight) / 2, halfSize, halfHeight))
             
-            transition.updateFrame(view: prev_button, frame: NSMakeRect(0, 0, halfSize, size.height))
-            transition.updateFrame(view: next_button, frame: NSMakeRect(halfSize + current.contentRect.width, 0, halfSize, size.height))
+            var chl: CGFloat
+            var chr: CGFloat
+            if prev_button.isHidden {
+                chl = size.height / 2
+            } else {
+                chl = (size.height - prev_button.frame.height) / 2
+            }
+            if next_button.isHidden {
+                chr = size.height / 2
+            } else {
+                chr = (size.height - prev_button.frame.height) / 2
+            }
             
-            transition.updateFrame(view: leftTop, frame: NSMakeRect(0, 0, halfSize, 50))
-            transition.updateFrame(view: leftBottom, frame: NSMakeRect(0, frame.height - 50, halfSize, 50))
+            transition.updateFrame(view: leftTop, frame: NSMakeRect(0, 0, halfSize, chl))
+            transition.updateFrame(view: leftBottom, frame: NSMakeRect(0, prev_button.isHidden ? chl : prev_button.frame.maxY, halfSize, chl))
             
-            transition.updateFrame(view: rightTop, frame: NSMakeRect(size.width - halfSize, 0, halfSize, 50))
-            transition.updateFrame(view: rightBottom, frame: NSMakeRect(size.width - halfSize, size.height - 50, halfSize, 50))
+            transition.updateFrame(view: rightTop, frame: NSMakeRect(size.width - halfSize, 0, halfSize, chr))
+            transition.updateFrame(view: rightBottom, frame: NSMakeRect(size.width - halfSize, next_button.isHidden ? chr : next_button.frame.maxY, halfSize, chr))
 
             if let view = self.reactions {
                 let point = NSMakePoint((size.width - view.frame.width) / 2, current.storyRect.maxY - view.frame.height + 15)
@@ -1790,6 +1826,9 @@ private final class StoryViewController: Control, Notifable {
 }
 
 final class StoryModalController : ModalViewController, Notifable {
+    
+    private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
+
     private let context: AccountContext
     private var initialId: StoryInitialIndex?
     private let stories: StoryContentContext
@@ -1814,7 +1853,7 @@ final class StoryModalController : ModalViewController, Notifable {
         super.init()
         self._frameRect = context.window.contentView!.bounds
         self.bar = .init(height: 0)
-        self.entertainment.loadViewIfNeeded()
+//        self.entertainment.loadViewIfNeeded()
     }
     
     override var dynamicSize: Bool {
@@ -1834,7 +1873,7 @@ final class StoryModalController : ModalViewController, Notifable {
     }
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
-        if let value = value as? ChatPresentationInterfaceState {
+        if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             self.interactions.update({ current in
                 var current = current
                 if let entryId = current.entryId {
@@ -1843,6 +1882,47 @@ final class StoryModalController : ModalViewController, Notifable {
                 current.emojiState = value.isEmojiSection ? .emoji : .stickers
                 return current
             })
+            if let current = genericView.current {
+                if value.inputQueryResult != oldValue.inputQueryResult {
+                    current.inputView.updateInputContext(with: value.inputQueryResult, context: genericView.inputContextHelper, animated: animated)
+                    //genericView.inputContextHelper.context(with: value.inputQueryResult, for: current.container, relativeView: current.inputView, animated: animated)
+                }
+            }
+            
+            
+           
+            
+            if value.inputQueryResult != oldValue.inputQueryResult || value.effectiveInput != oldValue.effectiveInput || value.state != oldValue.state {
+                if let (updatedContextQueryState, updatedContextQuerySignal) = contextQueryResultStateForChatInterfacePresentationState(value, context: self.context, currentQuery: self.contextQueryState?.0) {
+                    self.contextQueryState?.1.dispose()
+                    var inScope = true
+                    var inScopeResult: ((ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?)?
+                    self.contextQueryState = (updatedContextQueryState, (updatedContextQuerySignal |> deliverOnMainQueue).start(next: { [weak self] result in
+                        if let strongSelf = self {
+                            if Thread.isMainThread && inScope {
+                                inScope = false
+                                inScopeResult = result
+                            } else {
+                                strongSelf.chatInteraction.update(animated: animated, {
+                                    $0.updatedInputQueryResult { previousResult in
+                                        return result(previousResult)
+                                    }
+                                })
+                                
+                            }
+                        }
+                    }))
+                    inScope = false
+                    if let inScopeResult = inScopeResult {
+                        chatInteraction.update(animated: animated, {
+                            $0.updatedInputQueryResult { previousResult in
+                                return inScopeResult(previousResult)
+                            }
+                        })
+                        
+                    }
+                }
+            }
         }
         if let value = value as? StoryInteraction.State, let oldValue = oldValue as? StoryInteraction.State {
             self.chatInteraction.update({
@@ -1855,6 +1935,15 @@ final class StoryModalController : ModalViewController, Notifable {
                 } else {
                     self.genericView.closeReactions()
                 }
+                if value.inputInFocus {
+                    self.chatInteraction.update({
+                        $0.withoutSelectionState()
+                    })
+                } else {
+                    self.chatInteraction.update({
+                        $0.withSelectionState()
+                    })
+                }
             }
             if value.hasReactions != oldValue.hasReactions, !value.hasReactions {
                 self.genericView.closeReactions()
@@ -1864,14 +1953,15 @@ final class StoryModalController : ModalViewController, Notifable {
                 self.genericView.closeTooltip()
             }
             
-            if value.input != oldValue.input {
+            if value.input != oldValue.input || value.inputInFocus != oldValue.inputInFocus {
+                
                 let input = value.input
                 let textInputContextState = textInputStateContextQueryRangeAndType(input, includeContext: false)
                 
                 var cleanup = true
                 
                 if let textInputContextState = textInputContextState {
-                    if textInputContextState.1.contains(.swapEmoji) {
+                    if textInputContextState.1.contains(.swapEmoji), value.inputInFocus {
                         let stringRange = textInputContextState.0
                         let range = NSRange(string: input.inputText, range: stringRange)
                         let accept = self.genericView.hasEmojiSwap || !input.isEmojiHolder(at: range)
@@ -1892,11 +1982,16 @@ final class StoryModalController : ModalViewController, Notifable {
                     self.genericView.updateTextInputSuggestions([], chatInteraction: chatInteraction, range: NSMakeRange(0, 0), animated: animated)
                     self.inputSwapDisposable.set(nil)
                 }
-                
-
             }
             
         }
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        genericView.updateLayout(size: frame.size, transition: transition)
     }
     
 
@@ -1907,12 +2002,19 @@ final class StoryModalController : ModalViewController, Notifable {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
         let context = self.context
         let initialId = self.initialId
         let chatInteraction = self.chatInteraction
         let interactions = self.interactions
-        
         let stories = self.stories
+        
+        genericView.inputContextHelper = .init(chatInteraction: chatInteraction, hasSeparator: false)
+        
+        genericView.inputContextHelper.didScroll = { [weak self] in
+            self?.genericView.updateTextInputSuggestions([], chatInteraction: chatInteraction, range: NSMakeRange(0, 0), animated: true)
+        }
         
         let openChat:(PeerId, MessageId?, ChatInitialAction?)->Void = { [weak self] peerId, messageId, initial in
             let controller = context.bindings.rootNavigation().controller as? ChatController

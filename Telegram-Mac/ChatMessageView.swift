@@ -292,8 +292,15 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         }
     }
     
-    override var storyControl: NSView? {
-        return self.webpageContent?.mediaContentView
+    override func storyControl(_ storyId: StoryId) -> NSView? {
+        if let item = item as? ChatRowItem {
+            if item.message?.storyAttribute?.storyId == storyId {
+                return super.storyControl(storyId)
+            } else {
+                return self.webpageContent?.mediaContentView ?? super.storyControl(storyId)
+            }
+        }
+        return nil
     }
     
     required init?(coder: NSCoder) {

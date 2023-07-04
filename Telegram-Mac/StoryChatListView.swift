@@ -787,7 +787,7 @@ private final class ItemView : Control {
         }
         
         let layout = TextViewLayout.init(.initialize(string: name, color: theme.colors.text, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .middle)
-        layout.measure(width: item.height - 4)
+        layout.measure(width: item.itemWidth - 4)
         textView.update(layout)
         
         self.backgroundView.backgroundColor = theme.colors.background
@@ -873,7 +873,7 @@ private final class ItemView : Control {
         transition.updateFrame(view: textView, frame: textView.centerFrameX(y: stateView.frame.maxY + (4.0 * progress), addition: (textView.frame.width * (1 - progress)) / 2))
         transition.updateAlpha(view: textView, alpha: progress)
         
-        _ = stateView.update(component: item.stateComponent, availableSize: NSMakeSize(size.width - 6, size.width - 6), progress: progress, transition: transition)
+        stateView.update(component: item.stateComponent, availableSize: NSMakeSize(size.width - 6, size.width - 6), progress: progress, transition: transition)
 
     }
     

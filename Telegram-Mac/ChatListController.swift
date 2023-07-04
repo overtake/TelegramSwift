@@ -441,7 +441,7 @@ class ChatListController : PeersListController {
     private var didSuggestAutoarchive: Bool = false
     
     private var preloadStorySubscriptionsDisposable: Disposable?
-    private var preloadStoryResourceDisposables: [MediaResourceId: Disposable] = [:]
+    private var preloadStoryResourceDisposables: [MediaId: Disposable] = [:]
 
 
     
@@ -479,36 +479,33 @@ class ChatListController : PeersListController {
         
         
         self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(isHidden: false)
-        |> deliverOnMainQueue).start(next: { [weak self] resources in
-            
-            guard let `self` = self else {
-                return
-            }
-            
-            var validIds: [MediaResourceId] = []
-            for (_, info) in resources.sorted(by: { $0.value.priority < $1.value.priority }) {
-                let resource = info.resource
-                validIds.append(resource.resource.id)
-                if self.preloadStoryResourceDisposables[resource.resource.id] == nil {
-                    var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
-                    if let size = info.size {
-                        fetchRange = (0 ..< Int64(size), .default)
-                    }
-                    self.preloadStoryResourceDisposables[resource.resource.id] = fetchedMediaResource(mediaBox: self.context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: resource, range: fetchRange).start()
-                }
-            }
-            
-            var removeIds: [MediaResourceId] = []
-            for (id, disposable) in self.preloadStoryResourceDisposables {
-                if !validIds.contains(id) {
-                    removeIds.append(id)
-                    disposable.dispose()
-                }
-            }
-            for id in removeIds {
-                self.preloadStoryResourceDisposables.removeValue(forKey: id)
-            }
-        })
+                   |> deliverOnMainQueue).start(next: { [weak self] resources in
+                       guard let `self` = self else {
+                           return
+                       }
+                       
+                       var validIds: [MediaId] = []
+                       for (_, info) in resources.sorted(by: { $0.value.priority < $1.value.priority }) {
+                           if let mediaId = info.media.id {
+                               validIds.append(mediaId)
+                               if self.preloadStoryResourceDisposables[mediaId] == nil {
+                                   self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: self.context, peer: info.peer, storyId: info.storyId, media: info.media).start()
+                               }
+                           }
+                       }
+                       
+                       var removeIds: [MediaId] = []
+                       for (id, disposable) in self.preloadStoryResourceDisposables {
+                           if !validIds.contains(id) {
+                               removeIds.append(id)
+                               disposable.dispose()
+                           }
+                       }
+                       for id in removeIds {
+                           self.preloadStoryResourceDisposables.removeValue(forKey: id)
+                       }
+                   })
+
 
 
         let arguments = Arguments(context: context, openFilterSettings: { filter in

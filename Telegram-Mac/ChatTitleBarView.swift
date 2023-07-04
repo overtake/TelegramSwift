@@ -192,7 +192,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     private let searchButton:ImageButton = ImageButton()
     private let callButton:ImageButton = ImageButton()
     private let chatInteraction:ChatInteraction
-    private let avatarControl:AvatarControl = AvatarControl(font: .avatar(.header))
+    private let avatarControl:AvatarControl = AvatarControl(font: .avatar(12))
     private let badgeNode:GlobalBadgeNode
     private let disposable = MetaDisposable()
     private let closeButton = ImageButton()
@@ -337,42 +337,42 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
     
     private func updateStoryState(_ story: PeerExpiringStoryListContext.State?, animated: Bool) {
-        self.story = story
-        let peerId = self.chatInteraction.peerId
-        if let storyState = story, !storyState.items.isEmpty {
-            let hasUnseen = storyState.hasUnseen
+        if self.story != story {
+            if let storyState = story, !storyState.items.isEmpty {
+                let hasUnseen = storyState.hasUnseen
+                let current: AvatarStoryIndicatorComponent.IndicatorView
+                let isNew: Bool
+                if let view = self.storyState {
+                    current = view
+                    isNew = false
+                } else {
+                    current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, 36, 36))
+                    self.storyState = current
+                    photoContainer.addSubview(current)
+                    isNew = true
+                }
+                
+                let compoment = AvatarStoryIndicatorComponent(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount))
+                
+                _ = current.update(component: compoment, availableSize: NSMakeSize(30, 30), transition: .immediate)
+                
+                if animated, isNew {
+                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                self.avatarControl._change(size: NSMakeSize(30, 30), animated: animated)
+                self.avatarControl._change(pos: NSMakePoint(3, 3), animated: animated)
 
-            let current: AvatarStoryIndicatorComponent.IndicatorView
-            let isNew: Bool
-            if let view = self.storyState {
-                current = view
-                isNew = false
-            } else {
-                current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, 36, 36))
-                self.storyState = current
-                photoContainer.addSubview(current)
-                isNew = true
+            } else if let view = self.storyState {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.storyState = nil
+                
+                self.avatarControl._change(size: NSMakeSize(36, 36), animated: animated)
+                self.avatarControl._change(pos: NSMakePoint(0, 0), animated: animated)
             }
-            
-            let compoment = AvatarStoryIndicatorComponent(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount))
-            
-            _ = current.update(component: compoment, availableSize: NSMakeSize(30, 30), transition: .immediate)
-            
-            if animated, isNew {
-                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
-                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            }
-            self.avatarControl._change(size: NSMakeSize(30, 30), animated: animated)
-            self.avatarControl._change(pos: NSMakePoint(3, 3), animated: animated)
-
-        } else if let view = self.storyState {
-            performSubviewRemoval(view, animated: animated, scale: true)
-            self.storyState = nil
-            
-            self.avatarControl._change(size: NSMakeSize(36, 36), animated: animated)
-            self.avatarControl._change(pos: NSMakePoint(0, 0), animated: animated)
-
         }
+        self.story = story
+        
     }
    
     private var peerView:PeerView?
