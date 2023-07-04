@@ -469,6 +469,8 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     
     let textView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 100, 34))
     private let textContainer = View()
+    private let inputContextContainer = View()
+    private let inputContext_Relative = View()
     private let visualEffect: VisualEffect
     private let attach = ImageButton()
     private let action = StoryReplyActionButton(frame: NSMakeRect(0, 0, 50, 50))
@@ -489,6 +491,10 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         addSubview(action)
         addSubview(stickers)
         addSubview(textContainer)
+        addSubview(inputContextContainer)
+        
+        inputContextContainer.addSubview(inputContext_Relative)
+        
         textContainer.addSubview(textView)
         
         self.set(handler: { [weak self] _ in
@@ -607,7 +613,6 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     
     func updateInputContext(with result:ChatPresentationInputQueryResult?, context: InputContextHelper, animated:Bool) {
         context.updatedSize = { [weak self] size, animated in
-            NSLog("inputContextSize: \(size), animated: \(animated)")
             self?.inputContextSize = size
             self?.updateInputState(animated: animated)
         }
@@ -624,7 +629,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             self?.inputContextSize = nil
             self?.updateInputState(animated: animated)
         }
-        context.context(with: result, for: self, relativeView: self.textContainer, position: .above, animated: animated)
+        context.context(with: result, for: inputContextContainer, relativeView: inputContext_Relative, position: .below, animated: animated)
     }
     
     
@@ -650,6 +655,12 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         transition.updateFrame(view: textContainer, frame: textRect)
 
+        if let inputContextSize = self.inputContextSize {
+            transition.updateFrame(view: inputContextContainer, frame: CGRect(origin: CGPoint.init(x: 0, y: textRect.minY - inputContextSize.height), size: NSMakeSize(size.width, inputContextSize.height)))
+        } else {
+            transition.updateFrame(view: inputContextContainer, frame: CGRect(origin: CGPoint(x: 0, y: textRect.minY - 1), size: NSMakeSize(size.width, 1)))
+        }
+        
         transition.updateFrame(view: textView, frame: textContainer.bounds.insetBy(dx: 0, dy: 8))
     }
     
