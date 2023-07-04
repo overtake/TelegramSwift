@@ -511,21 +511,6 @@ private final class StoryListContainer : Control {
                 let frame = getFrame(item, index: i, progress: progress)
                 transition.updateFrame(view: view, frame: frame)
                 transition.updateAlpha(view: view, alpha: getAlpha(item, index: i, progress: progress))
-                
-                let nextIntersection: NSRect?
-                if focusRange.contains(i), i != focusRange.max - 1, let next = views[i + 1].item {
-                    let nextRect = getFrame(next, index: i + 1, progress: progress).insetBy(dx: 2, dy: 0)
-                    let currentRect = frame.insetBy(dx: 2, dy: 0)
-                    
-                    if NSIntersectsRect(nextRect, currentRect) {
-                        var intersect = currentRect.intersection(nextRect).offsetBy(dx: -frame.minX, dy: -frame.minY).offsetBy(dx: 1, dy: 0)
-                        nextIntersection = intersect
-                    } else {
-                        nextIntersection = nil
-                    }
-                } else {
-                    nextIntersection = nil
-                }
                 view.set(progress: progress, nextIntersection: nextIntersection, transition: transition)
             }
         }
