@@ -629,7 +629,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             self?.inputContextSize = nil
             self?.updateInputState(animated: animated)
         }
-        context.context(with: result, for: inputContextContainer, relativeView: inputContext_Relative, position: .below, animated: animated)
+        context.context(with: result, for: inputContextContainer, relativeView: inputContext_Relative, position: .above, animated: animated)
     }
     
     
@@ -660,6 +660,8 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         } else {
             transition.updateFrame(view: inputContextContainer, frame: CGRect(origin: CGPoint(x: 0, y: textRect.minY - 1), size: NSMakeSize(size.width, 1)))
         }
+        
+        transition.updateFrame(view: inputContext_Relative, frame: CGRect(origin: CGPoint(x: 0, y: inputContextContainer.frame.height), size: NSMakeSize(size.width, 1)))
         
         transition.updateFrame(view: textView, frame: textContainer.bounds.insetBy(dx: 0, dy: 8))
     }
