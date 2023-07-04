@@ -86,6 +86,7 @@ class ChatMediaLayoutParameters : Equatable {
     
     var automaticDownloadFunc:(Message)->Bool
     
+    var fillContent: Bool? = nil
     
     init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings, isRevealed: Bool? = nil) {
         self.automaticDownloadFunc = { _ in
