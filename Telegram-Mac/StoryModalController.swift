@@ -1853,7 +1853,6 @@ final class StoryModalController : ModalViewController, Notifable {
         super.init()
         self._frameRect = context.window.contentView!.bounds
         self.bar = .init(height: 0)
-//        self.entertainment.loadViewIfNeeded()
     }
     
     override var dynamicSize: Bool {
@@ -2459,6 +2458,7 @@ final class StoryModalController : ModalViewController, Notifable {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         let context = self.context
+        self.entertainment.loadViewIfNeeded()
         
         window?.set(handler: { [weak self] _ in
             if self?.isNotMainScreen == true {
