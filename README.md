@@ -18,7 +18,7 @@
 ### Using Homebrew
 
 ```
-brew cask install telegram
+brew install telegram
 ```
 
 ### Using `mas-cli`
