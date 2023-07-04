@@ -1197,6 +1197,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
     }
     
     func markAsSeen(id: StoryId) {
+        let _ = self.context.engine.messages.markStoryAsSeen(peerId: id.peerId, id: id.id, asPinned: false).start()
     }
 }
 
