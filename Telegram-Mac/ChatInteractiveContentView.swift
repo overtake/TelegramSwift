@@ -540,7 +540,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     var blurBackground: Bool {
-        return ((parent != nil && parent?.groupingKey == nil) || parent == nil) && self.parameters != nil
+        let blur = ((parent != nil && parent?.groupingKey == nil) || parent == nil)
+        if let fillContent = parameters?.fillContent, fillContent {
+            return false
+        }
+        return blur
     }
 
     override func update(size: NSSize) {

@@ -122,7 +122,7 @@ class ChatServiceItem: ChatRowItem {
         }
         
         var height: CGFloat {
-            return 10 + 100 + 10 + text.layoutSize.height + 10
+            return 10 + 80 + 10 + text.layoutSize.height + 10
         }
     }
     
@@ -1508,8 +1508,8 @@ class ChatServiceRowView: TableRowView {
     private class StoryView : Control {
         
         private let disposable = MetaDisposable()
-        fileprivate let mediaView: ChatInteractiveContentView = ChatInteractiveContentView(frame: NSMakeSize(94, 94).bounds)
-        private let statusView: AvatarStoryIndicatorComponent.IndicatorView = .init(frame: NSMakeSize(100, 100).bounds)
+        fileprivate let mediaView: ChatInteractiveContentView = ChatInteractiveContentView(frame: NSMakeSize(74, 74).bounds)
+        private let statusView: AvatarStoryIndicatorComponent.IndicatorView = .init(frame: NSMakeSize(80, 80).bounds)
         
         private var visualEffect: VisualEffect?
         
@@ -1533,20 +1533,24 @@ class ChatServiceRowView: TableRowView {
         }
         
         func update(item: ChatServiceItem, data: ChatServiceItem.StoryData, animated: Bool) {
-            
+            guard let message = item.message else {
+                return
+            }
             let context = item.context
                     
             switch data.storyItem {
             case let .item(storyItem):
                 if let media = storyItem.media {
-                    mediaView.update(with: media, size: NSMakeSize(94, 94), context: context, parent: item.message, table: item.table, animated: animated)
+                    let params = ChatMediaLayoutParameters(presentation: .Empty, media: media, automaticDownload: item.downloadSettings.isDownloable(message))
+                    params.fillContent = true
+                    mediaView.update(with: media, size: NSMakeSize(74, 74), context: context, parent: item.message, table: item.table, parameters: params, animated: animated)
                 }
             case .placeholder:
                 break
             }
             
             if let component = data.avatar {
-                statusView.update(component: component, availableSize: NSMakeSize(94, 94), transition: .immediate)
+                statusView.update(component: component, availableSize: NSMakeSize(74, 74), transition: .immediate)
                 statusView.isHidden = false
             } else {
                 statusView.isHidden = true
@@ -1890,7 +1894,7 @@ class ChatServiceRowView: TableRowView {
             if let view = self.storyView {
                 current = view
             } else {
-                current = StoryView(frame: NSMakeRect(0, 0, 170, storyData.height))
+                current = StoryView(frame: NSMakeRect(0, 0, 160, storyData.height))
                 self.storyView = current
                 addSubview(current)
                 
