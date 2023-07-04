@@ -34,7 +34,7 @@ final class ChatListSpaceItem : GeneralRowItem {
             } else if state.appear == .normal {
                 height += 40
             }
-            if !state.filterData.tabs.isEmpty, !state.filterData.sidebar, state.searchState == .None {
+            if !state.filterData.isEmpty, !state.filterData.sidebar, state.searchState == .None {
                 if let progress = getDeltaProgress() {
                     height += 36 * progress
                 } else if state.appear == .normal {

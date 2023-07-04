@@ -432,9 +432,9 @@ private final class StoryListContainer : Control {
                 return NSMakeRange(1, 3)
             } else {
                 if views.count > 1, views[1].item?.entry.hasUnseen == true {
-                    return NSMakeRange(1, min(3, views.count - 1))
+                    return NSMakeRange(1, min(3, views.count))
                 } else {
-                    return NSMakeRange(0, min(3, views.count - 1))
+                    return NSMakeRange(0, min(3, views.count))
                 }
             }
         } else {
