@@ -135,7 +135,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
                 }
                 
                 if component.theme.colors.isDark {
-                    inactiveColors = [component.theme.colors.grayIcon.withAlphaComponent(0.5), component.theme.colors.grayIcon.withAlphaComponent(0.5)]
+                    inactiveColors = [component.theme.colors.grayIcon.withAlphaComponent(1), component.theme.colors.grayIcon.withAlphaComponent(1)]
                 } else {
                     inactiveColors = [NSColor(rgb: 0xD8D8E1), NSColor(rgb: 0xD8D8E1)]
                 }

@@ -13,17 +13,28 @@ import SwiftSignalKit
 import Postbox
 import ObjcUtils
 
-private func interpolateArray(from minValue: Double, to maxValue: Double, count: Int) -> [Double] {
-    var result: [Double] = []
+func interpolateArray(from minValue: CGFloat, to maxValue: CGFloat, count: Int) -> [CGFloat] {
+    var result: [CGFloat] = []
     
     for i in 0..<count {
-        let t = Double(i) / Double(count - 1)
+        let t = CGFloat(i) / CGFloat(count - 1)
         let interpolatedValue = (1 - t) * maxValue + t * minValue
         result.append(interpolatedValue)
     }
     
     return result
 }
+
+func linearArray(from minValue: CGFloat, to maxValue: CGFloat, count: Int) -> [CGFloat] {
+    var result: [CGFloat] = []
+    
+    let value = (maxValue - minValue) / CGFloat(count)
+    for _ in 0 ..< count {
+        result.append(value)
+    }
+    return result
+}
+
 
 private struct StoryChatListEntry : Equatable, Comparable, Identifiable {
     let item: EngineStorySubscriptions.Item
@@ -187,8 +198,10 @@ private final class StoryListContainer : Control {
     private var list: [StoryChatListEntry] = []
     private var views: [ItemView] = []
     private let documentView = View()
+    private let componentsView = View()
+    private var components:[ComponentView] = []
+
     private let scrollView = HorizontalScrollView(frame: .zero)
-    private var shortTextView: TextView?
     private var progress: CGFloat = 1.0
 
     private var item: StoryListChatListRowItem?
@@ -198,6 +211,7 @@ private final class StoryListContainer : Control {
         addSubview(scrollView)
         
         
+        documentView.addSubview(componentsView)
         scrollView.background = .clear
         //self.scaleOnClick = true
         
@@ -281,26 +295,6 @@ private final class StoryListContainer : Control {
         return frame
     }
     
-    private func getTextAlpha() -> CGFloat {
-        return 1.0 - self.progress
-    }
-    private func getTextRect() -> CGRect {
-        var edgeView: NSView?
-        if !views.isEmpty {
-            edgeView = views[focusRange.max - 1]
-        } else {
-            edgeView = nil
-        }
-        if let edgeView = edgeView, let shortTextView = shortTextView {
-            return CGRect(origin: NSMakePoint(edgeView.frame.maxX + 12.0, floorToScreenPixels(backingScaleFactor, (frame.height - shortTextView.frame.height) / 2)), size: shortTextView.frame.size)
-        } else {
-            return .zero
-        }
-    }
-    private func getTextScale() -> CGFloat {
-        return 1.0 - self.progress
-    }
-    
     
     func set(transition: TableUpdateTransition, item: StoryListChatListRowItem, context: AccountContext, progress: CGFloat, animated: Bool) {
         
@@ -308,12 +302,19 @@ private final class StoryListContainer : Control {
         self.item = item
         
         if !transition.isEmpty {
-            var toRemove:[AnyHashable : ItemView] = [:]
-            
+            var toRemove_v:[AnyHashable : ItemView] = [:]
+            var toRemove_c:[AnyHashable : ComponentView] = [:]
+
             for deleted in transition.deleted.reversed() {
                 let view = views.remove(at: deleted)
+                let component = components.remove(at: deleted)
                 if let item = view.item {
-                    toRemove[item.stableId] = view
+                    toRemove_v[item.stableId] = view
+                } else {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                }
+                if let item = component.item {
+                    toRemove_c[item.stableId] = component
                 } else {
                     performSubviewRemoval(view, animated: animated, scale: true)
                 }
@@ -322,17 +323,29 @@ private final class StoryListContainer : Control {
                 let item = inserted.1 as! StoryListEntryRowItem
                 
                 let view: ItemView
+                let component: ComponentView
                 let isNew: Bool
-                if let v = toRemove[item.stableId] {
+                if let v = toRemove_v[item.stableId] {
+                    let c = toRemove_c[item.stableId]!
                     views.insert(v, at: inserted.0)
-                    toRemove.removeValue(forKey: item.stableId)
+                    components.insert(c, at: inserted.0)
+                    toRemove_v.removeValue(forKey: item.stableId)
+                    toRemove_c.removeValue(forKey: item.stableId)
                     view = v
+                    component = c
                     isNew = false
                 } else {
                     let rect = getFrame(item, index: inserted.0, progress: progress)
+                    let alpha = Float(getAlpha(item, index: inserted.0, progress: progress))
                     view = ItemView(frame: rect)
+                    component = ComponentView(frame: rect)
+                    
                     views.insert(view, at: inserted.0)
-                    view.layer?.opacity = Float(getAlpha(item, index: inserted.0, progress: progress))
+                    components.insert(component, at: inserted.0)
+                    
+                    view.layer?.opacity = alpha
+                    component.layer?.opacity = alpha
+                    
                     isNew = true
                 }
                 
@@ -340,79 +353,59 @@ private final class StoryListContainer : Control {
                     self?.open(item)
                 }, progress: progress, animated: false)
                 
+                component.set(item: item, open: { [weak self] item in
+                    self?.open(item)
+                }, progress: progress, animated: false)
+                
                 if inserted.0 == 0 {
-                    documentView.addSubview(view, positioned: .below, relativeTo: views.first)
+                    documentView.addSubview(view, positioned: .above, relativeTo: componentsView)
                 } else {
                     documentView.addSubview(view, positioned: .above, relativeTo: views[inserted.0 - 1])
                 }
+                
+                if inserted.0 == 0 {
+                    componentsView.addSubview(component, positioned: .below, relativeTo: componentsView.subviews.first)
+                } else {
+                    componentsView.addSubview(component, positioned: .above, relativeTo: components[inserted.0 - 1])
+                }
+                
                 if animated, isNew {
                     view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     view.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+                    
+                    component.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    component.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
+
                 }
             }
             for updated in transition.updated {
                 views[updated.0].set(item: updated.1, open: { [weak self] item in
                     self?.open(item)
                 }, progress: progress, animated: animated)
+                
+                components[updated.0].set(item: updated.1, open: { [weak self] item in
+                    self?.open(item)
+                }, progress: progress, animated: animated)
             }
             
-            for (_, view) in toRemove {
+            for (_, view) in toRemove_c {
                 performSubviewRemoval(view, animated: animated, scale: true)
             }
-            toRemove.removeAll()
+            for (_, view) in toRemove_v {
+                performSubviewRemoval(view, animated: animated, scale: true)
+            }
+            toRemove_c.removeAll()
+            toRemove_v.removeAll()
         }
         
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
 
-        if progress == 1.0 {
-            if let shortTextView = self.shortTextView {
-                performSubviewRemoval(shortTextView, animated: animated)
-                self.shortTextView = nil
-            }
-        } else {
+        if progress != 1.0 {
             if animated, scrollView.documentOffset != .zero {
                 let to = CGRect.init(origin: .zero, size: scrollView.clipView.bounds.size)
                 scrollView.clipView.layer?.animateBounds(from: scrollView.clipView.bounds, to: to, duration: 0.2, timingFunction: .easeOut)
             }
-//            scrollView.clipView.scroll(to: NSMakePoint(scrollView.documentOffset.x * progress, 0), animated: animated)
-            
-//            let shortTextView: TextView
-//            let isNew: Bool
-//            if let view = self.shortTextView {
-//                shortTextView = view
-//                isNew = false
-//            } else {
-//                shortTextView = TextView()
-//                shortTextView.userInteractionEnabled = false
-//                shortTextView.isSelectable = false
-//                addSubview(shortTextView, positioned: .below, relativeTo: self.scrollView)
-//                self.shortTextView = shortTextView
-//                isNew = true
-//            }
-//            let text = "Show Stories"
-//
-//            let color: NSColor?
-//            let string: String?
-//            if let attr = shortTextView.textLayout?.attributedString, !attr.string.isEmpty {
-//                color = attr.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
-//                string = attr.string
-//            } else {
-//                string = nil
-//                color = nil
-//            }
-//            let newColor = theme.colors.text
-//            if string != text || color != newColor {
-//                let layout = TextViewLayout(.initialize(string: text, color: newColor, font: .medium(.text)))
-//                layout.measure(width: frame.width - 80)
-//                shortTextView.update(layout)
-//            }
-//            if isNew {
-//                shortTextView.frame = getTextRect()
-//                shortTextView.layer?.opacity = Float(getTextAlpha())
-//                shortTextView.layer?.transform = CATransform3DMakeScale(getTextScale(), getTextScale(), 1.0)
-//            }
         }
-        
         self.updateLayout(size: frame.size, transition: transition)
         
         for (i, view) in views.enumerated() {
@@ -422,6 +415,9 @@ private final class StoryListContainer : Control {
                 view.layer?.zPosition = CGFloat(views.count - i)
             }
             view.userInteractionEnabled = progress == 1.0
+        }
+        for (i, view) in components.enumerated() {
+            view.layer?.zPosition = CGFloat(i)
         }
         self.userInteractionEnabled = progress != 1.0
     }
@@ -500,7 +496,8 @@ private final class StoryListContainer : Control {
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         let documentRect = CGRect(origin: .zero, size: documentSize)
         transition.updateFrame(view: documentView, frame: documentRect)
-        
+        transition.updateFrame(view: componentsView, frame: documentRect)
+
         scrollView.contentView._change(size: CGSize(width: scrollView.contentView.bounds.width, height: size.height), animated: transition.isAnimated, duration: transition.duration, timingFunction: transition.timingFunction)
         
 
@@ -509,17 +506,20 @@ private final class StoryListContainer : Control {
         for (i, view) in views.enumerated() {
             if let item = view.item {
                 let frame = getFrame(item, index: i, progress: progress)
+                let alpha = getAlpha(item, index: i, progress: progress)
+                
                 transition.updateFrame(view: view, frame: frame)
-                transition.updateAlpha(view: view, alpha: getAlpha(item, index: i, progress: progress))
-                view.set(progress: progress, nextIntersection: nil, transition: transition)
+                transition.updateAlpha(view: view, alpha: alpha)
+                view.set(progress: progress, transition: transition)
+
+                let component = components[i]
+                
+                transition.updateFrame(view: component, frame: frame)
+                transition.updateAlpha(view: component, alpha: alpha)
+                component.set(progress: progress, transition: transition)
             }
         }
         
-        if let shortTextView = shortTextView {
-            transition.updateTransformScale(layer: shortTextView.layer!, scale: getTextAlpha())
-            transition.updateFrame(view: shortTextView, frame: getTextRect())
-            transition.updateAlpha(view: shortTextView, alpha: getTextAlpha())
-        }
     }
 }
 
@@ -560,14 +560,13 @@ final class StoryListChatListRowView: TableRowView {
     private var current: [StoryChatListEntry] = []
     
     private var interfaceState: StoryListChatListRowItem.InterfaceState?
-    
     override func set(item: TableRowItem, animated: Bool = false) {
+        
         super.set(item: item, animated: animated)
         
         guard let item = item as? StoryListChatListRowItem else {
             return
         }
-        
         
         var entries:[StoryChatListEntry] = []
         var index: Int = 0
@@ -588,8 +587,9 @@ final class StoryListChatListRowView: TableRowView {
         let previous = self.interfaceState
         let interfaceState = item.getInterfaceState()
         self.interfaceState = interfaceState
-                
         
+                
+      
 
         let initialSize = NSMakeSize(item.height, item.height)
         let context = item.context
@@ -599,11 +599,10 @@ final class StoryListChatListRowView: TableRowView {
         })
         let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, grouping: false, animateVisibleOnly: false)
 
-        CATransaction.begin()
-
-        self.interfaceView.set(transition: transition, item: item, context: item.context, progress: interfaceState.progress, animated: animated)
-
-        CATransaction.commit()
+//        CATransaction.begin()
+        self.interfaceView.set(transition: transition, item: item, context: item.context, progress: item.progress, animated: animated)
+//        CATransaction.commit()
+        
 
         self.current = entries
         
@@ -696,25 +695,73 @@ private final class StoryListEntryRowItem : TableRowItem {
     }
 }
 
+private final class ComponentView : View {
+    private let stateView = AvatarStoryIndicatorComponent.IndicatorView(frame: StoryListChatListRowItem.fullSize.bounds)
+    fileprivate var item: StoryListEntryRowItem?
+    private var progress: CGFloat = 1.0
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        self.addSubview(stateView)
+        stateView.isEventLess = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func set(item: TableRowItem, open: @escaping(StoryListEntryRowItem)->Void, progress: CGFloat, animated: Bool) {
+        guard let item = item as? StoryListEntryRowItem else {
+            return
+        }
+        self.progress = progress
+        self.item = item
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        self.updateLayout(size: frame.size, transition: transition)
+
+    }
+    
+    func set(progress: CGFloat, transition: ContainedViewLayoutTransition) {
+        self.progress = progress
+        self.updateLayout(size: self.frame.size, transition: transition)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        guard let item = self.item else {
+            return
+        }
+        
+        let stateSize = NSMakeSize(size.width - 6 , size.width - 6)
+        let stateRect = CGRect(origin: CGPoint(x: (size.width - stateSize.width) / 2, y: 3), size: stateSize)
+        
+        transition.updateFrame(view: stateView, frame: stateRect.insetBy(dx: -3, dy: -3))
+        stateView.update(component: item.stateComponent, availableSize: NSMakeSize(size.width - 6, size.width - 6), progress: progress, transition: transition)
+
+    }
+
+}
+
 private final class ItemView : Control {
     fileprivate let imageView = AvatarControl(font: .avatar(15))
     fileprivate let smallImageView = AvatarControl(font: .avatar(7))
     fileprivate let textView = TextView()
-    fileprivate let stateView = AvatarStoryIndicatorComponent.IndicatorView(frame: StoryListChatListRowItem.fullSize.bounds)
     fileprivate let backgroundView = View()
     fileprivate var item: StoryListEntryRowItem?
     private var open:((StoryListEntryRowItem)->Void)?
-    private var overlap: View? = nil
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         imageView.setFrameSize(StoryListChatListRowItem.fullSize)
         self.addSubview(textView)
-        stateView.isEventLess = true
         smallImageView.userInteractionEnabled = false
         imageView.userInteractionEnabled = false
         self.addSubview(backgroundView)
-        self.addSubview(stateView)
         self.addSubview(imageView)
         self.addSubview(smallImageView)
         textView.userInteractionEnabled = false
@@ -776,8 +823,6 @@ private final class ItemView : Control {
         textView.update(layout)
         
         self.backgroundView.backgroundColor = theme.colors.background
-        backgroundView.layer?.borderWidth = item.entry.hasUnseen ? 1.0 + (0.5 * progress) : 1.0
-        backgroundView.layer?.borderColor = .clear
         
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
 
@@ -790,43 +835,13 @@ private final class ItemView : Control {
     }
     
     private var progress: CGFloat = 1.0
-    private var nextIntersection: CGRect? = nil
     
-    func set(progress: CGFloat, nextIntersection: CGRect?, transition: ContainedViewLayoutTransition) {
+    func set(progress: CGFloat, transition: ContainedViewLayoutTransition) {
         self.progress = progress
-        self.nextIntersection = nextIntersection
-        
-        
-//        if let next = self.nextIntersection {
-//            let current: View
-//            if let view = self.overlap {
-//                current = view
-//            } else {
-//                current = View(frame: next)
-//                self.overlap = current
-//                addSubview(current)
-//             //   addSubview(current, positioned: .above, relativeTo: stateView)
-//            }
-//
-//            current.backgroundColor = .random//theme.colors.background
-//            current.layer?.cornerRadius = next.height / 2
-//        } else if let view = self.overlap {
-//            performSubviewRemoval(view, animated: transition.isAnimated)
-//            self.overlap = nil
-//        }
-        
         self.updateLayout(size: self.frame.size, transition: transition)
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        
-        guard let item = self.item else {
-            return
-        }
-        
-        if let next = nextIntersection, let overlap = self.overlap {
-            transition.updateFrame(view: overlap, frame: next)
-        }
         
         let stateSize = NSMakeSize(size.width - 6 , size.width - 6)
         let stateRect = CGRect(origin: CGPoint(x: (size.width - stateSize.width) / 2, y: 3), size: stateSize)
@@ -838,8 +853,7 @@ private final class ItemView : Control {
         transition.updateFrame(view: imageView, frame: imageRect)
         transition.updateFrame(view: smallImageView, frame: imageRect)
 
-        transition.updateFrame(view: stateView, frame: stateRect.insetBy(dx: -3, dy: -3))
-        transition.updateFrame(view: backgroundView, frame: stateView.frame)
+        transition.updateFrame(view: backgroundView, frame: imageRect.insetBy(dx: -1.5, dy: -1.5))
 
         
 
@@ -855,11 +869,9 @@ private final class ItemView : Control {
         }
         
         transition.updateTransformScale(layer: textView.layer!, scale: progress)
-        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: stateView.frame.maxY + (4.0 * progress), addition: (textView.frame.width * (1 - progress)) / 2))
+        transition.updateFrame(view: textView, frame: textView.centerFrameX(y: imageView.frame.maxY + 3 + (4.0 * progress), addition: (textView.frame.width * (1 - progress)) / 2))
         transition.updateAlpha(view: textView, alpha: progress)
         
-        stateView.update(component: item.stateComponent, availableSize: NSMakeSize(size.width - 6, size.width - 6), progress: progress, transition: transition)
-
     }
     
 }

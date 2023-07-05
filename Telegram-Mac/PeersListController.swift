@@ -2895,12 +2895,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             if position <= 0 {
                 let previous = last
                 let speed = calculateScrollSpeed(scrollPositions: scrollPositions)
-                let acceptSpeed = speed != nil && abs(speed!) < 1.5
+                let acceptSpeed = speed != nil && abs(speed!) < 2.5
                 if acceptSpeed || storyInterfaceState.isProgress {
-                    let value = previous - position
                     if position == 0 {
                         finishOverscroll()
                     } else {
+                        let value = previous - position
                         initOverscrollWithDelta(value, fromEvent: false)
                         updateOverscrollWithDelta(value)
                     }
