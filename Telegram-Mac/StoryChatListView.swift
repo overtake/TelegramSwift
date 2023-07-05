@@ -409,6 +409,8 @@ private final class StoryListContainer : Control {
         self.updateLayout(size: frame.size, transition: transition)
         
         for (i, view) in views.enumerated() {
+            view.component = components[i]
+            
             if focusRange.contains(i) {
                 view.layer?.zPosition = 1000.0 - CGFloat(i)
             } else {
@@ -695,7 +697,7 @@ private final class StoryListEntryRowItem : TableRowItem {
     }
 }
 
-private final class ComponentView : View {
+private final class ComponentView : Control {
     private let stateView = AvatarStoryIndicatorComponent.IndicatorView(frame: StoryListChatListRowItem.fullSize.bounds)
     fileprivate var item: StoryListEntryRowItem?
     private var progress: CGFloat = 1.0
@@ -703,6 +705,8 @@ private final class ComponentView : View {
         super.init(frame: frameRect)
         self.addSubview(stateView)
         stateView.isEventLess = true
+        self.userInteractionEnabled = false
+        self.scaleOnClick = true
     }
     
     required init?(coder: NSCoder) {
@@ -755,6 +759,8 @@ private final class ItemView : Control {
     fileprivate var item: StoryListEntryRowItem?
     private var open:((StoryListEntryRowItem)->Void)?
     
+    weak var component: ComponentView?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         imageView.setFrameSize(StoryListChatListRowItem.fullSize)
@@ -787,6 +793,11 @@ private final class ItemView : Control {
             }
         }, for: .Click)
         
+    }
+    
+    override func stateDidUpdate(_ state: ControlState) {
+        super.stateDidUpdate(state)
+        component?.stateDidUpdate(state)
     }
     
     
