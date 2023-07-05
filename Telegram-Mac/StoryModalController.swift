@@ -755,6 +755,7 @@ private final class StoryViewController: Control, Notifable {
             var mediaFile: TelegramMediaFile
             let hasButton: Bool
             self.close = close
+            var colorAnimation: Bool = false
             switch source {
             case let .media(medias):
                 if medias.count > 1 {
@@ -822,13 +823,16 @@ private final class StoryViewController: Control, Notifable {
                 title = text
                 mediaFile = animation.file
                 hasButton = false
+                colorAnimation = true
             }
             
             let mediaLayer = InlineStickerItemLayer(account: context.account, file: mediaFile, size: NSMakeSize(24, 24), playPolicy: .toEnd(from: 0), getColors: { file in
                 if file == MenuAnimation.menu_success.file {
                     return []
-                } else {
+                } else if colorAnimation {
                     return [.init(keyPath: "", color: NSColor(0xffffff))]
+                } else {
+                    return []
                 }
             })
             mediaLayer.isPlayable = true

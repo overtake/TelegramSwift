@@ -223,9 +223,12 @@ final class StoryControlsView : Control {
         transition.updateFrame(view: textView, frame: textView.centerFrameY(x: avatar.frame.maxX + 8))
         transition.updateFrame(view: dateView, frame: dateView.centerFrameY(x: textView.frame.maxX))
 
-        var controlX = size.width - more.frame.width - 5
+        var controlX = size.width
         
-        transition.updateFrame(view: more, frame: more.centerFrameY(x: controlX))
+        if !more.isHidden {
+            controlX -= (more.frame.width + 5)
+            transition.updateFrame(view: more, frame: more.centerFrameY(x: controlX))
+        }
         
         if !closeFriends.isHidden {
             controlX -= (closeFriends.frame.width + 5)

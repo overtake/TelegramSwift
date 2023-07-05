@@ -15,6 +15,11 @@ import TGUIKit
 
 private let threadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
+private class CaptureProtectedContentLayer: AVSampleBufferDisplayLayer {
+    override func action(forKey event: String) -> CAAction? {
+        return nullAction
+    }
+}
 
 
 open class TransformImageView: NSView {
@@ -42,20 +47,69 @@ open class TransformImageView: NSView {
     open override var isFlipped: Bool {
         return true
     }
-    
+    private var _image: CGImage? = nil
     var image: CGImage? {
         set {
             layer?.contents = newValue
-            imageUpdated?(newValue)
+            if _image != newValue {
+                imageUpdated?(newValue)
+                _image = newValue
+                let preventsCapture = self.preventsCapture
+                self.preventsCapture = preventsCapture
+            }
         }
         get {
-            if let any = layer?.contents {
-                return any as! CGImage
-            } else {
-                return nil
+            return _image
+        }
+    }
+    
+    
+    open override var bounds: CGRect {
+        didSet {
+            if let captureProtectedContentLayer = self.captureProtectedContentLayer {
+                captureProtectedContentLayer.frame = super.bounds
             }
         }
     }
+
+    open override var frame: CGRect {
+        didSet {
+            if let captureProtectedContentLayer = self.captureProtectedContentLayer {
+                captureProtectedContentLayer.frame = super.bounds
+            }
+        }
+    }
+
+    
+    private var captureProtectedContentLayer: CaptureProtectedContentLayer?
+
+
+    
+    public var preventsCapture: Bool = false {
+        didSet {
+            if self.preventsCapture {
+                if self.captureProtectedContentLayer == nil, let image = self.image {
+                    let captureProtectedContentLayer = CaptureProtectedContentLayer()
+                    
+                    captureProtectedContentLayer.frame = self.bounds
+                    self.layer?.addSublayer(captureProtectedContentLayer)
+                    if let cmSampleBuffer = image.cmSampleBuffer {
+                        captureProtectedContentLayer.enqueue(cmSampleBuffer)
+                    }
+                    self.layer?.contents = nil
+                    
+                    if #available(macOS 10.15, *) {
+                        captureProtectedContentLayer.preventsCapture = true
+                    } 
+                }
+            } else if let captureProtectedContentLayer = self.captureProtectedContentLayer {
+                self.captureProtectedContentLayer = nil
+                captureProtectedContentLayer.removeFromSuperlayer()
+                self.layer?.contents = self.image
+            }
+        }
+    }
+
     
     required public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

@@ -1190,7 +1190,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
     
     private func updateItemNodeVisibilititesAndScrolling() {
         let visibleRect = self.contentView.bounds
-        let isScrolling = self.clipView.isScrolling
+        let isScrolling = self.clipView.isAnimateScrolling
         for (_, itemNode) in self.itemNodes {
             let visible = itemNode.frame.intersects(visibleRect)
             if itemNode.isVisibleInGrid != visible {

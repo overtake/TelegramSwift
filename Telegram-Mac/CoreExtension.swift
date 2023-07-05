@@ -3312,11 +3312,41 @@ extension CGImage {
         CVPixelBufferLockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
         let pixelData = CVPixelBufferGetBaseAddress(pixelBuffer!)
         let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-        let context = CGContext(data: pixelData, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer!), space: rgbColorSpace, bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue)
+        let context = CGContext(data: pixelData, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer!), space: rgbColorSpace, bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
         context?.draw(self, in: CGRect(origin: .zero, size: size))
         CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
         return pixelBuffer
     }
+    
+    var cmSampleBuffer: CMSampleBuffer? {
+           guard let pixelBuffer = self.cvPixelBuffer else {
+               return nil
+           }
+           var newSampleBuffer: CMSampleBuffer? = nil
+
+           var timingInfo = CMSampleTimingInfo(
+               duration: CMTimeMake(value: 1, timescale: 30),
+               presentationTimeStamp: CMTimeMake(value: 0, timescale: 30),
+               decodeTimeStamp: CMTimeMake(value: 0, timescale: 30)
+           )
+
+           var videoInfo: CMVideoFormatDescription? = nil
+           CMVideoFormatDescriptionCreateForImageBuffer(allocator: nil, imageBuffer: pixelBuffer, formatDescriptionOut: &videoInfo)
+           guard let videoInfo = videoInfo else {
+               return nil
+           }
+           CMSampleBufferCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: videoInfo, sampleTiming: &timingInfo, sampleBufferOut: &newSampleBuffer)
+
+           if let newSampleBuffer = newSampleBuffer {
+               let attachments = CMSampleBufferGetSampleAttachmentsArray(newSampleBuffer, createIfNecessary: true)! as NSArray
+               let dict = attachments[0] as! NSMutableDictionary
+
+               dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleAttachmentKey_DisplayImmediately as NSString as String)
+           }
+
+           return newSampleBuffer
+       }
+
 }
 
 

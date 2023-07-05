@@ -368,6 +368,8 @@ class StoryImageView : StoryView {
             return
         }
         
+        imageView.preventsCapture = story.isForwardingDisabled
+        
         var updateImageSignal: Signal<ImageDataTransformation, NoError>?
         
         
@@ -481,6 +483,8 @@ class StoryVideoView : StoryImageView {
                 self?.updateState(.finished)
             }
         })
+        
+        self.view.preventsCapture = story.isForwardingDisabled
         
         statusDisposable.set((mediaPlayer.status |> deliverOnMainQueue).start(next: { [weak self] status in
             let currentStatus = self?.state.status ?? status

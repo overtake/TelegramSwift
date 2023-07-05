@@ -202,6 +202,10 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
     public func withUpdatedState(_ state: TableScrollState) -> TableUpdateTransition {
         return .init(deleted: self.deleted, inserted: self.inserted, updated: self.updated, animated: self.animated, state: state, grouping: self.grouping, animateVisibleOnly: self.animateVisibleOnly, searchState: self.searchState)
     }
+    
+    public static var Empty: TableUpdateTransition {
+        return .init(deleted: [], inserted: [], updated: [])
+    }
     deinit {
         var bp:Int = 0
         bp += 1
@@ -886,7 +890,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         clipView.autoresizingMask = []
         clipView.autoresizesSubviews = false
-        clipView.copiesOnScroll = true
         
         self.tableView.autoresizingMask = []
         self.tableView.rowSizeStyle = .custom
@@ -2579,8 +2582,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let oldEmpty = self.isEmpty
         
-        clipView.reset()
-
         self.beginUpdates()
         
         let documentOffset = self.documentOffset

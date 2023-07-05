@@ -64,6 +64,14 @@ final class MediaPlayerView: View {
     private var videoLayer: AVSampleBufferDisplayLayer?
         
     
+    var preventsCapture: Bool = false {
+        didSet {
+            if #available(macOS 10.15, *) {
+                videoLayer?.preventsCapture = preventsCapture
+            }
+        }
+    }
+    
     func setVideoLayerGravity(_ gravity: AVLayerVideoGravity) {
         videoLayer?.videoGravity = gravity
     }
@@ -292,6 +300,9 @@ final class MediaPlayerView: View {
         self.addSubview(self.videoNode)
         
         let videoLayer = MediaPlayerViewLayer()
+        if #available(macOS 10.15, *) {
+            videoLayer.preventsCapture = self.preventsCapture
+        } 
         videoLayer.videoGravity = .resize
         
        // #if arch(x86_64)
