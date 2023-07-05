@@ -210,7 +210,11 @@ private final class StoryListContainer : Control {
         scrollView.documentView = documentView
         addSubview(scrollView)
         
-        
+        documentView.layer?.masksToBounds = false
+        componentsView.layer?.masksToBounds = false
+        self.layer?.masksToBounds = false
+        scrollView.layer?.masksToBounds = false
+        scrollView.contentView.layer?.masksToBounds = false
         documentView.addSubview(componentsView)
         scrollView.background = .clear
         //self.scaleOnClick = true
@@ -707,6 +711,8 @@ private final class ComponentView : Control {
         stateView.isEventLess = true
         self.userInteractionEnabled = false
         self.scaleOnClick = true
+        self.layer?.masksToBounds = false
+
     }
     
     required init?(coder: NSCoder) {
@@ -741,7 +747,7 @@ private final class ComponentView : Control {
             return
         }
         
-        let stateSize = NSMakeSize(size.width - 6 , size.width - 6)
+        let stateSize = NSMakeSize(size.width - 6, size.width - 6)
         let stateRect = CGRect(origin: CGPoint(x: (size.width - stateSize.width) / 2, y: 3), size: stateSize)
         
         transition.updateFrame(view: stateView, frame: stateRect.insetBy(dx: -3, dy: -3))
@@ -772,6 +778,8 @@ private final class ItemView : Control {
         self.addSubview(smallImageView)
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        self.layer?.masksToBounds = false
         
         self.scaleOnClick = true
         
@@ -855,7 +863,6 @@ private final class ItemView : Control {
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
         let stateSize = NSMakeSize(size.width - 6 , size.width - 6)
-        let stateRect = CGRect(origin: CGPoint(x: (size.width - stateSize.width) / 2, y: 3), size: stateSize)
         
         let imageSize = NSMakeSize(size.width - 6 + (1 - progress) * 1, size.width - 6 + (1 - progress) * 1)
         
