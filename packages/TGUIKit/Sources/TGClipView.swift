@@ -66,7 +66,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
     }
     var scrollCompletion:((_ success:Bool) ->Void)?
-    public var decelerationRate:CGFloat = 0.8
     
     
     public var destination: NSPoint? {
@@ -76,7 +75,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
     override init(frame frameRect: NSRect) {
         
         super.init(frame: frameRect)
-        backgroundColor = .clear
+        self.backgroundColor = .clear
+        self.wantsLayer = true
        // self.layerContentsRedrawPolicy = .never
       //  self.layer?.drawsAsynchronously = System.drawAsync
         //self.layer?.delegate = self

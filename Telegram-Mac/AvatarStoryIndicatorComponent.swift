@@ -145,12 +145,12 @@ public final class AvatarStoryIndicatorComponent : Equatable {
                 
                 context.setLineWidth(lineWidth)
                 context.setLineCap(.round)
+                let spacing: CGFloat = 3.0 * progress
 
-                if let counters = component.counters, counters.totalCount > 1, progress != 0 {
+                if let counters = component.counters, counters.totalCount > 1, spacing >= 2 {
                                         
                     let center = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
                     let radius = (diameter - lineWidth) * 0.5
-                    let spacing: CGFloat = 3.0 * progress
                     let angularSpacing: CGFloat = spacing / radius
                     let circleLength = CGFloat.pi * 2.0 * radius
                     let segmentLength = (circleLength - spacing * CGFloat(counters.totalCount)) / CGFloat(counters.totalCount)
@@ -234,6 +234,8 @@ public final class AvatarStoryIndicatorComponent : Equatable {
         required init(frame: CGRect) {
             super.init(frame: frame)
             self.addSubview(self.indicatorView)
+            self.layer?.masksToBounds = false
+            self.indicatorView.layer?.masksToBounds = false
         }
         
         required init?(coder: NSCoder) {

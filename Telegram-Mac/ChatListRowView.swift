@@ -2027,7 +2027,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      photoContainer.addSubview(current)
                      isNew = true
                  }
-                 _ = current.update(component: component, availableSize: NSMakeSize(44, 4), transition: .immediate)
+                 current.update(component: component, availableSize: NSMakeSize(44, 44), transition: .immediate)
                  
                  if animated, isNew {
                      current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
