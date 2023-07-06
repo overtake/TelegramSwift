@@ -81,6 +81,7 @@ class StoryView : Control {
     private var timerTime: TimeInterval?
     
     private let disposable = MetaDisposable()
+    private let priorityDisposable = MetaDisposable()
     private var shimmer: ShimmerLayer?
     fileprivate let overlay = View()
     
@@ -118,8 +119,9 @@ class StoryView : Control {
     }
     
     deinit {
-        disposable.dispose()
-        delayDisposable.dispose()
+        self.disposable.dispose()
+        self.delayDisposable.dispose()
+        self.priorityDisposable.dispose()
     }
     
     func animateAppearing(disappear: Bool) {
@@ -145,6 +147,8 @@ class StoryView : Control {
         self.magnifyView?.minMagnify = 1.0
         self.magnifyView?.maxMagnify = 2.0
 
+        
+        
     }
     
     func initializeStatus() {
@@ -242,9 +246,23 @@ class StoryView : Control {
     
     func appear(isMuted: Bool) {
         self.updateState(.waiting)
+        
+        if let story = self.story, let context = self.context {
+            switch story.media {
+            case let .image(image):
+                if let representation = largestImageRepresentation(image.representations) {
+                    self.priorityDisposable.set(context.engine.resources.pushPriorityDownload(resourceId: representation.resource.id.stringRepresentation))
+                }
+            case let .file(file):
+                self.priorityDisposable.set(context.engine.resources.pushPriorityDownload(resourceId: file.resource.id.stringRepresentation))
+            default:
+                self.priorityDisposable.set(nil)
+            }
+        }
     }
     func disappear() {
         self.updateState(.waiting)
+        self.priorityDisposable.set(nil)
     }
     func preload() {
         

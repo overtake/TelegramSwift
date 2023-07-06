@@ -40,7 +40,7 @@ final class StoryControlsView : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(shadowView)
-        avatar.setFrameSize(NSMakeSize(28, 28))
+        avatar.setFrameSize(NSMakeSize(32, 32))
         userContainer.addSubview(avatarAndText)
         avatarAndText.addSubview(avatar)
         avatarAndText.addSubview(dateView)
@@ -169,8 +169,12 @@ final class StoryControlsView : Control {
         closeFriends.isHidden = !story.storyItem.isCloseFriends
         
         let date = NSMutableAttributedString()
-        date.append(string: " \(strings().bullet) ", color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
-        date.append(string: DateUtils.string(forRelativeLastSeen: story.storyItem.timestamp), color: NSColor.white.withAlphaComponent(0.8), font: .medium(.short))
+        let color = NSColor.white.withAlphaComponent(0.8)
+        date.append(string: DateUtils.string(forRelativeLastSeen: story.storyItem.timestamp), color: NSColor.white.withAlphaComponent(0.8), font: .medium(.small))
+        if story.storyItem.isEdited {
+            date.append(string: " \(strings().bullet) ", color: color, font: .medium(.small))
+            date.append(string: "edited", color: color, font: .medium(.short))
+        }
 
         let dateLayout = TextViewLayout(date, maximumNumberOfLines: 1)
         dateLayout.measure(width: frame.width / 2)
@@ -187,7 +191,7 @@ final class StoryControlsView : Control {
         let authorWidth = frame.width - dateLayout.layoutSize.width - more.frame.width - muted.frame.width - avatar.frame.width - 10 - (muted.isHidden ? 0 : 12) - (more.isHidden ? 0 : 12) - (closeFriends.isHidden ? 0 : 12)
         
         let authorName = NSMutableAttributedString()
-        authorName.append(string: context.peerId == groupId ? "My Story" : peer.compactDisplayTitle, color: .white, font: .medium(.title))
+        authorName.append(string: context.peerId == groupId ? "My Story" : peer.displayTitle, color: .white, font: .medium(.title))
 
         
         let authorLayout = TextViewLayout(authorName, maximumNumberOfLines: 1, truncationType: .middle)
@@ -196,7 +200,7 @@ final class StoryControlsView : Control {
         textView.update(authorLayout)
         dateView.update(dateLayout)
         
-        avatarAndText.setFrameSize(NSMakeSize(textView.frame.width + dateView.frame.width + avatar.frame.width + 8, avatar.frame.height))
+        avatarAndText.setFrameSize(NSMakeSize(textView.frame.width + dateView.frame.width + avatar.frame.width + 10, avatar.frame.height))
         
         let transition: ContainedViewLayoutTransition
         if animated {
@@ -215,13 +219,13 @@ final class StoryControlsView : Control {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: shadowView, frame: NSMakeRect(0, 0, size.width, 74))
-        transition.updateFrame(view: userContainer, frame: NSMakeRect(0, 0, size.width, 56))
+        transition.updateFrame(view: userContainer, frame: NSMakeRect(0, 4, size.width, 56))
         
-        transition.updateFrame(view: avatarAndText, frame: avatarAndText.centerFrameY(x: 14))
+        transition.updateFrame(view: avatarAndText, frame: avatarAndText.centerFrameY(x: 12))
         
         transition.updateFrame(view: avatar, frame: avatar.centerFrameY(x: 0))
-        transition.updateFrame(view: textView, frame: textView.centerFrameY(x: avatar.frame.maxX + 8))
-        transition.updateFrame(view: dateView, frame: dateView.centerFrameY(x: textView.frame.maxX))
+        transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, avatar.frame.minY), size: textView.frame.size))
+        transition.updateFrame(view: dateView, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, avatar.frame.maxY - dateView.frame.height), size: dateView.frame.size))
 
         var controlX = size.width
         
@@ -243,11 +247,11 @@ final class StoryControlsView : Control {
     override func layout() {
         super.layout()
         
-        dateView.resize(frame.width / 2)
 
-        let width = frame.width - dateView.frame.width - more.frame.width - muted.frame.width - avatar.frame.width - 10 - (muted.isHidden ? 0 : 12) - (more.isHidden ? 0 : 12)
+        let width = frame.width - 24 - avatar.frame.width - 10 - (muted.isHidden ? 0 : 18) - (more.isHidden ? 0 : 18) - (closeFriends.isHidden ? 0 : 18)
         
         self.textView.resize(width)
+        self.dateView.resize(width)
 
         self.updateLayout(size: frame.size, transition: .immediate)
     }

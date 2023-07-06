@@ -209,13 +209,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     
-    override public func scroll(to newOrigin:NSPoint) -> Void {
-        CATransaction.begin()
-        self.setBoundsOrigin(newOrigin)
-        CATransaction.commit()
-        
-    }
-    
     public override var bounds: NSRect {
         set {
             super.bounds = newValue

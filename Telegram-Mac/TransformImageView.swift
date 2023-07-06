@@ -82,7 +82,7 @@ open class TransformImageView: NSView {
 
     
     private var captureProtectedContentLayer: CaptureProtectedContentLayer?
-
+    private var protectedOverlay: SimpleLayer?
 
     
     public var preventsCapture: Bool = false {
@@ -90,22 +90,43 @@ open class TransformImageView: NSView {
             if self.preventsCapture {
                 if self.captureProtectedContentLayer == nil, let image = self.image {
                     let captureProtectedContentLayer = CaptureProtectedContentLayer()
+                    let overlay = SimpleLayer(frame: bounds)
+                    overlay.contents = image
                     
-                    captureProtectedContentLayer.frame = self.bounds
-                    self.layer?.addSublayer(captureProtectedContentLayer)
-                    if let cmSampleBuffer = image.cmSampleBuffer {
-                        captureProtectedContentLayer.enqueue(cmSampleBuffer)
+                    weak var weakSelf = self
+                    weak var weakOverlay = overlay
+                    Queue.concurrentBackgroundQueue().async { [weak image] in
+                        if let cmSampleBuffer = image?.cmSampleBuffer {
+                            DispatchQueue.main.async {
+                                if let layer = weakSelf?.captureProtectedContentLayer {
+                                    layer.enqueue(cmSampleBuffer)
+                                    weakSelf?.layer?.contents = nil
+                                    delay(0.01, closure: {
+                                        weakOverlay?.removeFromSuperlayer()
+                                    })
+                                }
+                                
+                            }
+                        }
                     }
-                    self.layer?.contents = nil
+                    captureProtectedContentLayer.frame = self.bounds
                     
                     if #available(macOS 10.15, *) {
                         captureProtectedContentLayer.preventsCapture = true
-                    } 
+                    }
+                    
+                    self.layer?.addSublayer(captureProtectedContentLayer)
+                    self.layer?.addSublayer(overlay)
+                    
+                    self.captureProtectedContentLayer = captureProtectedContentLayer
+                    self.protectedOverlay = overlay
                 }
             } else if let captureProtectedContentLayer = self.captureProtectedContentLayer {
                 self.captureProtectedContentLayer = nil
                 captureProtectedContentLayer.removeFromSuperlayer()
                 self.layer?.contents = self.image
+                self.protectedOverlay?.removeFromSuperlayer()
+                self.protectedOverlay = nil
             }
         }
     }

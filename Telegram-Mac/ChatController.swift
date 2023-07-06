@@ -415,17 +415,15 @@ class ChatControllerView : View, ChatInputDelegate {
         for value in values {
             if let view = value.photoView {
                 view.layer?.removeAnimation(forKey: "opacity")
-                view._change(pos: value.point, animated: animated && view.superview == floatingPhotosView, duration: 0.2, timingFunction: .easeOut)
+                view._change(pos: value.point, animated: animated && !currentAnimationRows.isEmpty, duration: 0.2, timingFunction: .easeOut)
                 if view.superview != floatingPhotosView {
                     floatingPhotosView.addSubview(view)
-                    if animated {
-                        let moveAsNew = currentAnimationRows.first(where: {
-                            $0.index == value.items.first?.index
-                        })
-                        if let moveAsNew = moveAsNew {
-                            view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .easeOut)
-                            view.layer?.animatePosition(from: value.point - (moveAsNew.to - moveAsNew.from), to: value.point, duration: 0.2, timingFunction: .easeOut)
-                        }
+                    let moveAsNew = currentAnimationRows.first(where: {
+                        $0.index == value.items.first?.index
+                    })
+                    if let moveAsNew = moveAsNew {
+                        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, timingFunction: .easeOut)
+                        view.layer?.animatePosition(from: value.point - (moveAsNew.to - moveAsNew.from), to: value.point, duration: 0.2, timingFunction: .easeOut)
                     }
                 }
                 added.append(view)
