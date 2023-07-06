@@ -471,7 +471,7 @@ private final class StoryListContainer : Control {
     private func scrollAndFindItem(_ peerId: PeerId, animated: Bool) -> NSView? {
         for (i, view) in views.enumerated() {
             if view.item?.entry.id == peerId {
-                self.scroll(index: i, animated: animated, toVisible: true)
+               // self.scroll(index: i, animated: animated, toVisible: true)
                 return view.imageView
             }
         }
