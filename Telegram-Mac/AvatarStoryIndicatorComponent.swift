@@ -45,8 +45,14 @@ public final class AvatarStoryIndicatorComponent : Equatable {
     }
     public convenience init(story: EngineStorySubscriptions.Item, presentation: PresentationTheme, active: Bool = false) {
         let hasUnseen = story.hasUnseen || story.hasUnseenCloseFriends
-        self.init(hasUnseen: story.hasUnseen, hasUnseenCloseFriendsItems: story.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: story.storyCount, unseenCount: active && hasUnseen ? story.storyCount : story.unseenCount))
+        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: story.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: story.storyCount, unseenCount: active && hasUnseen ? story.storyCount : story.unseenCount))
     }
+    
+    public convenience init(stats: EngineChatList.StoryStats, presentation: PresentationTheme) {
+        let hasUnseen = stats.unseenCount > 0
+        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: false, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: stats.totalCount, unseenCount: stats.unseenCount))
+    }
+
     
     public static func ==(lhs: AvatarStoryIndicatorComponent, rhs: AvatarStoryIndicatorComponent) -> Bool {
         if lhs.hasUnseen != rhs.hasUnseen {

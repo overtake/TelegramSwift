@@ -178,11 +178,5 @@ public class SwitchView: Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public override func draw(_ layer: CALayer, in ctx: CGContext) {
-//        super.draw(layer, in: ctx)
-//        ctx.setFillColor(NSColor.grayBackground.cgColor)
-//        ctx.round(frame.size, frame.height/2.0)
-//        ctx.fill(layer.bounds)
-    }
     
 }

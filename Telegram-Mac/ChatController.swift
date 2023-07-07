@@ -326,9 +326,15 @@ class ChatControllerView : View, ChatInputDelegate {
         scroller = ChatNavigationScroller(.scroller)
         inputContextHelper = InputContextHelper(chatInteraction: chatInteraction)
         tableView = TableView(frame:NSMakeRect(0,0,frameRect.width,frameRect.height - 50), isFlipped:false)
+        
         inputView = ChatInputView(frame: NSMakeRect(0,tableView.frame.maxY, frameRect.width,50), chatInteraction: chatInteraction)
         //inputView.autoresizingMask = [.width]
         super.init(frame: frameRect)
+        
+        
+        tableView.getBackgroundColor = {
+            .clear
+        }
         
 //        self.layer = CAGradientLayer()
 //        self.layer?.disableActions()
@@ -415,7 +421,7 @@ class ChatControllerView : View, ChatInputDelegate {
         for value in values {
             if let view = value.photoView {
                 view.layer?.removeAnimation(forKey: "opacity")
-                view._change(pos: value.point, animated: animated && !currentAnimationRows.isEmpty, duration: 0.2, timingFunction: .easeOut)
+                view._change(pos: value.point, animated: animated || !currentAnimationRows.isEmpty, duration: 0.2, timingFunction: .easeOut)
                 if view.superview != floatingPhotosView {
                     floatingPhotosView.addSubview(view)
                     let moveAsNew = currentAnimationRows.first(where: {
@@ -2351,9 +2357,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         } |> distinctUntilChanged
         
         
-        let themeWallpaper: Signal<WallpaperResult, NoError> = wallpaper |> mapToSignal { wallpaper in
+        let chatTheme:Signal<(String?, TelegramPresentationTheme), NoError> = combineLatest(context.chatThemes, themeEmoticon, appearanceSignal) |> map { chatThemes, themeEmoticon, appearance -> (String?, TelegramPresentationTheme) in
+            
+            var theme: TelegramPresentationTheme = appearance.presentation
+            if let themeEmoticon = themeEmoticon {
+                let chatThemeData = chatThemes.first(where: { $0.0 == themeEmoticon})?.1
+                theme = chatThemeData ?? appearance.presentation
+            }
+            return (themeEmoticon, theme)
+        }
+
+        
+        let themeWallpaper: Signal<WallpaperResult, NoError> = combineLatest(wallpaper, appearanceSignal) |> mapToSignal { wallpaper, appearance in
             if let wallpaper = wallpaper?.uiWallpaper {
-                if backgroundExists(wallpaper) {
+                if backgroundExists(wallpaper, palette: appearance.presentation.colors) {
                     return .single(.result(wallpaper))
                 } else {
                     return .single(.loading) |> then(moveWallpaperToCache(postbox: context.account.postbox, wallpaper: wallpaper) |> map {
@@ -2367,16 +2384,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         |> deliverOnMainQueue
         
                 
-        let chatTheme:Signal<(String?, TelegramPresentationTheme), NoError> = combineLatest(context.chatThemes, themeEmoticon, appearanceSignal) |> map { chatThemes, themeEmoticon, appearance -> (String?, TelegramPresentationTheme) in
-            
-            var theme: TelegramPresentationTheme = appearance.presentation
-            if let themeEmoticon = themeEmoticon {
-                let chatThemeData = chatThemes.first(where: { $0.0 == themeEmoticon})?.1
-                theme = chatThemeData ?? appearance.presentation
-            }
-            return (themeEmoticon, theme)
-        }
-        
         
         struct ThemeTuple : Equatable {
             let theme: TelegramPresentationTheme
@@ -6076,7 +6083,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.updateHasPhotos(processedView.theme)
         
         genericView.tableView.merge(with: transition, appearAnimated: appearAnimated)
-        collectFloatingPhotos(animated: animated && transition.state.isNone, currentAnimationRows: currentAnimationRows)
+        collectFloatingPhotos(animated: false, currentAnimationRows: currentAnimationRows)
 
         
         genericView.chatTheme = processedView.theme

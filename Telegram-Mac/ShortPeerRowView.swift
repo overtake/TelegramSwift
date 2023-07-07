@@ -669,7 +669,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 photoContainer.addSubview(current)
                 isNew = true
             }
-            _ = current.update(component: indicator, availableSize: item.photoSize.bounds.insetBy(dx: 3, dy: 3).size, transition: .immediate)
+            current.update(component: indicator, availableSize: item.photoSize.bounds.insetBy(dx: 3, dy: 3).size, transition: .immediate)
             if animated, isNew {
                 current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

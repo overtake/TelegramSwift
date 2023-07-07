@@ -70,6 +70,10 @@ class SearchEmptyRowView : TableRowView {
         
     }
     
+    override var isOpaque: Bool {
+        return false
+    }
+    
 
     override var backdorColor: NSColor {
         if let item = item as? SearchEmptyRowItem {
