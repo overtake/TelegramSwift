@@ -57,7 +57,7 @@ private final class StoryViewerRowItem : GeneralRowItem {
 }
 
 private final class StoryViewerRowView: GeneralRowView {
-    private let avatar = AvatarControl(font: .avatar(20))
+    private let avatar = AvatarControl(font: .avatar(12))
     private let title = TextView()
     private let date = TextView()
     private let stateIcon = ImageView()

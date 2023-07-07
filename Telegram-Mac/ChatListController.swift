@@ -1466,7 +1466,7 @@ class ChatListController : PeersListController {
     }
 
     override func escapeKeyAction() -> KeyHandlerResult {
-        if !mode.isPlain, let navigation = navigationController {
+        if mode.groupId == .archive, let navigation = navigationController {
             navigation.back()
             return .invoked
         }

@@ -28,7 +28,7 @@ final class ChatListSpaceItem : GeneralRowItem {
         }
         let state = getState()
         var height: CGFloat = 50
-        if state.mode == .plain, state.splitState != .minimisize {
+        if state.mode.isPlain, state.splitState != .minimisize {
             if let progress = getDeltaProgress() {
                 height += 40 * progress
             } else if state.appear == .normal {
