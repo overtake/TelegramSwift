@@ -22,8 +22,10 @@ enum ThemeSource : Equatable {
 private final class PhotoCachedRecord {
     let date:TimeInterval
     let image:CGImage
+    let sampleBuffer: CMSampleBuffer?
     let size:Int
-    init(image:CGImage, size:Int) {
+    init(image:CGImage, sampleBuffer: CMSampleBuffer?, size:Int) {
+        self.sampleBuffer = sampleBuffer
         self.date = CFAbsoluteTimeGetCurrent() + kCFAbsoluteTimeIntervalSince1970
         self.size = size
         self.image = image
@@ -42,8 +44,10 @@ private final class WallpaperCachedRecord {
 public final class TransformImageResult {
     let image: CGImage?
     let highQuality: Bool
-    init(_ image: CGImage?, _ highQuality: Bool) {
+    let sampleBuffer: CMSampleBuffer?
+    init(_ image: CGImage?, _ highQuality: Bool, _ sampleBuffer: CMSampleBuffer? = nil) {
         self.image = image
+        self.sampleBuffer = sampleBuffer
         self.highQuality = highQuality
     }
     deinit {
@@ -339,17 +343,20 @@ private class PhotoCache {
         self.values.countLimit = memoryLimit
     }
     
-    fileprivate func cacheImage(_ image:CGImage, for key:PhotoCacheKeyEntry) {
-        self.values.setObject(PhotoCachedRecord(image: image, size: Int(image.backingSize.width * image.backingSize.height * 4)), forKey: .init(value: key.hashValue))
+    fileprivate func cacheImage(_ image:CGImage, sampleBuffer: CMSampleBuffer?, for key:PhotoCacheKeyEntry) {
+        self.values.setObject(PhotoCachedRecord(image: image, sampleBuffer: sampleBuffer, size: Int(image.backingSize.width * image.backingSize.height * 4)), forKey: .init(value: key.hashValue))
     }
     
     private func freeMemoryIfNeeded() {
     }
     
-    func cachedImage(for key:PhotoCacheKeyEntry) -> CGImage? {
-        var image:CGImage? = nil
-        image = self.values.object(forKey: .init(value: key.hashValue))?.image
-        return image
+    func cachedImage(for key:PhotoCacheKeyEntry) -> (CGImage, CMSampleBuffer?)? {
+        let result = self.values.object(forKey: .init(value: key.hashValue))
+        if let result = result {
+            return (result.image, result.sampleBuffer)
+        } else {
+            return nil
+        }
     }
     
     func removeRecord(for key:PhotoCacheKeyEntry) {
@@ -384,39 +391,39 @@ func clearImageCache() -> Signal<Void, NoError> {
 
 func cachedPeerPhoto(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal<CGImage?, NoError> {
     let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale, isForum)
-    return .single(peerPhotoCache.cachedImage(for: entry))
+    return .single(peerPhotoCache.cachedImage(for: entry)?.0)
 }
 
 func cachePeerPhoto(image:CGImage, peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal <Void, NoError> {
     let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale, isForum)
-    return .single(peerPhotoCache.cacheImage(image, for: entry))
+    return .single(peerPhotoCache.cacheImage(image, sampleBuffer: nil, for: entry))
 }
 
 func cachedEmptyPeerPhoto(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal<CGImage?, NoError> {
     let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale, isForum)
-    return .single(peerPhotoCache.cachedImage(for: entry))
+    return .single(peerPhotoCache.cachedImage(for: entry)?.0)
 }
 
 func cacheEmptyPeerPhoto(image:CGImage, peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal <Void, NoError> {
     let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale, isForum)
-    return .single(peerPhotoCache.cacheImage(image, for: entry))
+    return .single(peerPhotoCache.cacheImage(image, sampleBuffer: nil, for: entry))
 }
 func cachedPeerPhotoImmediatly(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat, isForum: Bool) -> CGImage? {
     let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale, isForum)
-    return peerPhotoCache.cachedImage(for: entry)
+    return peerPhotoCache.cachedImage(for: entry)?.0
 }
 func cachedEmptyPeerPhotoImmediatly(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat, isForum: Bool) -> CGImage? {
     let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale, isForum)
-    return peerPhotoCache.cachedImage(for: entry)
+    return peerPhotoCache.cachedImage(for: entry)?.0
 }
 
 func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<TransformImageResult, NoError> {
     let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)
-    let value: CGImage?
+    let value: (CGImage, CMSampleBuffer?)?
     var full: Bool = false
     
-    if arguments.imageSize.width <= 60, let media = media as? TelegramMediaFile, media.isStaticSticker || media.isAnimatedSticker, let image = stickersCache.cachedImage(for: entry) {
-        value = image
+    if arguments.imageSize.width <= 60, let media = media as? TelegramMediaFile, media.isStaticSticker || media.isAnimatedSticker {
+        value = stickersCache.cachedImage(for: entry)
         full = true
     } else if let image = photosCache.cachedImage(for: entry) {
         value = image
@@ -424,12 +431,12 @@ func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloa
     } else {
         value = photoThumbsCache.cachedImage(for: entry)
     }
-    return .single(TransformImageResult(value, full))
+    return .single(TransformImageResult(value?.0, full, value?.1))
 }
 
 func cachedSlot(value: SlotMachineValue, arguments: TransformImageArguments, scale: CGFloat) -> Signal<TransformImageResult, NoError> {
     let entry:PhotoCacheKeyEntry = .slot(value, arguments, scale)
-    let value: CGImage? = stickersCache.cachedImage(for: entry)
+    let value: CGImage? = stickersCache.cachedImage(for: entry)?.0
     let full: Bool = value != nil
     
     return .single(TransformImageResult(value, full))
@@ -437,7 +444,7 @@ func cachedSlot(value: SlotMachineValue, arguments: TransformImageArguments, sca
 
 func cachedMedia(media: TelegramThemeSettings, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<TransformImageResult, NoError> {
     let entry:PhotoCacheKeyEntry = .platformTheme(media, arguments, scale, positionFlags)
-    let value: CGImage?
+    let value: (CGImage, CMSampleBuffer?)?
     var full: Bool = false
     
     if let image = photosCache.cachedImage(for: entry) {
@@ -446,12 +453,12 @@ func cachedMedia(media: TelegramThemeSettings, arguments: TransformImageArgument
     } else {
         value = nil
     }
-    return .single(TransformImageResult(value, full))
+    return .single(TransformImageResult(value?.0, full, value?.1))
 }
 
 func cachedMedia(messageId: Int64, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<TransformImageResult, NoError> {
     let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, arguments, scale, positionFlags ?? [])
-    let value: CGImage?
+    let value: (CGImage, CMSampleBuffer?)?
     var full: Bool = false
     if let image = photosCache.cachedImage(for: entry) {
         value = image
@@ -459,39 +466,39 @@ func cachedMedia(messageId: Int64, arguments: TransformImageArguments, scale: CG
     } else {
         value = photoThumbsCache.cachedImage(for: entry)
     }
-    return .single(TransformImageResult(value, full))
+    return .single(TransformImageResult(value?.0, full, value?.1))
 }
 
 func cacheMedia(_ result: TransformImageResult, media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {
     if let image = result.image {
         let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)
         if arguments.imageSize.width <= 60, result.highQuality, let media = media as? TelegramMediaFile,  media.isStaticSticker || media.isAnimatedSticker {
-            stickersCache.cacheImage(image, for: entry)
+            stickersCache.cacheImage(image, sampleBuffer: result.sampleBuffer, for: entry)
         } else if !result.highQuality {
-            photoThumbsCache.cacheImage(image, for: entry)
+            photoThumbsCache.cacheImage(image, sampleBuffer: result.sampleBuffer, for: entry)
         } else {
-            photosCache.cacheImage(image, for: entry)
+            photosCache.cacheImage(image, sampleBuffer: result.sampleBuffer, for: entry)
         }
     }
 }
 
 func cacheSlot(_ result: TransformImageResult, value: SlotMachineValue, arguments: TransformImageArguments, scale: CGFloat) -> Void {
     if let image = result.image {
-        stickersCache.cacheImage(image, for: .slot(value, arguments, scale))
+        stickersCache.cacheImage(image, sampleBuffer: nil, for: .slot(value, arguments, scale))
     }
 }
 
 func cacheEmoji(_ image: CGImage, emoji: String, scale: CGFloat) -> Void {
-    stickersCache.cacheImage(image, for: .emoji(emoji, scale))
+    stickersCache.cacheImage(image, sampleBuffer: nil, for: .emoji(emoji, scale))
 }
 func cachedEmoji(emoji: String, scale: CGFloat) -> CGImage? {
-    return stickersCache.cachedImage(for: .emoji(emoji, scale))
+    return stickersCache.cachedImage(for: .emoji(emoji, scale))?.0
 }
 
 func cacheMedia(_ result: TransformImageResult, media: TelegramThemeSettings, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {
     if let image = result.image {
         let entry:PhotoCacheKeyEntry = .platformTheme(media, arguments, scale, positionFlags)
-        photosCache.cacheImage(image, for: entry)
+        photosCache.cacheImage(image, sampleBuffer: result.sampleBuffer, for: entry)
     }
 }
 
@@ -510,16 +517,16 @@ func cacheMedia(_ result: TransformImageResult, messageId: Int64, arguments: Tra
     if let image = result.image {
         let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, arguments, scale, positionFlags ?? [])
         if !result.highQuality {
-            photoThumbsCache.cacheImage(image, for: entry)
+            photoThumbsCache.cacheImage(image, sampleBuffer: result.sampleBuffer, for: entry)
         } else {
-            photosCache.cacheImage(image, for: entry)
+            photosCache.cacheImage(image, sampleBuffer: result.sampleBuffer, for: entry)
         }
     }
 }
 
 func cachedThemeThumb(source: ThemeSource, bubbled: Bool, thumbSource: AppearanceThumbSource = .general) -> Signal<TransformImageResult, NoError> {
     let entry:PhotoCacheKeyEntry = .theme(source, bubbled, thumbSource)
-    let value: CGImage?
+    let value: (CGImage, CMSampleBuffer?)?
     var full: Bool = false
     if let image = themeThums.cachedImage(for: entry) {
         value = image
@@ -527,11 +534,7 @@ func cachedThemeThumb(source: ThemeSource, bubbled: Bool, thumbSource: Appearanc
     } else {
         value = themeThums.cachedImage(for: entry)
     }
-    if value == nil {
-        var bp:Int = 0
-        bp += 1
-    }
-    return .single(TransformImageResult(value, full))
+    return .single(TransformImageResult(value?.0, full, value?.1))
 }
 
 func cacheThemeThumb(_ result: TransformImageResult, source: ThemeSource, bubbled: Bool, thumbSource: AppearanceThumbSource = .general) -> Void {
@@ -539,9 +542,9 @@ func cacheThemeThumb(_ result: TransformImageResult, source: ThemeSource, bubble
     
     if let image = result.image {
         if !result.highQuality {
-            themeThums.cacheImage(image, for: entry)
+            themeThums.cacheImage(image, sampleBuffer: result.sampleBuffer, for: entry)
         } else {
-            themeThums.cacheImage(image, for: entry)
+            themeThums.cacheImage(image, sampleBuffer: result.sampleBuffer, for: entry)
         }
     }
 }

@@ -37,8 +37,8 @@ private final class Arguments {
     let setupFilter: (ChatListFilter)->Void
     let openFilterSettings: (ChatListFilter)->Void
     let tabsMenuItems: (ChatListFilter, Int?, Bool?)->[ContextMenuItem]
-
-    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem]) {
+    let getController:()->ViewController?
+    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?) {
         self.context = context
         self.joinGroupCall = joinGroupCall
         self.joinGroup = joinGroup
@@ -50,6 +50,7 @@ private final class Arguments {
         self.setupFilter = setupFilter
         self.openFilterSettings = openFilterSettings
         self.tabsMenuItems = tabsMenuItems
+        self.getController = getController
     }
 }
 
@@ -126,7 +127,7 @@ struct PeerListState : Equatable {
             if !stories.items.isEmpty {
                 return true
             }
-            if let accountItem = stories.accountItem, accountItem.storyCount > 0 {
+            if let accountItem = stories.accountItem, accountItem.storyCount > 0, mode.groupId != .archive {
                 return true
             }
         }
@@ -392,6 +393,7 @@ class PeerListContainerView : Control {
             case contacts
             case chats
             case settings
+            case archivedChats
             var text: String {
                 switch self {
                 case .contacts:
@@ -400,6 +402,8 @@ class PeerListContainerView : Control {
                     return strings().peerListTitleChats
                 case .settings:
                     return "Settings"
+                case .archivedChats:
+                    return strings().peerListTitleArchive
                 }
             }
         }
@@ -423,14 +427,14 @@ class PeerListContainerView : Control {
         }
             
         fileprivate func updateState(_ state: PeerListState, arguments: Arguments, animated: Bool) {
-            let source: Source = state.isContacts ? .contacts : .chats
+            let source: Source = state.isContacts ? .contacts : state.mode.groupId != .archive ? .chats : .archivedChats
             let layout = TextViewLayout(.initialize(string: source.text, color: theme.colors.text, font: .medium(.title)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
             
-            let hasControls = state.splitState != .minimisize
+            let hasControls = state.splitState != .minimisize && state.mode == .plain
 
-            let hasStatus = state.peer?.peer.isPremium ?? false && hasControls
+            let hasStatus = state.peer?.peer.isPremium ?? false && hasControls && state.mode == .plain
 
             if hasStatus, let peer = state.peer?.peer, source != .contacts {
                 
@@ -494,6 +498,9 @@ class PeerListContainerView : Control {
     let backgroundView = View(frame: NSZeroRect)
     
     let tableView = TableView(frame:NSZeroRect, drawBorder: true)
+    
+    private var backButton: TitleButton?
+    
     private let containerView = Control()
     private let containerBackground = Control()
     private let statusContainer = Control()
@@ -606,7 +613,7 @@ class PeerListContainerView : Control {
         self.arguments = arguments
         
         if let stories = state.stories, state.hasStories {
-            self.storiesItem = .init(frame.size, stableId: 0, context: arguments.context, state: stories, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
+            self.storiesItem = .init(frame.size, stableId: 0, context: arguments.context, isArchive: state.mode.groupId == .archive, state: stories, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
         } else {
             self.storiesItem = nil
         }
@@ -689,13 +696,13 @@ class PeerListContainerView : Control {
             self.actionView = nil
         }
         
-        self.titleView.isHidden = (state.splitState == .minimisize) || (state.appear == .short && delta == nil) || (state.mode != .plain)
+        self.titleView.isHidden = (state.splitState == .minimisize) || (state.appear == .short && delta == nil) || !mode.isPlain
         
         let componentSize = NSMakeSize(40, 30)
         
         var controlPoint = NSMakePoint(frame.width - 10 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - componentSize.height)/2.0))
         
-        let hasControls = state.splitState != .minimisize && mode.isPlain && (state.appear != .short || delta != nil)
+        let hasControls = state.splitState != .minimisize && mode.isPlain && (state.appear != .short || delta != nil) && mode == .plain
         
         let hasProxy = (!state.proxySettings.servers.isEmpty || state.proxySettings.effectiveActiveServer != nil) && hasControls && !state.isContacts
         
@@ -759,6 +766,30 @@ class PeerListContainerView : Control {
         } else if let view = self.foldersView {
             performSubviewRemoval(view, animated: animated)
             self.foldersView = nil
+        }
+        
+        if state.mode.groupId == .archive {
+            let current: TitleButton
+            if let view = self.backButton {
+                current = view
+            } else {
+                current = TitleButton()
+                self.backButton = current
+                backButton?.set(handler: { [weak arguments] _ in
+                    arguments?.getController()?.navigationController?.back()
+                }, for: .Click)
+                statusContainer.addSubview(current, positioned: .below, relativeTo: statusContainer.subviews.first)
+            }
+            
+            current.set(text: strings().navigationBack, for: .Normal)
+            current.set(image: theme.icons.chatNavigationBack, for: .Normal)
+            current.set(color: theme.colors.accent, for: .Normal)
+            current.set(font: .medium(.title), for: .Normal)
+            current.sizeToFit(NSMakeSize(0, 20))
+            
+        } else if let view = self.backButton {
+            performSubviewRemoval(view, animated: animated)
+            self.backButton = nil
         }
         
         
@@ -1168,32 +1199,50 @@ class PeerListContainerView : Control {
             transition.updateAlpha(view: view, alpha: progress)
         }
         
+        if let view = self.backButton {
+            transition.updateFrame(view: view, frame: view.centerFrameY(x: 20))
+        }
+        
 
         if let actionView = self.actionView {
             transition.updateFrame(view: actionView, frame: CGRect(origin: CGPoint(x: 0, y: size.height - actionView.frame.height), size: NSMakeSize(frame.width, actionView.frame.height)))
         }
         
+        let titlePlusStorySize = titleView.frame.width + (70)
+        let titlePlusStoryStartX = (size.width - titlePlusStorySize) / 2
+        
+        let storyXStart = titlePlusStoryStartX
+        let titleXStart = titlePlusStoryStartX + (70)
+        
+        let storyXEnd: CGFloat = 0
+        let titleXEnd = (size.width - titleView.size.width) / 2
+        
+        
+        
+        var titleX: CGFloat = titleXEnd
+        var storyX: CGFloat = storyXEnd
+        
         var titleOffset: CGFloat = 0
         if let stories = self.storiesItem {
-            titleOffset += (1 - stories.progress) * 15
+            titleX = titleXEnd - (titleXEnd - titleXStart) * (1 - stories.progress)
+            storyX = storyXEnd + (storyXStart - storyXEnd) * (1 - stories.progress)
         }
+        
         
         titleOffset -= (1 - progress) * (size.width - 70)
         
-        transition.updateFrame(view: titleView, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(bsc, titleOffset + (size.width - titleView.size.width) / 2), y: floorToScreenPixels(bsc, (statusHeight - titleView.size.height) / 2) - 2), size: titleView.size))
+        transition.updateFrame(view: titleView, frame: CGRect(origin: CGPoint(x: titleX, y: floorToScreenPixels(bsc, (statusHeight - titleView.size.height) / 2) - 2), size: titleView.size))
         titleView.updateLayout(size: titleView.size, transition: transition)
         
         if let storiesItem = storiesItem, let view = storiesView {
             let size = NSMakeSize(size.width, storiesItem.height)
-            let reversed = 1 - storiesItem.getInterfaceState().progress
+            let reversed = 1 - storiesItem.progress
             
             let middle = size.width / 2
+                        
+            var rect = CGRect(origin: NSMakePoint(storyX, 10 + storiesItem.getInterfaceState().progress * 40), size: size)
             
-            let add: CGFloat = titleView.hasPremium ? 0 : 15
-            
-            var rect = CGRect(origin: NSMakePoint(reversed * (middle - 70 - 15 + add), 10 + storiesItem.getInterfaceState().progress * 40), size: size)
-            
-            rect.origin.x -= (1 - progress) * (size.width - 70 + add)
+//            rect.origin.x -= (1 - progress) * (size.width - 70)
             
             if storiesItem.itemsCount < 3 {
                 rect.origin.x += (1 - storiesItem.getInterfaceState().progress) * (StoryListChatListRowItem.smallSize.width / 2 * CGFloat(3 - storiesItem.itemsCount))
@@ -1249,7 +1298,7 @@ class PeerListContainerView : Control {
         }
         var offset: CGFloat = 50
         
-        if state.mode == .plain, state.splitState != .minimisize {
+        if state.splitState != .minimisize, state.mode.isPlain {
             if state.appear == .normal {
                 offset += 40
             } else if let progress = getDeltaProgress() {
@@ -1272,7 +1321,7 @@ class PeerListContainerView : Control {
         guard let state = self.state else {
             return 0
         }
-        if state.mode != .plain {
+        if !state.mode.isPlain {
             return 10
         }
         let height: CGFloat = 50
@@ -1330,7 +1379,11 @@ enum PeerListMode : Equatable {
         case .plain:
             return true
         default:
-            return false
+            if self.groupId == .archive {
+                return true
+            } else {
+                return false
+            }
         }
     }
     var groupId: EngineChatList.Group {
@@ -1451,15 +1504,16 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         default:
             self.topics = nil
         }
-        if mode == .plain {
-            self.storyList = context.engine.messages.storySubscriptions(isHidden: isContacts)
+        if mode.isPlain {
+            self.storyList = context.engine.messages.storySubscriptions(isHidden: isContacts || mode.groupId == .archive)
         } else {
             self.storyList = nil
         }
         super.init(context)
         
         
-        self.bar = .init(height: !mode.isPlain ? 50 : 0)
+        self.bar = .init(height: mode.isPlain ? 0 : 50)
+
     }
     
     override var redirectUserInterfaceCalls: Bool {
@@ -1954,6 +2008,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }, tabsMenuItems: { filter, unreadCount, allMuted in
             return filterContextMenuItems(filter, unreadCount: unreadCount, includeAllMuted: allMuted, context: context)
+        }, getController: { [weak self] in
+            return self
         })
         
         self.takeArguments = { [weak arguments] in

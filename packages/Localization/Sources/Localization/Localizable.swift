@@ -3979,7 +3979,7 @@ public final class L10n {
   public static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
   /// Story
   public static var chatListStory: String  { return L10n.tr("Localizable", "ChatList.Story") }
-  /// mentioned you in story
+  /// mentioned you in a story
   public static var chatListStoryMentioned: String  { return L10n.tr("Localizable", "ChatList.StoryMentioned") }
   /// Feed
   public static var chatListTitleFeed: String  { return L10n.tr("Localizable", "ChatList.TitleFeed") }
@@ -8575,6 +8575,8 @@ public final class L10n {
   }
   /// Verified Account
   public static var peerInfoVerifiedTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Verified.Tooltip") }
+  /// Archived Chats
+  public static var peerListTitleArchive: String  { return L10n.tr("Localizable", "PeerList.Title.Archive") }
   /// Chats
   public static var peerListTitleChats: String  { return L10n.tr("Localizable", "PeerList.Title.Chats") }
   /// Contacts

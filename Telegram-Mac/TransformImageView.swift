@@ -48,6 +48,15 @@ open class TransformImageView: NSView {
         return true
     }
     private var _image: CGImage? = nil
+    private var sampleBuffer: CMSampleBuffer? {
+        didSet {
+            if sampleBuffer != nil {
+                var bp = 0
+                bp += 1
+            }
+        }
+    }
+    
     var image: CGImage? {
         set {
             layer?.contents = newValue
@@ -88,26 +97,11 @@ open class TransformImageView: NSView {
     public var preventsCapture: Bool = false {
         didSet {
             if self.preventsCapture {
-                if self.captureProtectedContentLayer == nil, let image = self.image {
+                if self.captureProtectedContentLayer == nil {
                     let captureProtectedContentLayer = CaptureProtectedContentLayer()
-                    let overlay = SimpleLayer(frame: bounds)
-                    overlay.contents = image
-                    
-                    weak var weakSelf = self
-                    weak var weakOverlay = overlay
-                    Queue.concurrentBackgroundQueue().async { [weak image] in
-                        if let cmSampleBuffer = image?.cmSampleBuffer {
-                            DispatchQueue.main.async {
-                                if let layer = weakSelf?.captureProtectedContentLayer {
-                                    layer.enqueue(cmSampleBuffer)
-                                    weakSelf?.layer?.contents = nil
-                                    delay(0.01, closure: {
-                                        weakOverlay?.removeFromSuperlayer()
-                                    })
-                                }
-                                
-                            }
-                        }
+                    if let cmSampleBuffer = self.sampleBuffer {
+                        captureProtectedContentLayer.enqueue(cmSampleBuffer)
+                        self.layer?.contents = nil
                     }
                     captureProtectedContentLayer.frame = self.bounds
                     
@@ -116,17 +110,13 @@ open class TransformImageView: NSView {
                     }
                     
                     self.layer?.addSublayer(captureProtectedContentLayer)
-                    self.layer?.addSublayer(overlay)
                     
                     self.captureProtectedContentLayer = captureProtectedContentLayer
-                    self.protectedOverlay = overlay
                 }
             } else if let captureProtectedContentLayer = self.captureProtectedContentLayer {
                 self.captureProtectedContentLayer = nil
                 captureProtectedContentLayer.removeFromSuperlayer()
                 self.layer?.contents = self.image
-                self.protectedOverlay?.removeFromSuperlayer()
-                self.protectedOverlay = nil
             }
         }
     }
@@ -157,7 +147,7 @@ open class TransformImageView: NSView {
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] result in
             
             let hasImage = self?.image != nil
-            
+            self?.sampleBuffer = result.sampleBuffer
             if clearInstantly {
                 self?.image = result.image
             } else if let image = result.image {
@@ -177,7 +167,7 @@ open class TransformImageView: NSView {
     }
     
     
-    public func setSignal(_ signal: Signal<ImageDataTransformation, NoError>, clearInstantly: Bool = false, animate:Bool = false, synchronousLoad: Bool = false, cacheImage:@escaping(TransformImageResult) -> Void = { _ in } ) {
+    public func setSignal(_ signal: Signal<ImageDataTransformation, NoError>, clearInstantly: Bool = false, animate:Bool = false, synchronousLoad: Bool = false, cacheImage:@escaping(TransformImageResult) -> Void = { _ in }, isProtected: Bool = false) {
         if clearInstantly {
             self.image = nil
         }
@@ -197,7 +187,7 @@ open class TransformImageView: NSView {
         let result = combine |> map { data, arguments -> TransformImageResult in
             let context = data.execute(arguments, data.data)
             let image = context?.generateImage()
-            return TransformImageResult(image, context?.isHighQuality ?? false)
+            return TransformImageResult(image, context?.isHighQuality ?? false, isProtected ? image?.cmSampleBuffer : nil)
         } |> deliverOnMainQueue
         
         self.disposable.set(result.start(next: { [weak self] result in
@@ -205,6 +195,7 @@ open class TransformImageView: NSView {
                 if strongSelf.image == nil && strongSelf.animatesAlphaOnFirstTransition {
                     strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
+                self?.sampleBuffer = result.sampleBuffer
                 self?.image = result.image
                 if !strongSelf.first && animate {
                     self?.layer?.animateContents()

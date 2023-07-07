@@ -136,12 +136,14 @@ final class StoryListChatListRowItem : TableRowItem {
     private let _stableId: AnyHashable
     let context: AccountContext
     let state: EngineStorySubscriptions
+    let isArchive: Bool
     let open: (StoryInitialIndex?, Bool)->Void
     let getInterfaceState: ()->InterfaceState
     let reveal: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?, Bool)->Void, getInterfaceState: @escaping()->InterfaceState = { return .revealed }, reveal: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isArchive: Bool, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?, Bool)->Void, getInterfaceState: @escaping()->InterfaceState = { return .revealed }, reveal: @escaping()->Void) {
         self._stableId = stableId
         self.context = context
+        self.isArchive = isArchive
         self.state = state
         self.open = open
         self.reveal = reveal
@@ -152,7 +154,7 @@ final class StoryListChatListRowItem : TableRowItem {
     
     var itemsCount: Int {
         var count: Int = 0
-        if let accountItem = self.state.accountItem, accountItem.storyCount > 0 {
+        if !self.isArchive, let accountItem = self.state.accountItem, accountItem.storyCount > 0 {
             count += 1
         }
         count += self.state.items.count
@@ -578,7 +580,7 @@ final class StoryListChatListRowView: TableRowView {
         
         var entries:[StoryChatListEntry] = []
         var index: Int = 0
-        if let item = item.state.accountItem, item.storyCount > 0 {
+        if !item.isArchive, let item = item.state.accountItem, item.storyCount > 0 {
             entries.append(.init(item: item, index: index, appearance: appAppearance))
             index += 1
         }
@@ -635,6 +637,7 @@ final class StoryListChatListRowView: TableRowView {
 private final class StoryListEntryRowItem : TableRowItem {
     let entry: StoryChatListEntry
     let context: AccountContext
+    
     let stateComponent: AvatarStoryIndicatorComponent
 
     let open:(StoryInitialIndex?, Bool)->Void
@@ -665,10 +668,18 @@ private final class StoryListEntryRowItem : TableRowItem {
             }, itemImage: MenuAnimation.menu_open_profile.value))
             
             let peer = self.entry.item.peer._asPeer()
-            items.append(.init("Hide", handler: {
-                context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
-                showModalText(for: context.window, text: "Stories from \(peer.compactDisplayTitle) will now be shown in Contacts, not Chats.")
-            }, itemImage: MenuAnimation.menu_move_to_contacts.value))
+            if peer.storyArchived {
+                items.append(.init("Unarchive", handler: {
+                    context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: false)
+                    showModalText(for: context.window, text: "Stories from \(peer.compactDisplayTitle) will now be shown in Chats.")
+                }, itemImage: MenuAnimation.menu_show_message.value))
+            } else {
+                items.append(.init("Archive", handler: {
+                    context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
+                    showModalText(for: context.window, text: "Stories from \(peer.compactDisplayTitle) will now be shown in Archive.")
+                }, itemImage: MenuAnimation.menu_move_to_contacts.value))
+            }
+            
         } else {
             items.append(.init("Saved Stories", handler: {
                 context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true, isArchived: false))
@@ -839,7 +850,7 @@ private final class ItemView : Control {
             name = item.entry.item.peer._asPeer().compactDisplayTitle
         }
         
-        let layout = TextViewLayout.init(.initialize(string: name, color: theme.colors.text, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .middle)
+        let layout = TextViewLayout.init(.initialize(string: name, color: item.entry.hasUnseen || item.entry.id == item.context.peerId ? theme.colors.text : theme.colors.grayText, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .middle)
         layout.measure(width: item.itemWidth - 4)
         textView.update(layout)
         

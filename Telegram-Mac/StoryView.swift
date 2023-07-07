@@ -425,7 +425,7 @@ class StoryImageView : StoryView {
                 if result.image != nil {
                     self?.ready.set(true)
                 }
-            })
+            }, isProtected: story.isForwardingDisabled)
         } else {
             self.ready.set(true)
         }
