@@ -75,7 +75,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     override init(frame frameRect: NSRect) {
         
         super.init(frame: frameRect)
-        self.backgroundColor = .clear
+//        self.backgroundColor = .clear
         self.wantsLayer = true
        // self.layerContentsRedrawPolicy = .never
       //  self.layer?.drawsAsynchronously = System.drawAsync
@@ -85,10 +85,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     
-    
-    override public static var isCompatibleWithResponsiveScrolling: Bool {
-        return true
-    }
     
     public override var backgroundColor: NSColor {
         set {

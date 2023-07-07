@@ -347,9 +347,6 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-    }
     
     override func layout() {
         super.layout()

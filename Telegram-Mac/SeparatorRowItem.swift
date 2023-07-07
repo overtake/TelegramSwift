@@ -58,7 +58,7 @@ class SeparatorRowView: TableRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        layerContentsRedrawPolicy = .onSetNeedsDisplay
+       // layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
     
     override var backdorColor: NSColor {
@@ -69,6 +69,10 @@ class SeparatorRowView: TableRowView {
             return backgroundColor
         }
         return theme.colors.grayBackground
+    }
+    
+    override var isOpaque: Bool {
+        return false
     }
     
     required init?(coder: NSCoder) {
@@ -97,13 +101,6 @@ class SeparatorRowView: TableRowView {
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        
-        super.draw(layer, in: ctx)
-        
-        if backingScaleFactor == 1.0 {
-            ctx.setFillColor(backdorColor.cgColor)
-            ctx.fill(layer.bounds)
-        }
         
         if let item = self.item as? SeparatorRowItem {
             let (layout, apply) = TextNode.layoutText(maybeNode: text, item.text, nil, 1, .end, NSMakeSize(frame.width, frame.height), nil,false, .left)

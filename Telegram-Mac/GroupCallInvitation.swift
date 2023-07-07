@@ -321,8 +321,8 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                     var entries:[Peer] = []
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
-                            if let peer = renderedPeer.chatMainPeer, peer.canSendMessage() {
+                        case let .MessageEntry(data):
+                            if let peer = data.renderedPeer.chatMainPeer, peer.canSendMessage() {
                                 entries.append(peer)
                             }
                         default:

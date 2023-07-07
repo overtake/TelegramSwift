@@ -188,10 +188,10 @@ final class StoryControlsView : Control {
         more.isHidden = context.peerId == groupId
         closeFriends.isHidden = !story.storyItem.isCloseFriends
         
-        let authorWidth = frame.width - dateLayout.layoutSize.width - more.frame.width - muted.frame.width - avatar.frame.width - 10 - (muted.isHidden ? 0 : 12) - (more.isHidden ? 0 : 12) - (closeFriends.isHidden ? 0 : 12)
-        
+        let authorWidth = frame.width - 24 - avatar.frame.width - 10 - (muted.isHidden ? 0 : 18) - (more.isHidden ? 0 : 18) - (closeFriends.isHidden ? 0 : 18)
+
         let authorName = NSMutableAttributedString()
-        authorName.append(string: context.peerId == groupId ? "My Story" : peer.displayTitle, color: .white, font: .medium(.title))
+        authorName.append(string: context.peerId == groupId ? "You Story" : peer.displayTitle, color: .white, font: .medium(.title))
 
         
         let authorLayout = TextViewLayout(authorName, maximumNumberOfLines: 1, truncationType: .middle)

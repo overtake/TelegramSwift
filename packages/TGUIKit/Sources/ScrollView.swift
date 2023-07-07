@@ -161,7 +161,7 @@ open class ScrollView: NSScrollView{
       //  self.verticalScroller?.scrollerStyle = .overlay
         autoresizingMask = []
         self.wantsLayer = true;
-        layer?.backgroundColor = presentation.colors.background.cgColor
+       //  layer?.backgroundColor = presentation.colors.background.cgColor
       //  verticalScrollElasticity = .automatic
         //allowsMagnification = true
         //self.hasVerticalScroller = false
@@ -172,14 +172,11 @@ open class ScrollView: NSScrollView{
              scroller.scrollView = self
              self.verticalScroller = scroller
          }
- 
     }
     
     
-    
-    open override func draw(_ dirtyRect: NSRect) {
-        
-    }
+//    open override func draw(_ dirtyRect: NSRect) {
+//    }
     
     private var isBegan: Bool = false
     

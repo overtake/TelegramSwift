@@ -2721,12 +2721,56 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
         let wallpapers = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path
         try? FileManager.default.createDirectory(at: URL(fileURLWithPath: wallpapers), withIntermediateDirectories: true, attributes: nil)
         
-        let out = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + ".png"
+        let out = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark_0" + ".png"
         
         if !FileManager.default.fileExists(atPath: out) {
             try? FileManager.default.removeItem(atPath: out)
             try? FileManager.default.copyItem(atPath: path, toPath: out)
         }
+        
+        let outDark = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark_1" + ".png"
+        let darkUrl = URL(fileURLWithPath: outDark)
+        
+        if !FileManager.default.fileExists(atPath: outDark), let image = NSImage(contentsOf: darkUrl) {
+            
+            let intense = CGFloat(abs(settings.intensity ?? 0)) / 100
+            var cgImage = image._cgImage
+            if settings.colors.count > 1 {
+                cgImage = generateImage(image.size, contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(NSColor.black.cgColor)
+                    ctx.fill(size.bounds)
+                    ctx.clip(to: size.bounds, mask: image._cgImage!)
+                    
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
+                    ctx.fill(size.bounds)
+                })
+            } else if intense > 0 {
+                cgImage = generateImage(image.size, contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.draw(image._cgImage!, in: size.bounds)
+                    
+                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
+                    ctx.fill(size.bounds)
+                })
+            }
+            
+            
+            if let image = cgImage, let colorDestination = CGImageDestinationCreateWithURL(darkUrl as CFURL, kUTTypePNG, 1, nil) {
+                CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+                
+                let colorQuality: Float = 1.0
+                
+                let options = NSMutableDictionary()
+                options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                
+                CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
+                CGImageDestinationFinalize(colorDestination)
+                
+            }
+        }
+        
         subscriber.putNext(out)
         
         subscriber.putCompletion()
@@ -2755,7 +2799,8 @@ extension WallpaperSettings {
 }
 
 func wallpaperPath(_ resource: TelegramMediaResource, palette: ColorPalette = theme.colors, settings: WallpaperSettings) -> String {
-    return ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + ".png"
+    let path = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark_\(palette.isDark ? 1 : 0)" + ".png"
+    return path
 }
 
 

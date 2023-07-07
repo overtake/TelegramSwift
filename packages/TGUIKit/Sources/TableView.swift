@@ -440,7 +440,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        backgroundColor = .clear
+        wantsLayer = true
+//        backgroundColor = .clear
         self.autoresizesSubviews = false
         usesAlternatingRowBackgroundColors = false
         layerContentsRedrawPolicy = .never
@@ -470,9 +471,6 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         return nil
     }
     
-    override public static var isCompatibleWithResponsiveScrolling: Bool {
-        return true
-    }
     
     
     required init?(coder: NSCoder) {
@@ -488,11 +486,8 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         return flip
     }
     
-    override func draw(_ dirtyRect: NSRect) {
-       
-    }
     override var isOpaque: Bool {
-        return false
+        return true
     }
 
     
@@ -507,32 +502,6 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
     }
-    
-    
-    func draw(_ layer: CALayer, in ctx: CGContext) {
-
-        
-       
-        if let border = border {
-            
-            ctx.setFillColor(presentation.colors.border.cgColor)
-            
-            if border.contains(.Top) {
-                ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
-            }
-            if border.contains(.Bottom) {
-                ctx.fill(NSMakeRect(0, 0, NSWidth(self.frame), .borderSize))
-            }
-            if border.contains(.Left) {
-                ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
-            }
-            if border.contains(.Right) {
-                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
-            }
-            
-        }
-    }
-
     private var beforeRange: NSRange = NSMakeRange(NSNotFound, 0)
     private var offsetOfStartItem: NSPoint = .zero
     private var mouseDown: Bool = false
@@ -681,11 +650,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public var getBackgroundColor:()->NSColor = { presentation.colors.background } {
         didSet {
-            if super.layer?.backgroundColor != .clear {
-                super.layer?.backgroundColor = self.getBackgroundColor().cgColor
+            if tableView.backgroundColor != .clear {
+                tableView.backgroundColor = self.getBackgroundColor()
             }
-            self.needsDisplay = true
-
         }
     }
     
@@ -778,8 +745,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     open func updateLocalizationAndTheme(theme: PresentationTheme) {
-        if super.layer?.backgroundColor != .clear {
-            super.layer?.backgroundColor = self.getBackgroundColor().cgColor
+        if tableView.backgroundColor != .clear {
+            tableView.backgroundColor = self.getBackgroundColor()
         }
         stickView?.updateColors()
         rightBorder?.backgroundColor = theme.colors.border
@@ -824,7 +791,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public override init(frame frameRect: NSRect) {
         self.tableView = TGFlipableTableView(frame: frameRect.size.bounds)
-        self.tableView.wantsLayer = true
+//        self.tableView.wantsLayer = true
         self.tableView.autoresizesSubviews = false
         super.init(frame: frameRect)
         self.autoresizingMask = []
@@ -833,7 +800,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public init(frame frameRect: NSRect, isFlipped:Bool = true, bottomInset:CGFloat = 0, drawBorder: Bool = false) {
         self.tableView = TGFlipableTableView(frame: frameRect.size.bounds)
-        self.tableView.wantsLayer = true
+//        self.tableView.wantsLayer = true
         self.tableView.autoresizesSubviews = false
         super.init(frame: frameRect)
         self.autoresizingMask = []
@@ -1025,7 +992,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     private var liveScrollStack:[CGFloat] = []
     open func scrollDidLiveScrolling() {
-        
+                
         liveScrollStack.append(documentOffset.y)
         if documentOffset.y < -10, let liveScrollStartPosition = liveScrollStartPosition, let autohide = self.autohide, let item = autohide.item {
            
@@ -1151,7 +1118,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
-        self.scrollDidLiveScrolling()
+       // self.scrollDidLiveScrolling()
         
         
         var point = self.clipView.bounds.origin
@@ -1199,6 +1166,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             NotificationCenter.default.addObserver(forName: NSScrollView.willStartLiveScrollNotification, object: self, queue: nil, using: { [weak self] _ in
                 self?.scrollWillStartLiveScrolling()
+            })
+            
+            NotificationCenter.default.addObserver(forName: NSScrollView.didLiveScrollNotification, object: self, queue: nil, using: { [weak self] _ in
+                self?.scrollDidLiveScrolling()
             })
             
 

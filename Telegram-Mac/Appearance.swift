@@ -1450,7 +1450,7 @@ func getAverageColor(_ color: NSColor) -> NSColor {
     return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
 }
 
-func backgroundExists(_ wallpaper: Wallpaper) -> Bool {
+func backgroundExists(_ wallpaper: Wallpaper, palette: ColorPalette) -> Bool {
     #if !SHARE
     var backgroundMode: TableBackgroundMode
     switch wallpaper {
@@ -1462,17 +1462,17 @@ func backgroundExists(_ wallpaper: Wallpaper) -> Bool {
         return true
     case let .image(representation, settings):
         if let resource = largestImageRepresentation(representation)?.resource {
-            return FileManager.default.fileExists(atPath: wallpaperPath(resource, settings: settings))
+            return FileManager.default.fileExists(atPath: wallpaperPath(resource, palette: palette, settings: settings))
         } else {
             return false
         }
         
     case let .file(_, file, settings, _):
-        return FileManager.default.fileExists(atPath: wallpaperPath(file.resource, settings: settings))
+        return FileManager.default.fileExists(atPath: wallpaperPath(file.resource, palette: palette, settings: settings))
     case .none:
         return true
     case let .custom(representation, blurred):
-        return FileManager.default.fileExists(atPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))
+        return FileManager.default.fileExists(atPath: wallpaperPath(representation.resource, palette: palette, settings: WallpaperSettings(blur: blurred)))
     }
     #else
     return false
@@ -1497,32 +1497,7 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
         }
         
     case let .file(_, file, settings, _):
-        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
-            
-            let intense = CGFloat(abs(settings.intensity ?? 0)) / 100
-            
-            var image = image
-            if palette.isDark, settings.colors.count > 1 {
-                image = generateImage(image.size, contextGenerator: { size, ctx in
-                    ctx.clear(size.bounds)
-                    ctx.setFillColor(NSColor.black.cgColor)
-                    ctx.fill(size.bounds)
-                    ctx.clip(to: size.bounds, mask: image._cgImage!)
-                    
-                    ctx.clear(size.bounds)
-                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
-                    ctx.fill(size.bounds)
-                })!._NSImage
-            } else if palette.isDark, intense > 0 {
-                image = generateImage(image.size, contextGenerator: { size, ctx in
-                    ctx.clear(size.bounds)
-                    ctx.draw(image._cgImage!, in: size.bounds)
-                    
-                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
-                    ctx.fill(size.bounds)
-                })!._NSImage
-            }
-
+        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, palette: palette, settings: settings))) {
             backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
         } else {
             backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
