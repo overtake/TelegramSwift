@@ -97,12 +97,11 @@ open class TransformImageView: NSView {
     public var preventsCapture: Bool = false {
         didSet {
             if self.preventsCapture {
-                if self.captureProtectedContentLayer == nil {
+                if self.captureProtectedContentLayer == nil, let cmSampleBuffer = self.sampleBuffer {
                     let captureProtectedContentLayer = CaptureProtectedContentLayer()
-                    if let cmSampleBuffer = self.sampleBuffer {
-                        captureProtectedContentLayer.enqueue(cmSampleBuffer)
-                        self.layer?.contents = nil
-                    }
+                    captureProtectedContentLayer.enqueue(cmSampleBuffer)
+                    self.layer?.contents = nil
+
                     captureProtectedContentLayer.frame = self.bounds
                     
                     if #available(macOS 10.15, *) {
