@@ -410,6 +410,8 @@ private final class StoryListContainer : Control {
             if animated, scrollView.documentOffset != .zero {
                 let to = CGRect.init(origin: .zero, size: scrollView.clipView.bounds.size)
                 scrollView.clipView.layer?.animateBounds(from: scrollView.clipView.bounds, to: to, duration: 0.2, timingFunction: .easeOut)
+            } else if scrollView.documentOffset != .zero {
+                scrollView.clipView.scroll(to: .zero, animated: false)
             }
         }
         self.updateLayout(size: frame.size, transition: transition)

@@ -122,7 +122,7 @@ open class HorizontalScrollView : ScrollView {
             }
         }
         if documentView!.frame.width > frame.width {
-            scrollPoint.x = min(max(0, scrollPoint.x), documentView!.frame.width - frame.width)
+            scrollPoint.x = min(max(0, floorToScreenPixels(backingScaleFactor, scrollPoint.x)), documentView!.frame.width - frame.width)
             clipView.scroll(to: scrollPoint)
         } else {
             superview?.scrollWheel(with: event)
