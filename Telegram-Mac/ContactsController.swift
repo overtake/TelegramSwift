@@ -350,17 +350,10 @@ class ContactsController: PeersListController {
             TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId)
         ) |> map { $0?._asPeer() }
         
-        let storyState: Signal<EngineStorySubscriptions?, NoError>
-        if let storyList = storyList {
-            storyState = storyList |> map(Optional.init)
-        } else {
-            storyState = .single(nil)
-        }
-        
-        let transition = combineLatest(queue: prepareQueue, contacts, accountPeer, appearanceSignal, storyState)
-            |> mapToQueue { view, accountPeer, appearance, storyList -> Signal<TableUpdateTransition, NoError> in
+        let transition = combineLatest(queue: prepareQueue, contacts, accountPeer, appearanceSignal)
+            |> mapToQueue { view, accountPeer, appearance -> Signal<TableUpdateTransition, NoError> in
                 let first:Bool = !first.swap(true)
-                let entries = entriesForView(view, storyList: storyList, accountPeer: accountPeer).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                let entries = entriesForView(view, storyList: nil, accountPeer: accountPeer).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
 
                 return prepareEntries(from: previousEntries.swap(entries), to: entries, context: context, initialSize: initialSize.modify({$0}), arguments: arguments, animated: !first) |> runOn(first ? .mainQueue() : prepareQueue)
 
