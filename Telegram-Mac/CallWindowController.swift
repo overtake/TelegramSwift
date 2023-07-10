@@ -1129,6 +1129,7 @@ class PhoneCallWindowController {
                     }
                 default:
                     _ = self?.session.hangUpCurrentCall().start()
+                    self?.session.setToRemovableState()
                 }
             } else {
                 self?.session.setToRemovableState()

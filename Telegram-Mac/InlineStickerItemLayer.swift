@@ -597,7 +597,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             dimensionSize = file.dimensions?.size ?? size
             let reference: FileMediaReference
             let mediaResource: MediaResourceReference
-             if let stickerReference = file.stickerReference {
+            if let stickerReference = file.stickerReference ?? file.emojiReference {
                 if file.resource is CloudStickerPackThumbnailMediaResource {
                     reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
                     mediaResource = MediaResourceReference.stickerPackThumbnail(stickerPack: stickerReference, resource: file.resource)

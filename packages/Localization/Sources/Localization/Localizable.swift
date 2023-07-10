@@ -11927,6 +11927,8 @@ public final class L10n {
   public static func storageUsageTelegramUsageTextPeer(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Text.Peer", p1)
   }
+  /// This story does not exist
+  public static var storyErrorNotExist: String  { return L10n.tr("Localizable", "Story.Error.NotExist") }
   /// This story is not supported by your version of Telegram. Please update the app to the latest version.
   public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }
   /// You are seeing this story because you have been added to %@'s list of close friends.

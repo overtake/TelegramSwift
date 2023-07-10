@@ -91,7 +91,7 @@ private final class ReadThrottledProcessingManager {
 }
 
 
-private struct Reaction {
+struct StoryReactionAction {
     let item: UpdateMessageReaction
     let fromRect: CGRect?
 }
@@ -299,6 +299,7 @@ final class StoryArguments {
     let chatInteraction: ChatInteraction
     let showEmojiPanel:(Control)->Void
     let showReactionsPanel:()->Void
+    let react:(StoryReactionAction)->Void
     let attachPhotoOrVideo:(ChatInteraction.AttachMediaType?)->Void
     let attachFile:()->Void
     let nextStory:()->Void
@@ -320,7 +321,7 @@ final class StoryArguments {
     let toggleHide:(Peer, Bool)->Void
     let showFriendsTooltip:(Control, Peer)->Void
     let showTooltipText:(String, MenuAnimation)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void) {
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -347,6 +348,7 @@ final class StoryArguments {
         self.toggleHide = toggleHide
         self.showFriendsTooltip = showFriendsTooltip
         self.showTooltipText = showTooltipText
+        self.react = react
     }
     
     func longDown() {
@@ -397,7 +399,25 @@ private let close_image = NSImage(named: "Icon_StoryClose")!.precomposed(NSColor
 private let close_image_hover = NSImage(named: "Icon_StoryClose")!.precomposed(NSColor.white.withAlphaComponent(1))
 
 
-private func storyReactions(context: AccountContext, peerId: PeerId, react: @escaping(Reaction)->Void, onClose: @escaping()->Void) -> Signal<NSView?, NoError> {
+func storyReactionsWindow(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void) -> Signal<Window?, NoError> {
+    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose) |> map { value in
+        if let (panel, view) = value {
+            view.setFrameOrigin(.zero)
+            panel.contentView?.addSubview(view)
+            panel.contentView?.wantsLayer = true
+            view.autoresizingMask = [.width, .height]
+            return panel
+        } else {
+            return nil
+        }
+    }
+}
+
+private func storyReactions(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void) -> Signal<NSView?, NoError> {
+    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose) |> map { $0?.1 }
+}
+
+private func storyReactionsValues(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void) -> Signal<(Window, NSView)?, NoError> {
     
     
     let builtin = context.reactions.stateValue
@@ -533,7 +553,7 @@ private func storyReactions(context: AccountContext, peerId: PeerId, react: @esc
             react(.init(item: value.toUpdate(), fromRect: fromRect))
         }, radiusLayer: nil, revealReactions: reveal, presentation: storyTheme, hasBubble: false)
         
-        return view
+        return (panel, view)
     } |> deliverOnMainQueue
 }
 
@@ -713,7 +733,7 @@ private final class StoryViewController: Control, Notifable {
     class TooptipView : NSVisualEffectView {
         
         enum Source {
-            case reaction(Reaction)
+            case reaction(StoryReactionAction)
             case media([Media])
             case text
             case addedToProfile
@@ -1440,7 +1460,7 @@ private final class StoryViewController: Control, Notifable {
         }
     }
     
-    func playReaction(_ reaction: Reaction) -> Void {
+    func playReaction(_ reaction: StoryReactionAction) -> Void {
         
         guard let arguments = self.arguments else {
             return
@@ -2139,6 +2159,20 @@ final class StoryModalController : ModalViewController, Notifable {
             })
         }
         
+        let react:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
+            if let entryId = interactions?.presentation.entryId, let id = interactions?.presentation.storyId {
+                switch reaction.item {
+                case let .builtin(value):
+                    sendText(.init(inputText: value.normalizedEmoji), entryId, id, .reaction(reaction))
+                case let .custom(fileId, file):
+                    if let file = file, let text = file.customEmojiText {
+                        sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil, nil)]), entryId, id, .reaction(reaction))
+                    }
+                }
+                self?.genericView.playReaction(reaction)
+            }
+        }
+        
         self.chatInteraction.add(observer: self)
         interactions.add(observer: self)
         
@@ -2146,21 +2180,9 @@ final class StoryModalController : ModalViewController, Notifable {
             if let panel = self?.entertainment {
                 showPopover(for: control, with: panel, edge: .maxX, inset:NSMakePoint(0 + 38, 10), delayBeforeShown: 0.1)
             }
-        }, showReactionsPanel: { [weak interactions, weak self] in
-            if let entryId = interactions?.presentation.entryId, let id = interactions?.presentation.storyId {
-                _ = storyReactions(context: context, peerId: entryId, react: { [weak self] reaction in
-                    
-                    switch reaction.item {
-                    case let .builtin(value):
-                        sendText(.init(inputText: value.normalizedEmoji), entryId, id, .reaction(reaction))
-                    case let .custom(fileId, file):
-                        if let file = file, let text = file.customEmojiText {
-                            sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil, nil)]), entryId, id, .reaction(reaction))
-                        }
-                    }
-                    self?.genericView.playReaction(reaction)
-
-                }, onClose: {
+        }, showReactionsPanel: { [weak self, weak interactions] in
+            if let entryId = interactions?.presentation.entryId {
+                _ = storyReactions(context: context, peerId: entryId, react: react, onClose: {
                     self?.genericView.closeReactions()
                 }).start(next: { view in
                     if let view = view {
@@ -2168,7 +2190,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     }
                 })
             }
-        }, attachPhotoOrVideo: { type in
+        }, react: react, attachPhotoOrVideo: { type in
             chatInteraction.attachPhotoOrVideo(type)
         }, attachFile: {
             chatInteraction.attachFile(false)
@@ -2768,8 +2790,8 @@ final class StoryModalController : ModalViewController, Notifable {
         return true
     }
     
-    static func ShowStories(context: AccountContext, includeHidden: Bool, initialId: StoryInitialIndex?, singlePeer: Bool = false) {
-        let storyContent = StoryContentContextImpl(context: context, isHidden: includeHidden, focusedPeerId: initialId?.peerId, singlePeer: singlePeer)
+    static func ShowStories(context: AccountContext, isHidden: Bool, initialId: StoryInitialIndex?, singlePeer: Bool = false) {
+        let storyContent = StoryContentContextImpl(context: context, isHidden: isHidden, focusedPeerId: initialId?.peerId, singlePeer: singlePeer)
         let _ = (storyContent.state
         |> filter { $0.slice != nil }
         |> take(1)
@@ -2779,18 +2801,42 @@ final class StoryModalController : ModalViewController, Notifable {
         })
     }
     static func ShowSingleStory(context: AccountContext, storyId: StoryId, initialId: StoryInitialIndex?, emptyCallback:(()->Void)? = nil) {
-        let storyContent = SingleStoryContentContextImpl(context: context, storyId: storyId)
-        let _ = (storyContent.state
-        |> filter { $0.slice != nil }
-        |> take(1)
-        |> deliverOnMainQueue).start(next: { state in
-            if state.slice != nil {
-                showModal(with: StoryModalController(context: context, stories: storyContent, initialId: initialId), for: context.window, animationType: .animateBackground)
+        
+        var initialSignal = context.engine.messages.refreshStories(peerId: storyId.peerId, ids: [storyId.id])
+        |> map { _ -> StoryId? in
+        }
+        |> then(.single(storyId))
+        
+        initialSignal = initialSignal |> mapToSignal { storyId in
+            if let storyId = storyId {
+                return context.account.postbox.transaction { transaction -> StoryId? in
+                    if let _ = transaction.getStory(id: storyId)?.get(Stories.StoredItem.self) {
+                        return storyId
+                    } else {
+                        return nil
+                    }
+                }
+            } else {
+                return .single(nil)
+            }
+        }
+        
+        
+        _ = showModalProgress(signal: initialSignal, for: context.window).start(next: { storyId in
+            if let storyId = storyId {
+                let storyContent = SingleStoryContentContextImpl(context: context, storyId: storyId)
+                let _ = (storyContent.state
+                |> filter { $0.slice != nil }
+                |> take(1)
+                |> deliverOnMainQueue).start(next: { state in
+                    showModal(with: StoryModalController(context: context, stories: storyContent, initialId: initialId), for: context.window, animationType: .animateBackground)
+                })
             } else {
                 emptyCallback?()
             }
-        
         })
+        
+        
     }
     static func ShowPeerStory(context: AccountContext, listContext: PeerStoryListContext, peerId: PeerId, initialId: StoryInitialIndex?) {
         let storyContent = PeerStoryListContentContextImpl(context: context, peerId: peerId, listContext: listContext, initialId: initialId?.id)

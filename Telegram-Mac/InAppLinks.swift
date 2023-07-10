@@ -1030,9 +1030,11 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     controller?.chatInteraction.openStory(messageId, .init(peerId: peer.id, id: storyId))
                 } else {
                     StoryModalController.ShowSingleStory(context: context, storyId: .init(peerId: peer.id, id: storyId), initialId: nil, emptyCallback: {
-                        alert(for: context.window, info: strings().unknownError)
+                        showModalText(for: context.window, text: strings().storyErrorNotExist)
                     })
                 }
+            } else {
+                showModalText(for: context.window, text: strings().alertUserDoesntExists)
             }
         })
         afterComplete(true)

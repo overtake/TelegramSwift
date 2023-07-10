@@ -403,7 +403,7 @@ class ChatListRowItem: TableRowItem {
 
     let isArchiveItem: Bool
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, hideStatus: ItemHideStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, hideStatus: ItemHideStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil) {
         self.groupId = groupId
         self.peer = nil
         self.mode = .chat
@@ -415,8 +415,8 @@ class ChatListRowItem: TableRowItem {
         self.reactionsCount = nil
         self.selectedForum = nil
         self.story = nil
-        self.avatarStoryIndicator = nil
-        self.openStory = { _, _ in }
+        self.openStory = openStory
+        self.storyState = storyState
         self._stableId = stableId
         self.pinnedType = pinnedType
         self.splitState = context.layout
@@ -439,6 +439,15 @@ class ChatListRowItem: TableRowItem {
         self.filter = filter
         self.hasFailed = hasFailed
         self.isArchiveItem = true
+        
+        if let storyState = storyState, storyState.items.count > 0 {
+            let unseenCount: Int = storyState.items.reduce(0, {
+                $0 + ($1.unseenCount > 0 ? 1 : 0)
+            })
+            self.avatarStoryIndicator = .init(stats: .init(totalCount: storyState.items.count, unseenCount: unseenCount), presentation: theme)
+        } else {
+            self.avatarStoryIndicator = nil
+        }
                 
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: strings().chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
@@ -485,7 +494,6 @@ class ChatListRowItem: TableRowItem {
         
         photo = .ArchivedChats
         self.titleMode = .normal
-        
         super.init(initialSize)
         
         if case .hidden(true) = hideStatus {
@@ -580,9 +588,10 @@ class ChatListRowItem: TableRowItem {
     
     
     let story: EngineChatList.StoryStats?
+    let storyState: EngineStorySubscriptions?
     let avatarStoryIndicator: AvatarStoryIndicatorComponent?
     
-    let openStory:(StoryInitialIndex?, Bool)->Void
+    let openStory:(StoryInitialIndex?, Bool, Bool)->Void
 
 
     
@@ -596,7 +605,7 @@ class ChatListRowItem: TableRowItem {
         return false
     }
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool)->Void = { _, _ in }) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil, story: EngineChatList.StoryStats? = nil, openStory: @escaping(StoryInitialIndex?, Bool, Bool)->Void = { _, _, _ in }, storyState: EngineStorySubscriptions? = nil) {
         
         
         
@@ -650,6 +659,7 @@ class ChatListRowItem: TableRowItem {
         self.forumTopicData = forumTopicData
         self.forumTopicItems = forumTopicItems
         self.selectedForum = selectedForum
+        self.storyState = storyState
         self.hasDraft = draft != nil
         self.draft = draft
         self.peer = renderedPeer.chatMainPeer?._asPeer()
@@ -1162,7 +1172,19 @@ class ChatListRowItem: TableRowItem {
                     return view == nil
                 })
                 return view
-            }), true)
+            }), true, false)
+        } else if let storyState = self.storyState, !storyState.items.isEmpty {
+            let table = self.table
+            self.openStory(.init(peerId: storyState.items[0].peer.id, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, storyId in
+                var view: NSView?
+                table?.enumerateItems(with: { item in
+                    if let item = item as? ChatListRowItem, item.peerId == nil {
+                        view = item.takeStoryControl()
+                    }
+                    return view == nil
+                })
+                return view
+            }), false, true)
         }
     }
     private func takeStoryControl() -> NSView? {

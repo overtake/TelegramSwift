@@ -31,14 +31,14 @@ private final class Arguments {
     let joinGroup:(PeerId)->Void
     let openPendingRequests:()->Void
     let dismissPendingRequests:([PeerId])->Void
-    let openStory:(StoryInitialIndex?, Bool)->Void
+    let openStory:(StoryInitialIndex?, Bool, Bool)->Void
     let getStoryInterfaceState:()->StoryListChatListRowItem.InterfaceState
     let revealStoriesState:()->Void
     let setupFilter: (ChatListFilter)->Void
     let openFilterSettings: (ChatListFilter)->Void
     let tabsMenuItems: (ChatListFilter, Int?, Bool?)->[ContextMenuItem]
     let getController:()->ViewController?
-    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?) {
+    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?) {
         self.context = context
         self.joinGroupCall = joinGroupCall
         self.joinGroup = joinGroup
@@ -417,6 +417,7 @@ class PeerListContainerView : Control {
             addSubview(textView)
             textView.userInteractionEnabled = false
             textView.isSelectable = false
+            self.layer?.masksToBounds = false
         }
         
         
@@ -1978,8 +1979,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 }
             }
 
-        }, openStory: { initialId, singlePeer in
-            StoryModalController.ShowStories(context: context, includeHidden: false, initialId: initialId, singlePeer: singlePeer)
+        }, openStory: { initialId, singlePeer, isHidden in
+            StoryModalController.ShowStories(context: context, isHidden: isHidden, initialId: initialId, singlePeer: singlePeer)
         }, getStoryInterfaceState: { [weak self] in
             guard let `self` = self else {
                 return .empty
@@ -2940,32 +2941,49 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private var scrollPositions: [CGFloat] = []
     private func processScroll() {
         
-        guard storyInterfaceState != .empty, storyInterfaceState != .revealed, initFromEvent == nil || initFromEvent == false else {
+        guard storyInterfaceState != .empty, initFromEvent == nil || initFromEvent == false else {
             return
         }
-        CATransaction.begin()
-        let position = genericView.tableView.documentOffset.y
-        let last = scrollPositions.last ?? 0
-        if last != position {
+        
+        if storyInterfaceState == .revealed || storyInterfaceState.toHideProgress {
+            let position = genericView.tableView.documentOffset.y
+            let last = scrollPositions.last ?? 0
             self.scrollPositions.append(position)
-            if position <= 0 {
-                let previous = last
-                let speed = calculateScrollSpeed(scrollPositions: scrollPositions)
-                let acceptSpeed = speed != nil && abs(speed!) < 2.5
-                if acceptSpeed || storyInterfaceState.isProgress {
-                    if position == 0 {
-                        finishOverscroll()
-                    } else {
-                        let value = previous - position
-                        initOverscrollWithDelta(value, fromEvent: false)
-                        updateOverscrollWithDelta(value)
-                    }
+            let speed = calculateScrollSpeed(scrollPositions: scrollPositions)
+            if last != position, last >= 0 {
+                if position > last, let speed = speed, speed < 0 {
+                    let value = last - position
+                    initOverscrollWithDelta(value, fromEvent: false)
+                    updateOverscrollWithDelta(value)
                 }
-            } else if position > last {
+            } else if position < last {
                 self.scrollPositions = []
             }
+        } else {
+            CATransaction.begin()
+            let position = genericView.tableView.documentOffset.y
+            let last = scrollPositions.last ?? 0
+            if last != position {
+                self.scrollPositions.append(position)
+                if position <= 0 {
+                    let previous = last
+                    let speed = calculateScrollSpeed(scrollPositions: scrollPositions)
+                    let acceptSpeed = speed != nil && abs(speed!) < 2.5
+                    if acceptSpeed || storyInterfaceState.isProgress {
+                        if position == 0 {
+                            finishOverscroll()
+                        } else {
+                            let value = previous - position
+                            initOverscrollWithDelta(value, fromEvent: false)
+                            updateOverscrollWithDelta(value)
+                        }
+                    }
+                } else if position > last {
+                    self.scrollPositions = []
+                }
+            }
+            CATransaction.commit()
         }
-        CATransaction.commit()
     }
         
      func processScroll(_ event: NSEvent) -> Bool {

@@ -340,7 +340,7 @@ class ContactsController: PeersListController {
         let arguments = ContactsArguments(addContact: {
             showModal(with: AddContactModalController(context), for: context.window)
         }, openStory: { initialId, singlePeer in
-            StoryModalController.ShowStories(context: context, includeHidden: true, initialId: initialId, singlePeer: singlePeer)
+            StoryModalController.ShowStories(context: context, isHidden: true, initialId: initialId, singlePeer: singlePeer)
         })
         
         

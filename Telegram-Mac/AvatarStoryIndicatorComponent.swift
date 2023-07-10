@@ -45,12 +45,12 @@ public final class AvatarStoryIndicatorComponent : Equatable {
     }
     public convenience init(story: EngineStorySubscriptions.Item, presentation: PresentationTheme, active: Bool = false) {
         let hasUnseen = story.hasUnseen || story.hasUnseenCloseFriends
-        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: story.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: story.storyCount, unseenCount: active && hasUnseen ? story.storyCount : story.unseenCount))
+        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: story.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: story.storyCount, unseenCount: active && hasUnseen ? story.storyCount : story.unseenCount))
     }
     
     public convenience init(stats: EngineChatList.StoryStats, presentation: PresentationTheme) {
         let hasUnseen = stats.unseenCount > 0
-        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: false, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: stats.totalCount, unseenCount: stats.unseenCount))
+        self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: false, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: stats.totalCount, unseenCount: stats.unseenCount))
     }
 
     
@@ -118,7 +118,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
                 } else {
                     lineWidth = component.inactiveLineWidth
                 }
-                let maxOuterInset = component.activeLineWidth + component.activeLineWidth
+                let maxOuterInset: CGFloat = 3.0
                 diameter = availableSize.width + maxOuterInset * 2.0
                 let imageDiameter = availableSize.width + maxOuterInset * 2.0
                 
@@ -257,7 +257,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
             self.availableSize = availableSize
             self.progress = progress
             let maxOuterInset = component.activeLineWidth + component.activeLineWidth
-            let imageDiameter = availableSize.width + maxOuterInset * 2.0
+            let imageDiameter = availableSize.width + 3.0 * 2.0
 
             let rect = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: imageDiameter, height: imageDiameter))
             transition.updateFrame(view: self.indicatorView, frame: rect)
