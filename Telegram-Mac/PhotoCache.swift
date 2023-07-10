@@ -417,7 +417,7 @@ func cachedEmptyPeerPhotoImmediatly(_ peerId:PeerId, symbol: String, color: NSCo
     return peerPhotoCache.cachedImage(for: entry)?.0
 }
 
-func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<TransformImageResult, NoError> {
+func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<TransformImageResult?, NoError> {
     let entry:PhotoCacheKeyEntry = .media(media, arguments, scale, positionFlags)
     let value: (CGImage, CMSampleBuffer?)?
     var full: Bool = false
@@ -431,18 +431,25 @@ func cachedMedia(media: Media, arguments: TransformImageArguments, scale: CGFloa
     } else {
         value = photoThumbsCache.cachedImage(for: entry)
     }
-    return .single(TransformImageResult(value?.0, full, value?.1))
+    if let value = value {
+        return .single(TransformImageResult(value.0, full, value.1))
+    } else {
+        return .single(nil)
+    }
 }
 
-func cachedSlot(value: SlotMachineValue, arguments: TransformImageArguments, scale: CGFloat) -> Signal<TransformImageResult, NoError> {
+func cachedSlot(value: SlotMachineValue, arguments: TransformImageArguments, scale: CGFloat) -> Signal<TransformImageResult?, NoError> {
     let entry:PhotoCacheKeyEntry = .slot(value, arguments, scale)
     let value: CGImage? = stickersCache.cachedImage(for: entry)?.0
     let full: Bool = value != nil
-    
-    return .single(TransformImageResult(value, full))
+    if let value = value {
+        return .single(TransformImageResult(value, full))
+    } else {
+        return .single(nil)
+    }
 }
 
-func cachedMedia(media: TelegramThemeSettings, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<TransformImageResult, NoError> {
+func cachedMedia(media: TelegramThemeSettings, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<TransformImageResult?, NoError> {
     let entry:PhotoCacheKeyEntry = .platformTheme(media, arguments, scale, positionFlags)
     let value: (CGImage, CMSampleBuffer?)?
     var full: Bool = false
@@ -453,10 +460,14 @@ func cachedMedia(media: TelegramThemeSettings, arguments: TransformImageArgument
     } else {
         value = nil
     }
-    return .single(TransformImageResult(value?.0, full, value?.1))
+    if let value = value {
+        return .single(TransformImageResult(value.0, full, value.1))
+    } else {
+        return .single(nil)
+    }
 }
 
-func cachedMedia(messageId: Int64, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<TransformImageResult, NoError> {
+func cachedMedia(messageId: Int64, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Signal<TransformImageResult?, NoError> {
     let entry:PhotoCacheKeyEntry = .messageId(stableId: messageId, arguments, scale, positionFlags ?? [])
     let value: (CGImage, CMSampleBuffer?)?
     var full: Bool = false
@@ -466,7 +477,11 @@ func cachedMedia(messageId: Int64, arguments: TransformImageArguments, scale: CG
     } else {
         value = photoThumbsCache.cachedImage(for: entry)
     }
-    return .single(TransformImageResult(value?.0, full, value?.1))
+    if let value = value {
+        return .single(TransformImageResult(value.0, full, value.1))
+    } else {
+        return .single(nil)
+    }
 }
 
 func cacheMedia(_ result: TransformImageResult, media: Media, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {
@@ -524,7 +539,7 @@ func cacheMedia(_ result: TransformImageResult, messageId: Int64, arguments: Tra
     }
 }
 
-func cachedThemeThumb(source: ThemeSource, bubbled: Bool, thumbSource: AppearanceThumbSource = .general) -> Signal<TransformImageResult, NoError> {
+func cachedThemeThumb(source: ThemeSource, bubbled: Bool, thumbSource: AppearanceThumbSource = .general) -> Signal<TransformImageResult?, NoError> {
     let entry:PhotoCacheKeyEntry = .theme(source, bubbled, thumbSource)
     let value: (CGImage, CMSampleBuffer?)?
     var full: Bool = false
@@ -534,7 +549,11 @@ func cachedThemeThumb(source: ThemeSource, bubbled: Bool, thumbSource: Appearanc
     } else {
         value = themeThums.cachedImage(for: entry)
     }
-    return .single(TransformImageResult(value?.0, full, value?.1))
+    if let value = value {
+        return .single(TransformImageResult(value.0, full, value.1))
+    } else {
+        return .single(nil)
+    }
 }
 
 func cacheThemeThumb(_ result: TransformImageResult, source: ThemeSource, bubbled: Bool, thumbSource: AppearanceThumbSource = .general) -> Void {

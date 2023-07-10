@@ -90,11 +90,19 @@ final class ChatReactionsLayout {
                 switch renderType {
                 case .bubble:
                     if isOutOfBounds {
-                        bgColor = theme.blurServiceColor
-                        textColor = theme.chatServiceItemTextColor
-                        borderColor = .clear
-                        selectedColor = theme.colors.accent
-                        textSelectedColor = theme.colors.underSelectedColor
+                        if !hasWallpaper {
+                            bgColor = theme.colors.grayIcon.withAlphaComponent(0.2)
+                            textColor = theme.colors.accent
+                            borderColor = .clear
+                            selectedColor = theme.colors.accent
+                            textSelectedColor = theme.colors.underSelectedColor
+                        } else {
+                            bgColor = theme.blurServiceColor
+                            textColor = theme.chatServiceItemTextColor
+                            borderColor = .clear
+                            selectedColor = theme.colors.accent
+                            textSelectedColor = theme.colors.underSelectedColor
+                        }
                     } else {
                         if isIncoming {
                             bgColor = theme.colors.accent.withAlphaComponent(0.1)

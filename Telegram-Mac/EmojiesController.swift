@@ -461,8 +461,8 @@ private struct State : Equatable {
     var externalTopic: ExternalTopic = .init(title: "", iconColor: 0)
 }
 
-private func _id_section(_ id:Int64) -> InputDataIdentifier {
-    return .init("_id_section_\(id)")
+private func _id_section(_ id:Int64, _ index: Int = 0) -> InputDataIdentifier {
+    return .init("_id_section_\(id)_\(index)")
 }
 private func _id_pack(_ id: Int64) -> InputDataIdentifier {
     return .init("_id_pack_\(id)")
@@ -889,18 +889,28 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 let isPremium: Bool
                 let revealed: Bool
                 let selectedItems:[EmojiesSectionRowItem.SelectedItem]
+                let items: [StickerPackItem]
+                let index: Int
             }
             
-            let tuple = Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems)
+            var tuples:[Tuple] = []
             
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: section.installed, info: section.info, items: section.items, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send, viewSet: { info in
-                    arguments.viewSet(info)
-                }, showAllItems: {
-                    arguments.showAllItems(section.info.id.id)
-                }, openPremium: arguments.openPremium, installPack: arguments.installPack)
-            }))
-            index += 1
+            let chunks = section.items.chunks(32)
+            
+            for (i, items) in chunks.enumerated() {
+                tuples.append(Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems, items: items, index: i))
+            }
+            for tuple in tuples {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id, tuple.index), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == 0 ? section.info : nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, callback: arguments.send, viewSet: { info in
+                        arguments.viewSet(info)
+                    }, showAllItems: {
+                        arguments.showAllItems(section.info.id.id)
+                    }, openPremium: arguments.openPremium, installPack: arguments.installPack)
+                }))
+                index += 1
+            }
+            
         }
     }
     

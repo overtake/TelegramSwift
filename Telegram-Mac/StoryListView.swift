@@ -398,7 +398,7 @@ final class StoryListView : Control, Notifable {
     
     private(set) var inputView: (NSView & StoryInput)!
     let container = View()
-
+    private let content = View()
     
     
     var textView: NSTextView? {
@@ -421,13 +421,58 @@ final class StoryListView : Control, Notifable {
         super.init(frame: frameRect)
         
         container.layer?.masksToBounds = true
-        container.addSubview(self.controls)
-        container.addSubview(self.navigator)
+        content.addSubview(self.controls)
+        content.addSubview(self.navigator)
         container.layer?.masksToBounds = false
+        
+        container.addSubview(content)
+        
         controls.controlOpacityEventIgnored = true
         
         addSubview(container)
         controls.layer?.cornerRadius = 10
+        
+        controls.set(handler: { [weak self] control in
+            guard let arguments = self?.arguments, let story = self?.story, let peer = story.peer, let event = NSApp.currentEvent else {
+                return
+            }
+            let peerId = peer.id
+            let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.react, onClose: {
+                
+            }) |> deliverOnMainQueue
+            
+            _ = window.start(next: { panel in
+                let menu = ContextMenu(presentation: .current(storyTheme.colors))
+                if peer._asPeer().storyArchived {
+                    menu.addItem(ContextMenuItem("Unhide \(peer._asPeer().compactDisplayTitle)", handler: { [weak self] in
+                        self?.arguments?.toggleHide(peer._asPeer(), false)
+                    }, itemImage: MenuAnimation.menu_show_message.value))
+
+                } else {
+                    menu.addItem(ContextMenuItem("Hide \(peer._asPeer().compactDisplayTitle)", handler: {
+                        self?.arguments?.toggleHide(peer._asPeer(), true)
+                    }, itemImage: MenuAnimation.menu_move_to_contacts.value))
+                }
+
+                let report = ContextMenuItem("Report", itemImage: MenuAnimation.menu_report.value)
+                
+                let submenu = ContextMenu()
+                            
+                let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+                let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
+                
+                for i in 0 ..< options.count {
+                    submenu.addItem(ContextMenuItem(options[i].title, handler: { [weak self] in
+                        self?.arguments?.report(peerId, story.storyItem.id, options[i])
+                    }, itemImage: animation[i].value))
+                }
+                report.submenu = submenu
+                menu.addItem(report)
+                menu.topWindow = panel
+                AppMenu.show(menu: menu, event: event, for: control)
+            })
+           
+        }, for: .RightDown)
         
         controls.set(handler: { [weak self] _ in
             self?.updateSides()
@@ -568,7 +613,7 @@ final class StoryListView : Control, Notifable {
             } else {
                 current = Control(frame: storyView.frame)
                 current.layer?.cornerRadius = 10
-                self.container.addSubview(current, positioned: .above, relativeTo: navigator)
+                self.content.addSubview(current, positioned: .above, relativeTo: navigator)
                 self.pauseOverlay = current
                 
                 current.set(handler: { [weak self] _ in
@@ -621,25 +666,27 @@ final class StoryListView : Control, Notifable {
         }
 
         
-        if let current = self.current {
+        if let current = self.current, self.content.superview == container {
             let rect = CGRect(origin: CGPoint(x: (containerSize.width - aspect.width) / 2, y: 0), size: aspect)
-            transition.updateFrame(view: current, frame: rect)
+            transition.updateFrame(view: self.content, frame: rect)
+
+            transition.updateFrame(view: current, frame: rect.size.bounds)
             
-            transition.updateFrame(view: controls, frame: rect)
+            transition.updateFrame(view: controls, frame: rect.size.bounds)
             controls.updateLayout(size: rect.size, transition: transition)
                         
-            transition.updateFrame(view: navigator, frame: CGRect(origin: CGPoint(x: rect.minX, y: rect.minY + 6), size: NSMakeSize(rect.width, 2)))
+            transition.updateFrame(view: navigator, frame: CGRect(origin: CGPoint(x: 0, y: 0 + 6), size: NSMakeSize(rect.width, 2)))
             navigator.updateLayout(size: rect.size, transition: transition)
             
             if let pauseOverlay = pauseOverlay {
-                transition.updateFrame(view: pauseOverlay, frame: rect)
+                transition.updateFrame(view: pauseOverlay, frame: rect.size.bounds)
             }
             
             if let view = self.prevStoryView {
-                transition.updateFrame(view: view, frame: NSMakeRect(rect.minX, rect.minY, 40, rect.height))
+                transition.updateFrame(view: view, frame: NSMakeRect(0, 0, 40, rect.height))
             }
             if let view = self.nextStoryView {
-                transition.updateFrame(view: view, frame: NSMakeRect(rect.maxX - 40, rect.minY, 40, rect.height))
+                transition.updateFrame(view: view, frame: NSMakeRect(rect.width - 40, 0, 40, rect.height))
             }
         }
         inputView?.updateInputState(animated: transition.isAnimated)
@@ -681,23 +728,29 @@ final class StoryListView : Control, Notifable {
             return
         }
         
-        let oldRect = container.frame
         
         let aspectSize = control.frame.size//oldRect.size.aspectFilled(control.frame.size)
+
+        let point = self.convert(content.frame.origin, from: container)
+        
+        self.addSubview(content)
+        content.setFrameOrigin(point)
+        content.backgroundColor = .random
+        let oldRect = content.frame
 
         
         let origin = self.convert(control.frame.origin, from: superview)
         let newRect = CGRect(origin: NSMakePoint(origin.x + (control.frame.width - aspectSize.width) / 2, origin.y + (control.frame.height - aspectSize.height) / 2), size: aspectSize)
                 
-        
+                
         current?.animateAppearing(disappear: true)
         
         let duration: Double = 0.2
         
-        guard let layer = container.layer else {
+        guard let layer = content.layer else {
             return
         }
-        
+        CATransaction.begin()
         layer.animatePosition(from: oldRect.origin, to: newRect.origin, duration: duration, timingFunction: .default, removeOnCompletion: false)
         layer.animateScaleX(from: 1, to: newRect.width / oldRect.width, duration: duration, timingFunction: .default, removeOnCompletion: false)
         layer.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: duration, timingFunction: .default, removeOnCompletion: false)
@@ -705,10 +758,10 @@ final class StoryListView : Control, Notifable {
         
         
         if control is AvatarControl {
-            layer.cornerRadius = control.frame.height / 2
-            layer.animateCornerRadius(duration: duration, timingFunction: .default)
+            let anim = layer.makeAnimation(from: NSNumber(value: content.layer!.cornerRadius), to: NSNumber(value: CGFloat(content.frame.width / 2)), keyPath: "cornerRadius", timingFunction: .default, duration: duration, removeOnCompletion: false)
+            layer.add(anim, forKey: "cornerRadius")
         }
-        
+        CATransaction.commit()
        
     }
     
@@ -771,7 +824,7 @@ final class StoryListView : Control, Notifable {
             let aspect = StoryView.size.aspectFitted(size)
             let current = StoryView(frame: aspect.bounds)
             self.current = current
-            container.addSubview(current, positioned: .below, relativeTo: self.controls)
+            content.addSubview(current, positioned: .below, relativeTo: self.controls)
             self.updateLayout(size: frame.size, transition: .immediate)
         }
         
@@ -802,7 +855,7 @@ final class StoryListView : Control, Notifable {
 
 
         
-        self.container.addSubview(current, positioned: .below, relativeTo: self.controls)
+        self.content.addSubview(current, positioned: .below, relativeTo: self.controls)
         
         
         if entry.previousItemId != nil {
@@ -816,7 +869,7 @@ final class StoryListView : Control, Notifable {
                 current.layer?.opacity = 0
                 self.prevStoryView = current
             }
-            self.container.addSubview(current, positioned: .above, relativeTo: self.current)
+            self.content.addSubview(current, positioned: .above, relativeTo: self.current)
             current.direction = .horizontal(false)
         } else if let view = self.prevStoryView {
             performSubviewRemoval(view, animated: false)
@@ -833,7 +886,7 @@ final class StoryListView : Control, Notifable {
                 current.shadowBackground = NSColor.black.withAlphaComponent(0.2)
                 self.nextStoryView = current
             }
-            self.container.addSubview(current, positioned: .above, relativeTo: self.current)
+            self.content.addSubview(current, positioned: .above, relativeTo: self.current)
             current.direction = .horizontal(true)
         } else if let view = self.nextStoryView {
             performSubviewRemoval(view, animated: false)
@@ -886,7 +939,7 @@ final class StoryListView : Control, Notifable {
             } else {
                 current = Text(frame: NSMakeRect(0, container.frame.maxY - 100, container.frame.width, controls.frame.height))
                 self.text = current
-                container.addSubview(current, positioned: .above, relativeTo: controls)
+                content.addSubview(current, positioned: .above, relativeTo: controls)
             }
             let transition: ContainedViewLayoutTransition
             if animated {

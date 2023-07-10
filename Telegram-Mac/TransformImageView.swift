@@ -142,14 +142,14 @@ open class TransformImageView: NSView {
         disposable.set(nil)
     }
     
-    public func setSignal(signal: Signal<TransformImageResult, NoError>, clearInstantly: Bool = true, animate: Bool = false) {
+    public func setSignal(signal: Signal<TransformImageResult?, NoError>, clearInstantly: Bool = true, animate: Bool = false) {
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] result in
             
             let hasImage = self?.image != nil
-            self?.sampleBuffer = result.sampleBuffer
+            self?.sampleBuffer = result?.sampleBuffer
             if clearInstantly {
-                self?.image = result.image
-            } else if let image = result.image {
+                self?.image = result?.image
+            } else if let image = result?.image {
                 self?.image = image
             }
             if !hasImage && animate {
@@ -157,7 +157,7 @@ open class TransformImageView: NSView {
             } else if animate {
                 self?.layer?.animateContents()
             }
-            self?.isFullyLoaded = result.highQuality
+            self?.isFullyLoaded = result?.highQuality ?? false
         }))
     }
     

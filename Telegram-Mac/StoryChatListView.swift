@@ -91,6 +91,15 @@ final class StoryListChatListRowItem : TableRowItem {
             }
         }
         
+        var toHideProgress: Bool {
+            switch self {
+            case let .progress(_, from, _):
+                return from == .revealed
+            default:
+                return false
+            }
+        }
+        
         var initFromEvent: Bool? {
             switch self {
             case let .progress(_, _, initFromEvent):
@@ -137,10 +146,10 @@ final class StoryListChatListRowItem : TableRowItem {
     let context: AccountContext
     let state: EngineStorySubscriptions
     let isArchive: Bool
-    let open: (StoryInitialIndex?, Bool)->Void
+    let open: (StoryInitialIndex?, Bool, Bool)->Void
     let getInterfaceState: ()->InterfaceState
     let reveal: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isArchive: Bool, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?, Bool)->Void, getInterfaceState: @escaping()->InterfaceState = { return .revealed }, reveal: @escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isArchive: Bool, state: EngineStorySubscriptions, open:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getInterfaceState: @escaping()->InterfaceState = { return .revealed }, reveal: @escaping()->Void) {
         self._stableId = stableId
         self.context = context
         self.isArchive = isArchive
@@ -268,6 +277,8 @@ private final class StoryListContainer : Control {
         let w = StoryListChatListRowItem.smallSize.width
         let itemSize = NSMakeSize(w + (item.itemWidth - w) * progress, w + (item.itemHeight - w) * progress)
         
+        let gapBetween: CGFloat = 10.0
+        
         var frame = CGRect(origin: .zero, size: itemSize)
         if i < focusRange.location {
             let w = itemSize.width - (itemSize.width / 2 * (1 - progress))
@@ -276,7 +287,7 @@ private final class StoryListContainer : Control {
             
             frame.origin.x = (CGFloat(i) * itemSize.width)
 
-            frame.origin.x += (10.0 + (CGFloat(i) * 20))
+            frame.origin.x += (10.0 + (CGFloat(i) * gapBetween))
         } else {
             
             if i >= focusRange.max {
@@ -287,11 +298,11 @@ private final class StoryListContainer : Control {
             
             frame.origin.x = ((1.0 - progress) * CGFloat(i - focusRange.location)) * itemSize.width + (CGFloat(i) * itemSize.width * progress) + ((1.0 - progress) * 13.0)
             
-            let insets = (10.0 + (CGFloat(i) * 20)) * progress
+            let insets = (10.0 + (CGFloat(i) * gapBetween)) * progress
             frame.origin.x += insets
             
             if i > focusRange.max {
-                frame.origin.x -= 20 * CGFloat(i - focusRange.max) * (1 - progress)
+                frame.origin.x -= gapBetween * CGFloat(i - focusRange.max) * (1 - progress)
             }
             if i > focusRange.location {
                 frame.origin.x -= ((1.0 - progress) * itemSize.width / 2) * CGFloat(i - focusRange.location)
@@ -469,7 +480,7 @@ private final class StoryListContainer : Control {
     private func open(_ item: StoryListEntryRowItem) {
         item.open(.init(peerId: item.entry.id, id: nil, messageId: nil, takeControl: { [weak self] peerId, _, _ in
             return self?.scrollAndFindItem(peerId, animated: false)
-        }), false)
+        }), false, self.item?.isArchive ?? false)
     }
     
     private func scrollAndFindItem(_ peerId: PeerId, animated: Bool) -> NSView? {
@@ -642,8 +653,8 @@ private final class StoryListEntryRowItem : TableRowItem {
     
     let stateComponent: AvatarStoryIndicatorComponent
 
-    let open:(StoryInitialIndex?, Bool)->Void
-    init(_ initialSize: NSSize, entry: StoryChatListEntry, context: AccountContext, open: @escaping(StoryInitialIndex?, Bool)->Void) {
+    let open:(StoryInitialIndex?, Bool, Bool)->Void
+    init(_ initialSize: NSSize, entry: StoryChatListEntry, context: AccountContext, open: @escaping(StoryInitialIndex?, Bool, Bool)->Void) {
         self.entry = entry
         self.context = context
         self.open = open
@@ -674,12 +685,12 @@ private final class StoryListEntryRowItem : TableRowItem {
                 items.append(.init("Unarchive", handler: {
                     context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: false)
                     showModalText(for: context.window, text: "Stories from \(peer.compactDisplayTitle) will now be shown in Chats.")
-                }, itemImage: MenuAnimation.menu_show_message.value))
+                }, itemImage: MenuAnimation.menu_unarchive.value))
             } else {
                 items.append(.init("Archive", handler: {
                     context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
                     showModalText(for: context.window, text: "Stories from \(peer.compactDisplayTitle) will now be shown in Archive.")
-                }, itemImage: MenuAnimation.menu_move_to_contacts.value))
+                }, itemImage: MenuAnimation.menu_archive.value))
             }
             
         } else {
@@ -852,8 +863,8 @@ private final class ItemView : Control {
             name = item.entry.item.peer._asPeer().compactDisplayTitle
         }
         
-        let layout = TextViewLayout.init(.initialize(string: name, color: item.entry.hasUnseen || item.entry.id == item.context.peerId ? theme.colors.text : theme.colors.grayText, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .middle)
-        layout.measure(width: item.itemWidth - 4)
+        let layout = TextViewLayout.init(.initialize(string: name, color: item.entry.hasUnseen || item.entry.id == item.context.peerId ? theme.colors.text : theme.colors.grayText, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .end)
+        layout.measure(width: item.itemWidth + 5)
         textView.update(layout)
         
         self.backgroundView.backgroundColor = theme.colors.background
@@ -877,8 +888,10 @@ private final class ItemView : Control {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
-        let stateSize = NSMakeSize(size.width - 6 , size.width - 6)
-        
+        guard let item = self.item else {
+            return
+        }
+                
         let imageSize = NSMakeSize(size.width - 6 + (1 - progress) * 1, size.width - 6 + (1 - progress) * 1)
         
         let imageRect = CGRect(origin: CGPoint(x: (size.width - imageSize.width) / 2, y: 3 - (1 - progress) * 0.5), size: imageSize)
@@ -886,7 +899,8 @@ private final class ItemView : Control {
         transition.updateFrame(view: imageView, frame: imageRect)
         transition.updateFrame(view: smallImageView, frame: imageRect)
 
-        transition.updateFrame(view: backgroundView, frame: imageRect.insetBy(dx: -1.5, dy: -1.5))
+        let inset: CGFloat = item.entry.hasUnseen ? 1.0 : 1.5
+        transition.updateFrame(view: backgroundView, frame: imageRect.insetBy(dx: -inset, dy: -inset))
 
         
 

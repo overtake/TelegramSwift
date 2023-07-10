@@ -23,12 +23,12 @@ private final class Arguments {
     let hideDeprecatedSystem:()->Void
     let applySharedFolderUpdates:(ChatFolderUpdates)->Void
     let hideSharedFolderUpdates:()->Void
-    let openStory:(StoryInitialIndex?, Bool)->Void
+    let openStory:(StoryInitialIndex?, Bool, Bool)->Void
     let getStoryInterfaceState:()->StoryListChatListRowItem.InterfaceState
     let revealStoriesState:()->Void
     let getState:()->PeerListState
     let getDeltaProgress:()->CGFloat?
-    init(context: AccountContext, openFilterSettings: @escaping(ChatListFilter)->Void, createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, getState:@escaping()->PeerListState, getDeltaProgress:@escaping()->CGFloat?) {
+    init(context: AccountContext, openFilterSettings: @escaping(ChatListFilter)->Void, createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, getState:@escaping()->PeerListState, getDeltaProgress:@escaping()->CGFloat?) {
         self.context = context
         self.openFilterSettings = openFilterSettings
         self.createTopic = createTopic
@@ -94,7 +94,7 @@ extension EngineChatList.Item {
 
 enum UIChatListEntry : Identifiable, Comparable {
     case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter, generalStatus: ItemHideStatus?, selectedForum: PeerId?, appearMode: PeerListState.AppearMode, hideContent: Bool)
-    case group(Int, EngineChatList.GroupItem, Bool, ItemHideStatus, PeerListState.AppearMode, Bool)
+    case group(Int, EngineChatList.GroupItem, Bool, ItemHideStatus, PeerListState.AppearMode, Bool, EngineStorySubscriptions?)
     case reveal([ChatListFilter], ChatListFilter, ChatListFilterBadges)
     case empty(ChatListFilter, PeerListMode, SplitViewState, PeerEquatable?)
     case systemDeprecated(ChatListFilter)
@@ -109,8 +109,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
-        case let .group(index, item, animated, isHidden, appearMode, hideContent):
-            if case .group(index, item, animated, isHidden, appearMode, hideContent) = rhs {
+        case let .group(index, item, animated, isHidden, appearMode, hideContent, storyState):
+            if case .group(index, item, animated, isHidden, appearMode, hideContent, storyState) = rhs {
                 return true
             } else {
                 return false
@@ -187,7 +187,7 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
         case .space:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())
-        case let .group(id, _, _, _, _, _):
+        case let .group(id, _, _, _, _, _, _):
             var index = MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor()
             for _ in 0 ..< id {
                 index = index.peerLocalPredecessor()
@@ -216,7 +216,7 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return .chatId(entry.id, entry.renderedPeer.peerId, filterId.id)
             }
-        case let .group(_, group, _, _, _, _):
+        case let .group(_, group, _, _, _, _, _):
             return .groupId(group.id)
         case .reveal:
             return .reveal
@@ -263,12 +263,12 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 
                 return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, story: item.storyStats, openStory: arguments.openStory)
 
-            case let .group(_, item, animated, hideStatus, appearMode, hideContent):
+            case let .group(_, item, animated, hideStatus, appearMode, hideContent, storyState):
                 var messages:[Message] = []
                 if let message = item.topMessage {
                     messages.append(message._asMessage())
                 }
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, pinnedType: .none, groupId: item.id, groupItems: item.items, messages: messages, unreadCount: item.unreadCount, animateGroup: animated, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress)
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, pinnedType: .none, groupId: item.id, groupItems: item.items, messages: messages, unreadCount: item.unreadCount, animateGroup: animated, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, openStory: arguments.openStory, storyState: storyState)
             case let .reveal(tabs, selected, counters):
                 return ChatListRevealItem(initialSize, context: arguments.context, tabs: tabs, selected: selected, counters: counters)
             case let .empty(filter, mode, state, peer):
@@ -534,8 +534,8 @@ class ChatListController : PeersListController {
             if let filter = self?.filterValue.filter {
                 _ = context.engine.peers.hideChatFolderUpdates(folderId: filter.id).start()
             }
-        }, openStory: { initialId, singlePeer in
-            StoryModalController.ShowStories(context: context, includeHidden: false, initialId: initialId, singlePeer: singlePeer)
+        }, openStory: { initialId, singlePeer, isHidden in
+            StoryModalController.ShowStories(context: context, isHidden: isHidden, initialId: initialId, singlePeer: singlePeer)
         }, getStoryInterfaceState: { [weak self] in
             guard let `self` = self else {
                 return .empty
@@ -580,9 +580,12 @@ class ChatListController : PeersListController {
             }
         }
         
+        //            self.storyList =
+
+        
         let storyState: Signal<EngineStorySubscriptions?, NoError>
-        if let storyList = storyList {
-            storyState = storyList |> map(Optional.init)
+        if self.mode.groupId == .root {
+            storyState = context.engine.messages.storySubscriptions(isHidden: true) |> map(Optional.init)
         } else {
             storyState = .single(nil)
         }
@@ -652,7 +655,7 @@ class ChatListController : PeersListController {
                         } else {
                             hideStatus = hiddenItems.archive
                         }
-                        mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, hideStatus, state.controllerAppear, state.appear == .short))
+                        mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, hideStatus, state.controllerAppear, state.appear == .short, storyState))
                     }
                 }
             }
