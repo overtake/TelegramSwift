@@ -35,7 +35,7 @@ final class ChatAvatarView : Control {
         
         let context = item.chatInteraction.context
         
-        if let storyStats = storyStats {
+        if let storyStats = storyStats, peer.id != item.context.peerId {
             self.storyComponent = .init(stats: storyStats, presentation: theme)
         } else {
             self.storyComponent = nil
