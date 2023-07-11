@@ -86,11 +86,10 @@ final class StoryControlsView : Control {
         }, for: .Click)
         
         more.contextMenu = { [weak self] in
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
             if let story = self?.story, let arguments = self?.arguments {
                 return arguments.storyContextMenu(story)
             }
-            return menu
+            return nil
         }
         
         avatarAndText.scaleOnClick = true

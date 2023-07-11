@@ -877,9 +877,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     
                     let menu = ContextMenu()
                     
-                    if let _ = authorStoryStats {
+                    if let _ = authorStoryStats, let messageId = item.message?.id {
                         menu.addItem(ContextMenuItem(strings().chatContextPeerOpenStory, handler: {
-                            //chatInteraction?.openStory()
+                            chatInteraction?.openChatPeerStories(messageId, peer.id)
                         }, itemImage: MenuAnimation.menu_stories.value))
                     }
                     
