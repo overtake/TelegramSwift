@@ -9,6 +9,7 @@
 import Foundation
 import TGUIKit
 import TelegramCore
+import Postbox
 
 public final class AvatarStoryIndicatorComponent : Equatable {
     public struct Counters: Equatable {
@@ -52,7 +53,6 @@ public final class AvatarStoryIndicatorComponent : Equatable {
         let hasUnseen = stats.unseenCount > 0
         self.init(hasUnseen: hasUnseen, hasUnseenCloseFriendsItems: false, theme: presentation, activeLineWidth: 2.0, inactiveLineWidth: 1.0, counters: .init(totalCount: stats.totalCount, unseenCount: stats.unseenCount))
     }
-
     
     public static func ==(lhs: AvatarStoryIndicatorComponent, rhs: AvatarStoryIndicatorComponent) -> Bool {
         if lhs.hasUnseen != rhs.hasUnseen {

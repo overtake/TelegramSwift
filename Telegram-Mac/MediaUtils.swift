@@ -1615,8 +1615,8 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 
 
-func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
-    if let largest = photo.representationForDisplayAtSize(PixelDimensions(NSMakeSize(1280, 1280))) {
+func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false, dimension: NSSize = NSMakeSize(1280, 1280)) -> Signal<MediaResourceStatus, NoError> {
+    if let largest = photo.representationForDisplayAtSize(PixelDimensions(dimension)) {
         if largest.resource is LocalFileReferenceMediaResource {
             return .single(.Local)
         } else {

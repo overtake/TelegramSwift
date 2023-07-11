@@ -321,7 +321,8 @@ final class StoryArguments {
     let toggleHide:(Peer, Bool)->Void
     let showFriendsTooltip:(Control, Peer)->Void
     let showTooltipText:(String, MenuAnimation)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void) {
+    let storyContextMenu:(StoryContentItem)->ContextMenu
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -349,6 +350,7 @@ final class StoryArguments {
         self.showFriendsTooltip = showFriendsTooltip
         self.showTooltipText = showTooltipText
         self.react = react
+        self.storyContextMenu = storyContextMenu
     }
     
     func longDown() {
@@ -2131,6 +2133,19 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }
         
+        let copyLink:(StoryContentItem)->Void = { [weak self] story in
+            if let peerId = story.peerId, story.sharable {
+                let signal = showModalProgress(signal: context.engine.messages.exportStoryLink(peerId: peerId, id: story.storyItem.id), for: context.window)
+                
+                _ = signal.start(next: { link in
+                    if let link = link {
+                        copyToClipboard(link)
+                        self?.genericView.showTooltip(.linkCopied)
+                    }
+                })
+            }
+        }
+        
         
         let beforeCompletion:()->Void = { [weak interactions] in
             interactions?.update({ current in
@@ -2157,6 +2172,23 @@ final class StoryModalController : ModalViewController, Notifable {
                 self?.interactions.updateInput(with: "", resetFocus: true)
                 self?.genericView.showTooltip(source)
             })
+        }
+        
+        let report:(PeerId, Int32, ReportReason)->Void = { [weak self] peerId, storyId, reason in
+            _ = context.engine.peers.reportPeerStory(peerId: peerId, storyId: storyId, reason: reason, message: "").start()
+            self?.genericView.showTooltip(.justText("Telegram moderators will review your report. Thank you!"))
+        }
+
+        
+        let toggleHide:(Peer, Bool)->Void = { [weak self] peer, value in
+            context.engine.peers.updatePeerStoriesHidden(id: peer.id, isHidden: value)
+            let text: String
+            if !value {
+                text = "Stories from **\(peer.compactDisplayTitle)** will now be shown in Chats, not Contacts."
+            } else {
+                text = "Stories from **\(peer.compactDisplayTitle)** will now be shown in Contacts, not Chats."
+            }
+            self?.genericView.showTooltip(.justText(text))
         }
         
         let react:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
@@ -2246,18 +2278,7 @@ final class StoryModalController : ModalViewController, Notifable {
             } else {
                 self?.genericView.showShareError()
             }
-        }, copyLink: { [weak self] story in
-            if let peerId = story.peerId, story.sharable {
-                let signal = showModalProgress(signal: context.engine.messages.exportStoryLink(peerId: peerId, id: story.storyItem.id), for: context.window)
-                
-                _ = signal.start(next: { link in
-                    if let link = link {
-                        copyToClipboard(link)
-                        self?.genericView.showTooltip(.linkCopied)
-                    }
-                })
-            }
-        }, startRecording: { [weak self] autohold in
+        }, copyLink: copyLink, startRecording: { [weak self] autohold in
             guard let `self` = self else {
                 return
             }
@@ -2272,22 +2293,48 @@ final class StoryModalController : ModalViewController, Notifable {
         }, hashtag: { [weak self] string in
             self?.close()
             self?.context.bindings.globalSearch(string)
-        }, report: { [weak self] peerId, storyId, reason in
-            _ = context.engine.peers.reportPeerStory(peerId: peerId, storyId: storyId, reason: reason, message: "").start()
-            self?.genericView.showTooltip(.justText("Telegram moderators will review your report. Thank you!"))
-        }, toggleHide: { [weak self] peer, value in
-            context.engine.peers.updatePeerStoriesHidden(id: peer.id, isHidden: value)
-            let text: String
-            if !value {
-                text = "Stories from **\(peer.compactDisplayTitle)** will now be shown in Chats, not Contacts."
-            } else {
-                text = "Stories from **\(peer.compactDisplayTitle)** will now be shown in Contacts, not Chats."
-            }
-            self?.genericView.showTooltip(.justText(text))
-        }, showFriendsTooltip: { [weak self] control, peer in
+        }, report: report, toggleHide: toggleHide, showFriendsTooltip: { [weak self] control, peer in
             self?.genericView.showTooltip(.tooltip(strings().storyTooltipCloseFriends(peer.compactDisplayTitle), MenuAnimation.menu_clear_history))
         }, showTooltipText: { [weak self] text, animation in
             self?.genericView.showTooltip(.tooltip(text, animation))
+        }, storyContextMenu: { story in
+            guard let peer = story.peer else {
+                return ContextMenu()
+            }
+            let peerId = peer.id
+            
+            let menu = ContextMenu(presentation: .current(storyTheme.colors))
+            if peer._asPeer().storyArchived {
+                menu.addItem(ContextMenuItem("Unhide \(peer._asPeer().compactDisplayTitle)", handler: {                     toggleHide(peer._asPeer(), false)
+                }, itemImage: MenuAnimation.menu_show_message.value))
+
+            } else {
+                menu.addItem(ContextMenuItem("Hide \(peer._asPeer().compactDisplayTitle)", handler: {
+                    toggleHide(peer._asPeer(), true)
+                }, itemImage: MenuAnimation.menu_move_to_contacts.value))
+            }
+            
+            if story.canCopyLink {
+                menu.addItem(ContextMenuItem("Copy Link", handler: {
+                    copyLink(story)
+                }, itemImage: MenuAnimation.menu_copy_link.value))
+            }
+
+            let reportItem = ContextMenuItem("Report", itemImage: MenuAnimation.menu_report.value)
+            
+            let submenu = ContextMenu()
+                        
+            let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+            let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
+            
+            for i in 0 ..< options.count {
+                submenu.addItem(ContextMenuItem(options[i].title, handler: {
+                    report(peerId, story.storyItem.id, options[i])
+                }, itemImage: animation[i].value))
+            }
+            reportItem.submenu = submenu
+            menu.addItem(reportItem)
+            return menu
         })
         
         self.arguments = arguments
@@ -2430,19 +2477,13 @@ final class StoryModalController : ModalViewController, Notifable {
         
         let signal = stories.state |> deliverOnMainQueue
 
-        
-        var currentPeerId: PeerId? = nil
-        
+                
         disposable.set(combineLatest(signal, genericView.getReady).start(next: { [weak self] state, ready in
             if state.slice == nil {
                 self?.initialId = nil
                 self?.close()
             } else if let stories = self?.stories {
                 self?.genericView.update(context: context, storyContext: stories, initial: initialId)
-                if let slice = state.slice, currentPeerId != slice.peer.id {
-                    let signal = context.account.viewTracker.peerView(slice.peer.id) |> deliverOnMainQueue
-                    currentPeerId = slice.peer.id
-                }
                 if ready {
                     self?.readyOnce()
                 }
@@ -2784,6 +2825,10 @@ final class StoryModalController : ModalViewController, Notifable {
             return current
         })
         self.closed = true
+    }
+    
+    override var shouldCloseAllTheSameModals: Bool {
+        return false
     }
 
     override var isVisualEffectBackground: Bool {

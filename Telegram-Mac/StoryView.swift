@@ -131,7 +131,7 @@ class StoryView : Control {
     var statusSignal: Signal<MediaResourceStatus, NoError> {
         if let context = self.context {
             if let media = story?.media._asMedia() as? TelegramMediaImage {
-                return chatMessagePhotoStatus(account: context.account, photo: media)
+                return chatMessagePhotoStatus(account: context.account, photo: media, dimension: NSMakeSize(10000, 10000))
             } else if let media = story?.media._asMedia() as? TelegramMediaFile {
                 return context.account.postbox.mediaBox.resourceStatus(media.resource)
             }
@@ -146,9 +146,6 @@ class StoryView : Control {
         self.story = story
         self.magnifyView?.minMagnify = 1.0
         self.magnifyView?.maxMagnify = 2.0
-
-        
-        
     }
     
     func initializeStatus() {
@@ -407,7 +404,7 @@ class StoryImageView : StoryView {
         var resource: TelegramMediaResource? = nil
         if let image = media as? TelegramMediaImage  {
             let reference = ImageMediaReference.story(peer: peerReference, id: story.id, media: image)
-            updateImageSignal = chatMessagePhoto(account: context.account, imageReference: reference, scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
+            updateImageSignal = chatMessagePhoto(account: context.account, imageReference: reference, toRepresentationSize: NSMakeSize(10000, 10000), scale: backingScaleFactor, synchronousLoad: false, autoFetchFullSize: true)
             resource = image.representations.last?.resource
         } else if let file = media as? TelegramMediaFile {
             let fileReference = FileMediaReference.story(peer: peerReference, id: story.id, media: file)
@@ -432,7 +429,7 @@ class StoryImageView : StoryView {
         self.imageView.set(arguments: arguments)
         
         if let resource = resource {
-            let signal = context.account.postbox.mediaBox.resourceStatus(resource) |> deliverOnMainQueue
+            let signal = context.account.postbox.mediaBox.resourceStatus(resource, approximateSynchronousValue: true) |> deliverOnMainQueue
             awaitingDisposable.set(signal.start(next: { [weak self] status in
                 self?.mediaStatus = status
             }))
@@ -451,6 +448,8 @@ class StoryImageView : StoryView {
                 if awaiting {
                     self.play()
                 }
+            } else {
+                self.pause()
             }
         }
     }

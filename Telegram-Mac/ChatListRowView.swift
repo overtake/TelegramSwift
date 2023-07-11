@@ -1768,7 +1768,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 self.archivedPhoto?.userInteractionEnabled = false
                 self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground)
                 self.archivedPhoto?.background = item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground
-                self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
 
                 let animateArchive = item.animateArchive && animated
                 if animateArchive {
@@ -2045,6 +2044,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  if let photoVideoView = photoVideoView {
                      photoVideoView.layer?.cornerRadius = item.isForum ? 10 : photoVideoView.frame.height / 2
                  }
+                 self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
 
              } else if let view = self.storyStateView {
                  performSubviewRemoval(view, animated: animated, scale: true)
@@ -2061,7 +2061,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  if let photoVideoView = photoVideoView {
                      photoVideoView.layer?.cornerRadius = item.isForum ? 10 : photoVideoView.frame.height / 2
                  }
-                 
+                 self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
              }
          }
         

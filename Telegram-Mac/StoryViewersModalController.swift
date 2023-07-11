@@ -16,13 +16,18 @@ import Postbox
 private final class StoryViewerRowItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let peer: Peer
+    fileprivate let storyStats: PeerStoryStats?
+    fileprivate let avatarComponent: AvatarStoryIndicatorComponent?
     fileprivate let presentation: TelegramPresentationTheme
     fileprivate let nameLayout: TextViewLayout
     fileprivate let dateLayout: TextViewLayout
     fileprivate let callback: (PeerId)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer, timestamp: Int32, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) {
+    fileprivate let openStory:(PeerId)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer, storyStats: PeerStoryStats?, timestamp: Int32, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void) {
         self.context = context
         self.peer = peer
+        self.openStory = openStory
+        self.storyStats = storyStats
         self.callback = callback
         self.presentation = presentation
         
@@ -32,6 +37,12 @@ private final class StoryViewerRowItem : GeneralRowItem {
         let string = stringForRelativeTimestamp(relativeTimestamp: timestamp, relativeTo: context.timestamp)
 
         self.dateLayout = .init(.initialize(string: string, color: presentation.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        
+        if let stats = storyStats {
+            self.avatarComponent = .init(stats: stats, presentation: presentation)
+        } else {
+            self.avatarComponent = nil
+        }
 
         super.init(initialSize, stableId: stableId, viewType: .legacy)
         
@@ -57,7 +68,9 @@ private final class StoryViewerRowItem : GeneralRowItem {
 }
 
 private final class StoryViewerRowView: GeneralRowView {
-    private let avatar = AvatarControl(font: .avatar(12))
+    fileprivate let avatar = AvatarControl(font: .avatar(12))
+    private var avatarComponent: AvatarStoryIndicatorComponent.IndicatorView?
+    private let container = Control(frame: NSMakeRect(16, 8, 36, 36))
     private let title = TextView()
     private let date = TextView()
     private let stateIcon = ImageView()
@@ -67,7 +80,8 @@ private final class StoryViewerRowView: GeneralRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(content)
-        content.addSubview(avatar)
+        container.addSubview(avatar)
+        content.addSubview(container)
         content.addSubview(date)
         content.addSubview(title)
         content.addSubview(stateIcon)
@@ -81,13 +95,21 @@ private final class StoryViewerRowView: GeneralRowView {
 
         stateIcon.isEventLess = true
         
-        avatar.frame = NSMakeRect(16, 8, 36, 36)
+        avatar.frame = NSMakeRect(0, 0, 36, 36)
         
         content.set(handler: { [weak self] _ in
             if let item = self?.item as? StoryViewerRowItem {
                 item.callback(item.peer.id)
             }
         }, for: .Click)
+        
+        self.container.set(handler: { [weak self] _ in
+            if let item = self?.item as? StoryViewerRowItem {
+                item.openStory(item.peer.id)
+            }
+        }, for: .Click)
+        avatar.userInteractionEnabled = false
+        container.scaleOnClick = true
     }
     
     required init?(coder: NSCoder) {
@@ -114,6 +136,28 @@ private final class StoryViewerRowView: GeneralRowView {
         self.borderView.backgroundColor = item.presentation.colors.border
         
         self.avatar.setPeer(account: item.context.account, peer: item.peer)
+        
+        var transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
+        if let component = item.avatarComponent {
+            let current: AvatarStoryIndicatorComponent.IndicatorView
+            if let view = self.avatarComponent {
+                current = view
+            } else {
+                current = .init(frame: container.bounds)
+                container.addSubview(current)
+                self.avatarComponent = current
+                transition = .immediate
+            }
+            current.update(component: component, availableSize: container.bounds.insetBy(dx: 3, dy: 3).size, transition: transition)
+            transition.updateFrame(view: avatar, frame: container.bounds.insetBy(dx: 3, dy: 3))
+        } else if let view = self.avatarComponent {
+            performSubviewRemoval(view, animated: animated)
+            self.avatarComponent = nil
+            transition.updateFrame(view: avatar, frame: container.bounds)
+        }
+        
+        self.container.userInteractionEnabled = item.avatarComponent != nil
     }
     
     override func layout() {
@@ -121,7 +165,7 @@ private final class StoryViewerRowView: GeneralRowView {
         
         content.frame = bounds
         
-        let contentX = avatar.frame.maxX + 10
+        let contentX = container.frame.maxX + 10
         
         title.setFrameOrigin(NSMakePoint(contentX, 10))
         date.setFrameOrigin(NSMakePoint(contentX + 18, frame.height - date.frame.height - 10))
@@ -136,22 +180,18 @@ private final class Arguments {
     let context: AccountContext
     let presentation: TelegramPresentationTheme
     let callback:(PeerId)->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void) {
+    let openStory:(PeerId)->Void
+    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void) {
         self.context = context
         self.presentation = presentation
         self.callback = callback
-    }
-}
-
-extension StoryViewList: Equatable {
-    public static func ==(lhs: StoryViewList, rhs: StoryViewList) -> Bool {
-        return lhs.items.count != rhs.items.count
+        self.openStory = openStory
     }
 }
 
 private struct State : Equatable {
     var item: EngineStoryItem
-    var views: StoryViewList?
+    var views: EngineStoryViewListContext.State?
     var isLoadingMore: Bool = false
 }
 
@@ -170,6 +210,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     struct Tuple: Equatable {
         let peer: PeerEquatable
+        let storyStats: PeerStoryStats?
         let timestamp: Int32
         let viewType: GeneralViewType
     }
@@ -179,40 +220,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if let list = state.views {
         var items: [Tuple] = []
         for item in list.items {
-            items.append(.init(peer: .init(item.peer._asPeer()), timestamp: item.timestamp, viewType: .legacy))
+            items.append(.init(peer: .init(item.peer._asPeer()), storyStats: item.storyStats, timestamp: item.timestamp, viewType: .legacy))
         }
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
-                return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback)
+                return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory)
             }))
             index += 1
         }
         
-        
-        
-    } else if let views = state.item.views {
-        var items: [Tuple] = []
-        for item in views.seenPeers {
-            items.append(.init(peer: .init(item._asPeer()), timestamp: Int32(Date().timeIntervalSince1970), viewType: .legacy))
-        }
-        
-        for item in items {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
-                return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback)
-            }))
-            index += 1
-        }
-        if views.seenCount == views.seenPeers.count {
-            needToLoad = false
-        }
     }
     
-    if state.isLoadingMore && needToLoad {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading_more, equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .legacy, color: arguments.presentation.colors.text)
-        }))
-        index += 1
-    }
     
     // entries
     return entries
@@ -220,7 +238,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 func StoryViewersModalController(context: AccountContext, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
     
-
+    let storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, seenPeers: []))
+    
     let actionsDisposable = DisposableSet()
 
     let initialState = State(item: story, views: nil)
@@ -232,10 +251,16 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
     }
     
     var close:(()->Void)? = nil
+    
+    var getControl:((PeerId)->NSView?)? = nil
 
     let arguments = Arguments(context: context, presentation: presentation, callback: { peerId in
         callback(peerId)
         close?()
+    }, openStory: { peerId in
+        StoryModalController.ShowStories(context: context, isHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: nil, takeControl: { [] peerId, _, _ in
+            return getControl?(peerId)
+        }), singlePeer: true)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -269,51 +294,52 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
     }
     
     let loadMore:()->Void = {
-        updateState { current in
-            var current = current
-            current.isLoadingMore = true
-            return current
-        }
-        
-        let signal = context.engine.messages.getStoryViewList(account: context.account, id: story.id, offsetTimestamp: nil, offsetPeerId: nil, limit: 100) |> deliverOnMainQueue
-        
-        actionsDisposable.add(signal.start(next: { list in
-            updateState { current in
-                var current = current
-                current.isLoadingMore = false
-                current.views = list
-                return current
-            }
-        }))
+        storyViewList.loadMore()
     }
     
+    actionsDisposable.add(storyViewList.state.start(next: { list in
+        updateState { current in
+            var current = current
+            current.views = list
+            return current
+        }
+    }))
     
     controller.didLoaded = { controller, _ in
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
-                break
-                //loadMore()
+                loadMore()
             default:
                 break
             }
+        }
+        getControl = { [weak controller] peerId in
+            var control: NSView?
+            controller?.tableView.enumerateVisibleItems(with: { item in
+                if let item = item as? StoryViewerRowItem, item.peer.id == peerId {
+                    control = (item.view as? StoryViewerRowView)?.avatar
+                }
+                return control == nil
+            })
+            return control
         }
     }
     
     controller.didAppear = { controller in        
         controller.window?.set(handler: { _ in
             return .invokeNext
-        }, with: controller, for: .All, priority: .supreme)
+        }, with: controller, for: .All, priority: .modal)
         
         controller.window?.set(handler: {  _ in
             close?()
             return .invoked
-        }, with: controller, for: .DownArrow, priority: .supreme)
+        }, with: controller, for: .DownArrow, priority: .modal)
         
         controller.window?.set(handler: {  _ in
             close?()
             return .invoked
-        }, with: controller, for: .Escape, priority: .supreme)
+        }, with: controller, for: .Escape, priority: .modal)
     }
     
     loadMore()

@@ -86,37 +86,10 @@ final class StoryControlsView : Control {
         }, for: .Click)
         
         more.contextMenu = { [weak self] in
-            
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
-            if let story = self?.story, let peer = story.peer, let peerId = story.peerId {
-                if peer._asPeer().storyArchived {
-                    menu.addItem(ContextMenuItem("Unhide \(peer._asPeer().compactDisplayTitle)", handler: { [weak self] in
-                        self?.arguments?.toggleHide(peer._asPeer(), false)
-                    }, itemImage: MenuAnimation.menu_show_message.value))
-
-                } else {
-                    menu.addItem(ContextMenuItem("Hide \(peer._asPeer().compactDisplayTitle)", handler: {
-                        self?.arguments?.toggleHide(peer._asPeer(), true)
-                    }, itemImage: MenuAnimation.menu_move_to_contacts.value))
-                }
-
-                let report = ContextMenuItem("Report", itemImage: MenuAnimation.menu_report.value)
-                
-                let submenu = ContextMenu()
-                            
-                let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-                let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-                
-                for i in 0 ..< options.count {
-                    submenu.addItem(ContextMenuItem(options[i].title, handler: { [weak self] in
-                        self?.arguments?.report(peerId, story.storyItem.id, options[i])
-                    }, itemImage: animation[i].value))
-                }
-                report.submenu = submenu
-                menu.addItem(report)
+            if let story = self?.story, let arguments = self?.arguments {
+                return arguments.storyContextMenu(story)
             }
-            
-
             return menu
         }
         
@@ -157,7 +130,7 @@ final class StoryControlsView : Control {
         }
     }
     
-    func update(context: AccountContext, arguments: StoryArguments, groupId: PeerId, peer: Peer?, story: StoryContentItem, animated: Bool) {
+    func update(context: AccountContext, arguments: StoryArguments, groupId: PeerId, peer: Peer?, slice: StoryContentContextState.FocusedSlice, story: StoryContentItem, animated: Bool) {
         guard let peer = peer else {
             return
         }
@@ -170,14 +143,21 @@ final class StoryControlsView : Control {
         
         let date = NSMutableAttributedString()
         let color = NSColor.white.withAlphaComponent(0.8)
-        date.append(string: DateUtils.string(forRelativeLastSeen: story.storyItem.timestamp), color: NSColor.white.withAlphaComponent(0.8), font: .medium(.small))
+        if story.storyItem.expirationTimestamp < context.timestamp {
+            date.append(string: stringForFullDate(timestamp: story.storyItem.timestamp), color: color, font: .medium(.small))
+        } else {
+            date.append(string: DateUtils.string(forRelativeLastSeen: story.storyItem.timestamp), color: color, font: .medium(.small))
+        }
         if story.storyItem.isEdited {
             date.append(string: " \(strings().bullet) ", color: color, font: .medium(.small))
             date.append(string: "edited", color: color, font: .medium(.short))
         }
+        
+        let textWidth = frame.width - 24 - avatar.frame.width - 10 - (muted.isHidden ? 0 : 18) - (more.isHidden ? 0 : 18) - (closeFriends.isHidden ? 0 : 18)
+
 
         let dateLayout = TextViewLayout(date, maximumNumberOfLines: 1)
-        dateLayout.measure(width: frame.width / 2)
+        dateLayout.measure(width: textWidth)
 
         if hasNoSound {
             muted.set(image: cant_unmute, for: .Normal)
@@ -188,14 +168,16 @@ final class StoryControlsView : Control {
         more.isHidden = context.peerId == groupId
         closeFriends.isHidden = !story.storyItem.isCloseFriends
         
-        let authorWidth = frame.width - 24 - avatar.frame.width - 10 - (muted.isHidden ? 0 : 18) - (more.isHidden ? 0 : 18) - (closeFriends.isHidden ? 0 : 18)
 
         let authorName = NSMutableAttributedString()
-        authorName.append(string: context.peerId == groupId ? "You Story" : peer.displayTitle, color: .white, font: .medium(.title))
-
+        authorName.append(string: context.peerId == groupId ? "Your Story" : peer.displayTitle, color: .white, font: .medium(.title))
         
+        if story.dayCounters != nil, let position = story.position {
+            authorName.append(string: " \(strings().bullet) \(position + 1)/\(slice.totalCount)", color: color, font: .normal(.small))
+        }
+
         let authorLayout = TextViewLayout(authorName, maximumNumberOfLines: 1, truncationType: .middle)
-        authorLayout.measure(width: authorWidth)
+        authorLayout.measure(width: textWidth)
         
         textView.update(authorLayout)
         dateView.update(dateLayout)

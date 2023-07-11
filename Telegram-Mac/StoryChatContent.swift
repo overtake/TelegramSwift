@@ -18,9 +18,24 @@ private struct StoryKey: Hashable {
 
 final class StoryContentItem {
     
+    struct DayCounters: Equatable {
+        var position: Int
+        var totalCount: Int
+        
+        init(position: Int, totalCount: Int) {
+            self.position = position
+            self.totalCount = totalCount
+        }
+    }
+
+    
     let position: Int?
+    let dayCounters: DayCounters?
     let peer: EnginePeer?
     let storyItem: EngineStoryItem
+    let entityFiles: [EngineMedia.Id: TelegramMediaFile]
+
+
     
     var peerId: EnginePeer.Id? {
         return self.peer?.id
@@ -38,12 +53,18 @@ final class StoryContentItem {
 
     init(
         position: Int?,
+        dayCounters: DayCounters?,
         peer: EnginePeer?,
-        storyItem: EngineStoryItem) {
+        storyItem: EngineStoryItem,
+        entityFiles: [EngineMedia.Id: TelegramMediaFile]
+    ) {
         self.position = position
+        self.dayCounters = dayCounters
         self.peer = peer
         self.storyItem = storyItem
+        self.entityFiles = entityFiles
     }
+
 }
 
 
@@ -230,9 +251,11 @@ final class StoryContentContextImpl: StoryContentContext {
                 ),
                 context.engine.data.subscribe(TelegramEngine.EngineData.Item.NotificationSettings.Global())
             )
-            |> mapToSignal { _, views, globalNotificationSettings -> Signal<(CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings), NoError> in
-                return context.account.postbox.transaction { transaction -> (CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings) in
+            |> mapToSignal { _, views, globalNotificationSettings -> Signal<(CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile]), NoError> in
+                return context.account.postbox.transaction { transaction -> (CombinedView, [PeerId: Peer], EngineGlobalNotificationSettings, [MediaId: TelegramMediaFile]) in
                     var peers: [PeerId: Peer] = [:]
+                    var allEntityFiles: [MediaId: TelegramMediaFile] = [:]
+                    
                     if let itemsView = views.views[PostboxViewKey.storyItems(peerId: peerId)] as? StoryItemsView {
                         for item in itemsView.items {
                             if let item = item.value.get(Stories.StoredItem.self), case let .item(itemValue) = item {
@@ -243,13 +266,24 @@ final class StoryContentContextImpl: StoryContentContext {
                                         }
                                     }
                                 }
+                                for entity in itemValue.entities {
+                                    if case let .CustomEmoji(_, fileId) = entity.type {
+                                        let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+                                        if allEntityFiles[mediaId] == nil {
+                                            if let file = transaction.getMedia(mediaId) as? TelegramMediaFile {
+                                                allEntityFiles[file.fileId] = file
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
-                    return (views, peers, globalNotificationSettings)
+                    
+                    return (views, peers, globalNotificationSettings, allEntityFiles)
                 }
             }
-            |> deliverOnMainQueue).start(next: { [weak self] views, peers, globalNotificationSettings in
+            |> deliverOnMainQueue).start(next: { [weak self] views, peers, globalNotificationSettings, allEntityFiles in
                 guard let `self` = self else {
                     return
                 }
@@ -327,7 +361,7 @@ final class StoryContentContextImpl: StoryContentContext {
                             isExpired: false,
                             isPublic: false,
                             isPending: true,
-                            isCloseFriends: false,
+                            isCloseFriends: item.privacy.base == .closeFriends,
                             isForwardingDisabled: false,
                             isEdited: false
                         ))
@@ -363,7 +397,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         }
                     }
                 }
-                if focusedIndex == nil, let state = state {
+                if focusedIndex == nil, let state {
                     if let storedFocusedId = self.storedFocusedId {
                         focusedIndex = mappedItems.firstIndex(where: { $0.id >= storedFocusedId })
                     } else if let index = mappedItems.firstIndex(where: { $0.isPending }) {
@@ -423,8 +457,10 @@ final class StoryContentContextImpl: StoryContentContext {
                         let allItems = mappedItems.map { item in
                             return StoryContentItem(
                                 position: nil,
+                                dayCounters: nil,
                                 peer: peer,
-                                storyItem: item
+                                storyItem: item,
+                                entityFiles: extractItemEntityFiles(item: item, allEntityFiles: allEntityFiles)
                             )
                         }
                         
@@ -434,8 +470,10 @@ final class StoryContentContextImpl: StoryContentContext {
                             additionalPeerData: additionalPeerData,
                             item: StoryContentItem(
                                 position: mappedFocusedIndex ?? focusedIndex,
+                                dayCounters: nil,
                                 peer: peer,
-                                storyItem: mappedItem
+                                storyItem: mappedItem,
+                                entityFiles: extractItemEntityFiles(item: mappedItem, allEntityFiles: allEntityFiles)
                             ),
                             totalCount: totalCount,
                             previousItemId: previousItemId,
@@ -590,12 +628,17 @@ final class StoryContentContextImpl: StoryContentContext {
             }
             let singlePeerListContext = PeerExpiringStoryListContext(account: context.account, peerId: focusedPeerId)
             self.singlePeerListContext = singlePeerListContext
+            
             self.storySubscriptionsDisposable = (combineLatest(
                 context.engine.data.subscribe(TelegramEngine.EngineData.Item.Peer.Peer(id: focusedPeerId)),
                 singlePeerListContext.state
             )
             |> deliverOnMainQueue).start(next: { [weak self] peer, state in
                 guard let `self` = self, let peer = peer else {
+                    return
+                }
+                
+                if state.isLoading {
                     return
                 }
                 
@@ -731,7 +774,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 }
                 
                 var sortedItems: [EngineStorySubscriptions.Item] = []
-                if let accountItem = storySubscriptions.accountItem {
+                if !isHidden, let accountItem = storySubscriptions.accountItem {
                     if self.fixedSubscriptionOrder.contains(context.account.peerId) {
                         sortedItems.append(accountItem)
                     } else {
@@ -1074,11 +1117,12 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.NotificationSettings.Global()
             ),
-            context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer]) in
+            context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile]) in
                 guard let item = transaction.getStory(id: storyId)?.get(Stories.StoredItem.self) else {
-                    return (nil, [:])
+                    return (nil, [:], [:])
                 }
                 var peers: [PeerId: Peer] = [:]
+                var allEntityFiles: [MediaId: TelegramMediaFile] = [:]
                 if case let .item(item) = item {
                     if let views = item.views {
                         for id in views.seenPeerIds {
@@ -1087,8 +1131,18 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                             }
                         }
                     }
+                    for entity in item.entities {
+                        if case let .CustomEmoji(_, fileId) = entity.type {
+                            let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+                            if allEntityFiles[mediaId] == nil {
+                                if let file = transaction.getMedia(mediaId) as? TelegramMediaFile {
+                                    allEntityFiles[file.fileId] = file
+                                }
+                            }
+                        }
+                    }
                 }
-                return (item, peers)
+                return (item, peers, allEntityFiles)
             }
         )
         |> deliverOnMainQueue).start(next: { [weak self] data, itemAndPeers in
@@ -1097,7 +1151,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
             }
             
             let (peer, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
-            let (item, peers) = itemAndPeers
+            let (item, peers, allEntityFiles) = itemAndPeers
             
             guard let peer = peer else {
                 return
@@ -1147,8 +1201,10 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 
                 let mainItem = StoryContentItem(
                     position: 0,
+                    dayCounters: nil,
                     peer: peer,
-                    storyItem: mappedItem
+                    storyItem: mappedItem,
+                    entityFiles: extractItemEntityFiles(item: mappedItem, allEntityFiles: allEntityFiles)
                 )
                 let stateValue = StoryContentContextState(
                     slice: StoryContentContextState.FocusedSlice(
@@ -1197,7 +1253,6 @@ final class SingleStoryContentContextImpl: StoryContentContext {
     }
     
     func markAsSeen(id: StoryId) {
-        let _ = self.context.engine.messages.markStoryAsSeen(peerId: id.peerId, id: id.id, asPinned: false).start()
     }
 }
 
@@ -1289,16 +1344,57 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 }
             }
             
+            struct DayIndex: Hashable {
+                var year: Int32
+                var day: Int32
+                
+                init(timestamp: Int32) {
+                    var time: time_t = time_t(timestamp)
+                    var timeinfo: tm = tm()
+                    localtime_r(&time, &timeinfo)
+
+                    self.year = timeinfo.tm_year
+                    self.day = timeinfo.tm_yday
+                }
+            }
+            
             let stateValue: StoryContentContextState
             if let focusedIndex = focusedIndex {
                 let item = state.items[focusedIndex]
                 self.focusedId = item.id
                 
-                let allItems = state.items.map { stateItem -> StoryContentItem in
-                    return StoryContentItem(
-                        position: nil,
+                var allItems: [StoryContentItem] = []
+                
+                var dayCounts: [DayIndex: Int] = [:]
+                var itemDayIndices: [Int32: (Int, DayIndex)] = [:]
+                
+                for i in 0 ..< state.items.count {
+                    let stateItem = state.items[i]
+                    allItems.append(StoryContentItem(
+                        position: i,
+                        dayCounters: nil,
                         peer: peer,
-                        storyItem: stateItem
+                        storyItem: stateItem,
+                        entityFiles: extractItemEntityFiles(item: stateItem, allEntityFiles: state.allEntityFiles)
+                    ))
+                    
+                    let day = DayIndex(timestamp: stateItem.timestamp)
+                    let dayCount: Int
+                    if let current = dayCounts[day] {
+                        dayCount = current + 1
+                        dayCounts[day] = dayCount
+                    } else {
+                        dayCount = 1
+                        dayCounts[day] = dayCount
+                    }
+                    itemDayIndices[stateItem.id] = (dayCount - 1, day)
+                }
+                
+                var dayCounters: StoryContentItem.DayCounters?
+                if let (offset, day) = itemDayIndices[item.id], let dayCount = dayCounts[day] {
+                    dayCounters = StoryContentItem.DayCounters(
+                        position: offset,
+                        totalCount: dayCount
                     )
                 }
                 
@@ -1307,9 +1403,11 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                         peer: peer,
                         additionalPeerData: additionalPeerData,
                         item: StoryContentItem(
-                            position: nil,
+                            position: focusedIndex,
+                            dayCounters: dayCounters,
                             peer: peer,
-                            storyItem: item
+                            storyItem: item,
+                            entityFiles: extractItemEntityFiles(item: item, allEntityFiles: state.allEntityFiles)
                         ),
                         totalCount: state.totalCount,
                         previousItemId: focusedIndex == 0 ? nil : state.items[focusedIndex - 1].id,
@@ -1494,3 +1592,17 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
     
     return combineLatest(signals) |> ignoreValues
 }
+
+func extractItemEntityFiles(item: EngineStoryItem, allEntityFiles: [MediaId: TelegramMediaFile]) -> [MediaId: TelegramMediaFile] {
+    var result: [MediaId: TelegramMediaFile] = [:]
+    for entity in item.entities {
+        if case let .CustomEmoji(_, fileId) = entity.type {
+            let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+            if let file = allEntityFiles[mediaId] {
+                result[file.fileId] = file
+            }
+        }
+    }
+    return result
+}
+

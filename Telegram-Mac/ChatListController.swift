@@ -640,25 +640,29 @@ class ChatListController : PeersListController {
                 return .chat(item.0, state.activities.activities[space] ?? [], item.1, filter: filterData.filter, generalStatus: generalStatus, selectedForum: state.selectedForum, appearMode: state.controllerAppear, hideContent: state.appear == .short)
             }
             
-            if case .filter = filterData.filter, mapped.isEmpty {} else {
+            if case .filter = filterData.filter, state.mode == .plain, mapped.isEmpty {} else {
                 if !update.list.hasLater {
-                    for (i, group) in update.list.groupItems.reversed().enumerated() {
-                        
-                        let hideStatus: ItemHideStatus
-                        if state.appear == .short || state.splitState == .minimisize {
-                            switch hiddenItems.archive {
-                            case .hidden:
-                                hideStatus = hiddenItems.archive
-                            default:
-                                hideStatus = .normal
-                            }
-                        } else {
+                    let hideStatus: ItemHideStatus
+                    if state.appear == .short || state.splitState == .minimisize {
+                        switch hiddenItems.archive {
+                        case .hidden:
                             hideStatus = hiddenItems.archive
+                        default:
+                            hideStatus = .normal
                         }
+                    } else {
+                        hideStatus = hiddenItems.archive
+                    }
+                    for (i, group) in update.list.groupItems.reversed().enumerated() {
                         mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, hideStatus, state.controllerAppear, state.appear == .short, storyState))
+                    }
+                    if update.list.groupItems.isEmpty, let storyState = storyState, !storyState.items.isEmpty {
+                        mapped.append(.group(0, .init(id: .archive, topMessage: nil, items: [], unreadCount: 0), animateGroupNextTransition.swap(nil) == .archive, hideStatus, state.controllerAppear, state.appear == .short, storyState))
                     }
                 }
             }
+            
+           
             
             if mapped.isEmpty {
                 if !update.list.isLoading {

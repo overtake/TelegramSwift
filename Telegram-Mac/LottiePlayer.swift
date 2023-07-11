@@ -582,7 +582,6 @@ private final class PlayerRenderer {
         var currentFrame: Int32 = 0
         var startFrame: Int32 = min(min(player.startFrame, maxFrames), min(player.endFrame, maxFrames))
         var endFrame: Int32 = min(player.endFrame, maxFrames)
-        
         switch self.animation.playPolicy {
         case let .loopAt(firstStart, range):
             startFrame = range.lowerBound
@@ -765,7 +764,7 @@ private final class PlayerRenderer {
                     }
                 }
                 let isRendering = isRendering.with { $0 }
-                if hungry && !isRendering && !cancelled && !askedRender, endFrame > 1 {
+                if hungry && !isRendering && !cancelled && !askedRender {
                     askedRender = true
                     add_frames_impl?()
                 }
@@ -798,11 +797,11 @@ private final class PlayerRenderer {
                         }
                     }
 
-                    if let frame = frame, currentFrame <= endFrame {
+                    if let frame = frame {
                         stateValue.updateCurrentFrame(currentFrame + 1)
                         stateValue.addFrame(frame)
                     } else {
-                        if stateValue.startFrame != currentFrame, endFrame != 1 {
+                        if stateValue.startFrame != currentFrame {
                             stateValue.updateCurrentFrame(stateValue.startFrame)
                             stateValue.loopComplete()
                         } else {
