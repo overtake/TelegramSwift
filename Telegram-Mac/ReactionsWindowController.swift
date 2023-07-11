@@ -155,7 +155,7 @@ final class ReactionsWindowController : NSObject {
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = false
-        
+        panel.identifier = .init("reactions")
         
         let contentView = View(frame: .zero)
         panel.contentView = contentView

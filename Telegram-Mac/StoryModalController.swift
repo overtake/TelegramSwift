@@ -321,8 +321,8 @@ final class StoryArguments {
     let toggleHide:(Peer, Bool)->Void
     let showFriendsTooltip:(Control, Peer)->Void
     let showTooltipText:(String, MenuAnimation)->Void
-    let storyContextMenu:(StoryContentItem)->ContextMenu
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu) {
+    let storyContextMenu:(StoryContentItem)->ContextMenu?
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -2103,7 +2103,7 @@ final class StoryModalController : ModalViewController, Notifable {
                         
                         secondBlock.append(ContextMenuItem("Send Message", handler: {
                             openChat(peerId, nil, nil)
-                        }, itemImage: MenuAnimation.menu_send_now.value))
+                        }, itemImage: MenuAnimation.menu_read.value))
                         
                         let blocks:[[ContextMenuItem]] = [firstBlock,
                                                           secondBlock,
@@ -2143,6 +2143,15 @@ final class StoryModalController : ModalViewController, Notifable {
                         self?.genericView.showTooltip(.linkCopied)
                     }
                 })
+            }
+        }
+        
+        let share:(StoryContentItem)->Void = { [weak self] story in
+            if let peerId = story.peerId, story.sharable {
+                let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id), isMention: false)
+                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id)), presentation: storyTheme), for: context.window)
+            } else {
+                self?.genericView.showShareError()
             }
         }
         
@@ -2271,14 +2280,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     openPeerInfo(peerId, nil)
                 }), for: context.window)
             }
-        }, share: { [weak self] story in
-            if let peerId = story.peerId, story.sharable {
-                let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id), isMention: false)
-                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id)), presentation: storyTheme), for: context.window)
-            } else {
-                self?.genericView.showShareError()
-            }
-        }, copyLink: copyLink, startRecording: { [weak self] autohold in
+        }, share: share, copyLink: copyLink, startRecording: { [weak self] autohold in
             guard let `self` = self else {
                 return
             }
@@ -2298,12 +2300,23 @@ final class StoryModalController : ModalViewController, Notifable {
         }, showTooltipText: { [weak self] text, animation in
             self?.genericView.showTooltip(.tooltip(text, animation))
         }, storyContextMenu: { story in
-            guard let peer = story.peer else {
-                return ContextMenu()
+            guard let peer = story.peer, peer.id != context.peerId else {
+                return nil
             }
             let peerId = peer.id
-            
             let menu = ContextMenu(presentation: .current(storyTheme.colors))
+            
+            if story.canCopyLink {
+                menu.addItem(ContextMenuItem("Copy Link", handler: {
+                    copyLink(story)
+                }, itemImage: MenuAnimation.menu_copy_link.value))
+            }
+            if story.sharable {
+                menu.addItem(ContextMenuItem("Share", handler: {
+                    share(story)
+                }, itemImage: MenuAnimation.menu_share.value))
+            }
+            
             if peer._asPeer().storyArchived {
                 menu.addItem(ContextMenuItem("Unhide \(peer._asPeer().compactDisplayTitle)", handler: {                     toggleHide(peer._asPeer(), false)
                 }, itemImage: MenuAnimation.menu_show_message.value))
@@ -2314,11 +2327,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 }, itemImage: MenuAnimation.menu_move_to_contacts.value))
             }
             
-            if story.canCopyLink {
-                menu.addItem(ContextMenuItem("Copy Link", handler: {
-                    copyLink(story)
-                }, itemImage: MenuAnimation.menu_copy_link.value))
-            }
+          
+
 
             let reportItem = ContextMenuItem("Report", itemImage: MenuAnimation.menu_report.value)
             
@@ -2495,7 +2505,7 @@ final class StoryModalController : ModalViewController, Notifable {
             DispatchQueue.main.async {
                 self?.interactions.update { current in
                     var current = current
-                    current.hasPopover = hasPopover(context.window)
+                    current.hasPopover = hasPopover(context.window) || NSApp.windows.contains(where: { $0.identifier == .init("reactions") })
                     current.hasMenu = contextMenuOnScreen()
                     current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil || findModal(InputDataModalController.self, isAboveTo: self) != nil || findModal(ShareModalController.self, isAboveTo: self) != nil
                     return current
