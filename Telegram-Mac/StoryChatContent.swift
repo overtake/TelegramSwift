@@ -397,7 +397,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         }
                     }
                 }
-                if focusedIndex == nil, let state {
+                if focusedIndex == nil, let state = state {
                     if let storedFocusedId = self.storedFocusedId {
                         focusedIndex = mappedItems.firstIndex(where: { $0.id >= storedFocusedId })
                     } else if let index = mappedItems.firstIndex(where: { $0.isPending }) {
