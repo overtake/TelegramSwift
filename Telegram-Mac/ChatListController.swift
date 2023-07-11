@@ -470,7 +470,7 @@ class ChatListController : PeersListController {
         var scroll:TableScrollState? = nil
         
         
-        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(isHidden: false)
+        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(isHidden: self.mode.groupId == .archive)
                    |> deliverOnMainQueue).start(next: { [weak self] resources in
                        guard let `self` = self else {
                            return
