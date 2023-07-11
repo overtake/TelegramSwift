@@ -448,9 +448,7 @@ class StoryImageView : StoryView {
                 if awaiting {
                     self.play()
                 }
-            } else {
-                self.pause()
-            }
+            } 
         }
     }
     private var awaitPlaying: Bool = false

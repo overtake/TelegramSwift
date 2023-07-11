@@ -2497,7 +2497,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     var current = current
                     current.hasPopover = hasPopover(context.window)
                     current.hasMenu = contextMenuOnScreen()
-                    current.hasModal = findModal(PreviewSenderController.self) != nil || findModal(InputDataModalController.self) != nil || findModal(ShareModalController.self) != nil
+                    current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil || findModal(InputDataModalController.self, isAboveTo: self) != nil || findModal(ShareModalController.self, isAboveTo: self) != nil
                     return current
                 }
             }

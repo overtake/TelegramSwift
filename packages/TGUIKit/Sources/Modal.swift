@@ -966,9 +966,17 @@ public func closeAllModals(window: Window? = nil) {
     }
 }
 
-public func findModal<T>(_ t: T.Type) -> T? where T:ModalViewController {
-    for modal in activeModals {
+public func findModal<T>(_ t: T.Type, isAboveTo: ModalViewController? = nil) -> T? where T:ModalViewController {
+    let index = activeModals.firstIndex(where: {
+        $0.value?.controller === isAboveTo
+    })
+    for (i, modal) in activeModals.enumerated() {
         if let controller = modal.value?.controller, type(of: controller) == t {
+            if let index = index {
+                if index > i {
+                    continue
+                }
+            }
             return controller as? T
         }
     }
