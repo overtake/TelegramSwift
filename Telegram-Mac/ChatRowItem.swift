@@ -2262,7 +2262,7 @@ class ChatRowItem: TableRowItem {
                     }
                     return ChatFileMediaItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if let story = message.media[0] as? TelegramMediaStory {
-                    if message.isExpiredStory {
+                    if message.isExpiredStory && !story.isMention {
                         return ChatRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                     } else {
                         if story.isMention {

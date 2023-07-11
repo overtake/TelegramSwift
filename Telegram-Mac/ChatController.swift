@@ -1557,7 +1557,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     private let visibleMessageRange: Atomic<VisibleMessageRange> = Atomic(value: .init(lowerBound: .absoluteLowerBound(), upperBound: nil))
 
-    private var grouppedFloatingPhotos: [([ChatRowItem], NSView)] = []
+    private var grouppedFloatingPhotos: [([ChatRowItem], ChatAvatarView)] = []
     
     private let chatThemeValue: Promise<(String?, TelegramPresentationTheme)> = Promise((nil, theme))
     private let chatThemeTempValue: Promise<(String?, TelegramPresentationTheme)?> = Promise(nil)
@@ -1671,6 +1671,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     var historyState:ChatHistoryState = ChatHistoryState() {
         didSet {
+            assertOnMainThread()
             //if historyState != oldValue {
                 genericView.updateScroller(historyState) // updateScroller()
             //}
@@ -1692,6 +1693,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     override func scrollup(force: Bool = false) -> Void {
+        
+        assertOnMainThread()
+        
         chatInteraction.update({ $0.withUpdatedTempPinnedMaxId(nil) })
         
         self.messageIndexDisposable.set(nil)
@@ -1842,7 +1846,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.grouppedFloatingPhotos = []
             return
         }
-        let cached:[MessageId : NSView] = self.grouppedFloatingPhotos.reduce([:], { current, value in
+        let cached:[MessageId : ChatAvatarView] = self.grouppedFloatingPhotos.reduce([:], { current, value in
             var current = current
             for item in value.0 {
                 let view = value.1
@@ -1891,7 +1895,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         self.grouppedFloatingPhotos = groupped.compactMap { value in
             let item = value[value.count - 1]
-            var view: NSView?
+            var view: ChatAvatarView?
             for item in value {
                 if let v = cached[item.message!.id] {
                     view = v
@@ -1900,19 +1904,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             if view == nil {
                 view = ChatRowView.makePhotoView(item)
+            } else if let peer = item.peer {
+                view?.setPeer(item: item, peer: peer, storyStats: item.entry.additionalData.authorStoryStats, message: item.message)
             }
-                    
+           
             //??
-            let control = view as? Control
-            control?.toolTip = item.nameHide
-            control?.removeAllHandlers()
-            control?.set(handler: { [weak item, weak self] control in
-                if self?.chatInteraction.presentation.state == .selecting {
-                    self?.toggleUnderMouseMessage()
-                } else {
-                    item?.openInfo()
-                }
-            }, for: .Click)
+            let control = view
+            
             if let control = control {
                 return (value, control)
             } else {
@@ -1924,17 +1922,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
     }
     
-    private func toggleUnderMouseMessage() {
-        if let event = NSApp.currentEvent {
-            let point = genericView.tableView.contentView.convert(event.locationInWindow, from: nil)
-            let row = genericView.tableView.row(at: point)
-            if row != -1 {
-                let item = genericView.tableView.item(at: row)
-                (item as? ChatRowItem)?.toggleSelect()
-            }
-        }
-    }
-
     private func updateVisibleRange(_ range: NSRange) -> Void {
         var lowerBound: MessageIndex?
         var upperBound: MessageIndex?
@@ -2600,7 +2587,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         ads = (fixed: adMessages.fixed, opportunistic: adMessages.opportunistic)
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    
+                    
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed, translate: uiState.translate, storyState: uiState.storyState, peerStoryStats: view.peerStoryStats).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -3465,6 +3454,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             })
         }
         
+        chatInteraction.openChatPeerStories = { [weak self] messageId, peerId in
+            StoryModalController.ShowStories(context: context, isHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: messageId, takeControl: { peerId, messageId, storyId in
+                return self?.findStoryControl(messageId, storyId, peerId, useAvatar: true)
+            }), singlePeer: true)
+        }
+        
         
         chatInteraction.openProxySettings = { [weak self] in
             let controller = proxyListController(accountManager: context.sharedContext.accountManager, network: context.account.network, pushController: { [weak self] controller in
@@ -3802,6 +3797,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.chatInteraction.focusMessageId(nil, messageId, .CenterActionEmpty { [weak self] _ in
                 self?.chatInteraction.update({$0.withUpdatedTempPinnedMaxId(messageId)})
             })
+        }
+        
+        chatInteraction.toggleUnderMouseMessage = { [weak self] in
+            if let event = NSApp.currentEvent, let `self` = self {
+                let point = self.genericView.tableView.contentView.convert(event.locationInWindow, from: nil)
+                let row = self.genericView.tableView.row(at: point)
+                if row != -1 {
+                    let item = self.genericView.tableView.item(at: row)
+                    (item as? ChatRowItem)?.toggleSelect()
+                }
+            }
         }
         
         chatInteraction.runPremiumScreenEffect = { [weak self] message, mirror, isIncoming in
@@ -4348,7 +4354,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return
             }
             if let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
-                _ = context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peer.id, timeout: seconds).start(completed: scrollAfterSend)
+                _ = (context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peer.id, timeout: seconds) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                 strongSelf.nextTransaction.set(handler: afterSentTransition)
             }
             scrollAfterSend()
@@ -7866,14 +7872,27 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.themeSelector?.close(true)
     }
     
-    func findStoryControl(_ messageId: MessageId?, _ storyId: Int32?, _ peerId: PeerId) -> NSView? {
+    func findStoryControl(_ messageId: MessageId?, _ storyId: Int32?, _ peerId: PeerId, useAvatar: Bool = false) -> NSView? {
         var control: NSView? = nil
+        
+        if useAvatar, !self.grouppedFloatingPhotos.isEmpty {
+            for value in grouppedFloatingPhotos {
+                if value.0.contains(where: { $0.messages.contains(where: { $0.id == messageId })}) {
+                    return value.1.storyControl
+                }
+            }
+        }
+        
         genericView.tableView.enumerateVisibleItems(with: { item in
             guard let id = storyId else {
                 return false
             }
             let storyId: StoryId = .init(peerId: peerId, id: id)
             if let item = item as? ChatRowItem, messageId == item.message?.id || messageId == nil {
+                if useAvatar, let view = item.view as? ChatRowView {
+                    control = view.storyAvatarControl
+                    return false
+                }
                 if let attr = item.message?.storyAttribute {
                     if attr.storyId == storyId {
                         if let view = item.view as? ChatRowView {

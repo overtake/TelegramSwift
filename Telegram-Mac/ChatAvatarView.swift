@@ -20,22 +20,49 @@ final class ChatAvatarView : Control {
     private var photoVideoPlayer: MediaPlayer? 
 
     private let disposable = MetaDisposable()
-    
+    private var storyComponent: AvatarStoryIndicatorComponent?
+    private var storyComponentView: AvatarStoryIndicatorComponent.IndicatorView?
+
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         avatar.userInteractionEnabled = false
         avatar.setFrameSize(frameRect.size)
         addSubview(avatar)
+        self.scaleOnClick = true
     }
     
-    func setPeer(context: AccountContext, peer: Peer, message: Message? = nil, size: NSSize? = nil, force: Bool = false, disableForum: Bool = false) {
+    func setPeer(item: ChatRowItem, peer: Peer, storyStats: PeerStoryStats? = nil, message: Message? = nil, size: NSSize? = nil, force: Bool = false, disableForum: Bool = false) {
+        
+        let context = item.chatInteraction.context
+        
+        if let storyStats = storyStats {
+            self.storyComponent = .init(stats: storyStats, presentation: theme)
+        } else {
+            self.storyComponent = nil
+        }
+        
         self.avatar.setPeer(account: context.account, peer: peer, message: message, size: size, disableForum: disableForum)
         if peer.isPremium || force, peer.hasVideo, !isLite(.animations) {
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             disposable.set(signal.start(next: { [weak self] photos in
                 self?.updatePhotos(photos.map { $0.value }, context: context, peer: peer)
             }))
+        } else {
+            self.updatePhotos([], context: context, peer: peer)
         }
+        
+        self.removeAllHandlers()
+        self.set(handler: { [weak item] control in
+            if storyStats != nil, let id = message?.id {
+                item?.chatInteraction.openChatPeerStories(id, peer.id)
+            } else if item?.chatInteraction.presentation.state == .selecting {
+                item?.chatInteraction.toggleUnderMouseMessage()
+            } else {
+                item?.openInfo()
+            }
+        }, for: .Click)
+        
+        self.toolTip = item.nameHide
     }
     
     private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
@@ -89,7 +116,50 @@ final class ChatAvatarView : Control {
             self.photoVideoView = nil
             self.videoRepresentation = nil
         }
+        
+        if let storyComponent = storyComponent {
+            let current: AvatarStoryIndicatorComponent.IndicatorView
+            let isNew: Bool
+            if let view = self.storyComponentView {
+                current = view
+                isNew = false
+            } else {
+                current = .init(frame: self.bounds)
+                self.storyComponentView = current
+                addSubview(current)
+                isNew = true
+            }
+            let transition: ContainedViewLayoutTransition
+            if !isNew {
+                transition = .animated(duration: 0.2, curve: .easeOut)
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            } else {
+                transition = .immediate
+            }
+            current.update(component: storyComponent, availableSize: bounds.insetBy(dx: 3, dy: 3).size, transition: transition)
+            transition.updateFrame(view: avatar, frame: bounds.insetBy(dx: 3, dy: 3))
+            
+            if let view = self.photoVideoView {
+                transition.updateFrame(view: view, frame: bounds.insetBy(dx: 3, dy: 3))
+            }
+            
+        } else if let view = self.storyComponentView {
+            performSubviewRemoval(view, animated: true)
+            self.storyComponentView = nil
+            
+            let transition: ContainedViewLayoutTransition = .animated(duration: 0.2, curve: .easeOut)
+            
+            transition.updateFrame(view: avatar, frame: bounds)
+            if let view = self.photoVideoView {
+                transition.updateFrame(view: view, frame: bounds)
+            }
+        }
+        
         updatePlayerIfNeeded()
+    }
+    
+    var storyControl: NSView {
+        return avatar
     }
     
     @objc func updatePlayerIfNeeded() {
@@ -135,10 +205,6 @@ final class ChatAvatarView : Control {
         NotificationCenter.default.removeObserver(self)
     }
     deinit {
-        if superview != nil {
-            var bp = 0
-            bp += 1
-        }
         NotificationCenter.default.removeObserver(self)
     }
     

@@ -873,26 +873,39 @@ class ChatServiceItem: ChatRowItem {
             } else if let _ = authorId {
                 _ = attributedString.append(string:  isPhoto ? strings().serviceMessageDesturctingPhoto(authorName) : strings().serviceMessageDesturctingVideo(authorName), color: grayTextColor, font: .normal(theme.fontSize))
             }
-        } else if let story = message.media.first as? TelegramMediaStory, let item = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
-            let info = NSMutableAttributedString()
+        } else if let story = message.media.first as? TelegramMediaStory {
             
-            let text: String
-            
-            var authorName: String = ""
-            if let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle {
-                authorName = displayTitle
+            if message.isExpiredStory {
+                if isIncoming {
+                    _ = attributedString.append(string:  strings().chatServiceStoryExpiredMentionTextIncoming, color: grayTextColor, font: .normal(theme.fontSize))
+                } else {
+                    var name: String = ""
+                    if let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle {
+                        name = displayTitle
+                    }
+                    _ = attributedString.append(string:  strings().chatServiceStoryExpiredMentionTextOutgoing(name), color: grayTextColor, font: .normal(theme.fontSize))
+                }
+            } else if let item = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
+                let info = NSMutableAttributedString()
+                
+                let text: String
+                
+                var authorName: String = ""
+                if let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle {
+                    authorName = displayTitle
+                }
+                
+                if isIncoming {
+                    text = strings().chatServiceStoryMentioned(authorName)
+                } else {
+                    text = strings().chatServiceStoryMentionedYou(authorName)
+                }
+                
+                _ = info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
+                info.detectBoldColorInString(with: .medium(theme.fontSize))
+                
+                self.storydata = .init(context: context, maxReadId: entry.additionalData.storyReadMaxId, media: story, storyItem: item, text: TextViewLayout(info, alignment: .center), theme: theme, isIncoming: isIncoming)
             }
-            
-            if isIncoming {
-                text = strings().chatServiceStoryMentioned(authorName)
-            } else {
-                text = strings().chatServiceStoryMentionedYou(authorName)
-            }
-            
-            _ = info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
-            info.detectBoldColorInString(with: .medium(theme.fontSize))
-            
-            self.storydata = .init(context: context, maxReadId: entry.additionalData.storyReadMaxId, media: story, storyItem: item, text: TextViewLayout(info, alignment: .center), theme: theme, isIncoming: isIncoming)
         }
         
         

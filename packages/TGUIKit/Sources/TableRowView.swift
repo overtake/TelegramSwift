@@ -64,7 +64,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         // self.layer = (self.layerClass() as! CALayer.Type).init()
         self.wantsLayer = true
         backgroundColor = .clear
-     //   self.layerContentsRedrawPolicy = .never
+        self.layerContentsRedrawPolicy = .never
         autoresizingMask = []
       //  self.layer?.delegate = self
         autoresizesSubviews = false
@@ -91,7 +91,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     open func layerClass() ->AnyClass {
-        return SimpleLayer.self;
+        return CALayer.self;
     }
     
     
@@ -133,25 +133,25 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
 //        ctx.setFillColor(backdorColor.cgColor)
 //        ctx.fill(layer.bounds)
        // layer.draw(in: ctx)
-//
-//        if let border = border {
-//
-//            ctx.setFillColor(borderColor.cgColor)
-//
-//            if border.contains(.Top) {
-//                ctx.fill(NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize))
-//            }
-//            if border.contains(.Bottom) {
-//                ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
-//            }
-//            if border.contains(.Left) {
-//                ctx.fill(NSMakeRect(0, 0, .borderSize, frame.height))
-//            }
-//            if border.contains(.Right) {
-//                ctx.fill(NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height))
-//            }
-//
-//        }
+        
+        if let border = border {
+            
+            ctx.setFillColor(borderColor.cgColor)
+            
+            if border.contains(.Top) {
+                ctx.fill(NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize))
+            }
+            if border.contains(.Bottom) {
+                ctx.fill(NSMakeRect(0, 0, frame.width, .borderSize))
+            }
+            if border.contains(.Left) {
+                ctx.fill(NSMakeRect(0, 0, .borderSize, frame.height))
+            }
+            if border.contains(.Right) {
+                ctx.fill(NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height))
+            }
+            
+        }
         
     }
     
@@ -345,6 +345,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
+    }
+    
+    override public static var isCompatibleWithResponsiveScrolling: Bool {
+        return true
     }
     
     

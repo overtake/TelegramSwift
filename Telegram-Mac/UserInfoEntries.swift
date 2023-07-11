@@ -1806,11 +1806,11 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     } else if view.peerIsContact {
                         photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSuggestPhoto(user.compactDisplayTitle), type: .suggest, nextType: state.suggestingPhotoState != nil ? .loading : .none, viewType: .singleItem))
                         photoBlock.append(.setPhoto(sectionId: sectionId, string: strings().userInfoSetPhoto(user.compactDisplayTitle), type: .set, nextType: .none, viewType: .singleItem))
-                                                
-                        if user.photo.contains(where: { $0.isPersonal }), let image = cachedData.photo {
-                            photoBlock.append(.resetPhoto(sectionId: sectionId, string: strings().userInfoResetPhoto, image: image, user: user, viewType: .singleItem))
-                        }
                         photoBlock.append(.setPhotoInfo(sectionId: sectionId, string: strings().userInfoSetPhotoBlockInfo(user.compactDisplayTitle), viewType: .textBottomItem))
+
+                        if user.photo.contains(where: { $0.isPersonal }), let image = cachedData.photo {
+                            photoBlock.append(.resetPhoto(sectionId: sectionId, string: strings().userInfoResetPhoto, image: image, user: user, viewType: .lastItem))
+                        }
                     }
                     if !photoBlock.isEmpty, peer is TelegramSecretChat || view.peerIsContact {
                         entries.append(UserInfoEntry.section(sectionId: sectionId))

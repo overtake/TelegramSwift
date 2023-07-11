@@ -147,10 +147,26 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
         case let poll as TelegramMediaPoll:
             messageText = "📊 \(poll.text)"
         case let story as TelegramMediaStory:
-            if story.isMention {
-                messageText = strings().chatListStoryMentioned
-            } else {
-                messageText = strings().chatListStory
+            if message.isExpiredStory {
+                if story.isMention {
+                    if message.flags.contains(.Incoming) {
+                        messageText = strings().chatServiceStoryExpiredMentionTextIncoming
+                    } else if let peer = message.peers[message.id.peerId] {
+                        messageText = strings().chatServiceStoryExpiredMentionTextOutgoing(peer.compactDisplayTitle)
+                    }
+                } else {
+                    messageText = strings().chatListStoryExpired
+                }
+            } else if let peer = message.peers[message.id.peerId] {
+                if story.isMention {
+                    if message.flags.contains(.Incoming) {
+                        messageText = strings().chatServiceStoryMentioned(peer.compactDisplayTitle)
+                    } else {
+                        messageText = strings().chatServiceStoryMentionedYou(peer.compactDisplayTitle)
+                    }
+                } else {
+                    messageText = strings().chatListStory
+                }
             }
         case let webpage as TelegramMediaWebpage:
             if case let .Loaded(content) = webpage.content {
@@ -189,6 +205,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             break
         }
     }
+    
+
     if message.storyAttribute != nil, notifications, message.flags.contains(.Incoming) {
         return (string: strings().notificationStoryReply(messageText).nsstring, justSpoiled: justSpoiled)
     }

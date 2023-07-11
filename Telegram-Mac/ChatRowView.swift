@@ -44,7 +44,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
 
 
-    private var avatar:AvatarControl?
+    private var avatar:ChatAvatarView?
     private(set) var contentView:View = View()
     private var replyView:ChatAccessoryView?
     private var replyMarkupView:View?
@@ -864,17 +864,24 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    static func makePhotoView(_ item: ChatRowItem) -> NSView {
+    static func makePhotoView(_ item: ChatRowItem) -> ChatAvatarView {
         let avatar = ChatAvatarView(frame: NSMakeSize(36, 36).bounds)
         avatar.setFrameSize(36,36)
         let chatInteraction = item.chatInteraction
+        let authorStoryStats = item.entry.additionalData.authorStoryStats
         
         if let peer = item.peer {
-            avatar.setPeer(context: item.context, peer: peer, message: item.message)
+            avatar.setPeer(item: item, peer: peer, storyStats: item.entry.additionalData.authorStoryStats, message: item.message)
             if peer.id.id._internalGetInt64Value() != 0 {
                 avatar.contextMenu = { [weak chatInteraction] in
                     
                     let menu = ContextMenu()
+                    
+                    if let _ = authorStoryStats {
+                        menu.addItem(ContextMenuItem(strings().chatContextPeerOpenStory, handler: {
+                            //chatInteraction?.openStory()
+                        }, itemImage: MenuAnimation.menu_stories.value))
+                    }
                     
                     menu.addItem(ContextMenuItem(strings().chatContextPeerOpenInfo, handler: {
                         chatInteraction?.openInfo(peer.id, false, nil, nil)
@@ -900,25 +907,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
             }
         }
-        
-       
         return avatar
     }
     
     func fillPhoto(_ item:ChatRowItem, animated: Bool) -> Void {
         if item.hasPhoto, let peer = item.peer, item.renderType != .bubble {
-            
             if avatar == nil {
-                avatar = AvatarControl(font: .avatar(.text))
-                avatar?.frame = avatarFrame(item)
+                avatar = ChatRowView.makePhotoView(item)
                 rowView.addSubview(avatar!)
             }
-            avatar?.removeAllHandlers()
-            avatar?.set(handler: { [weak item] control in
-                item?.openInfo()
-            }, for: .Click)
-            avatar?.toolTip = item.nameHide
-            self.avatar?.setPeer(account: item.context.account, peer: peer, message: item.message)
+            avatar?.setPeer(item: item, peer: peer, storyStats: item.entry.additionalData.authorStoryStats, message: item.message)
             
         } else {
             if let view = avatar {
@@ -2050,7 +2048,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             initRevealState()
         }
         
-        CATransaction.begin()
         
         let updateRightSubviews:(Bool) -> Void = { [weak self] animated in
             guard let `self` = self else {return}
@@ -2085,7 +2082,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             failed({_ in})
         }
         
-        CATransaction.commit()
     }
     
     
@@ -2132,6 +2128,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 self.rowView.layer?.animateAlpha(from: 0, to: 1, duration: 0.35)
             }
         }
+    }
+    
+    var storyAvatarControl: NSView? {
+        return self.avatar
     }
     
     func storyControl(_ storyId: StoryId) -> NSView? {

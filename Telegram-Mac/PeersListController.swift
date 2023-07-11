@@ -581,6 +581,11 @@ class PeerListContainerView : Control {
         tableView.getBackgroundColor = {
             .clear
         }
+        
+        titleView.scaleOnClick = true
+        
+       
+        
         updateLocalizationAndTheme(theme: theme)
         
         
@@ -1605,6 +1610,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.hideDownloads = { [weak self] in
             self?.hideDownloads(animated: true)
         }
+        
+        genericView.titleView.set(handler: { [weak self] _ in
+            self?.toggleStoriesState()
+        }, for: .Click)
         
         
         let actionsDisposable = self.actionsDisposable
@@ -2960,7 +2969,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 self.scrollPositions = []
             }
         } else {
-            CATransaction.begin()
             let position = genericView.tableView.documentOffset.y
             let last = scrollPositions.last ?? 0
             if last != position {
@@ -2982,7 +2990,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     self.scrollPositions = []
                 }
             }
-            CATransaction.commit()
         }
     }
         
@@ -3009,6 +3016,23 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
          }
     }
     
+    func toggleStoriesState() {
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
+        guard let item = optional, storyInterfaceState != .empty else {
+            return
+        }
+        if self.storyInterfaceState == .revealed {
+            self.storyInterfaceState = .concealed
+        } else {
+            self.storyInterfaceState = .revealed
+        }
+        CATransaction.begin()
+        self.genericView.tableView.scroll(to: .up(false), ignoreLayerAnimation: true)
+        self.genericView.tableView.reloadData(row: item.index, animated: true)
+        self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+        CATransaction.commit()
+    }
+    
     @discardableResult func revealStoriesState() -> Bool {
         let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
         guard let item = optional, storyInterfaceState != .empty else {
@@ -3016,8 +3040,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         if self.storyInterfaceState != .revealed {
             self.storyInterfaceState = .revealed
+            CATransaction.begin()
+            self.genericView.tableView.scroll(to: .up(false), ignoreLayerAnimation: true)
             self.genericView.tableView.reloadData(row: item.index, animated: true)
             self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+            CATransaction.commit()
             return true
         }
         return false

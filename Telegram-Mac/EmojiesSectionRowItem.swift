@@ -132,6 +132,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.installPack = installPack
         self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0)
        
+        
         self.context = context
         self.callback = callback
         
@@ -905,7 +906,6 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 }
                 view.masksToBounds = true
                 view.cornerRadius = item.selection != nil ? 4 : 0
-//                view.backgroundColor = NSColor.random.cgColor
                 
                 if item.lock {
                     let current: InlineStickerLockLayer
@@ -930,14 +930,6 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                
                 
                 index += 1
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
-                    } else {
-                        isKeyWindow = window.isKeyWindow
-                    }
-                }
                 view.frame = rect
             }
         }

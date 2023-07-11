@@ -59,12 +59,13 @@ final class PremiumGiftHeaderItem : GeneralRowItem {
 
 private final class PremiumGiftHeaderView: TableRowView {
     
-    private let avatar = ChatAvatarView(frame: NSMakeSize(100, 100).bounds)
+    private let avatar = AvatarControl(font: .avatar(.header))
     private let textView = TextView()
     private let titleView = TextView()
 //    private let scene: PremiumGiftStarSceneView = PremiumGiftStarSceneView(frame: NSMakeRect(0, 0, 200, 200))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        avatar.setFrameSize(NSMakeSize(100, 100))
         addSubview(textView)
         addSubview(titleView)
         
@@ -103,7 +104,7 @@ private final class PremiumGiftHeaderView: TableRowView {
         titleView.update(item.titleLayout)
         textView.update(item.textLayout)
 
-        avatar.setPeer(context: item.context, peer: item.peer, force: true)
+        avatar.setPeer(account: item.context.account, peer: item.peer)
         
         needsLayout = true
     }

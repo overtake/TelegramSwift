@@ -193,6 +193,7 @@ final class ChatInteraction : InterfaceObserver  {
     var toggleTranslate:()->Void = { }
     var hideTranslation:()->Void = { }
     var openStories: (_ f:@escaping(PeerId, MessageId?, Int32?)-> NSView?)->Void = { _ in }
+    var openChatPeerStories: (MessageId, PeerId)->Void = { _, _ in }
     var doNotTranslate:(String)->Void = { _ in }
     var translateTo:(String)->Void = { _ in }
     var enableTranslatePaywall:()->Void = { }
@@ -201,6 +202,8 @@ final class ChatInteraction : InterfaceObserver  {
     var setupChatThemes:()->Void = { }
     var closeChatThemes:()->Void = { }
     var appendAttributedText:(NSAttributedString)->Void = { _ in }
+    
+    var toggleUnderMouseMessage:()->Void = { }
     
     var openStory:(MessageId, StoryId)->Void = { _, _ in }
     

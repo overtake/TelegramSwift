@@ -461,7 +461,7 @@ private struct State : Equatable {
     var externalTopic: ExternalTopic = .init(title: "", iconColor: 0)
 }
 
-private func _id_section(_ id:Int64, _ index: Int = 0) -> InputDataIdentifier {
+private func _id_section(_ id:Int64, _ index: String = "") -> InputDataIdentifier {
     return .init("_id_section_\(id)_\(index)")
 }
 private func _id_pack(_ id: Int64) -> InputDataIdentifier {
@@ -662,11 +662,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }))
                     index += 1
                 }
+                
+                let chunks = animatedEmoji.chunks(16)
+                var string: String = "a"
+                for chunk in chunks {
+                    let tuple = Tuple(items: chunk, selected: state.selectedItems)
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae_\(string)"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                        return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selected, callback: arguments.send)
+                    }))
+                    index += 1
+                    string += "a"
+                }
                                 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae"), equatable: InputDataEquatable(Tuple(items: animatedEmoji, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: animatedEmoji, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
-                }))
-                index += 1
+                
                 
             } else if arguments.mode == .status {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_search_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
@@ -890,19 +898,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 let revealed: Bool
                 let selectedItems:[EmojiesSectionRowItem.SelectedItem]
                 let items: [StickerPackItem]
-                let index: Int
+                let index: String
             }
             
             var tuples:[Tuple] = []
             
-            let chunks = section.items.chunks(32)
+            let chunks = section.items.chunks(16)
+            var string: String = "a"
             
             for (i, items) in chunks.enumerated() {
-                tuples.append(Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems, items: items, index: i))
+                tuples.append(Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems, items: items, index: string))
+                string += "a"
             }
             for tuple in tuples {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id, tuple.index), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == 0 ? section.info : nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, callback: arguments.send, viewSet: { info in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: tuple.section.installed, info: tuple.index == "a" ? section.info : nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selectedItems, callback: arguments.send, viewSet: { info in
                         arguments.viewSet(info)
                     }, showAllItems: {
                         arguments.showAllItems(section.info.id.id)

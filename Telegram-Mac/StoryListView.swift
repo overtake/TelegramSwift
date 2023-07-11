@@ -438,38 +438,14 @@ final class StoryListView : Control, Notifable {
             }
             let peerId = peer.id
             let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.react, onClose: {
-                
+            
             }) |> deliverOnMainQueue
             
-            _ = window.start(next: { panel in
-                let menu = ContextMenu(presentation: .current(storyTheme.colors))
-                if peer._asPeer().storyArchived {
-                    menu.addItem(ContextMenuItem("Unhide \(peer._asPeer().compactDisplayTitle)", handler: { [weak self] in
-                        self?.arguments?.toggleHide(peer._asPeer(), false)
-                    }, itemImage: MenuAnimation.menu_show_message.value))
-
-                } else {
-                    menu.addItem(ContextMenuItem("Hide \(peer._asPeer().compactDisplayTitle)", handler: {
-                        self?.arguments?.toggleHide(peer._asPeer(), true)
-                    }, itemImage: MenuAnimation.menu_move_to_contacts.value))
+            _ = window.start(next: { [weak arguments] panel in
+                if let menu = arguments?.storyContextMenu(story) {
+                    menu.topWindow = panel
+                    AppMenu.show(menu: menu, event: event, for: control)
                 }
-
-                let report = ContextMenuItem("Report", itemImage: MenuAnimation.menu_report.value)
-                
-                let submenu = ContextMenu()
-                            
-                let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-                let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-                
-                for i in 0 ..< options.count {
-                    submenu.addItem(ContextMenuItem(options[i].title, handler: { [weak self] in
-                        self?.arguments?.report(peerId, story.storyItem.id, options[i])
-                    }, itemImage: animation[i].value))
-                }
-                report.submenu = submenu
-                menu.addItem(report)
-                menu.topWindow = panel
-                AppMenu.show(menu: menu, event: event, for: control)
             })
            
         }, for: .RightDown)
@@ -750,7 +726,6 @@ final class StoryListView : Control, Notifable {
         guard let layer = content.layer else {
             return
         }
-        CATransaction.begin()
         layer.animatePosition(from: oldRect.origin, to: newRect.origin, duration: duration, timingFunction: .default, removeOnCompletion: false)
         layer.animateScaleX(from: 1, to: newRect.width / oldRect.width, duration: duration, timingFunction: .default, removeOnCompletion: false)
         layer.animateScaleY(from: 1, to: newRect.height / oldRect.height, duration: duration, timingFunction: .default, removeOnCompletion: false)
@@ -761,7 +736,6 @@ final class StoryListView : Control, Notifable {
             let anim = layer.makeAnimation(from: NSNumber(value: content.layer!.cornerRadius), to: NSNumber(value: CGFloat(content.frame.width / 2)), keyPath: "cornerRadius", timingFunction: .default, duration: duration, removeOnCompletion: false)
             layer.add(anim, forKey: "cornerRadius")
         }
-        CATransaction.commit()
        
     }
     
@@ -780,7 +754,7 @@ final class StoryListView : Control, Notifable {
         self.controls.isHidden = entry == nil
 
         if let entry = entry {
-            self.navigator.initialize(count: entry.totalCount)
+            self.navigator.initialize(count: entry.item.dayCounters?.totalCount ?? entry.totalCount)
             
             if self.inputView == nil {
                 let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
@@ -813,7 +787,7 @@ final class StoryListView : Control, Notifable {
                 self.redraw()
             } else if let current = self.current, let arguments = arguments {
                 self.updateStoryState(current.state)
-                self.controls.update(context: context, arguments: arguments, groupId: entry.peer.id, peer: entry.peer._asPeer(), story: entry.item, animated: true)
+                self.controls.update(context: context, arguments: arguments, groupId: entry.peer.id, peer: entry.peer._asPeer(), slice: entry, story: entry.item, animated: true)
                 self.inputView.update(entry.item, animated: true)
                 self.arguments?.markAsRead(entry.peer.id, entry.item.storyItem.id)
             } else {
@@ -895,7 +869,7 @@ final class StoryListView : Control, Notifable {
         
         self.updateLayout(size: self.frame.size, transition: .immediate)
 
-        self.controls.update(context: context, arguments: arguments, groupId: groupId, peer: entry.peer._asPeer(), story: story, animated: false)
+        self.controls.update(context: context, arguments: arguments, groupId: groupId, peer: entry.peer._asPeer(), slice: entry, story: story, animated: false)
 
         
         arguments.interaction.flushPauses()
@@ -970,13 +944,14 @@ final class StoryListView : Control, Notifable {
         guard let view = self.current, let entry = self.entry else {
             return
         }
+        
         switch state {
         case .playing:
-            self.navigator.set(entry.item.position ?? 0, current: view.currentTimestamp, duration: view.duration, playing: true)
+            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, current: view.currentTimestamp, duration: view.duration, playing: true)
         case .finished:
             self.arguments?.nextStory()
         default:
-            self.navigator.set(entry.item.position ?? 0, current: view.currentTimestamp, duration: view.duration, playing: false)
+            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, current: view.currentTimestamp, duration: view.duration, playing: false)
         }
     }
     

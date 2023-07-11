@@ -2385,6 +2385,8 @@ public final class L10n {
   public static var chatContextPeerMention: String  { return L10n.tr("Localizable", "Chat.Context.Peer.Mention") }
   /// Open Profile
   public static var chatContextPeerOpenInfo: String  { return L10n.tr("Localizable", "Chat.Context.Peer.OpenInfo") }
+  /// Open Stories
+  public static var chatContextPeerOpenStory: String  { return L10n.tr("Localizable", "Chat.Context.Peer.OpenStory") }
   /// Send Message
   public static var chatContextPeerSendMessage: String  { return L10n.tr("Localizable", "Chat.Context.Peer.SendMessage") }
   /// Hide pinned message
@@ -3268,6 +3270,12 @@ public final class L10n {
   /// Search messages by %@
   public static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
+  }
+  /// The story you were mentioned in\nis no longer available
+  public static var chatServiceStoryExpiredMentionTextIncoming: String  { return L10n.tr("Localizable", "Chat.Service.StoryExpiredMentionTextIncoming") }
+  /// The story where you mentioned %@\n is no longer available
+  public static func chatServiceStoryExpiredMentionTextOutgoing(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StoryExpiredMentionTextOutgoing", p1)
   }
   /// %@ mentioned you in a story
   public static func chatServiceStoryMentioned(_ p1: String) -> String {
@@ -4507,6 +4515,8 @@ public final class L10n {
   }
   /// Live stream started
   public static var chatListServiceVoiceChatStartedChannel1: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted.Channel1") }
+  /// Expired Story
+  public static var chatListStoryExpired: String  { return L10n.tr("Localizable", "ChatList.Story.Expired") }
   /// Unsupported Story
   public static var chatListStoryUnsupported: String  { return L10n.tr("Localizable", "ChatList.Story.Unsupported") }
   /// Archive
