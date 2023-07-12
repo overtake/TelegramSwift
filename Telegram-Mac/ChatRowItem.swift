@@ -838,6 +838,11 @@ class ChatRowItem: TableRowItem {
             if let media = message.extendedMedia, media is TelegramMediaAction {
                 return false
             }
+            if let media = message.extendedMedia as? TelegramMediaStory {
+                if media.isMention {
+                    return false
+                }
+            }
             return true
         }
         return false

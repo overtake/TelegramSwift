@@ -446,6 +446,15 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         }
     }
     
+    static func push(context: AccountContext, peerId: PeerId, listContext: PeerStoryListContext, standalone: Bool = false, isArchived: Bool = false) {
+        if let controller = context.bindings.rootNavigation().controller as? StoryMediaController {
+            if controller.isArchived == isArchived && controller.standalone == standalone {
+                return
+            }
+        }
+        context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: peerId, listContext: listContext, standalone: standalone, isArchived: isArchived))
+    }
+    
     init(context: AccountContext, peerId: EnginePeer.Id, listContext: PeerStoryListContext, standalone: Bool = false, isArchived: Bool = false) {
         self.peerId = peerId
         self.isArchived = isArchived
