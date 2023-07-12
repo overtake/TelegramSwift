@@ -1214,11 +1214,11 @@ class PeerListContainerView : Control {
             transition.updateFrame(view: actionView, frame: CGRect(origin: CGPoint(x: 0, y: size.height - actionView.frame.height), size: NSMakeSize(frame.width, actionView.frame.height)))
         }
         
-        let titlePlusStorySize = titleView.frame.width + (55)
+        let titlePlusStorySize = titleView.frame.width + (59)
         let titlePlusStoryStartX = (size.width - titlePlusStorySize) / 2
         
         let storyXStart = titlePlusStoryStartX - 10
-        let titleXStart = titlePlusStoryStartX + (55)
+        let titleXStart = titlePlusStoryStartX + (59)
         
         let storyXEnd: CGFloat = 0
         let titleXEnd = (size.width - titleView.size.width) / 2
@@ -1228,14 +1228,12 @@ class PeerListContainerView : Control {
         var titleX: CGFloat = titleXEnd
         var storyX: CGFloat = storyXEnd
         
-        var titleOffset: CGFloat = 0
         if let stories = self.storiesItem {
             titleX = titleXEnd - (titleXEnd - titleXStart) * (1 - stories.progress)
             storyX = storyXEnd + (storyXStart - storyXEnd) * (1 - stories.progress)
         }
         
         
-        titleOffset -= (1 - progress) * (size.width - 70)
         
         transition.updateFrame(view: titleView, frame: CGRect(origin: CGPoint(x: titleX, y: floorToScreenPixels(bsc, (statusHeight - titleView.size.height) / 2) - 2), size: titleView.size))
         titleView.updateLayout(size: titleView.size, transition: transition)

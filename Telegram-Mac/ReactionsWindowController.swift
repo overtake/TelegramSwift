@@ -155,7 +155,7 @@ final class ReactionsWindowController : NSObject {
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = false
-        panel.identifier = .init("reactions")
+        panel.name = self.name
         
         let contentView = View(frame: .zero)
         panel.contentView = contentView
@@ -180,12 +180,12 @@ final class ReactionsWindowController : NSObject {
 
     private var onClose:(()->Void)?
     private let presentation: TelegramPresentationTheme
-    
-    init(_ context: AccountContext, peerId: PeerId, selectedItems: [EmojiesSectionRowItem.SelectedItem], react: @escaping(StickerPackItem, NSRect?)->Void, onClose:(()->Void)? = nil, presentation: TelegramPresentationTheme = theme) {
+    private let name: String
+    init(_ context: AccountContext, peerId: PeerId, selectedItems: [EmojiesSectionRowItem.SelectedItem], react: @escaping(StickerPackItem, NSRect?)->Void, onClose:(()->Void)? = nil, presentation: TelegramPresentationTheme = theme, name: String = "") {
         self.context = context
         self.presentation = presentation
         self.onClose = onClose
-        
+        self.name = name
         
         self.emojies = .init(context, mode: .reactions, selectedItems: selectedItems, presentation: presentation)
         self.emojies.loadViewIfNeeded()

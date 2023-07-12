@@ -21,6 +21,7 @@ final class PremiumStatusControl : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         userInteractionEnabled = false
+        layer?.masksToBounds = false
     }
     
     required init?(coder: NSCoder) {
