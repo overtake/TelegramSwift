@@ -402,11 +402,17 @@ private let close_image_hover = NSImage(named: "Icon_StoryClose")!.precomposed(N
 
 
 func storyReactionsWindow(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void) -> Signal<Window?, NoError> {
-    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose) |> map { value in
+    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose, name: "reactions") |> map { value in
         if let (panel, view) = value {
-            view.setFrameOrigin(.zero)
+            panel._canBecomeMain = false
+            panel._canBecomeKey = false
+            panel.level = .popUpMenu
+            panel.backgroundColor = .clear
+            panel.isOpaque = false
+            panel.hasShadow = false
             panel.contentView?.addSubview(view)
             panel.contentView?.wantsLayer = true
+            view.setFrameOrigin(.zero)
             view.autoresizingMask = [.width, .height]
             return panel
         } else {
@@ -419,7 +425,7 @@ private func storyReactions(context: AccountContext, peerId: PeerId, react: @esc
     return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose) |> map { $0?.1 }
 }
 
-private func storyReactionsValues(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void) -> Signal<(Window, NSView)?, NoError> {
+private func storyReactionsValues(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void, name: String = "") -> Signal<(Window, NSView)?, NoError> {
     
     
     let builtin = context.reactions.stateValue
@@ -524,12 +530,7 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
         
         
         let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
-        panel._canBecomeMain = false
-        panel._canBecomeKey = false
-        panel.level = .popUpMenu
-        panel.backgroundColor = .clear
-        panel.isOpaque = false
-        panel.hasShadow = false
+       
         
 
         let reveal:((NSView & StickerFramesCollector)->Void)?
@@ -546,7 +547,7 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
                 }
                 react(.init(item: value, fromRect: fromRect))
                 onClose()
-            }, onClose: onClose, presentation: storyTheme)
+            }, onClose: onClose, presentation: storyTheme, name: name)
             window.show(view)
         }
         
@@ -2201,16 +2202,24 @@ final class StoryModalController : ModalViewController, Notifable {
         }
         
         let react:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
+            
             if let entryId = interactions?.presentation.entryId, let id = interactions?.presentation.storyId {
                 switch reaction.item {
                 case let .builtin(value):
                     sendText(.init(inputText: value.normalizedEmoji), entryId, id, .reaction(reaction))
+                    self?.genericView.playReaction(reaction)
                 case let .custom(fileId, file):
                     if let file = file, let text = file.customEmojiText {
-                        sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil, nil)]), entryId, id, .reaction(reaction))
+                        if file.isPremiumEmoji, !context.isPremium {
+                            showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
+                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                            })
+                        } else {
+                            sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil, nil)]), entryId, id, .reaction(reaction))
+                            self?.genericView.playReaction(reaction)
+                        }
                     }
                 }
-                self?.genericView.playReaction(reaction)
             }
         }
         
@@ -2512,7 +2521,7 @@ final class StoryModalController : ModalViewController, Notifable {
             DispatchQueue.main.async {
                 self?.interactions.update { current in
                     var current = current
-                    current.hasPopover = hasPopover(context.window) || NSApp.windows.contains(where: { $0.identifier == .init("reactions") })
+                    current.hasPopover = hasPopover(context.window) || NSApp.windows.contains(where: { ($0 as? Window)?.name == "reactions" })
                     current.hasMenu = contextMenuOnScreen()
                     current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil || findModal(InputDataModalController.self, isAboveTo: self) != nil || findModal(ShareModalController.self, isAboveTo: self) != nil
                     return current
