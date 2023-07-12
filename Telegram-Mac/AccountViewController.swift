@@ -309,7 +309,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .stories(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "My Stories", icon: theme.icons.settingsStories, activeIcon: theme.icons.settingsStoriesActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsMyStories, icon: theme.icons.settingsStories, activeIcon: theme.icons.settingsStoriesActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, listContext: arguments.storyList, standalone: true), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .proxy(_, viewType, status):

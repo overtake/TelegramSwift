@@ -246,7 +246,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         let appConfiguration = data.chatInteraction.context.appConfiguration
         let context = data.chatInteraction.context
         let account = context.account
-        let isService = data.message.extendedMedia is TelegramMediaAction
+        var isService = data.message.extendedMedia is TelegramMediaAction
+        
+        if !isService, let story = data.message.media.first as? TelegramMediaStory {
+            isService = story.isMention
+        }
         
         var items:[ContextMenuItem] = []
         

@@ -115,6 +115,8 @@ public final class L10n {
   public static var accountSettingsLanguage: String  { return L10n.tr("Localizable", "AccountSettings.Language") }
   /// Logout
   public static var accountSettingsLogout: String  { return L10n.tr("Localizable", "AccountSettings.Logout") }
+  /// My Stories
+  public static var accountSettingsMyStories: String  { return L10n.tr("Localizable", "AccountSettings.MyStories") }
   /// Notifications
   public static var accountSettingsNotifications: String  { return L10n.tr("Localizable", "AccountSettings.Notifications") }
   /// Telegram Passport

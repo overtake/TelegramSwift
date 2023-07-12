@@ -700,11 +700,11 @@ private final class StoryListEntryRowItem : TableRowItem {
             
         } else {
             items.append(.init("Saved Stories", handler: {
-                context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true, isArchived: false))
+                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true, isArchived: false)
             }, itemImage: MenuAnimation.menu_stories.value))
             
             items.append(.init("Archived Stories", handler: {
-                context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: true), standalone: true, isArchived: true))
+                StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: true), standalone: true, isArchived: true)
             }, itemImage: MenuAnimation.menu_archive.value))
         }
         
