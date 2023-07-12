@@ -13,13 +13,24 @@ import TGUIKit
 final class StoryListNavigationView : View {
     
     private var parts:[View] = []
-    private let selector: View = View(frame: NSMakeRect(0, 0, 2, 2))
+    private let selector = LinearProgressControl(progressHeight: 2)
+    
     private var selected: Int? = nil
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         selector.layer?.cornerRadius = 1
         selector.backgroundColor = NSColor.white
         self.addSubview(selector)
+        
+        selector.insets = NSEdgeInsetsMake(0, 0, 0, 0)
+        selector.roundCorners = true
+        selector.alignment = .center
+        selector.liveScrobbling = false
+        selector.containerBackground = .clear
+        selector.style = ControlStyle(foregroundColor: .white, backgroundColor: .clear, highlightColor: .clear)
+        selector.set(progress: 0, animated: false, duration: 0)
+        
+
     }
     
     required init?(coder: NSCoder) {
@@ -36,13 +47,13 @@ final class StoryListNavigationView : View {
             let part = View(frame: NSMakeRect(0, 0, 0, 2))
             part.backgroundColor = NSColor.white.withAlphaComponent(0.3)
             part.layer?.cornerRadius = 1
-            self.addSubview(part)
+            self.addSubview(part, positioned: .below, relativeTo: self.selector)
             parts.append(part)
         }
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     
-    func set(_ index: Int, current: Double, duration: Double, playing: Bool) {
+    func set(_ index: Int, status: MediaPlayerStatus?, duration: Double, animated: Bool) {
         self.selected = index
                 
         CATransaction.begin()
@@ -52,18 +63,17 @@ final class StoryListNavigationView : View {
             } else {
                 part.backgroundColor = NSColor.white.withAlphaComponent(0.3)
             }
-            if i == index {
-                if playing {
-                    var rect = part.frame
-                    rect.size.width = part.frame.width * min(current / duration, 1)
-                    selector.frame = part.frame
-                    selector.layer?.animateBounds(from: NSMakeSize(rect.size.width, 2).bounds, to: part.frame.size.bounds, duration: duration - current, timingFunction: .linear, removeOnCompletion: false)
-                } else {
-                    selector.layer?.removeAnimation(forKey: "bounds")
-                    var rect = part.frame
-                    rect.size.width = part.frame.width * min(current / duration, 1)
-                    selector.frame = rect
+            if i == index, let status = status {
+                selector.frame = NSMakeRect(part.frame.minX, part.frame.minY, part.frame.width, 2)
+                switch status.status {
+                case .playing:
+                    selector.set(progress: duration == 0 ? 0 : CGFloat(status.timestamp / duration), animated: animated, duration: duration, beginTime: status.generationTimestamp, offset: status.timestamp, speed: Float(status.baseRate))
+                case .paused:
+                    selector.set(progress: duration == 0 ? 0 : CGFloat(status.timestamp / duration), animated: false)
+                case .buffering:
+                    selector.set(progress: duration == 0 ? 0 : CGFloat(status.timestamp / duration), animated: false)
                 }
+
             }
         }
         CATransaction.commit()
@@ -79,7 +89,7 @@ final class StoryListNavigationView : View {
         
         
         var x: CGFloat = 6
-        for (i, part) in parts.enumerated() {
+        for part in parts {
             let rect = CGRect(origin: CGPoint(x: x, y: 0), size: itemSize)
             transition.updateFrame(view: part, frame: rect)
             x += itemSize.width + 2

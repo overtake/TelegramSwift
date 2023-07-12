@@ -6091,7 +6091,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.updateHasPhotos(processedView.theme)
         
         genericView.tableView.merge(with: transition, appearAnimated: appearAnimated)
-        collectFloatingPhotos(animated: false, currentAnimationRows: currentAnimationRows)
+        collectFloatingPhotos(animated: transition.animated || transition.state.isNone, currentAnimationRows: currentAnimationRows)
 
         
         genericView.chatTheme = processedView.theme

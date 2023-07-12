@@ -1152,7 +1152,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
-       // self.scrollDidLiveScrolling()
+        self.scrollDidLiveScrolling()
         
         
         var point = self.clipView.bounds.origin

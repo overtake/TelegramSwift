@@ -340,6 +340,17 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
             close?()
             return .invoked
         }, with: controller, for: .Escape, priority: .modal)
+        
+        controller.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: true, { [weak controller] scroll in
+            var refreshStoryPeerIds:[PeerId] = []
+            controller?.tableView.enumerateVisibleItems(with: { item in
+                if let item = item as? StoryViewerRowItem {
+                    refreshStoryPeerIds.append(item.peer.id)
+                }
+                return true
+            })
+            context.account.viewTracker.refreshStoryStatsForPeerIds(peerIds: refreshStoryPeerIds)
+        }))
     }
     
     loadMore()

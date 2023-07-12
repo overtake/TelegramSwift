@@ -105,6 +105,8 @@ enum LocalAnimatedSticker : String {
     case change_sim
     case pirate_flag
     
+    case stories_archive
+    
     case share_folder
     
     case text_to_voice

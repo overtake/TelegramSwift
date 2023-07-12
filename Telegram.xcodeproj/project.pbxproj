@@ -364,6 +364,7 @@
 		2796FF0B274248FB00DA653C /* ObjcUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 2796FF0A274248FB00DA653C /* ObjcUtils */; };
 		2796FF0D274249B000DA653C /* RingBuffer in Frameworks */ = {isa = PBXBuildFile; productRef = 2796FF0C274249B000DA653C /* RingBuffer */; };
 		2796FF1027424BA800DA653C /* DateUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 2796FF0F27424BA800DA653C /* DateUtils */; };
+		27994EDA2A5EF7C30084D982 /* stories_archive.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27994ED92A5EF7C30084D982 /* stories_archive.tgs */; };
 		279A1E0D25E90D13007D48E7 /* PaymentWebInteractionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */; };
 		279A1E2825E945A2007D48E7 /* PaymentsReceiptController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */; };
 		279B03542A4ECCC3007D2AB9 /* menu_move_to_contacts.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 279B03532A4ECCC3007D2AB9 /* menu_move_to_contacts.tgs */; };
@@ -1830,6 +1831,7 @@
 		2796FF062742480500DA653C /* CalendarUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CalendarUtils; path = packages/CalendarUtils; sourceTree = "<group>"; };
 		2796FF09274248BC00DA653C /* ObjcUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ObjcUtils; path = packages/ObjcUtils; sourceTree = "<group>"; };
 		2796FF0E27424A7C00DA653C /* DateUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = DateUtils; path = packages/DateUtils; sourceTree = "<group>"; };
+		27994ED92A5EF7C30084D982 /* stories_archive.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = stories_archive.tgs; sourceTree = "<group>"; };
 		279A1E0C25E90D13007D48E7 /* PaymentWebInteractionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentWebInteractionController.swift; sourceTree = "<group>"; };
 		279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsReceiptController.swift; sourceTree = "<group>"; };
 		279B03532A4ECCC3007D2AB9 /* menu_move_to_contacts.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_move_to_contacts.tgs; sourceTree = "<group>"; };
@@ -5707,6 +5709,7 @@
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
+				27994ED92A5EF7C30084D982 /* stories_archive.tgs */,
 				27F67415297680DC0014DCB9 /* duck_empty.tgs */,
 				27C6B65C29DC123500F7E7AC /* share_folder.tgs */,
 				276F9B892935FD7800E35997 /* pirate_flag.tgs */,
@@ -6390,6 +6393,7 @@
 				27D29AA227F1DE8E00D4BC64 /* menu_reload.tgs in Resources */,
 				275549142747C24F0098A3CD /* device_edge.tgs in Resources */,
 				27336733276240A60027441E /* menu_view_replies.tgs in Resources */,
+				27994EDA2A5EF7C30084D982 /* stories_archive.tgs in Resources */,
 				27F2BBC527BE4E7B00A37463 /* code_note.tgs in Resources */,
 				2773A54625FA324B00AB45E9 /* voice_chat_mute.tgs in Resources */,
 				9F03681622771A9700456348 /* anim_mute.json in Resources */,

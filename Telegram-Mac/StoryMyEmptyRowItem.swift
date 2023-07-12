@@ -12,7 +12,7 @@ import TelegramCore
 
 final class StoryMyEmptyRowItem : GeneralRowItem {
     fileprivate let titleLayout: TextViewLayout
-    fileprivate let sticker: LocalAnimatedSticker = LocalAnimatedSticker.chiken_born
+    fileprivate let sticker: LocalAnimatedSticker = LocalAnimatedSticker.stories_archive
     fileprivate let stickerSize: NSSize = NSMakeSize(120, 120)
     fileprivate let context: AccountContext
     fileprivate let showArchive: ()->Void
@@ -85,7 +85,7 @@ private final class StoryMyEmptyRowView: GeneralContainableRowView {
         
         archive.set(font: .medium(.title), for: .Normal)
         archive.set(color: theme.colors.accent, for: .Normal)
-        archive.set(text: "Show Archive", for: .Normal)
+        archive.set(text: "Open Archive", for: .Normal)
         archive.sizeToFit(NSMakeSize(10, 10), NSMakeSize(200, 50), thatFit: false)
         
         imageView.update(with: item.sticker.file, size: item.stickerSize, context: item.context, parent: nil, table: item.table, parameters: params, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
