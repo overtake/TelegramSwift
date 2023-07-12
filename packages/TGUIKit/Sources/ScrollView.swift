@@ -181,20 +181,8 @@ open class ScrollView: NSScrollView{
         
     }
     
-    private var isBegan: Bool = false
     
     open override func scrollWheel(with event: NSEvent) {
-        
-        switch event.phase {
-        case .began:
-            isBegan = true
-        case .cancelled:
-            isBegan = false
-        case .ended:
-            isBegan = false
-        default:
-            break
-        }
         
         guard let window = window as? Window else {
             super.scrollWheel(with: event)
@@ -205,7 +193,7 @@ open class ScrollView: NSScrollView{
             return
         }
         
-        if !window.inLiveSwiping, super.responds(to: #selector(scrollWheel(with:))), isBegan {
+        if !window.inLiveSwiping, super.responds(to: #selector(scrollWheel(with:))) {
             super.scrollWheel(with: event)
         }
 //
