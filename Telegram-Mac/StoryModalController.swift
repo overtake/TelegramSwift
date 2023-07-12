@@ -2274,12 +2274,17 @@ final class StoryModalController : ModalViewController, Notifable {
             }, appearance: storyTheme.appearance)
         }, markAsRead: { [weak self] peerId, storyId in
             self?.stories.markAsSeen(id: .init(peerId: peerId, id: storyId))
-        }, showViewers: { story in
-            if let peerId = story.peer?.id {
-                showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
-                    openPeerInfo(peerId, nil)
-                }), for: context.window)
+        }, showViewers: { [weak self] story in
+            if story.storyItem.expirationTimestamp + 24 * 60 * 60 < context.timestamp {
+                self?.genericView.showTooltip(.tooltip("List of viewers isn't available after 24 hours of story expiration.", MenuAnimation.menu_clear_history))
+            } else {
+                if let peerId = story.peer?.id {
+                    showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
+                        openPeerInfo(peerId, nil)
+                    }), for: context.window)
+                }
             }
+            
         }, share: share, copyLink: copyLink, startRecording: { [weak self] autohold in
             guard let `self` = self else {
                 return
@@ -2295,8 +2300,10 @@ final class StoryModalController : ModalViewController, Notifable {
         }, hashtag: { [weak self] string in
             self?.close()
             self?.context.bindings.globalSearch(string)
-        }, report: report, toggleHide: toggleHide, showFriendsTooltip: { [weak self] control, peer in
-            self?.genericView.showTooltip(.tooltip(strings().storyTooltipCloseFriends(peer.compactDisplayTitle), MenuAnimation.menu_clear_history))
+        }, report: report,
+        toggleHide: toggleHide,
+        showFriendsTooltip: { [weak self] control, peer in
+            self?.genericView.showTooltip(.tooltip(strings().storyTooltipCloseFriends(peer.compactDisplayTitle), MenuAnimation.menu_add_to_favorites))
         }, showTooltipText: { [weak self] text, animation in
             self?.genericView.showTooltip(.tooltip(text, animation))
         }, storyContextMenu: { story in
@@ -2318,13 +2325,13 @@ final class StoryModalController : ModalViewController, Notifable {
             }
             
             if peer._asPeer().storyArchived {
-                menu.addItem(ContextMenuItem("Unhide \(peer._asPeer().compactDisplayTitle)", handler: {                     toggleHide(peer._asPeer(), false)
-                }, itemImage: MenuAnimation.menu_show_message.value))
+                menu.addItem(ContextMenuItem("Archive \(peer._asPeer().compactDisplayTitle)", handler: {                     toggleHide(peer._asPeer(), false)
+                }, itemImage: MenuAnimation.menu_unarchive.value))
 
             } else {
-                menu.addItem(ContextMenuItem("Hide \(peer._asPeer().compactDisplayTitle)", handler: {
+                menu.addItem(ContextMenuItem("Archive \(peer._asPeer().compactDisplayTitle)", handler: {
                     toggleHide(peer._asPeer(), true)
-                }, itemImage: MenuAnimation.menu_move_to_contacts.value))
+                }, itemImage: MenuAnimation.menu_archive.value))
             }
             
           

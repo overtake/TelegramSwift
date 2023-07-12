@@ -202,7 +202,10 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
             }
             
             self.loadingDisposable.set(nil)
-            self.listStateValue.list = list
+            var listStateValue = self.listStateValue
+            listStateValue.list = list
+            listStateValue.loadingState = loadingState
+            self.listStateValue = listStateValue
         }
     }
     
@@ -265,7 +268,9 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
                 }
             }
             self.loadingDisposable.set(nil)
-            self.listStateValue.list = list
+            var listStateValue = self.listStateValue
+            listStateValue.list = list
+            self.listStateValue = listStateValue
             if case .loading = self.listStateValue.loadingState {
                 self.loadMore()
             }
@@ -291,10 +296,10 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
                 list.append(member)
             }
         }
-        var updatedValue = self.listStateValue
-        updatedValue.list = list
-        updatedValue.loadingState = .ready(hasMore: members.count >= requestBatchSize)
-        self.listStateValue = updatedValue
+        var listStateValue = self.listStateValue
+        listStateValue.list = list
+        listStateValue.loadingState = .ready(hasMore: members.count >= requestBatchSize)
+        self.listStateValue = listStateValue
         if firstLoad {
             self.checkUpdateHead()
         }
@@ -539,7 +544,9 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
             }
         }
         if updatedList {
-            self.listStateValue.list = list
+            var listStateValue = self.listStateValue
+            listStateValue.list = list
+            self.listStateValue = listStateValue
         }
     }
 
@@ -652,6 +659,8 @@ private final class PeerChannelMemberContextWithSubscribers {
     private let becameEmpty: () -> Void
     
     private var emptyTimer: SwiftSignalKit.Timer?
+    private var currentValue: ChannelMemberListState?
+
     
     init(context: ChannelMemberCategoryListContext, emptyTimeout: Double, becameEmpty: @escaping () -> Void) {
         self.context = context
@@ -660,6 +669,7 @@ private final class PeerChannelMemberContextWithSubscribers {
         self.disposable.set((context.listState
             |> deliverOnMainQueue).start(next: { [weak self] value in
                 if let strongSelf = self {
+                    strongSelf.currentValue = value
                     for f in strongSelf.subscribers.copyItems() {
                         f(value)
                     }
@@ -689,7 +699,10 @@ private final class PeerChannelMemberContextWithSubscribers {
     func subscribe(requestUpdate: Bool, updated: @escaping (ChannelMemberListState) -> Void) -> Disposable {
         let wasEmpty = self.subscribers.isEmpty
         let index = self.subscribers.add(updated)
-        updated(self.context.listStateValue)
+        if let currentValue = self.currentValue {
+            updated(currentValue)
+        }
+
         if wasEmpty {
             self.emptyTimer?.invalidate()
             if requestUpdate {

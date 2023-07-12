@@ -408,9 +408,12 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 }, itemImage: MenuAnimation.menu_archive.value))
             }
             let selecting = self?.stateValue.with { $0.selected != nil } == true
-            menu.addItem(ContextMenuItem(selecting ? "Done" : "Select", handler: {
-                self?.toggleSelection()
-            }, itemImage: MenuAnimation.menu_select_multiple.value))
+            let hasItems = self?.stateValue.with { $0.state?.items.count } != 0
+            if hasItems {
+                menu.addItem(ContextMenuItem(selecting ? "Done" : "Select", handler: {
+                    self?.toggleSelection()
+                }, itemImage: MenuAnimation.menu_select_multiple.value))
+            }
 
             return menu
         }

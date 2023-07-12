@@ -460,7 +460,7 @@ private final class StoryListContainer : Control {
     }
     
     var visibleRange: NSRange {
-        let range = NSMakeRange(0, Int(ceil(max(0, floor(scrollView.documentOffset.x)) + frame.width / 70)))
+        let range = NSMakeRange(0, Int(ceil(max(0, floor(scrollView.documentOffset.x)) + frame.width / 60)))
         return range
     }
     

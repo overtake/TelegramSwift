@@ -132,7 +132,6 @@ final class ChatAvatarView : Control {
             let transition: ContainedViewLayoutTransition
             if !isNew {
                 transition = .animated(duration: 0.2, curve: .easeOut)
-                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             } else {
                 transition = .immediate
             }
