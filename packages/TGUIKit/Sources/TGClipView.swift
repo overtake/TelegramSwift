@@ -214,6 +214,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         }
     }
     
+    public override func scroll(to newOrigin: NSPoint) {
+        bounds.origin = newOrigin
+    }
     
     func handleCompletionIfNeeded(withSuccess success: Bool) {
         self.destinationOrigin = nil

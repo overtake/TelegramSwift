@@ -1014,9 +1014,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         liveScrollStartPosition = nil
     }
     
-    open override func scroll(_ clipView: NSClipView, to point: NSPoint) {
-        clipView.scroll(to: point)
-    }
     
     public var _scrollWillStartLiveScrolling:(()->Void)?
     public var _scrollDidLiveScrolling:(()->Void)?
