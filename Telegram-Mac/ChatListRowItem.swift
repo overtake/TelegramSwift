@@ -445,7 +445,7 @@ class ChatListRowItem: TableRowItem {
             let unseenCount: Int = storyState.items.reduce(0, {
                 $0 + ($1.unseenCount > 0 ? 1 : 0)
             })
-            self.avatarStoryIndicator = .init(stats: .init(totalCount: storyState.items.count, unseenCount: unseenCount), presentation: theme)
+            self.avatarStoryIndicator = .init(stats: .init(totalCount: storyState.items.count, unseenCount: unseenCount, hasUnseenCloseFriends: false), presentation: theme)
         } else {
             self.avatarStoryIndicator = nil
         }

@@ -448,7 +448,7 @@ class StoryImageView : StoryView {
                 if awaiting {
                     self.play()
                 }
-            } 
+            }
         }
     }
     private var awaitPlaying: Bool = false
@@ -506,7 +506,7 @@ class StoryVideoView : StoryImageView {
             if status.status == .playing {
                 self?.updateState(.playing(currentStatus))
             } else if status.status == .paused {
-                self?.updateState(.paused(currentStatus))
+                self?.updateState(.loading(currentStatus))
             } else if case .buffering = status.status {
                 self?.updateState(.loading(currentStatus))
             }

@@ -1094,6 +1094,13 @@ private final class StoryViewController: Control, Notifable {
         return self.storyContext?.stateValue?.previousSlice != nil || self.storyContext?.stateValue?.slice?.previousItemId != nil
     }
     
+    var hasNextSlice: Bool {
+        return self.storyContext?.stateValue?.nextSlice != nil
+    }
+    var hasPrevSlice: Bool {
+        return self.storyContext?.stateValue?.previousSlice != nil
+    }
+    
     private func updatePrevNextControls(_ event: NSEvent, animated: Bool = true) {
         guard let current = self.current, let arguments = self.arguments else {
             return
@@ -1678,11 +1685,11 @@ private final class StoryViewController: Control, Notifable {
                 self?.returnGroupIndex(previous: previous)
                 switch result {
                 case .moveBack:
-                    if self?.hasPrevGroup == false, value > 0.5 {
+                    if self?.hasPrevSlice == false, value > 0.5 {
                         self?.close.send(event: .Click)
                     }
                 case .moveNext:
-                    if self?.hasNextGroup == false, value > 0.5 {
+                    if self?.hasNextSlice == false, value > 0.5 {
                         self?.close.send(event: .Click)
                     }
                 default:
@@ -1748,14 +1755,14 @@ private final class StoryViewController: Control, Notifable {
             let delta: CGFloat
             let maxDelta: CGFloat = log(25.0)
             if scrollDeltaX > 0 {
-                if !hasPrevGroup {
+                if !hasPrevSlice {
                     delta = log(scrollDeltaX) / maxDelta * 25
                     autofinish = false
                 } else {
                     delta = scrollDeltaX
                 }
             } else {
-                if !hasNextGroup {
+                if !hasNextSlice {
                     delta = -(log(abs(scrollDeltaX)) / maxDelta * 25)
                     autofinish = false
                 } else {
@@ -1821,12 +1828,12 @@ private final class StoryViewController: Control, Notifable {
             var cancelAnyway = false
             switch result {
             case .moveBack:
-                if !self.hasPrevGroup, value > 0.5 {
+                if !self.hasPrevSlice, value > 0.5 {
 //                    progress = 1.0
                     cancelAnyway = true
                 }
             case .moveNext:
-                if !self.hasNextGroup, value > 0.5 {
+                if !self.hasNextSlice, value > 0.5 {
 //                    progress = 1.0
                     cancelAnyway = true
                 }

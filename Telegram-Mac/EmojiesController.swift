@@ -376,6 +376,7 @@ private struct State : Equatable {
         }
     }
     var sections:[Section]
+    var itemsDict: [MediaId: StickerPackItem]
     var peer: PeerEquatable?
     var emojiState: EmojiState = .init(selected: nil)
     var revealed:[Int64: Bool] = [:]
@@ -549,27 +550,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
+    
     var index: Int32 = 0
-    
-//    entries.append(.sectionId(sectionId, type: .custom(10)))
-//    sectionId += 1
-    
-//    if arguments.mode != .reactions {
-    
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return GeneralRowItem(initialSize, height: 46, stableId: stableId, backgroundColor: .clear)
-        }))
-        index += 1
-//    } else {
-//        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-//            return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
-//        }))
-//        index += 1
-//    }
-    
-    
-//    entries.append(.sectionId(sectionId, type: .custom(46)))
-//    sectionId += 1
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+        return GeneralRowItem(initialSize, height: 46, stableId: stableId, backgroundColor: .clear)
+    }))
+    index += 1
     
     var e = emojiesInstance
     e[EmojiSegment.Recent] = state.recent.emojies
@@ -580,18 +566,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     let isPremium = state.peer?.peer.isPremium == true
-    
-    let recentDict:[MediaId: StickerPackItem] = state.sections.reduce([:], { current, value in
-        return current + value.dict
-    })
+        
     var recentAnimated:[StickerPackItem] = state.recent.animated.compactMap { mediaId in
-        if let item = recentDict[mediaId] {
+        if let item = state.itemsDict[mediaId] {
             if !item.file.isPremiumEmoji || isPremium {
                 return item
             }
         }
         return nil
     }
+    
     
     if arguments.mode == .forumTopic {
         let file = ForumUI.makeIconFile(title: state.externalTopic.title, iconColor: state.externalTopic.iconColor)
@@ -2019,7 +2003,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         let mode = self.mode
         let actionsDisposable = DisposableSet()
         
-        let initialState = State(sections: [], selectedItems: self.selectedItems)
+        let initialState = State(sections: [], itemsDict: [:], selectedItems: self.selectedItems)
         
         let statePromise = ValuePromise<State>(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -2183,17 +2167,17 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             
             let initialSize = initialSize.modify { $0 }
             
-            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: false, animateEverything: true, grouping: true)
+            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: true, grouping: true)
             
             
-            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: false, animateEverything: true, grouping: true)
+            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: true, grouping: true)
 
             return combineLatest(sectionsTransition, packsTransition) |> map { values in
                 return (sections: values.0, packs: values.1, state: state.state)
             }
             
         } |> deliverOnMainQueue
-        
+                        
         disposable.set(transition.start(next: { [weak self] values in
             self?.genericView.update(sections: values.sections, packs: values.packs, state: values.state, context: context, arguments: arguments, mode: mode)
             
@@ -2293,7 +2277,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let peer = getPeerView(peerId: context.peerId, postbox: context.account.postbox)
         
-        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic, searchCategories).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic, searchCategories in
+        actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, context.account.viewTracker.featuredEmojiPacks(), peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic, searchCategories).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic, searchCategories in
             
             
             var featuredStatusEmoji: OrderedItemListView?
@@ -2349,11 +2333,10 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 }
             }
             
-
-            
             updateState { current in
                 var current = current
                 var sections: [State.Section] = []
+                var itemsDict: [MediaId: StickerPackItem] = [:]
                 for (_, info, _) in view.collectionInfos {
                     var files: [StickerPackItem] = []
                     var dict: [MediaId: StickerPackItem] = [:]
@@ -2365,6 +2348,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                                 if let item = view.entries[i].item as? StickerPackItem {
                                     files.append(item)
                                     dict[item.file.fileId] = item
+                                    itemsDict[item.file.fileId] = item
                                 }
                             }
                         }
@@ -2389,6 +2373,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.recentStatusItems = recentStatusItems
                 current.forumTopicItems = forumTopic
                 current.sections = sections
+                current.itemsDict = itemsDict
                 current.search = search
                 current.reactions = reactions
                 current.recent = recentEmoji

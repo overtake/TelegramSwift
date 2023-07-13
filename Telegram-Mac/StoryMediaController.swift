@@ -184,6 +184,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
                 index = index.globalPredecessor()
             }
             entries.insert(.section(index: index), at: 0)
+            entries.append(.section(index: MessageIndex.absoluteLowerBound()))
         }
 
     } else {

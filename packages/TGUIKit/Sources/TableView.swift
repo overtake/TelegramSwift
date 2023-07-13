@@ -186,6 +186,7 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
     public let searchState: TableSearchViewState?
     public let isPartOfTransition: Bool
     public let isOnMainQueue: Bool
+    fileprivate let uniqueId = arc4random64()
     public init(deleted:[Int], inserted:[(Int,TableRowItem)], updated:[(Int,TableRowItem)], animated:Bool = false, state:TableScrollState = .none(nil), grouping:Bool = true, animateVisibleOnly: Bool = false, searchState: TableSearchViewState? = nil, isPartOfTransition: Bool = false) {
         self.animated = animated
         self.state = state
@@ -2575,8 +2576,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func merge(with transition:TableUpdateTransition, appearAnimated: Bool = false) -> Void {
         self.merge(with: transition, forceApply: false, appearAnimated: appearAnimated)
     }
-    
+    private var processedIds: Set<Int64> = Set()
     private func merge(with transition:TableUpdateTransition, forceApply: Bool, appearAnimated: Bool) -> Void {
+        
+        
+        if processedIds.contains(transition.uniqueId)  {
+            return
+        }
+        self.processedIds.insert(transition.uniqueId)
         
         assertOnMainThread()
         assert(!updating)

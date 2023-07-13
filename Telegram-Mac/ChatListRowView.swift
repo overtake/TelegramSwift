@@ -1776,6 +1776,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         self.expandView?.animateOnce()
                     }
                 }
+                self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
                 photo.setState(account: item.context.account, state: .Empty)
             } else {
                 self.archivedPhoto?.removeFromSuperview()

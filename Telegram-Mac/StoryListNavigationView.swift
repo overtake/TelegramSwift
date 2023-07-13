@@ -53,7 +53,7 @@ final class StoryListNavigationView : View {
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     
-    func set(_ index: Int, status: MediaPlayerStatus?, duration: Double, animated: Bool) {
+    func set(_ index: Int, state: StoryView.State, duration: Double, animated: Bool) {
         self.selected = index
                 
         CATransaction.begin()
@@ -63,16 +63,19 @@ final class StoryListNavigationView : View {
             } else {
                 part.backgroundColor = NSColor.white.withAlphaComponent(0.3)
             }
-            if i == index, let status = status {
+            if i == index {
                 selector.frame = NSMakeRect(part.frame.minX, part.frame.minY, part.frame.width, 2)
-                switch status.status {
-                case .playing:
+                switch state {
+                case let .playing(status):
                     selector.set(progress: duration == 0 ? 0 : CGFloat(status.timestamp / duration), animated: animated, duration: duration, beginTime: status.generationTimestamp, offset: status.timestamp, speed: Float(status.baseRate))
-                case .paused:
-                    selector.set(progress: duration == 0 ? 0 : CGFloat(status.timestamp / duration), animated: false)
-                case .buffering:
-                    selector.set(progress: duration == 0 ? 0 : CGFloat(status.timestamp / duration), animated: false)
+                default:
+                    if let status = state.status {
+                        selector.set(progress: duration == 0 ? 0 : CGFloat(status.timestamp / duration), animated: false)
+                    } else {
+                        selector.set(progress: 0, animated: false)
+                    }
                 }
+                
 
             }
         }
