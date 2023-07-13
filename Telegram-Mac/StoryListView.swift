@@ -947,11 +947,11 @@ final class StoryListView : Control, Notifable {
         
         switch state {
         case .playing:
-            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, status: view.state.status, duration: view.duration, animated: true)
+            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, state: view.state, duration: view.duration, animated: true)
         case .finished:
             self.arguments?.nextStory()
         default:
-            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, status: view.state.status, duration: view.duration, animated: true)
+            self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, state: view.state, duration: view.duration, animated: true)
         }
     }
     

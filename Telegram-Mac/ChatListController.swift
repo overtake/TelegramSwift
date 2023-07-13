@@ -1253,7 +1253,7 @@ class ChatListController : PeersListController {
             
             switch direction {
             case let .left(_state):
-                if !self.mode.isPlain && checkFolder {
+                if (!self.mode.isPlain || self.mode.groupId == .archive) && checkFolder {
                     swipeState = nil
                 } else {
                     swipeState = _state

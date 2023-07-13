@@ -215,7 +215,7 @@ func prepareInputDataTransition(left:[AppearanceWrapperEntry<InputDataEntry>], r
             return entry.item(arguments: arguments, initialSize: initialSize)
         }
         
-        let applyQueue = prepareQueue
+        let applyQueue = Queue.concurrentDefaultQueue()
         
         let cancelled: Atomic<Bool> = Atomic(value: false)
         
