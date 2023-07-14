@@ -303,9 +303,9 @@ final class StoryContentContextImpl: StoryContentContext {
                 if let cachedPeerDataView = views.views[PostboxViewKey.cachedPeerData(peerId: peerId)] as? CachedPeerDataView, let cachedUserData = cachedPeerDataView.cachedPeerData as? CachedUserData {
                     var isMuted = false
                     if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings {
-                        isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings)
+                        isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings, topSearchPeers: [])
                     } else {
-                        isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: nil)
+                        isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: nil, topSearchPeers: [])
                     }
                     additionalPeerData = StoryContentContextState.AdditionalPeerData(isMuted: isMuted, areVoiceMessagesAvailable: cachedUserData.voiceMessagesAvailable)
                 } else {
@@ -1157,7 +1157,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 return
             }
             
-            let isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings._asNotificationSettings())
+            let isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings._asNotificationSettings(), topSearchPeers: [])
             
             let additionalPeerData = StoryContentContextState.AdditionalPeerData(
                 isMuted: isMuted,
@@ -1308,7 +1308,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 return
             }
             
-            let isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings._asNotificationSettings())
+            let isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings._asNotificationSettings(), topSearchPeers: [])
             
             let additionalPeerData = StoryContentContextState.AdditionalPeerData(
                 isMuted: isMuted,

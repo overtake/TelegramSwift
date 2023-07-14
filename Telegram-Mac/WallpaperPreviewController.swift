@@ -412,11 +412,11 @@ private final class WallpaperPreviewView: View {
         
         switch wallpaper {
         case .color:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 80, stableId: 0, backgroundColor: .clear))
         case .file(_, _, _, _):
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 80, stableId: 0, backgroundColor: .clear))
         default:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 80, stableId: 0, backgroundColor: .clear))
         }
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
@@ -488,7 +488,6 @@ private final class WallpaperPreviewView: View {
         default:
             break
         }
-
     }
     
     var croppedRect: NSRect {
@@ -567,16 +566,9 @@ private final class WallpaperPreviewView: View {
        
         
         let backgroundSize: NSSize = size
-//        switch self.previewState  {
-//        case .color:
-//            backgroundSize = NSMakeSize(frame.width, size.height - colorPickerSize.height)
-//        case .pattern:
-//            backgroundSize = NSMakeSize(frame.width, frame.height - colorPickerSize.height)
-//        default:
-//            backgroundSize = frame.size
-//        }
+
         transition.updateFrame(view: backgroundView, frame: backgroundSize.bounds)
-        backgroundView.updateLayout(size: backgroundSize, transition: transition)
+//        backgroundView.updateLayout(size: backgroundSize, transition: transition)
         
         switch previewState {
         case .color, .pattern:            
@@ -628,9 +620,9 @@ private final class WallpaperPreviewView: View {
 
         switch previewState {
         case .color, .pattern:
-            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: frame.height - colorPicker.frame.height - tableView.listHeight - 10 - 120), size: documentSize))
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: size.height - colorPicker.frame.height - tableView.listHeight - 10 - 100), size: documentSize))
         case .normal:
-            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: frame.height - tableView.listHeight - 10 - 120), size: documentSize))
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: size.height - tableView.listHeight - 10 - 120), size: documentSize))
         }
         
     }
@@ -1315,6 +1307,8 @@ class WallpaperPreviewController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
         
         genericView.ready = { [weak self] in
             self?.readyOnce()

@@ -216,6 +216,7 @@ class PeerListContainerView : Control {
         fileprivate var button:PremiumStatusControl?
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
+            layer?.masksToBounds = false
         }
         
         private var peer: Peer?

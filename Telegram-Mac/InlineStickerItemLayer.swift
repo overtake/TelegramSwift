@@ -426,7 +426,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.frame = size.bounds
         self.initialize()
         self.file = file
-        self.updateSize(size: size, sync: false)
+        self.updateSize(size: size, sync: true)
         
     }
 

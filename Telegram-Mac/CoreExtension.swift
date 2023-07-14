@@ -456,6 +456,12 @@ public extension Message {
         }
         return false
     }
+    var isExpiredReplyStory: Bool {
+        if let reply = self.storyAttribute, let data = associatedStories[reply.storyId] {
+            return data.get(Stories.StoredItem.self) == nil
+        }
+        return false
+    }
     
     func translationAttribute(toLang: String) -> TranslationMessageAttribute? {
         for attr in attributes {
