@@ -17,7 +17,8 @@ final class ChatAvatarView : Control {
     private let avatar: AvatarControl = AvatarControl(font: .avatar(.title))
     
     private var photoVideoView: MediaPlayerView?
-    private var photoVideoPlayer: MediaPlayer? 
+    private var photoVideoPlayer: MediaPlayer?
+    private let backgroundView = View()
 
     private let disposable = MetaDisposable()
     private var storyComponent: AvatarStoryIndicatorComponent?
@@ -25,9 +26,14 @@ final class ChatAvatarView : Control {
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        backgroundView.frame = frameRect.size.bounds
+        addSubview(backgroundView)
         avatar.userInteractionEnabled = false
         avatar.setFrameSize(frameRect.size)
         addSubview(avatar)
+        
+        backgroundView.layer?.cornerRadius = frameRect.height / 2
+        
         self.scaleOnClick = true
     }
     
@@ -209,5 +215,10 @@ final class ChatAvatarView : Control {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        backgroundView.backgroundColor = theme.colors.background
     }
 }
