@@ -660,7 +660,13 @@ class ChatMessageItem: ChatRowItem {
                 }
             }
             
-            let interactions = globalLinkExecutor
+            let interactions: TextViewInteractions = globalLinkExecutor
+            if let adAttribute = message.adAttribute {
+                interactions.processURL = { [weak chatInteraction] link in
+                    chatInteraction?.markAdAction(adAttribute.opaqueId)
+                    globalLinkExecutor.processURL(link)
+                }
+            } 
             interactions.copy = {
                 selectManager.copy(selectManager)
                 return !selectManager.isEmpty

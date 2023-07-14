@@ -1966,16 +1966,16 @@ final class GroupCallUIController : ViewController {
         }, with: self, for: .mouseExited, priority: .modal)
         
         
-        window.set(handler: { [weak arguments, weak self] event in
-            if self?.data.call.isStream == false {
-                if videoSourcesValue.with ({ $0.screencast == nil }) {
-                    arguments?.shareSource(.screencast, true)
-                } else {
-                    arguments?.cancelShareScreencast()
-                }
-            }
-            return .invokeNext
-        }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
+//        window.set(handler: { [weak arguments, weak self] event in
+//            if self?.data.call.isStream == false {
+//                if videoSourcesValue.with ({ $0.screencast == nil }) {
+//                    arguments?.shareSource(.screencast, true)
+//                } else {
+//                    arguments?.cancelShareScreencast()
+//                }
+//            }
+//            return .invokeNext
+//        }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
         
         window.set(handler: { [weak arguments, weak self] event in
             if self?.data.call.isStream == false {
