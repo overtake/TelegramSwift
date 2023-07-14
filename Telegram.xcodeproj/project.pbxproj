@@ -196,6 +196,7 @@
 		275549192747C24F0098A3CD /* device_ubuntu.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2755490E2747C24D0098A3CD /* device_ubuntu.tgs */; };
 		2755491A2747C24F0098A3CD /* device_linux.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2755490F2747C24F0098A3CD /* device_linux.tgs */; };
 		2755491D274B7FCB0098A3CD /* TextRecognizing in Frameworks */ = {isa = PBXBuildFile; productRef = 2755491C274B7FCB0098A3CD /* TextRecognizing */; };
+		275C14132A61780F000DDACF /* expired_story.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275C14122A61780F000DDACF /* expired_story.tgs */; };
 		275DDC3A267B8702009CF884 /* bot_menu_close.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC38267B8701009CF884 /* bot_menu_close.tgs */; };
 		275DDC3B267B8702009CF884 /* bot_close_menu.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC39267B8702009CF884 /* bot_close_menu.tgs */; };
 		275F259A28127F5D00D5A5D7 /* Avatar_StickersList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F259928127F5D00D5A5D7 /* Avatar_StickersList.swift */; };
@@ -1652,6 +1653,7 @@
 		2755490E2747C24D0098A3CD /* device_ubuntu.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_ubuntu.tgs; sourceTree = "<group>"; };
 		2755490F2747C24F0098A3CD /* device_linux.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_linux.tgs; sourceTree = "<group>"; };
 		2755491B274B7B3C0098A3CD /* TextRecognizing */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TextRecognizing; path = packages/TextRecognizing; sourceTree = "<group>"; };
+		275C14122A61780F000DDACF /* expired_story.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = expired_story.tgs; sourceTree = "<group>"; };
 		275DDC38267B8701009CF884 /* bot_menu_close.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_menu_close.tgs; sourceTree = "<group>"; };
 		275DDC39267B8702009CF884 /* bot_close_menu.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_close_menu.tgs; sourceTree = "<group>"; };
 		275F259928127F5D00D5A5D7 /* Avatar_StickersList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_StickersList.swift; sourceTree = "<group>"; };
@@ -5709,6 +5711,7 @@
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
+				275C14122A61780F000DDACF /* expired_story.tgs */,
 				27994ED92A5EF7C30084D982 /* stories_archive.tgs */,
 				27F67415297680DC0014DCB9 /* duck_empty.tgs */,
 				27C6B65C29DC123500F7E7AC /* share_folder.tgs */,
@@ -6543,6 +6546,7 @@
 				27CE1564297966D8001F8CE8 /* emoji_category_like.tgs in Resources */,
 				27478F5C25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs in Resources */,
 				C250B01C1DB670B4004E9FBE /* url-schemes.txt in Resources */,
+				275C14132A61780F000DDACF /* expired_story.tgs in Resources */,
 				D0A5586E2574F75B00B7C182 /* group_call_chatlist_typing.json in Resources */,
 				27CE156B297966D8001F8CE8 /* emoji_category_dislike.tgs in Resources */,
 				9F03681122771A9700456348 /* archiveAvatar.json in Resources */,

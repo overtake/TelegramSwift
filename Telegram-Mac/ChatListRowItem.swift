@@ -852,10 +852,8 @@ class ChatListRowItem: TableRowItem {
                 textLeftCutout += contentImageTrailingSpace
             }
         }
-        if let message = messages.first(where: { $0.storyAttribute != nil }) {
-            if message.effectivelyIncoming(context.peerId) {
-                textLeftCutout += 20
-            }
+        if let _ = messages.first(where: { $0.storyAttribute != nil }) {
+            textLeftCutout += 20
         }
 
         if hasUnreadMentions {
@@ -1772,9 +1770,7 @@ class ChatListRowItem: TableRowItem {
     
     var isReplyToStory: Bool {
         if let message = self.messages.first(where: { $0.storyAttribute != nil }) {
-            if message.effectivelyIncoming(context.peerId) {
-                return true
-            }
+            return true
         }
         return false
     }

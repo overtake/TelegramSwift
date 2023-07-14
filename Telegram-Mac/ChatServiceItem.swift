@@ -866,6 +866,7 @@ class ChatServiceItem: ChatRowItem {
                 }
             }
             _ = attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
+            
         } else if message.id.peerId.namespace == Namespaces.Peer.CloudUser, message.autoremoveAttribute != nil || message.autoclearTimeout != nil {
             let isPhoto: Bool = message.anyMedia is TelegramMediaImage
             if authorId == context.peerId {
@@ -885,6 +886,13 @@ class ChatServiceItem: ChatRowItem {
                     }
                     _ = attributedString.append(string:  strings().chatServiceStoryExpiredMentionTextOutgoing(name), color: grayTextColor, font: .normal(theme.fontSize))
                 }
+                
+                attributedString.insert(.initialize(string: "🤡", color: grayTextColor, font: .normal(theme.fontSize)), at: 0)
+                let file = LocalAnimatedSticker.expired_story.monochromeFile
+                
+                attributedString.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: "🤡"))), range: NSMakeRange(0, 2))
+
+                
             } else if let item = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
                 let info = NSMutableAttributedString()
                 

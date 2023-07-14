@@ -185,6 +185,8 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
             }
             entries.insert(.section(index: index), at: 0)
             entries.append(.section(index: MessageIndex.absoluteLowerBound()))
+        } else {
+            entries.append(.section(index: MessageIndex.absoluteLowerBound()))
         }
 
     } else {

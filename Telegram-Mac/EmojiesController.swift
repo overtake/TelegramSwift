@@ -2167,10 +2167,10 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             
             let initialSize = initialSize.modify { $0 }
             
-            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: true, grouping: true)
+            let sectionsTransition = prepareInputDataTransition(left: previousSections.swap(sectionEntries), right: sectionEntries, animated: !onMain, searchState: state.sections.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: false, grouping: true)
             
             
-            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: true, grouping: true)
+            let packsTransition = prepareInputDataTransition(left: previousPacks.swap(packEntries), right: packEntries, animated: !onMain, searchState: state.packs.searchState, initialSize: initialSize, arguments: inputArguments, onMainQueue: onMain, animateEverything: false, grouping: true)
 
             return combineLatest(sectionsTransition, packsTransition) |> map { values in
                 return (sections: values.0, packs: values.1, state: state.state)

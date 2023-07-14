@@ -2135,6 +2135,9 @@ class ChatRowItem: TableRowItem {
                 if let story = message.media.first as? TelegramMediaStory, message.isExpiredStory {
                     self.replyModel = ExpiredStoryReplyModel(message: message, storyId: story.storyId, bubbled: renderType == .bubble, context: context, presentation: replyPresentation)
                     replyModel?.isSideAccessory = isBubbled && !hasBubble
+                } else if let storyReply = message.storyAttribute, message.isExpiredReplyStory {
+                    self.replyModel = ExpiredStoryReplyModel(message: message, storyId: storyReply.storyId, bubbled: renderType == .bubble, context: context, presentation: replyPresentation)
+                    replyModel?.isSideAccessory = isBubbled && !hasBubble
                 }
                 
                 let paid: Bool

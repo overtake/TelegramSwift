@@ -1173,7 +1173,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case administrators(section:Int, count: String, viewType: GeneralViewType)
     case permissions(section:Int, count: String, viewType: GeneralViewType)
     case blocked(section:Int, count:Int32?, viewType: GeneralViewType)
-    case member(section:Int, index: Int, peerId: PeerId, peer: Peer?, presence: PeerPresence?, activity: PeerInputActivity?, memberStatus: GroupInfoMemberStatus, editing: ShortPeerDeleting?, menuItems: [ContextMenuItem], enabled:Bool, viewType: GeneralViewType)
+    case member(section:Int, index: Int, peerId: PeerId, peer: Peer?, presence: PeerPresence?, activity: PeerInputActivity?, stories: PeerStoryStats?, memberStatus: GroupInfoMemberStatus, editing: ShortPeerDeleting?, menuItems: [ContextMenuItem], enabled:Bool, viewType: GeneralViewType)
     case showMore(section:Int, index: Int, viewType: GeneralViewType)
     case leave(section:Int, text: String, viewType: GeneralViewType)
     case media(section:Int, controller: PeerMediaController, isVisible: Bool, viewType: GeneralViewType)
@@ -1207,7 +1207,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .administrators(section, count, _): return .administrators(section: section, count: count, viewType: viewType)
         case let .permissions(section, count, _): return .permissions(section: section, count: count, viewType: viewType)
         case let .blocked(section, count, _): return .blocked(section: section, count: count, viewType: viewType)
-        case let .member(section, index, peerId, peer, presence, activity, memberStatus, editing, menuItems, enabled, _): return .member(section: section, index: index, peerId: peerId, peer: peer, presence: presence, activity: activity, memberStatus: memberStatus, editing: editing, menuItems: menuItems, enabled: enabled, viewType: viewType)
+        case let .member(section, index, peerId, peer, presence, activity, stories, memberStatus, editing, menuItems, enabled, _): return .member(section: section, index: index, peerId: peerId, peer: peer, presence: presence, activity: activity, stories: stories, memberStatus: memberStatus, editing: editing, menuItems: menuItems, enabled: enabled, viewType: viewType)
         case let .showMore(section, index, _): return .showMore(section: section, index: index, viewType: viewType)
         case let .leave(section, text, _): return  .leave(section: section, text: text, viewType: viewType)
         case let .media(section, controller, isVisible, _): return  .media(section: section, controller: controller, isVisible: isVisible, viewType: viewType)
@@ -1430,8 +1430,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .member(lhsSection, lhsIndex, lhsPeerId, lhsPeer, lhsPresence, lhsActivity, lhsMemberStatus, lhsEditing, lhsMenuItems, lhsEnabled, lhsViewType):
-            if case let .member(rhsSection, rhsIndex, rhsPeerId, rhsPeer, rhsPresence, rhsActivity, rhsMemberStatus, rhsEditing, rhsMenuItems, rhsEnabled, rhsViewType) = entry {
+        case let .member(lhsSection, lhsIndex, lhsPeerId, lhsPeer, lhsPresence, lhsActivity, lhsStories, lhsMemberStatus, lhsEditing, lhsMenuItems, lhsEnabled, lhsViewType):
+            if case let .member(rhsSection, rhsIndex, rhsPeerId, rhsPeer, rhsPresence, rhsActivity, rhsStories, rhsMemberStatus, rhsEditing, rhsMenuItems, rhsEnabled, rhsViewType) = entry {
                 if lhsIndex != rhsIndex {
                     return false
                 }
@@ -1448,6 +1448,9 @@ enum GroupInfoEntry: PeerInfoEntry {
                     return false
                 }
                 if lhsViewType != rhsViewType {
+                    return false
+                }
+                if lhsStories != rhsStories {
                     return false
                 }
                 if let lhsPeer = lhsPeer, let rhsPeer = rhsPeer {
@@ -1507,7 +1510,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     
     var stableId: PeerInfoEntryStableId {
         switch self {
-        case let .member(_, _, peerId, _, _, _, _, _, _, _, _):
+        case let .member(_, _, peerId, _, _, _, _, _, _, _, _, _):
             return GroupPeerEntryStableId(peerId: peerId)
         default:
             return IntPeerInfoEntryStableId(value: stableIndex)
@@ -1635,7 +1638,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return sectionId
         case let .usersHeader(sectionId, _, _):
             return sectionId
-        case let .member(sectionId, _, _, _, _, _, _, _, _, _, _):
+        case let .member(sectionId, _, _, _, _, _, _, _, _, _, _, _):
             return sectionId
         case let .showMore(sectionId, _, _):
             return sectionId
@@ -1702,7 +1705,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 100000) + stableIndex
         case let .usersHeader(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
-        case let .member(sectionId, index, _, _, _, _, _, _, _, _, _):
+        case let .member(sectionId, index, _, _, _, _, _, _, _, _, _, _):
             return (sectionId * 100000) + index + 200
         case let .showMore(sectionId, index, _):
             return (sectionId * 100000) + index + 200
@@ -1836,7 +1839,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAddMember, nameStyle: blueActionButton, type: .none, viewType: viewType, action: { [weak arguments] in
                 arguments?.addMember(inviteViaLink)
             }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
-        case let .member(_, _, _, peer, presence, inputActivity, memberStatus, editing, menuItems, enabled, viewType):
+        case let .member(_, _, _, peer, presence, inputActivity, stories, memberStatus, editing, menuItems, enabled, viewType):
             let label: String
             switch memberStatus {
             case let .admin(rank):
@@ -1869,7 +1872,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                 arguments?.peerInfo(peer!.id)
             }, contextMenuItems: {
                 return .single(menuItems)
-            }, inputActivity: inputActivity, highlightVerified: true)
+            }, inputActivity: inputActivity, highlightVerified: true, story: stories?.subscriptionItem(peer!))
         case let .showMore(_, _, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoShowMore, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.showMore, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
         case let .leave(_, text, viewType):

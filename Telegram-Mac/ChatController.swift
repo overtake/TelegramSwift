@@ -421,7 +421,7 @@ class ChatControllerView : View, ChatInputDelegate {
         for value in values {
             if let view = value.photoView {
                 view.layer?.removeAnimation(forKey: "opacity")
-                view._change(pos: value.point, animated: animated || !currentAnimationRows.isEmpty, duration: 0.2, timingFunction: .easeOut)
+                view._change(pos: value.point, animated: animated && view.superview == floatingPhotosView, duration: 0.2, timingFunction: .easeOut)
                 if view.superview != floatingPhotosView {
                     floatingPhotosView.addSubview(view)
                     let moveAsNew = currentAnimationRows.first(where: {
@@ -6091,7 +6091,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.updateHasPhotos(processedView.theme)
         
         genericView.tableView.merge(with: transition, appearAnimated: appearAnimated)
-        collectFloatingPhotos(animated: transition.animated || transition.state.isNone, currentAnimationRows: currentAnimationRows)
+        collectFloatingPhotos(animated: animated && transition.state.isNone, currentAnimationRows: currentAnimationRows)
+
 
         
         genericView.chatTheme = processedView.theme

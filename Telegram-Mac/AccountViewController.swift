@@ -81,7 +81,8 @@ fileprivate final class AccountInfoArguments {
     let setStatus:(Control, TelegramUser)->Void
     let runStatusPopover:()->Void
     let set2Fa:(TwoStepVeriticationAccessConfiguration?)->Void
-    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void) {
+    let openStory:(StoryInitialIndex?)->Void
+    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void) {
         self.context = context
         self.storyList = storyList
         self.presentController = presentController
@@ -93,6 +94,7 @@ fileprivate final class AccountInfoArguments {
         self.setStatus = setStatus
         self.runStatusPopover = runStatusPopover
         self.set2Fa = set2Fa
+        self.openStory = openStory
     }
 }
 
@@ -122,7 +124,7 @@ private final class AnyUpdateStateEquatable  : Equatable {
 }
 
 private enum AccountInfoEntry : TableItemListNodeEntry {
-    case info(index:Int, viewType: GeneralViewType, PeerEquatable)
+    case info(index:Int, viewType: GeneralViewType, PeerEquatable, EngineStorySubscriptions.Item?)
     case setStatus(index:Int, viewType: GeneralViewType, PeerEquatable)
     case set2FaAlert(index:Int, viewType: GeneralViewType)
     case set2Fa(index:Int, settings: TwoStepVeriticationAccessConfiguration?, viewType: GeneralViewType)
@@ -203,7 +205,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     
     var index:Int {
         switch self {
-        case let .info(index, _, _):
+        case let .info(index, _, _, _):
             return index
         case let .setStatus(index, _, _):
             return index
@@ -260,13 +262,13 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     
     func item(_ arguments: AccountInfoArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .info(_, viewType, peer):
-            return AccountInfoItem(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 12, right: 12), context: arguments.context, peer: peer.peer as! TelegramUser, action: {
+        case let .info(_, viewType, peer, storyStats):
+            return AccountInfoItem(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 12, right: 12), context: arguments.context, peer: peer.peer as! TelegramUser, storyStats: storyStats, action: {
                 let first: Atomic<Bool> = Atomic(value: true)
                 EditAccountInfoController(context: arguments.context, f: { controller in
                     arguments.presentController(controller, first.swap(false))
                 })
-            }, setStatus: arguments.setStatus)
+            }, setStatus: arguments.setStatus, openStory: arguments.openStory)
         case let .setStatus(_, viewType, peer):
             let icon: CGImage = peer.peer.emojiStatus != nil ? theme.icons.account_change_status : theme.icons.account_set_status
             let text = peer.peer.emojiStatus != nil ? strings().accountSettingsChangeStatus : strings().accountSettingsUpdateStatus
@@ -419,7 +421,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?, storyStats: EngineStorySubscriptions?) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -427,7 +429,7 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     if let peer = peerViewMainPeer(peerView) as? TelegramUser {
         entries.append(.whiteSpace(index: index, height: 20))
         index += 1
-        entries.append(.info(index: index, viewType: .singleItem, PeerEquatable(peer)))
+        entries.append(.info(index: index, viewType: .singleItem, PeerEquatable(peer), storyStats?.accountItem))
         index += 1
         
 //        entries.append(.whiteSpace(index: index, height: 20))
@@ -824,6 +826,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                     navigation.push(controller)
                 }
             }))
+        }, openStory: { initialId in
+            StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
         })
         
         self.arguments = arguments
@@ -851,8 +855,10 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
 
         let twoStep: Signal<TwoStepVeriticationAccessConfiguration?, NoError> = .single(nil) |> then(context.engine.auth.twoStepVerificationConfiguration() |> map { .init(configuration: $0, password: nil) })
         
-        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let storyStats = context.engine.messages.storySubscriptions(isHidden: false)
+        
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep, storyStats) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration, storyStats -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration, storyStats: storyStats).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
