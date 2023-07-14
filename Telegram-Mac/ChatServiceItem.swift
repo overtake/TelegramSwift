@@ -105,15 +105,17 @@ class ChatServiceItem: ChatRowItem {
         let isIncoming: Bool
         let avatar: AvatarStoryIndicatorComponent?
         let context: AccountContext
-        init(context: AccountContext, maxReadId: Int32?, media: TelegramMediaStory, storyItem: Stories.StoredItem, text: TextViewLayout, theme: TelegramPresentationTheme, isIncoming: Bool) {
+        let peer: PeerReference
+        init(context: AccountContext, peer: PeerReference, maxReadId: Int32?, media: TelegramMediaStory, storyItem: Stories.StoredItem, text: TextViewLayout, theme: TelegramPresentationTheme, isIncoming: Bool) {
             self.media = media
             self.context = context
             self.storyItem = storyItem
             self.text = text
+            self.peer = peer
             self.isIncoming = isIncoming
             
-            if isIncoming, storyItem.expirationTimestamp > context.timestamp, let maxReadId = maxReadId {
-                let isUnread: Bool = maxReadId < storyItem.id
+            if storyItem.expirationTimestamp > context.timestamp, let maxReadId = maxReadId {
+                let isUnread: Bool = maxReadId < storyItem.id && isIncoming
                 self.avatar = .init(hasUnseen: isUnread, hasUnseenCloseFriendsItems: false, theme: theme, activeLineWidth: 1.5, inactiveLineWidth: 1.5, counters: .init(totalCount: 1, unseenCount: isUnread ? 1 : 0))
             } else {
                 self.avatar = nil
@@ -893,7 +895,7 @@ class ChatServiceItem: ChatRowItem {
                 attributedString.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: "🤡"))), range: NSMakeRange(0, 2))
 
                 
-            } else if let item = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
+            } else if let item = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self), let peer = message.author, let peerReference = PeerReference(peer) {
                 let info = NSMutableAttributedString()
                 
                 let text: String
@@ -912,7 +914,7 @@ class ChatServiceItem: ChatRowItem {
                 _ = info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
                 info.detectBoldColorInString(with: .medium(theme.fontSize))
                 
-                self.storydata = .init(context: context, maxReadId: entry.additionalData.storyReadMaxId, media: story, storyItem: item, text: TextViewLayout(info, alignment: .center), theme: theme, isIncoming: isIncoming)
+                self.storydata = .init(context: context, peer: peerReference, maxReadId: entry.additionalData.storyReadMaxId, media: story, storyItem: item, text: TextViewLayout(info, alignment: .center), theme: theme, isIncoming: isIncoming)
             }
         }
         
@@ -1526,10 +1528,11 @@ class ChatServiceRowView: TableRowView {
         }
     }
 
-    private class StoryView : Control {
+    private class _StoryView : Control {
         
         private let disposable = MetaDisposable()
-        fileprivate let mediaView: ChatInteractiveContentView = ChatInteractiveContentView(frame: NSMakeSize(74, 74).bounds)
+        fileprivate let mediaView: TransformImageView = TransformImageView(frame: NSMakeSize(74, 74).bounds)
+        fileprivate let avatar: AvatarControl = AvatarControl(font: .avatar(.title))
         private let statusView: AvatarStoryIndicatorComponent.IndicatorView = .init(frame: NSMakeSize(80, 80).bounds)
         
         private var visualEffect: VisualEffect?
@@ -1538,18 +1541,19 @@ class ChatServiceRowView: TableRowView {
         
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
+            avatar.setFrameSize(NSMakeSize(74, 74))
             addSubview(mediaView)
+            addSubview(avatar)
             addSubview(statusView)
             addSubview(textView)
             textView.userInteractionEnabled = false
             textView.isSelectable = false
             
-            mediaView.userInteractionEnabled = false
+            avatar.userInteractionEnabled = false
+            
             self.scaleOnClick = true
             layer?.cornerRadius = 10
-            
-            mediaView.backgroundColor = .random
-            
+                        
             mediaView.layer?.cornerRadius = mediaView.frame.height / 2
         }
         
@@ -1562,9 +1566,35 @@ class ChatServiceRowView: TableRowView {
             switch data.storyItem {
             case let .item(storyItem):
                 if let media = storyItem.media {
-                    let params = ChatMediaLayoutParameters(presentation: .Empty, media: media, automaticDownload: item.downloadSettings.isDownloable(message))
-                    params.fillContent = true
-                    mediaView.update(with: media, size: NSMakeSize(74, 74), context: context, parent: item.message, table: item.table, parameters: params, animated: animated)
+                    
+                    let updateImageSignal: Signal<ImageDataTransformation, NoError>
+
+                    let imageSize: NSSize
+                    if let media = media as? TelegramMediaImage {
+                        let reference = ImageMediaReference.story(peer: data.peer, id: storyItem.id, media: media)
+                        updateImageSignal = chatMessagePhoto(account: context.account, imageReference: reference, scale: backingScaleFactor, synchronousLoad: false)
+                        imageSize = media.representations.last?.dimensions.size ?? StoryView.size
+                    } else if let media = media as? TelegramMediaFile {
+                        let reference = FileMediaReference.story(peer: data.peer, id: storyItem.id, media: media)
+                        updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference:reference, scale: backingScaleFactor)
+                        imageSize = media.dimensions?.size ?? StoryView.size
+                    } else {
+                        updateImageSignal = .complete()
+                        imageSize = StoryView.size
+                    }
+                    
+                    let arguments = TransformImageArguments.init(corners: .init(radius: 0), imageSize: imageSize, boundingSize: mediaView.frame.size, intrinsicInsets: .init())
+                    
+                    mediaView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor))
+                    
+                    if !mediaView.isFullyLoaded {
+                        mediaView.setSignal(updateImageSignal, cacheImage: { result in
+                            cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                        })
+                    }
+                    mediaView.set(arguments: arguments)
+                    avatar.setPeer(account: item.context.account, peer: item.message?.author)
+                    avatar.isHidden = !storyItem.isForwardingDisabled
                 }
             case .placeholder:
                 break
@@ -1603,6 +1633,7 @@ class ChatServiceRowView: TableRowView {
             super.layout()
             statusView.centerX(y: 10)
             mediaView.centerX(y: 13)
+            avatar.centerX(y: 13)
             textView.centerX(y: statusView.frame.maxY + 10)
         }
         
@@ -1624,7 +1655,7 @@ class ChatServiceRowView: TableRowView {
     private var photoVideoPlayer: MediaPlayer?
     
     private var giftView: GiftView?
-    private var storyView: StoryView?
+    private var storyView: _StoryView?
     private var suggestView: SuggestView?
     private var wallpaperView: WallpaperView?
 
@@ -1911,11 +1942,11 @@ class ChatServiceRowView: TableRowView {
         }
 
         if let storyData = item.storydata {
-            let current: StoryView
+            let current: _StoryView
             if let view = self.storyView {
                 current = view
             } else {
-                current = StoryView(frame: NSMakeRect(0, 0, 160, storyData.height))
+                current = _StoryView(frame: NSMakeRect(0, 0, 160, storyData.height))
                 self.storyView = current
                 addSubview(current)
                 
@@ -2045,7 +2076,7 @@ class ChatServiceRowView: TableRowView {
     }
     
     var storyMediaControl: NSView? {
-        return storyView?.mediaView
+        return storyView?.avatar
     }
     
 }
