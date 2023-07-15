@@ -276,6 +276,32 @@ class StoryView : Control {
         }
         
     }
+    
+    func bufferingPlay() {
+        if case .playing = state.status?.status {
+            
+        } else {
+            if let current = state.status {
+                self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: current.timestamp, baseRate: 1, volume: 1, seekId: 0, status: .playing)))
+            } else {
+                self.updateState(.playing(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: 1, seekId: 0, status: .playing)))
+            }
+        }
+    }
+    
+    func bufferingPause() {
+        if case .paused = state.status?.status {
+            
+        } else {
+            if let current = state.status {
+                self.updateState(.paused(.init(generationTimestamp: current.generationTimestamp, duration: self.duration, dimensions: .zero, timestamp: current.timestamp + (CACurrentMediaTime() - current.generationTimestamp), baseRate: 1, volume: 1, seekId: 0, status: .paused)))
+            } else {
+                self.updateState(.paused(.init(generationTimestamp: CACurrentMediaTime(), duration: self.duration, dimensions: .zero, timestamp: 0, baseRate: 1, volume: 1, seekId: 0, status: .paused)))
+            }
+        }
+        
+    }
+    
     func play() {
         if case .playing = state.status?.status {
             
@@ -414,14 +440,17 @@ class StoryImageView : StoryView {
         
         self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor, positionFlags: nil), clearInstantly: false)
 
+        self.awaitPlaying = !imageView.isFullyLoaded
+        
         if let updateImageSignal = updateImageSignal, !self.imageView.isFullyLoaded {
-            self.imageView.setSignal(updateImageSignal, animate: updated, cacheImage: { [weak media, weak self] result in
+            self.imageView.setSignal(updateImageSignal, animate: true, cacheImage: { [weak media, weak self] result in
                 if let media = media {
                     cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: nil)
                 }
                 if result.image != nil {
                     self?.ready.set(true)
                 }
+                self?.awaitPlaying = !result.highQuality
             }, isProtected: story.isForwardingDisabled)
         } else {
             self.ready.set(true)
@@ -501,16 +530,21 @@ class StoryVideoView : StoryImageView {
         
         self.view.preventsCapture = story.isForwardingDisabled
         
+        var shouldBeResumedAfterBufferring = false
+        
         statusDisposable.set((mediaPlayer.status |> deliverOnMainQueue).start(next: { [weak self] status in
-            let currentStatus = self?.state.status ?? status
-            if status.status == .playing {
-                self?.updateState(.playing(currentStatus))
-            } else if status.status == .paused {
-                self?.updateState(.loading(currentStatus))
-            } else if case .buffering = status.status {
-                self?.updateState(.loading(currentStatus))
+            if case let .buffering(_, whilePlaying) = status.status {
+                self?.bufferingPause()
+                shouldBeResumedAfterBufferring = whilePlaying
+            } else if shouldBeResumedAfterBufferring {
+                self?.bufferingPlay()
+                shouldBeResumedAfterBufferring = false
             }
         }))
+        
+        delay(2.0, closure: {
+            self.updateState(.loading(self.state.status!))
+        })
     }
     
     override var magnify: MagnifyView? {
