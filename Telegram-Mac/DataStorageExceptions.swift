@@ -53,6 +53,8 @@ private class AddExceptionCallbackObject : ShareObject {
             return peer.isGroup || peer.isSupergroup || peer.isGigagroup
         case .channels:
             return peer.isChannel
+        case .stories:
+            return peer.isUser
         }
     }
     
@@ -114,6 +116,8 @@ private extension CacheStorageSettings.PeerStorageCategory {
             return strings().storageExceptionsTitleGroup
         case .privateChats:
             return strings().storageExceptionsTitlePrivate
+        case .stories:
+            return strings().storageExceptionsTitleStories
         }
     }
     var addString: String {
@@ -124,6 +128,8 @@ private extension CacheStorageSettings.PeerStorageCategory {
             return strings().storageExceptionsAddGroup
         case .privateChats:
             return strings().storageExceptionsAddPrivate
+        case .stories:
+            return strings().storageExceptionsTitleStories
         }
     }
 }

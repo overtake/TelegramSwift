@@ -67,10 +67,10 @@ final class StoryListNavigationView : View {
                 selector.frame = NSMakeRect(part.frame.minX, part.frame.minY, part.frame.width, 2)
                 switch state {
                 case let .playing(status):
-                    selector.set(progress: duration == 0 ? 0 : CGFloat(status.timestamp / duration), animated: animated, duration: duration, beginTime: status.generationTimestamp, offset: status.timestamp, speed: Float(status.baseRate))
+                    selector.set(progress: status.timestamp == 0 ? 1 : CGFloat(status.timestamp / duration), animated: animated, duration: duration, beginTime: status.generationTimestamp, offset: status.timestamp, speed: Float(status.baseRate))
                 default:
                     if let status = state.status {
-                        selector.set(progress: duration == 0 ? 0 : CGFloat(status.timestamp / duration), animated: false)
+                        selector.set(progress: duration == 0 ? 1 : CGFloat(status.timestamp / duration), animated: false)
                     } else {
                         selector.set(progress: 0, animated: false)
                     }

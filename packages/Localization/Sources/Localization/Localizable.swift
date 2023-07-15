@@ -3119,7 +3119,7 @@ public final class L10n {
   public static var chatRepliesDesc: String  { return L10n.tr("Localizable", "Chat.Replies.Desc") }
   /// Expired Story
   public static var chatReplyExpiredStory: String  { return L10n.tr("Localizable", "Chat.Reply.ExpiredStory") }
-  /// Story is expired.
+  /// This story is no longer available.
   public static var chatReplyExpiredStoryError: String  { return L10n.tr("Localizable", "Chat.Reply.ExpiredStory.Error") }
   /// Reminder
   public static var chatRightContextReminder: String  { return L10n.tr("Localizable", "Chat.Right.Context.Reminder") }
@@ -4009,6 +4009,34 @@ public final class L10n {
   public static var chatListAddTopSeparator: String  { return L10n.tr("Localizable", "ChatList.Add.TopSeparator") }
   /// Chats
   public static var chatListArchiveBack: String  { return L10n.tr("Localizable", "ChatList.Archive.Back") }
+  /// %d
+  public static func chatListArchiveStoryCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_countable", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_few", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_many", p1)
+  }
+  /// %d Story
+  public static func chatListArchiveStoryCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_one", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_other", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_two", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_zero", p1)
+  }
   /// Call
   public static var chatListContextCall: String  { return L10n.tr("Localizable", "ChatList.Context.Call") }
   /// Clear History
@@ -11783,6 +11811,8 @@ public final class L10n {
   public static var storageExceptionsTitleGroup: String  { return L10n.tr("Localizable", "StorageExceptions.Title.Group") }
   /// Private Chats
   public static var storageExceptionsTitlePrivate: String  { return L10n.tr("Localizable", "StorageExceptions.Title.Private") }
+  /// Stories
+  public static var storageExceptionsTitleStories: String  { return L10n.tr("Localizable", "StorageExceptions.Title.Stories") }
   /// Telegram is calculating the current cache size.\nThis can take a few minutes.
   public static var storageUsageCalculating: String  { return L10n.tr("Localizable", "StorageUsage.Calculating") }
   /// All media will stay in the Telegram cloud and can be re-downloaded if you need it again.
@@ -11827,6 +11857,8 @@ public final class L10n {
   public static var storageUsageCategoryPhotos: String  { return L10n.tr("Localizable", "StorageUsage.Category.Photos") }
   /// Stickers
   public static var storageUsageCategoryStickers: String  { return L10n.tr("Localizable", "StorageUsage.Category.Stickers") }
+  /// Stories
+  public static var storageUsageCategoryStories: String  { return L10n.tr("Localizable", "StorageUsage.Category.Stories") }
   /// Videos
   public static var storageUsageCategoryVideos: String  { return L10n.tr("Localizable", "StorageUsage.Category.Videos") }
   /// Media and documents will stay in the cloud and can be re-downloaded if you need them again.
@@ -11881,6 +11913,8 @@ public final class L10n {
   public static var storageUsageKeepMediaHeader: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Header") }
   /// Private Chats
   public static var storageUsageKeepMediaPrivate: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Private") }
+  /// Stories
+  public static var storageUsageKeepMediaStories: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Stories") }
   /// If your cache size exceeds this limit, the oldest media will be deleted.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
   public static var storageUsageLimitDesc: String  { return L10n.tr("Localizable", "StorageUsage.Limit.Desc") }
   /// MAXIMUM CACHE SIZE
@@ -11939,7 +11973,7 @@ public final class L10n {
   public static func storageUsageTelegramUsageTextPeer(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Text.Peer", p1)
   }
-  /// This story does not exist
+  /// This story is no longer available
   public static var storyErrorNotExist: String  { return L10n.tr("Localizable", "Story.Error.NotExist") }
   /// This story is not supported by your version of Telegram. Please update the app to the latest version.
   public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }

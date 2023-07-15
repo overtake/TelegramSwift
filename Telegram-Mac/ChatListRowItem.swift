@@ -513,7 +513,7 @@ class ChatListRowItem: TableRowItem {
 
         }
         
-        let messageText: NSAttributedString
+        var messageText: NSAttributedString
         if groupItems.count == 1 {
             messageText = chatListText(account: context.account, for: message, messagesCount: 1, folder: true)
         } else {
@@ -534,6 +534,11 @@ class ChatListRowItem: TableRowItem {
             }
             messageText = textString
         }
+        
+        if messageText.string.isEmpty, let storyState = storyState, storyState.items.count > 0 {
+            messageText = .initialize(string: strings().chatListArchiveStoryCountCountable(storyState.items.count), color: theme.chatList.grayTextColor, font: .normal(.text))
+        }
+        
         if let messageText = messageText.mutableCopy() as? NSMutableAttributedString, !messageText.string
             .isEmpty {
             self.messageLayout = .init(messageText, maximumNumberOfLines: 2)

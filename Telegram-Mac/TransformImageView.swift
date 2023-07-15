@@ -63,6 +63,9 @@ open class TransformImageView: NSView {
             if _image != newValue {
                 imageUpdated?(newValue)
                 _image = newValue
+                if let sampleBuffer = self.sampleBuffer {
+                    self.captureProtectedContentLayer?.enqueue(sampleBuffer)
+                }
                 let preventsCapture = self.preventsCapture
                 self.preventsCapture = preventsCapture
             }
