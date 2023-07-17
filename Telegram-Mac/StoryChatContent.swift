@@ -415,7 +415,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         }
                     }
                 }
-                if focusedIndex == nil, let state {
+                if focusedIndex == nil, let state = state {
                     if let storedFocusedId = self.storedFocusedId {
                         focusedIndex = mappedItems.firstIndex(where: { $0.id >= storedFocusedId })
                     } else if let index = mappedItems.firstIndex(where: { $0.isPending }) {
@@ -1563,7 +1563,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 }
             }
             
-            if let indexDifference, let listState = self.listState, let focusedId = self.focusedId {
+            if let indexDifference = indexDifference, let listState = self.listState, let focusedId = self.focusedId {
                 if let index = listState.items.firstIndex(where: { $0.id == focusedId }) {
                     var nextIndex = index + indexDifference
                     if nextIndex < 0 {
