@@ -641,7 +641,7 @@ final class StoryListView : Control, Notifable {
         let aspect = StoryView.size.aspectFitted(maxSize)
         let containerSize: NSSize
         if let arguments = self.arguments, arguments.interaction.presentation.inputInFocus || arguments.interaction.presentation.inputRecording != nil {
-            containerSize = NSMakeSize(min(min(aspect.width + 60, size.width - 20), StoryView.size.width + 80), aspect.height)
+            containerSize = NSMakeSize(min(aspect.width + 60, size.width - 20), aspect.height)
         } else {
             containerSize = aspect
         }
