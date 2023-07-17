@@ -417,12 +417,13 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             return
         }
         
+        let wWdith = window.contentView!.frame.width
         
-        let maxSize = NSMakeSize(window.contentView!.frame.width - 100, window.contentView!.frame.height - 110)
+        let maxSize = NSMakeSize(wWdith - 100, window.contentView!.frame.height - 110)
         let supersize = StoryView.size.aspectFitted(maxSize)
         let size: NSSize
         if arguments.interaction.presentation.inputRecording != nil {
-            size = NSMakeSize(min(supersize.width + 60, window.frame.width - 20), self.textViewSize(self.textView).height + 16)
+            size = NSMakeSize(min(supersize.width + 60, wWdith - 20), self.textViewSize(self.textView).height + 16)
             textView.inputView.textContainer?.maximumNumberOfLines = 0
             textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
             textView.inputView.isSelectable = true
@@ -430,7 +431,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         } else {
             switch self.inputState {
             case .focus:
-                size = NSMakeSize(min(supersize.width + 60, window.frame.width - 20), self.textViewSize(self.textView).height + 16)
+                size = NSMakeSize(min(supersize.width + 60, wWdith - 20), self.textViewSize(self.textView).height + 16)
                 textView.inputView.textContainer?.maximumNumberOfLines = 0
                 textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
                 textView.inputView.isSelectable = true

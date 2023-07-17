@@ -981,6 +981,11 @@ private final class StoryViewController: Control, Notifable {
         addSubview(prev_button)
         addSubview(next_button)
         
+        
+//        leftBottom.backgroundColor = .random
+//        rightTop.backgroundColor = .random
+//        rightBottom.backgroundColor = .random
+//        leftTop.backgroundColor = .random
 
 
         next_button.controlOpacityEventIgnored = true
