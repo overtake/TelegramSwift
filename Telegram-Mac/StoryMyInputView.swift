@@ -166,11 +166,11 @@ final class StoryMyInputView : Control, StoryInput {
                
                 
                 if !story.storyItem.isPinned {
-                    menu.addItem(ContextMenuItem("Save to Profile", handler: {
+                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveToProfile, handler: {
                         self?.arguments?.togglePinned(story)
                     }, itemImage: MenuAnimation.menu_save_to_profile.value))
                 } else {
-                    menu.addItem(ContextMenuItem("Remove from Profile", handler: {
+                    menu.addItem(ContextMenuItem(strings().storyMyInputRemoveFromProfile, handler: {
                         self?.arguments?.togglePinned(story)
                     }, itemImage: MenuAnimation.menu_delete.value))
                 }
@@ -190,7 +190,7 @@ final class StoryMyInputView : Control, StoryInput {
                 
                 
                 if let resource = resource {
-                    menu.addItem(ContextMenuItem("Save Media...", handler: {
+                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
                         saveAs(resource, account: context.account)
                     }, itemImage: MenuAnimation.menu_save_as.value))
                 }
@@ -198,24 +198,18 @@ final class StoryMyInputView : Control, StoryInput {
                 if story.sharable {
                    
                     if !story.storyItem.isForwardingDisabled {
-                        menu.addItem(ContextMenuItem("Share", handler: {
+                        menu.addItem(ContextMenuItem(strings().storyMyInputShare, handler: {
                             self?.arguments?.share(story)
                         }, itemImage: MenuAnimation.menu_share.value))
                     }
                     
                     if story.canCopyLink {
-                        menu.addItem(ContextMenuItem("Copy Link", handler: {
+                        menu.addItem(ContextMenuItem(strings().storyMyInputCopyLink, handler: {
                             self?.arguments?.copyLink(story)
                         }, itemImage: MenuAnimation.menu_copy_link.value))
                     }
                 }
-
             }
-            
-//            menu.addItem(ContextSeparatorItem())
-//            menu.addItem(ContextMenuItem("Delete", handler: {
-//                self?.deleteAction()
-//            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
 
             return menu
         }
@@ -225,7 +219,7 @@ final class StoryMyInputView : Control, StoryInput {
         }, for: .Click)
       
         
-        
+        self.views.scaleOnClick = true
     }
     
     private func deleteAction() {
@@ -251,7 +245,9 @@ final class StoryMyInputView : Control, StoryInput {
         self.story = story
         let storyViews = story.storyItem.views
         
-        let text: NSAttributedString = .initialize(string: storyViews == nil || storyViews!.seenCount == 0 ? "No Views yet" : "\(storyViews!.seenCount) views", color: storyTheme.colors.text, font: .normal(.short))
+        let string = strings().storyMyInputViewsCountable(storyViews?.seenCount ?? 0)
+        
+        let text: NSAttributedString = .initialize(string: string, color: storyTheme.colors.text, font: .normal(.short))
         let layout = TextViewLayout(text)
         layout.measure(width: .greatestFiniteMagnitude)
         self.viewsText.update(layout)
@@ -285,7 +281,7 @@ final class StoryMyInputView : Control, StoryInput {
             }
         }
         
-        if let views = story.storyItem.views, views.seenCount > 3 {
+        if let views = story.storyItem.views, views.seenCount > 3 || views.seenCount == 0 {
             self.views.removeAllHandlers()
             self.views.set(handler: { [weak arguments] _ in
                 arguments?.showViewers(story)

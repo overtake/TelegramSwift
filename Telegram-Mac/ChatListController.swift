@@ -1226,34 +1226,38 @@ class ChatListController : PeersListController {
             guard let `self` = self, let window = self.window else {return .failed}
             let swipeState: SwipeState?
             
+            
+            let hitTestView = self.genericView.hitTest(self.genericView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+            if let view = hitTestView, view.isInSuperclassView(ChatListRevealView.self) {
+                return .failed
+            } else if let view = hitTestView, view.isInSuperclassView(StoryListView.self) {
+                if self.getStoryInterfaceState() == .revealed {
+                    return .failed
+                }
+            }
+
             var checkFolder: Bool = true
             let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
             if row != -1 {
-                
-                let hitTestView = self.genericView.hitTest(self.genericView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
-                if let view = hitTestView, view.isInSuperclassView(ChatListRevealView.self) {
-                    return .failed
-                }
                 let item = self.genericView.tableView.item(at: row) as? ChatListRowItem
                 if let item = item {
                     let view = item.view as? ChatListRowView
                     if view?.endRevealState != nil {
                         checkFolder = false
                     }
-                    
                     if !item.hasRevealState {
                         return .failed
                     }
                 } else {
                     return .failed
                 }
-                
+
             }
 
             
             switch direction {
             case let .left(_state):
-                if (!self.mode.isPlain || self.mode.groupId == .archive) && checkFolder {
+                if (!self.mode.isPlain || self.mode.groupId == .archive) && checkFolder  {
                     swipeState = nil
                 } else {
                     swipeState = _state
@@ -1607,6 +1611,20 @@ class ChatListController : PeersListController {
                 
             }
         }
+    }
+    override var supportSwipes: Bool {
+        guard let window = self.window else {
+            return false
+        }
+        let hitTestView = self.genericView.hitTest(self.genericView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+        if let view = hitTestView, view.isInSuperclassView(ChatListRevealView.self) {
+            return false
+        } else if let view = hitTestView, view.isInSuperclassView(StoryListChatListRowView.self) {
+            if self.getStoryInterfaceState() == .revealed || self.getStoryInterfaceState().progress != 0 {
+                return false
+            }
+        }
+        return true
     }
   
 }

@@ -79,7 +79,7 @@ final class StoryControlsView : Control {
 
         muted.set(handler: { [weak self] _ in
             if self?.hasNoSound == true {
-                self?.arguments?.showTooltipText("This video has no sound", MenuAnimation.menu_speaker_muted)
+                self?.arguments?.showTooltipText(strings().storyControlsVideoNoSound, MenuAnimation.menu_speaker_muted)
             } else {
                 self?.arguments?.interaction.toggleMuted()
             }
@@ -149,7 +149,7 @@ final class StoryControlsView : Control {
         }
         if story.storyItem.isEdited {
             date.append(string: " \(strings().bullet) ", color: color, font: .medium(.small))
-            date.append(string: "edited", color: color, font: .medium(.short))
+            date.append(string: strings().storyControlsEdited, color: color, font: .medium(.short))
         }
         
         let textWidth = frame.width - 24 - avatar.frame.width - 10 - (muted.isHidden ? 0 : 18) - (more.isHidden ? 0 : 18) - (closeFriends.isHidden ? 0 : 18)
@@ -169,7 +169,7 @@ final class StoryControlsView : Control {
         
 
         let authorName = NSMutableAttributedString()
-        authorName.append(string: context.peerId == groupId ? "Your Story" : peer.displayTitle, color: .white, font: .medium(.title))
+        authorName.append(string: context.peerId == groupId ? strings().storyControlsYourStory : peer.displayTitle, color: .white, font: .medium(.title))
         
         if story.dayCounters != nil, let position = story.position {
             authorName.append(string: " \(strings().bullet) \(position + 1)/\(slice.totalCount)", color: color, font: .normal(.small))

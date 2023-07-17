@@ -187,6 +187,8 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
             entries.append(.section(index: MessageIndex.absoluteLowerBound()))
         } else {
             entries.append(.section(index: MessageIndex.absoluteLowerBound()))
+            entries.append(.section(index: MessageIndex.absoluteLowerBound().globalSuccessor()))
+
         }
 
     } else {

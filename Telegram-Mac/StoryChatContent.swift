@@ -10,6 +10,7 @@ import Foundation
 import TelegramCore
 import SwiftSignalKit
 import Postbox
+import RangeSet
 
 private struct StoryKey: Hashable {
     var peerId: EnginePeer.Id
@@ -100,18 +101,21 @@ final class StoryContentContextState {
     
     final class AdditionalPeerData: Equatable {
             static func == (lhs: StoryContentContextState.AdditionalPeerData, rhs: StoryContentContextState.AdditionalPeerData) -> Bool {
-                return lhs.isMuted == rhs.isMuted && lhs.areVoiceMessagesAvailable == rhs.areVoiceMessagesAvailable
+                return lhs.isMuted == rhs.isMuted && lhs.areVoiceMessagesAvailable == rhs.areVoiceMessagesAvailable && lhs.presence == rhs.presence
             }
             
             let isMuted: Bool
             let areVoiceMessagesAvailable: Bool
-            
+            let presence: EnginePeer.Presence?
+
             init(
                 isMuted: Bool,
-                areVoiceMessagesAvailable: Bool
+                areVoiceMessagesAvailable: Bool,
+                presence: EnginePeer.Presence?
             ) {
                 self.isMuted = isMuted
                 self.areVoiceMessagesAvailable = areVoiceMessagesAvailable
+                self.presence = presence
             }
         }
 
@@ -240,6 +244,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 PostboxViewKey.cachedPeerData(peerId: peerId),
                 PostboxViewKey.storiesState(key: .peer(peerId)),
                 PostboxViewKey.storyItems(peerId: peerId),
+                PostboxViewKey.peerPresences(peerIds: Set([peerId]))
             ]
             if peerId == context.account.peerId {
                 inputKeys.append(PostboxViewKey.storiesState(key: .local))
@@ -300,6 +305,11 @@ final class StoryContentContextImpl: StoryContentContext {
                     return
                 }
                 let additionalPeerData: StoryContentContextState.AdditionalPeerData
+                var peerPresence: PeerPresence?
+                if let presencesView = views.views[PostboxViewKey.peerPresences(peerIds: Set([peerId]))] as? PeerPresencesView {
+                    peerPresence = presencesView.presences[peerId]
+                }
+                
                 if let cachedPeerDataView = views.views[PostboxViewKey.cachedPeerData(peerId: peerId)] as? CachedPeerDataView, let cachedUserData = cachedPeerDataView.cachedPeerData as? CachedUserData {
                     var isMuted = false
                     if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings {
@@ -307,9 +317,17 @@ final class StoryContentContextImpl: StoryContentContext {
                     } else {
                         isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: nil, topSearchPeers: [])
                     }
-                    additionalPeerData = StoryContentContextState.AdditionalPeerData(isMuted: isMuted, areVoiceMessagesAvailable: cachedUserData.voiceMessagesAvailable)
+                    additionalPeerData = StoryContentContextState.AdditionalPeerData(
+                        isMuted: isMuted,
+                        areVoiceMessagesAvailable: cachedUserData.voiceMessagesAvailable,
+                        presence: peerPresence.flatMap { EnginePeer.Presence($0) }
+                    )
                 } else {
-                    additionalPeerData = StoryContentContextState.AdditionalPeerData(isMuted: true, areVoiceMessagesAvailable: true)
+                    additionalPeerData = StoryContentContextState.AdditionalPeerData(
+                        isMuted: true,
+                        areVoiceMessagesAvailable: true,
+                        presence: peerPresence.flatMap { EnginePeer.Presence($0) }
+                    )
                 }
                 let state = stateView.value?.get(Stories.PeerState.self)
                 
@@ -397,7 +415,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         }
                     }
                 }
-                if focusedIndex == nil, let state = state {
+                if focusedIndex == nil, let state {
                     if let storedFocusedId = self.storedFocusedId {
                         focusedIndex = mappedItems.firstIndex(where: { $0.id >= storedFocusedId })
                     } else if let index = mappedItems.firstIndex(where: { $0.isPending }) {
@@ -726,7 +744,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 self.updatePeerContexts()
             })
         } else {
-            self.storySubscriptionsDisposable = (context.engine.messages.storySubscriptions(isHidden: isHidden)
+            self.storySubscriptionsDisposable = (context.engine.messages.storySubscriptions(isHidden: isHidden, tempKeepNewlyArchived: true)
             |> deliverOnMainQueue).start(next: { [weak self] storySubscriptions in
                 guard let `self` = self else {
                     return
@@ -934,6 +952,8 @@ final class StoryContentContextImpl: StoryContentContext {
                     })
                 }
             }
+        } else {
+            self.updateState()
         }
     }
     
@@ -1087,6 +1107,7 @@ final class StoryContentContextImpl: StoryContentContext {
 
 final class SingleStoryContentContextImpl: StoryContentContext {
     private let context: AccountContext
+    private let readGlobally: Bool
     
     private(set) var stateValue: StoryContentContextState?
     var state: Signal<StoryContentContextState, NoError> {
@@ -1106,13 +1127,16 @@ final class SingleStoryContentContextImpl: StoryContentContext {
     
     init(
         context: AccountContext,
-        storyId: StoryId
+        storyId: StoryId,
+        readGlobally: Bool
     ) {
         self.context = context
+        self.readGlobally = readGlobally
         
         self.storyDisposable = (combineLatest(queue: .mainQueue(),
             context.engine.data.subscribe(
                 TelegramEngine.EngineData.Item.Peer.Peer(id: storyId.peerId),
+                TelegramEngine.EngineData.Item.Peer.Presence(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.AreVoiceMessagesAvailable(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: storyId.peerId),
                 TelegramEngine.EngineData.Item.NotificationSettings.Global()
@@ -1150,18 +1174,19 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
+            let (peer, presence, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
             let (item, peers, allEntityFiles) = itemAndPeers
             
             guard let peer = peer else {
                 return
             }
-            
+
             let isMuted = resolvedAreStoriesMuted(globalSettings: globalNotificationSettings._asGlobalNotificationSettings(), peer: peer._asPeer(), peerSettings: notificationSettings._asNotificationSettings(), topSearchPeers: [])
             
             let additionalPeerData = StoryContentContextState.AdditionalPeerData(
                 isMuted: isMuted,
-                areVoiceMessagesAvailable: areVoiceMessagesAvailable
+                areVoiceMessagesAvailable: areVoiceMessagesAvailable,
+                presence: presence
             )
             
             if item == nil {
@@ -1253,6 +1278,9 @@ final class SingleStoryContentContextImpl: StoryContentContext {
     }
     
     func markAsSeen(id: StoryId) {
+        if self.readGlobally {
+            let _ = self.context.engine.messages.markStoryAsSeen(peerId: id.peerId, id: id.id, asPinned: false).start()
+        }
     }
 }
 
@@ -1289,6 +1317,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
         self.storyDisposable = (combineLatest(queue: .mainQueue(),
             context.engine.data.subscribe(
                 TelegramEngine.EngineData.Item.Peer.Peer(id: peerId),
+                TelegramEngine.EngineData.Item.Peer.Presence(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.AreVoiceMessagesAvailable(id: peerId),
                 TelegramEngine.EngineData.Item.Peer.NotificationSettings(id: peerId),
                 TelegramEngine.EngineData.Item.NotificationSettings.Global()
@@ -1302,7 +1331,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 return
             }
             
-            let (peer, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
+            let (peer, presence, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
             
             guard let peer = peer else {
                 return
@@ -1312,7 +1341,8 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
             
             let additionalPeerData = StoryContentContextState.AdditionalPeerData(
                 isMuted: isMuted,
-                areVoiceMessagesAvailable: areVoiceMessagesAvailable
+                areVoiceMessagesAvailable: areVoiceMessagesAvailable,
+                presence: presence
             )
             
             self.listState = state
@@ -1533,7 +1563,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 }
             }
             
-            if let indexDifference = indexDifference, let listState = self.listState, let focusedId = self.focusedId {
+            if let indexDifference, let listState = self.listState, let focusedId = self.focusedId {
                 if let index = listState.items.firstIndex(where: { $0.id == focusedId }) {
                     var nextIndex = index + indexDifference
                     if nextIndex < 0 {
@@ -1562,7 +1592,7 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
     switch media {
     case let .image(image):
         if let representation = largestImageRepresentation(image.representations) {
-            signals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .other, reference: .media(media: .story(peer: peer, id: storyId, media: media._asMedia()), resource: representation.resource), range: nil)
+            signals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyId, media: media._asMedia()), resource: representation.resource), range: nil)
             |> ignoreValues
             |> `catch` { _ -> Signal<Never, NoError> in
                 return .complete()
@@ -1579,7 +1609,7 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
             }
         }
         
-        signals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .other, reference: .media(media: .story(peer: peer, id: storyId, media: media._asMedia()), resource: file.resource), range: fetchRange)
+        signals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyId, media: media._asMedia()), resource: file.resource), range: fetchRange)
         |> ignoreValues
         |> `catch` { _ -> Signal<Never, NoError> in
             return .complete()
@@ -1591,6 +1621,88 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
     }
     
     return combineLatest(signals) |> ignoreValues
+}
+
+func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id, storyItem: EngineStoryItem) -> Signal<Never, NoError> {
+    return context.engine.data.get(
+        TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
+    )
+    |> mapToSignal { peerValue -> Signal<Never, NoError> in
+        guard let peerValue = peerValue else {
+            return .complete()
+        }
+        guard let peer = PeerReference(peerValue._asPeer()) else {
+            return .complete()
+        }
+        
+        var statusSignals: [Signal<Never, NoError>] = []
+        var loadSignals: [Signal<Never, NoError>] = []
+        
+        switch storyItem.media {
+        case let .image(image):
+            if let representation = largestImageRepresentation(image.representations) {
+                statusSignals.append(
+                    context.account.postbox.mediaBox.resourceData(representation.resource)
+                    |> filter { data in
+                        return data.complete
+                    }
+                    |> take(1)
+                    |> ignoreValues
+                )
+                
+                loadSignals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyItem.id, media: storyItem.media._asMedia()), resource: representation.resource), range: nil)
+                |> ignoreValues
+                |> `catch` { _ -> Signal<Never, NoError> in
+                    return .complete()
+                })
+            }
+        case let .file(file):
+            var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
+            for attribute in file.attributes {
+                if case let .Video(_, _, _, preloadSize) = attribute {
+                    if let preloadSize = preloadSize {
+                        fetchRange = (0 ..< Int64(preloadSize), .default)
+                    }
+                    break
+                }
+            }
+            
+            statusSignals.append(
+                context.account.postbox.mediaBox.resourceRangesStatus(file.resource)
+                |> filter { ranges in
+                    if let fetchRange = fetchRange {
+                        return ranges.isSuperset(of: RangeSet(fetchRange.0))
+                    } else {
+                        return true
+                    }
+                }
+                |> take(1)
+                |> ignoreValues
+            )
+            
+            loadSignals.append(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .story, reference: .media(media: .story(peer: peer, id: storyItem.id, media: storyItem.media._asMedia()), resource: file.resource), range: fetchRange)
+            |> ignoreValues
+            |> `catch` { _ -> Signal<Never, NoError> in
+                return .complete()
+            })
+            loadSignals.append(context.account.postbox.mediaBox.cachedResourceRepresentation(file.resource, representation: CachedVideoFirstFrameRepresentation(), complete: true, fetch: true, attemptSynchronously: false)
+            |> ignoreValues)
+        default:
+            break
+        }
+        
+        return Signal { subscriber in
+            let statusDisposable = combineLatest(statusSignals).start(completed: {
+                subscriber.putCompletion()
+            })
+            let loadDisposable = combineLatest(loadSignals).start()
+            
+            return ActionDisposable {
+                statusDisposable.dispose()
+                loadDisposable.dispose()
+            }
+        }
+    }
 }
 
 func extractItemEntityFiles(item: EngineStoryItem, allEntityFiles: [MediaId: TelegramMediaFile]) -> [MediaId: TelegramMediaFile] {
