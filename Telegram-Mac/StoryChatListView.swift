@@ -681,29 +681,35 @@ private final class StoryListEntryRowItem : TableRowItem {
         let context = self.context
         
         if context.peerId != peerId {
-            items.append(.init("View Profile", handler: {
-                PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
-            }, itemImage: MenuAnimation.menu_open_profile.value))
-            
-            let peer = self.entry.item.peer._asPeer()
-            if peer.storyArchived {
-                items.append(.init("Unarchive", handler: {
-                    context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: false)
-                    showModalText(for: context.window, text: "Stories from \(peer.compactDisplayTitle) will now be shown in Chats.")
-                }, itemImage: MenuAnimation.menu_unarchive.value))
-            } else {
-                items.append(.init("Archive", handler: {
-                    context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
-                    showModalText(for: context.window, text: "Stories from \(peer.compactDisplayTitle) will now be shown in Archive.")
-                }, itemImage: MenuAnimation.menu_archive.value))
+            if !self.entry.item.peer.isService {
+                
+                items.append(.init(strings().storyListContextSendMessage, handler: {
+                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                }, itemImage: MenuAnimation.menu_read.value))
+                
+                items.append(.init(strings().storyListContextViewProfile, handler: {
+                    PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+                }, itemImage: MenuAnimation.menu_open_profile.value))
+                
+                let peer = self.entry.item.peer._asPeer()
+                if peer.storyArchived {
+                    items.append(.init(strings().storyListContextUnarchive, handler: {
+                        context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: false)
+                        showModalText(for: context.window, text: strings().storyListTooltipUnarchive(peer.compactDisplayTitle))
+                    }, itemImage: MenuAnimation.menu_unarchive.value))
+                } else {
+                    items.append(.init(strings().storyListContextArchive, handler: {
+                        context.engine.peers.updatePeerStoriesHidden(id: peerId, isHidden: true)
+                        showModalText(for: context.window, text: strings().storyListTooltipArchive(peer.compactDisplayTitle))
+                    }, itemImage: MenuAnimation.menu_archive.value))
+                }
             }
-            
         } else {
-            items.append(.init("Saved Stories", handler: {
+            items.append(.init(strings().storyListContextSavedStories, handler: {
                 StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), standalone: true, isArchived: false)
             }, itemImage: MenuAnimation.menu_stories.value))
             
-            items.append(.init("Archived Stories", handler: {
+            items.append(.init(strings().storyListContextArchivedStories, handler: {
                 StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: true), standalone: true, isArchived: true)
             }, itemImage: MenuAnimation.menu_archive.value))
         }
@@ -863,7 +869,7 @@ private final class ItemView : Control {
         
         let name: String
         if item.entry.id == item.context.peerId {
-            name = "My Story"
+            name = strings().storyListMyStory
         } else {
             name = item.entry.item.peer._asPeer().compactDisplayTitle
         }

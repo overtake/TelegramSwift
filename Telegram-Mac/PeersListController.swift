@@ -1216,7 +1216,10 @@ class PeerListContainerView : Control {
         }
         
         let titlePlusStorySize = titleView.frame.width + (59)
-        let titlePlusStoryStartX = (size.width - titlePlusStorySize) / 2
+        var titlePlusStoryStartX = (size.width - titlePlusStorySize) / 2
+        if let back = backButton {
+            titlePlusStoryStartX = max(back.frame.maxX + 10, titlePlusStoryStartX)
+        }
         
         let storyXStart = titlePlusStoryStartX - 10
         let titleXStart = titlePlusStoryStartX + (59)

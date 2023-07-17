@@ -437,30 +437,38 @@ final class StoryListView : Control, Notifable {
                 return
             }
             let peerId = peer.id
-            let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.react, onClose: {
-            
-            }) |> deliverOnMainQueue
-            
-            _ = window.start(next: { [weak arguments] panel in
-                if let menu = arguments?.storyContextMenu(story) {
-                    menu.topWindow = panel
+            if peer.isService {
+                if let menu = arguments.storyContextMenu(story) {
                     AppMenu.show(menu: menu, event: event, for: control)
                 }
-            })
-           
+            } else {
+                let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.react, onClose: {
+                
+                }) |> deliverOnMainQueue
+                
+                _ = window.start(next: { [weak arguments] panel in
+                    if let menu = arguments?.storyContextMenu(story) {
+                        
+                        menu.topWindow = panel
+                        AppMenu.show(menu: menu, event: event, for: control)
+                    }
+                })
+            }
         }, for: .RightDown)
         
         controls.set(handler: { [weak self] _ in
             self?.updateSides()
+            self?.arguments?.down()
         }, for: .Down)
         
         controls.set(handler: { [weak self] _ in
-            self?.arguments?.longDown()
             self?.updateSides()
+            self?.arguments?.longDown()
         }, for: .LongMouseDown)
         
+        
         controls.set(handler: { [weak self] _ in
-            self?.arguments?.longUp()
+            self?.arguments?.up()
             self?.updateSides()
         }, for: .Up)
         
@@ -488,7 +496,7 @@ final class StoryListView : Control, Notifable {
     private func updateSides(animated: Bool = true) {
         if let args = self.arguments {
             let isPrev: Bool?
-            if !args.interaction.presentation.mouseDown, let event = NSApp.currentEvent, event.type == .leftMouseDown {
+            if !args.interaction.presentation.longDown, let event = NSApp.currentEvent, event.type == .leftMouseDown {
                 let point = controls.convert(event.locationInWindow, from: nil)
                 if point.x < controls.frame.width / 2 {
                     isPrev = true
@@ -610,8 +618,8 @@ final class StoryListView : Control, Notifable {
         self.controls.userInteractionEnabled = !value.magnified
 
    
-        let isControlHid = value.mouseDown || value.magnified //|| value.isSpacePaused
-        let prevIsControlHid = oldValue.mouseDown || oldValue.magnified //|| oldValue.isSpacePaused
+        let isControlHid = value.longDown || value.magnified //|| value.isSpacePaused
+        let prevIsControlHid = oldValue.longDown || oldValue.magnified //|| oldValue.isSpacePaused
 
         if isControlHid != prevIsControlHid {
             self.controls.change(opacity: isControlHid ? 0 : 1, animated: animated)
@@ -670,9 +678,10 @@ final class StoryListView : Control, Notifable {
         if let text = self.text {
             var rect = text.bounds
             rect.size.width = aspect.width
-            rect.origin.x = (containerSize.width - aspect.width) / 2
+            rect.origin.x = 0
             rect.origin.y = controls.frame.maxY - text.frame.height
             transition.updateFrame(view: text, frame: rect)
+            text.updateLayout(size: rect.size, transition: transition)
         }
     }
     
@@ -759,8 +768,10 @@ final class StoryListView : Control, Notifable {
             if self.inputView == nil {
                 let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
                 let aspect = StoryView.size.aspectFitted(maxSize)
-
-                if entry.peer.id == context.peerId {
+                
+                if entry.peer.isService {
+                    self.inputView = StoryNoReplyInput(frame: NSMakeRect(0, 0, aspect.width, 50))
+                } else if entry.peer.id == context.peerId {
                     self.inputView = StoryMyInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
                 } else {
                     self.inputView = StoryInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
@@ -1213,6 +1224,10 @@ extension StoryListView {
                 completed(true)
             }
         }
+    }
+    
+    var hasInput: Bool {
+        return self.textView != nil
     }
 
 }

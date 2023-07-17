@@ -134,6 +134,8 @@ final class StoryInteraction : InterfaceObserver {
         }
                 
         var mouseDown: Bool = false
+        var longDown: Bool = false
+
         var inputInFocus: Bool = false
         var hasPopover: Bool = false
         var hasMenu: Bool = false
@@ -159,7 +161,7 @@ final class StoryInteraction : InterfaceObserver {
         var recordType: RecordingStateSettings = FastSettings.recordingState
         
         var isPaused: Bool {
-            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified
+            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown
         }
         
         var inTransition: Bool {
@@ -356,17 +358,26 @@ final class StoryArguments {
     func longDown() {
         self.interaction.update { current in
             var current = current
+            current.longDown = true
+            return current
+        }
+    }
+    func down() {
+        self.interaction.update { current in
+            var current = current
             current.mouseDown = true
             return current
         }
     }
-    func longUp() {
+    func up() {
         self.interaction.update { current in
             var current = current
             current.mouseDown = false
+            current.longDown = false
             return current
         }
     }
+    
     func inputFocus() {
         self.interaction.update { current in
             var current = current
@@ -782,32 +793,32 @@ private final class StoryViewController: Control, Notifable {
             switch source {
             case let .media(medias):
                 if medias.count > 1 {
-                    title = "Media Sent."
+                    title = strings().storyTooltipReactionSent
                 } else if let media = medias.first {
                     if let file = media as? TelegramMediaFile {
                         if file.isSticker || file.isAnimatedSticker || file.isVideoSticker {
-                           title = "Sticker Sent.";
+                           title = strings().storyTooltipStickerSent
                         } else if file.isVideo && file.isAnimated {
-                            title = "GIF Sent."
+                            title = strings().storyTooltipGifSent
                         } else if file.isVideo {
-                            title = "Video Sent."
+                            title = strings().storyTooltipVideoSent
                         } else if file.isMusic || file.isMusicFile {
-                            title = "Audio Sent.";
+                            title = strings().storyTooltipAudioSent
                         } else {
-                            title = "Media Sent."
+                            title = strings().storyTooltipMediaSent
                         }
                     } else if let _ = media as? TelegramMediaImage {
-                        title = "Picture Sent."
+                        title = strings().storyTooltipPhotoSent
                     } else {
-                        title = "Media Sent."
+                        title = strings().storyTooltipMediaSent
                     }
                 } else {
-                    title = "Media Sent."
+                    title = strings().storyTooltipMediaSent
                 }
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = true
             case let .reaction(reaction):
-                title = "Reaction Sent."
+                title = strings().storyTooltipReactionSent
                 var file: TelegramMediaFile?
                 switch reaction.item {
                 case let .custom(_, f):
@@ -823,19 +834,19 @@ private final class StoryViewController: Control, Notifable {
                 }
                 hasButton = true
             case .text:
-                title = "Message Sent."
+                title = strings().storyTooltipMessageSent
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = true
             case .addedToProfile:
-                title = "Saved stories can be viewed by others on your profile until you remove them."
+                title = strings().storyTooltipSavedToProfile
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = false
             case .removedFromProfile:
-                title = "Story removed from your profile."
+                title = strings().storyTooltipRemovedFromProfile
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = false
             case .linkCopied:
-                title = "Copied to clipboard."
+                title = strings().storyTooltipLinkCopied
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = false
             case let .justText(text):
@@ -871,7 +882,7 @@ private final class StoryViewController: Control, Notifable {
             
             self.button.set(font: .medium(.text), for: .Normal)
             self.button.set(color: storyTheme.colors.accent, for: .Normal)
-            self.button.set(text: "View in Chat", for: .Normal)
+            self.button.set(text: strings().storyTooltipButtonViewInChat, for: .Normal)
             self.button.sizeToFit(NSMakeSize(10, 10), .zero, thatFit: false)
             
             layout.measure(width: size.width - 16 - (button.isHidden ? 0 : 16 + self.button.frame.width) - media.frame.width - 10 - 10)
@@ -1102,7 +1113,7 @@ private final class StoryViewController: Control, Notifable {
     }
     
     private func updatePrevNextControls(_ event: NSEvent, animated: Bool = true) {
-        guard let current = self.current, let arguments = self.arguments else {
+        guard let arguments = self.arguments else {
             return
         }
         
@@ -1211,6 +1222,7 @@ private final class StoryViewController: Control, Notifable {
                 current.magnified = false
                 current.readingText = false
                 current.mouseDown = false
+                current.longDown = false
             }
             return current
         })
@@ -1328,8 +1340,6 @@ private final class StoryViewController: Control, Notifable {
         if nextGroup != nil || bySwipe {
             inTransition = true
             self.arguments?.interaction.flushPauses()
-
-            let entryId = nextGroup?.peer.id
 
 
 
@@ -1802,9 +1812,8 @@ private final class StoryViewController: Control, Notifable {
                     }
                 } else if scrollDeltaY < -50 {
                     if let peerId = current.id, peerId == arguments?.context.peerId, let story = current.story {
-                        if let views = story.storyItem.views, views.seenCount > 0 {
-                            arguments?.showViewers(story)
-                        }
+                        arguments?.showViewers(story)
+                        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                     } else {
                         if self.reactions != nil {
                             self.closeReactions(reactByFirst: true)
@@ -1812,8 +1821,13 @@ private final class StoryViewController: Control, Notifable {
                             if self.isInputFocused {
                                 self.resetInputView()
                             } else {
-                                self.window?.makeFirstResponder(self.inputView)
-                                self.showReactions()
+                                if current.hasInput {
+                                    self.window?.makeFirstResponder(self.inputView)
+                                    self.showReactions()
+                                    NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                                } else {
+                                    NSSound.beep()
+                                }
                             }
                         }
                     }
@@ -2109,7 +2123,7 @@ final class StoryModalController : ModalViewController, Notifable {
                             break
                         }
                         
-                        secondBlock.append(ContextMenuItem("Send Message", handler: {
+                        secondBlock.append(ContextMenuItem(strings().storyAvatarContextSendMessage, handler: {
                             openChat(peerId, nil, nil)
                         }, itemImage: MenuAnimation.menu_read.value))
                         
@@ -2193,7 +2207,7 @@ final class StoryModalController : ModalViewController, Notifable {
         
         let report:(PeerId, Int32, ReportReason)->Void = { [weak self] peerId, storyId, reason in
             _ = context.engine.peers.reportPeerStory(peerId: peerId, storyId: storyId, reason: reason, message: "").start()
-            self?.genericView.showTooltip(.justText("Telegram moderators will review your report. Thank you!"))
+            self?.genericView.showTooltip(.justText(strings().storyReportSuccessText))
         }
 
         
@@ -2201,9 +2215,9 @@ final class StoryModalController : ModalViewController, Notifable {
             context.engine.peers.updatePeerStoriesHidden(id: peer.id, isHidden: value)
             let text: String
             if !value {
-                text = "Stories from **\(peer.compactDisplayTitle)** will now be shown in Chats, not Contacts."
+                text = strings().storyTooltipUnarchive(peer.compactDisplayTitle)
             } else {
-                text = "Stories from **\(peer.compactDisplayTitle)** will now be shown in Contacts, not Chats."
+                text = strings().storyTooltipArchive(peer.compactDisplayTitle)
             }
             self?.genericView.showTooltip(.justText(text))
         }
@@ -2274,7 +2288,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 return current
             }
         }, deleteStory: { [weak self] story in
-            confirm(for: context.window, information: "Are you sure you want to delete story?", successHandler: { _ in
+            confirm(for: context.window, information: strings().storyConfirmDelete, successHandler: { _ in
                 if let stateValue = self?.stories.stateValue, let slice = stateValue.slice {
                     if slice.nextItemId != nil {
                         self?.stories.navigate(navigation: .item(.next))
@@ -2292,7 +2306,9 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.stories.markAsSeen(id: .init(peerId: peerId, id: storyId))
         }, showViewers: { [weak self] story in
             if story.storyItem.expirationTimestamp + 24 * 60 * 60 < context.timestamp {
-                self?.genericView.showTooltip(.tooltip("List of viewers isn't available after 24 hours of story expiration.", MenuAnimation.menu_clear_history))
+                self?.genericView.showTooltip(.tooltip(strings().storyAlertViewsExpired, MenuAnimation.menu_clear_history))
+            } else if story.storyItem.views?.seenCount == 0 {
+                self?.genericView.showTooltip(.tooltip(strings().storyAlertNoViews, MenuAnimation.menu_clear_history))
             } else {
                 if let peerId = story.peer?.id {
                     showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
@@ -2330,43 +2346,41 @@ final class StoryModalController : ModalViewController, Notifable {
             let menu = ContextMenu(presentation: .current(storyTheme.colors))
             
             if story.canCopyLink {
-                menu.addItem(ContextMenuItem("Copy Link", handler: {
+                menu.addItem(ContextMenuItem(strings().storyControlsMenuCopyLink, handler: {
                     copyLink(story)
                 }, itemImage: MenuAnimation.menu_copy_link.value))
             }
             if story.sharable {
-                menu.addItem(ContextMenuItem("Share", handler: {
+                menu.addItem(ContextMenuItem(strings().storyControlsMenuShare, handler: {
                     share(story)
                 }, itemImage: MenuAnimation.menu_share.value))
             }
-            
-            if peer._asPeer().storyArchived {
-                menu.addItem(ContextMenuItem("Archive \(peer._asPeer().compactDisplayTitle)", handler: {                     toggleHide(peer._asPeer(), false)
-                }, itemImage: MenuAnimation.menu_unarchive.value))
+            if !peer.isService {
+                if peer._asPeer().storyArchived {
+                    menu.addItem(ContextMenuItem(strings().storyControlsMenuUnarchive, handler: {                     toggleHide(peer._asPeer(), false)
+                    }, itemImage: MenuAnimation.menu_unarchive.value))
 
-            } else {
-                menu.addItem(ContextMenuItem("Archive \(peer._asPeer().compactDisplayTitle)", handler: {
-                    toggleHide(peer._asPeer(), true)
-                }, itemImage: MenuAnimation.menu_archive.value))
+                } else {
+                    menu.addItem(ContextMenuItem(strings().storyControlsMenuArchive, handler: {
+                        toggleHide(peer._asPeer(), true)
+                    }, itemImage: MenuAnimation.menu_archive.value))
+                }
+                let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
+                
+                let submenu = ContextMenu()
+                            
+                let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+                let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
+                
+                for i in 0 ..< options.count {
+                    submenu.addItem(ContextMenuItem(options[i].title, handler: {
+                        report(peerId, story.storyItem.id, options[i])
+                    }, itemImage: animation[i].value))
+                }
+                reportItem.submenu = submenu
+                menu.addItem(reportItem)
+
             }
-            
-          
-
-
-            let reportItem = ContextMenuItem("Report", itemImage: MenuAnimation.menu_report.value)
-            
-            let submenu = ContextMenu()
-                        
-            let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-            let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-            
-            for i in 0 ..< options.count {
-                submenu.addItem(ContextMenuItem(options[i].title, handler: {
-                    report(peerId, story.storyItem.id, options[i])
-                }, itemImage: animation[i].value))
-            }
-            reportItem.submenu = submenu
-            menu.addItem(reportItem)
             return menu
         })
         
@@ -2549,12 +2563,6 @@ final class StoryModalController : ModalViewController, Notifable {
         
     }
     
-    private func openCurrentMedia() {
-        if let peerId = self.interactions.presentation.entryId {
-           // self.context.bindings.rootNavigation().push(StoryMediaController(context: context, peerId: peerId))
-        }
-    }
-    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         let context = self.context
@@ -2571,7 +2579,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 return .rejected
             }
             if let story = self?.genericView.current?.story, story.peerId == context.peerId {
-                if story.storyItem.views?.seenCount != 0, findModal(InputDataModalController.self) == nil {
+                if findModal(InputDataModalController.self) == nil {
                     self?.arguments?.showViewers(story)
                     return .invoked
                 }
@@ -2749,15 +2757,6 @@ final class StoryModalController : ModalViewController, Notifable {
             return .invoked
         }, with: self, for: .I, priority: .modal, modifierFlags: [.command])
         
-        
-        window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            if self?.isNotMainScreen == true {
-                return .rejected
-            }
-            self?.close()
-            self?.openCurrentMedia()
-            return .invoked
-        }, with: self, for: .E, priority: .modal, modifierFlags: [.command])
     }
     
     private var isNotMainScreen: Bool {
@@ -2877,7 +2876,7 @@ final class StoryModalController : ModalViewController, Notifable {
         
         })
     }
-    static func ShowSingleStory(context: AccountContext, storyId: StoryId, initialId: StoryInitialIndex?, emptyCallback:(()->Void)? = nil) {
+    static func ShowSingleStory(context: AccountContext, storyId: StoryId, initialId: StoryInitialIndex?, readGlobally: Bool = true, emptyCallback:(()->Void)? = nil) {
         
         var initialSignal = context.engine.messages.refreshStories(peerId: storyId.peerId, ids: [storyId.id])
         |> map { _ -> StoryId? in
@@ -2901,7 +2900,7 @@ final class StoryModalController : ModalViewController, Notifable {
         
         _ = showModalProgress(signal: initialSignal, for: context.window).start(next: { storyId in
             if let storyId = storyId {
-                let storyContent = SingleStoryContentContextImpl(context: context, storyId: storyId)
+                let storyContent = SingleStoryContentContextImpl(context: context, storyId: storyId, readGlobally: readGlobally)
                 let _ = (storyContent.state
                 |> filter { $0.slice != nil }
                 |> take(1)

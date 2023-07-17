@@ -267,7 +267,7 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "\(story.views?.seenCount ?? 0) Views")
+    let controller = InputDataController(dataSignal: signal, title: strings().storyViewsTitleCountable(story.views?.seenCount ?? 0))
     
     controller.getBackgroundColor = {
         presentation.colors.background

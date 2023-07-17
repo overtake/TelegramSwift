@@ -129,7 +129,7 @@ private final class StoryReplyActionButton : View {
         
         if state == .share, story?.storyItem.isForwardingDisabled == true {
             if story?.canCopyLink == false {
-                tooltip(for: current, text: "You can't share this story")
+                tooltip(for: current, text: strings().storyInputCantShare)
             } else {
                 current.contextMenu = {
                     let menu = ContextMenu()
@@ -509,7 +509,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         textView.textFont = .normal(.text)
         textView.textColor = .white
-        textView.setPlaceholderAttributedString(.initialize(string: "Reply Privately...", color: NSColor.white.withAlphaComponent(0.33), font: .normal(.text)), update: true)
+        textView.setPlaceholderAttributedString(.initialize(string: strings().storyInputPlaceholder, color: NSColor.white.withAlphaComponent(0.33), font: .normal(.text)), update: true)
         textView.delegate = self
         textView.inputView.appearance = storyTheme.appearance
                 
@@ -535,16 +535,16 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         attach.contextMenu = { [weak self] in
             
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
+            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors), betterInside: true)
             var items: [ContextMenuItem] = []
             
             
             
-            items.append(ContextMenuItem("Photo Or Video", handler: { [weak self] in
+            items.append(ContextMenuItem(strings().storyInputAttach, handler: { [weak self] in
                 self?.arguments?.attachPhotoOrVideo(nil)
             }, itemImage: MenuAnimation.menu_shared_media.value))
             
-            items.append(ContextMenuItem("File", handler: { [weak self] in
+            items.append(ContextMenuItem(strings().storyInputFile, handler: { [weak self] in
                 self?.arguments?.attachFile()
             }, itemImage: MenuAnimation.menu_file.value))
             
