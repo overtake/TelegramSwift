@@ -12053,7 +12053,7 @@ public final class L10n {
   public static var storyNoReplyInputNoReply: String  { return L10n.tr("Localizable", "Story.NoReplyInput.NoReply") }
   /// Telegram moderators will review your report. Thank you!
   public static var storyReportSuccessText: String  { return L10n.tr("Localizable", "Story.Report.SuccessText") }
-  /// Stories from **%@** will now be shown in Chats.
+  /// Stories from **%@** will now be shown in Archived Chats.
   public static func storyTooltipArchive(_ p1: String) -> String {
     return L10n.tr("Localizable", "Story.Tooltip.Archive", p1)
   }
@@ -12062,6 +12062,10 @@ public final class L10n {
   /// You are seeing this story because you have been added to %@'s list of close friends.
   public static func storyTooltipCloseFriends(_ p1: String) -> String {
     return L10n.tr("Localizable", "Story.Tooltip.CloseFriends", p1)
+  }
+  /// Only %@'s contacts can view this story.
+  public static func storyTooltipContacts(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Story.Tooltip.Contacts", p1)
   }
   /// GIF Sent.
   public static var storyTooltipGifSent: String  { return L10n.tr("Localizable", "Story.Tooltip.GifSent") }
@@ -12079,9 +12083,13 @@ public final class L10n {
   public static var storyTooltipRemovedFromProfile: String  { return L10n.tr("Localizable", "Story.Tooltip.RemovedFromProfile") }
   /// Saved stories can be viewed by others on your profile until you remove them.
   public static var storyTooltipSavedToProfile: String  { return L10n.tr("Localizable", "Story.Tooltip.SavedToProfile") }
+  /// Only some contacts %@ selected can view this story.
+  public static func storyTooltipSelectedContacts(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Story.Tooltip.SelectedContacts", p1)
+  }
   /// Sticker Sent.
   public static var storyTooltipStickerSent: String  { return L10n.tr("Localizable", "Story.Tooltip.StickerSent") }
-  /// Stories from **%@** will now be shown in Archived Chats.
+  /// Stories from **%@** will now be shown in Chats.
   public static func storyTooltipUnarchive(_ p1: String) -> String {
     return L10n.tr("Localizable", "Story.Tooltip.Unarchive", p1)
   }

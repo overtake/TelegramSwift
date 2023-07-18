@@ -20,6 +20,9 @@ private let cant_unmute = NSImage(named: "Icon_StoryMute")!.precomposed(NSColor.
 
 private let unmuted_image = NSImage(named: "Icon_StoryUnmute")!.precomposed(NSColor.white)
 
+private let privacy_close_friends = NSImage(named: "Icon_StoryCloseFriends")!.precomposed()
+private let privacy_contacts = NSImage(named: "Icon_Story_Contacts")!.precomposed()
+private let privacy_selected_contacts = NSImage(named: "Icon_Story_Selected_Contacts")!.precomposed()
 
 final class StoryControlsView : Control {
     private let avatar = AvatarControl(font: .avatar(13))
@@ -74,9 +77,6 @@ final class StoryControlsView : Control {
         muted.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
         
         
-        closeFriends.set(image: NSImage(named: "Icon_StoryCloseFriends")!.precomposed(), for: .Normal)
-        closeFriends.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
-
         muted.set(handler: { [weak self] _ in
             if self?.hasNoSound == true {
                 self?.arguments?.showTooltipText(strings().storyControlsVideoNoSound, MenuAnimation.menu_speaker_muted)
@@ -104,8 +104,8 @@ final class StoryControlsView : Control {
         textView.userInteractionEnabled = false
      
         closeFriends.set(handler: { [weak self] control in
-            if let peer = self?.story?.peer {
-                self?.arguments?.showFriendsTooltip(control, peer._asPeer())
+            if let story = self?.story {
+                self?.arguments?.showFriendsTooltip(control, story)
             }
         }, for: .Click)
         
@@ -138,7 +138,18 @@ final class StoryControlsView : Control {
         self.arguments = arguments
         avatar.setPeer(account: context.account, peer: peer)
         
-        closeFriends.isHidden = !story.storyItem.isCloseFriends
+        closeFriends.isHidden = !story.storyItem.isCloseFriends && !story.storyItem.isSelectedContacts && !story.storyItem.isContacts
+        
+        if story.storyItem.isCloseFriends {
+            closeFriends.set(image: privacy_close_friends, for: .Normal)
+        } else if story.storyItem.isSelectedContacts {
+            closeFriends.set(image: privacy_selected_contacts, for: .Normal)
+        } else if story.storyItem.isContacts {
+            closeFriends.set(image: privacy_contacts, for: .Normal)
+        }
+        closeFriends.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
+
+        
         
         let date = NSMutableAttributedString()
         let color = NSColor.white.withAlphaComponent(0.8)
@@ -165,7 +176,6 @@ final class StoryControlsView : Control {
         }
         muted.isHidden = !arguments.interaction.canBeMuted(story.storyItem)
         more.isHidden = context.peerId == groupId
-        closeFriends.isHidden = !story.storyItem.isCloseFriends
         
 
         let authorName = NSMutableAttributedString()
