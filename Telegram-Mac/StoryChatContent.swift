@@ -359,6 +359,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         isPublic: item.isPublic,
                         isPending: false,
                         isCloseFriends: item.isCloseFriends,
+                        isContacts: item.isContacts,
+                        isSelectedContacts: item.isSelectedContacts,
                         isForwardingDisabled: item.isForwardingDisabled,
                         isEdited: item.isEdited
                     )
@@ -380,6 +382,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             isPublic: false,
                             isPending: true,
                             isCloseFriends: item.privacy.base == .closeFriends,
+                            isContacts: false,
+                            isSelectedContacts: false,
                             isForwardingDisabled: false,
                             isEdited: false
                         ))
@@ -1220,6 +1224,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     isPublic: itemValue.isPublic,
                     isPending: false,
                     isCloseFriends: itemValue.isCloseFriends,
+                    isContacts: itemValue.isContacts,
+                    isSelectedContacts: itemValue.isSelectedContacts,
                     isForwardingDisabled: itemValue.isForwardingDisabled,
                     isEdited: itemValue.isEdited
                 )

@@ -321,10 +321,10 @@ final class StoryArguments {
     let hashtag:(String)->Void
     let report:(PeerId, Int32, ReportReason)->Void
     let toggleHide:(Peer, Bool)->Void
-    let showFriendsTooltip:(Control, Peer)->Void
+    let showFriendsTooltip:(Control, StoryContentItem)->Void
     let showTooltipText:(String, MenuAnimation)->Void
     let storyContextMenu:(StoryContentItem)->ContextMenu?
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, Peer)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?) {
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -2339,8 +2339,19 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.context.bindings.globalSearch(string)
         }, report: report,
         toggleHide: toggleHide,
-        showFriendsTooltip: { [weak self] control, peer in
-            self?.genericView.showTooltip(.tooltip(strings().storyTooltipCloseFriends(peer.compactDisplayTitle), MenuAnimation.menu_add_to_favorites))
+        showFriendsTooltip: { [weak self] _, story in
+            guard let peer = story.peer?._asPeer() else {
+                return
+            }
+            let text: String
+            if story.storyItem.isCloseFriends {
+                text = strings().storyTooltipCloseFriends(peer.compactDisplayTitle)
+            } else if story.storyItem.isContacts {
+                text = strings().storyTooltipContacts(peer.compactDisplayTitle)
+            } else {
+                text = strings().storyTooltipSelectedContacts(peer.compactDisplayTitle)
+            }
+            self?.genericView.showTooltip(.tooltip(text, MenuAnimation.menu_add_to_favorites))
         }, showTooltipText: { [weak self] text, animation in
             self?.genericView.showTooltip(.tooltip(text, animation))
         }, storyContextMenu: { story in
