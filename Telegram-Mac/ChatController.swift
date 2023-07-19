@@ -3454,10 +3454,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             })
         }
         
-        chatInteraction.openChatPeerStories = { [weak self] messageId, peerId in
+        chatInteraction.openChatPeerStories = { [weak self] messageId, peerId, setProgress in
             StoryModalController.ShowStories(context: context, isHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: messageId, takeControl: { peerId, messageId, storyId in
                 return self?.findStoryControl(messageId, storyId, peerId, useAvatar: true)
-            }), singlePeer: true)
+            }, setProgress: setProgress), singlePeer: true)
         }
         
         
@@ -4011,10 +4011,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return current
             }
         }
-        chatInteraction.openStories = { [weak self] f in
+        chatInteraction.openStories = { [weak self] f, setProgress in
             let state = self?.uiState.with ({ $0.storyState })
             if let _ = state {
-                StoryModalController.ShowStories(context: context, isHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: nil, takeControl: f), singlePeer: true)
+                StoryModalController.ShowStories(context: context, isHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: nil, takeControl: f, setProgress: setProgress), singlePeer: true)
             }
         }
         

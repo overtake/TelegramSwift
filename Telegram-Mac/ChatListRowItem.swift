@@ -1178,6 +1178,8 @@ class ChatListRowItem: TableRowItem {
                     return view == nil
                 })
                 return view
+            }, setProgress: { [weak self] signal in
+                self?.setStoryProgress(signal)
             }), true, false)
         } else if let storyState = self.storyState, !storyState.items.isEmpty {
             let table = self.table
@@ -1190,11 +1192,16 @@ class ChatListRowItem: TableRowItem {
                     return view == nil
                 })
                 return view
+            }, setProgress: { [weak self] signal in
+                self?.setStoryProgress(signal)
             }), false, true)
         }
     }
     private func takeStoryControl() -> NSView? {
         (self.view as? ChatListRowView)?.takeStoryControl()
+    }
+    private func setStoryProgress(_ signal:Signal<Never, NoError>)  {
+        (self.view as? ChatListRowView)?.setStoryProgress(signal)
     }
     
     var markAsUnread: Bool {

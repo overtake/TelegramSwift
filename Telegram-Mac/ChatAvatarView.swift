@@ -14,7 +14,7 @@ import SwiftSignalKit
 
 
 final class ChatAvatarView : Control {
-    private let avatar: AvatarControl = AvatarControl(font: .avatar(.title))
+    private let avatar: AvatarStoryControl = AvatarStoryControl(font: .avatar(.title), size: NSMakeSize(36, 36))
     
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
@@ -22,7 +22,6 @@ final class ChatAvatarView : Control {
 
     private let disposable = MetaDisposable()
     private var storyComponent: AvatarStoryIndicatorComponent?
-    private var storyComponentView: AvatarStoryIndicatorComponent.IndicatorView?
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -36,31 +35,39 @@ final class ChatAvatarView : Control {
         
         self.scaleOnClick = true
     }
+    private var peer: Peer?
     
     func setPeer(item: ChatRowItem, peer: Peer, storyStats: PeerStoryStats? = nil, message: Message? = nil, size: NSSize? = nil, force: Bool = false, disableForum: Bool = false) {
         
         let context = item.chatInteraction.context
+        
+        let animated: Bool = self.peer != nil
         
         if let storyStats = storyStats, peer.id != item.context.peerId, message?.id.peerId.namespace == Namespaces.Peer.CloudChannel || message?.id.peerId.namespace == Namespaces.Peer.CloudGroup {
             self.storyComponent = .init(stats: storyStats, presentation: theme)
         } else {
             self.storyComponent = nil
         }
+        self.peer = peer
         
         self.avatar.setPeer(account: context.account, peer: peer, message: message, size: size, disableForum: disableForum)
         if peer.isPremium || force, peer.hasVideo, !isLite(.animations) {
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
+            var first = true
             disposable.set(signal.start(next: { [weak self] photos in
-                self?.updatePhotos(photos.map { $0.value }, context: context, peer: peer)
+                self?.updatePhotos(photos.map { $0.value }, context: context, peer: peer, animated: !first)
+                first = false
             }))
         } else {
-            self.updatePhotos([], context: context, peer: peer)
+            self.updatePhotos([], context: context, peer: peer, animated: animated)
         }
         
         self.removeAllHandlers()
         self.set(handler: { [weak item] control in
             if storyStats != nil, let id = message?.id {
-                item?.chatInteraction.openChatPeerStories(id, peer.id)
+                item?.chatInteraction.openChatPeerStories(id, peer.id, { [weak self] signal in
+                    self?.setOpenProgress(signal)
+                })
             } else if item?.chatInteraction.presentation.state == .selecting {
                 item?.chatInteraction.toggleUnderMouseMessage()
             } else {
@@ -71,9 +78,13 @@ final class ChatAvatarView : Control {
         self.toolTip = item.nameHide
     }
     
+    func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        SetOpenStoryDisposable(self.avatar.pushLoadingStatus(signal: signal))
+    }
+    
     private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
     
-    private func updatePhotos(_ photos: [TelegramPeerPhoto], context: AccountContext, peer: Peer) {
+    private func updatePhotos(_ photos: [TelegramPeerPhoto], context: AccountContext, peer: Peer, animated: Bool) {
         
         if let first = photos.first, let video = first.image.videoRepresentations.first {
             let equal = videoRepresentation?.resource.id == video.resource.id
@@ -123,38 +134,15 @@ final class ChatAvatarView : Control {
             self.videoRepresentation = nil
         }
         
+        let transition: ContainedViewLayoutTransition = animated  ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+
         if let storyComponent = storyComponent {
-            let current: AvatarStoryIndicatorComponent.IndicatorView
-            let isNew: Bool
-            if let view = self.storyComponentView {
-                current = view
-                isNew = false
-            } else {
-                current = .init(frame: self.bounds)
-                self.storyComponentView = current
-                addSubview(current)
-                isNew = true
-            }
-            let transition: ContainedViewLayoutTransition
-            if !isNew {
-                transition = .animated(duration: 0.2, curve: .easeOut)
-            } else {
-                transition = .immediate
-            }
-            current.update(component: storyComponent, availableSize: bounds.insetBy(dx: 3, dy: 3).size, transition: transition)
-            transition.updateFrame(view: avatar, frame: bounds.insetBy(dx: 3, dy: 3))
-            
+            avatar.update(component: storyComponent, availableSize: bounds.insetBy(dx: 3, dy: 3).size, transition: transition)
             if let view = self.photoVideoView {
                 transition.updateFrame(view: view, frame: bounds.insetBy(dx: 3, dy: 3))
             }
-            
-        } else if let view = self.storyComponentView {
-            performSubviewRemoval(view, animated: true)
-            self.storyComponentView = nil
-            
-            let transition: ContainedViewLayoutTransition = .animated(duration: 0.2, curve: .easeOut)
-            
-            transition.updateFrame(view: avatar, frame: bounds)
+        } else {
+            avatar.update(component: nil, availableSize: bounds.size, transition: transition)
             if let view = self.photoVideoView {
                 transition.updateFrame(view: view, frame: bounds)
             }

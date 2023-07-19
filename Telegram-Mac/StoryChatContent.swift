@@ -1632,7 +1632,7 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
 func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id, storyItem: EngineStoryItem) -> Signal<Never, NoError> {
     return context.engine.data.get(
         TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
-    )
+    ) //|> delay(2.0, queue: .mainQueue())
     |> mapToSignal { peerValue -> Signal<Never, NoError> in
         guard let peerValue = peerValue else {
             return .complete()

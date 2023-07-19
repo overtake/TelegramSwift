@@ -280,8 +280,9 @@ final class StoryMyInputView : Control, StoryInput {
                 self.avatars = nil
             }
         }
+        let expired = story.storyItem.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp
         
-        if let views = story.storyItem.views, views.seenCount > 3 || views.seenCount == 0 {
+        if let views = story.storyItem.views, views.seenCount > 3 || views.seenCount == 0 || expired {
             self.views.removeAllHandlers()
             self.views.set(handler: { [weak arguments] _ in
                 arguments?.showViewers(story)

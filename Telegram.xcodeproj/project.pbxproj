@@ -198,6 +198,8 @@
 		2755491D274B7FCB0098A3CD /* TextRecognizing in Frameworks */ = {isa = PBXBuildFile; productRef = 2755491C274B7FCB0098A3CD /* TextRecognizing */; };
 		275C14132A61780F000DDACF /* expired_story.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275C14122A61780F000DDACF /* expired_story.tgs */; };
 		275C14152A6549F8000DDACF /* StoryNoReplyInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */; };
+		275C14172A66A3CD000DDACF /* AvatarStoryControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */; };
+		275C14182A67F1CB000DDACF /* AvatarStoryControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */; };
 		275DDC3A267B8702009CF884 /* bot_menu_close.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC38267B8701009CF884 /* bot_menu_close.tgs */; };
 		275DDC3B267B8702009CF884 /* bot_close_menu.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC39267B8702009CF884 /* bot_close_menu.tgs */; };
 		275F259A28127F5D00D5A5D7 /* Avatar_StickersList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F259928127F5D00D5A5D7 /* Avatar_StickersList.swift */; };
@@ -1656,6 +1658,7 @@
 		2755491B274B7B3C0098A3CD /* TextRecognizing */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TextRecognizing; path = packages/TextRecognizing; sourceTree = "<group>"; };
 		275C14122A61780F000DDACF /* expired_story.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = expired_story.tgs; sourceTree = "<group>"; };
 		275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryNoReplyInput.swift; sourceTree = "<group>"; };
+		275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarStoryControl.swift; sourceTree = "<group>"; };
 		275DDC38267B8701009CF884 /* bot_menu_close.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_menu_close.tgs; sourceTree = "<group>"; };
 		275DDC39267B8702009CF884 /* bot_close_menu.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_close_menu.tgs; sourceTree = "<group>"; };
 		275F259928127F5D00D5A5D7 /* Avatar_StickersList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_StickersList.swift; sourceTree = "<group>"; };
@@ -5313,6 +5316,7 @@
 				C2B4D0C71E36047F00CBC4E6 /* ChatActivitiesModel.swift */,
 				C29C3E5A1E421F1700193A7E /* ChatAccessoryModel.swift */,
 				C2FD33F11E69CF6D008D13D4 /* ChatUrlPreviewModel.swift */,
+				275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */,
 			);
 			name = models;
 			sourceTree = "<group>";
@@ -6669,6 +6673,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				275C14182A67F1CB000DDACF /* AvatarStoryControl.swift in Sources */,
 				27EE444A297FD9030077AA0F /* PresenceStrings.swift in Sources */,
 				2747969928FEB00700A891F3 /* InlineStickersContext.swift in Sources */,
 				278926CC27550CD300923087 /* ChatPresentationInputQueryResult.swift in Sources */,
@@ -7245,6 +7250,7 @@
 				D0675D84217F1F27004900A7 /* ArchiverContext.swift in Sources */,
 				C248BD261E706A05004B9106 /* RecentSessionsController.swift in Sources */,
 				9FA0E53D205693DA001E5649 /* WebSessionsController.swift in Sources */,
+				275C14172A66A3CD000DDACF /* AvatarStoryControl.swift in Sources */,
 				C250B01F1DB67B42004E9FBE /* WPLayout.swift in Sources */,
 				D0D7520924C03CD60037D73A /* VideoEditorThumbs.swift in Sources */,
 				2751017D29D2BA02004CEFF3 /* TextInputController.swift in Sources */,

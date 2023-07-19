@@ -50,6 +50,7 @@ final class StoryListNavigationView : View {
             self.addSubview(part, positioned: .below, relativeTo: self.selector)
             parts.append(part)
         }
+        self.selector.set(progress: 0, animated: false)
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     

@@ -245,6 +245,25 @@ public extension ContainedViewLayoutTransition {
         }
     }
     
+    func updateAlpha(layer: CALayer, alpha: CGFloat, completion: ((Bool) -> Void)? = nil) {
+        switch self {
+        case .immediate:
+            layer.opacity = Float(alpha)
+            if let completion = completion {
+                completion(true)
+            }
+        case let .animated(duration, curve):
+            let previousAlpha = layer.presentation()?.opacity ?? layer.opacity
+            layer.opacity = Float(alpha)
+            layer.animateAlpha(from: CGFloat(previousAlpha), to: alpha, duration: duration, timingFunction: curve.timingFunction, completion: { result in
+                if let completion = completion {
+                    completion(result)
+                }
+            })
+        }
+    }
+
+    
     func animatePositionWithKeyframes(layer: CALayer, keyframes: [CGPoint], removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
            switch self {
            case .immediate:
@@ -253,6 +272,31 @@ public extension ContainedViewLayoutTransition {
                layer.animateKeyframes(values: keyframes.map(NSValue.init(point:)), duration: duration, keyPath: "position", timingFunction: curve.timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
            }
        }
+    
+    
+    func setShapeLayerStrokeEnd(layer: CAShapeLayer, strokeEnd: CGFloat, completion: ((Bool) -> Void)? = nil) {
+        switch self {
+        case .immediate:
+            layer.strokeEnd = strokeEnd
+            completion?(true)
+        case let .animated(duration, curve):
+            let previousStrokeEnd = layer.strokeEnd
+            layer.strokeEnd = strokeEnd
+            
+            layer.animate(
+                from: previousStrokeEnd as NSNumber,
+                to: strokeEnd as NSNumber,
+                keyPath: "strokeEnd",
+                timingFunction: curve.timingFunction,
+                duration: duration,
+                delay: 0.0,
+                removeOnCompletion: true,
+                additive: false,
+                completion: completion
+            )
+        }
+    }
+
 
 }
 

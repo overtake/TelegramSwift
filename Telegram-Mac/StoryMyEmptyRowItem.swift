@@ -18,7 +18,12 @@ final class StoryMyEmptyRowItem : GeneralRowItem {
     fileprivate let showArchive: ()->Void
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, showArchive: @escaping()->Void) {
         self.showArchive = showArchive
-        self.titleLayout = TextViewLayout.init(.initialize(string: "Only you can see archived stories unless you choose to save them to your profile.", color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        let string = NSMutableAttributedString()
+        _ = string.append(string: strings().storyMediaEmptyTitle, color: theme.colors.text, font: .medium(.header))
+        _ = string.append(string: "\n", color: theme.colors.text, font: .medium(.small))
+        _ = string.append(string: strings().storyMediaEmptyText, color: theme.colors.grayText, font: .normal(.text))
+
+        self.titleLayout = TextViewLayout(string, alignment: .center)
         self.context = context
         super.init(initialSize, stableId: stableId, viewType: viewType)
         _ = makeSize(initialSize.width)
@@ -37,7 +42,7 @@ final class StoryMyEmptyRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return self.viewType.innerInset.top + stickerSize.height + self.viewType.innerInset.top + titleLayout.layoutSize.height + self.viewType.innerInset.top + 20 + self.viewType.innerInset.bottom + 20
+        return self.viewType.innerInset.top + stickerSize.height + self.viewType.innerInset.top + titleLayout.layoutSize.height + self.viewType.innerInset.top + 20 + self.viewType.innerInset.bottom + 20 + 10
     }
     
     override func viewClass() -> AnyClass {
@@ -84,9 +89,11 @@ private final class StoryMyEmptyRowView: GeneralContainableRowView {
         let params = item.sticker.parameters
         
         archive.set(font: .medium(.title), for: .Normal)
-        archive.set(color: theme.colors.accent, for: .Normal)
-        archive.set(text: "Open Archive", for: .Normal)
-        archive.sizeToFit(NSMakeSize(10, 10), NSMakeSize(200, 50), thatFit: false)
+        archive.set(color: theme.colors.underSelectedColor, for: .Normal)
+        archive.set(background: theme.colors.accent, for: .Normal)
+        archive.layer?.cornerRadius = 10
+        archive.set(text: strings().storyMediaEmptyOpen, for: .Normal)
+        archive.sizeToFit(NSMakeSize(10, 10), NSMakeSize(200, 30), thatFit: false)
         
         imageView.update(with: item.sticker.file, size: item.stickerSize, context: item.context, parent: nil, table: item.table, parameters: params, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
         
@@ -105,7 +112,7 @@ private final class StoryMyEmptyRowView: GeneralContainableRowView {
         self.imageView.centerX(y: item.viewType.innerInset.top)
         self.textView.centerX(y: self.imageView.frame.maxY + 20 + item.inset.bottom)
         
-        archive.centerX(y: self.textView.frame.maxY + item.inset.top)
+        archive.centerX(y: self.textView.frame.maxY + item.inset.top + 10)
         
     }
 }

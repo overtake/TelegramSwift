@@ -464,7 +464,12 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         let source = self.source
         
-        
+        let storiesSignal: Signal<PeerExpiringStoryListContext.State?, NoError>
+        if let stories = self.stories {
+            storiesSignal = stories.state |> map(Optional.init)
+        } else {
+            storiesSignal = .single(nil)
+        }
         
         let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> = arguments.get() |> mapToSignal { arguments in
             
@@ -541,12 +546,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             }
             
             
-            let storiesSignal: Signal<PeerExpiringStoryListContext.State?, NoError>
-            if let stories = self.stories {
-                storiesSignal = stories.state |> map(Optional.init)
-            } else {
-                storiesSignal = .single(nil)
-            }
+           
             
             return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal)
                 |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in

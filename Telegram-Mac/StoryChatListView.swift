@@ -478,13 +478,31 @@ private final class StoryListContainer : Control {
     }
     
     private func open(_ item: StoryListEntryRowItem) {
-        item.open(.init(peerId: item.entry.id, id: nil, messageId: nil, takeControl: { [weak self] peerId, _, _ in
+        let peerId = item.entry.id
+        item.open(.init(peerId: peerId, id: nil, messageId: nil, takeControl: { [weak self] peerId, _, _ in
             return self?.scrollAndFindItem(peerId, animated: false)
+        }, setProgress: { [weak self] value in
+            self?.setProgress(peerId, value)
         }), false, self.item?.isArchive ?? false)
     }
     
+    func setProgress(_ peerId: PeerId, _ value: Signal<Never, NoError>) {
+        if let view = findItemView(peerId) {
+            view.setOpenProgress(value)
+        }
+    }
+    
+    private func findItemView(_ peerId: PeerId) -> ItemView? {
+        for view in views {
+            if view.item?.entry.id == peerId {
+                return view
+            }
+        }
+        return nil
+    }
+    
     private func scrollAndFindItem(_ peerId: PeerId, animated: Bool) -> NSView? {
-        for (i, view) in views.enumerated() {
+        for view in views {
             if view.item?.entry.id == peerId {
                 if view.visibleRect != .zero {
                     return view.imageView
@@ -740,6 +758,9 @@ private final class StoryListEntryRowItem : TableRowItem {
 
 private final class ComponentView : Control {
     private let stateView = AvatarStoryIndicatorComponent.IndicatorView(frame: StoryListChatListRowItem.fullSize.bounds)
+    
+    private var loadingStatuses = Bag<Disposable>()
+
     fileprivate var item: StoryListEntryRowItem?
     private var progress: CGFloat = 1.0
     required init(frame frameRect: NSRect) {
@@ -770,7 +791,10 @@ private final class ComponentView : Control {
         
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
         self.updateLayout(size: frame.size, transition: transition)
-
+        
+        if progress != 1 {
+            self.cancelLoading()
+        }
     }
     
     func set(progress: CGFloat, transition: ContainedViewLayoutTransition) {
@@ -788,8 +812,57 @@ private final class ComponentView : Control {
         let stateRect = CGRect(origin: CGPoint(x: (size.width - stateSize.width) / 2, y: 3), size: stateSize)
         
         transition.updateFrame(view: stateView, frame: stateRect.insetBy(dx: -3, dy: -3))
-        stateView.update(component: item.stateComponent, availableSize: NSMakeSize(size.width - 6, size.width - 6), progress: progress, transition: transition)
+        stateView.update(component: item.stateComponent, availableSize: NSMakeSize(size.width - 6, size.width - 6), progress: progress, transition: transition, displayProgress: !self.loadingStatuses.isEmpty)
 
+    }
+    
+    
+    func cancelLoading() {
+        for disposable in self.loadingStatuses.copyItems() {
+            disposable.dispose()
+        }
+        self.loadingStatuses.removeAll()
+        self.updateStoryIndicator(transition: .animated(duration: 0.2, curve: .easeOut))
+    }
+    
+    func pushLoadingStatus(signal: Signal<Never, NoError>) -> Disposable {
+        let disposable = MetaDisposable()
+        
+        let loadingStatuses = self.loadingStatuses
+        
+        for d in loadingStatuses.copyItems() {
+            d.dispose()
+        }
+        loadingStatuses.removeAll()
+        
+        let index = loadingStatuses.add(disposable)
+        
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 0.2, execute: { [weak self] in
+            self?.updateStoryIndicator(transition: .animated(duration: 0.2, curve: .easeOut))
+        })
+        
+        disposable.set(signal.start(completed: { [weak self] in
+            Queue.mainQueue().async {
+                loadingStatuses.remove(index)
+                if loadingStatuses.isEmpty {
+                    self?.updateStoryIndicator(transition: .animated(duration: 0.2, curve: .easeOut))
+                }
+            }
+        }))
+        
+        return ActionDisposable { [weak self] in
+            loadingStatuses.get(index)?.dispose()
+            loadingStatuses.remove(index)
+            if loadingStatuses.isEmpty {
+                self?.updateStoryIndicator(transition: .animated(duration: 0.2, curve: .easeOut))
+            }
+        }
+    }
+
+    private func updateStoryIndicator(transition: ContainedViewLayoutTransition) {
+        if let component = stateView.component, let availableSize = stateView.availableSize {
+            stateView.update(component: component, availableSize: availableSize, progress: stateView.progress ?? 1.0, transition: transition, displayProgress: !self.loadingStatuses.isEmpty)
+        }
     }
 
 }
@@ -803,6 +876,13 @@ private final class ItemView : Control {
     private var open:((StoryListEntryRowItem)->Void)?
     
     weak var component: ComponentView?
+    
+    deinit {
+    }
+    
+    func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        SetOpenStoryDisposable(self.component?.pushLoadingStatus(signal: signal))
+    }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

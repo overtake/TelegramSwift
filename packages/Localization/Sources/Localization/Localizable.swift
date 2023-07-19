@@ -12011,7 +12011,7 @@ public final class L10n {
   public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }
   /// Copy Link
   public static var storyMyInputCopyLink: String  { return L10n.tr("Localizable", "Story.MyInput.CopyLink") }
-  /// Remove To Profile
+  /// Remove From Profile
   public static var storyMyInputRemoveFromProfile: String  { return L10n.tr("Localizable", "Story.MyInput.RemoveFromProfile") }
   /// Save Media...
   public static var storyMyInputSaveMedia: String  { return L10n.tr("Localizable", "Story.MyInput.SaveMedia") }
@@ -12129,6 +12129,12 @@ public final class L10n {
   public static var storyListContextViewProfile: String  { return L10n.tr("Localizable", "StoryList.Context.ViewProfile") }
   /// Only you can see archived stories unless you choose to save them to your profile
   public static var storyMediaArchiveText: String  { return L10n.tr("Localizable", "StoryMedia.ArchiveText") }
+  /// Open Archive
+  public static var storyMediaEmptyOpen: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Open") }
+  /// Open the Archive so select stories you want to be displayed in your profile.
+  public static var storyMediaEmptyText: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Text") }
+  /// No Saved Stories
+  public static var storyMediaEmptyTitle: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Title") }
   /// %d
   public static func storyViewsTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_countable", p1)

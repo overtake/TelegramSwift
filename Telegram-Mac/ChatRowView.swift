@@ -873,13 +873,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let peer = item.peer {
             avatar.setPeer(item: item, peer: peer, storyStats: item.entry.additionalData.authorStoryStats, message: item.message)
             if peer.id.id._internalGetInt64Value() != 0 {
-                avatar.contextMenu = { [weak chatInteraction] in
+                avatar.contextMenu = { [weak chatInteraction, weak avatar] in
                     
                     let menu = ContextMenu()
                     
                     if let _ = authorStoryStats, let messageId = item.message?.id {
-                        menu.addItem(ContextMenuItem(strings().chatContextPeerOpenStory, handler: {
-                            chatInteraction?.openChatPeerStories(messageId, peer.id)
+                        menu.addItem(ContextMenuItem(strings().chatContextPeerOpenStory, handler: { 
+                            chatInteraction?.openChatPeerStories(messageId, peer.id, { signal in
+                                avatar?.setOpenProgress(signal)
+                            })
                         }, itemImage: MenuAnimation.menu_stories.value))
                     }
                     

@@ -195,7 +195,7 @@ private func entries(_ state: State, arguments: Arguments) -> [Entry] {
         var index = MessageIndex.absoluteLowerBound()
         entries.append(.section(index: index))
         index = index.globalSuccessor()
-        if state.state?.peerReference?.id == arguments.context.peerId {
+        if arguments.isMy {
             entries.append(.emptySelf(index: index, viewType: .singleItem))
         }
     }

@@ -192,8 +192,8 @@ final class ChatInteraction : InterfaceObserver  {
     var revealMedia:(MessageId)->Void = { _ in }
     var toggleTranslate:()->Void = { }
     var hideTranslation:()->Void = { }
-    var openStories: (_ f:@escaping(PeerId, MessageId?, Int32?)-> NSView?)->Void = { _ in }
-    var openChatPeerStories: (MessageId, PeerId)->Void = { _, _ in }
+    var openStories: (_ f:@escaping(PeerId, MessageId?, Int32?)-> NSView?, ((Signal<Never, NoError>)->Void)?)->Void = { _, _ in }
+    var openChatPeerStories: (MessageId, PeerId, ((Signal<Never, NoError>)->Void)?)->Void = { _, _, _ in }
     var doNotTranslate:(String)->Void = { _ in }
     var translateTo:(String)->Void = { _ in }
     var enableTranslatePaywall:()->Void = { }

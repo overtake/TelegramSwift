@@ -409,7 +409,7 @@ class StoryImageView : StoryView {
             return
         }
         
-        imageView.preventsCapture = story.isForwardingDisabled
+        imageView.preventsCapture = story.isForwardingDisabled && peerId != context.peerId
         
         var updateImageSignal: Signal<ImageDataTransformation, NoError>?
         
@@ -451,7 +451,7 @@ class StoryImageView : StoryView {
                     self?.ready.set(true)
                 }
                 self?.awaitPlaying = !result.highQuality
-            }, isProtected: story.isForwardingDisabled)
+            }, isProtected: story.isForwardingDisabled && peerId != context.peerId)
         } else {
             self.ready.set(true)
         }
@@ -528,7 +528,7 @@ class StoryVideoView : StoryImageView {
             }
         })
         
-        self.view.preventsCapture = story.isForwardingDisabled
+        self.view.preventsCapture = story.isForwardingDisabled && peerId != context.peerId
         
         var shouldBeResumedAfterBufferring = false
         

@@ -294,11 +294,17 @@ class ShortPeerRowItem: GeneralRowItem {
                 return view == nil
             })
             return view
+        }, setProgress: { [weak self] value in
+            
         }))
     }
     
     private func takeStoryControl() -> NSView? {
         (self.view as? ShortPeerRowView)?.takeStoryControl()
+    }
+    
+    func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        (self.view as? ShortPeerRowView)?.setOpenProgress(signal)
     }
     
     
