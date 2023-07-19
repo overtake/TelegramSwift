@@ -412,6 +412,7 @@ class ChatRowItem: TableRowItem {
         if context.isLite(.blur) {
             return false
         }
+        
         return true
     }
     var shouldBlurService: Bool {
