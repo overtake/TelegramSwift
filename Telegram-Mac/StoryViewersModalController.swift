@@ -68,8 +68,7 @@ private final class StoryViewerRowItem : GeneralRowItem {
 }
 
 private final class StoryViewerRowView: GeneralRowView {
-    fileprivate let avatar = AvatarControl(font: .avatar(12))
-    private var avatarComponent: AvatarStoryIndicatorComponent.IndicatorView?
+    fileprivate let avatar = AvatarStoryControl(font: .avatar(12), size: NSMakeSize(36, 36))
     private let container = Control(frame: NSMakeRect(16, 8, 36, 36))
     private let title = TextView()
     private let date = TextView()
@@ -140,24 +139,16 @@ private final class StoryViewerRowView: GeneralRowView {
         var transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
         
         if let component = item.avatarComponent {
-            let current: AvatarStoryIndicatorComponent.IndicatorView
-            if let view = self.avatarComponent {
-                current = view
-            } else {
-                current = .init(frame: container.bounds)
-                container.addSubview(current)
-                self.avatarComponent = current
-                transition = .immediate
-            }
-            current.update(component: component, availableSize: container.bounds.insetBy(dx: 3, dy: 3).size, transition: transition)
-            transition.updateFrame(view: avatar, frame: container.bounds.insetBy(dx: 3, dy: 3))
-        } else if let view = self.avatarComponent {
-            performSubviewRemoval(view, animated: animated)
-            self.avatarComponent = nil
-            transition.updateFrame(view: avatar, frame: container.bounds)
+            self.avatar.update(component: component, availableSize: NSMakeSize(30, 30), transition: transition)
+        } else {
+            self.avatar.update(component: nil, availableSize: NSMakeSize(36, 36), transition: transition)
         }
         
         self.container.userInteractionEnabled = item.avatarComponent != nil
+    }
+    
+    func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        SetOpenStoryDisposable(self.avatar.pushLoadingStatus(signal: signal))
     }
     
     override func layout() {
@@ -253,6 +244,7 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
     var close:(()->Void)? = nil
     
     var getControl:((PeerId)->NSView?)? = nil
+    var setProgress:((PeerId, Signal<Never, NoError>)->Void)? = nil
 
     let arguments = Arguments(context: context, presentation: presentation, callback: { peerId in
         callback(peerId)
@@ -260,6 +252,8 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
     }, openStory: { peerId in
         StoryModalController.ShowStories(context: context, isHidden: false, initialId: .init(peerId: peerId, id: nil, messageId: nil, takeControl: { [] peerId, _, _ in
             return getControl?(peerId)
+        }, setProgress: { value in
+            setProgress?(peerId, value)
         }), singlePeer: true)
     })
     
@@ -323,6 +317,15 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
                 return control == nil
             })
             return control
+        }
+        setProgress = { [weak controller] peerId, signal in
+            controller?.tableView.enumerateVisibleItems(with: { item in
+                if let item = item as? StoryViewerRowItem, item.peer.id == peerId {
+                    (item.view as? StoryViewerRowView)?.setOpenProgress(signal)
+                    return false
+                }
+                return true
+            })
         }
     }
     

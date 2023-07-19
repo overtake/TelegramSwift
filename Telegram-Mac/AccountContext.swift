@@ -19,6 +19,16 @@ import FetchManager
 import InAppPurchaseManager
 import ApiCredentials
 
+private let globalStoryDisposable = MetaDisposable()
+
+func SetOpenStoryDisposable(_ disposable: Disposable?) {
+    globalStoryDisposable.set(disposable)
+}
+func CancelOpenStory() {
+    globalStoryDisposable.set(nil)
+}
+
+
 
 
 

@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import SwiftSignalKit
 import Postbox
 
 
@@ -17,9 +17,8 @@ import Postbox
 
 class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
-    private let image:AvatarControl = AvatarControl(font: .avatar(.text))
+    private let image:AvatarStoryControl = AvatarStoryControl(font: .avatar(.text), size: NSMakeSize(36, 36))
     private let photoContainer = Control()
-    private var storyStateView: AvatarStoryIndicatorComponent.IndicatorView?
 
     private var deleteControl:ImageButton?
     private var selectControl:SelectingControl?
@@ -152,6 +151,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     func takeStoryControl() -> NSView? {
         return self.image
     }
+    func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        SetOpenStoryDisposable(self.image.pushLoadingStatus(signal: signal))
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -281,11 +283,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 }
                 
                 photoContainer.frame = NSMakeRect(item.inset.left + (item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
-                if let _ = storyStateView {
-                    image.frame = item.photoSize.bounds.insetBy(dx: 3, dy: 3)
-                } else {
-                    image.frame = item.photoSize.bounds
-                }
+                image.frame = item.photoSize.bounds
+
                 
                 if let switchView = switchView {
                     switchView.centerY(x:container.frame.width - switchView.frame.width - item.inset.right)
@@ -352,11 +351,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 
                 photoContainer.frame = NSMakeRect((item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
                 
-                if let _ = storyStateView {
-                    image.frame = item.photoSize.bounds.insetBy(dx: 3, dy: 3)
-                } else {
-                    image.frame = item.photoSize.bounds
-                }
+                image.frame = item.photoSize.bounds
+
                 if let switchView = switchView {
                     switchView.centerY(x: containerView.frame.width - switchView.frame.width - innerInsets.right)
                 }
@@ -657,39 +653,17 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     
         photoContainer.userInteractionEnabled = item.story != nil
         
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
         if let indicator = item.avatarStoryIndicator {
-            let current: AvatarStoryIndicatorComponent.IndicatorView
-            let isNew: Bool
-            if let view = self.storyStateView {
-                current = view
-                isNew = false
-            } else {
-                current = AvatarStoryIndicatorComponent.IndicatorView(frame: item.photoSize.bounds)
-                self.storyStateView = current
-                photoContainer.addSubview(current)
-                isNew = true
-            }
-            current.update(component: indicator, availableSize: item.photoSize.bounds.insetBy(dx: 3, dy: 3).size, transition: .immediate)
-            if animated, isNew {
-                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
-                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            }
-            self.image._change(size: NSMakeSize(item.photoSize.width - 6, item.photoSize.height - 6), animated: animated)
-            self.image._change(pos: NSMakePoint(3, 3), animated: animated)
+            self.image.update(component: indicator, availableSize: item.photoSize.bounds.insetBy(dx: 3, dy: 3).size, transition: transition)
         } else {
-            if let view = self.storyStateView {
-                performSubviewRemoval(view, animated: animated, scale: true)
-                self.storyStateView = nil
-            }
-            
-            self.image._change(size: item.photoSize, animated: animated)
-            self.image._change(pos: NSMakePoint(0, 0), animated: animated)
+            self.image.update(component: nil, availableSize: item.photoSize, transition: transition)
         }
         
         if let photo = item.photo {
             image.setSignal(photo)
         } else {
-            image.setPeer(account: item.account, peer: item.peer)
+            image.setPeer(account: item.account, peer: item.peer, size: item.photoSize)
         }
         
         self.updateInteractionType(previousType, item.interactionType, item:item, animated:animated)

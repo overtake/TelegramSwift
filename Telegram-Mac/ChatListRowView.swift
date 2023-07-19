@@ -883,9 +883,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var groupActivityView: GroupCallActivity?
     private var activitiesModel:ChatActivitiesModel?
     private var photoContainer = Control(frame: NSMakeRect(0, 0, 50, 50))
-    private let photo: AvatarControl = AvatarControl(font: .avatar(22))
+    private let photo: AvatarStoryControl = AvatarStoryControl(font: .avatar(22), size: NSMakeSize(50, 50))
+
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
+    
     
     private var borderView: View?
 
@@ -910,7 +912,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var statusControl: PremiumStatusControl?
     
     private var avatarTimerBadge: AvatarBadgeView?
-    private var storyStateView: AvatarStoryIndicatorComponent.IndicatorView?
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [(message: Message, media: Media, size: CGSize)] = []
@@ -1235,8 +1236,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     }
     
     func takeStoryControl() -> NSView? {
-        
         return self.photo
+    }
+    
+    func setStoryProgress(_ signal:Signal<Never, NoError>)  {
+        SetOpenStoryDisposable(self.photo.pushLoadingStatus(signal: signal))
     }
     
     required init?(coder: NSCoder) {
@@ -1764,7 +1768,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     self.archivedPhoto = LAnimationButton(animation: "archiveAvatar", size: NSMakeSize(46, 46), offset: NSMakeSize(0, 0))
                     photoContainer.addSubview(self.archivedPhoto!, positioned: .above, relativeTo: self.photo)
                 }
-                self.archivedPhoto?.frame = self.photo.frame
+                self.archivedPhoto?.frame = self.photo.photoRect
                 self.archivedPhoto?.userInteractionEnabled = false
                 self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground)
                 self.archivedPhoto?.background = item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground
@@ -1776,7 +1780,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         self.expandView?.animateOnce()
                     }
                 }
-                self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
+                self.archivedPhoto?.layer?.cornerRadius = photo.radius
                 photo.setState(account: item.context.account, state: .Empty)
             } else {
                 self.archivedPhoto?.removeFromSuperview()
@@ -2014,30 +2018,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              photoContainer.userInteractionEnabled = item.avatarStoryIndicator != nil
              photoContainer.scaleOnClick = true
-             
+             let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+
              if let component = item.avatarStoryIndicator {
-                 let current: AvatarStoryIndicatorComponent.IndicatorView
-                 let isNew: Bool
-                 if let view = self.storyStateView {
-                     current = view
-                     isNew = false
-                 } else {
-                     current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, 50, 50))
-                     self.storyStateView = current
-                     photoContainer.addSubview(current)
-                     isNew = true
-                 }
-                 current.update(component: component, availableSize: NSMakeSize(44, 44), transition: .immediate)
                  
-                 if animated, isNew {
-                     current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
-                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                 }
-                 self.photo._change(size: NSMakeSize(44, 44), animated: animated)
+                 
+                 self.photo.update(component: component, availableSize: NSMakeSize(44, 44), transition: transition)
+                 
                  self.photoVideoView?._change(size: NSMakeSize(44, 44), animated: animated)
                  self.archivedPhoto?._change(size: NSMakeSize(44, 44), animated: animated)
-                 
-                 self.photo._change(pos: NSMakePoint(3, 3), animated: animated)
+
                  self.photoVideoView?._change(pos: NSMakePoint(3, 3), animated: animated)
                  self.archivedPhoto?._change(pos: NSMakePoint(3, 3), animated: animated)
                  
@@ -2045,24 +2035,20 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  if let photoVideoView = photoVideoView {
                      photoVideoView.layer?.cornerRadius = item.isForum ? 10 : photoVideoView.frame.height / 2
                  }
-                 self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
+                 self.archivedPhoto?.layer?.cornerRadius = photo.radius
 
-             } else if let view = self.storyStateView {
-                 performSubviewRemoval(view, animated: animated, scale: true)
-                 self.storyStateView = nil
-                 
-                 self.photo._change(size: NSMakeSize(50, 50), animated: animated)
+             } else {
                  self.photoVideoView?._change(size: NSMakeSize(50, 50), animated: animated)
                  self.archivedPhoto?._change(size: NSMakeSize(50, 50), animated: animated)
                  
-                 self.photo._change(pos: NSMakePoint(0, 0), animated: animated)
                  self.photoVideoView?._change(pos: NSMakePoint(0, 0), animated: animated)
                  self.archivedPhoto?._change(pos: NSMakePoint(0, 0), animated: animated)
                  
                  if let photoVideoView = photoVideoView {
                      photoVideoView.layer?.cornerRadius = item.isForum ? 10 : photoVideoView.frame.height / 2
                  }
-                 self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
+                 self.archivedPhoto?.layer?.cornerRadius = photo.radius
+                 self.photo.update(component: nil, availableSize: NSMakeSize(44, 44), transition: transition)
              }
          }
         

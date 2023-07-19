@@ -192,7 +192,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     private let searchButton:ImageButton = ImageButton()
     private let callButton:ImageButton = ImageButton()
     private let chatInteraction:ChatInteraction
-    private let avatarControl:AvatarControl = AvatarControl(font: .avatar(12))
+    private let avatarControl:AvatarStoryControl = AvatarStoryControl(font: .avatar(12), size: NSMakeSize(36, 36))
     private let badgeNode:GlobalBadgeNode
     private let disposable = MetaDisposable()
     private let closeButton = ImageButton()
@@ -209,7 +209,6 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     private let photoContainer: Control = Control(frame: NSMakeRect(0, 0, 36, 36))
     
-    private var storyState: AvatarStoryIndicatorComponent.IndicatorView? = nil
 
     
     var connectionStatus:ConnectionStatus = .online(proxyAddress: nil) {
@@ -336,39 +335,21 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         self.updateStoryState(story, animated: animated)
     }
     
+    var hasStories: Bool {
+        if let storyState = story, !storyState.items.isEmpty {
+            return true
+        }
+        return false
+    }
+    
     private func updateStoryState(_ story: PeerExpiringStoryListContext.State?, animated: Bool) {
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
         if self.story != story {
             if let storyState = story, !storyState.items.isEmpty {
-                let hasUnseen = storyState.hasUnseen
-                let current: AvatarStoryIndicatorComponent.IndicatorView
-                let isNew: Bool
-                if let view = self.storyState {
-                    current = view
-                    isNew = false
-                } else {
-                    current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, 36, 36))
-                    self.storyState = current
-                    photoContainer.addSubview(current)
-                    isNew = true
-                }
-                
-                let compoment = AvatarStoryIndicatorComponent(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount))
-                
-                _ = current.update(component: compoment, availableSize: NSMakeSize(30, 30), transition: .immediate)
-                
-                if animated, isNew {
-                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
-                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                }
-                self.avatarControl._change(size: NSMakeSize(30, 30), animated: animated)
-                self.avatarControl._change(pos: NSMakePoint(3, 3), animated: animated)
-
-            } else if let view = self.storyState {
-                performSubviewRemoval(view, animated: animated, scale: true)
-                self.storyState = nil
-                
-                self.avatarControl._change(size: NSMakeSize(36, 36), animated: animated)
-                self.avatarControl._change(pos: NSMakePoint(0, 0), animated: animated)
+                let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme)
+                avatarControl.update(component: compoment, availableSize: NSMakeSize(30, 30), transition: transition)
+            } else {
+                avatarControl.update(component: nil, availableSize: NSMakeSize(36, 36), transition: transition)
             }
         }
         self.story = story
@@ -495,7 +476,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
     
     private func openPhoto() {
-        if self.storyState != nil {
+        if self.hasStories {
             
             chatInteraction.openStories({ [weak self] peerId, _, _ in
                 if self?.chatInteraction.peerId == peerId {
@@ -503,6 +484,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 } else {
                     return nil
                 }
+            }, { [weak self] signal in
+                self?.setOpenProgress(signal)
             })
         } else {
             if chatInteraction.mode == .history, chatInteraction.peerId != chatInteraction.context.peerId {
@@ -513,6 +496,10 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }
         }
         
+    }
+    
+    private func setOpenProgress(_ signal: Signal<Never, NoError>) {
+        SetOpenStoryDisposable(self.avatarControl.pushLoadingStatus(signal: signal))
     }
     
     func updateSearchButton(hidden: Bool, animated: Bool) {

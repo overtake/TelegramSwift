@@ -501,7 +501,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.updatePhoto = updatePhoto
         
         if let storyState = stories, !storyState.items.isEmpty {
-            let compoment = AvatarStoryIndicatorComponent(hasUnseen: storyState.hasUnseen, hasUnseenCloseFriendsItems: storyState.hasUnseenCloseFriends, theme: presentation, activeLineWidth: 1.5, inactiveLineWidth: 1.0, counters: .init(totalCount: storyState.items.count, unseenCount: storyState.unseenCount))
+            let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme)
             self.avatarStoryComponent = compoment
         } else {
             self.avatarStoryComponent = nil
@@ -619,6 +619,8 @@ class PeerInfoHeadItem: GeneralRowItem {
                     return view == nil
                 })
                 return view
+            }, setProgress: { [weak self] signal in
+                self?.setOpenProgress(signal)
             }))
         }
     }
@@ -628,6 +630,11 @@ class PeerInfoHeadItem: GeneralRowItem {
             return view.takeControl()
         }
         return nil
+    }
+    private func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        if let view = self.view as? PeerInfoHeadView {
+            view.setOpenProgress(signal)
+        }
     }
     
     deinit {
@@ -883,10 +890,9 @@ private final class NameContainer : View {
 
 private final class PeerInfoHeadView : GeneralContainableRowView {
     private let photoContainer = Control(frame: NSMakeRect(0, 0, 120, 120))
-    private let photoView: AvatarControl = AvatarControl(font: .avatar(30))
+    private let photoView: AvatarStoryControl = AvatarStoryControl(font: .avatar(30), size: NSMakeSize(120, 120))
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
-    private var storyStateView: AvatarStoryIndicatorComponent.IndicatorView?
 
     
     
@@ -1283,37 +1289,14 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         photoContainer.scaleOnClick = true
         
-        if let storyData = item.avatarStoryComponent {
-            let current: AvatarStoryIndicatorComponent.IndicatorView
-            let isNew: Bool
-            if let view = self.storyStateView {
-                current = view
-                isNew = false
-            } else {
-                current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, item.photoDimension, item.photoDimension))
-                self.storyStateView = current
-                photoContainer.addSubview(current)
-                isNew = true
-            }
-            _ = current.update(component: storyData, availableSize: NSMakeSize(item.photoDimension - 6, item.photoDimension - 6), transition: .immediate)
-
-            if animated, isNew {
-                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
-                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-            }
-            self.photoView._change(size: NSMakeSize(item.photoDimension - 6, item.photoDimension - 6), animated: animated)
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        if let avatarStoryComponent = item.avatarStoryComponent {
+            photoView.update(component: avatarStoryComponent, availableSize: NSMakeSize(item.photoDimension - 6, item.photoDimension - 6), transition: transition)
             self.photoVideoView?._change(size: NSMakeSize(item.photoDimension - 6, item.photoDimension - 6), animated: animated)
-            
-            self.photoView._change(pos: NSMakePoint(3, 3), animated: animated)
             self.photoVideoView?._change(pos: NSMakePoint(3, 3), animated: animated)
-        } else if let view = self.storyStateView {
-            performSubviewRemoval(view, animated: animated, scale: true)
-            self.storyStateView = nil
-            
-            self.photoView._change(size: NSMakeSize(item.photoDimension, item.photoDimension), animated: animated)
+        } else  {
+            photoView.update(component: nil, availableSize: NSMakeSize(item.photoDimension, item.photoDimension), transition: transition)
             self.photoVideoView?._change(size: NSMakeSize(item.photoDimension, item.photoDimension), animated: animated)
-            
-            self.photoView._change(pos: NSMakePoint(0, 0), animated: animated)
             self.photoVideoView?._change(pos: NSMakePoint(0, 0), animated: animated)
         }
 
@@ -1416,5 +1399,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     func takeControl() -> NSView? {
         return self.photoView
     }
-        
+    func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        SetOpenStoryDisposable(self.photoView.pushLoadingStatus(signal: signal))
+    }
 }

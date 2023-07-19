@@ -1216,9 +1216,10 @@ private final class StoryViewController: Control, Notifable {
             self.updatePrevNextControls(event)
         }
         
+        var updated: Bool = false
         arguments?.interaction.update(animated: false, { current in
             var current = current
-            let updated = current.storyId != state.slice?.item.storyItem.id
+            updated = current.storyId != state.slice?.item.storyItem.id
             current.entryId = state.slice?.peer.id
             current.storyId = state.slice?.item.storyItem.id
             current.canRecordVoice = state.slice?.additionalPeerData.areVoiceMessagesAvailable == true
@@ -1231,6 +1232,10 @@ private final class StoryViewController: Control, Notifable {
             }
             return current
         })
+        
+        if updated {
+            self.closeTooltip()
+        }
     }
     
     func delete() -> KeyHandlerResult {
@@ -2371,6 +2376,28 @@ final class StoryModalController : ModalViewController, Notifable {
                     share(story)
                 }, itemImage: MenuAnimation.menu_share.value))
             }
+            if !story.storyItem.isForwardingDisabled {
+                let resource: TelegramMediaFile?
+                if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
+                    if let res = media.representations.last?.resource {
+                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
+                    } else {
+                        resource = nil
+                    }
+                    
+                } else if let media = story.storyItem.media._asMedia() as? TelegramMediaFile {
+                    resource = media
+                } else {
+                    resource = nil
+                }
+                
+                
+                if let resource = resource {
+                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
+                        saveAs(resource, account: context.account)
+                    }, itemImage: MenuAnimation.menu_save_as.value))
+                }
+            }
             if !peer.isService {
                 if peer._asPeer().storyArchived {
                     menu.addItem(ContextMenuItem(strings().storyControlsMenuUnarchive, handler: {                     toggleHide(peer._asPeer(), false)
@@ -2884,13 +2911,39 @@ final class StoryModalController : ModalViewController, Notifable {
     
     static func ShowStories(context: AccountContext, isHidden: Bool, initialId: StoryInitialIndex?, singlePeer: Bool = false) {
         let storyContent = StoryContentContextImpl(context: context, isHidden: isHidden, focusedPeerId: initialId?.peerId, singlePeer: singlePeer)
-        let _ = (storyContent.state
-        |> filter { $0.slice != nil }
-        |> take(1)
-        |> deliverOnMainQueue).start(next: { _ in
-            showModal(with: StoryModalController(context: context, stories: storyContent, initialId: initialId), for: context.window, animationType: .animateBackground)
         
-        })
+        let signal = storyContent.state
+        |> deliverOn(prepareQueue)
+        |> take(1)
+        |> mapToSignal { state -> Signal<StoryContentContextState, NoError> in
+            if let slice = state.slice {
+                return waitUntilStoryMediaPreloaded(context: context, peerId: slice.peer.id, storyItem: slice.item.storyItem)
+                |> timeout(4.0, queue: .mainQueue(), alternate: .complete())
+                |> map { _ -> StoryContentContextState in
+                }
+                |> then(.single(state))
+            } else {
+                return .single(state)
+            }
+        }
+        |> deliverOnMainQueue
+        |> map { state in
+            if state.slice == nil {
+                return
+            }
+            showModal(with: StoryModalController(context: context, stories: storyContent, initialId: initialId), for: context.window, animationType: .animateBackground)
+        }
+        |> afterDisposed {
+            
+        }
+        |> ignoreValues
+        
+        if let setProgress = initialId?.setProgress {
+            setProgress(signal)
+        } else {
+            _ = signal.start()
+        }
+
     }
     static func ShowSingleStory(context: AccountContext, storyId: StoryId, initialId: StoryInitialIndex?, readGlobally: Bool = true, emptyCallback:(()->Void)? = nil) {
         
@@ -2941,6 +2994,5 @@ final class StoryModalController : ModalViewController, Notifable {
         })
     }
 }
-
 
 

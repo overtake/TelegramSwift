@@ -667,4 +667,12 @@ struct StoryInitialIndex {
     let id: Int32?
     let messageId: MessageId?
     let takeControl:((PeerId, MessageId?, Int32?)->NSView?)?
+    let setProgress:((Signal<Never, NoError>)->Void)?
+    init(peerId: PeerId, id: Int32?, messageId: MessageId?, takeControl: ((PeerId, MessageId?, Int32?) -> NSView?)?, setProgress: ((Signal<Never, NoError>) -> Void)? = nil) {
+        self.peerId = peerId
+        self.id = id
+        self.messageId = messageId
+        self.takeControl = takeControl
+        self.setProgress = setProgress
+    }
 }

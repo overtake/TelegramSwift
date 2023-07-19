@@ -741,7 +741,7 @@ final class StoryListView : Control, Notifable {
         
         
         
-        if control is AvatarControl {
+        if control is AvatarControl || control is AvatarStoryControl {
             let anim = layer.makeAnimation(from: NSNumber(value: content.layer!.cornerRadius), to: NSNumber(value: CGFloat(content.frame.width / 2)), keyPath: "cornerRadius", timingFunction: .default, duration: duration, removeOnCompletion: false)
             layer.add(anim, forKey: "cornerRadius")
         }

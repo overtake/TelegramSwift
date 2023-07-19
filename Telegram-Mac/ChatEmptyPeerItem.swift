@@ -303,6 +303,8 @@ class ChatEmptyPeerView : TableRowView {
                 bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, textView.frame.height + 20))
             }
             
+            bgView.addSubview(self.textView)
+            
             bgView.center()
             
             if let imageView = imageView {
