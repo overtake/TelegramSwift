@@ -12105,6 +12105,8 @@ public final class L10n {
   public static func storyFeedTooltipUnarchive(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryFeed.TooltipUnarchive", p1)
   }
+  /// Show More
+  public static var storyItemTextShowMore: String  { return L10n.tr("Localizable", "StoryItem.Text.ShowMore") }
   /// My Story
   public static var storyListMyStory: String  { return L10n.tr("Localizable", "StoryList.MyStory") }
   /// Stories from **%@** will now be shown in Archived Chats.
