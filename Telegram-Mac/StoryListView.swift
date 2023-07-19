@@ -73,6 +73,8 @@ final class StoryListView : Control, Notifable {
         private var arguments: StoryArguments?
         private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
         
+        private var showMore: TextView?
+        
         required init(frame frameRect: NSRect) {
             scrollView.background = .clear
             super.init(frame: frameRect)
@@ -168,12 +170,51 @@ final class StoryListView : Control, Notifable {
             layout.measure(width: frame.width - 20)
             layout.interactions = globalLinkExecutor
             
+            
+            
             if !layout.isPerfectSized {
                 container.set(cursor: NSCursor.pointingHand, for: .Hover)
                 container.set(cursor: NSCursor.pointingHand, for: .Highlight)
             } else {
                 container.set(cursor: NSCursor.arrow, for: .Hover)
                 container.set(cursor: NSCursor.arrow, for: .Highlight)
+            }
+            
+            if !layout.isPerfectSized, state != .revealed {
+                
+                let current: TextView
+                let isNew: Bool
+                if let view = self.showMore {
+                    current = view
+                    isNew = false
+                } else {
+                    current = TextView()
+                    self.showMore = current
+                    self.documentView.addSubview(current)
+
+                    current.set(handler: { control in
+                        toggleState(.revealed)
+                    }, for: .Click)
+                   
+                    isNew = true
+                }
+                let moreLayout = TextViewLayout.init(.initialize(string: strings().storyItemTextShowMore, color: storyTheme.colors.text, font: .bold(.text)))
+                moreLayout.measure(width: .greatestFiniteMagnitude)
+                current.update(moreLayout)
+                
+                layout.cutout = .init(topLeft: nil, topRight: nil, bottomRight: NSMakeSize(moreLayout.layoutSize.width, 10))
+                layout.measure(width: frame.width - 20)
+                
+                if isNew {
+                    current.setFrameOrigin(NSMakePoint(documentView.frame.width - current.frame.width - 10, documentView.frame.height - current.frame.height - 10))
+                    if transition.isAnimated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                }
+                
+            } else if let view = self.showMore {
+                performSubviewRemoval(view, animated: transition.isAnimated)
+                self.showMore = nil
             }
             
             if self.textView?.textLayout?.attributedString != layout.attributedString || self.textView?.textLayout?.lines.count != layout.lines.count {
@@ -249,8 +290,13 @@ final class StoryListView : Control, Notifable {
                 transition.updateFrame(view: shadowView, frame: container.frame)
 
                 
+                
                 textView.resize(size.width - 20)
                 transition.updateFrame(view: textView, frame: CGRect.init(origin: NSMakePoint(10, 10), size: textView.frame.size))
+                
+                if let view = self.showMore {
+                    transition.updateFrame(view: view, frame: CGRect.init(origin: NSMakePoint(documentView.frame.width - view.frame.width - 10, documentView.frame.height - view.frame.height), size: view.frame.size))
+                }
             }
         }
         

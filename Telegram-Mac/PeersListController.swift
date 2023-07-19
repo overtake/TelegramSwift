@@ -1116,7 +1116,6 @@ class PeerListContainerView : Control {
             return
         }
         
-        CATransaction.begin()
         
         var offset: CGFloat = navigationHeight
         
@@ -1280,7 +1279,6 @@ class PeerListContainerView : Control {
         transition.updateAlpha(view: self.backgroundView, alpha: 1 - progress)
 
 
-        CATransaction.commit()
         
         self.updateScrollerInset(animated: transition.isAnimated)
 

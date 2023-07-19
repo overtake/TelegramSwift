@@ -114,13 +114,25 @@ class WPLayout: Equatable {
         
         let attributedText:NSMutableAttributedString = NSMutableAttributedString()
         
-        let text = content.type != "telegram_background" ? content.text?.trimmed : nil
+        var text = content.type != "telegram_background" ? content.text?.trimmed : nil
+        
+        if text == nil, let story = content.story, let storedItem = parent.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
+            switch storedItem {
+            case let .item(item):
+                text = item.text.prefixWithDots(100)
+            default:
+                break
+            }
+        }
+        
         if let title = content.title ?? content.author, content.type != "telegram_background" {
             _ = attributedText.append(string: title, color: presentation.text, font: .medium(fontSize))
             if text != nil {
                 _ = attributedText.append(string: "\n")
             }
         }
+        
+        
         if let text = text {
             _ = attributedText.append(string: text, color: presentation.text, font: .normal(fontSize))
         }
