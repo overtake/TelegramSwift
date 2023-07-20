@@ -14,7 +14,20 @@ public enum ScrollDirection {
     case none;
 }
 
-
+public func calculateScrollSpeed(scrollPositions: [CGFloat]) -> CGFloat? {
+    guard scrollPositions.count >= 2 else {
+        return nil // Not enough data to calculate speed
+    }
+    
+    let firstPosition = scrollPositions.max()!
+    let lastPosition = scrollPositions.min()!
+    
+    let distance = lastPosition - firstPosition
+    let timeElapsed = CGFloat(scrollPositions.count - 1)
+    
+    let speed = distance / timeElapsed
+    return speed
+}
 
 public struct ScrollPosition : Equatable {
     public private(set) var rect:NSRect
@@ -144,8 +157,8 @@ open class ScrollView: NSScrollView{
         layerContentsRedrawPolicy = .never
         
         self.hasHorizontalScroller = false 
-        self.horizontalScrollElasticity = .none
-        self.verticalScroller?.scrollerStyle = .overlay
+        self.horizontalScrollElasticity = .automatic
+      //  self.verticalScroller?.scrollerStyle = .overlay
         autoresizingMask = []
         self.wantsLayer = true;
         layer?.backgroundColor = presentation.colors.background.cgColor
@@ -170,6 +183,7 @@ open class ScrollView: NSScrollView{
     
     
     open override func scrollWheel(with event: NSEvent) {
+        
         guard let window = window as? Window else {
             super.scrollWheel(with: event)
             return

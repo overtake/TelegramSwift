@@ -25,19 +25,29 @@ class AccountInfoItem: GeneralRowItem {
 
     fileprivate let context: AccountContext
     let peer: TelegramUser
+    let storyStats: EngineStorySubscriptions.Item?
     private(set) var photos: [TelegramPeerPhoto] = []
 
+    
     private let peerPhotosDisposable = MetaDisposable()
     
     let setStatus:(Control, TelegramUser)->Void
     
-    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void, setStatus: @escaping(Control, TelegramUser)->Void) {
+    let avatarStoryIndicator: AvatarStoryIndicatorComponent?
+    let openStory:(StoryInitialIndex?)->Void
+    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, storyStats: EngineStorySubscriptions.Item?, action: @escaping()->Void, setStatus: @escaping(Control, TelegramUser)->Void, openStory:@escaping(StoryInitialIndex?)->Void) {
         self.context = context
         self.peer = peer
+        self.storyStats = storyStats
         self.setStatus = setStatus
-        
+        self.openStory = openStory
         let attr = NSMutableAttributedString()
         
+        if let storyStats = storyStats, storyStats.storyCount > 0 {
+            self.avatarStoryIndicator = .init(story: storyStats, presentation: theme)
+        } else {
+            self.avatarStoryIndicator = nil
+        }
         
         let titleAttr: NSMutableAttributedString = NSMutableAttributedString()
         _ = titleAttr.append(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title))
@@ -70,6 +80,20 @@ class AccountInfoItem: GeneralRowItem {
             self?.noteHeightOfRow()
         }))
         
+    }
+    
+    func openPeerStory() {
+        let table = self.table
+        self.openStory(.init(peerId: peer.id, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, storyId in
+            var view: NSView?
+            table?.enumerateItems(with: { item in
+                if let item = item as? AccountInfoItem {
+                    view = (item.view as? AccountInfoView)?.takeStoryControl()
+                }
+                return view == nil
+            })
+            return view
+        }))
     }
     
     deinit {
@@ -107,8 +131,10 @@ private class AccountInfoView : GeneralContainableRowView {
     
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
+    private var storyStateView: AvatarStoryIndicatorComponent.IndicatorView?
 
     private let container = View()
+    private let avatarContainer = Control()
     
     fileprivate var statusControl: PremiumStatusControl?
     
@@ -119,25 +145,48 @@ private class AccountInfoView : GeneralContainableRowView {
         layerContentsRedrawPolicy = .onSetNeedsDisplay
         avatarView.animated = true
         
+        avatarContainer.scaleOnClick = true
+        
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         
-        addSubview(avatarView)
+        avatarContainer.addSubview(avatarView)
+        addSubview(avatarContainer)
         addSubview(actionView)
         
         container.addSubview(textView)
         container.addSubview(titleView)
         
         addSubview(container)
-        avatarView.set(handler: { [weak self] _ in
-            if let item = self?.item as? AccountInfoItem, let _ = item.peer.largeProfileImage {
-                showPhotosGallery(context: item.context, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
+        avatarContainer.set(handler: { [weak self] _ in
+            if let item = self?.item as? AccountInfoItem {
+                if let stories = item.storyStats, stories.storyCount > 0 {
+                    item.openPeerStory()
+                } else if let _ = item.peer.largeProfileImage {
+                    showPhotosGallery(context: item.context, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
+                }
             }
         }, for: .Click)
         
+        avatarContainer.contextMenu = { [weak self] in
+            if let item = self?.item as? AccountInfoItem, let storyStats = item.storyStats, storyStats.storyCount > 0 {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().peerInfoContextOpenPhoto, handler: { [weak item] in
+                    if let item = item {
+                        if let _ = item.peer.largeProfileImage {
+                            showPhotosGallery(context: item.context, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
+                        }
+                    }
+                }, itemImage: MenuAnimation.menu_shared_media.value))
+                return menu
+            }
+            return nil
+        }
+        
+        self.avatarView.userInteractionEnabled = false
         
         self.containerView.set(handler: { [weak self] _ in
             if let item = self?.item as? GeneralRowItem {
@@ -327,7 +376,7 @@ private class AccountInfoView : GeneralContainableRowView {
                         
                         self.photoVideoView = MediaPlayerView()
                         self.photoVideoView!.layer?.cornerRadius = self.avatarView.frame.height / 2
-                        self.addSubview(self.photoVideoView!)
+                        avatarContainer.addSubview(self.photoVideoView!)
                         self.photoVideoView!.isEventLess = true
                         self.photoVideoView!.frame = self.avatarView.frame
                         
@@ -359,6 +408,53 @@ private class AccountInfoView : GeneralContainableRowView {
                 self.photoVideoView?.removeFromSuperview()
                 self.photoVideoView = nil
             }
+            
+            if let component = item.avatarStoryIndicator {
+                let current: AvatarStoryIndicatorComponent.IndicatorView
+                let isNew: Bool
+                if let view = self.storyStateView {
+                    current = view
+                    isNew = false
+                } else {
+                    current = AvatarStoryIndicatorComponent.IndicatorView(frame: NSMakeRect(0, 0, 60, 60))
+                    self.storyStateView = current
+                    avatarContainer.addSubview(current)
+                    isNew = true
+                }
+                current.update(component: component, availableSize: NSMakeSize(54, 54), transition: .immediate)
+                
+                if animated, isNew {
+                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                self.avatarView._change(size: NSMakeSize(54, 54), animated: animated)
+                self.photoVideoView?._change(size: NSMakeSize(54, 54), animated: animated)
+                                
+                
+                if let photoVideoView = photoVideoView {
+                    photoVideoView.layer?.cornerRadius = photoVideoView.frame.height / 2
+                }
+                
+                self.avatarView._change(pos: NSMakePoint(3, 3), animated: animated)
+                self.photoVideoView?._change(pos: NSMakePoint(3, 3), animated: animated)
+
+
+            } else if let view = self.storyStateView {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.storyStateView = nil
+                
+                self.avatarView._change(size: NSMakeSize(60, 60), animated: animated)
+                self.photoVideoView?._change(size: NSMakeSize(60, 60), animated: animated)
+                
+                self.avatarView._change(pos: .zero, animated: animated)
+                self.photoVideoView?._change(pos: .zero, animated: animated)
+
+                
+                if let photoVideoView = photoVideoView {
+                    photoVideoView.layer?.cornerRadius = photoVideoView.frame.height / 2
+                }
+            }
+       
             needsDisplay = true
             needsLayout = true
         }
@@ -378,7 +474,8 @@ private class AccountInfoView : GeneralContainableRowView {
     
     override func layout() {
         super.layout()
-        avatarView.centerY(x:16)
+        avatarContainer.setFrameSize(NSMakeSize(60, 60))
+        avatarContainer.centerY(x:16)
         
         let h: CGFloat = statusControl != nil ? 6 : 0
         
@@ -404,6 +501,11 @@ private class AccountInfoView : GeneralContainableRowView {
     
     override func copy() -> Any {
         return avatarView.copy()
+    }
+    
+    
+    func takeStoryControl() -> NSView? {
+        return self.avatarView
     }
     
 }

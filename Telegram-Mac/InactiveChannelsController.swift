@@ -172,15 +172,10 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
         close?()
         
         if !arguments.select.presentation.selected.isEmpty {
-            let removeSignal = combineLatest(arguments.select.presentation.selected.map { context.engine.peers.removePeerChat(peerId: $0, reportChatSpam: false)})
+            let removeSignal = combineLatest(arguments.select.presentation.selected.map { context.engine.peers.removePeerChat(peerId: $0, reportChatSpam: false)}) |> ignoreValues
             let peers = arguments.select.presentation.peers.map { $0.value }
-            let signal = context.account.postbox.transaction { transaction in
-                updatePeers(transaction: transaction, peers: peers, update: { _, updated in
-                    return updated
-                })
-                } |> mapToSignal { _ in
-                    return removeSignal
-            }
+            
+            let signal = context.engine.peers.ensurePeersAreLocallyAvailable(peers: peers.map(EnginePeer.init)) |> then(removeSignal)
             
             _ = showModalProgress(signal: signal, for: context.window).start()
         }

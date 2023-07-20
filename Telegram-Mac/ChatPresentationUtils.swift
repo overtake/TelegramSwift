@@ -56,7 +56,21 @@ final class ChatMediaPresentation : Equatable {
                                      waveformBackground: theme.chat.waveformBackground(isIncoming, renderType == .bubble),
                                      waveformForeground: theme.chat.waveformForeground(isIncoming, renderType == .bubble))
     }
-    
+    static func make(theme: TelegramPresentationTheme) -> ChatMediaPresentation {
+        let isIncoming: Bool = false
+        
+        let grayText = theme.chat.grayText(isIncoming, false)
+
+        return ChatMediaPresentation(presentation: theme, isIncoming: isIncoming,
+                                     isBubble: false,
+                                     activityBackground: theme.chat.activityBackground(isIncoming, false),
+                                     activityForeground: theme.chat.activityForeground(isIncoming, false),
+                                     text: theme.chat.textColor(isIncoming, false),
+                                     grayText: grayText,
+                                     link: theme.chat.linkColor(isIncoming, false),
+                                     waveformBackground: theme.chat.waveformBackground(isIncoming, false),
+                                     waveformForeground: theme.chat.waveformForeground(isIncoming, false))
+    }
     static var empty: ChatMediaPresentation {
         return .init(presentation: theme, isIncoming: true, isBubble: true, activityBackground: .clear, activityForeground: .clear, text: .clear, grayText: .clear, link: .clear, waveformBackground: .clear, waveformForeground: .clear)
     }

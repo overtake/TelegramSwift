@@ -281,9 +281,9 @@ struct ChatAccessoryPresentation {
     let enabledText: NSColor
     let disabledText: NSColor
     let border: NSColor
-    
+    let app: TelegramPresentationTheme
     func withUpdatedBackground(_ backgroundColor: NSColor) -> ChatAccessoryPresentation {
-        return ChatAccessoryPresentation(background: backgroundColor, title: title, enabledText: enabledText, disabledText: disabledText, border: border)
+        return ChatAccessoryPresentation(background: backgroundColor, title: title, enabledText: enabledText, disabledText: disabledText, border: border, app: app)
     }
 }
 
@@ -314,7 +314,7 @@ class ChatAccessoryModel: NSObject {
             self.view?.updateTheme()
         }
         get {
-            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: theme.colors.accent, enabledText: theme.colors.text, disabledText: theme.colors.grayText, border: theme.colors.accent)
+            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: theme.colors.accent, enabledText: theme.colors.text, disabledText: theme.colors.grayText, border: theme.colors.accent, app: theme)
         }
     }
     

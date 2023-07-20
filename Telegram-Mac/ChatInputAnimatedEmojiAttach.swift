@@ -36,25 +36,7 @@ final class ChatInputAnimatedEmojiAttach: View {
         self.media.isPlayable = !isLite(.emoji)
         self.media.frame = mediaRect
         self.layer?.addSublayer(media)
-        
-        if fromRect != .zero, FastSettings.animateInputEmoji {
-            
-            self.isHidden = true
-            DispatchQueue.main.async {
                 
-                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: size, textColor: theme.colors.text)
-                let toRect = self.convert(self.bounds, to: nil)
-                
-                let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
-                let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
-
-                parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: { [weak self] _ in
-                    self?.isHidden = false
-                    self?.layer?.animateScaleSpring(from: 0.8, to: 1.0, duration: 0.2, bounce: true)
-                })
-            }
-        }
-        
         needsLayout = true
     }
     

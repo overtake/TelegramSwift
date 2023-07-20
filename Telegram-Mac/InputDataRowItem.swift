@@ -693,7 +693,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         }
         return theme.colors.redUI
     }
-    var borderColor: NSColor {
+    override var borderColor: NSColor {
         if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
             return customTheme.borderColor
         }

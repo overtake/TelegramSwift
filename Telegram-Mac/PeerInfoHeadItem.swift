@@ -28,6 +28,9 @@ fileprivate final class ActionButton : Control {
         textView.isEventLess = true
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        self.controlOpacityEventIgnored = true
+        
         set(handler: { control in
             control.change(opacity: 0.8, animated: true)
         }, for: .Highlight)
@@ -426,6 +429,9 @@ class PeerInfoHeadItem: GeneralRowItem {
                 let maxActionSize: NSSize = items.max(by: { $0.size.height < $1.size.height })!.size
                 height += maxActionSize.height + insets.top
             }
+            if self.threadId != nil {
+                height += 40
+            }
         } else {
             height = photoDimension + insets.top + insets.bottom
         }
@@ -468,13 +474,15 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate let arguments: PeerInfoArguments
     fileprivate let threadData: MessageHistoryThreadData?
     fileprivate let threadId: Int64?
+    fileprivate let stories: PeerExpiringStoryListContext.State?
+    fileprivate let avatarStoryComponent: AvatarStoryIndicatorComponent?
     let canEditPhoto: Bool
     
     
     let peerPhotosDisposable = MetaDisposable()
     
     var photos: [TelegramPeerPhoto] = []
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, stories: PeerExpiringStoryListContext.State? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
         self.threadData = threadData
@@ -483,6 +491,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.editing = editing
         self.threadId = threadId
         self.arguments = arguments
+        self.stories = stories
         self.isVerified = peer?.isVerified ?? false
         self.isPremium = peer?.isPremium ?? false
         self.isScam = peer?.isScam ?? false
@@ -491,6 +500,12 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.updatingPhotoState = updatingPhotoState
         self.updatePhoto = updatePhoto
         
+        if let storyState = stories, !storyState.items.isEmpty {
+            let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme)
+            self.avatarStoryComponent = compoment
+        } else {
+            self.avatarStoryComponent = nil
+        }
         
         let canEditPhoto: Bool
         if let peer = peer as? TelegramUser {
@@ -590,6 +605,36 @@ class PeerInfoHeadItem: GeneralRowItem {
     }
     var isTopic: Bool {
         return self.isForum && threadData != nil
+    }
+    
+    func openPeerStory() {
+        if let peerId = self.peer?.id {
+            let table = self.table
+            self.arguments.openStory(.init(peerId: peerId, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, _ in
+                var view: NSView?
+                table?.enumerateItems(with: { item in
+                    if let item = item as? PeerInfoHeadItem, item.peer?.id == peerId {
+                        view = item.takeControl()
+                    }
+                    return view == nil
+                })
+                return view
+            }, setProgress: { [weak self] signal in
+                self?.setOpenProgress(signal)
+            }))
+        }
+    }
+    
+    private func takeControl() -> NSView? {
+        if let view = self.view as? PeerInfoHeadView {
+            return view.takeControl()
+        }
+        return nil
+    }
+    private func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        if let view = self.view as? PeerInfoHeadView {
+            view.setOpenProgress(signal)
+        }
     }
     
     deinit {
@@ -844,7 +889,8 @@ private final class NameContainer : View {
 
 
 private final class PeerInfoHeadView : GeneralContainableRowView {
-    private let photoView: AvatarControl = AvatarControl(font: .avatar(30))
+    private let photoContainer = Control(frame: NSMakeRect(0, 0, 120, 120))
+    private let photoView: AvatarStoryControl = AvatarStoryControl(font: .avatar(30), size: NSMakeSize(120, 120))
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
 
@@ -872,21 +918,49 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        photoView.setFrameSize(NSMakeSize(120, 120))
+
         
-        
-        addSubview(photoView)
+        photoContainer.addSubview(photoView)
+        addSubview(photoContainer)
         addSubview(nameView)
         addSubview(statusView)
         addSubview(actionsView)
         
-        photoView.set(handler: { [weak self] _ in
-            if let item = self?.item as? PeerInfoHeadItem, let peer = item.peer, let _ = peer.largeProfileImage {
-                showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
+        
+        photoView.userInteractionEnabled = false
+        
+        photoContainer.set(handler: { [weak self] _ in
+            if let item = self?.item as? PeerInfoHeadItem {
+                if let stories = item.stories, !stories.items.isEmpty {
+                    item.openPeerStory()
+                } else {
+                    if let peer = item.peer, let _ = peer.largeProfileImage {
+                        showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
+                    }
+                }
             }
         }, for: .Click)
         
+        photoContainer.contextMenu = { [weak self] in
+            if let item = self?.item as? PeerInfoHeadItem, let stories = item.stories, !stories.items.isEmpty {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().peerInfoContextOpenPhoto, handler: { [weak item] in
+                    if let item = item {
+                        if let peer = item.peer, let _ = peer.largeProfileImage {
+                            showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
+                        }
+                    }
+                }, itemImage: MenuAnimation.menu_shared_media.value))
+                return menu
+            }
+            return nil
+        }
+        
+        
          registerForDraggedTypes([.tiff, .string, .kUrl, .kFileUrl])
     }
+    
     
     
     override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
@@ -1006,16 +1080,19 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             return
         }
         
-        photoView.centerX(y: item.viewType.innerInset.top)
-        nameView.centerX(y: photoView.frame.maxY + item.viewType.innerInset.top)
-        statusView.centerX(y: nameView.frame.maxY + 4)
-        actionsView.centerX(y: containerView.frame.height - actionsView.frame.height)
-        photoEditableView?.centerX(y: item.viewType.innerInset.top)
+        photoContainer.centerX(y: item.viewType.innerInset.top)
         
+        photoView.center()
+        photoEditableView?.center()
         photoVideoView?.frame = photoView.frame
         
+
+        nameView.centerX(y: photoContainer.frame.maxY + item.viewType.innerInset.top)
+        statusView.centerX(y: nameView.frame.maxY + 4)
+        actionsView.centerX(y: containerView.frame.height - actionsView.frame.height)
+        
         if let photo = self.topicPhotoView {
-            photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, containerView.frame.width - item.photoDimension) / 2, item.viewType.innerInset.top, item.photoDimension, item.photoDimension)
+            photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, photoContainer.frame.width - item.photoDimension) / 2, floorToScreenPixels(backingScaleFactor, photoContainer.frame.height - item.photoDimension) / 2, item.photoDimension, item.photoDimension)
 
         }
 
@@ -1067,7 +1144,6 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             return
         }
         
-        photoView.setFrameSize(NSMakeSize(item.photoDimension, item.photoDimension))
         photoView.setPeer(account: item.context.account, peer: item.peer)
 
         updatePhoto(item, animated: animated)
@@ -1090,9 +1166,9 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                         self.photoView.layer?.cornerCurve = .circular
                     } 
                     if let photoEditableView = self.photoEditableView {
-                        self.addSubview(self.photoVideoView!, positioned: .below, relativeTo: photoEditableView)
+                        photoContainer.addSubview(self.photoVideoView!, positioned: .below, relativeTo: photoEditableView)
                     } else {
-                        self.addSubview(self.photoVideoView!)
+                        photoContainer.addSubview(self.photoVideoView!)
 
                     }
                     self.photoVideoView!.isEventLess = true
@@ -1169,7 +1245,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         layoutActionItems(item.items, animated: animated)
         
         
-        photoView.userInteractionEnabled = !item.editing
+        photoContainer.userInteractionEnabled = !item.editing
         
         let containerRect: NSRect
         switch item.viewType {
@@ -1183,7 +1259,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         if item.canEditPhoto || self.activeDragging || item.updatingPhotoState != nil {
             if photoEditableView == nil {
                 photoEditableView = .init(frame: NSMakeRect(0, 0, item.photoDimension, item.photoDimension))
-                addSubview(photoEditableView!)
+                photoContainer.addSubview(photoEditableView!)
                 if animated {
                     photoEditableView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
@@ -1209,6 +1285,21 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         containerView.change(pos: containerRect.origin, animated: animated)
         containerView.setCorners(item.viewType.corners, animated: animated)
         borderView._change(opacity: item.viewType.hasBorder ? 1.0 : 0.0, animated: animated)
+        
+        
+        photoContainer.scaleOnClick = true
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        if let avatarStoryComponent = item.avatarStoryComponent {
+            photoView.update(component: avatarStoryComponent, availableSize: NSMakeSize(item.photoDimension - 6, item.photoDimension - 6), transition: transition)
+            self.photoVideoView?._change(size: NSMakeSize(item.photoDimension - 6, item.photoDimension - 6), animated: animated)
+            self.photoVideoView?._change(pos: NSMakePoint(3, 3), animated: animated)
+        } else  {
+            photoView.update(component: nil, availableSize: NSMakeSize(item.photoDimension, item.photoDimension), transition: transition)
+            self.photoVideoView?._change(size: NSMakeSize(item.photoDimension, item.photoDimension), animated: animated)
+            self.photoVideoView?._change(pos: NSMakePoint(0, 0), animated: animated)
+        }
+
         
         needsLayout = true
         updateListeners()
@@ -1239,7 +1330,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 topicView = Control(frame: size.bounds)
                 topicView.scaleOnClick = true
                 self.topicPhotoView = topicView
-                self.containerView.addSubview(topicView)
+                photoContainer.addSubview(topicView)
                 
                 topicView.set(handler: { [weak self] _ in
                     if let file = self?.inlineTopicPhotoLayer?.file {
@@ -1304,5 +1395,11 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             checkValue(value)
         }
     }
-        
+    
+    func takeControl() -> NSView? {
+        return self.photoView
+    }
+    func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        SetOpenStoryDisposable(self.photoView.pushLoadingStatus(signal: signal))
+    }
 }

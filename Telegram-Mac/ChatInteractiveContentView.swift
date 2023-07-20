@@ -540,7 +540,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     var blurBackground: Bool {
-        return (parent != nil && parent?.groupingKey == nil) || parent == nil
+        let blur = ((parent != nil && parent?.groupingKey == nil) || parent == nil)
+        if let fillContent = parameters?.fillContent, fillContent {
+            return false
+        }
+        return blur
     }
 
     override func update(size: NSSize) {
@@ -643,8 +647,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
             dimensions = file.dimensions?.size ?? size
         }
         
-        let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
-
 
         
 
@@ -654,7 +656,17 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if mediaUpdated /*mediaUpdated*/ {
             
             
+            var dimensions: NSSize = size
             
+            if let image = media as? TelegramMediaImage {
+                dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
+            } else if let file = media as? TelegramMediaFile {
+                dimensions = file.dimensions?.size ?? size
+            }
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(topLeft: .Corner(topLeftRadius), topRight: .Corner(topRightRadius), bottomLeft: .Corner(bottomLeftRadius), bottomRight: .Corner(bottomRightRadius)), imageSize: blurBackground ? dimensions.aspectFitted(size) : dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets(), resizeMode: blurBackground ? .blurBackground : .none)
+
+
             
             if let image = media as? TelegramMediaImage {
                 

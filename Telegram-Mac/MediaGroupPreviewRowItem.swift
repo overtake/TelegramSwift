@@ -348,7 +348,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
 
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        return .clear
     }
     
     

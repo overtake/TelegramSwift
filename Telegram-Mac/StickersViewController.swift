@@ -731,7 +731,6 @@ class NStickersView : View {
         emptySearchContainer.isHidden = true
         emptySearchContainer.isEventLess = true
         
-        updateLocalizationAndTheme(theme: theme)
         
         packsView.getBackgroundColor = {
             .clear
@@ -823,12 +822,14 @@ class NStickersView : View {
             transition = .immediate
         }
         
+        let theme = presentation ?? theme
+        
         let currentClose: BackCategoryControl
         if state?.selectedEmojiCategory != nil, let context = context {
             if let view = self.closeCategories {
                 currentClose = view
             } else {
-                currentClose = .init(frame: NSMakeRect(searchView.frame.minX, searchView.frame.minY, 30, 30), context: context)
+                currentClose = .init(frame: NSMakeRect(searchView.frame.minX, searchView.frame.minY, 30, 30), context: context, presentation: theme)
                 self.closeCategories = currentClose
                 searchInside.addSubview(currentClose)
                 
@@ -859,7 +860,7 @@ class NStickersView : View {
                 current = view
                 isNew = false
             } else {
-                current = AnimatedEmojiesCategories(frame: categoryRect)
+                current = AnimatedEmojiesCategories(frame: categoryRect, presentation: presentation)
                 self.categories = current
                 searchInside.addSubview(current)
                 
@@ -921,11 +922,18 @@ class NStickersView : View {
             selectionView.layer?.animateCornerRadius()
         }
         transition.updateFrame(view: selectionView, frame: rect)
-        updateLocalizationAndTheme(theme: theme)
+        updateLocalizationAndTheme(theme: presentation ?? theme)
     }
     private var state: State?
     private var context: AccountContext?
     private var arguments: StickerPanelArguments?
+    
+    var presentation: TelegramPresentationTheme? {
+        didSet {
+            categories?.presentation = presentation
+        }
+    }
+    
     fileprivate func update(data: StickerPacksUpdateData, context: AccountContext, arguments: StickerPanelArguments?, animated: Bool) {
         self.state = data.state
         self.context = context
@@ -1014,6 +1022,8 @@ class NStickersView : View {
         self.searchContainer.backgroundColor = theme.colors.background
         self.tabsContainer.backgroundColor = theme.colors.background
         self.searchBorder.backgroundColor = theme.colors.border
+        
+        self.searchView.searchTheme = theme.search
         self.searchView.updateLocalizationAndTheme(theme: theme)
     }
     
@@ -1103,8 +1113,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     
     
     var mode: EntertainmentViewController.Mode = .common
+    private var presentation: TelegramPresentationTheme?
     
-    override init(_ context: AccountContext) {
+    init(_ context: AccountContext, presentation: TelegramPresentationTheme? = nil) {
+        self.presentation = presentation
         super.init(context)
         bar = .init(height: 0)
         _frameRect = NSMakeRect(0, 0, 350, 350)
@@ -1130,8 +1142,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        self.genericView.packsView.updateLocalizationAndTheme(theme: theme)
+        super.updateLocalizationAndTheme(theme: presentation ?? theme)
+        self.genericView.packsView.updateLocalizationAndTheme(theme: presentation ?? theme)
     }
     
     func update(with interactions:EntertainmentInteractions, chatInteraction: ChatInteraction) {
@@ -1238,6 +1250,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     }
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.presentation = presentation
+        
         let context = self.context
         let initialSize = self.atomicSize
         

@@ -161,6 +161,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openBank: (String)->Void = { _ in }
     var afterSentTransition:()->Void = {}
     var getGradientOffsetRect:()->NSRect = {  return .zero }
+    var markAdAction:(Data)->Void = { _ in }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
     var openFocusedMedia:(Int32?)->Void = { _ in return }
@@ -191,6 +192,8 @@ final class ChatInteraction : InterfaceObserver  {
     var revealMedia:(MessageId)->Void = { _ in }
     var toggleTranslate:()->Void = { }
     var hideTranslation:()->Void = { }
+    var openStories: (_ f:@escaping(PeerId, MessageId?, Int32?)-> NSView?, ((Signal<Never, NoError>)->Void)?)->Void = { _, _ in }
+    var openChatPeerStories: (MessageId, PeerId, ((Signal<Never, NoError>)->Void)?)->Void = { _, _, _ in }
     var doNotTranslate:(String)->Void = { _ in }
     var translateTo:(String)->Void = { _ in }
     var enableTranslatePaywall:()->Void = { }
@@ -198,6 +201,12 @@ final class ChatInteraction : InterfaceObserver  {
     var dismissPendingRequests:([PeerId])->Void = { _ in }
     var setupChatThemes:()->Void = { }
     var closeChatThemes:()->Void = { }
+    var appendAttributedText:(NSAttributedString)->Void = { _ in }
+    
+    var toggleUnderMouseMessage:()->Void = { }
+    
+    var openStory:(MessageId, StoryId)->Void = { _, _ in }
+    
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())
@@ -373,7 +382,7 @@ final class ChatInteraction : InterfaceObserver  {
     func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
 
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
-        let inputText = presentation.effectiveInput.attributedString.mutableCopy() as! NSMutableAttributedString
+        let inputText = presentation.effectiveInput.attributedString(theme).mutableCopy() as! NSMutableAttributedString
         
         if self.presentation.state != .normal && presentation.state != .editing {
             return selectedRange.lowerBound ..< selectedRange.lowerBound
@@ -734,7 +743,7 @@ final class ChatInteraction : InterfaceObserver  {
                     case let .url(url):
                         execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
                     case .text:
-                        _ = (enqueueMessages(account: strongSelf.context.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
+                        _ = (enqueueMessages(account: strongSelf.context.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
                             strongSelf?.scrollToLatest(true)
                         })
                     case .requestPhone:

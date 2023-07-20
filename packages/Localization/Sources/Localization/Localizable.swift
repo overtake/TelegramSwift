@@ -115,6 +115,8 @@ public final class L10n {
   public static var accountSettingsLanguage: String  { return L10n.tr("Localizable", "AccountSettings.Language") }
   /// Logout
   public static var accountSettingsLogout: String  { return L10n.tr("Localizable", "AccountSettings.Logout") }
+  /// My Stories
+  public static var accountSettingsMyStories: String  { return L10n.tr("Localizable", "AccountSettings.MyStories") }
   /// Notifications
   public static var accountSettingsNotifications: String  { return L10n.tr("Localizable", "AccountSettings.Notifications") }
   /// Telegram Passport
@@ -891,6 +893,8 @@ public final class L10n {
   public static func changeNumberSendDataErrorPhoneNumberOccupied(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChangeNumber.SendData.Error.PhoneNumberOccupied", p1)
   }
+  /// You can only change your phone number using mobile Telegram apps. Please use an official Telegram app on your phone to update your number.
+  public static var changePhoneUseMobile: String  { return L10n.tr("Localizable", "ChangePhone.UseMobile") }
   /// All your Telegram contacts will get your new number added to their address book, provided they had your old number and you haven't blocked them in Telegram.
   public static var changePhoneNumberIntroAlert: String  { return L10n.tr("Localizable", "ChangePhoneNumber.Intro.Alert") }
   /// You can change your Telegram number here. Your account and all your cloud data — messages, media, contacts, etc. will be moved to the new number.\n\n**Important**: all your Telegram contacts will get your **new number** added to their address book, provided they had your old number and you haven't blocked them in Telegram.
@@ -1318,6 +1322,14 @@ public final class L10n {
   /// changed custom title for %@: %@
   public static func channelEventLogMessageRankName(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageRankName", p1, p2)
+  }
+  /// %@ allowed message forwarding
+  public static func channelEventLogMessageToggleNoForwardsOff(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageToggleNoForwardsOff", p1)
+  }
+  /// %@ restricted message forwarding
+  public static func channelEventLogMessageToggleNoForwardsOn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageToggleNoForwardsOn", p1)
   }
   /// transferred ownership
   public static var channelEventLogMessageTransfered: String  { return L10n.tr("Localizable", "Channel.EventLog.MessageTransfered") }
@@ -2091,6 +2103,10 @@ public final class L10n {
   public static func chatBubblesForwardedFrom(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Bubbles.ForwardedFrom", p1)
   }
+  /// Forwarded Story From: [%@]()
+  public static func chatBubblesForwardedStory(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Bubbles.ForwardedStory", p1)
+  }
   /// Incoming Call
   public static var chatCallIncoming: String  { return L10n.tr("Localizable", "Chat.Call.Incoming") }
   /// Outgoing Call
@@ -2371,6 +2387,8 @@ public final class L10n {
   public static var chatContextPeerMention: String  { return L10n.tr("Localizable", "Chat.Context.Peer.Mention") }
   /// Open Profile
   public static var chatContextPeerOpenInfo: String  { return L10n.tr("Localizable", "Chat.Context.Peer.OpenInfo") }
+  /// Open Stories
+  public static var chatContextPeerOpenStory: String  { return L10n.tr("Localizable", "Chat.Context.Peer.OpenStory") }
   /// Send Message
   public static var chatContextPeerSendMessage: String  { return L10n.tr("Localizable", "Chat.Context.Peer.SendMessage") }
   /// Hide pinned message
@@ -2745,6 +2763,8 @@ public final class L10n {
   }
   /// imported
   public static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
+  /// OPEN STORY
+  public static var chatMessageOpenStory: String  { return L10n.tr("Localizable", "Chat.Message.OpenStory") }
   /// recommended
   public static var chatMessageRecommended: String  { return L10n.tr("Localizable", "Chat.Message.Recommended") }
   /// SEND MESSAGE
@@ -3097,6 +3117,10 @@ public final class L10n {
   public static var chatRecordingCancel: String  { return L10n.tr("Localizable", "Chat.Recording.Cancel") }
   /// This chat helps you keep track of replies to your comments in Channels.
   public static var chatRepliesDesc: String  { return L10n.tr("Localizable", "Chat.Replies.Desc") }
+  /// Expired Story
+  public static var chatReplyExpiredStory: String  { return L10n.tr("Localizable", "Chat.Reply.ExpiredStory") }
+  /// This story is no longer available.
+  public static var chatReplyExpiredStoryError: String  { return L10n.tr("Localizable", "Chat.Reply.ExpiredStory.Error") }
   /// Reminder
   public static var chatRightContextReminder: String  { return L10n.tr("Localizable", "Chat.Right.Context.Reminder") }
   /// Scheduled Messages
@@ -3248,6 +3272,16 @@ public final class L10n {
   /// Search messages by %@
   public static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
+  }
+  /// The story you were mentioned in\nis no longer available
+  public static var chatServiceStoryExpiredMentionTextIncoming: String  { return L10n.tr("Localizable", "Chat.Service.StoryExpiredMentionTextIncoming") }
+  /// The story where you mentioned %@\n is no longer available
+  public static func chatServiceStoryExpiredMentionTextOutgoing(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StoryExpiredMentionTextOutgoing", p1)
+  }
+  /// %@ mentioned you in a story
+  public static func chatServiceStoryMentioned(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StoryMentioned", p1)
   }
   /// %@ suggests you profile photo
   public static func chatServiceSuggestedPhoto(_ p1: String) -> String {
@@ -3502,6 +3536,10 @@ public final class L10n {
   /// %@ received the following documents: %@
   public static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
+  }
+  /// You mentioned %@ in a story
+  public static func chatServiceStoryMentionedYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.StoryMentioned.You", p1)
   }
   /// %@ suggests you to use this photo for your Telegram account.
   public static func chatServiceSuggestPhotoInfo(_ p1: String) -> String {
@@ -3949,6 +3987,10 @@ public final class L10n {
   public static var chatListHideMuted: String  { return L10n.tr("Localizable", "ChatList.HideMuted") }
   /// Proxy Sponsor
   public static var chatListSponsoredChannel: String  { return L10n.tr("Localizable", "ChatList.SponsoredChannel") }
+  /// Story
+  public static var chatListStory: String  { return L10n.tr("Localizable", "ChatList.Story") }
+  /// mentioned you in a story
+  public static var chatListStoryMentioned: String  { return L10n.tr("Localizable", "ChatList.StoryMentioned") }
   /// Feed
   public static var chatListTitleFeed: String  { return L10n.tr("Localizable", "ChatList.TitleFeed") }
   /// Unhide Muted
@@ -3967,6 +4009,34 @@ public final class L10n {
   public static var chatListAddTopSeparator: String  { return L10n.tr("Localizable", "ChatList.Add.TopSeparator") }
   /// Chats
   public static var chatListArchiveBack: String  { return L10n.tr("Localizable", "ChatList.Archive.Back") }
+  /// %d
+  public static func chatListArchiveStoryCountCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_countable", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_few", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_many", p1)
+  }
+  /// %d Story
+  public static func chatListArchiveStoryCountOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_one", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_other", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_two", p1)
+  }
+  /// %d Stories
+  public static func chatListArchiveStoryCountZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.ArchiveStory.Count_zero", p1)
+  }
   /// Call
   public static var chatListContextCall: String  { return L10n.tr("Localizable", "ChatList.Context.Call") }
   /// Clear History
@@ -4475,6 +4545,10 @@ public final class L10n {
   }
   /// Live stream started
   public static var chatListServiceVoiceChatStartedChannel1: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted.Channel1") }
+  /// Expired Story
+  public static var chatListStoryExpired: String  { return L10n.tr("Localizable", "ChatList.Story.Expired") }
+  /// Unsupported Story
+  public static var chatListStoryUnsupported: String  { return L10n.tr("Localizable", "ChatList.Story.Unsupported") }
   /// Archive
   public static var chatListSwipingArchive: String  { return L10n.tr("Localizable", "ChatList.Swiping.Archive") }
   /// Delete
@@ -7047,6 +7121,8 @@ public final class L10n {
   public static var markFake: String  { return L10n.tr("Localizable", "Mark.Fake") }
   /// SCAM
   public static var markScam: String  { return L10n.tr("Localizable", "Mark.Scam") }
+  /// Unsupported
+  public static var mediaCellUnsupported: String  { return L10n.tr("Localizable", "MediaCell.Unsupported") }
   /// Discard Changes
   public static var mediaSenderDiscardChangesHeader: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.Header") }
   /// Discard
@@ -7533,6 +7609,10 @@ public final class L10n {
   public static var notificationReminder: String  { return L10n.tr("Localizable", "Notification.Reminder") }
   /// Reply
   public static var notificationReply: String  { return L10n.tr("Localizable", "Notification.Reply") }
+  /// Replied to your story: %@
+  public static func notificationStoryReply(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Notification.StoryReply", p1)
+  }
   /// %1$@ to your "%2$@"
   public static func notificationContactReacted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Notification.Contact.Reacted", p1, p2)
@@ -8469,6 +8549,8 @@ public final class L10n {
   public static var peerInfoConfirmSecretChatHeader: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.SecretChat.Header") }
   /// Start
   public static var peerInfoConfirmSecretChatOK: String  { return L10n.tr("Localizable", "PeerInfo.Confirm.SecretChat.OK") }
+  /// Open Photo
+  public static var peerInfoContextOpenPhoto: String  { return L10n.tr("Localizable", "PeerInfo.Context.OpenPhoto") }
   /// About
   public static var peerInfoDescriptionPlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.Description.Placeholder") }
   /// Add
@@ -8533,6 +8615,12 @@ public final class L10n {
   }
   /// Verified Account
   public static var peerInfoVerifiedTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Verified.Tooltip") }
+  /// Archived Chats
+  public static var peerListTitleArchive: String  { return L10n.tr("Localizable", "PeerList.Title.Archive") }
+  /// Chats
+  public static var peerListTitleChats: String  { return L10n.tr("Localizable", "PeerList.Title.Chats") }
+  /// Contacts
+  public static var peerListTitleContacts: String  { return L10n.tr("Localizable", "PeerList.Title.Contacts") }
   /// Audio
   public static var peerMediaAudio: String  { return L10n.tr("Localizable", "PeerMedia.Audio") }
   /// Groups
@@ -9417,6 +9505,8 @@ public final class L10n {
   public static var privacyPhoneNumberSettingsDiscoveryHeader: String  { return L10n.tr("Localizable", "PrivacyPhoneNumberSettings.DiscoveryHeader") }
   /// Active Sessions
   public static var privacySettingsActiveSessions: String  { return L10n.tr("Localizable", "PrivacySettings.ActiveSessions") }
+  /// Bio
+  public static var privacySettingsBio: String  { return L10n.tr("Localizable", "PrivacySettings.Bio") }
   /// Blocked Users
   public static var privacySettingsBlockedUsers: String  { return L10n.tr("Localizable", "PrivacySettings.BlockedUsers") }
   /// If Away For
@@ -9589,6 +9679,14 @@ public final class L10n {
   public static var privacySettingsControllerVoiceMessagesDescription: String  { return L10n.tr("Localizable", "PrivacySettingsController.VoiceMessagesDescription") }
   /// WHO CAN SEND VOICE AND VIDEO MESSAGES ME
   public static var privacySettingsControllerVoiceMessagesHeader: String  { return L10n.tr("Localizable", "PrivacySettingsController.VoiceMessagesHeader") }
+  /// You can restrict who can see your bio with granular precision.
+  public static var privacySettingsControllerBioCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.CustomHelp") }
+  /// WHO CAN SEE MY BIO
+  public static var privacySettingsControllerBioWhoCanSee: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.WhoCanSee") }
+  /// Always Share With
+  public static var privacySettingsControllerBioAlwaysShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.AlwaysShareWith.Title") }
+  /// Never Share With
+  public static var privacySettingsControllerBioNeverShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.Bio.NeverShareWith.Title") }
   /// When forwarded to other chats, messages you send will not link back to your account.
   public static var privacySettingsControllerForwardsCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.CustomHelp") }
   /// WHO CAN FORWARD MY MESSAGES
@@ -11713,6 +11811,8 @@ public final class L10n {
   public static var storageExceptionsTitleGroup: String  { return L10n.tr("Localizable", "StorageExceptions.Title.Group") }
   /// Private Chats
   public static var storageExceptionsTitlePrivate: String  { return L10n.tr("Localizable", "StorageExceptions.Title.Private") }
+  /// Stories
+  public static var storageExceptionsTitleStories: String  { return L10n.tr("Localizable", "StorageExceptions.Title.Stories") }
   /// Telegram is calculating the current cache size.\nThis can take a few minutes.
   public static var storageUsageCalculating: String  { return L10n.tr("Localizable", "StorageUsage.Calculating") }
   /// All media will stay in the Telegram cloud and can be re-downloaded if you need it again.
@@ -11757,6 +11857,8 @@ public final class L10n {
   public static var storageUsageCategoryPhotos: String  { return L10n.tr("Localizable", "StorageUsage.Category.Photos") }
   /// Stickers
   public static var storageUsageCategoryStickers: String  { return L10n.tr("Localizable", "StorageUsage.Category.Stickers") }
+  /// Stories
+  public static var storageUsageCategoryStories: String  { return L10n.tr("Localizable", "StorageUsage.Category.Stories") }
   /// Videos
   public static var storageUsageCategoryVideos: String  { return L10n.tr("Localizable", "StorageUsage.Category.Videos") }
   /// Media and documents will stay in the cloud and can be re-downloaded if you need them again.
@@ -11811,6 +11913,8 @@ public final class L10n {
   public static var storageUsageKeepMediaHeader: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Header") }
   /// Private Chats
   public static var storageUsageKeepMediaPrivate: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Private") }
+  /// Stories
+  public static var storageUsageKeepMediaStories: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Stories") }
   /// If your cache size exceeds this limit, the oldest media will be deleted.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
   public static var storageUsageLimitDesc: String  { return L10n.tr("Localizable", "StorageUsage.Limit.Desc") }
   /// MAXIMUM CACHE SIZE
@@ -11869,6 +11973,200 @@ public final class L10n {
   public static func storageUsageTelegramUsageTextPeer(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Text.Peer", p1)
   }
+  /// Nobody has viewed your story yet.
+  public static var storyAlertNoViews: String  { return L10n.tr("Localizable", "Story.Alert.NoViews") }
+  /// List of viewers isn't available after 24 hours of story expiration.
+  public static var storyAlertViewsExpired: String  { return L10n.tr("Localizable", "Story.Alert.ViewsExpired") }
+  /// Send Message
+  public static var storyAvatarContextSendMessage: String  { return L10n.tr("Localizable", "Story.AvatarContext.SendMessage") }
+  /// Are you sure you want to delete story?
+  public static var storyConfirmDelete: String  { return L10n.tr("Localizable", "Story.Confirm.Delete") }
+  /// edited
+  public static var storyControlsEdited: String  { return L10n.tr("Localizable", "Story.Controls.Edited") }
+  /// This video has no sound
+  public static var storyControlsVideoNoSound: String  { return L10n.tr("Localizable", "Story.Controls.VideoNoSound") }
+  /// Your Story
+  public static var storyControlsYourStory: String  { return L10n.tr("Localizable", "Story.Controls.YourStory") }
+  /// Hide Stories
+  public static var storyControlsMenuArchive: String  { return L10n.tr("Localizable", "Story.Controls.Menu.Archive") }
+  /// Copy Link
+  public static var storyControlsMenuCopyLink: String  { return L10n.tr("Localizable", "Story.Controls.Menu.CopyLink") }
+  /// Report
+  public static var storyControlsMenuReport: String  { return L10n.tr("Localizable", "Story.Controls.Menu.Report") }
+  /// Share
+  public static var storyControlsMenuShare: String  { return L10n.tr("Localizable", "Story.Controls.Menu.Share") }
+  /// Unhide Stories
+  public static var storyControlsMenuUnarchive: String  { return L10n.tr("Localizable", "Story.Controls.Menu.Unarchive") }
+  /// This story is no longer available
+  public static var storyErrorNotExist: String  { return L10n.tr("Localizable", "Story.Error.NotExist") }
+  /// Photo or Video
+  public static var storyInputAttach: String  { return L10n.tr("Localizable", "Story.Input.Attach") }
+  /// You can't share this story
+  public static var storyInputCantShare: String  { return L10n.tr("Localizable", "Story.Input.CantShare") }
+  /// File
+  public static var storyInputFile: String  { return L10n.tr("Localizable", "Story.Input.File") }
+  /// Reply Privately...
+  public static var storyInputPlaceholder: String  { return L10n.tr("Localizable", "Story.Input.Placeholder") }
+  /// This story is not supported by your version of Telegram. Please update the app to the latest version.
+  public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }
+  /// Copy Link
+  public static var storyMyInputCopyLink: String  { return L10n.tr("Localizable", "Story.MyInput.CopyLink") }
+  /// Remove From Profile
+  public static var storyMyInputRemoveFromProfile: String  { return L10n.tr("Localizable", "Story.MyInput.RemoveFromProfile") }
+  /// Save Media...
+  public static var storyMyInputSaveMedia: String  { return L10n.tr("Localizable", "Story.MyInput.SaveMedia") }
+  /// Save To Profile
+  public static var storyMyInputSaveToProfile: String  { return L10n.tr("Localizable", "Story.MyInput.SaveToProfile") }
+  /// Share
+  public static var storyMyInputShare: String  { return L10n.tr("Localizable", "Story.MyInput.Share") }
+  /// %d
+  public static func storyMyInputViewsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Views_countable", p1)
+  }
+  /// %d views
+  public static func storyMyInputViewsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Views_few", p1)
+  }
+  /// %d views
+  public static func storyMyInputViewsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Views_many", p1)
+  }
+  /// %d view
+  public static func storyMyInputViewsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Views_one", p1)
+  }
+  /// %d views
+  public static func storyMyInputViewsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Views_other", p1)
+  }
+  /// %d views
+  public static func storyMyInputViewsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Views_two", p1)
+  }
+  /// %d views
+  public static func storyMyInputViewsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Views_zero", p1)
+  }
+  /// No Views yet
+  public static var storyMyInputViewsZeroValueHolder: String  { return L10n.tr("Localizable", "Story.MyInput.Views_ZeroValueHolder") }
+  /// You can't reply to this story
+  public static var storyNoReplyInputNoReply: String  { return L10n.tr("Localizable", "Story.NoReplyInput.NoReply") }
+  /// Telegram moderators will review your report. Thank you!
+  public static var storyReportSuccessText: String  { return L10n.tr("Localizable", "Story.Report.SuccessText") }
+  /// Stories from **%@** will now be shown in Archived Chats.
+  public static func storyTooltipArchive(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Story.Tooltip.Archive", p1)
+  }
+  /// Audio Sent.
+  public static var storyTooltipAudioSent: String  { return L10n.tr("Localizable", "Story.Tooltip.AudioSent") }
+  /// You are seeing this story because you have been added to %@'s list of close friends.
+  public static func storyTooltipCloseFriends(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Story.Tooltip.CloseFriends", p1)
+  }
+  /// Only %@'s contacts can view this story.
+  public static func storyTooltipContacts(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Story.Tooltip.Contacts", p1)
+  }
+  /// GIF Sent.
+  public static var storyTooltipGifSent: String  { return L10n.tr("Localizable", "Story.Tooltip.GifSent") }
+  /// Copied to clipboard.
+  public static var storyTooltipLinkCopied: String  { return L10n.tr("Localizable", "Story.Tooltip.LinkCopied") }
+  /// Media Sent.
+  public static var storyTooltipMediaSent: String  { return L10n.tr("Localizable", "Story.Tooltip.MediaSent") }
+  /// Message Sent.
+  public static var storyTooltipMessageSent: String  { return L10n.tr("Localizable", "Story.Tooltip.MessageSent") }
+  /// Photo Sent.
+  public static var storyTooltipPhotoSent: String  { return L10n.tr("Localizable", "Story.Tooltip.PhotoSent") }
+  /// Reaction Sent.
+  public static var storyTooltipReactionSent: String  { return L10n.tr("Localizable", "Story.Tooltip.ReactionSent") }
+  /// Story removed from your profile.
+  public static var storyTooltipRemovedFromProfile: String  { return L10n.tr("Localizable", "Story.Tooltip.RemovedFromProfile") }
+  /// Saved stories can be viewed by others on your profile until you remove them.
+  public static var storyTooltipSavedToProfile: String  { return L10n.tr("Localizable", "Story.Tooltip.SavedToProfile") }
+  /// Only some contacts %@ selected can view this story.
+  public static func storyTooltipSelectedContacts(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Story.Tooltip.SelectedContacts", p1)
+  }
+  /// Sticker Sent.
+  public static var storyTooltipStickerSent: String  { return L10n.tr("Localizable", "Story.Tooltip.StickerSent") }
+  /// Stories from **%@** will now be shown in Chats.
+  public static func storyTooltipUnarchive(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Story.Tooltip.Unarchive", p1)
+  }
+  /// Video Sent.
+  public static var storyTooltipVideoSent: String  { return L10n.tr("Localizable", "Story.Tooltip.VideoSent") }
+  /// View in Chat
+  public static var storyTooltipButtonViewInChat: String  { return L10n.tr("Localizable", "Story.Tooltip.Button.ViewInChat") }
+  /// Stories from **%@** will now be shown in Archived Chats.
+  public static func storyFeedTooltipArchive(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryFeed.TooltipArchive", p1)
+  }
+  /// Stories from **%@** will now be shown in Chats.
+  public static func storyFeedTooltipUnarchive(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryFeed.TooltipUnarchive", p1)
+  }
+  /// Show More
+  public static var storyItemTextShowMore: String  { return L10n.tr("Localizable", "StoryItem.Text.ShowMore") }
+  /// My Story
+  public static var storyListMyStory: String  { return L10n.tr("Localizable", "StoryList.MyStory") }
+  /// Stories from **%@** will now be shown in Archived Chats.
+  public static func storyListTooltipArchive(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryList.TooltipArchive", p1)
+  }
+  /// Stories from **%@** will now be shown in Chats.
+  public static func storyListTooltipUnarchive(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryList.TooltipUnarchive", p1)
+  }
+  /// Hide Stories
+  public static var storyListContextArchive: String  { return L10n.tr("Localizable", "StoryList.Context.Archive") }
+  /// Archived Stories
+  public static var storyListContextArchivedStories: String  { return L10n.tr("Localizable", "StoryList.Context.ArchivedStories") }
+  /// Saved Stories
+  public static var storyListContextSavedStories: String  { return L10n.tr("Localizable", "StoryList.Context.SavedStories") }
+  /// Send Message
+  public static var storyListContextSendMessage: String  { return L10n.tr("Localizable", "StoryList.Context.SendMessage") }
+  /// Unhide Stories
+  public static var storyListContextUnarchive: String  { return L10n.tr("Localizable", "StoryList.Context.Unarchive") }
+  /// View Profile
+  public static var storyListContextViewProfile: String  { return L10n.tr("Localizable", "StoryList.Context.ViewProfile") }
+  /// Only you can see archived stories unless you choose to save them to your profile
+  public static var storyMediaArchiveText: String  { return L10n.tr("Localizable", "StoryMedia.ArchiveText") }
+  /// Open Archive
+  public static var storyMediaEmptyOpen: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Open") }
+  /// Open the Archive so select stories you want to be displayed in your profile.
+  public static var storyMediaEmptyText: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Text") }
+  /// No Saved Stories
+  public static var storyMediaEmptyTitle: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Title") }
+  /// %d
+  public static func storyViewsTitleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryViews.Title_countable", p1)
+  }
+  /// %d views
+  public static func storyViewsTitleFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryViews.Title_few", p1)
+  }
+  /// %d views
+  public static func storyViewsTitleMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryViews.Title_many", p1)
+  }
+  /// %d view
+  public static func storyViewsTitleOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryViews.Title_one", p1)
+  }
+  /// %d views
+  public static func storyViewsTitleOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryViews.Title_other", p1)
+  }
+  /// %d views
+  public static func storyViewsTitleTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryViews.Title_two", p1)
+  }
+  /// %d views
+  public static func storyViewsTitleZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StoryViews.Title_zero", p1)
+  }
+  /// No Views yet
+  public static var storyViewsTitleZeroValueHolder: String  { return L10n.tr("Localizable", "StoryViews.Title_ZeroValueHolder") }
   /// Suggest Frequent Contacts
   public static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }
   /// This will delete all data about the people you message frequently as well as the inline bots you are likely to use.
@@ -12113,8 +12411,20 @@ public final class L10n {
   public static func themePreviewUsesCountZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "ThemePreview.UsesCount_zero", p1)
   }
+  /// {date} hour ago
+  public static var timeAgoHour: String  { return L10n.tr("Localizable", "Time.agoHour") }
+  /// {date} hours ago
+  public static var timeAgoHours: String  { return L10n.tr("Localizable", "Time.agoHours") }
+  /// {date} minute ago
+  public static var timeAgoMinute: String  { return L10n.tr("Localizable", "Time.agoMinute") }
+  /// {date} minutes ago
+  public static var timeAgoMinutes: String  { return L10n.tr("Localizable", "Time.agoMinutes") }
   /// at
   public static var timeAt: String  { return L10n.tr("Localizable", "Time.at") }
+  /// {date}
+  public static var timeAtDate: String  { return L10n.tr("Localizable", "Time.AtDate") }
+  /// just now
+  public static var timeJustnow: String  { return L10n.tr("Localizable", "Time.justnow") }
   /// last seen
   public static var timeLastSeen: String  { return L10n.tr("Localizable", "Time.last_seen") }
   /// Jan %@, %@ at %@
@@ -13578,6 +13888,10 @@ public final class L10n {
   /// You sucessfully removed "%@" from attach menu.
   public static func webAppAttachRemoveSuccess(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.AttachRemove.Success", p1)
+  }
+  /// Are you sure you want to open %@ in Telegram?
+  public static func webAppConfirmOpenWebapp(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Confirm.OpenWebapp", p1)
   }
   /// Allow Write
   public static var webAppFirstOpenAllowWrite: String  { return L10n.tr("Localizable", "WebApp.FirstOpen.AllowWrite") }

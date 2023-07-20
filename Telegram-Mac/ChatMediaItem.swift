@@ -86,6 +86,7 @@ class ChatMediaLayoutParameters : Equatable {
     
     var automaticDownloadFunc:(Message)->Bool
     
+    var fillContent: Bool? = nil
     
     init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings, isRevealed: Bool? = nil) {
         self.automaticDownloadFunc = { _ in
@@ -110,7 +111,7 @@ class ChatMediaLayoutParameters : Equatable {
     
     static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool, isFile: Bool = false, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false, isCopyProtected: Bool = false, isRevealed: Bool? = nil) -> ChatMediaLayoutParameters {
         if media.isInstantVideo && !isFile {
-            var duration:Int = 0
+            var duration:Double = 0
             for attr in media.attributes {
                 switch attr {
                 case let .Video(params):
@@ -123,20 +124,20 @@ class ChatMediaLayoutParameters : Equatable {
             return ChatMediaVideoMessageLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia, isRevealed: isRevealed)
         } else if media.isVoice && !isFile {
             var waveform:AudioWaveform? = nil
-            var duration:Int = 0
+            var duration:Double = 0
             for attr in media.attributes {
                 switch attr {
                 case let .Audio(_, _duration, _, _, _data):
                     if let data = _data {
                         waveform = AudioWaveform(bitstream: data, bitsPerSample: 5)
                     }
-                    duration = _duration
+                    duration = Double(_duration)
                 default:
                     break
                 }
             }
             
-            return ChatMediaVoiceLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, waveform:waveform, duration:duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload)
+            return ChatMediaVoiceLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, waveform:waveform, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload)
         } else if media.isMusic && !isFile {
             var audioTitle:String?
             var audioPerformer:String?
@@ -349,6 +350,17 @@ class ChatMediaItem: ChatRowItem {
             case .full(let media):
                 self.media = media
             }
+        } else if let media = message.media[0] as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
+            switch story {
+            case let .item(item):
+                if let media = item.media {
+                    self.media = media
+                } else {
+                    self.media = media
+                }
+            case .placeholder:
+                self.media = media
+            }
         } else {
             self.media = message.media[0]
         }
@@ -368,20 +380,23 @@ class ChatMediaItem: ChatRowItem {
         let parameters = ChatMediaGalleryParameters(showMedia: { [weak self] message in
             guard let `self` = self else {return}
             
-            var type:GalleryAppearType = .history
-            if let parameters = self.parameters as? ChatMediaGalleryParameters, parameters.isWebpage {
-                type = .alone
-            } else if message.containsSecretMedia {
-                type = .secret
+            if let media = message.media.first as? TelegramMediaStory {
+                self.chatInteraction.openStory(message.id, media.storyId)
+            } else {
+                var type:GalleryAppearType = .history
+                if let parameters = self.parameters as? ChatMediaGalleryParameters, parameters.isWebpage {
+                    type = .alone
+                } else if message.containsSecretMedia {
+                    type = .secret
+                }
+                if self.chatInteraction.mode.isThreadMode, self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
+                    type = .messages([message])
+                }
+                showChatGallery(context: context, message: message, self.table, self.parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
             }
-            if self.chatInteraction.mode.isThreadMode, self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
-                type = .messages([message])
-            }
-            showChatGallery(context: context, message: message, self.table, self.parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
-            
-            }, showMessage: { [weak self] message in
-                self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia, isRevealed: entry.isRevealed)
+        }, showMessage: { [weak self] message in
+            self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
+        }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia, isRevealed: entry.isRevealed)
         
         self.parameters = parameters
         
@@ -817,6 +832,11 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
         contentNode.addAccesoryOnCopiedView(view: view)
     }
 
+
+    
+    override var storyMediaControl: NSView? {
+        return self.contentNode
+    }
 }
 
 

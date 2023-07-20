@@ -75,7 +75,7 @@ private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arg
         }))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_border, equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return GeneralLineSeparatorRowItem.init(initialSize: initialSize, stableId: stableId)
+            return GeneralLineSeparatorRowItem(initialSize: initialSize, stableId: stableId)
         }))
         index += 1
     } 

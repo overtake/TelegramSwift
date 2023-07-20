@@ -257,7 +257,7 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
                     let combine = peers.filter {
                         selected.presentation.selected.contains($0.peer.id)
                     }.map {
-                        return enqueueMessages(account: context.account, peerId: $0.peer.id, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
+                        return enqueueMessages(account: context.account, peerId: $0.peer.id, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
                     }
                     _ = combineLatest(combine).start()
                     

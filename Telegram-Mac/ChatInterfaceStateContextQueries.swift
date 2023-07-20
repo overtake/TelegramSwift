@@ -557,7 +557,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
             var detectedRange: NSRange = NSMakeRange(NSNotFound, 0)
             let text = chatPresentationInterfaceState.effectiveInput.inputText.prefix(4096)
             
-            var attr = chatPresentationInterfaceState.effectiveInput.attributedString
+            var attr = chatPresentationInterfaceState.effectiveInput.attributedString(theme)
             attr = attr.attributedSubstring(from: NSMakeRange(0, min(attr.length, 4096)))
             attr.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
                 

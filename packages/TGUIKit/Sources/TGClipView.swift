@@ -9,17 +9,25 @@
 import Cocoa
 import CoreVideo
 import SwiftSignalKit
+
+private final class ClipLayer : SimpleLayer {
+    override var bounds: CGRect {
+        didSet {
+            NSLog("\(bounds)")
+        }
+    }
+}
+
 public class TGClipView: NSClipView,CALayerDelegate {
     
     var border:BorderType? {
         didSet {
-            self.layerContentsRedrawPolicy = .onSetNeedsDisplay
-            super.needsDisplay = true
-             self.layerContentsRedrawPolicy = .never
+//            self.layerContentsRedrawPolicy = .onSetNeedsDisplay
+//            super.needsDisplay = true
+//            self.layerContentsRedrawPolicy = .never
         }
     }
     
-    var displayLink:CVDisplayLink?
     var shouldAnimateOriginChange:Bool = false
     var destinationOrigin:NSPoint?
     
@@ -32,7 +40,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     public override var needsDisplay: Bool {
         set {
             //self.layerContentsRedrawPolicy = .onSetNeedsDisplay
-            super.needsDisplay = needsDisplay
+            super.needsDisplay = newValue
            // self.layerContentsRedrawPolicy = .never
         }
         get {
@@ -58,15 +66,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
     }
     var scrollCompletion:((_ success:Bool) ->Void)?
-    public var decelerationRate:CGFloat = 0.8
     
     
-    public var isScrolling: Bool {
-        if let displayLink = displayLink {
-            return CVDisplayLinkIsRunning(displayLink)
-        }
-        return false
-    }
     public var destination: NSPoint? {
         return self.destinationOrigin
     }
@@ -74,18 +75,16 @@ public class TGClipView: NSClipView,CALayerDelegate {
     override init(frame frameRect: NSRect) {
         
         super.init(frame: frameRect)
-        //self.wantsLayer = true
-        backgroundColor = .clear
-        self.layerContentsRedrawPolicy = .never
+//        self.backgroundColor = .clear
+        self.wantsLayer = true
+       // self.layerContentsRedrawPolicy = .never
       //  self.layer?.drawsAsynchronously = System.drawAsync
         //self.layer?.delegate = self
 //        createDisplayLink()
 
     }
     
-    override public static var isCompatibleWithResponsiveScrolling: Bool {
-        return true
-    }
+    
     
     public override var backgroundColor: NSColor {
         set {
@@ -99,180 +98,56 @@ public class TGClipView: NSClipView,CALayerDelegate {
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    public override func draw(_ dirtyRect: NSRect) {
-        
-    }
-    
-//    override public func setNeedsDisplay(_ invalidRect: NSRect) {
-//        
+//
+//    public override func draw(_ dirtyRect: NSRect) {
+//
 //    }
-    
-    public func draw(_ layer: CALayer, in ctx: CGContext) {
-       // ctx.clear(bounds)
+//
+////    override public func setNeedsDisplay(_ invalidRect: NSRect) {
+////
+////    }
+//
+//    public func draw(_ layer: CALayer, in ctx: CGContext) {
+//       // ctx.clear(bounds)
+//
+//
+//           // ctx.setFillColor(NSColor.clear.cgColor)
+//           // ctx.fill(bounds)
+//
+//
+//        if let border = border {
+//
+//            ctx.setFillColor(presentation.colors.border.cgColor)
+//
+//            if border.contains(.Top) {
+//                ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
+//            }
+//            if border.contains(.Bottom) {
+//                ctx.fill(NSMakeRect(0, 0, NSWidth(self.frame), .borderSize))
+//            }
+//            if border.contains(.Left) {
+//                ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
+//            }
+//            if border.contains(.Right) {
+//                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
+//            }
+//
+//        }
+//    }
+//
 
-        
-           // ctx.setFillColor(NSColor.clear.cgColor)
-           // ctx.fill(bounds)
-        
-
-        if let border = border {
-            
-            ctx.setFillColor(presentation.colors.border.cgColor)
-            
-            if border.contains(.Top) {
-                ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
-            }
-            if border.contains(.Bottom) {
-                ctx.fill(NSMakeRect(0, 0, NSWidth(self.frame), .borderSize))
-            }
-            if border.contains(.Left) {
-                ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
-            }
-            if border.contains(.Right) {
-                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
-            }
-            
-        }
-    }
-    
-    private func createDisplayLink() {
-        if displayLink != nil {
-            return
-        }
-        CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
-        guard let displayLink = displayLink else {
-            return
-        }
-        
-        let callback: CVDisplayLinkOutputCallback = { (_, _, _, _, _, userInfo) -> CVReturn in
-            let clipView = Unmanaged<TGClipView>.fromOpaque(userInfo!).takeUnretainedValue()
-            
-            Queue.mainQueue().async {
-                clipView.updateOrigin()
-            }
-            
-            return kCVReturnSuccess
-        }
-        
-        let userInfo = Unmanaged.passUnretained(self).toOpaque()
-        CVDisplayLinkSetOutputCallback(displayLink, callback, userInfo)
-    }
     
     deinit {
-        endScroll()
         NotificationCenter.default.removeObserver(self)
     }
     
-    
-    func beginScroll() -> Void {
-        createDisplayLink()
-        if let displayLink = displayLink {
-            if (CVDisplayLinkIsRunning(displayLink)) {
-                return
-            }
-            CVDisplayLinkStart(displayLink)
-        }
-        
-    }
-    
     public var isAnimateScrolling:Bool {
-        if let displayLink = displayLink {
-            if (CVDisplayLinkIsRunning(displayLink)) {
-                return true
-            }
-        }
-        if layer?.animation(forKey: "bounds") != nil {
-            return true
-        }
         return self.point != nil
     }
     
-    func endScroll() -> Void {
-        if let displayLink = displayLink {
-            if (!CVDisplayLinkIsRunning(displayLink)) {
-                return;
-            }
-            CVDisplayLinkStop(displayLink);
-        }
-        self.displayLink = nil
-    }
-//    
-//    func easeInOutQuad (percentComplete: CGFloat, elapsedTimeMs: CGFloat, startValue: CGFloat, endValue: CGFloat, totalDuration: CGFloat) -> CGFloat {
-//        var newElapsedTimeMs = elapsedTimeMs
-//        newElapsedTimeMs /= totalDuration/2
-//        
-//        if newElapsedTimeMs < 1 {
-//            return endValue/2*newElapsedTimeMs*newElapsedTimeMs + startValue
-//        }
-//        newElapsedTimeMs = newElapsedTimeMs - 1
-//        return -endValue/2 * ((newElapsedTimeMs)*(newElapsedTimeMs-2) - 1) + startValue
-//    }
-
-    public func reset() {
-        endScroll()
-        if let destinationOrigin = destinationOrigin {
-            super.scroll(to: destinationOrigin)
-            handleCompletionIfNeeded(withSuccess: false)
-        }
-    }
-    
-    public func updateOrigin() -> Void {
-        if (self.window == nil) {
-            self.reset()
-            return;
-        }
-        
-        if let destination = self.destinationOrigin {
-            var o:CGPoint = self.bounds.origin;
-            let lastOrigin:CGPoint = o;
-            
-            
-            
-            o.x = ceil(o.x + (destination.x - o.x) * (1 - self.decelerationRate));
-            o.y = ceil(o.y + (destination.y - o.y) * (1 - self.decelerationRate));
-            
-            
-            super.scroll(to: o)
-            
-            
-            // Make this call so that we can force an update of the scroller positions.
-      //      self.containingScrollView?.reflectScrolledClipView(self);
-            
-            if ((abs(o.x - lastOrigin.x) < 1 && abs(o.y - lastOrigin.y) < 1)) {
-                self.endScroll()
-                super.scroll(to: destination)
-                self.handleCompletionIfNeeded(withSuccess: true)
-            } else if o == destination {
-                self.endScroll()
-                self.handleCompletionIfNeeded(withSuccess: true)
-            }
-        } else {
-            endScroll()
-        }
-        
-
-    }
-    
     override public func viewWillMove(toWindow newWindow: NSWindow?) {
-//        if let w = newWindow {
-//
-//            NotificationCenter.default.addObserver(self, selector: #selector(updateCVDisplay), name: NSWindow.didChangeScreenNotification, object: w)
-//
-//        } else {
-//            NotificationCenter.default.removeObserver(self, name: NSWindow.didChangeScreenNotification, object: self.window)
-//        }
-        
         super.viewWillMove(toWindow: newWindow)
     }
-    
-//    @objc func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
-//        if let displayLink = displayLink, let _ = NSScreen.main {
-//            CVDisplayLinkSetCurrentCGDisplay(displayLink, CGMainDisplayID());
-//        }
-//    }
-    
-    
     func scrollRectToVisible(_ rect: NSRect, animated: Bool) -> Bool {
         self.shouldAnimateOriginChange = animated
         return super.scrollToVisible(rect)
@@ -290,11 +165,18 @@ public class TGClipView: NSClipView,CALayerDelegate {
     var documentOffset: NSPoint {
         return self.point ?? self.bounds.origin
     }
+    
+    public func updateBounds(to point: NSPoint) {
+        self.bounds.origin = point
+    }
         
     private(set) var point: NSPoint?
     
     public func scroll(to point: NSPoint, animated:Bool, completion: @escaping (Bool) -> Void = {_ in})  {
         
+        if point == self.destinationOrigin {
+            return
+        }
         self.scrollCompletion = completion
         self.destinationOrigin = point
         if animated {
@@ -320,54 +202,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
             self.scrollCompletion?(false)
         }
         
-//        self.scrollCompletion?(false)
-//        self.shouldAnimateOriginChange = animated
-//        self.scrollCompletion = completion
-        
-//        if animated {
-//            self.layer?.removeAllAnimations()
-//            beginScroll()
-//        }
-//        if animated && abs(bounds.minY - point.y) > frame.height {
-//            let y:CGFloat
-//            if bounds.minY < point.y {
-//                y = point.y - floor(frame.height / 2)
-//            } else {
-//                y = point.y + floor(frame.height / 2)
-//            }
-//            super.scroll(to: NSMakePoint(point.x,y))
-//            DispatchQueue.main.async(execute: { [weak self] in
-//                self?.scroll(to: point)
-//            })
-//        } else {
-//            self.scroll(to: point)
-//        }
-        
     }
     
-    public func justScroll(to newOrigin:NSPoint) {
-        super.scroll(to: newOrigin)
-    }
-    
-    
-    override public func scroll(to newOrigin:NSPoint) -> Void {
-        let newOrigin = NSMakePoint(round(newOrigin.x), round(newOrigin.y))
-        if (self.shouldAnimateOriginChange) {
-            self.shouldAnimateOriginChange = false;
-            self.destinationOrigin = newOrigin;
-            self.beginScroll()
-        } else {
-            if !isAnimateScrolling {
-                self.destinationOrigin = nil;
-                self.endScroll()
-                super.scroll(to: newOrigin)
-                Queue.mainQueue().justDispatch {
-                    self.handleCompletionIfNeeded(withSuccess: true)
-                }
-            }
-        }
-        
-    }
     
     public override var bounds: NSRect {
         set {
@@ -378,6 +214,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         }
     }
     
+    public override func scroll(to newOrigin: NSPoint) {
+        bounds.origin = newOrigin
+    }
     
     func handleCompletionIfNeeded(withSuccess success: Bool) {
         self.destinationOrigin = nil

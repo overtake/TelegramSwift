@@ -154,7 +154,7 @@ open class BackgroundView: View {
     deinit {
     }
     
-    private let imageView: CALayer = CALayer()
+    private let imageView: SimpleLayer = SimpleLayer()
     private var backgroundView: NSView?
     
     public var useSharedAnimationPhase: Bool = true
@@ -217,8 +217,8 @@ open class BackgroundView: View {
     open var backgroundMode:TableBackgroundMode = .plain {
         didSet {
             if oldValue != backgroundMode {
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
+//                CATransaction.begin()
+//                CATransaction.setDisableActions(true)
                 tileControl.validLayout = nil
                 var backgroundView: NSView? = nil
                 switch backgroundMode {
@@ -322,7 +322,7 @@ open class BackgroundView: View {
                     self.backgroundView = nil
                 }
             }
-            CATransaction.commit()
+//            CATransaction.commit()
         }
     }
     

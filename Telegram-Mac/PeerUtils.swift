@@ -231,7 +231,10 @@ let publicGroupRestrictedPermissions: TelegramChatBannedRightsFlags = [
 
 
 
-func checkMediaPermission(_ media: Media, for peer: Peer) -> String? {
+func checkMediaPermission(_ media: Media, for peer: Peer?) -> String? {
+    guard let peer = peer else {
+        return nil
+    }
     switch media {
     case _ as TelegramMediaPoll:
         return permissionText(from: peer, for: .banSendPolls)
@@ -260,7 +263,10 @@ func checkMediaPermission(_ media: Media, for peer: Peer) -> String? {
     }
 }
 
-func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -> String? {
+func permissionText(from peer: Peer?, for flags: TelegramChatBannedRightsFlags) -> String? {
+    guard let peer = peer else {
+        return nil
+    }
     var bannedPermission: (Int32, Bool)?
     
     let get:(TelegramChatBannedRightsFlags) -> (Int32, Bool)? = { flags in
@@ -654,5 +660,19 @@ func getPeerView(peerId: PeerId, postbox: Postbox) -> Signal<Peer?, NoError> {
 func getCachedDataView(peerId: PeerId, postbox: Postbox) -> Signal<CachedPeerData?, NoError> {
     return postbox.combinedView(keys: [.cachedPeerData(peerId: peerId)]) |> map { view in
         return (view.views[.cachedPeerData(peerId: peerId)] as? CachedPeerDataView)?.cachedPeerData
+    }
+}
+struct StoryInitialIndex {
+    let peerId: PeerId
+    let id: Int32?
+    let messageId: MessageId?
+    let takeControl:((PeerId, MessageId?, Int32?)->NSView?)?
+    let setProgress:((Signal<Never, NoError>)->Void)?
+    init(peerId: PeerId, id: Int32?, messageId: MessageId?, takeControl: ((PeerId, MessageId?, Int32?) -> NSView?)?, setProgress: ((Signal<Never, NoError>) -> Void)? = nil) {
+        self.peerId = peerId
+        self.id = id
+        self.messageId = messageId
+        self.takeControl = takeControl
+        self.setProgress = setProgress
     }
 }

@@ -478,7 +478,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                         }
                     }, for: .Click)
                 }
-                control.update(state: controlState, color: data.backgroundColor, activityBackground: data.fontColor, blurBackground: parameters.presentation.isBubble ? theme.blurServiceColor : nil, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+                control.update(state: controlState, color: data.backgroundColor, activityBackground: data.fontColor, blurBackground: parameters.presentation.isBubble && parameters.presentation.presentation.hasWallpaper ? theme.blurServiceColor : nil, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
             }
             
             if removeTransribeControl, let view = transcribeControl {

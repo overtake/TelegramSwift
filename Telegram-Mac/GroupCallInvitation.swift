@@ -321,8 +321,8 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                     var entries:[Peer] = []
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
-                            if let peer = renderedPeer.chatMainPeer, peer.canSendMessage() {
+                        case let .MessageEntry(data):
+                            if let peer = data.renderedPeer.chatMainPeer, peer.canSendMessage() {
                                 entries.append(peer)
                             }
                         default:
@@ -539,7 +539,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                                     link = links.speakerLink ?? links.listenerLink
                                 }
                                 for peerId in peerIds {
-                                    _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+                                    _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
                                 }
                                 
                                 subscriber.putNext(true)
@@ -548,7 +548,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                             }, appearance: GroupCallTheme.customTheme.appearance)
                         } else {
                             for peerId in peerIds {
-                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
                             }
                             subscriber.putNext(true)
                             subscriber.putCompletion()

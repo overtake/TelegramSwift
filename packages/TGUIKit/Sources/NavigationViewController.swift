@@ -697,7 +697,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
         previous.tied = nil
         
-        controller.view.removeFromSuperview()
+       // controller.view.removeFromSuperview()
         
         let popInteractiveInset: CGFloat? = window.inLiveSwiping ? controller.frame.minX : nil
         

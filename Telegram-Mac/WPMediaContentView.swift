@@ -98,4 +98,8 @@ class WPMediaContentView: WPContentView {
         return contentNode?.interactionContentView(for: innerId, animateIn: animateIn) ?? self
     }
     
+    override var mediaContentView: NSView? {
+        return contentNode
+    }
+    
 }

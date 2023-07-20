@@ -433,6 +433,8 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
                     current = info.phoneNumber
                 case .voiceMessages:
                     current = info.voiceMessages
+                case .bio:
+                    current = info.bio
                 }
                 
                 present(.push, SelectivePrivacySettingsController(context, kind: kind, current: current, callSettings: kind == .voiceCalls ? info.voiceCallsP2P : nil, phoneDiscoveryEnabled: nil, updated: { updated, updatedCallSettings, _ in }))

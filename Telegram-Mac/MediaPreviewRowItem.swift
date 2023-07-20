@@ -27,18 +27,20 @@ class MediaPreviewRowItem: TableRowItem {
     fileprivate let paint:()->Void
     fileprivate let delete: (()->Void)?
     fileprivate let editedData: EditedImageData?
-    init(_ initialSize: NSSize, media: Media, context: AccountContext, editedData: EditedImageData? = nil, isSpoiler: Bool, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
+    fileprivate let theme: TelegramPresentationTheme
+    init(_ initialSize: NSSize, media: Media, context: AccountContext, theme: TelegramPresentationTheme, editedData: EditedImageData? = nil, isSpoiler: Bool, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
         self.edit = edit
         self.paint = paint
         self.delete = delete
         self.media = media
         self.context = context
+        self.theme = theme
         self.editedData = editedData
         self.chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context)
         if let media = media as? TelegramMediaFile {
-            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty, automaticDownload: true, isIncoming: false, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
+            parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(theme: theme), automaticDownload: true, isIncoming: false, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
         } else {
-            parameters = ChatMediaLayoutParameters(presentation: .empty, media: media)
+            parameters = ChatMediaLayoutParameters(presentation: .make(theme: theme), media: media)
         }
         
         parameters?.forceSpoiler = isSpoiler
@@ -175,7 +177,9 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
     override func shakeView() {
         contentNode?.shake()
     }
-    
+    override var backdorColor: NSColor {
+        return .clear
+    }
     
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)

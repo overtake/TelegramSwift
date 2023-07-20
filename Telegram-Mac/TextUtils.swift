@@ -13,14 +13,14 @@ import Postbox
 import TGUIKit
 import SwiftSignalKit
 import CurrencyFormat
-
+import ColorPalette
 enum MessageTextMediaViewType {
     case emoji
     case text
     case none
 }
 
-func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1) -> (string: NSString, justSpoiled: String) {
+func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false) -> (string: NSString, justSpoiled: String) {
     var messageText: String = message.text
     
     if message.text.isEmpty, message.textEntities?.entities.isEmpty == false {
@@ -37,6 +37,23 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     break
                 }
             }
+        }
+    }
+    
+    let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
+    
+    if message.id.peerId == supportId, message.flags.contains(.Incoming), !notifications {
+        let regexPattern = #"[\d\-]{5,7}"#
+        do {
+            let regex = try NSRegularExpression(pattern: regexPattern, options: [])
+            let range = NSRange(location: 0, length: messageText.utf16.count)
+            
+            let matches = regex.matches(in: messageText, range: range)
+            for match in matches {
+                messageText = messageText.spoiler(match.range)
+            }
+        } catch {
+            print("Error creating regular expression: \(error.localizedDescription)")
         }
     }
     
@@ -129,6 +146,28 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             messageText = invoice.title
         case let poll as TelegramMediaPoll:
             messageText = "📊 \(poll.text)"
+        case let story as TelegramMediaStory:
+            if message.isExpiredStory {
+                if story.isMention {
+                    if message.flags.contains(.Incoming) {
+                        messageText = strings().chatServiceStoryExpiredMentionTextIncoming
+                    } else if let peer = message.peers[message.id.peerId] {
+                        messageText = strings().chatServiceStoryExpiredMentionTextOutgoing(peer.compactDisplayTitle)
+                    }
+                } else {
+                    messageText = strings().chatListStoryExpired
+                }
+            } else if let peer = message.peers[message.id.peerId] {
+                if story.isMention {
+                    if message.flags.contains(.Incoming) {
+                        messageText = strings().chatServiceStoryMentioned(peer.compactDisplayTitle)
+                    } else {
+                        messageText = strings().chatServiceStoryMentionedYou(peer.compactDisplayTitle)
+                    }
+                } else {
+                    messageText = strings().chatListStory
+                }
+            }
         case let webpage as TelegramMediaWebpage:
             if case let .Loaded(content) = webpage.content {
                 if let _ = content.image {
@@ -166,11 +205,17 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             break
         }
     }
+    
+
+    if message.storyAttribute != nil, notifications, message.flags.contains(.Incoming) {
+        return (string: strings().notificationStoryReply(messageText).nsstring, justSpoiled: justSpoiled)
+    }
+    
     return (string: messageText.nsstring, justSpoiled: justSpoiled)
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:EngineRenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false, notifications: Bool = false) -> NSAttributedString {
     
     
     if let draft = draft, !draft.text.isEmpty {
@@ -252,7 +297,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         
-        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount)
+        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount, notifications: notifications)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
         
@@ -828,6 +873,15 @@ struct PeerStatusStringTheme {
         self.statusFont = statusFont
         self.statusColor = statusColor
         self.highlightColor = highlightColor
+        self.highlightIfActivity = highlightIfActivity
+    }
+    
+    init(_ colors: ColorPalette, titleFont:NSFont = .normal(.title), statusFont:NSFont = .normal(.short), highlightIfActivity:Bool = true) {
+        self.titleFont = .normal(.title)
+        self.titleColor = colors.text
+        self.statusFont = statusFont
+        self.statusColor = colors.grayText
+        self.highlightColor = colors.accent
         self.highlightIfActivity = highlightIfActivity
     }
 }

@@ -98,11 +98,40 @@ class ChatServiceItem: ChatRowItem {
             return 160
         }
     }
-
+    struct StoryData {
+        let media: TelegramMediaStory
+        let storyItem: Stories.StoredItem
+        let text: TextViewLayout
+        let isIncoming: Bool
+        let avatar: AvatarStoryIndicatorComponent?
+        let context: AccountContext
+        let peer: PeerReference
+        init(context: AccountContext, peer: PeerReference, maxReadId: Int32?, media: TelegramMediaStory, storyItem: Stories.StoredItem, text: TextViewLayout, theme: TelegramPresentationTheme, isIncoming: Bool) {
+            self.media = media
+            self.context = context
+            self.storyItem = storyItem
+            self.text = text
+            self.peer = peer
+            self.isIncoming = isIncoming
+            
+            if storyItem.expirationTimestamp > context.timestamp, let maxReadId = maxReadId {
+                let isUnread: Bool = maxReadId < storyItem.id && isIncoming
+                self.avatar = .init(hasUnseen: isUnread, hasUnseenCloseFriendsItems: false, theme: theme, activeLineWidth: 1.5, inactiveLineWidth: 1.5, counters: .init(totalCount: 1, unseenCount: isUnread ? 1 : 0))
+            } else {
+                self.avatar = nil
+            }
+            self.text.measure(width: 140)
+        }
+        
+        var height: CGFloat {
+            return 10 + 80 + 10 + text.layoutSize.height + 10
+        }
+    }
     
     private(set) var giftData: GiftData? = nil
     private(set) var suggestPhotoData: SuggestPhotoData? = nil
     private(set) var wallpaperData: WallpaperData? = nil
+    private(set) var storydata: StoryData? = nil
 
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
@@ -116,7 +145,6 @@ class ChatServiceItem: ChatRowItem {
         if let displayTitle = message.author?.displayTitle {
             authorName = displayTitle
         }
-        
         let isIncoming: Bool = message.isIncoming(context.account, entry.renderType == .bubble)
 
         
@@ -840,12 +868,53 @@ class ChatServiceItem: ChatRowItem {
                 }
             }
             _ = attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
+            
         } else if message.id.peerId.namespace == Namespaces.Peer.CloudUser, message.autoremoveAttribute != nil || message.autoclearTimeout != nil {
             let isPhoto: Bool = message.anyMedia is TelegramMediaImage
             if authorId == context.peerId {
                 _ = attributedString.append(string: isPhoto ? strings().serviceMessageDesturctingPhotoYou(authorName) : strings().serviceMessageDesturctingVideoYou(authorName), color: grayTextColor, font: .normal(theme.fontSize))
             } else if let _ = authorId {
                 _ = attributedString.append(string:  isPhoto ? strings().serviceMessageDesturctingPhoto(authorName) : strings().serviceMessageDesturctingVideo(authorName), color: grayTextColor, font: .normal(theme.fontSize))
+            }
+        } else if let story = message.media.first as? TelegramMediaStory {
+            
+            if message.isExpiredStory {
+                if isIncoming {
+                    _ = attributedString.append(string:  strings().chatServiceStoryExpiredMentionTextIncoming, color: grayTextColor, font: .normal(theme.fontSize))
+                } else {
+                    var name: String = ""
+                    if let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle {
+                        name = displayTitle
+                    }
+                    _ = attributedString.append(string:  strings().chatServiceStoryExpiredMentionTextOutgoing(name), color: grayTextColor, font: .normal(theme.fontSize))
+                }
+                
+                attributedString.insert(.initialize(string: "🤡", color: grayTextColor, font: .normal(theme.fontSize)), at: 0)
+                let file = LocalAnimatedSticker.expired_story.monochromeFile
+                
+                attributedString.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: "🤡"))), range: NSMakeRange(0, 2))
+
+                
+            } else if let item = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self), let peer = message.author, let peerReference = PeerReference(peer) {
+                let info = NSMutableAttributedString()
+                
+                let text: String
+                
+                var authorName: String = ""
+                if let displayTitle = message.peers[message.id.peerId]?.compactDisplayTitle {
+                    authorName = displayTitle
+                }
+                
+                if isIncoming {
+                    text = strings().chatServiceStoryMentioned(authorName)
+                } else {
+                    text = strings().chatServiceStoryMentionedYou(authorName)
+                }
+                
+                _ = info.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
+                info.detectBoldColorInString(with: .medium(theme.fontSize))
+                
+                self.storydata = .init(context: context, peer: peerReference, maxReadId: entry.additionalData.storyReadMaxId, media: story, storyItem: item, text: TextViewLayout(info, alignment: .center), theme: theme, isIncoming: isIncoming)
             }
         }
         
@@ -876,6 +945,9 @@ class ChatServiceItem: ChatRowItem {
             height += data.height + (isBubbled ? 9 : 6)
         }
         if let data = self.wallpaperData {
+            height += data.height + (isBubbled ? 9 : 6)
+        }
+        if let data = self.storydata {
             height += data.height + (isBubbled ? 9 : 6)
         }
         return height
@@ -1456,6 +1528,124 @@ class ChatServiceRowView: TableRowView {
         }
     }
 
+    private class _StoryView : Control {
+        
+        private let disposable = MetaDisposable()
+        fileprivate let mediaView: TransformImageView = TransformImageView(frame: NSMakeSize(74, 74).bounds)
+        fileprivate let avatar: AvatarControl = AvatarControl(font: .avatar(.title))
+        private let statusView: AvatarStoryIndicatorComponent.IndicatorView = .init(frame: NSMakeSize(80, 80).bounds)
+        
+        private var visualEffect: VisualEffect?
+        
+        private let textView = TextView()
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            avatar.setFrameSize(NSMakeSize(74, 74))
+            addSubview(mediaView)
+            addSubview(avatar)
+            addSubview(statusView)
+            addSubview(textView)
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            
+            avatar.userInteractionEnabled = false
+            
+            self.scaleOnClick = true
+            layer?.cornerRadius = 10
+                        
+            mediaView.layer?.cornerRadius = mediaView.frame.height / 2
+        }
+        
+        func update(item: ChatServiceItem, data: ChatServiceItem.StoryData, animated: Bool) {
+            guard let message = item.message else {
+                return
+            }
+            let context = item.context
+                    
+            switch data.storyItem {
+            case let .item(storyItem):
+                if let media = storyItem.media {
+                    
+                    let updateImageSignal: Signal<ImageDataTransformation, NoError>
+
+                    let imageSize: NSSize
+                    if let media = media as? TelegramMediaImage {
+                        let reference = ImageMediaReference.story(peer: data.peer, id: storyItem.id, media: media)
+                        updateImageSignal = chatMessagePhoto(account: context.account, imageReference: reference, scale: backingScaleFactor, synchronousLoad: false)
+                        imageSize = media.representations.last?.dimensions.size ?? StoryView.size
+                    } else if let media = media as? TelegramMediaFile {
+                        let reference = FileMediaReference.story(peer: data.peer, id: storyItem.id, media: media)
+                        updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference:reference, scale: backingScaleFactor)
+                        imageSize = media.dimensions?.size ?? StoryView.size
+                    } else {
+                        updateImageSignal = .complete()
+                        imageSize = StoryView.size
+                    }
+                    
+                    let arguments = TransformImageArguments.init(corners: .init(radius: 0), imageSize: imageSize, boundingSize: mediaView.frame.size, intrinsicInsets: .init())
+                    
+                    mediaView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor))
+                    
+                    if !mediaView.isFullyLoaded {
+                        mediaView.setSignal(updateImageSignal, cacheImage: { result in
+                            cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                        })
+                    }
+                    mediaView.set(arguments: arguments)
+                    avatar.setPeer(account: item.context.account, peer: item.message?.author)
+                    avatar.isHidden = !storyItem.isForwardingDisabled
+                }
+            case .placeholder:
+                break
+            }
+            
+            if let component = data.avatar {
+                statusView.update(component: component, availableSize: NSMakeSize(74, 74), transition: .immediate)
+                statusView.isHidden = false
+            } else {
+                statusView.isHidden = true
+            }
+            textView.update(data.text)
+                        
+            if item.shouldBlurService {
+                let current: VisualEffect
+                if let view = self.visualEffect {
+                    current = view
+                } else {
+                    current = VisualEffect(frame: bounds)
+                    self.visualEffect = current
+                    addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                }
+                current.bgColor = item.presentation.blurServiceColor
+                
+                self.backgroundColor = .clear
+                
+            } else if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+                self.backgroundColor = item.presentation.chatServiceItemColor
+            }
+        }
+        
+        
+        override func layout() {
+            super.layout()
+            statusView.centerX(y: 10)
+            mediaView.centerX(y: 13)
+            avatar.centerX(y: 13)
+            textView.centerX(y: statusView.frame.maxY + 10)
+        }
+        
+        deinit {
+            disposable.dispose()
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+
     
     
     private var textView:TextView
@@ -1465,6 +1655,7 @@ class ChatServiceRowView: TableRowView {
     private var photoVideoPlayer: MediaPlayer?
     
     private var giftView: GiftView?
+    private var storyView: _StoryView?
     private var suggestView: SuggestView?
     private var wallpaperView: WallpaperView?
 
@@ -1523,13 +1714,10 @@ class ChatServiceRowView: TableRowView {
                 self.imageView?.set(arguments: imageArguments)
                 self.photoVideoView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
             }
-            if let view = giftView {
-                view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
-            }
-            if let view = suggestView {
-                view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
-            }
-            if let view = wallpaperView {
+            
+            let activeView = [giftView, suggestView, wallpaperView, storyView].compactMap { $0 }.first
+            
+            if let view = activeView {
                 view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
             }
         }
@@ -1753,6 +1941,27 @@ class ChatServiceRowView: TableRowView {
             self.wallpaperView = nil
         }
 
+        if let storyData = item.storydata {
+            let current: _StoryView
+            if let view = self.storyView {
+                current = view
+            } else {
+                current = _StoryView(frame: NSMakeRect(0, 0, 160, storyData.height))
+                self.storyView = current
+                addSubview(current)
+                
+                current.set(handler: { [weak self] _ in
+                    if let item = self?.item as? ChatRowItem, let message = item.message {
+                        item.chatInteraction.openStory(message.id, storyData.media.storyId)
+                    }
+                }, for: .Click)
+            }
+            
+            current.update(item: item, data: storyData, animated: animated)
+        } else if let view = self.storyView {
+            performSubviewRemoval(view, animated: animated)
+            self.storyView = nil
+        }
         
         updateInlineStickers(context: item.context, view: self.textView, textLayout: item.text)
         
@@ -1860,6 +2069,14 @@ class ChatServiceRowView: TableRowView {
                 self.layer?.animateAlpha(from: 0, to: 1, duration: 0.35)
             }
         }
+    }
+    
+    func storyControl(_ storyId: StoryId) -> NSView? {
+        return storyView?.mediaView
+    }
+    
+    var storyMediaControl: NSView? {
+        return storyView?.avatar
     }
     
 }

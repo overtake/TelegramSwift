@@ -222,12 +222,12 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
     }
 
     deinit {
+        lookAtMessageDisposable.dispose()
         if control.isPictureInPicture {
             control.pause()
         }
         self.control.setMode(.normal, animated: true)
         NotificationCenter.default.removeObserver(self)
-        lookAtMessageDisposable.dispose()
     }
 
     override func animationResizeTime(_ newFrame: NSRect) -> TimeInterval {
@@ -340,7 +340,7 @@ func pausepip() {
 }
 
 func playPipIfNeeded() {
-    if let window = window as? ModernPictureInPictureVideoWindow, window.forcePaused {
+    if let window = window as? ModernPictureInPictureVideoWindow, window.forcePaused, window.control.isPlaying()  {
         window.control.play()
         window.forcePaused = false
     }

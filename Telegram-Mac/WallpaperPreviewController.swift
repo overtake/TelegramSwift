@@ -412,11 +412,11 @@ private final class WallpaperPreviewView: View {
         
         switch wallpaper {
         case .color:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 80, stableId: 0, backgroundColor: .clear))
         case .file(_, _, _, _):
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 80, stableId: 0, backgroundColor: .clear))
         default:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 80, stableId: 0, backgroundColor: .clear))
         }
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)
@@ -429,8 +429,8 @@ private final class WallpaperPreviewView: View {
         }
         
         
-        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
-        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil)
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil)
         
 
         let firstText: String
@@ -455,11 +455,11 @@ private final class WallpaperPreviewView: View {
 
 
 
-        let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
+        let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
         
         let firstEntry: ChatHistoryEntry = .MessageEntry(firstMessage, MessageIndex(firstMessage), true, .bubble, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
 
-        let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: secondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
+        let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 22 + 60*60*18, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser1, text: secondText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
         
         let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, .bubble, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
         
@@ -478,7 +478,7 @@ private final class WallpaperPreviewView: View {
         
         switch source {
         case let .chat(peer, _):
-            let zeroMessage = Message(stableId: 111, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [TelegramMediaAction(action: .customText(text: strings().wallpaperBackgroundNoApplyToPeer(peer.compactDisplayTitle), entities: []))], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
+            let zeroMessage = Message(stableId: 111, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [TelegramMediaAction(action: .customText(text: strings().wallpaperBackgroundNoApplyToPeer(peer.compactDisplayTitle), entities: []))], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
 
             let zeroEntry: ChatHistoryEntry = .MessageEntry(zeroMessage, MessageIndex(zeroMessage), true, .bubble, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
             let item0 = ChatRowItem.item(frame.size, from: zeroEntry, interaction: chatInteraction, theme: theme)
@@ -488,7 +488,6 @@ private final class WallpaperPreviewView: View {
         default:
             break
         }
-
     }
     
     var croppedRect: NSRect {
@@ -567,16 +566,9 @@ private final class WallpaperPreviewView: View {
        
         
         let backgroundSize: NSSize = size
-//        switch self.previewState  {
-//        case .color:
-//            backgroundSize = NSMakeSize(frame.width, size.height - colorPickerSize.height)
-//        case .pattern:
-//            backgroundSize = NSMakeSize(frame.width, frame.height - colorPickerSize.height)
-//        default:
-//            backgroundSize = frame.size
-//        }
+
         transition.updateFrame(view: backgroundView, frame: backgroundSize.bounds)
-        backgroundView.updateLayout(size: backgroundSize, transition: transition)
+//        backgroundView.updateLayout(size: backgroundSize, transition: transition)
         
         switch previewState {
         case .color, .pattern:            
@@ -628,9 +620,9 @@ private final class WallpaperPreviewView: View {
 
         switch previewState {
         case .color, .pattern:
-            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: frame.height - colorPicker.frame.height - tableView.listHeight - 10 - 120), size: documentSize))
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: size.height - colorPicker.frame.height - tableView.listHeight - 10 - 100), size: documentSize))
         case .normal:
-            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: frame.height - tableView.listHeight - 10 - 120), size: documentSize))
+            transition.updateFrame(view: tableView, frame: .init(origin: .init(x: 0, y: size.height - tableView.listHeight - 10 - 120), size: documentSize))
         }
         
     }
@@ -1315,6 +1307,8 @@ class WallpaperPreviewController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
         
         genericView.ready = { [weak self] in
             self?.readyOnce()

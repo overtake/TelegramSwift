@@ -26,7 +26,7 @@ struct InteractiveEmojiConfiguration : Equatable {
     private let confettiCompitable: [String: InteractiveEmojiConfetti]
         
     fileprivate init(emojis: [String], confettiCompitable: [String: InteractiveEmojiConfetti]) {
-        self.emojis = emojis.map { $0.fixed }
+        self.emojis = emojis.map { $0.withoutColorizer }
         self.confettiCompitable = confettiCompitable
     }
     
@@ -144,7 +144,7 @@ class DiceCache {
                                           var animatedEmojiStickers: [String: StickerPackItem] = [:]
                                           for case let item in items {
                                               if let emoji = item.getStringRepresentationsOfIndexKeys().first {
-                                                  animatedEmojiStickers[emoji] = item
+                                                  animatedEmojiStickers[emoji.withoutColorizer] = item
                                               }
                                           }
                                           return animatedEmojiStickers
@@ -239,7 +239,7 @@ class DiceCache {
                         } else {
                             return .single(nil)
                         }
-                    } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).fixed, $0, value.file) }
+                    } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).withoutColorizer, $0, value.file) }
                 }
                 signals.append(combineLatest(dices) |> map { (value.0, $0) })
             }
@@ -248,7 +248,7 @@ class DiceCache {
                 var dict: [String : [(String, Data?, TelegramMediaFile)]] = [:]
                 
                 for value in values {
-                    dict[value.0.fixed] = value.1
+                    dict[value.0.withoutColorizer] = value.1
                 }
                 return dict
             }
@@ -265,13 +265,13 @@ class DiceCache {
                     } else {
                         return .single(nil)
                     }
-                } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).fixed, $0, value.file) }
+                } |> map { ((value.file.stickerText ?? value.getStringRepresentationsOfIndexKeys().first!).withoutColorizer, $0, value.file) }
             }
             return combineLatest(effects) |> map { values in
                 var dict: [String : [(String, Data?, TelegramMediaFile)]] = [:]
                 
                 for value in values {
-                    var list = dict[value.0.fixed] ?? []
+                    var list = dict[value.0.withoutColorizer] ?? []
                     list.append(value)
                     dict[value.0] = list
                 }
@@ -314,13 +314,13 @@ class DiceCache {
             let invoke = {
                 if !cancelled {
                     var dataContext: EmojiDataContext
-                    if let dc = self.dataEffectsContexts[emoji.fixed] {
+                    if let dc = self.dataEffectsContexts[emoji.withoutColorizer] {
                         dataContext = dc
                     } else {
                         dataContext = EmojiDataContext()
                     }
                     
-                    self.dataEffectsContexts[emoji.fixed] = dataContext
+                    self.dataEffectsContexts[emoji.withoutColorizer] = dataContext
                     
                     let index = dataContext.subscribers.add({ data in
                         if !cancelled {
@@ -330,7 +330,7 @@ class DiceCache {
                     subscriber.putNext(dataContext.data)
                     disposable.set(ActionDisposable { [weak self] in
                         resourcesQueue.async {
-                            if let current = self?.dataEffectsContexts[emoji.fixed] {
+                            if let current = self?.dataEffectsContexts[emoji.withoutColorizer] {
                                 current.subscribers.remove(index)
                             }
                         }

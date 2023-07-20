@@ -695,7 +695,7 @@ public class Modal: NSObject {
             }
         }
         
-        let animateBackground = !unhideModalIfNeeded() || self.controller?.containerBackground == .clear
+        let animateBackground = !unhideModalIfNeeded() || self.controller?.containerBackground == .clear || animationType == .animateBackground
         
         if callAcceptInteraction, let interactionsView = interactionsView {
             interactionsView.interactions.accept?()
@@ -706,8 +706,9 @@ public class Modal: NSObject {
         } else {
             background = self.background
         }
-        if let controller = controller, controller.contentBelowBackground {
-            controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.25, timingFunction: .spring, completion: { [weak self, weak background] _ in
+        switch animationType {
+        case let .noneDelayed(duration):
+            delay(duration, closure: { [weak self, weak background] in
                 background?.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
                 self?.controller?.view.removeFromSuperview()
@@ -715,29 +716,42 @@ public class Modal: NSObject {
                 self?.controller?.modal = nil
                 self?.controller = nil
             })
-
-        } else if animateBackground {
-            background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.25, removeOnCompletion: false, completion: {[weak self, weak background] complete in
-                if let stongSelf = self {
+        default:
+            if let controller = controller, controller.contentBelowBackground, !animateBackground {
+                controller.view._change(opacity: 0, animated: true, removeOnCompletion: false, duration: 0.25, timingFunction: .spring, completion: { [weak self, weak background] _ in
                     background?.removeFromSuperview()
-                    stongSelf.controller?.view.removeFromSuperview()
-                    stongSelf.controller?.viewDidDisappear(true)
-                    stongSelf.controller?.modal = nil
-                    stongSelf.controller = nil
-                }
-            })
-        } else if let lastActive = activeModals.last?.value {
-            background.removeFromSuperview()
-            self.controller?.view.removeFromSuperview()
-            self.controller?.viewDidDisappear(true)
-            self.controller?.modal = nil
-            self.controller = nil
-            lastActive.containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    self?.controller?.view.removeFromSuperview()
+                    self?.controller?.view.removeFromSuperview()
+                    self?.controller?.viewDidDisappear(true)
+                    self?.controller?.modal = nil
+                    self?.controller = nil
+                })
+
+            } else if animateBackground {
+                background.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.25, removeOnCompletion: false, completion: {[weak self, weak background] complete in
+                    if let stongSelf = self {
+                        background?.removeFromSuperview()
+                        stongSelf.controller?.view.removeFromSuperview()
+                        stongSelf.controller?.viewDidDisappear(true)
+                        stongSelf.controller?.modal = nil
+                        stongSelf.controller = nil
+                    }
+                })
+            } else if let lastActive = activeModals.last?.value {
+                background.removeFromSuperview()
+                self.controller?.view.removeFromSuperview()
+                self.controller?.viewDidDisappear(true)
+                self.controller?.modal = nil
+                self.controller = nil
+                lastActive.containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
         }
+        
+       
        
        
         switch animationType {
-        case .common:
+        case .common, .noneDelayed, .animateBackground:
             break
         case let .scaleToRect(newRect, contentView):
             let oldRect = contentView.convert(contentView.bounds, to: background)
@@ -829,6 +843,7 @@ public class Modal: NSObject {
                     strongSelf.background.background = controller.isFullScreen ? controller.containerBackground : controller.background
                     if strongSelf.animated {
                         if case .alpha = strongSelf.animationType {
+                        } else if case .animateBackground = strongSelf.animationType {
                         } else {
                             strongSelf.container.layer?.animateAlpha(from: 0.1, to: 1.0, duration: 0.15, timingFunction: .spring)
                         }
@@ -848,6 +863,10 @@ public class Modal: NSObject {
                                 view.layer?.animateScaleY(from: oldRect.height / newRect.height, to: 1, duration: 0.3, timingFunction: .spring)
                             case .alpha:
                                 view.layer?.animateAlpha(from: 1.0, to: 1.0, duration: 0.15, timingFunction: .spring)
+                            case .animateBackground:
+                                strongSelf.visualEffectView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                            case .none:
+                                break
                             }
                         }
                     }
@@ -947,9 +966,17 @@ public func closeAllModals(window: Window? = nil) {
     }
 }
 
-public func findModal<T>(_ t: T.Type) -> T? where T:ModalViewController {
-    for modal in activeModals {
+public func findModal<T>(_ t: T.Type, isAboveTo: ModalViewController? = nil) -> T? where T:ModalViewController {
+    let index = activeModals.firstIndex(where: {
+        $0.value?.controller === isAboveTo
+    })
+    for (i, modal) in activeModals.enumerated() {
         if let controller = modal.value?.controller, type(of: controller) == t {
+            if let index = index {
+                if index > i {
+                    continue
+                }
+            }
             return controller as? T
         }
     }
@@ -961,9 +988,13 @@ public enum ModalAnimationType {
     case scaleCenter
     case scaleFrom(NSRect)
     case alpha
+    case none
+    case animateBackground
 }
-public enum ModalAnimationCloseBehaviour {
+public enum ModalAnimationCloseBehaviour : Equatable {
     case common
+    case noneDelayed(duration: CGFloat)
+    case animateBackground
     case scaleToRect(NSRect, NSView)
 }
 

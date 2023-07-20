@@ -51,14 +51,14 @@ typedef NS_ENUM(NSInteger, TGTextInputTagId) {
 -(BOOL)textViewIsTypingEnabled;
 
 @optional
-- (void) textViewNeedClose:(id __nonnull)textView;
-- (BOOL) canTransformInputText;
-- (BOOL) supportContinuityCamera;
+- (void)textViewNeedClose:(id __nonnull)textView;
+- (BOOL)canTransformInputText;
+- (BOOL)supportContinuityCamera;
+- (void)responderDidUpdate;
 - (void)textViewDidReachedLimit:(id __nonnull)textView;
 - (void)makeUrlOfRange: (NSRange)range;
 - (BOOL)copyTextWithRTF:(NSAttributedString *)rtf;
 - (NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers;
-//func textView(_ textView: NSTextView, shouldUpdateTouchBarItemIdentifiers identifiers: [NSTouchBarItemIdentifier]) -> [NSTouchBarItemIdentifier] {
 @end
 
 

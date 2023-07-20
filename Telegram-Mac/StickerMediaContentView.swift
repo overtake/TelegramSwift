@@ -183,8 +183,7 @@ class StickerMediaContentView: ChatMediaContentView {
                 return
             }
             
-            
-            if let reference = media.stickerReference {
+            if let reference = media.stickerReference, media.fileName != "telegram-animoji.tgs" {
                 showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for: context.window)
             } else if let sticker = media.stickerText, !sticker.isEmpty {
                 let signal = context.diceCache.animationEffect(for: sticker.emojiUnmodified) |> deliverOnMainQueue
