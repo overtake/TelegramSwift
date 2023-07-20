@@ -99,6 +99,14 @@ final class StoryListChatListRowItem : TableRowItem {
                 return false
             }
         }
+        var toRevealProgress: Bool {
+            switch self {
+            case let .progress(_, from, _):
+                return from == .concealed
+            default:
+                return false
+            }
+        }
         
         var initFromEvent: Bool? {
             switch self {

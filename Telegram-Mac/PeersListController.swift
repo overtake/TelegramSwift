@@ -2877,8 +2877,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     } else {
                         transition = .immediate
                     }
-                    self.genericView.tableView.reloadData(row: item.index, animated: transition.isAnimated)
-                    self.genericView.updateLayout(frame.size, transition: transition)
+                    CATransaction.begin()
+                    self.genericView.tableView.reloadData(row: item.index, animated: true)
+                    self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+                    CATransaction.commit()
                     return false
                 default:
                     return false
@@ -2931,6 +2933,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         guard let item = optional else {
             return false
         }
+        initFromEvent = nil
+
         switch storyInterfaceState {
         case let .progress(value, _, _):
             if value > 0.5 {
@@ -2938,12 +2942,14 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             } else {
                 self.storyInterfaceState = .concealed
             }
+            CATransaction.begin()
             self.genericView.tableView.reloadData(row: item.index, animated: true)
             self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+            CATransaction.commit()
+            return true
         default:
             break
         }
-        initFromEvent = nil
         return false
     }
     
@@ -2968,7 +2974,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             } else if position < last {
                 self.scrollPositions = []
             }
-        } else {
+        } else if storyInterfaceState == .concealed || storyInterfaceState.toRevealProgress {
             let position = genericView.tableView.documentOffset.y
             let last = scrollPositions.last ?? 0
             if last != position {
@@ -2996,12 +3002,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
      func processScroll(_ event: NSEvent) -> Bool {
          scrollPositions = []
 
-         guard genericView.tableView.documentOffset.y <= 2, storyInterfaceState != .empty else {
+         guard genericView.tableView.documentOffset.y == 0, storyInterfaceState != .empty else {
              return false
          }
         
          switch event.phase {
-         case .began:
+         case .began, .mayBegin:
              if event.scrollingDeltaY != 0 {
                  return initOverscrollWithDelta(event.scrollingDeltaY, fromEvent: true)
              } else {
@@ -3009,10 +3015,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
              }
          case .changed, .stationary:
              return updateOverscrollWithDelta(event.scrollingDeltaY)
-         case .ended, .cancelled, .mayBegin:
+         case .ended, .cancelled:
              return finishOverscroll()
          default:
-             return false
+             return true
          }
     }
     
@@ -3064,8 +3070,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             } else {
                 transition = .immediate
             }
-            self.genericView.tableView.reloadData(row: item.index, animated: animated)
-            self.genericView.updateLayout(frame.size, transition: transition)
+            CATransaction.begin()
+            self.genericView.tableView.scroll(to: .up(false), ignoreLayerAnimation: true)
+            self.genericView.tableView.reloadData(row: item.index, animated: true)
+            self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+            CATransaction.commit()
         }
     }
 
