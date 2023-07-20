@@ -225,7 +225,7 @@ final class StoryListView : Control, Notifable {
                     performSubviewRemoval(current, animated: transition.isAnimated)
                     self.textView = nil
                 }
-                self.documentView.addSubview(textView)
+                self.documentView.addSubview(textView, positioned: .below, relativeTo: showMore)
                 if transition.isAnimated {
                     textView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }

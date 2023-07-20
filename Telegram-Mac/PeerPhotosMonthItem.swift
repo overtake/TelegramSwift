@@ -240,7 +240,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return self.contentHeight + self.viewType.innerInset.top + self.viewType.innerInset.bottom
+        return self.contentHeight + self.viewType.innerInset.top + self.viewType.innerInset.bottom + 1
     }
     
     override var instantlyResize: Bool {

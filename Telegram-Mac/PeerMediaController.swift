@@ -210,6 +210,8 @@
             return tableView
         } else if let view = self.mainView as? InputDataView {
             return view.tableView
+        } else if let view = self.mainView as? StoryMediaView {
+            return view.tableView
         }
         return nil
     }
@@ -481,7 +483,7 @@
     private let commonGroups: ViewController
     
     
-    private let tagsList:[PeerMediaCollectionMode] = [.members, .photoOrVideo, .file, .webpage, .music, .voice, .gifs, .commonGroups]
+     private let tagsList:[PeerMediaCollectionMode] = [.members, .stories, .photoOrVideo, .file, .webpage, .music, .voice, .gifs, .commonGroups]
     
     
     private var currentTagListIndex: Int {
