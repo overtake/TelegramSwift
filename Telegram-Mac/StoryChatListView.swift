@@ -554,23 +554,26 @@ private final class StoryListContainer : Control {
         
         for (i, view) in views.enumerated() {
             if let item = view.item {
+                let component = components[i]
+
+                
                 let frame = getFrame(item, index: i, progress: progress)
                 let alpha = getAlpha(item, index: i, progress: progress)
                 
-                transition.updateFrame(view: view, frame: frame)
-                transition.updateAlpha(view: view, alpha: alpha)
-                view.set(progress: progress, transition: transition)
+               
+                view.isHidden = !visibleRange.contains(i) //&& progress == 0
+                component.isHidden = !visibleRange.contains(i)// && progress == 0
 
-
-                let component = components[i]
-                
-                view.isHidden = !visibleRange.contains(i) && progress == 0
-                component.isHidden = !visibleRange.contains(i) && progress == 0
-
-                
-                transition.updateFrame(view: component, frame: frame)
-                transition.updateAlpha(view: component, alpha: alpha)
-                component.set(progress: progress, transition: transition)
+                if !component.isHidden {
+                    transition.updateFrame(view: component, frame: frame)
+                    transition.updateAlpha(view: component, alpha: alpha)
+                    component.set(progress: progress, transition: transition)
+                }
+                if !view.isHidden {
+                    transition.updateFrame(view: view, frame: frame)
+                    transition.updateAlpha(view: view, alpha: alpha)
+                    view.set(progress: progress, transition: transition)
+                }
             }
         }
         
