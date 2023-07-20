@@ -156,6 +156,10 @@ class EBlockRowView: TableRowView {
         content.frame = bounds
     }
     
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)
         

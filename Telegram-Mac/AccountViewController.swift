@@ -71,6 +71,7 @@ private final class AccountSearchBarView: View {
 
 fileprivate final class AccountInfoArguments {
     let context: AccountContext
+    var storyList: PeerStoryListContext
     let presentController:(ViewController, Bool) -> Void
     let openFaq:()->Void
     let ask:()->Void
@@ -80,8 +81,10 @@ fileprivate final class AccountInfoArguments {
     let setStatus:(Control, TelegramUser)->Void
     let runStatusPopover:()->Void
     let set2Fa:(TwoStepVeriticationAccessConfiguration?)->Void
-    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void) {
+    let openStory:(StoryInitialIndex?)->Void
+    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void) {
         self.context = context
+        self.storyList = storyList
         self.presentController = presentController
         self.openFaq = openFaq
         self.ask = ask
@@ -91,6 +94,7 @@ fileprivate final class AccountInfoArguments {
         self.setStatus = setStatus
         self.runStatusPopover = runStatusPopover
         self.set2Fa = set2Fa
+        self.openStory = openStory
     }
 }
 
@@ -120,13 +124,14 @@ private final class AnyUpdateStateEquatable  : Equatable {
 }
 
 private enum AccountInfoEntry : TableItemListNodeEntry {
-    case info(index:Int, viewType: GeneralViewType, PeerEquatable)
+    case info(index:Int, viewType: GeneralViewType, PeerEquatable, EngineStorySubscriptions.Item?)
     case setStatus(index:Int, viewType: GeneralViewType, PeerEquatable)
     case set2FaAlert(index:Int, viewType: GeneralViewType)
     case set2Fa(index:Int, settings: TwoStepVeriticationAccessConfiguration?, viewType: GeneralViewType)
     case accountRecord(index: Int, viewType: GeneralViewType, info: AccountWithInfo)
     case addAccount(index: Int, [AccountWithInfo], viewType: GeneralViewType)
     case proxy(index: Int, viewType: GeneralViewType, status: String?)
+    case stories(index: Int, viewType: GeneralViewType)
     case general(index: Int, viewType: GeneralViewType)
     case stickers(index: Int, viewType: GeneralViewType)
     case notifications(index: Int, viewType: GeneralViewType, status: UNUserNotifications.AuthorizationStatus)
@@ -159,38 +164,40 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .account(info)
         case .addAccount:
             return .index(4)
-        case .general:
+        case .stories:
             return .index(5)
-        case .proxy:
+        case .general:
             return .index(6)
-        case .notifications:
+        case .proxy:
             return .index(7)
-        case .dataAndStorage:
+        case .notifications:
             return .index(8)
-        case .activeSessions:
+        case .dataAndStorage:
             return .index(9)
-        case .privacy:
+        case .activeSessions:
             return .index(10)
-        case .language:
+        case .privacy:
             return .index(11)
-        case .stickers:
+        case .language:
             return .index(12)
-        case .filters:
+        case .stickers:
             return .index(13)
-        case .update:
+        case .filters:
             return .index(14)
-        case .appearance:
+        case .update:
             return .index(15)
-        case .passport:
+        case .appearance:
             return .index(16)
-        case .premium:
+        case .passport:
             return .index(17)
-        case .faq:
+        case .premium:
             return .index(18)
-        case .ask:
+        case .faq:
             return .index(19)
-        case .about:
+        case .ask:
             return .index(20)
+        case .about:
+            return .index(21)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -198,7 +205,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     
     var index:Int {
         switch self {
-        case let .info(index, _, _):
+        case let .info(index, _, _, _):
             return index
         case let .setStatus(index, _, _):
             return index
@@ -209,6 +216,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .accountRecord(index, _, _):
             return index
         case let .addAccount(index, _, _):
+            return index
+        case let  .stories(index, _):
             return index
         case let  .general(index, _):
             return index
@@ -253,13 +262,13 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     
     func item(_ arguments: AccountInfoArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .info(_, viewType, peer):
-            return AccountInfoItem(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 12, right: 12), context: arguments.context, peer: peer.peer as! TelegramUser, action: {
+        case let .info(_, viewType, peer, storyStats):
+            return AccountInfoItem(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 12, right: 12), context: arguments.context, peer: peer.peer as! TelegramUser, storyStats: storyStats, action: {
                 let first: Atomic<Bool> = Atomic(value: true)
                 EditAccountInfoController(context: arguments.context, f: { controller in
                     arguments.presentController(controller, first.swap(false))
                 })
-            }, setStatus: arguments.setStatus)
+            }, setStatus: arguments.setStatus, openStory: arguments.openStory)
         case let .setStatus(_, viewType, peer):
             let icon: CGImage = peer.peer.emojiStatus != nil ? theme.icons.account_change_status : theme.icons.account_set_status
             let text = peer.peer.emojiStatus != nil ? strings().accountSettingsChangeStatus : strings().accountSettingsUpdateStatus
@@ -300,6 +309,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .general(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .stories(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsMyStories, icon: theme.icons.settingsStories, activeIcon: theme.icons.settingsStoriesActive, type: .next, viewType: viewType, action: {
+                arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, listContext: arguments.storyList, standalone: true), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .proxy(_, viewType, status):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), viewType: viewType, action: {
@@ -408,7 +421,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?, storyStats: EngineStorySubscriptions?) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -416,7 +429,7 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     if let peer = peerViewMainPeer(peerView) as? TelegramUser {
         entries.append(.whiteSpace(index: index, height: 20))
         index += 1
-        entries.append(.info(index: index, viewType: .singleItem, PeerEquatable(peer)))
+        entries.append(.info(index: index, viewType: .singleItem, PeerEquatable(peer), storyStats?.accountItem))
         index += 1
         
 //        entries.append(.whiteSpace(index: index, height: 20))
@@ -489,9 +502,14 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     entries.append(.whiteSpace(index: index, height: 10))
     index += 1
     
-   
+    
+    entries.append(.stories(index: index, viewType: .singleItem))
+    index += 1
     
     if !proxySettings.0.servers.isEmpty {
+        entries.append(.whiteSpace(index: index, height: 10))
+        index += 1
+        
         let status: String
         switch proxySettings.1 {
         case .online:
@@ -502,9 +520,10 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         entries.append(.proxy(index: index, viewType: .singleItem, status: status))
         index += 1
         
-        entries.append(.whiteSpace(index: index, height: 20))
-        index += 1
     }
+    
+    entries.append(.whiteSpace(index: index, height: 10))
+    index += 1
     
     entries.append(.general(index: index, viewType: .singleItem))
     index += 1
@@ -755,7 +774,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             }
         }
         
-        let arguments = AccountInfoArguments(context: context, presentController: { [weak self] controller, main in
+        
+        let arguments = AccountInfoArguments(context: context, storyList: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             guard let singleLayout = self?.context.layout else {return}
             if main {
@@ -806,6 +826,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                     navigation.push(controller)
                 }
             }))
+        }, openStory: { initialId in
+            StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
         })
         
         self.arguments = arguments
@@ -833,8 +855,10 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
 
         let twoStep: Signal<TwoStepVeriticationAccessConfiguration?, NoError> = .single(nil) |> then(context.engine.auth.twoStepVerificationConfiguration() |> map { .init(configuration: $0, password: nil) })
         
-        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let storyStats = context.engine.messages.storySubscriptions(isHidden: false)
+        
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep, storyStats) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration, storyStats -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration, storyStats: storyStats).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -844,6 +868,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             self?.tableView.merge(with: transition)
             self?.readyOnce()
         }))
+       
     }
     
     
@@ -859,38 +884,42 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     override func navigationWillChangeController() {
         if let navigation = navigation as? ExMajorNavigationController {
             if navigation.controller is DataAndStorageViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(8))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
                     _ = tableView.select(item: item)
                 }
             } else if navigation.controller is PrivacyAndSecurityViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
                     _ = tableView.select(item: item)
                 }
             } else if navigation.controller is InstalledStickerPacksController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
                     _ = tableView.select(item: item)
                 }
                 
             } else if navigation.controller is GeneralSettingsViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(5))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
                     _ = tableView.select(item: item)
                 }
             }  else if navigation.controller is RecentSessionsController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                    _ = tableView.select(item: item)
+                }
+            } else if navigation.controller is StoryMediaController {
+                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(5))) {
                     _ = tableView.select(item: item)
                 }
             } else if navigation.controller is PassportController {
-                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(16))) {
+                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(17))) {
                     _ = tableView.select(item: item)
                 }
             } else if let controller = navigation.controller as? InputDataController {
                 switch true {
                 case controller.identifier == "proxy":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "language":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "account":
@@ -898,23 +927,23 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "passport":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(16))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(17))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "app_update":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(14))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(15))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "filters":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(14))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "notification-settings":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(8))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "app_appearance":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(15))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(16))) {
                         _ = tableView.select(item: item)
                     }
                 default:
@@ -956,8 +985,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         let context = self.context
-        
-        
+                
         let privacySettings = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)
 
         settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(privacySettings), context.webSessions.state, proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in

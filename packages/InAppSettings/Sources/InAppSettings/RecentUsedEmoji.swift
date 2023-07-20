@@ -72,7 +72,7 @@ public class RecentUsedEmoji: Codable, Equatable {
         var isset:[String: String] = [:]
         var list:[String] = []
         for emoji in _emojies {
-            if isset[emoji] == nil, emoji != "�", !emoji.emojiSkinToneModifiers.contains(emoji), emoji != "️" {
+            if isset[emoji] == nil, !emoji.emojiSkinToneModifiers.contains(emoji), emoji != "️" {
                 var emoji = emoji
                 isset[emoji] = emoji
                 for skin in skinModifiers {

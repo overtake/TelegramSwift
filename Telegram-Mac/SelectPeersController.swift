@@ -848,8 +848,8 @@ class SelectChatsBehavior: SelectPeersBehavior {
                     
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
-                            if let peer = renderedPeer.chatMainPeer {
+                        case let .MessageEntry(data):
+                            if let peer = data.renderedPeer.chatMainPeer {
                                 entries.append(peer)
                             }
                         default:
@@ -1462,7 +1462,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
             singleAction = { [weak self] peer in
                 
                 _ = (account.postbox.transaction { transaction -> Void in
-                    updatePeers(transaction: transaction, peers: [peer], update: { _, updated -> Peer? in
+                    updatePeersCustom(transaction: transaction, peers: [peer], update: { _, updated -> Peer? in
                         return updated
                     })
                 }).start()
@@ -1503,7 +1503,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     
     func confirmSelected(_ peerIds:[PeerId], _ peers:[Peer]) {
         let signal = context.account.postbox.transaction { transaction -> Void in
-            updatePeers(transaction: transaction, peers: peers, update: { (_, updated) -> Peer? in
+            updatePeersCustom(transaction: transaction, peers: peers, update: { (_, updated) -> Peer? in
                 return updated
             })
         } |> deliverOnMainQueue |> mapToSignal { [weak self] () -> Signal<[PeerId], NoError> in

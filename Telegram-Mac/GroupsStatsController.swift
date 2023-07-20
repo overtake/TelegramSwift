@@ -381,7 +381,7 @@ func GroupStatsViewController(_ context: AccountContext, peerId: PeerId, datacen
         return context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId))
     }
     
-    let statsContext = GroupStatsContext(postbox: context.account.postbox, network: context.account.network, datacenterId: datacenterId, peerId: peerId)
+    let statsContext = GroupStatsContext(postbox: context.account.postbox, network: context.account.network, accountPeerId: context.peerId, datacenterId: datacenterId, peerId: peerId)
 
     let peersPromise = Promise<[PeerId: Peer]?>(nil)
     

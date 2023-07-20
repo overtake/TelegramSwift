@@ -74,6 +74,10 @@ class PeerInfoArguments {
         pushViewController(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId))
     }
     
+    func openStory(_ initialId: StoryInitialIndex?) {
+        StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
+    }
+    
     func toggleNotifications(_ currentlyMuted: Bool) {
         
         toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: effectivePeerId, threadId: nil).start())
@@ -92,7 +96,7 @@ class PeerInfoArguments {
         let isEditing = (state as? GroupInfoState)?.editingState != nil || (state as? ChannelInfoState)?.editingState != nil || force
         
         let signal = context.account.postbox.peerView(id: peerId) |> take(1) |> mapToSignal { view -> Signal<Bool, NoError> in
-            return removeChatInteractively(context: context, peerId: peerId, userId: peerViewMainPeer(view)?.id, deleteGroup: isEditing && peerViewMainPeer(view)?.groupAccess.isCreator == true)
+            return removeChatInteractively(context: context, peerId: peerId, userId: peerViewMainPeer(view)?.id, deleteGroup: isEditing && peerViewMainPeer(view)?.groupAccess.isCreator == true, forceRemoveGlobally: peerViewMainPeer(view)?.groupAccess.isCreator == true)
         } |> deliverOnMainQueue
         
         deleteDisposable.set(signal.start(completed: { [weak self] in
@@ -283,14 +287,27 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     let threadInfo: ThreadInfo?
     
     let source: Source
+    let stories: PeerExpiringStoryListContext?
     
     
+    static func push(navigation: NavigationViewController, context: AccountContext, peerId: PeerId) {
+        if let controller = navigation.controller as? PeerInfoController, controller.peerId == peerId {
+            return
+        }
+        navigation.push(PeerInfoController(context: context, peerId: peerId))
+    }
     
-    
-    init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isAd: Bool = false, source: Source = .none) {
+    init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, stories: PeerExpiringStoryListContext? = nil, isAd: Bool = false, source: Source = .none) {
         self.peerId = peerId
         self.source = source
         self.threadInfo = threadInfo
+        
+        if peerId.namespace == Namespaces.Peer.CloudUser {
+            self.stories = stories ?? .init(account: context.account, peerId: peerId)
+        } else {
+            self.stories = nil
+        }
+        
         self.mediaController = PeerMediaController(context: context, peerId: peerId, threadInfo: threadInfo, isProfileIntended: true)
         super.init(context)
         
@@ -447,6 +464,12 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         let source = self.source
         
+        let storiesSignal: Signal<PeerExpiringStoryListContext.State?, NoError>
+        if let stories = self.stories {
+            storiesSignal = stories.state |> map(Optional.init)
+        } else {
+            storiesSignal = .single(nil)
+        }
         
         let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> = arguments.get() |> mapToSignal { arguments in
             
@@ -522,10 +545,15 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 threadData = .single(nil)
             }
             
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData)
-                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
+            
+           
+            
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData, storiesSignal)
+                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData, stories -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
                     
-                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                    
+                    
+                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source, stories: stories).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
                     return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0, threadData) }
                     

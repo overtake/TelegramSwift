@@ -232,6 +232,10 @@ final class Appearance : Equatable {
         self.presentation = presentation
     }
     
+    var languageCode: String {
+        return language.baseLanguageCode.replacingOccurrences(of: "-raw", with: "")
+    }
+    
     var locale: Locale {
         return Locale(identifier: appAppearance.language.languageCode)
     }

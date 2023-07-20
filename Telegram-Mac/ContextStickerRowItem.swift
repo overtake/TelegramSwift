@@ -19,15 +19,17 @@ class ContextStickerRowItem: TableRowItem {
     fileprivate let context:AccountContext
     fileprivate let _stableId:Int64
     fileprivate let chatInteraction:ChatInteraction
+    fileprivate let presentation: TelegramPresentationTheme?
     var selectedIndex:Int? = nil
     override var stableId: AnyHashable {
         return _stableId
     }
-    init(_ initialSize:NSSize, _ context: AccountContext, _ entry:InputMediaStickersRow, _ stableId:Int64, _ chatInteraction:ChatInteraction) {
+    init(_ initialSize:NSSize, _ context: AccountContext, _ entry:InputMediaStickersRow, _ stableId:Int64, _ chatInteraction:ChatInteraction, presentation: TelegramPresentationTheme?) {
         self.context = context
         self.result = entry
         self.chatInteraction = chatInteraction
         self._stableId = stableId
+        self.presentation = presentation
         super.init(initialSize)
     }
     
@@ -45,6 +47,10 @@ class ContextStickerRowItem: TableRowItem {
 
 class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
 
+    
+    override var backdorColor: NSColor {
+        return .clear
+    }
     
     func fileAtPoint(_ point:NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let item = item as? ContextStickerRowItem {
@@ -108,11 +114,12 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 let control = Control()
                 addSubview(control)
                 let content = StickerMediaContentView(frame: .zero)
+                content.backgroundColor = .clear
                 content.userInteractionEnabled = false
                 control.addSubview(content)
             }
             
-            
+            let presentation = item.presentation ?? theme
             
             for i in 0 ..< item.result.entries.count {
                 let container:Control = self.subviews[i] as! Control
@@ -121,15 +128,15 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 
 
                 if item.selectedIndex == i {
-                    container.set(background: theme.colors.grayBackground, for: .Normal)
-                    container.set(background: theme.colors.grayBackground, for: .Hover)
-                    container.set(background: theme.colors.grayBackground, for: .Highlight)
+                    container.set(background: presentation.colors.accent, for: .Normal)
+                    container.set(background: presentation.colors.accent, for: .Hover)
+                    container.set(background: presentation.colors.accent, for: .Highlight)
 
                     container.apply(state: .Normal)
                 } else {
-                    container.set(background: theme.colors.background, for: .Normal)
-                    container.set(background: theme.colors.background, for: .Hover)
-                    container.set(background: theme.colors.background, for: .Highlight)
+                    container.set(background: .clear, for: .Normal)
+                    container.set(background: .clear, for: .Hover)
+                    container.set(background: .clear, for: .Highlight)
                     container.apply(state: .Normal)
                 }
                 

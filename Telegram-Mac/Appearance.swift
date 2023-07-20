@@ -808,6 +808,43 @@ private func generateTriangle(_ size: NSSize, color: NSColor) -> CGImage {
     })!
 }
 
+private func generateStoryState(_ color: NSColor, bgColor: NSColor, size: NSSize, wide: CGFloat) -> CGImage {
+    return generateImage(size, contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        
+        let startAngle = -CGFloat.pi / 2.0
+        let endAngle = CGFloat(1.0) * 2.0 * CGFloat.pi + startAngle
+        
+        let path = CGMutablePath()
+        
+        path.addArc(center: CGPoint(x: size.width / 2.0, y: size.height / 2.0), radius: size.width / 2 - 1, startAngle: startAngle, endAngle: endAngle, clockwise: false)
+        
+        ctx.setStrokeColor(color.cgColor)
+        ctx.setLineWidth(wide)
+        ctx.setLineCap(.round)
+        ctx.addPath(path)
+        ctx.strokePath()
+        
+    })!
+}
+
+
+private func generateStoryStateWithOnline(_ color: NSColor, size: NSSize, wide: CGFloat) -> CGImage {
+    return generateImage(size, contextGenerator: { size, ctx in
+        let rect = CGRect(origin: CGPoint(), size: size)
+        ctx.clear(rect)
+        
+        ctx.setFillColor(color.cgColor)
+        ctx.fillEllipse(in: size.bounds)
+        
+        ctx.setBlendMode(.clear)
+        ctx.fillEllipse(in: size.bounds.insetBy(dx: wide, dy: wide))
+    })!
+}
+
+
 
 
 private func generateLocationMapPinIcon(_ background: NSColor) -> CGImage {
@@ -1413,7 +1450,7 @@ func getAverageColor(_ color: NSColor) -> NSColor {
     return NSColor(hue: hue, saturation: saturation, brightness: brightness, alpha: alpha)
 }
 
-func backgroundExists(_ wallpaper: Wallpaper) -> Bool {
+func backgroundExists(_ wallpaper: Wallpaper, palette: ColorPalette) -> Bool {
     #if !SHARE
     var backgroundMode: TableBackgroundMode
     switch wallpaper {
@@ -1425,17 +1462,17 @@ func backgroundExists(_ wallpaper: Wallpaper) -> Bool {
         return true
     case let .image(representation, settings):
         if let resource = largestImageRepresentation(representation)?.resource {
-            return FileManager.default.fileExists(atPath: wallpaperPath(resource, settings: settings))
+            return FileManager.default.fileExists(atPath: wallpaperPath(resource, palette: palette, settings: settings))
         } else {
             return false
         }
         
     case let .file(_, file, settings, _):
-        return FileManager.default.fileExists(atPath: wallpaperPath(file.resource, settings: settings))
+        return FileManager.default.fileExists(atPath: wallpaperPath(file.resource, palette: palette, settings: settings))
     case .none:
         return true
     case let .custom(representation, blurred):
-        return FileManager.default.fileExists(atPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))
+        return FileManager.default.fileExists(atPath: wallpaperPath(representation.resource, palette: palette, settings: WallpaperSettings(blur: blurred)))
     }
     #else
     return false
@@ -1460,32 +1497,7 @@ func generateBackgroundMode(_ wallpaper: Wallpaper, palette: ColorPalette, maxSi
         }
         
     case let .file(_, file, settings, _):
-        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
-            
-            let intense = CGFloat(abs(settings.intensity ?? 0)) / 100
-            
-            var image = image
-            if palette.isDark, settings.colors.count > 1 {
-                image = generateImage(image.size, contextGenerator: { size, ctx in
-                    ctx.clear(size.bounds)
-                    ctx.setFillColor(NSColor.black.cgColor)
-                    ctx.fill(size.bounds)
-                    ctx.clip(to: size.bounds, mask: image._cgImage!)
-                    
-                    ctx.clear(size.bounds)
-                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
-                    ctx.fill(size.bounds)
-                })!._NSImage
-            } else if palette.isDark, intense > 0 {
-                image = generateImage(image.size, contextGenerator: { size, ctx in
-                    ctx.clear(size.bounds)
-                    ctx.draw(image._cgImage!, in: size.bounds)
-                    
-                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
-                    ctx.fill(size.bounds)
-                })!._NSImage
-            }
-
+        if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, palette: palette, settings: settings))) {
             backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
         } else {
             backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
@@ -2147,6 +2159,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                groupStickerNotFound: { #imageLiteral(resourceName: "Icon_GroupStickerNotFound").precomposed(palette.grayIcon) },
                                                settingsAskQuestion: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(flipVertical: true)) },
                                                settingsFaq: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(flipVertical: true)) },
+                                               settingsStories: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsStories").precomposed(flipVertical: true)) },
                                                settingsGeneral: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(flipVertical: true)) },
                                                settingsLanguage: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(flipVertical: true)) },
                                                settingsNotifications: { generateSettingsIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(flipVertical: true)) },
@@ -2163,6 +2176,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsPremium: { generatePremiumIcon(NSImage(named: "Icon_Premium_Settings")!.precomposed(flipVertical: true)) },
                                                settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
+                                               settingsStoriesActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsStories").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsLanguageActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsLanguage").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsNotificationsActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsNotifications").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
@@ -2662,7 +2676,21 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 folder_invite_link: { generateFolderLinkIcon(palette: palette, revoked: false) },
                                                 folder_invite_link_revoked: { generateFolderLinkIcon(palette: palette, revoked: true) },
                               folders_sidebar_edit: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon, flipVertical: true) },
-                              folders_sidebar_edit_active: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon.withAlphaComponent(0.8), flipVertical: true) }
+                              folders_sidebar_edit_active: { NSImage(named: "Icon_LeftSidebarEditFolders")!.precomposed(palette.grayIcon.withAlphaComponent(0.8), flipVertical: true) },
+                              story_unseen: { generateStoryState(palette.accent, bgColor: palette.background, size: NSMakeSize(50, 50), wide: 1.5) },
+                              story_seen: { generateStoryState(palette.grayIcon.withAlphaComponent(0.5), bgColor: palette.background, size: NSMakeSize(50, 50), wide: 1.0) },
+                              story_selected: { generateStoryState(palette.underSelectedColor, bgColor: palette.background, size: NSMakeSize(50, 50), wide: 1.0) },
+                              story_unseen_chat: { generateStoryState(palette.accent, bgColor: palette.background, size: NSMakeSize(36, 36), wide: 1.5) },
+                              story_seen_chat: { generateStoryState(palette.grayIcon, bgColor: palette.background, size: NSMakeSize(36, 36), wide: 1.0) },
+                              story_unseen_profile: { generateStoryState(palette.accent, bgColor: palette.background, size: NSMakeSize(120, 120), wide: 1.5) },
+                              story_seen_profile: { generateStoryState(palette.grayIcon, bgColor: palette.background, size: NSMakeSize(120, 120), wide: 1.0) },
+                              story_view_read: { NSImage(named: "Icon_StoryViewRead")!.precomposed(palette.grayIcon) },
+                              story_view_reaction: { NSImage(named: "Icon_StoryViewReaction")!.precomposed(palette.grayIcon) },
+                              story_chatlist_reply: { NSImage(named: "Icon_StoryReply")!.precomposed(palette.grayIcon) },
+                              story_chatlist_reply_active: { NSImage(named: "Icon_StoryReply")!.precomposed(palette.underSelectedColor) },
+                              message_story_expired: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitle) },
+                              message_story_expired_bubble_incoming: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitleBubble_incoming) },
+                              message_story_expired_bubble_outgoing: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitleBubble_outgoing) }
 
     )
 

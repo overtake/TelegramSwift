@@ -246,7 +246,7 @@ class ChatInputAccessory: View {
         
         transition.updateFrame(view: self.container, frame: NSMakeRect(49, 0, size.width, size.height))
         transition.updateFrame(view: iconView, frame: iconView.centerFrameY(x: 2))
-        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: size.width - dismiss.frame.width))
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: size.width - dismiss.frame.width + 3))
         if let view = progress {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: 5))
         }

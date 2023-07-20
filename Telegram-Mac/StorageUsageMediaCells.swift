@@ -448,7 +448,8 @@ private final class StorageUsageMediaCellsView : GeneralContainableRowView {
                     view = self.contentViews[i]!
                 }
                 let selected = item.getSelected(layout.message.id)
-                if view.layoutItem != layout || view.selecting != selected {
+                let isUpdated = view.layoutItem == nil || !view.layoutItem!.isEqual(to: layout)
+                if isUpdated || view.selecting != selected {
                     view.update(layout: layout, selected: selected, context: item.context, table: item.table, animated: animated)
                     view.updateSize(item.getTextSize(layout.message.id), playable: item.isPlayable(layout.message), animated: animated)
                 }
@@ -496,7 +497,7 @@ private final class StorageUsageMediaCellsView : GeneralContainableRowView {
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool) -> NSView {
         if let innerId = innerId.base as? MessageId {
-            let view = contentViews.compactMap { $0 }.first(where: { $0.layoutItem?.message.id == innerId })
+            let view = contentViews.compactMap { $0 }.first(where: { $0.layoutItem?.id == innerId })
             return view ?? NSView()
         }
         return self
@@ -504,7 +505,7 @@ private final class StorageUsageMediaCellsView : GeneralContainableRowView {
     
     override func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
         if let innerId = innerId.base as? MessageId {
-            let cell = contentViews.compactMap { $0 }.first(where: { $0.layoutItem?.message.id == innerId })
+            let cell = contentViews.compactMap { $0 }.first(where: { $0.layoutItem?.id == innerId })
             cell?.addAccesoryOnCopiedView(view: view)
         }
     }

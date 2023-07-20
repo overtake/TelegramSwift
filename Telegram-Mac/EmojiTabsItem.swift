@@ -15,11 +15,13 @@ final class EmojiTabsItem: TableRowItem {
     let selected: EmojiSegment?
     let select:(EmojiSegment)->Void
     private let _stableId: AnyHashable
-    init(_ initialSize: NSSize, stableId: AnyHashable, segments:[EmojiSegment], selected: EmojiSegment?, select:@escaping(EmojiSegment)->Void) {
+    let presentation: TelegramPresentationTheme?
+    init(_ initialSize: NSSize, stableId: AnyHashable, segments:[EmojiSegment], selected: EmojiSegment?, select:@escaping(EmojiSegment)->Void, presentation: TelegramPresentationTheme?) {
         self._stableId = stableId
         self.segments = segments
         self.selected = selected
         self.select = select
+        self.presentation = presentation
         super.init(initialSize)
     }
     
@@ -94,6 +96,8 @@ private final class EmojiTabsView: HorizontalRowView {
         
         func update(item: EmojiTabsItem, animated: Bool) {
             
+            
+            let theme = item.presentation ?? theme
             
             leftGradient.shadowBackground = theme.colors.background.withAlphaComponent(1)
             leftGradient.direction = .horizontal(false)

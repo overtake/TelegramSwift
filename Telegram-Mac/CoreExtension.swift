@@ -161,7 +161,7 @@ extension RenderedPeer {
 extension TelegramMediaFile {
     var videoSize:NSSize {
         for attr in attributes {
-            if case let .Video(_,size, _) = attr {
+            if case let .Video(_,size, _, _) = attr {
                 return size.size
             }
         }
@@ -170,7 +170,7 @@ extension TelegramMediaFile {
     
     var isStreamable: Bool {
         for attr in attributes {
-            if case let .Video(_, _, flags) = attr {
+            if case let .Video(_, _, flags, _) = attr {
                 return flags.contains(.supportsStreaming)
             }
         }
@@ -200,9 +200,9 @@ extension TelegramMediaFile {
         return NSZeroSize
     }
     
-    var videoDuration:Int {
+    var videoDuration: Double {
         for attr in attributes {
-            if case let .Video(duration,_, _) = attr {
+            if case let .Video(duration,_, _, _) = attr {
                 return duration
             }
         }
@@ -450,6 +450,19 @@ public extension Message {
         return nil
     }
     
+    var isExpiredStory: Bool {
+        if let media = media.first as? TelegramMediaStory, let data = associatedStories[media.storyId] {
+            return data.get(Stories.StoredItem.self) == nil
+        }
+        return false
+    }
+    var isExpiredReplyStory: Bool {
+        if let reply = self.storyAttribute, let data = associatedStories[reply.storyId] {
+            return data.get(Stories.StoredItem.self) == nil
+        }
+        return false
+    }
+    
     func translationAttribute(toLang: String) -> TranslationMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? TranslationMessageAttribute, attr.toLang == toLang {
@@ -633,6 +646,13 @@ public extension Message {
             default:
                 break
             }
+        } else if let media = self.media.first as? TelegramMediaStory, let story = associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
+            switch story {
+            case let .item(item):
+                return item.media
+            default:
+                return media
+            }
         }
         return media.first
     }
@@ -771,6 +791,15 @@ public extension Message {
         return nil
     }
     
+    var storyAttribute: ReplyStoryAttribute? {
+        for attr in attributes {
+            if let attr = attr as? ReplyStoryAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var editedAttribute: EditedMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? EditedMessageAttribute, !attr.isHidden {
@@ -811,23 +840,23 @@ public extension Message {
     }
     
     func withUpdatedStableId(_ stableId:UInt32) -> Message {
-        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo)
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     func withUpdatedId(_ messageId:MessageId) -> Message {
-        return Message(stableId: stableId, stableVersion: stableVersion, id: messageId, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo)
+        return Message(stableId: stableId, stableVersion: stableVersion, id: messageId, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     
     func withUpdatedGroupingKey(_ groupingKey:Int64?) -> Message {
-        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo)
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     
     func withUpdatedTimestamp(_ timestamp: Int32) -> Message {
-        return Message(stableId: self.stableId, stableVersion: self.stableVersion, id: self.id, globallyUniqueId: self.globallyUniqueId, groupingKey: self.groupingKey, groupInfo: self.groupInfo, threadId: threadId, timestamp: timestamp, flags: self.flags, tags: self.tags, globalTags: self.globalTags, localTags: self.localTags, forwardInfo: self.forwardInfo, author: self.author, text: self.text, attributes: self.attributes, media: self.media, peers: self.peers, associatedMessages: self.associatedMessages, associatedMessageIds: self.associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo)
+        return Message(stableId: self.stableId, stableVersion: self.stableVersion, id: self.id, globallyUniqueId: self.globallyUniqueId, groupingKey: self.groupingKey, groupInfo: self.groupInfo, threadId: threadId, timestamp: timestamp, flags: self.flags, tags: self.tags, globalTags: self.globalTags, localTags: self.localTags, forwardInfo: self.forwardInfo, author: self.author, text: self.text, attributes: self.attributes, media: self.media, peers: self.peers, associatedMessages: self.associatedMessages, associatedMessageIds: self.associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     
     
     func withUpdatedText(_ text:String) -> Message {
-        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo)
+        return Message(stableId: stableId, stableVersion: stableVersion, id: id, globallyUniqueId: globallyUniqueId, groupingKey: groupingKey, groupInfo: groupInfo, threadId: threadId, timestamp: timestamp, flags: flags, tags: tags, globalTags: globalTags, localTags: localTags, forwardInfo: forwardInfo, author: author, text: text, attributes: attributes, media: media, peers: peers, associatedMessages: associatedMessages, associatedMessageIds: associatedMessageIds, associatedMedia: self.associatedMedia, associatedThreadInfo: self.associatedThreadInfo, associatedStories: self.associatedStories)
     }
     
     func possibilityForwardTo(_ peer:Peer) -> Bool {
@@ -849,7 +878,7 @@ public extension Message {
     }
     
     convenience init(_ media: Media, stableId: UInt32, messageId: MessageId) {
-        self.init(stableId: stableId, stableVersion: 0, id: messageId, globallyUniqueId: nil, groupingKey: nil, groupInfo: nil, threadId: nil, timestamp: 0, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: nil, text: "", attributes: [], media: [media], peers: SimpleDictionary(), associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil)
+        self.init(stableId: stableId, stableVersion: 0, id: messageId, globallyUniqueId: nil, groupingKey: nil, groupInfo: nil, threadId: nil, timestamp: 0, flags: [], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: nil, text: "", attributes: [], media: [media], peers: SimpleDictionary(), associatedMessages: SimpleDictionary(), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
     }
 }
 
@@ -939,6 +968,10 @@ func uniquePeers(from peers:[Peer], defaultExculde:[PeerId] = []) -> [Peer] {
 func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> Bool {
         
     if message.peers[message.id.peerId] is TelegramSecretChat {
+        return false
+    }
+    
+    if message.isExpiredStory {
         return false
     }
     
@@ -1265,6 +1298,19 @@ extension Media {
         }
         return false
     }
+    var hasNoSound: Bool {
+        if let media = self as? TelegramMediaFile {
+            for attr in media.attributes {
+                switch attr {
+                case let .Video(_, _, flags, _):
+                    return flags.contains(.isSilent)
+                default:
+                    return false
+                }
+            }
+        }
+        return false
+    }
     var isMusicFile: Bool {
         if let media = self as? TelegramMediaFile {
             for attr in media.attributes {
@@ -1390,6 +1436,13 @@ extension Peer {
             default:
                 break
             }
+        }
+        return false
+    }
+    
+    var storyArchived: Bool {
+        if let user = self as? TelegramUser {
+            return user.storiesHidden ?? false
         }
         return false
     }
@@ -2472,7 +2525,7 @@ func mediaResourceName(from media:Media?, ext:String?) -> String {
 }
 
 
-func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: Int64? = nil, userId: PeerId? = nil, deleteGroup: Bool = false) -> Signal<Bool, NoError> {
+func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: Int64? = nil, userId: PeerId? = nil, deleteGroup: Bool = false, forceRemoveGlobally: Bool = false) -> Signal<Bool, NoError> {
     return context.account.postbox.peerView(id: peerId)
         |> take(1)
         |> map { peerViewMainPeer($0) }
@@ -2538,6 +2591,10 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
                 }
             }
             
+            if forceRemoveGlobally {
+                canRemoveGlobally = false
+                thridTitle = nil
+            }
             
 
             
@@ -2546,7 +2603,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
                 if let threadId = threadId {
                     _ = context.engine.peers.removeForumChannelThread(id: peerId, threadId: threadId).start()
                 } else {
-                    _ = context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: result == .thrid).start()
+                    _ = context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: result == .thrid || forceRemoveGlobally).start()
                     if peer.isBot && result == .thrid {
                         _ = context.blockedPeersContext.add(peerId: peerId).start()
                     }
@@ -2670,12 +2727,56 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
         let wallpapers = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path
         try? FileManager.default.createDirectory(at: URL(fileURLWithPath: wallpapers), withIntermediateDirectories: true, attributes: nil)
         
-        let out = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + ".png"
+        let out = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark_0" + ".png"
         
         if !FileManager.default.fileExists(atPath: out) {
             try? FileManager.default.removeItem(atPath: out)
             try? FileManager.default.copyItem(atPath: path, toPath: out)
         }
+        
+        let outDark = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark_1" + ".png"
+        let darkUrl = URL(fileURLWithPath: outDark)
+        
+        if !FileManager.default.fileExists(atPath: outDark), let image = NSImage(contentsOf: darkUrl) {
+            
+            let intense = CGFloat(abs(settings.intensity ?? 0)) / 100
+            var cgImage = image._cgImage
+            if settings.colors.count > 1 {
+                cgImage = generateImage(image.size, contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(NSColor.black.cgColor)
+                    ctx.fill(size.bounds)
+                    ctx.clip(to: size.bounds, mask: image._cgImage!)
+                    
+                    ctx.clear(size.bounds)
+                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
+                    ctx.fill(size.bounds)
+                })
+            } else if intense > 0 {
+                cgImage = generateImage(image.size, contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    ctx.draw(image._cgImage!, in: size.bounds)
+                    
+                    ctx.setFillColor(NSColor.black.withAlphaComponent(1 - intense).cgColor)
+                    ctx.fill(size.bounds)
+                })
+            }
+            
+            
+            if let image = cgImage, let colorDestination = CGImageDestinationCreateWithURL(darkUrl as CFURL, kUTTypePNG, 1, nil) {
+                CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+                
+                let colorQuality: Float = 1.0
+                
+                let options = NSMutableDictionary()
+                options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                
+                CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
+                CGImageDestinationFinalize(colorDestination)
+                
+            }
+        }
+        
         subscriber.putNext(out)
         
         subscriber.putCompletion()
@@ -2704,7 +2805,8 @@ extension WallpaperSettings {
 }
 
 func wallpaperPath(_ resource: TelegramMediaResource, palette: ColorPalette = theme.colors, settings: WallpaperSettings) -> String {
-    return ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + ".png"
+    let path = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark_\(palette.isDark ? 1 : 0)" + ".png"
+    return path
 }
 
 
@@ -3252,20 +3354,71 @@ struct CachedDataEquatable: Equatable {
 
 extension CGImage {
     var cvPixelBuffer: CVPixelBuffer? {
-        var pixelBuffer: CVPixelBuffer? = nil
-        let options: [NSObject: Any] = [
-            kCVPixelBufferCGImageCompatibilityKey: false,
-            kCVPixelBufferCGBitmapContextCompatibilityKey: false,
-            ]
-        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width), Int(size.height), kCVPixelFormatType_32BGRA, options as CFDictionary, &pixelBuffer)
-        CVPixelBufferLockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-        let pixelData = CVPixelBufferGetBaseAddress(pixelBuffer!)
-        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-        let context = CGContext(data: pixelData, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer!), space: rgbColorSpace, bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue)
-        context?.draw(self, in: CGRect(origin: .zero, size: size))
-        CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        let cgImage = self
+
+        var maybePixelBuffer: CVPixelBuffer? = nil
+        let ioSurfaceProperties = NSMutableDictionary()
+        let options = NSMutableDictionary()
+        options.setObject(ioSurfaceProperties, forKey: kCVPixelBufferIOSurfacePropertiesKey as NSString)
+
+        let _ = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width * self.scale), Int(size.height * self.scale), kCVPixelFormatType_32ARGB, options as CFDictionary, &maybePixelBuffer)
+        guard let pixelBuffer = maybePixelBuffer else {
+            return nil
+        }
+        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        defer {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        }
+
+        let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+
+        let context = CGContext(
+            data: baseAddress,
+            width: Int(self.size.width * self.scale),
+            height: Int(self.size.height * self.scale),
+            bitsPerComponent: 8,
+            bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue,
+            releaseCallback: nil,
+            releaseInfo: nil
+        )!
+        context.clear(CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
+        context.draw(cgImage, in: CGRect(origin: .zero, size: CGSize(width: self.size.width * self.scale, height: self.size.height * self.scale)))
+
         return pixelBuffer
     }
+
+    
+    var cmSampleBuffer: CMSampleBuffer? {
+           guard let pixelBuffer = self.cvPixelBuffer else {
+               return nil
+           }
+           var newSampleBuffer: CMSampleBuffer? = nil
+
+           var timingInfo = CMSampleTimingInfo(
+               duration: CMTimeMake(value: 1, timescale: 30),
+               presentationTimeStamp: CMTimeMake(value: 0, timescale: 30),
+               decodeTimeStamp: CMTimeMake(value: 0, timescale: 30)
+           )
+
+           var videoInfo: CMVideoFormatDescription? = nil
+           CMVideoFormatDescriptionCreateForImageBuffer(allocator: nil, imageBuffer: pixelBuffer, formatDescriptionOut: &videoInfo)
+           guard let videoInfo = videoInfo else {
+               return nil
+           }
+           CMSampleBufferCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: videoInfo, sampleTiming: &timingInfo, sampleBufferOut: &newSampleBuffer)
+
+           if let newSampleBuffer = newSampleBuffer {
+               let attachments = CMSampleBufferGetSampleAttachmentsArray(newSampleBuffer, createIfNecessary: true)! as NSArray
+               let dict = attachments[0] as! NSMutableDictionary
+
+               dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleAttachmentKey_DisplayImmediately as NSString as String)
+           }
+
+           return newSampleBuffer
+       }
+
 }
 
 
@@ -3313,10 +3466,13 @@ extension TelegramMediaWebpageLoadedContent {
                 newUrl = self.url + "?t=\(Int(timecode))"
             }
         }
-        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, attributes: self.attributes, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: newUrl, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: self.file, story: self.story, attributes: self.attributes, instantPage: self.instantPage)
     }
     func withUpdatedFile(_ file: TelegramMediaFile) -> TelegramMediaWebpageLoadedContent {
-        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: file, attributes: self.attributes, instantPage: self.instantPage)
+        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: self.image, file: file, story: self.story, attributes: self.attributes, instantPage: self.instantPage)
+    }
+    func withUpdatedImage(_ image: TelegramMediaImage) -> TelegramMediaWebpageLoadedContent {
+        return TelegramMediaWebpageLoadedContent(url: self.url, displayUrl: self.displayUrl, hash: self.hash, type: self.type, websiteName: self.websiteName, title: self.title, text: self.text, embedUrl: self.embedUrl, embedType: self.embedType, embedSize: self.embedSize, duration: self.duration, author: self.author, image: image, file: self.file, story: self.story, attributes: self.attributes, instantPage: self.instantPage)
     }
     
     var isCrossplatformTheme: Bool {
@@ -3672,10 +3828,6 @@ extension NSAttributedString {
     static func makeEmojiHolder(_ emoji: String, fromRect: NSRect?) -> NSAttributedString {
         let attach = NSMutableAttributedString()
         _ = attach.append(string: emoji)
-        if let fromRect = fromRect, FastSettings.animateInputEmoji {
-            let tag = TGInputTextEmojiHolder(uniqueId: arc4random64(), emoji: emoji, rect: fromRect, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: NSColor.clear))
-            attach.addAttribute(.init(rawValue: TGEmojiHolderAttributeName), value: tag, range: NSMakeRange(0, emoji.length))
-        }
         return attach
     }
 }
@@ -3726,3 +3878,10 @@ func isLite(_ key: LiteModeKey = .any) -> Bool {
 }
 
 let scheduleWhenOnlineDate = Date(timeIntervalSince1970: TimeInterval(scheduleWhenOnlineTimestamp))
+
+
+extension SearchTheme {
+    static func initialize(_ palette: ColorPalette) -> SearchTheme {
+        return SearchTheme(palette.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(palette.grayIcon), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(palette.grayIcon), { strings().searchFieldSearch }, palette.text, palette.grayText)
+    }
+}

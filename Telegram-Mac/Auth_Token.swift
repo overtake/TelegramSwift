@@ -67,6 +67,7 @@ private final class ExportTokenOptionView : View {
 }
 
 final class Auth_TokenView : View {
+    private var progressView: InfiniteProgressView?
     fileprivate let imageView: ImageView = ImageView(frame: Auth_Insets.qrSize.bounds)
     private let animation: LottiePlayerView = LottiePlayerView(frame: Auth_Insets.qrAnimSize.bounds)
     fileprivate let logoView = LottiePlayerView(frame: NSMakeRect(0, 0, 40, 40))
@@ -138,6 +139,9 @@ final class Auth_TokenView : View {
         self.backgroundColor = theme.colors.background
         animationContainer.background = dayClassicPalette.background
         animationContainer.layer?.cornerRadius = 10
+        
+        
+        self.progressView?.color = .black
         measure()
         
         if let data = LocalAnimatedSticker.qrcode_matrix.data, imageView.isHidden {
@@ -183,6 +187,11 @@ final class Auth_TokenView : View {
         
         if !isLoading {
             
+            if let view = self.progressView {
+                performSubviewRemoval(view, animated: true)
+                self.progressView = nil
+            }
+            
             let timeout = max(1, 3 - (Date().timeIntervalSince1970 - startTime))
             
             delay(timeout, closure: { [weak self] in
@@ -194,6 +203,18 @@ final class Auth_TokenView : View {
             })
         } else {
             startTime = Date().timeIntervalSince1970
+            
+            let current: InfiniteProgressView
+            if let view = self.progressView {
+                current = view
+            } else {
+                current = InfiniteProgressView(color: .black, lineWidth: 1.5)
+                current.setFrameSize(NSMakeSize(40, 40))
+                self.progressView = current
+                animationContainer.addSubview(current)
+                current.progress = nil
+                current.color = .black
+            }
         }
         first = false
         needsLayout = true
@@ -216,6 +237,8 @@ final class Auth_TokenView : View {
         animationContainer.centerX(y: 0)
         imageView.centerX(y: 0)
         animation.center()
+        
+        progressView?.center()
         logoView.centerX(y: floor((imageView.frame.height - logoView.frame.height) / 2))
         titleView.updateWithNewWidth(containerView.frame.width)
         titleView.centerX(y: imageView.frame.maxY + Auth_Insets.betweenHeader)

@@ -1113,8 +1113,8 @@ public final class TextViewLayout : Equatable {
                         
                         
                         let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.text
-                        let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 1.0)
-                        strokeRects.append((rect, color))
+                        let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 0.5)
+                       // strokeRects.append((rect, color))
                     }
                 }
             }
@@ -1567,6 +1567,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private let drawLayer: TextDrawLayer = TextDrawLayer()
     private var blockMask: SimpleLayer?
     
+    
     var hasBackground: Bool {
         return blurBackground != nil
     }
@@ -1658,7 +1659,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         super.draw(dirtyRect)
     }
     
-    var drawingLayer: CALayer? {
+    public var drawingLayer: CALayer? {
         if #available(macOS 10.13, *) {
             return drawLayer
         } else {

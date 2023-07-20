@@ -9,6 +9,7 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+
 enum ChatInputRecodingState {
     case none
     case recoding(TimeInterval)

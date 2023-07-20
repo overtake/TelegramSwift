@@ -22,7 +22,7 @@ private struct State : Equatable {
 private let _id_input_url = InputDataIdentifier("_id_input_url")
 private let _id_text = InputDataIdentifier("_id_text")
 
-private func entries(state: State) -> [InputDataEntry] {
+private func entries(state: State, presentation: TelegramPresentationTheme) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId: Int32 = 0
@@ -31,11 +31,12 @@ private func entries(state: State) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterTextHeader), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterTextHeader), data: InputDataGeneralTextData(color: presentation.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
+    let itemTheme = GeneralRowItem.Theme.initialize(presentation)
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.text), error: nil, identifier: _id_text, mode: .plain, data: InputDataRowData( viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().inputFormatterTextPlaceholder, filter: { $0 }, limit: 10000))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.text), error: nil, identifier: _id_text, mode: .plain, data: InputDataRowData( viewType: .singleItem, customTheme: itemTheme), placeholder: nil, inputPlaceholder: strings().inputFormatterTextPlaceholder, filter: { $0 }, limit: 10000))
     index += 1
     
     
@@ -43,10 +44,10 @@ private func entries(state: State) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterURLHeader), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterURLHeader), data: InputDataGeneralTextData(color: presentation.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.url), error: nil, identifier: _id_input_url, mode: .plain, data: InputDataRowData( viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().inputFormatterURLPlaceholder, filter: { $0 }, limit: 10000))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.url), error: nil, identifier: _id_input_url, mode: .plain, data: InputDataRowData( viewType: .singleItem, customTheme: itemTheme), placeholder: nil, inputPlaceholder: strings().inputFormatterURLPlaceholder, filter: { $0 }, limit: 10000))
     index += 1
 
     
@@ -56,7 +57,7 @@ private func entries(state: State) -> [InputDataEntry] {
     return entries
 }
 
-func InputURLFormatterModalController(string: String, defaultUrl: String? = nil, completion: @escaping(String, String?) -> Void) -> InputDataModalController {
+func InputURLFormatterModalController(string: String, defaultUrl: String? = nil, completion: @escaping(String, String?) -> Void, presentation: TelegramPresentationTheme? = nil) -> InputDataModalController {
     
     
     let initialState = State(text: string, url: defaultUrl?.removingPercentEncoding)
@@ -67,8 +68,8 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
         statePromise.set(stateValue.modify (f))
     }
     
-    let dataSignal = statePromise.get() |> map { state in
-        return entries(state: state)
+    let dataSignal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
+        return entries(state: state, presentation: presentation ?? theme)
     }
     
     var close: (() -> Void)? = nil
@@ -124,16 +125,33 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
         return .none
     })
     
+    let modalTheme: ModalController.Theme?
     
+    if let presentation = presentation {
+        modalTheme = ModalController.Theme(text: presentation.colors.text, grayText: presentation.colors.grayText, background: presentation.colors.background, border: presentation.colors.border, accent: presentation.colors.accent, grayForeground: presentation.colors.grayForeground)
+    } else {
+        modalTheme = nil
+    }
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, drawBorder: true, singleButton: true)
+    }, drawBorder: true, singleButton: true, customTheme: {
+        return modalTheme ?? .init()
+    })
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    
+    modalController.getModalTheme = {
+        return modalTheme ?? .init()
+    }
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
+    controller.getBackgroundColor = {
+        return presentation?.colors.listBackground ?? theme.colors.listBackground
+    }
+    
     
     close = { [weak modalController] in
         modalController?.modal?.close()

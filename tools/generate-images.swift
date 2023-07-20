@@ -228,6 +228,7 @@ func initialize() -> [String] {
     array.append("groupStickerNotFound")
     array.append("settingsAskQuestion")
     array.append("settingsFaq")
+    array.append("settingsStories")
     array.append("settingsGeneral")
     array.append("settingsLanguage")
     array.append("settingsNotifications")
@@ -244,6 +245,7 @@ func initialize() -> [String] {
     array.append("settingsPremium")
     array.append("settingsAskQuestionActive")
     array.append("settingsFaqActive")
+    array.append("settingsStoriesActive")
     array.append("settingsGeneralActive")
     array.append("settingsLanguageActive")
     array.append("settingsNotificationsActive")
@@ -853,6 +855,30 @@ func initialize() -> [String] {
 
     array.append("folders_sidebar_edit")
     array.append("folders_sidebar_edit_active")
+    
+    array.append("story_unseen")
+    array.append("story_seen")
+    array.append("story_selected")
+
+    array.append("story_unseen_chat")
+    array.append("story_seen_chat")
+
+    
+    array.append("story_unseen_profile")
+    array.append("story_seen_profile")
+
+    
+    array.append("story_view_read")
+    array.append("story_view_reaction")
+    
+    array.append("story_chatlist_reply")
+    array.append("story_chatlist_reply_active")
+    
+    
+    array.append("message_story_expired")
+    array.append("message_story_expired_bubble_incoming")
+    array.append("message_story_expired_bubble_outgoing")
+
 
     return array
 }

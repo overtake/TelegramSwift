@@ -432,9 +432,15 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
     }
-    func animateCornerRadius() ->Void {
-        let animation = CABasicAnimation(keyPath: "cornerRadius")
-        animation.duration = 0.2
+    func animateCornerRadius(duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut) ->Void {
+        let animation: CABasicAnimation
+        if timingFunction == .spring {
+            animation = makeSpringAnimation("cornerRadius")
+        } else {
+            animation = CABasicAnimation(keyPath: "cornerRadius")
+            animation.timingFunction = .init(name: timingFunction)
+        }
+        animation.duration = duration
         self.add(animation, forKey: "cornerRadius")
     }
     
@@ -458,6 +464,15 @@ public extension NSView {
         image.addRepresentation(bitmapRep)
         bitmapRep.size = bounds.size
         return NSImage(data: dataWithPDF(inside: bounds))!
+    }
+    
+    func setCenterScale(_ scale: CGFloat) {
+        let rect = self.bounds
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+        fr = CATransform3DScale(fr, scale, scale, 1)
+        fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+        self.layer?.transform = fr
     }
     
     var subviewsSize: NSSize {
@@ -504,6 +519,8 @@ public extension NSView {
                     }
                 } else if let view = view as? ImageView, view.isEventLess {
                     return NSPointInRect(location, self.bounds)
+                } else if let view = view as? LayerBackedView, view.isEventLess {
+                    return NSPointInRect(location, self.bounds)
                 }
                 if view == self {
                     return NSPointInRect(location, self.bounds)
@@ -542,6 +559,9 @@ public extension NSView {
         } else {
             return System.backingScale
         }
+    }
+    var bsc: CGFloat {
+        return backingScaleFactor
     }
     
     func removeAllSubviews() -> Void {
@@ -1968,6 +1988,29 @@ public extension NSView {
         return visibleRect
     }
     
+    func setAnchorPoint(anchorPoint: CGPoint) {
+        guard let layer = self.layer else {
+            return
+        }
+        
+        var newPoint = CGPoint(x: bounds.size.width * anchorPoint.x, y: bounds.size.height * anchorPoint.y)
+        var oldPoint = CGPoint(x: bounds.size.width * layer.anchorPoint.x, y: bounds.size.height * layer.anchorPoint.y)
+
+        newPoint = newPoint.applying(layer.affineTransform())
+        oldPoint = oldPoint.applying(layer.affineTransform())
+
+        var position = layer.position
+
+        position.x -= oldPoint.x
+        position.x += newPoint.x
+
+        position.y -= oldPoint.y
+        position.y += newPoint.y
+        
+        layer.position = position
+        layer.anchorPoint = anchorPoint
+    }
+    
 }
 
 public extension NSWindow {
@@ -2295,5 +2338,13 @@ extension CGAffineTransform {
         transform.tx *= transformedSize.width;
         transform.ty *= transformedSize.height;
         return transform
+    }
+}
+
+
+public extension CGFloat {
+    func rounded(toPlaces places:Int) -> CGFloat {
+        let divisor = pow(10.0, CGFloat(places))
+        return (self * divisor).rounded() / divisor
     }
 }

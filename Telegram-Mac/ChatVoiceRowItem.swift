@@ -81,13 +81,13 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     let isWebpage:Bool
     let resource: TelegramMediaResource
     fileprivate(set) var waveformWidth:CGFloat = 120
-    let duration:Int
+    let duration: Double
     
     var transcribe:()->Void = {}
     
     fileprivate(set) var transcribeData: TranscribeData?
     
-    init(showPlayer:@escaping(APController) -> Void, waveform:AudioWaveform?, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
+    init(showPlayer:@escaping(APController) -> Void, waveform:AudioWaveform?, duration: Double, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
         self.showPlayer = showPlayer
         self.waveform = waveform
         self.duration = duration
@@ -113,14 +113,14 @@ class ChatVoiceRowItem: ChatMediaItem {
         let file = media as! TelegramMediaFile
 
         var waveform:AudioWaveform? = nil
-        var duration:Int = 0
+        var duration:Double = 0
         for attr in file.attributes {
             switch attr {
             case let .Audio(_, _duration, _, _, _data):
                 if let data = _data {
                     waveform = AudioWaveform(bitstream: data, bitsPerSample: 5)
                 }
-                duration = _duration
+                duration = Double(_duration)
             default:
                 break
             }

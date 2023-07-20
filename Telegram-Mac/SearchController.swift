@@ -357,7 +357,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
     
     let togglePin:(Peer) -> Void = { peer in
         let updatePeer = arguments.context.account.postbox.transaction { transaction -> Void in
-            updatePeers(transaction: transaction, peers: [peer], update: { (_, updated) -> Peer? in
+            updatePeersCustom(transaction: transaction, peers: [peer], update: { (_, updated) -> Peer? in
                 return updated
             })
             } |> mapToSignal { _ -> Signal<TogglePeerChatPinnedResult, NoError> in
@@ -1449,7 +1449,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         if let peer = peer {
              storedPeer = context.account.postbox.transaction { transaction -> Void in
                 if transaction.getPeer(peer.id) == nil {
-                    updatePeers(transaction: transaction, peers: [peer], update: { (previous, updated) -> Peer? in
+                    updatePeersCustom(transaction: transaction, peers: [peer], update: { (previous, updated) -> Peer? in
                         return updated
                     })
                 }

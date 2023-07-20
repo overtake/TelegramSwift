@@ -147,6 +147,8 @@
             return view.tableView
         } else if let view = self.view.mainView as? PeerMediaGifsView {
             return view.tableView
+        } else if let view = self.view.mainView as? StoryMediaView {
+            return view.tableView
         }
         return nil
     }
@@ -207,6 +209,8 @@
         if let tableView = self.mainView as? TableView {
             return tableView
         } else if let view = self.mainView as? InputDataView {
+            return view.tableView
+        } else if let view = self.mainView as? StoryMediaView {
             return view.tableView
         }
         return nil
@@ -389,6 +393,9 @@
         if self == .gifs {
             return strings().peerMediaGifs
         }
+        if self == .stories {
+            return "Stories"
+        }
         return ""
     }
  }
@@ -470,12 +477,13 @@
     
     private let mediaGrid:PeerMediaPhotosController
     private let gifs: PeerMediaPhotosController
+    private let stories: StoryMediaController
     private let listControllers:[PeerMediaListController]
     private let members: ViewController
     private let commonGroups: ViewController
     
     
-    private let tagsList:[PeerMediaCollectionMode] = [.members, .photoOrVideo, .file, .webpage, .music, .voice, .gifs, .commonGroups]
+     private let tagsList:[PeerMediaCollectionMode] = [.members, .stories, .photoOrVideo, .file, .webpage, .music, .voice, .gifs, .commonGroups]
     
     
     private var currentTagListIndex: Int {
@@ -496,6 +504,8 @@
     private let toggleDisposable = MetaDisposable()
     private let externalDisposable = MetaDisposable()
     private var currentController: ViewController?
+     
+    private let storyListContext: PeerStoryListContext
      
     private let threadInfo: ThreadInfo?
         
@@ -527,7 +537,7 @@
         self.isProfileIntended = isProfileIntended
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .photoOrVideo)
-        
+        self.storyListContext = .init(account: context.account, peerId: peerId, isArchived: false)
         var updateTitle:((ExternalSearchMessages)->Void)? = nil
         
         if let external = externalSearchData {
@@ -548,7 +558,9 @@
         
         self.members = PeerMediaGroupPeersController(context: context, peerId: peerId, editing: editing.get())
         self.commonGroups = GroupsInCommonViewController(context: context, peerId: peerId)
-         self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .gif)
+        self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .gif)
+         self.stories = StoryMediaController(context: context, peerId: peerId, listContext: storyListContext)
+         
         super.init(context)
         
         updateTitle = { [weak self] result in
@@ -572,7 +584,7 @@
         
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            guard let `self` = self, self.mode != .commonGroups, self.externalSearchData == nil else {
+            guard let `self` = self, self.mode != .commonGroups, self.mode != .stories, self.externalSearchData == nil else {
                 return .rejected
             }
             if self.mode == .members {
@@ -790,6 +802,7 @@
         let threadInfo = self.threadInfo
         
         let membersTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
+        let storiesTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let commonGroupsTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         
         membersTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
@@ -825,6 +838,17 @@
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
         }
         
+        if peerId.namespace == Namespaces.Peer.CloudUser {
+            storiesTab = storyListContext.state |> map { state -> (exist: Bool, loaded: Bool) in
+                return (exist: state.totalCount > 0, loaded: state.peerReference != nil)
+            } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+                return (tag: .stories, exists: data.exist, hasLoaded: data.loaded)
+            }
+        } else {
+            storiesTab = .single((tag: .stories, exists: false, hasLoaded: true))
+        }
+        
+        
         let location: ChatLocationInput
         if let threadInfo = threadInfo {
             location = context.chatLocationInput(for: .thread(threadInfo.message), contextHolder: threadInfo.contextHolder)
@@ -841,10 +865,11 @@
             
         }
         
-        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab) |> map { members, general, commonGroups -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
+        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab, storiesTab) |> map { members, general, commonGroups, stories -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
             var general = general
             general.insert(members, at: 0)
             general.append(commonGroups)
+            general.insert(stories, at: 0)
             return general
         }
         
@@ -910,6 +935,13 @@
                         self.gifs.loadViewIfNeeded(self.genericView.view.bounds)
                     }
                     return self.gifs.ready.get() |> map { ready in
+                        return data
+                    }
+                case .stories:
+                    if !self.stories.isLoaded() {
+                        self.stories.loadViewIfNeeded(self.genericView.view.bounds)
+                    }
+                    return self.stories.ready.get() |> map { ready in
                         return data
                     }
                 default:
@@ -1181,7 +1213,7 @@
         searchValueDisposable.set(nil)
         
         
-        centerBar.updateSearchVisibility(mode != .commonGroups && externalSearchData == nil)
+        centerBar.updateSearchVisibility(mode != .commonGroups && mode != .stories && externalSearchData == nil)
         
         
         if let controller = controller as? PeerMediaSearchable {
@@ -1220,6 +1252,8 @@
             return self.commonGroups
         case .gifs:
             return self.gifs
+        case .stories:
+            return stories
         default:
             return self.listControllers[Int(mode.rawValue)]
         }

@@ -292,6 +292,17 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         }
     }
     
+    override func storyControl(_ storyId: StoryId) -> NSView? {
+        if let item = item as? ChatRowItem {
+            if item.message?.storyAttribute?.storyId == storyId {
+                return super.storyControl(storyId)
+            } else {
+                return self.webpageContent?.mediaContentView ?? super.storyControl(storyId)
+            }
+        }
+        return nil
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

@@ -164,6 +164,8 @@ class FastSettings {
     private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
 
     
+    private static let kStoryMuted = "kStoryMuted"
+    
 
     
     static var sendingType:SendingType {
@@ -518,6 +520,15 @@ class FastSettings {
         UserDefaults.standard.synchronize()
     }
     
+    static var storyIsMuted: Bool {
+        get {
+            return UserDefaults.standard.value(forKey: kStoryMuted) as? Bool ?? false
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: kStoryMuted)
+        }
+    }
+    
     
     private static let kDefaultScreenShareKey = "kDefaultScreenShare"
     private static let kDefaultVideoShare = "kDefaultVideoShare"
@@ -729,7 +740,7 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bo
         
 //        setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
         
-       // removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
+        //removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
         
         let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
         
@@ -860,7 +871,7 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 
 //                setxattr(adopted.cString(using: .utf8), "com.apple.quarantine", quarantineData, quarantineDataLength, 0, XATTR_CREATE)
 
-              //  removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
+                    // removexattr(adopted.cString(using: .utf8), "com.apple.quarantine", 0)
 
                 
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970

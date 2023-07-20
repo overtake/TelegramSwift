@@ -8,7 +8,7 @@
 
 import Cocoa
 import SwiftSignalKit
-
+import ColorPalette
 
 public struct SearchToken : Equatable {
     public let name:String
@@ -141,6 +141,17 @@ public class TokenizedView: ScrollView, AppearanceViewProtocol, NSTextViewDelega
         let accentColor: NSColor
         let accentSelectColor: NSColor
         let redColor: NSColor
+        
+        public init(_ colors: ColorPalette) {
+            self.background = colors.background
+            self.textColor = colors.text
+            self.grayBackground = colors.grayBackground
+            self.grayTextColor = colors.grayText
+            self.underSelectColor = colors.underSelectedColor
+            self.accentColor = colors.accent
+            self.accentSelectColor = colors.accentSelect
+            self.redColor = colors.redUI
+        }
         
         public init(background: NSColor = presentation.colors.background,
              grayBackground: NSColor = presentation.colors.grayBackground,

@@ -508,11 +508,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             let current = textView.attributedString().copy() as! NSAttributedString
             let currentRange = textView.selectedRange()
 
-            let item = SimpleUndoItem(attributedString: current, be: state.effectiveInput.attributedString, wasRange: currentRange, be: range)
+            let item = SimpleUndoItem(attributedString: current, be: state.effectiveInput.attributedString(theme), wasRange: currentRange, be: range)
             if !initial {
                 self.textView.addSimpleItem(item)
             } else {
-                self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+                self.textView.setAttributedString(state.effectiveInput.attributedString(theme), animated:animated)
                 if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
                     textView.setSelectedRange(range)
                 }
@@ -862,7 +862,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 if !current.effectiveInput.inputText.contains(disabledPreview) {
 
                     var detectedUrl: String?
-                    current.effectiveInput.attributedString.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: current.effectiveInput.attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+                    current.effectiveInput.attributedString(theme).enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: current.effectiveInput.attributedString(theme).range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
                         if let tag = value as? TGInputTextTag, let url = tag.attachment as? String {
                             detectedUrl = url
                         }
@@ -979,7 +979,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                     if let data = pasteboard.data(forType: .kInApp) {
                         let decoder = AdaptedPostboxDecoder()
                         if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
-                            let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString
+                            let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString(theme)
                             let current = textView.attributedString().copy() as! NSAttributedString
                             let currentRange = textView.selectedRange()
                             let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)

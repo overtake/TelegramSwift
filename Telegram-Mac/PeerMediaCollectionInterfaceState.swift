@@ -32,7 +32,8 @@ final class PeerMediaCollectionInteraction : InterfaceObserver {
 }
 
 enum PeerMediaCollectionMode : Int32 {
-    case members = -2
+    case members = -3
+    case stories = -2
     case photoOrVideo = -1
     case file = 0
     case webpage = 1
@@ -58,6 +59,8 @@ enum PeerMediaCollectionMode : Int32 {
             return []
         case .gifs:
             return .gif
+        case .stories:
+            return []
         }
     }
 }

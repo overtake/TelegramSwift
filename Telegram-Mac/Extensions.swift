@@ -2485,6 +2485,14 @@ extension CGImage {
         guard CGImageDestinationFinalize(destination) else { return nil }
         return mutableData as Data
     }
+    
+    var jpegData: Data? {
+        guard let mutableData = CFDataCreateMutable(nil, 0),
+            let destination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) else { return nil }
+        CGImageDestinationAddImage(destination, self, nil)
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return mutableData as Data
+    }
 }
 
 func localizedPsa(_ key: String, type: String, args: [CVarArg] = []) -> String {
@@ -2656,7 +2664,7 @@ struct DateSelectorUtil {
     static let mediaFileDate: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeZone = NSTimeZone.local
-        formatter.dateFormat = "MMM d, yyyy, h a"
+        formatter.dateFormat = "MMM d, yyyy"
         return formatter
     }()
     

@@ -94,8 +94,19 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         return CALayer.self;
     }
     
+    
     open var backdorColor: NSColor {
+        if let item = self.item {
+            return item.backdorColor
+        }
         return presentation.colors.background
+    }
+    
+    open var borderColor: NSColor {
+        if let item = self.item {
+            return item.borderColor
+        }
+        return presentation.colors.border
     }
     
     open var isSelect: Bool {
@@ -125,7 +136,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
         if let border = border {
             
-            ctx.setFillColor(presentation.colors.border.cgColor)
+            ctx.setFillColor(borderColor.cgColor)
             
             if border.contains(.Top) {
                 ctx.fill(NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize))

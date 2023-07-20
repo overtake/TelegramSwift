@@ -31,91 +31,29 @@ private final class Arguments {
     let joinGroup:(PeerId)->Void
     let openPendingRequests:()->Void
     let dismissPendingRequests:([PeerId])->Void
-
-    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void) {
+    let openStory:(StoryInitialIndex?, Bool, Bool)->Void
+    let getStoryInterfaceState:()->StoryListChatListRowItem.InterfaceState
+    let revealStoriesState:()->Void
+    let setupFilter: (ChatListFilter)->Void
+    let openFilterSettings: (ChatListFilter)->Void
+    let tabsMenuItems: (ChatListFilter, Int?, Bool?)->[ContextMenuItem]
+    let getController:()->ViewController?
+    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?) {
         self.context = context
         self.joinGroupCall = joinGroupCall
         self.joinGroup = joinGroup
         self.openPendingRequests = openPendingRequests
         self.dismissPendingRequests = dismissPendingRequests
+        self.openStory = openStory
+        self.getStoryInterfaceState = getStoryInterfaceState
+        self.revealStoriesState = revealStoriesState
+        self.setupFilter = setupFilter
+        self.openFilterSettings = openFilterSettings
+        self.tabsMenuItems = tabsMenuItems
+        self.getController = getController
     }
 }
 
-
-final class RevealAllChatsView : Control {
-    let textView: TextView = TextView()
-
-    var layoutState: SplitViewState = .dual {
-        didSet {
-            needsLayout = true
-        }
-    }
-    
-    
-    
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        textView.userInteractionEnabled = false
-        textView.isSelectable = false
-        addSubview(textView)
-        
-        let layout = TextViewLayout(.initialize(string: strings().chatListCloseFilter, color: .white, font: .medium(.title)))
-        layout.measure(width: max(280, frame.width))
-        textView.update(layout)
-        
-        let shadow = NSShadow()
-        shadow.shadowBlurRadius = 5
-        shadow.shadowColor = NSColor.black.withAlphaComponent(0.1)
-        shadow.shadowOffset = NSMakeSize(0, 2)
-        self.shadow = shadow
-        set(background: theme.colors.accent, for: .Normal)
-    }
-    
-    override func cursorUpdate(with event: NSEvent) {
-        NSCursor.pointingHand.set()
-    }
-    
-    override var backgroundColor: NSColor {
-        didSet {
-            textView.backgroundColor = backgroundColor
-        }
-    }
-    
-    override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        needsLayout = true
-    }
-    
-    
-    
-    override func layout() {
-        super.layout()
-        textView.center()
-        
-        layer?.cornerRadius = frame.height / 2
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
-final class FilterTabsView : View {
-    let tabs: ScrollableSegmentView = ScrollableSegmentView(frame: NSZeroRect)
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        addSubview(tabs)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func layout() {
-        super.layout()
-        tabs.frame = bounds
-    }
-}
 
 struct PeerListState : Equatable {
     
@@ -179,6 +117,27 @@ struct PeerListState : Equatable {
     var controllerAppear: AppearMode
     var hiddenItems: PeerListHiddenItems
     var selectedForum: PeerId?
+    var stories: EngineStorySubscriptions?
+    var isContacts: Bool
+    var filterData: FilterData
+    var presentation: TelegramPresentationTheme
+    
+    var hasStories: Bool {
+        if let stories = self.stories, !isContacts {
+            if !stories.items.isEmpty {
+                return true
+            }
+            if let accountItem = stories.accountItem, accountItem.storyCount > 0, mode.groupId != .archive {
+                return true
+            }
+        }
+        return false
+    }
+    
+    static var initialize: PeerListState {
+        return .init(proxySettings: .defaultSettings, connectionStatus: .waitingForNetwork, splitState: .dual, searchState: .None, peer: nil, forumPeer: nil, mode: .plain, activities: .init(activities: [:]), appear: .normal, controllerAppear: .normal, hiddenItems: .default, selectedForum: nil, stories: nil, isContacts: false, filterData: FilterData(), presentation: theme)
+
+    }
 }
 
 class PeerListContainerView : Control {
@@ -191,6 +150,7 @@ class PeerListContainerView : Control {
             addSubview(button)
             button.userInteractionEnabled = false
             button.isEventLess = true
+            self.scaleOnClick = true
         }
         
         func update(_ pref: ProxySettings, connection: ConnectionStatus, animated: Bool) {
@@ -256,6 +216,7 @@ class PeerListContainerView : Control {
         fileprivate var button:PremiumStatusControl?
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
+            layer?.masksToBounds = false
         }
         
         private var peer: Peer?
@@ -427,18 +388,130 @@ class PeerListContainerView : Control {
         }
     }
 
+    fileprivate final class TitleView : Control {
+        
+        enum Source {
+            case contacts
+            case chats
+            case settings
+            case archivedChats
+            var text: String {
+                switch self {
+                case .contacts:
+                    return strings().peerListTitleContacts
+                case .chats:
+                    return strings().peerListTitleChats
+                case .settings:
+                    return "Settings"
+                case .archivedChats:
+                    return strings().peerListTitleArchive
+                }
+            }
+        }
+        
+        var openStatus:((Control)->Void)? = nil
+        
+        private let textView = TextView()
+        private var premiumStatus: StatusView?
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(textView)
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            self.layer?.masksToBounds = false
+        }
+        
+        
+        
+        
+        override func updateLocalizationAndTheme(theme: PresentationTheme) {
+            super.updateLocalizationAndTheme(theme: theme)
+        }
+            
+        fileprivate func updateState(_ state: PeerListState, arguments: Arguments, animated: Bool) {
+            let source: Source = state.isContacts ? .contacts : state.mode.groupId != .archive ? .chats : .archivedChats
+            let layout = TextViewLayout(.initialize(string: source.text, color: theme.colors.text, font: .medium(.title)))
+            layout.measure(width: .greatestFiniteMagnitude)
+            textView.update(layout)
+            
+            let hasControls = state.splitState != .minimisize && state.mode == .plain
+
+            let hasStatus = state.peer?.peer.isPremium ?? false && hasControls && state.mode == .plain
+
+            if hasStatus, let peer = state.peer?.peer, source != .contacts {
+                
+                
+                let current: StatusView
+                if let view = self.premiumStatus {
+                    current = view
+                } else {
+                    current = StatusView(frame: CGRect(origin: NSMakePoint(textView.frame.width + 4, (frame.height - 20) / 2), size: NSMakeSize(20, 20)))
+                    self.premiumStatus = current
+                    self.addSubview(current)
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                    current.set(handler: { [weak self] control in
+                        self?.openStatus?(control)
+                    }, for: .Click)
+                    current.scaleOnClick = true
+                }
+                current.update(peer, context: arguments.context, animated: animated)
+                
+            } else if let view = self.premiumStatus {
+                performSubviewRemoval(view, animated: animated)
+                self.premiumStatus = nil
+            }
+        }
+        
+        var hasPremium: Bool {
+            return premiumStatus != nil
+        }
+        
+        var size: NSSize {
+            var width: CGFloat = textView.frame.width
+            if let premiumStatus = self.premiumStatus {
+                width += premiumStatus.frame.width + 4
+            }
+            return NSMakeSize(width, 20)
+        }
+        
+        override func layout() {
+            super.layout()
+            self.updateLayout(size: frame.size, transition: .immediate)
+        }
+        
+        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+            transition.updateFrame(view: textView, frame: textView.centerFrameY(x: 0))
+            if let premiumStatus = self.premiumStatus {
+                transition.updateFrame(view: premiumStatus, frame: premiumStatus.centerFrameY(x: textView.frame.width + 4))
+            }
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
     private var callView: ChatGroupCallView?
     private var header: NSView?
+    fileprivate var isContacts: Bool = false
     
     let backgroundView = View(frame: NSZeroRect)
     
     let tableView = TableView(frame:NSZeroRect, drawBorder: true)
-    private let containerView: View = View()
+    
+    private var backButton: TitleButton?
+    
+    private let containerView = Control()
+    private let containerBackground = Control()
+    private let statusContainer = Control()
     
     let searchView:SearchView = SearchView(frame:NSMakeRect(10, 0, 0, 0))
     let compose:ImageButton = ImageButton()
     
-    private var premiumStatus: StatusView?
+    fileprivate let titleView = TitleView(frame: .zero)
+    
     private var downloads: DownloadsControl?
     private var proxy: ProxyView?
     
@@ -448,6 +521,11 @@ class PeerListContainerView : Control {
     fileprivate var showDownloads:(()->Void)? = nil
     fileprivate var hideDownloads:(()->Void)? = nil
     
+    
+    var searchViewRect: NSRect {
+        let y = navigationHeight - statusHeight + 10
+        return NSMakeRect(0, max(0, y), frame.width, frame.height - y)
+    }
 
     var mode: PeerListMode = .plain {
         didSet {
@@ -468,35 +546,70 @@ class PeerListContainerView : Control {
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
     }
+    private let borderView = View()
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.border = [.Right]
         compose.autohighlight = false
         autoresizesSubviews = false
         
         backgroundView.layer?.opacity = 0
         
         addSubview(backgroundView)
-        addSubview(containerView)
         addSubview(tableView)
-        containerView.addSubview(compose)
+        addSubview(containerView)
+        
+        
+       // containerView.handleScrollEventOnInteractionEnabled = true
+        statusContainer.handleScrollEventOnInteractionEnabled = true
+        statusContainer.userInteractionEnabled = false
+        statusContainer.isEventLess = true
+        
+        searchView.externalScroll = { [weak self] event in
+            self?.tableView.scrollWheel(with: event)
+        }
+        
+        statusContainer.addSubview(compose)
+        statusContainer.addSubview(titleView)
+        
+        containerView.addSubview(containerBackground)
+        containerView.addSubview(statusContainer)
+        
         containerView.addSubview(searchView)
         
+        addSubview(borderView)
         
         tableView.getBackgroundColor = {
             .clear
         }
+        
+        titleView.scaleOnClick = true
+        
+       
+        
         updateLocalizationAndTheme(theme: theme)
+        
         
     }
     
     private var state: PeerListState?
     private var arguments: Arguments?
     
+    private var storiesItem: StoryListChatListRowItem?
+    private var storiesView: StoryListChatListRowView?
+    
+    private var foldersItem: ChatListRevealItem?
+    private var foldersView: ChatListRevealView?
+
     
     var openProxy:((Control)->Void)? = nil
-    var openStatus:((Control)->Void)? = nil
+    var openStatus:((Control)->Void)? = nil {
+        didSet {
+            titleView.openStatus = { [weak self] control in
+                self?.openStatus?(control)
+            }
+        }
+    }
 
     fileprivate func updateState(_ state: PeerListState, arguments: Arguments, animated: Bool) {
         
@@ -505,6 +618,25 @@ class PeerListContainerView : Control {
         let animated = animated && self.state?.splitState == state.splitState && self.state != nil
         self.state = state
         self.arguments = arguments
+        
+        if let stories = state.stories, state.hasStories {
+            self.storiesItem = .init(frame.size, stableId: 0, context: arguments.context, isArchive: state.mode.groupId == .archive, state: stories, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
+        } else {
+            self.storiesItem = nil
+        }
+        
+        if !state.filterData.isEmpty && !state.filterData.sidebar, state.splitState != .minimisize, state.searchState == .None {
+            self.foldersItem = .init(frame.size, context: arguments.context, tabs: state.filterData.tabs, selected: state.filterData.filter, counters: state.filterData.badges, action: arguments.setupFilter, openSettings: {
+                arguments.openFilterSettings(.allChats)
+            }, menuItems: arguments.tabsMenuItems, getCurrentStoriesState: { [weak self] in
+                if let state = self?.arguments?.getStoryInterfaceState(), let tableView = self?.tableView {
+                    return (state, tableView)
+                }
+                return nil
+            })
+        } else {
+            self.foldersItem = nil
+        }
 
         var voiceChat: ChatActiveGroupCallInfo?
         if let forumPeer = state.forumPeer, forumPeer.call?.data?.groupCall == nil {
@@ -523,6 +655,7 @@ class PeerListContainerView : Control {
         
         self.updateAdditionHeader(state, size: frame.size, arguments: arguments, animated: animated)
 
+        self.titleView.updateState(state, arguments: arguments, animated: animated)
         
         if let info = voiceChat, state.splitState != .minimisize {
             let current: ChatGroupCallView
@@ -570,24 +703,16 @@ class PeerListContainerView : Control {
             self.actionView = nil
         }
         
-        let progress: CGFloat
-        if let delta = delta {
-            progress = delta / (frame.width - 70)
-        } else {
-            progress = 1.0
-        }
-        
-        self.searchView.isHidden = (state.splitState == .minimisize) || (state.appear == .short && delta == nil)
+        self.titleView.isHidden = (state.splitState == .minimisize) || (state.appear == .short && delta == nil) || !mode.isPlain
         
         let componentSize = NSMakeSize(40, 30)
         
-        var controlPoint = NSMakePoint(frame.width - 15 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - componentSize.height)/2.0))
+        var controlPoint = NSMakePoint(frame.width - 10 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - componentSize.height)/2.0))
         
-        let hasControls = state.splitState != .minimisize && state.searchState != .Focus && mode.isPlain && (state.appear != .short || delta != nil)
+        let hasControls = state.splitState != .minimisize && mode.isPlain && (state.appear != .short || delta != nil) && mode == .plain
         
-        let hasProxy = (!state.proxySettings.servers.isEmpty || state.proxySettings.effectiveActiveServer != nil) && hasControls
+        let hasProxy = (!state.proxySettings.servers.isEmpty || state.proxySettings.effectiveActiveServer != nil) && hasControls && !state.isContacts
         
-        let hasStatus = state.peer?.peer.isPremium ?? false && hasControls
         
         if hasProxy {
             controlPoint.x -= componentSize.width
@@ -598,7 +723,7 @@ class PeerListContainerView : Control {
             } else {
                 current = ProxyView(frame: CGRect(origin: controlPoint, size: componentSize))
                 self.proxy = current
-                self.containerView.addSubview(current, positioned: .below, relativeTo: searchView)
+                self.statusContainer.addSubview(current, positioned: .below, relativeTo: nil)
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
@@ -613,36 +738,68 @@ class PeerListContainerView : Control {
             self.proxy = nil
         }
         
-        if hasStatus, let peer = state.peer?.peer {
-            
-            controlPoint.x -= componentSize.width
-            
-            let current: StatusView
-            if let view = self.premiumStatus {
-                current = view
+       
+        if let item = self.storiesItem {
+            let current: StoryListChatListRowView
+            if let view = self.storiesView {
+                current = view 
             } else {
-                current = StatusView(frame: CGRect(origin: controlPoint, size: componentSize))
-                self.premiumStatus = current
-                self.containerView.addSubview(current, positioned: .below, relativeTo: searchView)
+                current = StoryListChatListRowView(frame: NSMakeRect(0, 50, frame.width, item.height))
+                containerView.addSubview(current, positioned: .below, relativeTo: statusContainer)
+                self.storiesView = current
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
-                current.set(handler: { [weak self] control in
-                    self?.openStatus?(control)
-                }, for: .Click)
             }
-            current.update(peer, context: arguments.context, animated: animated)
-            
-        } else if let view = self.premiumStatus {
+            current.set(item: item, animated: animated)
+        } else if let view = self.storiesView {
             performSubviewRemoval(view, animated: animated)
-            self.premiumStatus = nil
+            self.storiesView = nil
         }
         
-        premiumStatus?.change(opacity: progress, animated: animated)
-        proxy?.change(opacity: progress, animated: animated)
-        searchView.change(opacity: progress, animated: animated)
+        if let item = self.foldersItem {
+            let current: ChatListRevealView
+            if let view = self.foldersView {
+                current = view
+            } else {
+                current = ChatListRevealView(frame: NSMakeRect(0, navigationHeight - item.height, frame.width, item.height))
+                containerView.addSubview(current, positioned: .below, relativeTo: statusContainer)
+                self.foldersView = current
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.set(item: item, animated: animated)
+        } else if let view = self.foldersView {
+            performSubviewRemoval(view, animated: animated)
+            self.foldersView = nil
+        }
         
-
+        if state.mode.groupId == .archive {
+            let current: TitleButton
+            if let view = self.backButton {
+                current = view
+            } else {
+                current = TitleButton()
+                self.backButton = current
+                backButton?.set(handler: { [weak arguments] _ in
+                    arguments?.getController()?.navigationController?.back()
+                }, for: .Click)
+                statusContainer.addSubview(current, positioned: .below, relativeTo: statusContainer.subviews.first)
+            }
+            
+            current.set(text: strings().navigationBack, for: .Normal)
+            current.set(image: theme.icons.chatNavigationBack, for: .Normal)
+            current.set(color: theme.colors.accent, for: .Normal)
+            current.set(font: .medium(.title), for: .Normal)
+            current.sizeToFit(NSMakeSize(0, 20))
+            
+        } else if let view = self.backButton {
+            performSubviewRemoval(view, animated: animated)
+            self.backButton = nil
+        }
+        
+        
         if previous?.appear != state.appear {
             self.delta = nil
         } else if previous?.splitState != state.splitState {
@@ -650,7 +807,7 @@ class PeerListContainerView : Control {
         }
         
         let transition: ContainedViewLayoutTransition
-        if animated {
+        if animated, previous?.splitState == state.splitState {
             if previous?.appear != state.appear {
                 transition = .animated(duration: 0.4, curve: .spring)
             } else {
@@ -659,8 +816,6 @@ class PeerListContainerView : Control {
         } else {
             transition = .immediate
         }
-        
-        
   
         self.updateLayout(self.frame.size, transition: transition)
     }
@@ -864,14 +1019,29 @@ class PeerListContainerView : Control {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let theme = (theme as! TelegramPresentationTheme)
+        
+
+        borderView.backgroundColor = theme.colors.border
+                
         self.backgroundColor = theme.colors.background
         self.backgroundView.backgroundColor = theme.colors.listBackground
+        
         compose.set(background: .clear, for: .Normal)
         compose.set(background: .clear, for: .Hover)
-        compose.set(background: theme.colors.accent, for: .Highlight)
-        compose.set(image: theme.icons.composeNewChat, for: .Normal)
-        compose.set(image: theme.icons.composeNewChat, for: .Hover)
-        compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
+
+        if isContacts {
+            compose.set(background: .clear, for: .Highlight)
+            compose.set(image: theme.icons.contactsNewContact, for: .Normal)
+            compose.set(image: theme.icons.contactsNewContact, for: .Hover)
+            compose.set(image: theme.icons.contactsNewContact, for: .Highlight)
+        } else {
+            compose.set(background: theme.colors.accent, for: .Highlight)
+            compose.set(image: theme.icons.composeNewChat, for: .Normal)
+            compose.set(image: theme.icons.composeNewChat, for: .Hover)
+            compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
+            
+        }
+             
         compose.layer?.cornerRadius = .cornerRadius
         compose.sizeToFit()
         
@@ -879,10 +1049,15 @@ class PeerListContainerView : Control {
             return strings().chatListSearchPlaceholder
         }, theme.search.textColor, theme.search.placeholderColor)
         
+        self.containerView.backgroundColor = theme.colors.background
+        self.containerBackground.backgroundColor = theme.colors.listBackground
+        
+        
         super.updateLocalizationAndTheme(theme: theme)
         
         updateLayout(self.frame.size, transition: .immediate)
     }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -893,32 +1068,32 @@ class PeerListContainerView : Control {
         self.updateLayout(frame.size, transition: .immediate)
     }
     
-    private var delta: CGFloat? = nil
+    private(set) var delta: CGFloat? = nil
     
     func updateSwipingState(_ state: SwipeState, controller: ViewController) -> Void {
         let transition: ContainedViewLayoutTransition
         switch state {
-        case let .swiping(delta, prev):
+        case let .swiping(delta, _):
             if controller.stake.keepLeft > 0 {
                 self.delta = max(0, min(delta, frame.width - controller.stake.keepLeft))
             } else {
                 self.delta = nil
             }
             transition = .immediate
-        case let .success(delta, prev):
+        case .success:
             if controller.stake.keepLeft > 0 {
                 self.delta = frame.width - controller.stake.keepLeft
             } else {
                 self.delta = nil
             }
-            transition = .animated(duration: controller.animationStyle.duration, curve: .spring)
-        case let .failed(delta, prev):
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        case .failed:
             if controller.stake.keepLeft > 0 {
                 self.delta = 0
             } else {
                 self.delta = nil
             }
-            transition = .animated(duration: controller.animationStyle.duration, curve: .spring)
+            transition = .animated(duration: 0.2, curve: .easeOut)
         case .start:
             if controller.stake.keepLeft > 0 {
                 self.delta = 0
@@ -941,15 +1116,11 @@ class PeerListContainerView : Control {
             return
         }
         
-        var offset: CGFloat
-        switch theme.controllerBackgroundMode {
-        case .background:
-            offset = 50
-        case .tiled:
-            offset = 50
-        default:
-            offset = 50
-        }
+        
+        var offset: CGFloat = navigationHeight
+        
+        let progress: CGFloat = getDeltaProgress() ?? (state.appear == .short ? 0.0 : 1.0)
+        
         
         if state.splitState == .minimisize {
             switch self.mode {
@@ -959,9 +1130,24 @@ class PeerListContainerView : Control {
                 break
             }
         }
-        
+                
         var inset: CGFloat = 0
         
+        if state.searchState == .Focus {
+            inset = 50 - navigationHeight
+        }
+        
+        let containerSize = NSMakeSize(state.splitState == .minimisize || state.appear == .short ? 70 + (delta ?? 0) : size.width, offset)
+                
+        transition.updateFrame(view: self.containerView, frame: NSMakeRect(0, inset, containerSize.width, offset))
+        transition.updateFrame(view: self.statusContainer, frame: NSMakeRect(0, 0, containerSize.width, statusHeight))
+
+        transition.updateFrame(view: self.containerBackground, frame: self.containerView.bounds)
+
+        transition.updateFrame(view: self.backgroundView, frame: size.bounds)
+        transition.updateFrame(view: self.borderView, frame: CGRect.init(origin: CGPoint.init(x: size.width - .borderSize, y: 0), size: CGSize(width: .borderSize, height: size.height)))
+        
+
         if let header = self.header {
             offset += header.frame.height
             transition.updateFrame(view: header, frame: NSMakeRect(0, inset, size.width, header.frame.height))
@@ -973,33 +1159,21 @@ class PeerListContainerView : Control {
             transition.updateFrame(view: callView, frame: NSMakeRect(0, inset, size.width, callView.frame.height))
             
             inset += callView.frame.height
-
         }
         
+        let statusHeight: CGFloat = self.statusHeight
+
 
         let componentSize = NSMakeSize(40, 30)
+                        
         
-        let containerSize = NSMakeSize(state.splitState == .minimisize || state.appear == .short ? 70 + (delta ?? 0) : size.width, offset)
-                
-        transition.updateFrame(view: self.containerView, frame: NSMakeRect(0, 0, containerSize.width, offset))
-
-                
-        var searchWidth = (containerSize.width - 10 * 2)
+        var searchY: CGFloat = statusHeight
         
-        if state.searchState != .Focus && state.mode.isPlain {
-            searchWidth -= (componentSize.width + 12)
-        }
-        if let _ = self.proxy {
-            searchWidth -= componentSize.width
-        }
-        if let _ = self.premiumStatus {
-            searchWidth -= componentSize.width
-        }
-        if searchWidth < 5 {
-            searchWidth = 0
+        if let storiesItem = storiesItem {
+            searchY += (StoryListChatListRowItem.InterfaceState.revealed.height * storiesItem.progress) + 9 * storiesItem.progress
         }
         
-        let searchRect = NSMakeRect(10, floorToScreenPixels(backingScaleFactor, inset + (offset - inset - componentSize.height)/2.0), searchWidth, componentSize.height)
+        let searchRect = NSMakeRect(10, searchY, (size.width - 10 * 2), componentSize.height * progress)
         
         var bottomInset: CGFloat = 0
         if let actionView = self.actionView {
@@ -1009,16 +1183,17 @@ class PeerListContainerView : Control {
         transition.updateFrame(view: searchView, frame: searchRect)
         searchView.updateLayout(size: searchRect.size, transition: transition)
         
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, offset, size.width, size.height - offset - bottomInset))
 
-        transition.updateFrame(view: backgroundView, frame: size.bounds)
+
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, 0, size.width, size.height - bottomInset))
+        
         
         if let downloads = downloads {
             let rect = NSMakeRect(0, size.height - downloads.frame.height, size.width - .borderSize, downloads.frame.height)
             transition.updateFrame(view: downloads, frame: rect)
         }
         
-        var controlPoint = NSMakePoint(containerSize.width - 14, floorToScreenPixels(backingScaleFactor, (offset - componentSize.height)/2.0))
+        var controlPoint = NSMakePoint(containerSize.width - 14, floorToScreenPixels(backingScaleFactor, (statusHeight - componentSize.height)/2.0))
 
         controlPoint.x -= componentSize.width
         
@@ -1027,14 +1202,149 @@ class PeerListContainerView : Control {
         if let view = proxy {
             controlPoint.x -= componentSize.width
             transition.updateFrame(view: view, frame: CGRect(origin: controlPoint, size: componentSize))
+            transition.updateAlpha(view: view, alpha: progress)
         }
-        if let view = premiumStatus {
-            controlPoint.x -= componentSize.width
-            transition.updateFrame(view: view, frame: CGRect(origin: controlPoint, size: componentSize))
+        
+        if let view = self.backButton {
+            transition.updateFrame(view: view, frame: view.centerFrameY(x: 20))
         }
+        
+
         if let actionView = self.actionView {
             transition.updateFrame(view: actionView, frame: CGRect(origin: CGPoint(x: 0, y: size.height - actionView.frame.height), size: NSMakeSize(frame.width, actionView.frame.height)))
         }
+        
+        let titlePlusStorySize = titleView.frame.width + (59)
+        var titlePlusStoryStartX = (size.width - titlePlusStorySize) / 2
+        if let back = backButton {
+            titlePlusStoryStartX = max(back.frame.maxX + 10, titlePlusStoryStartX)
+        }
+        
+        let storyXStart = titlePlusStoryStartX - 10
+        let titleXStart = titlePlusStoryStartX + (59)
+        
+        let storyXEnd: CGFloat = 0
+        let titleXEnd = (size.width - titleView.size.width) / 2
+        
+        
+        
+        var titleX: CGFloat = titleXEnd
+        var storyX: CGFloat = storyXEnd
+        
+        if let stories = self.storiesItem {
+            titleX = titleXEnd - (titleXEnd - titleXStart) * (1 - stories.progress)
+            storyX = storyXEnd + (storyXStart - storyXEnd) * (1 - stories.progress)
+        }
+        
+        
+        
+        transition.updateFrame(view: titleView, frame: CGRect(origin: CGPoint(x: titleX, y: floorToScreenPixels(bsc, (statusHeight - titleView.size.height) / 2) - 2), size: titleView.size))
+        titleView.updateLayout(size: titleView.size, transition: transition)
+        
+        if let storiesItem = storiesItem, let view = storiesView {
+            let size = NSMakeSize(size.width, storiesItem.height)
+            let reversed = 1 - storiesItem.progress
+            
+            let middle = size.width / 2
+                        
+            var rect = CGRect(origin: NSMakePoint(storyX, 10 + storiesItem.getInterfaceState().progress * 40), size: size)
+            
+//            rect.origin.x -= (1 - progress) * (size.width - 70)
+            
+            if storiesItem.itemsCount < 3 {
+                rect.origin.x += (1 - storiesItem.getInterfaceState().progress) * (StoryListChatListRowItem.smallSize.width / 2 * CGFloat(3 - storiesItem.itemsCount))
+            }
+            
+            transition.updateFrame(view: view, frame: rect)
+            view.set(item: storiesItem, animated: transition.isAnimated)
+            view.updateLayout(size: size, transition: transition)
+            transition.updateAlpha(view: view, alpha: progress)
+        }
+        
+        if let foldersItem = foldersItem, let view = foldersView {
+            let controlSize = NSMakeSize(size.width, foldersItem.height)
+            
+            let rect = CGRect(origin: NSMakePoint(0, navigationHeight - controlSize.height), size: controlSize)
+                        
+            transition.updateFrame(view: view, frame: rect)
+            view.set(item: foldersItem, animated: transition.isAnimated)
+            
+            view.updateLayout(size: size, transition: transition)
+            transition.updateAlpha(view: view, alpha: progress)
+        }
+        
+        transition.updateAlpha(view: self.titleView, alpha: progress)
+        transition.updateAlpha(view: self.searchView, alpha: progress)
+        transition.updateAlpha(view: self.containerBackground, alpha: 1 - progress)
+        transition.updateAlpha(view: self.backgroundView, alpha: 1 - progress)
+
+
+        
+        self.updateScrollerInset(animated: transition.isAnimated)
+
+    }
+    
+    func getDeltaProgress() -> CGFloat? {
+        let progress: CGFloat?
+        if let delta = self.delta {
+            progress = delta / (frame.width - 70)
+        } else {
+            if let state = self.state, state.appear == .short {
+                progress = 0.0
+            } else {
+                progress = nil
+            }
+        }
+        return progress
+    }
+    
+    var navigationHeight: CGFloat {
+        guard let state = self.state else {
+            return 50
+        }
+        var offset: CGFloat = 50
+        
+        if state.splitState != .minimisize, state.mode.isPlain {
+            if state.appear == .normal {
+                offset += 40
+            } else if let progress = getDeltaProgress() {
+                offset += 40 * progress
+            }
+            if let storiesItem = self.storiesItem {
+                offset += storiesItem.navigationHeight
+            }
+            if let foldersItem = self.foldersItem {
+                if state.appear == .normal {
+                    offset += foldersItem.height
+                } else if let progress = getDeltaProgress() {
+                    offset += foldersItem.height * progress
+                }
+            }
+        }
+        return offset
+    }
+    var statusHeight: CGFloat {
+        guard let state = self.state else {
+            return 0
+        }
+        if !state.mode.isPlain {
+            return 10
+        }
+        let height: CGFloat = 50
+
+        return height
+    }
+    
+    func updateScrollerInset(animated: Bool) {
+        var top: CGFloat = 0
+        self.tableView.enumerateItems(with: { item in
+            if let item = item as? ChatListSpaceItem {
+                top += item.height
+                item.redraw(animated: animated)
+            }
+            return true
+        })
+        tableView.scrollerInsets = .init(left: 0, right: 0, top: top, bottom: 0)
     }
     
     func updateDownloads(_ state: DownloadsSummary.State, context: AccountContext, arguments: DownloadsControlArguments, animated: Bool) {
@@ -1075,7 +1385,11 @@ enum PeerListMode : Equatable {
         case .plain:
             return true
         default:
-            return false
+            if self.groupId == .archive {
+                return true
+            } else {
+                return false
+            }
         }
     }
     var groupId: EngineChatList.Group {
@@ -1116,12 +1430,23 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return nil
     }
     
-    private  let stateValue: Atomic<PeerListState?> = Atomic(value: nil)
-    private let stateSignal: ValuePromise<PeerListState?> = ValuePromise(nil, ignoreRepeated: true)
-    var stateUpdater: Signal<PeerListState?, NoError> {
+    let stateValue: Atomic<PeerListState> = Atomic(value: .initialize)
+    private let stateSignal: ValuePromise<PeerListState> = ValuePromise(.initialize, ignoreRepeated: true)
+    var stateUpdater: Signal<PeerListState, NoError> {
         return stateSignal.get()
     }
     
+
+    var filterSignal : Signal<FilterData, NoError> {
+        return self.stateSignal.get() |> map { $0.filterData }
+    }
+    var filterValue: FilterData {
+        return self.stateValue.with { $0.filterData }
+    }
+
+    
+    let storyList: Signal<EngineStorySubscriptions, NoError>?
+
     
     private let progressDisposable = MetaDisposable()
     private let createSecretChatDisposable = MetaDisposable()
@@ -1141,7 +1466,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         didSet {
             if let controller = searchController {
                 genericView.customHandler.size = { [weak controller, weak self] size in
-                    let frame = self?.genericView.tableView.frame ?? size.bounds
+                    let frame = self?.genericView.searchViewRect ?? size.bounds
                     controller?.view.frame = frame
                 }
                 progressDisposable.set((controller.isLoading.get() |> deliverOnMainQueue).start(next: { [weak self] isLoading in
@@ -1150,36 +1475,34 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }
     }
+    
+    func updateState(_ f:(PeerListState)->PeerListState) -> Void {
+        self.stateSignal.set(self.stateValue.modify(f))
+    }
         
     func updateHiddenItemsState(_ f:(PeerListHiddenItems)->PeerListHiddenItems) {
         
-        let state = self.stateSignal
-        let stateValue = self.stateValue
-       
-        let updateState:((PeerListState?)->PeerListState?) -> Void = { f in
-            state.set(stateValue.modify(f))
-        }
-        
+    
         updateState { current in
             var current = current
-            if let value = current {
-                current?.hiddenItems = f(value.hiddenItems)
-            }
+            current.hiddenItems = f(current.hiddenItems)
             return current
         }
         
-        let value = self.stateValue.with { $0?.hiddenItems.archive }
-        if let value = value {
-            FastSettings.archiveStatus = value
-        }
-        
+        let value = self.stateValue.with { $0.hiddenItems.archive }
+        FastSettings.archiveStatus = value
+
     }
     
     let topics: ForumChannelTopics?
+    let isContacts: Bool
+    var revealListener: TableScrollListener!
+
     
-    init(_ context: AccountContext, followGlobal:Bool = true, mode: PeerListMode = .plain, searchOptions: AppSearchOptions = [.chats, .messages]) {
+    init(_ context: AccountContext, isContacts: Bool = false, followGlobal:Bool = true, mode: PeerListMode = .plain, searchOptions: AppSearchOptions = [.chats, .messages]) {
         self.followGlobal = followGlobal
         self.mode = mode
+        self.isContacts = isContacts
         self.searchOptions = searchOptions
         switch mode {
         case let .forum(peerId, _):
@@ -1187,9 +1510,16 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         default:
             self.topics = nil
         }
+        if mode.isPlain {
+            self.storyList = context.engine.messages.storySubscriptions(isHidden: isContacts || mode.groupId == .archive)
+        } else {
+            self.storyList = nil
+        }
         super.init(context)
         
-        self.bar = .init(height: !mode.isPlain ? 50 : 0)
+        
+        self.bar = .init(height: mode.isPlain ? 0 : 50)
+
     }
     
     override var redirectUserInterfaceCalls: Bool {
@@ -1230,7 +1560,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     controller = DownloadsController(context: context, searchValue: self.genericView.searchView.searchValue |> map { $0.request })
                     self.downloadsController = controller
                     
-                    controller.frame = self.genericView.tableView.frame
+                    controller.frame = self.genericView.searchViewRect
                     self.addSubview(controller.view)
                     
                     if animated {
@@ -1260,8 +1590,19 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         super.viewDidLoad()
         let context = self.context
         let mode = self.mode
-
+        let isContacts = self.isContacts
         
+        genericView.isContacts = isContacts
+        
+        revealListener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            self?.processScroll()
+        })
+        
+        genericView.tableView.applyExternalScroll = { [weak self] event in
+            return self?.processScroll(event) ?? false
+        }
+
+        genericView.tableView.addScroll(listener: revealListener)
         
         genericView.showDownloads = { [weak self] in
             self?.showDownloads(animated: true)
@@ -1269,6 +1610,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.hideDownloads = { [weak self] in
             self?.hideDownloads(animated: true)
         }
+        
+        genericView.titleView.set(handler: { [weak self] _ in
+            self?.toggleStoriesState()
+        }, for: .Click)
         
         
         let actionsDisposable = self.actionsDisposable
@@ -1306,7 +1651,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let state = self.stateSignal
         let stateValue = self.stateValue
        
-        let updateState:((PeerListState?)->PeerListState?) -> Void = { f in
+        let updateState:((PeerListState)->PeerListState) -> Void = { f in
             state.set(stateValue.modify(f))
         }
         
@@ -1328,7 +1673,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         let forumPeer: Signal<PeerListState.ForumData?, NoError>
 
-        if case let .forum(peerId, isFull) = self.mode {
+        if case let .forum(peerId, _) = self.mode {
             
             let importState: Promise<PeerInvitationImportersState?> = Promise()
             
@@ -1479,13 +1824,31 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         default:
             isFull = true
         }
+                
+        let storyList = self.storyList
+        let storyState: Signal<EngineStorySubscriptions?, NoError>
+        if let storyList = storyList {
+            storyState = storyList |> map(Optional.init)
+        } else {
+            storyState = .single(nil)
+        }
         
-        let initHiddenItems = PeerListHiddenItems(archive: FastSettings.archiveStatus, generalTopic: nil, promo: Set())
-        
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, appearMode.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, appearMode, _ in
-            updateState { current in
-                let state: PeerListState = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, searchState: current?.searchState ?? .None, peer: peer, forumPeer: forumPeer, mode: mode, activities: inputActivities, appear: layout == .minimisize ? .normal : appearMode, controllerAppear: isFull ? .normal : .short, hiddenItems: current?.hiddenItems ?? initHiddenItems, selectedForum: current?.selectedForum)
-                return state
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, appearance in
+            updateState { value in
+                var current: PeerListState = value
+                current.proxySettings = pref.0
+                current.connectionStatus = pref.1
+                current.splitState = layout
+                current.controllerAppear = isFull ? .normal : .short
+                current.peer = peer
+                current.forumPeer = forumPeer
+                current.mode = mode
+                current.activities = inputActivities
+                current.stories = storyState
+                current.appear = layout == .minimisize ? .normal : appearMode
+                current.isContacts = isContacts
+                current.presentation = appearance.presentation
+                return current
             }
         }))
         
@@ -1519,7 +1882,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         genericView.openStatus = { control in
-            let peer = stateValue.with { $0?.peer?.peer }
+            let peer = stateValue.with { $0.peer?.peer }
             if let peer = peer as? TelegramUser {
                 let callback:(TelegramMediaFile, Int32?, CGRect?)->Void = { file, timeout, fromRect in
                     context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect)
@@ -1530,25 +1893,38 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }
 
-        genericView.compose.contextMenu = { [weak self] in
-            let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
-                self?.context.composeCreateGroup()
-            }, itemImage: MenuAnimation.menu_create_group.value),
-            ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
-                self?.context.composeCreateSecretChat()
-            }, itemImage: MenuAnimation.menu_lock.value),
-            ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
-                self?.context.composeCreateChannel()
-            }, itemImage: MenuAnimation.menu_channel.value)];
-            
-            let menu = ContextMenu()
-            for item in items {
-                menu.addItem(item)
+       
+        
+        if isContacts {
+            genericView.compose.set(handler: { _ in
+                showModal(with: AddContactModalController(context), for: context.window)
+            }, for: .Click)
+        } else {
+            genericView.compose.contextMenu = { [weak self] in
+                let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
+                    self?.context.composeCreateGroup()
+                }, itemImage: MenuAnimation.menu_create_group.value),
+                ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
+                    self?.context.composeCreateSecretChat()
+                }, itemImage: MenuAnimation.menu_lock.value),
+                ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
+                    self?.context.composeCreateChannel()
+                }, itemImage: MenuAnimation.menu_channel.value)];
+                
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
             }
-            return menu
         }
         
         genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
+            updateState { current in
+                var current = current
+                current.searchState = state.state
+                return current
+            }
             switch state.state {
             case .Focus:
                 assert(self?.searchController == nil)
@@ -1557,15 +1933,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             case .None:
                 self?.hideSearchController(animated: animated)
             }
-            updateState { current in
-                var current = current
-                current?.searchState = state.state
-                return current
-            }
         }, { [weak self] state in
             updateState { current in
                 var current = current
-                current?.searchState = state.state
+                current.searchState = state.state
                 return current
             }
             self?.searchController?.request(with: state.request)
@@ -1574,8 +1945,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         })
         
         let stateSignal = state.get()
-        |> filter { $0 != nil }
-        |> map { $0! }
         
         let previousState: Atomic<PeerListState?> = Atomic(value: nil)
         
@@ -1614,11 +1983,43 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 FastSettings.dismissPendingRequests(peerIds, for: peerId)
                 updateState { current in
                     var current = current
-                    current?.forumPeer?.invitationState = nil
+                    current.forumPeer?.invitationState = nil
                     return current
                 }
             }
 
+        }, openStory: { initialId, singlePeer, isHidden in
+            StoryModalController.ShowStories(context: context, isHidden: isHidden, initialId: initialId, singlePeer: singlePeer)
+        }, getStoryInterfaceState: { [weak self] in
+            guard let `self` = self else {
+                return .empty
+            }
+            if self.state?.splitState == .minimisize {
+                return .empty
+            }
+            if self.state?.hasStories == true {
+                return self.storyInterfaceState
+            }
+            return .empty
+        }, revealStoriesState: { [weak self] in
+            self?.revealStoriesState()
+        }, setupFilter: { [weak self] filter in
+            self?.updateState { current in
+                var current = current
+                current.filterData = current.filterData.withUpdatedFilter(filter)
+                return current
+            }
+            self?.scrollup(force: true)
+        }, openFilterSettings: { filter in
+            if case .filter = filter {
+                context.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
+            } else {
+                context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+            }
+        }, tabsMenuItems: { filter, unreadCount, allMuted in
+            return filterContextMenuItems(filter, unreadCount: unreadCount, includeAllMuted: allMuted, context: context)
+        }, getController: { [weak self] in
+            return self
         })
         
         self.takeArguments = { [weak arguments] in
@@ -1626,7 +2027,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         actionsDisposable.add(stateSignal.start(next: { [weak self] state in
+            CATransaction.begin()
             self?.updateState(state, previous: previousState.swap(state), arguments: arguments)
+            CATransaction.commit()
         }))
         
         centerBarView.set(handler: { _ in
@@ -1639,7 +2042,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }, for: .Click)
     }
     
-    private var state: PeerListState? {
+    var state: PeerListState? {
         return self.stateValue.with { $0 }
     }
     
@@ -1664,10 +2067,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self.checkSearchMedia()
             self.genericView.tableView.alwaysOpenRowsOnMouseUp = state.splitState == .single
             self.requestUpdateBackBar()
-            
+                        
             DispatchQueue.main.async {
                 self.requestUpdateBackBar()
             }
+            genericView.updateLayout(frame.size, transition: .immediate)
         }
               
         setCenterTitle(self.defaultBarTitle)
@@ -1953,6 +2357,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         if searchController == nil {
             
+            self.completeUndefiedStates(animated: true)
+
             let initialTags: SearchTags
             let target: SearchController.Target
             switch self.mode {
@@ -1964,7 +2370,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 target = .common(.root)
             }
             
-            let rect = self.genericView.tableView.frame
+            let rect = self.genericView.searchViewRect
             let frame = rect
             let searchController = SearchController(context: self.context, open: { [weak self] (id, messageId, close) in
                 if let id = id {
@@ -1997,6 +2403,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         searchController.view.layer?.animatePosition(from: NSMakePoint(rect.minX, rect.minY + 15), to: rect.origin, duration: 0.4, timingFunction: .spring)
 
                     } else {
+                        self?.completeUndefiedStates(animated: false)
                         searchController.viewDidAppear(animated)
                     }
                     self?.addSubview(searchController.view)
@@ -2032,7 +2439,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self.genericView.tableView.change(opacity: 1, animated: animated)
             let view = searchController.view
         
-            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
+            searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: .spring, completion: { [weak view] completed in
                 view?.removeFromSuperview()
             })
             if animated {
@@ -2161,6 +2568,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             break
         case .loading:
             break
+        case .space:
+            break
         }
         if close {
             self.genericView.searchView.cancel(true)
@@ -2185,6 +2594,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+    }
+    
+    func updateScrollerInset(animated: Bool) {
+        self.genericView.updateScrollerInset(animated: animated)
+    }
+    
+    
+    func afterTransaction(_ transition: TableUpdateTransition) {
+        self.updateScrollerInset(animated: transition.animated)
     }
 
     private var effectiveTableView: TableView {
@@ -2246,13 +2664,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         switch style {
         case .push:
             swipeState = nil
+            self.completeUndefiedStates(animated: style != .none)
             if controller.stake.isCustom {
                 appearMode.set(.short)
-                genericView.backgroundView.change(opacity: 1, animated: true)
+             //   genericView.backgroundView.change(opacity: 1, animated: style != .none)
             } else {
                 appearMode.set(.normal)
-                genericView.backgroundView.change(opacity: 0, animated: true)
+               // genericView.backgroundView.change(opacity: 0, animated: style != .none)
             }
+            
             if let controller = controller as? PeersListController {
                 if case let .forum(peerId, _) = controller.mode {
                     self.updateHighlight(peerId)
@@ -2285,15 +2705,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         case .forum:
             break
         default:
-            let state = self.stateSignal
-            let stateValue = self.stateValue
-           
-            let updateState:((PeerListState?)->PeerListState?) -> Void = { f in
-                state.set(stateValue.modify(f))
-            }
-            updateState { current in
+            self.updateState { current in
                 var current = current
-                current?.selectedForum = peerId
+                current.selectedForum = peerId
                 return current
             }
         }
@@ -2379,5 +2793,290 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }
     }
+    
+    private var deltaY: CGFloat = 0
+    private var initFromEvent: Bool? = nil
+    
+    private var _storyInterfaceState: StoryListChatListRowItem.InterfaceState = .concealed
+    private var storyInterfaceState: StoryListChatListRowItem.InterfaceState {
+        get {
+            if self.state?.splitState == .minimisize {
+                return .empty
+            }
+            if self.state?.appear == .short || genericView.delta != nil, self.state?.hasStories == true {
+                return .concealed
+            }
+            if self.state?.hasStories == false {
+                return .empty
+            }
+            return self._storyInterfaceState
+            
+        }
+        set {
+            _storyInterfaceState = newValue
+        }
+    }
+    
+    func getStoryInterfaceState() -> StoryListChatListRowItem.InterfaceState {
+        return self.takeArguments()?.getStoryInterfaceState() ?? .empty
+    }
+    
+    func getDeltaProgress() -> CGFloat? {
+        genericView.getDeltaProgress()
+    }
+    
+    @discardableResult private func updateOverscrollWithDelta(_ scrollingDeltaY: CGFloat) -> Bool {
+        
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
+        guard let item = optional, storyInterfaceState != .empty else {
+            return false
+        }
+        
+        deltaY -= scrollingDeltaY
+        
+        switch storyInterfaceState {
+        case let .progress(_, from, fromEvent):
+            
+            var optimized: CGFloat = deltaY
+            let autofinish: Bool
+            switch from {
+            case .concealed:
+                
+                if fromEvent {
+                    let value = StoryListChatListRowItem.InterfaceState.small
+                    let current = log(max(1, StoryListChatListRowItem.InterfaceState.small - optimized))
+                    let result = value - current
+                    optimized = result
+                    autofinish = current > 5.1
+                } else {
+                    autofinish = optimized <= (StoryListChatListRowItem.InterfaceState.small + 10) / 2
+                }
+                
+            case .revealed:
+                autofinish = optimized >= StoryListChatListRowItem.InterfaceState.small
+            }
+            
+            if autofinish  {
+                initFromEvent = nil
+                scrollPositions = [-1000, 1000]
+            }
+            let progress: CGFloat = max(0.0, min(1.0 - optimized / StoryListChatListRowItem.InterfaceState.small, 1.0))
+            if autofinish {
+                switch storyInterfaceState {
+                case let .progress(_, from, fromEvent):
+                    switch from {
+                    case .revealed:
+                        storyInterfaceState = .concealed
+                    case .concealed:
+                        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .drawCompleted)
+                        storyInterfaceState = .revealed
+                    }
+                    let transition: ContainedViewLayoutTransition
+                    if progress != 0 {
+                        transition = .animated(duration: 0.2, curve: .easeOut)
+                    } else {
+                        transition = .immediate
+                    }
+                    CATransaction.begin()
+                    self.genericView.tableView.reloadData(row: item.index, animated: true)
+                    self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+                    CATransaction.commit()
+                    return false
+                default:
+                    return false
+                }
+            } else {
+                storyInterfaceState = .progress(progress, from, fromEvent)
+                CATransaction.begin()
+                genericView.tableView.reloadData(row: item.index)
+                self.genericView.updateLayout(frame.size, transition: .immediate)
+                CATransaction.commit()
+                return true
+            }
+        default:
+            return false
+        }
+    }
+    
+    @discardableResult private func initOverscrollWithDelta(_ scrollingDeltaY: CGFloat, fromEvent: Bool) -> Bool {
+        
+        
+        switch storyInterfaceState {
+        case .revealed:
+            deltaY = 0
+            if scrollingDeltaY < 0 {
+                initFromEvent = fromEvent
+                self.storyInterfaceState = .progress(1.0, .revealed, fromEvent)
+            } else {
+                initFromEvent = nil
+                return false
+            }
+        case .concealed:
+            deltaY = StoryListChatListRowItem.InterfaceState.small
+            if scrollingDeltaY > 0 {
+                initFromEvent = fromEvent
+                self.storyInterfaceState = .progress(0.0, .concealed, fromEvent)
+            } else {
+                initFromEvent = nil
+                return false
+            }
+        case .progress:
+            initFromEvent = nil
+        case .empty:
+            fatalError("not supported")
+        }
+        return true
+    }
+    @discardableResult private func finishOverscroll() -> Bool {
+        
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
+        guard let item = optional else {
+            return false
+        }
+        initFromEvent = nil
+
+        switch storyInterfaceState {
+        case let .progress(value, _, _):
+            if value > 0.5 {
+                self.storyInterfaceState = .revealed
+            } else {
+                self.storyInterfaceState = .concealed
+            }
+            CATransaction.begin()
+            self.genericView.tableView.reloadData(row: item.index, animated: true)
+            self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+            CATransaction.commit()
+            return true
+        default:
+            break
+        }
+        return false
+    }
+    
+    private var scrollPositions: [CGFloat] = []
+    private func processScroll() {
+        
+        guard storyInterfaceState != .empty, initFromEvent == nil || initFromEvent == false else {
+            return
+        }
+        
+        if storyInterfaceState == .revealed || storyInterfaceState.toHideProgress {
+            let position = genericView.tableView.documentOffset.y
+            let last = scrollPositions.last ?? 0
+            self.scrollPositions.append(position)
+            let speed = calculateScrollSpeed(scrollPositions: scrollPositions)
+            if last != position, last >= 0 {
+                if position > last, let speed = speed, speed < 0 {
+                    let value = last - position
+                    initOverscrollWithDelta(value, fromEvent: false)
+                    updateOverscrollWithDelta(value)
+                }
+            } else if position < last {
+                self.scrollPositions = []
+            }
+        } else if storyInterfaceState == .concealed || storyInterfaceState.toRevealProgress {
+            let position = genericView.tableView.documentOffset.y
+            let last = scrollPositions.last ?? 0
+            if last != position {
+                self.scrollPositions.append(position)
+                if position <= 0 {
+                    let previous = last
+                    let speed = calculateScrollSpeed(scrollPositions: scrollPositions)
+                    let acceptSpeed = speed != nil && abs(speed!) < 2.5
+                    if acceptSpeed || storyInterfaceState.isProgress {
+                        if position == 0 {
+                            finishOverscroll()
+                        } else {
+                            let value = previous - position
+                            initOverscrollWithDelta(value, fromEvent: false)
+                            updateOverscrollWithDelta(value)
+                        }
+                    }
+                } else if position > last {
+                    self.scrollPositions = []
+                }
+            }
+        }
+    }
+        
+     func processScroll(_ event: NSEvent) -> Bool {
+         scrollPositions = []
+
+         guard genericView.tableView.documentOffset.y == 0, storyInterfaceState != .empty else {
+             return false
+         }
+        
+         switch event.phase {
+         case .began, .mayBegin:
+             if event.scrollingDeltaY != 0 {
+                 return initOverscrollWithDelta(event.scrollingDeltaY, fromEvent: true)
+             } else {
+                 return false
+             }
+         case .changed, .stationary:
+             return updateOverscrollWithDelta(event.scrollingDeltaY)
+         case .ended, .cancelled:
+             return finishOverscroll()
+         default:
+             return true
+         }
+    }
+    
+    func toggleStoriesState() {
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
+        guard let item = optional, storyInterfaceState != .empty else {
+            return
+        }
+        if self.storyInterfaceState == .revealed {
+            self.storyInterfaceState = .concealed
+        } else {
+            self.storyInterfaceState = .revealed
+        }
+        CATransaction.begin()
+        self.genericView.tableView.scroll(to: .up(false), ignoreLayerAnimation: true)
+        self.genericView.tableView.reloadData(row: item.index, animated: true)
+        self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+        CATransaction.commit()
+    }
+    
+    @discardableResult func revealStoriesState() -> Bool {
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
+        guard let item = optional, storyInterfaceState != .empty else {
+            return false
+        }
+        if self.storyInterfaceState != .revealed {
+            self.storyInterfaceState = .revealed
+            CATransaction.begin()
+            self.genericView.tableView.scroll(to: .up(false), ignoreLayerAnimation: true)
+            self.genericView.tableView.reloadData(row: item.index, animated: true)
+            self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+            CATransaction.commit()
+            return true
+        }
+        return false
+    }
+    
+    func completeUndefiedStates(animated: Bool) {
+        let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
+        guard let item = optional, storyInterfaceState != .empty else {
+            return
+        }
+        if self.storyInterfaceState == .revealed {
+            self.storyInterfaceState = .concealed
+            
+            let transition: ContainedViewLayoutTransition
+            if animated {
+                transition = .animated(duration: 0.2, curve: .easeOut)
+            } else {
+                transition = .immediate
+            }
+            CATransaction.begin()
+            self.genericView.tableView.scroll(to: .up(false), ignoreLayerAnimation: true)
+            self.genericView.tableView.reloadData(row: item.index, animated: true)
+            self.genericView.updateLayout(frame.size, transition: .animated(duration: 0.2, curve: .easeOut))
+            CATransaction.commit()
+        }
+    }
+
         
 }

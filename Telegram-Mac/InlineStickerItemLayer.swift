@@ -472,12 +472,19 @@ final class InlineStickerItemLayer : SimpleLayer {
             if let value = playerState {
                 self.triggerNextState?(value)
                 self.triggerNextState = nil
+                
+                if let triggerOnState = triggerOnState, value == triggerOnState.0 {
+                    triggerOnState.1(value)
+                    self.triggerOnState = nil
+                }
             }
         }
     }
     private let playPolicy: LottiePlayPolicy
     
     var triggerNextState: ((LottiePlayerState)->Void)? = nil
+    var triggerOnState: (LottiePlayerState, (LottiePlayerState)->Void)? = nil
+
     
     private var unique: Int = 0
     var stopped: Bool = false
@@ -590,7 +597,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             dimensionSize = file.dimensions?.size ?? size
             let reference: FileMediaReference
             let mediaResource: MediaResourceReference
-             if let stickerReference = file.stickerReference {
+            if let stickerReference = file.stickerReference ?? file.emojiReference {
                 if file.resource is CloudStickerPackThumbnailMediaResource {
                     reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
                     mediaResource = MediaResourceReference.stickerPackThumbnail(stickerPack: stickerReference, resource: file.resource)

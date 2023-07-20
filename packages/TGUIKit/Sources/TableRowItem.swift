@@ -46,6 +46,12 @@ open class TableRowItem: NSObject {
     
     open private(set) var height:CGFloat = 60;
     
+    open var backdorColor: NSColor {
+        return presentation.colors.background
+    }
+    open var borderColor: NSColor {
+        return presentation.colors.border
+    }
     
     public var size:NSSize  {
         return NSMakeSize(width, height)

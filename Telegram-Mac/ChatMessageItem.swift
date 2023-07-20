@@ -215,7 +215,7 @@ class ChatMessageItem: ChatRowItem {
         }
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let content = webpage.content
-            let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
+            let link = inApp(for: webpage.content.url.nsstring, context: context, messageId: message?.id, openInfo: chatInteraction.openInfo)
             switch link {
             case let .followResolvedName(_, _, postId, _, action, _):
                 if let action = action {
@@ -252,6 +252,8 @@ class ChatMessageItem: ChatRowItem {
                 }
             case .folder:
                 return strings().chatMessageViewChatList
+            case .story:
+                return strings().chatMessageOpenStory
             default:
                 break
             }
@@ -288,10 +290,13 @@ class ChatMessageItem: ChatRowItem {
                 link = inAppLink.peerInfo(link: "", peerId: id, action: action, openChat: peer.isChannel || peer.isBot, postId: messageId?.id, callback: chatInteraction.openInfo)
             case let .join(_, joinHash):
                 link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
+            case let .webPage(title, url: url):
+                fatalError("must be supported")
             }
+            chatInteraction.markAdAction(adAttribute.opaqueId)
             execute(inapp: link)
         } else if let webpage = webpageLayout {
-            let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
+            let link = inApp(for: webpage.content.url.nsstring, context: context, messageId: message?.id, openInfo: chatInteraction.openInfo)
             execute(inapp: link)
         } else if unsupported {
             #if APP_STORE
@@ -537,7 +542,7 @@ class ChatMessageItem: ChatRowItem {
             
             var media = message.anyMedia
             if let game = media as? TelegramMediaGame {
-                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, attributes: [], instantPage: nil)))
+                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
             }
             
             self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType)
@@ -546,6 +551,7 @@ class ChatMessageItem: ChatRowItem {
             if let webpage = media as? TelegramMediaWebpage {
                 switch webpage.content {
                 case let .Loaded(content):
+                    var content = content
                     var forceArticle: Bool = false
                     if let instantPage = content.instantPage {
                         if instantPage.blocks.count == 3 {
@@ -560,9 +566,23 @@ class ChatMessageItem: ChatRowItem {
                     if content.type == "telegram_background" {
                         forceArticle = true
                     }
-                    if content.file == nil || forceArticle {
+                    
+                    if let story = content.story, let media = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
+                        switch media {
+                        case let .item(story):
+                            if let image = story.media as? TelegramMediaImage {
+                                content = content.withUpdatedImage(image)
+                            } else if let file = story.media as? TelegramMediaFile {
+                                content = content.withUpdatedFile(file)
+                            }
+                        default:
+                            break
+                        }
+                    }
+                    
+                    if content.file == nil || forceArticle, content.story == nil {
                         webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
-                    } else {
+                    } else if content.file != nil || content.image != nil {
                         webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
                     }
                 default:
@@ -574,11 +594,15 @@ class ChatMessageItem: ChatRowItem {
             
             
             (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in
-                if let webpage = message.anyMedia as? TelegramMediaWebpage {
+                if let webpage = message.media.first as? TelegramMediaWebpage {
                     switch webpage.content {
                     case let .Loaded(content):
                         if content.embedType == "iframe" && content.type != kBotInlineTypeGif, let url = content.embedUrl {
                             showModal(with: WebpageModalController(context: context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size, chatInteraction: self?.chatInteraction), for: context.window)
+                            return
+                        }
+                        if let story = content.story {
+                            self?.chatInteraction.openStory(message.id, story.storyId)
                             return
                         }
                     default:
@@ -636,7 +660,13 @@ class ChatMessageItem: ChatRowItem {
                 }
             }
             
-            let interactions = globalLinkExecutor
+            let interactions: TextViewInteractions = globalLinkExecutor
+            if let adAttribute = message.adAttribute {
+                interactions.processURL = { [weak chatInteraction] link in
+                    chatInteraction?.markAdAction(adAttribute.opaqueId)
+                    globalLinkExecutor.processURL(link)
+                }
+            } 
             interactions.copy = {
                 selectManager.copy(selectManager)
                 return !selectManager.isEmpty
@@ -797,7 +827,7 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }) -> NSAttributedString {
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }, underlineLinks: Bool = false) -> NSAttributedString {
         var entities: [MessageTextEntity] = []
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {
@@ -831,20 +861,29 @@ class ChatMessageItem: ChatRowItem {
                 if nsString == nil {
                     nsString = text as NSString
                 }
-                let link = inApp(for:nsString!.substring(with: range) as NSString, context:context, openInfo:openInfo, applyProxy: applyProxy)
+                let link = inApp(for:nsString!.substring(with: range) as NSString, context:context, messageId: message?.id, openInfo:openInfo, applyProxy: applyProxy)
                 string.addAttribute(NSAttributedString.Key.link, value: link, range: range)
+                if underlineLinks {
+                    string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+                }
             case .Email:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 if nsString == nil {
                     nsString = text as NSString
                 }
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.external(link: "mailto:\(nsString!.substring(with: range))", false), range: range)
+                if underlineLinks {
+                    string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+                }
             case let .TextUrl(url):
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 if nsString == nil {
                     nsString = text as NSString
                 }
-                string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: nsString?.substring(with: range).trimmed != url), range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, messageId: message?.id, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: nsString?.substring(with: range).trimmed != url), range: range)
+                if underlineLinks {
+                    string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+                }
             case .Bold:
                 fontAttributes.append((range, .bold))
             case .Italic:
@@ -856,9 +895,15 @@ class ChatMessageItem: ChatRowItem {
                     nsString = text as NSString
                 }
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(link: nsString!.substring(with: range), username: nsString!.substring(with: range), postId:nil, context:context, action:nil, callback: openInfo), range: range)
+                if underlineLinks {
+                    string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+                }
             case let .TextMention(peerId):
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: false, postId: nil, callback: openInfo), range: range)
+                if underlineLinks {
+                    string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+                }
             case .BotCommand:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: textColor, range: range)
                 if nsString == nil {
@@ -886,6 +931,9 @@ class ChatMessageItem: ChatRowItem {
                     nsString = text as NSString
                 }
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.hashtag(nsString!.substring(with: range), hashtag), range: range)
+                if underlineLinks {
+                    string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+                }
             case .Strikethrough:
                 string.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
             case .Underline:

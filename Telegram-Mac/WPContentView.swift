@@ -174,5 +174,8 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
         return self.containerView
     }
     
+    var mediaContentView: NSView? {
+        return containerView
+    }
 
 }
