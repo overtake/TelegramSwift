@@ -3018,11 +3018,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
          case .ended, .cancelled:
              return finishOverscroll()
          default:
-             if event.phase.rawValue == 0 {
-                 return true
-             } else {
-                 return false
-             }
+             return false
          }
     }
     

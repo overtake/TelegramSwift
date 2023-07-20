@@ -561,8 +561,8 @@ private final class StoryListContainer : Control {
                 let alpha = getAlpha(item, index: i, progress: progress)
                 
                
-                view.isHidden = !visibleRange.contains(i) //&& progress == 0
-                component.isHidden = !visibleRange.contains(i)// && progress == 0
+                view.isHidden = !visibleRange.contains(i) && progress < 1.0
+                component.isHidden = !visibleRange.contains(i) && progress < 1.0
 
                 if !component.isHidden {
                     transition.updateFrame(view: component, frame: frame)
