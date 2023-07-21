@@ -542,9 +542,6 @@ class StoryVideoView : StoryImageView {
             }
         }))
         
-        delay(2.0, closure: {
-            self.updateState(.loading(self.state.status!))
-        })
     }
     
     override var magnify: MagnifyView? {
