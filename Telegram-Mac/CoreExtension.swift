@@ -745,8 +745,10 @@ public extension Message {
     }
     
     func isIncoming(_ account: Account, _ isBubbled: Bool) -> Bool {
-        if isBubbled, let peer = coreMessageMainPeer(self), peer.isChannel {
-            return true
+        if isBubbled, let peer = coreMessageMainPeer(self) {
+            if peer.isSupergroup, self.author?.id == account.peerId {
+                return false
+            }
         }
         
         return effectivelyIncoming(account.peerId)

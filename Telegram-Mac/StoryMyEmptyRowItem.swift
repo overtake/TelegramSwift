@@ -16,12 +16,21 @@ final class StoryMyEmptyRowItem : GeneralRowItem {
     fileprivate let stickerSize: NSSize = NSMakeSize(120, 120)
     fileprivate let context: AccountContext
     fileprivate let showArchive: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, showArchive: @escaping()->Void) {
+    fileprivate let isArchive: Bool
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, viewType: GeneralViewType, isArchive: Bool, showArchive: @escaping()->Void) {
         self.showArchive = showArchive
+        self.isArchive = isArchive
         let string = NSMutableAttributedString()
-        _ = string.append(string: strings().storyMediaEmptyTitle, color: theme.colors.text, font: .medium(.header))
-        _ = string.append(string: "\n", color: theme.colors.text, font: .medium(.small))
-        _ = string.append(string: strings().storyMediaEmptyText, color: theme.colors.grayText, font: .normal(.text))
+        
+        if isArchive {
+            _ = string.append(string: strings().storyMediaArchiveEmptyTitle, color: theme.colors.text, font: .medium(.header))
+            _ = string.append(string: "\n", color: theme.colors.text, font: .medium(.small))
+            _ = string.append(string: strings().storyMediaArchiveEmptyText, color: theme.colors.grayText, font: .normal(.text))
+        } else {
+            _ = string.append(string: strings().storyMediaEmptyTitle, color: theme.colors.text, font: .medium(.header))
+            _ = string.append(string: "\n", color: theme.colors.text, font: .medium(.small))
+            _ = string.append(string: strings().storyMediaEmptyText, color: theme.colors.grayText, font: .normal(.text))
+        }
 
         self.titleLayout = TextViewLayout(string, alignment: .center)
         self.context = context
@@ -42,7 +51,12 @@ final class StoryMyEmptyRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return self.viewType.innerInset.top + stickerSize.height + self.viewType.innerInset.top + titleLayout.layoutSize.height + self.viewType.innerInset.top + 20 + self.viewType.innerInset.bottom + 20 + 10
+        var height = self.viewType.innerInset.top + stickerSize.height + self.viewType.innerInset.top + titleLayout.layoutSize.height + self.viewType.innerInset.top + 20 + self.viewType.innerInset.bottom + 20 + 10
+        
+        if isArchive {
+            height -= (30 + 10)
+        }
+        return height
     }
     
     override func viewClass() -> AnyClass {
@@ -94,6 +108,8 @@ private final class StoryMyEmptyRowView: GeneralContainableRowView {
         archive.layer?.cornerRadius = 10
         archive.set(text: strings().storyMediaEmptyOpen, for: .Normal)
         archive.sizeToFit(NSMakeSize(10, 10), NSMakeSize(200, 30), thatFit: false)
+        
+        archive.isHidden = item.isArchive
         
         imageView.update(with: item.sticker.file, size: item.stickerSize, context: item.context, parent: nil, table: item.table, parameters: params, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
         

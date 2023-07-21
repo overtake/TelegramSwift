@@ -39,7 +39,7 @@ func linearArray(from minValue: CGFloat, to maxValue: CGFloat, count: Int) -> [C
 private struct StoryChatListEntry : Equatable, Comparable, Identifiable {
     let item: EngineStorySubscriptions.Item
     let index: Int
-    let appearance: Appearance
+    let appearance: TelegramPresentationTheme
     static func <(lhs: StoryChatListEntry, rhs: StoryChatListEntry) -> Bool {
         return lhs.index < rhs.index
     }
@@ -229,6 +229,8 @@ private final class StoryListContainer : Control {
         scrollView.documentView = documentView
         addSubview(scrollView)
         
+        
+        
         documentView.layer?.masksToBounds = false
         componentsView.layer?.masksToBounds = false
         self.layer?.masksToBounds = false
@@ -253,6 +255,7 @@ private final class StoryListContainer : Control {
     
     private var scrollOffset: NSPoint = .zero
     
+    private var previousVisibleRange: NSRange? = nil
     private func updateScroll() {
         let previous = self.scrollOffset
         let current = scrollView.documentOffset
@@ -261,6 +264,19 @@ private final class StoryListContainer : Control {
         if previous.x < current.x, (current.x - frame.width) - documentSize.width < frame.width {
             self.loadMore?(.bottom)
         }
+        
+        let visibleRange = self.visibleRange
+        if previousVisibleRange != visibleRange, previousVisibleRange != nil, progress == 1 {
+            drawVisibleViews()
+            self.previousVisibleRange = visibleRange
+        } else {
+            self.previousVisibleRange = visibleRange
+        }
+    }
+    
+    func drawVisibleViews() {
+
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     deinit {
@@ -322,6 +338,8 @@ private final class StoryListContainer : Control {
     
     
     func set(transition: TableUpdateTransition, item: StoryListChatListRowItem, context: AccountContext, progress: CGFloat, animated: Bool) {
+        
+        let previousProgress = self.progress
         
         self.progress = progress
         self.item = item
@@ -394,6 +412,7 @@ private final class StoryListContainer : Control {
                     componentsView.addSubview(component, positioned: .above, relativeTo: components[inserted.0 - 1])
                 }
                 
+                
                 if animated, isNew {
                     view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     view.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
@@ -433,7 +452,10 @@ private final class StoryListContainer : Control {
                 scrollView.clipView.scroll(to: .zero, animated: false)
             }
         }
-        self.updateLayout(size: frame.size, transition: transition)
+        if previousProgress != progress {
+            self.updateLayout(size: frame.size, transition: transition)
+        }
+        
         
         for (i, view) in views.enumerated() {
             view.component = components[i]
@@ -468,7 +490,34 @@ private final class StoryListContainer : Control {
     }
     
     var visibleRange: NSRange {
-        let range = NSMakeRange(0, Int(ceil(max(0, floor(scrollView.documentOffset.x)) + frame.width / 60)))
+        
+        let visibleRect = scrollView.documentVisibleRect
+        
+        var range: NSRange = NSMakeRange(NSNotFound, 0)
+        for (i, view) in views.enumerated() {
+            if let item = view.item {
+                let frame = getFrame(item, index: i, progress: 1)
+                if range.location == NSNotFound {
+                    if visibleRect.intersects(frame) {
+                        range.location = i
+                        range.length += 1
+                    }
+                } else {
+                    if visibleRect.intersects(frame) {
+                        range.length += 1
+                    } else {
+                        break
+                    }
+                }
+            }
+           
+        }
+
+        if range.location == NSNotFound {
+            range.location = 0
+            range.length = views.count
+        }
+        
         return range
     }
     
@@ -552,6 +601,7 @@ private final class StoryListContainer : Control {
 
         transition.updateFrame(view: scrollView, frame: size.bounds)
         
+        let visibleRange = self.visibleRange
         for (i, view) in views.enumerated() {
             if let item = view.item {
                 let component = components[i]
@@ -561,18 +611,18 @@ private final class StoryListContainer : Control {
                 let alpha = getAlpha(item, index: i, progress: progress)
                 
                
-                view.isHidden = !visibleRange.contains(i) && progress < 1.0
-                component.isHidden = !visibleRange.contains(i) && progress < 1.0
+                view.isHidden = !visibleRange.contains(i)
+                component.isHidden = !visibleRange.contains(i)
 
-                if !component.isHidden {
-                    transition.updateFrame(view: component, frame: frame)
-                    transition.updateAlpha(view: component, alpha: alpha)
-                    component.set(progress: progress, transition: transition)
-                }
                 if !view.isHidden {
                     transition.updateFrame(view: view, frame: frame)
                     transition.updateAlpha(view: view, alpha: alpha)
                     view.set(progress: progress, transition: transition)
+                }
+                if !component.isHidden  {
+                    transition.updateFrame(view: component, frame: frame)
+                    transition.updateAlpha(view: component, alpha: alpha)
+                    component.set(progress: progress, transition: transition)
                 }
             }
         }
@@ -619,6 +669,7 @@ final class StoryListChatListRowView: TableRowView {
     private var interfaceState: StoryListChatListRowItem.InterfaceState?
     override func set(item: TableRowItem, animated: Bool = false) {
         
+        let previousItem = self.item as? StoryListChatListRowItem
         super.set(item: item, animated: animated)
         
         guard let item = item as? StoryListChatListRowItem else {
@@ -628,13 +679,13 @@ final class StoryListChatListRowView: TableRowView {
         var entries:[StoryChatListEntry] = []
         var index: Int = 0
         if !item.isArchive, let item = item.state.accountItem, item.storyCount > 0 {
-            entries.append(.init(item: item, index: index, appearance: appAppearance))
+            entries.append(.init(item: item, index: index, appearance: theme))
             index += 1
         }
         
         for item in item.state.items {
             if item.storyCount > 0 {
-                entries.append(.init(item: item, index: index, appearance: appAppearance))
+                entries.append(.init(item: item, index: index, appearance: theme))
                 index += 1
             }
         }
@@ -907,6 +958,8 @@ private final class ItemView : Control {
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
+        self.handleScrollEventOnInteractionEnabled = false
+        
         self.layer?.masksToBounds = false
         
         self.scaleOnClick = true
@@ -928,6 +981,7 @@ private final class ItemView : Control {
                 self?.open?(item)
             }
         }, for: .Click)
+        
         
     }
     
@@ -965,7 +1019,7 @@ private final class ItemView : Control {
             name = item.entry.item.peer._asPeer().compactDisplayTitle
         }
         
-        let layout = TextViewLayout.init(.initialize(string: name, color: item.entry.hasUnseen || item.entry.id == item.context.peerId ? theme.colors.text : theme.colors.grayText, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .end)
+        let layout = TextViewLayout(.initialize(string: name, color: item.entry.hasUnseen || item.entry.id == item.context.peerId ? theme.colors.text : theme.colors.grayText, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .end)
         layout.measure(width: item.itemWidth + 5)
         textView.update(layout)
         
@@ -985,6 +1039,10 @@ private final class ItemView : Control {
     
     func set(progress: CGFloat, transition: ContainedViewLayoutTransition) {
         self.progress = progress
+        
+        imageView.isHidden = progress == 0
+        smallImageView.isHidden = progress != 0
+
         self.updateLayout(size: self.frame.size, transition: transition)
     }
     
