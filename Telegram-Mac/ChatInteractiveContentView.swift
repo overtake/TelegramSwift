@@ -527,11 +527,17 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
     }
     
+    var isStory: Bool {
+        return parent?.media.first is TelegramMediaStory
+    }
+    
     var autoplayVideo: Bool {
         if let autoremoveAttribute = parent?.autoremoveAttribute, autoremoveAttribute.timeout <= 60 {
            return false
         }
-
+        if parent?.media.first is TelegramMediaStory {
+            return false
+        }
         if let media = media as? TelegramMediaFile, let parameters = self.parameters {
             let autoplay = (media.isStreamable || authenticFetchStatus == .Local) && (autoDownload || authenticFetchStatus == .Local) && parameters.autoplay && (parent?.groupingKey == nil || self.frame.width == superview?.frame.width)
             return autoplay
@@ -936,6 +942,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                             
                             var removeProgress: Bool = strongSelf.autoplayVideo && !isSpoiler && strongSelf.lite == false
                             if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
+                                removeProgress = true
+                            }
+                            if strongSelf.isStory {
                                 removeProgress = true
                             }
                             

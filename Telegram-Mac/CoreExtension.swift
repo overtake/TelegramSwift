@@ -2729,17 +2729,17 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
         let wallpapers = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path
         try? FileManager.default.createDirectory(at: URL(fileURLWithPath: wallpapers), withIntermediateDirectories: true, attributes: nil)
         
-        let out = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark_0" + ".png"
+        let out = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark__0" + ".png"
         
         if !FileManager.default.fileExists(atPath: out) {
             try? FileManager.default.removeItem(atPath: out)
             try? FileManager.default.copyItem(atPath: path, toPath: out)
         }
         
-        let outDark = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark_1" + ".png"
+        let outDark = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark__1" + ".png"
         let darkUrl = URL(fileURLWithPath: outDark)
         
-        if !FileManager.default.fileExists(atPath: outDark), let image = NSImage(contentsOf: darkUrl) {
+        if !FileManager.default.fileExists(atPath: outDark), let image = NSImage(contentsOf: URL(fileURLWithPath: out)) {
             
             let intense = CGFloat(abs(settings.intensity ?? 0)) / 100
             var cgImage = image._cgImage
@@ -2763,8 +2763,6 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
                     ctx.fill(size.bounds)
                 })
             }
-            
-            
             if let image = cgImage, let colorDestination = CGImageDestinationCreateWithURL(darkUrl as CFURL, kUTTypePNG, 1, nil) {
                 CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
                 
@@ -2807,7 +2805,7 @@ extension WallpaperSettings {
 }
 
 func wallpaperPath(_ resource: TelegramMediaResource, palette: ColorPalette = theme.colors, settings: WallpaperSettings) -> String {
-    let path = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark_\(palette.isDark ? 1 : 0)" + ".png"
+    let path = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + "_isDark__\(palette.isDark ? 1 : 0)" + ".png"
     return path
 }
 

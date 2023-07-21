@@ -2947,11 +2947,24 @@ final class StoryModalController : ModalViewController, Notifable {
     }
     static func ShowSingleStory(context: AccountContext, storyId: StoryId, initialId: StoryInitialIndex?, readGlobally: Bool = true, emptyCallback:(()->Void)? = nil) {
         
-        var initialSignal = context.engine.messages.refreshStories(peerId: storyId.peerId, ids: [storyId.id])
-        |> map { _ -> StoryId? in
+        var initialSignal: Signal<StoryId?, NoError> = context.account.postbox.transaction { transaction -> StoryId? in
+            if let _ = transaction.getStory(id: storyId)?.get(Stories.StoredItem.self) {
+                return storyId
+            } else {
+                return nil
+            }
+        } |> mapToSignal { id in
+            if let _ = id {
+                return .single(Optional(storyId))
+            } else {
+                return context.engine.messages.refreshStories(peerId: storyId.peerId, ids: [storyId.id])
+                |> map { _ -> StoryId? in
+                }
+                |> then(.single(storyId))
+            }
         }
-        |> then(.single(storyId))
         
+                
         initialSignal = initialSignal |> mapToSignal { storyId in
             if let storyId = storyId {
                 return context.account.postbox.transaction { transaction -> StoryId? in
