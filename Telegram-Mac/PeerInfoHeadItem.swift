@@ -1308,7 +1308,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
-        return photoView
+        return photoView.avatar
     }
     
     override func copy() -> Any {

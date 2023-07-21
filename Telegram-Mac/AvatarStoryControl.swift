@@ -18,7 +18,7 @@ final class AvatarStoryControl : Control {
 
 
     
-    fileprivate let avatar: AvatarControl
+    let avatar: AvatarControl
     fileprivate var indicator: AvatarStoryIndicatorComponent.IndicatorView?
 
     var contentUpdated: ((Any?)->Void)? {
