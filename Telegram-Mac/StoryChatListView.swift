@@ -533,10 +533,12 @@ private final class StoryListContainer : Control {
     }
     
     var documentSize: NSSize {
-        if let last = views.last {
-            return NSMakeSize(max(last.frame.maxX + 10, frame.width), frame.height)
+        if views.count > 0, let view = views.last, let item = view.item {
+            let index = views.count - 1
+            return NSMakeSize(max(frame.width, getFrame(item, index: index, progress: 1.0).maxX + 10), frame.height)
+        } else {
+            return frame.size
         }
-        return frame.size
     }
     
     
@@ -971,7 +973,7 @@ private final class ItemView : Control {
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
-        self.handleScrollEventOnInteractionEnabled = false
+//        self.handleScrollEventOnInteractionEnabled = false
         
         self.layer?.masksToBounds = false
         
