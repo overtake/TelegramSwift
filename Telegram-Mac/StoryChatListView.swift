@@ -723,7 +723,7 @@ final class StoryListChatListRowView: TableRowView {
 
         self.current = entries
         
-        if interfaceView.unitDocumentSize.width < interfaceView.frame.width * 4 {
+        if interfaceView.unitDocumentSize.width < interfaceView.frame.width * 10 {
             if let _ = item.state.hasMoreToken {
                 item.context.account.filteredStorySubscriptionsContext?.loadMore()
             }
