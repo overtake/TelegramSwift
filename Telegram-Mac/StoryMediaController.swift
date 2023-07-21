@@ -50,7 +50,7 @@ private enum Entry : TableItemListNodeEntry {
                 return items
             })
         case let .emptySelf(index, viewType):
-            return StoryMyEmptyRowItem(initialSize, stableId: index, context: arguments.context, viewType: viewType, showArchive: arguments.showArchive)
+            return StoryMyEmptyRowItem(initialSize, stableId: index, context: arguments.context, viewType: viewType, isArchive: arguments.isArchive, showArchive: arguments.showArchive)
         case .date:
             return PeerMediaDateItem(initialSize, index: index, stableId: stableId, inset: !arguments.standalone ? .init() : NSEdgeInsets(left: 30, right: 30))
         case .section:
@@ -408,14 +408,14 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             
             let menu = ContextMenu()
             if !isArchived {
-                menu.addItem(ContextMenuItem("Archive", handler: {
+                menu.addItem(ContextMenuItem(strings().storyMediaContextArchive, handler: {
                     self?.openArchive()
                 }, itemImage: MenuAnimation.menu_archive.value))
             }
             let selecting = self?.stateValue.with { $0.selected != nil } == true
             let hasItems = self?.stateValue.with { $0.state?.items.count } != 0
             if hasItems {
-                menu.addItem(ContextMenuItem(selecting ? "Done" : "Select", handler: {
+                menu.addItem(ContextMenuItem(selecting ? strings().storyMediaDone : strings().storyMediaSelect, handler: {
                     self?.toggleSelection()
                 }, itemImage: MenuAnimation.menu_select_multiple.value))
             }
@@ -442,7 +442,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             return current
         }
         
-        button?.set(text: stateValue.with { $0.selected != nil } ? "Done" : "Select", for: .Normal)
+        button?.set(text: stateValue.with { $0.selected != nil } ? strings().storyMediaDone : strings().storyMediaSelect, for: .Normal)
     }
     
     private func openArchive() {
@@ -512,7 +512,7 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
         })
 
                 
-        self.setCenterTitle(isArchived ? "Archive" : peerId == context.peerId ? "My Stories" : "")
+        self.setCenterTitle(isArchived ? strings().storyMediaTitleArchive : peerId == context.peerId ? strings().storyMediaTitleMyStories : "")
         
         let arguments = Arguments(context: context, standalone: standalone, isArchive: isArchived, isMy: peerId == context.peerId, openStory: { [weak self] initialId in
             if let list = self?.listContext {

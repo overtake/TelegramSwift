@@ -1594,6 +1594,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         genericView.isContacts = isContacts
         
+        genericView.tableView._scrollDidEndLiveScrolling = { [weak self] in
+            _ = self?.finishOverscroll()
+        }
+        
         revealListener = .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
             self?.processScroll()
         })
@@ -2847,7 +2851,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     let current = log(max(1, StoryListChatListRowItem.InterfaceState.small - optimized))
                     let result = value - current
                     optimized = result
-                    autofinish = current > 5.1
+                    autofinish = current > 5.0
                 } else {
                     autofinish = optimized <= (StoryListChatListRowItem.InterfaceState.small + 10) / 2
                 }
@@ -3018,7 +3022,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
          case .ended, .cancelled:
              return finishOverscroll()
          default:
-             return false
+             return finishOverscroll()
          }
     }
     

@@ -12131,12 +12131,26 @@ public final class L10n {
   public static var storyListContextViewProfile: String  { return L10n.tr("Localizable", "StoryList.Context.ViewProfile") }
   /// Only you can see archived stories unless you choose to save them to your profile
   public static var storyMediaArchiveText: String  { return L10n.tr("Localizable", "StoryMedia.ArchiveText") }
+  /// Done
+  public static var storyMediaDone: String  { return L10n.tr("Localizable", "StoryMedia.Done") }
+  /// Select
+  public static var storyMediaSelect: String  { return L10n.tr("Localizable", "StoryMedia.Select") }
+  /// Upload a new story to view it here
+  public static var storyMediaArchiveEmptyText: String  { return L10n.tr("Localizable", "StoryMedia.Archive.Empty.Text") }
+  /// No Archived Stories
+  public static var storyMediaArchiveEmptyTitle: String  { return L10n.tr("Localizable", "StoryMedia.Archive.Empty.Title") }
+  /// Archive
+  public static var storyMediaContextArchive: String  { return L10n.tr("Localizable", "StoryMedia.Context.Archive") }
   /// Open Archive
   public static var storyMediaEmptyOpen: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Open") }
   /// Open the Archive so select stories you want to be displayed in your profile.
   public static var storyMediaEmptyText: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Text") }
   /// No Saved Stories
   public static var storyMediaEmptyTitle: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Title") }
+  /// Archive
+  public static var storyMediaTitleArchive: String  { return L10n.tr("Localizable", "StoryMedia.Title.Archive") }
+  /// My Stories
+  public static var storyMediaTitleMyStories: String  { return L10n.tr("Localizable", "StoryMedia.Title.MyStories") }
   /// %d
   public static func storyViewsTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_countable", p1)

@@ -2371,7 +2371,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     copyLink(story)
                 }, itemImage: MenuAnimation.menu_copy_link.value))
             }
-            if story.sharable {
+            if story.sharable && !story.storyItem.isForwardingDisabled {
                 menu.addItem(ContextMenuItem(strings().storyControlsMenuShare, handler: {
                     share(story)
                 }, itemImage: MenuAnimation.menu_share.value))

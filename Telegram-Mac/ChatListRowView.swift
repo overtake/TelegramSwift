@@ -2717,7 +2717,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
        
         guard let item = item as? ChatListRowItem else { return }
                 
-        photoVideoView?.frame = photo.frame
 
         animatedView?.frame = bounds
         
