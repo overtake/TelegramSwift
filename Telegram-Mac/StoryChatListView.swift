@@ -456,17 +456,11 @@ private final class StoryListContainer : Control {
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
 
         if progress != 1.0 {
-            if animated, scrollView.documentOffset != .zero {
-                let to = CGRect.init(origin: .zero, size: scrollView.clipView.bounds.size)
-                scrollView.clipView.layer?.animateBounds(from: scrollView.clipView.bounds, to: to, duration: 0.2, timingFunction: .easeOut)
-            } else if scrollView.documentOffset != .zero {
-                scrollView.clipView.scroll(to: .zero, animated: false)
-            }
+            scrollView.clipView.scroll(to: .zero, animated: false)
+
         }
-        if previousProgress != progress {
-            self.updateLayout(size: frame.size, transition: transition)
-        }
-        
+        self.updateLayout(size: frame.size, transition: transition)
+
         
         for (i, view) in views.enumerated() {
             view.component = components[i]
