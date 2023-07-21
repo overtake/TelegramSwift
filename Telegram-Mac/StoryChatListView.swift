@@ -37,15 +37,26 @@ func linearArray(from minValue: CGFloat, to maxValue: CGFloat, count: Int) -> [C
 
 
 private struct StoryChatListEntry : Equatable, Comparable, Identifiable {
+    
+    struct Name : Equatable {
+        let text: String
+        let color: NSColor
+    }
+    
     let item: EngineStorySubscriptions.Item
+    let name: Name
     let index: Int
     let appearance: TelegramPresentationTheme
+    
     static func <(lhs: StoryChatListEntry, rhs: StoryChatListEntry) -> Bool {
         return lhs.index < rhs.index
     }
     
     static func ==(lhs: StoryChatListEntry, rhs: StoryChatListEntry) -> Bool {
         if lhs.item != rhs.item {
+            return false
+        }
+        if lhs.name != rhs.name {
             return false
         }
         return lhs.appearance == rhs.appearance
@@ -679,13 +690,15 @@ final class StoryListChatListRowView: TableRowView {
         var entries:[StoryChatListEntry] = []
         var index: Int = 0
         if !item.isArchive, let item = item.state.accountItem, item.storyCount > 0 {
-            entries.append(.init(item: item, index: index, appearance: theme))
+            let name: StoryChatListEntry.Name = .init(text: strings().storyListMyStory, color: theme.colors.text)
+            entries.append(.init(item: item, name: name, index: index, appearance: theme))
             index += 1
         }
         
         for item in item.state.items {
             if item.storyCount > 0 {
-                entries.append(.init(item: item, index: index, appearance: theme))
+                let name: StoryChatListEntry.Name = .init(text: item.peer._asPeer().compactDisplayTitle, color: item.hasUnseen ? theme.colors.text : theme.colors.grayText)
+                entries.append(.init(item: item, name: name, index: index, appearance: theme))
                 index += 1
             }
         }
@@ -997,6 +1010,8 @@ private final class ItemView : Control {
     
     func set(item: TableRowItem, open: @escaping(StoryListEntryRowItem)->Void, progress: CGFloat, animated: Bool) {
         
+        let previous = self.item?.entry
+        
         guard let item = item as? StoryListEntryRowItem else {
             return
         }
@@ -1012,16 +1027,11 @@ private final class ItemView : Control {
         smallImageView.isHidden = progress != 0
         
         
-        let name: String
-        if item.entry.id == item.context.peerId {
-            name = strings().storyListMyStory
-        } else {
-            name = item.entry.item.peer._asPeer().compactDisplayTitle
+        if previous?.name != item.entry.name {
+            let layout = TextViewLayout(.initialize(string: item.entry.name.text, color: item.entry.name.color, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .end)
+            layout.measure(width: item.itemWidth + 5)
+            textView.update(layout)
         }
-        
-        let layout = TextViewLayout(.initialize(string: name, color: item.entry.hasUnseen || item.entry.id == item.context.peerId ? theme.colors.text : theme.colors.grayText, font: .normal(10)), maximumNumberOfLines: 1, truncationType: .end)
-        layout.measure(width: item.itemWidth + 5)
-        textView.update(layout)
         
         self.backgroundView.backgroundColor = theme.colors.background
         
