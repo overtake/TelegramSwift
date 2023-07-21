@@ -295,7 +295,7 @@ class ShortPeerRowItem: GeneralRowItem {
             })
             return view
         }, setProgress: { [weak self] value in
-            
+            self?.setOpenProgress(value)
         }))
     }
     
