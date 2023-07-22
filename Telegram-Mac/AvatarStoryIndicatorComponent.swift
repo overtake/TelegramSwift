@@ -311,7 +311,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
                 context.setLineCap(.round)
                 let spacing: CGFloat = 3.0 * progress
 
-                if let counters = component.counters, counters.totalCount > 1, spacing >= 2 {
+                if let counters = component.counters, counters.totalCount > 1, spacing >= 2, counters.totalCount < 20 {
                                         
                     let center = CGPoint(x: size.width * 0.5, y: size.height * 0.5)
                     let radius = (diameter - lineWidth) * 0.5
