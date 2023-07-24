@@ -10,16 +10,88 @@ import Foundation
 import TGUIKit
 
 
+private final class ListView : View {
+    
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        let partSize = (frame.width - 12 - CGFloat(self.count - 1) * 2) / CGFloat(self.count)
+        let itemSize = NSMakeSize(max(2, partSize), 2)
+        
+                
+        var x: CGFloat = 6
+        for i in 0 ..< count {
+            let rect = CGRect(origin: CGPoint(x: x, y: 0), size: itemSize)
+            
+            let path = CGMutablePath()
+            path.addRoundedRect(in: rect, cornerWidth: 1, cornerHeight: 1)
+            
+            let color: NSColor
+            if i < selected {
+                color = NSColor.white
+            } else {
+                color = NSColor.white.withAlphaComponent(0.3)
+            }
+            ctx.setFillColor(color.cgColor)
+
+            ctx.addPath(path)
+            ctx.fillPath()
+            
+            x += itemSize.width + 2
+        }
+        
+        
+    }
+    func getRect(_ index: Int) -> NSRect {
+        let partSize = (frame.width - 12 - CGFloat(self.count - 1) * 2) / CGFloat(self.count)
+        let itemSize = NSMakeSize(max(2, partSize), 2)
+        
+        
+        var x: CGFloat = 6
+        for i in 0 ..< count {
+            let rect = CGRect(origin: CGPoint(x: x, y: 0), size: itemSize)
+            x += itemSize.width + 2
+            if i == index {
+                return rect
+            }
+        }
+        return .zero
+    }
+    
+    var count: Int = 0 {
+        didSet {
+            needsDisplay = true
+        }
+    }
+    var selected: Int = 0 {
+        didSet {
+            needsDisplay = true
+        }
+    }
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        layerContentsRedrawPolicy = .duringViewResize
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 final class StoryListNavigationView : View {
+    
     
     private var parts:[View] = []
     private let selector = LinearProgressControl(progressHeight: 2)
     
+    private let listView: ListView
+    
     private var selected: Int? = nil
     required init(frame frameRect: NSRect) {
+        self.listView = ListView(frame: NSMakeRect(0, 0, frameRect.width, 2))
         super.init(frame: frameRect)
         selector.layer?.cornerRadius = 1
         selector.backgroundColor = NSColor.white
+        self.addSubview(listView)
         self.addSubview(selector)
         
         selector.insets = NSEdgeInsetsMake(0, 0, 0, 0)
@@ -42,14 +114,9 @@ final class StoryListNavigationView : View {
         for part in parts {
             part.removeFromSuperview()
         }
-        parts.removeAll()
-        for _ in 0 ..< count {
-            let part = View(frame: NSMakeRect(0, 0, 0, 2))
-            part.backgroundColor = NSColor.white.withAlphaComponent(0.3)
-            part.layer?.cornerRadius = 1
-            self.addSubview(part, positioned: .below, relativeTo: self.selector)
-            parts.append(part)
-        }
+        
+        listView.count = count
+        
         self.selector.set(progress: 0, animated: false)
         self.updateLayout(size: frame.size, transition: .immediate)
     }
@@ -58,26 +125,17 @@ final class StoryListNavigationView : View {
         self.selected = index
                 
         CATransaction.begin()
-        for (i, part) in parts.enumerated() {
-            if i < index {
-                part.backgroundColor = NSColor.white
+        
+        self.listView.selected = index
+        selector.frame = listView.getRect(index)
+        switch state {
+        case let .playing(status):
+            selector.set(progress: status.timestamp == 0 ? 1 : CGFloat(status.timestamp / duration), animated: animated, duration: duration, beginTime: status.generationTimestamp, offset: status.timestamp, speed: Float(status.baseRate))
+        default:
+            if let status = state.status {
+                selector.set(progress: duration == 0 ? 1 : CGFloat(status.timestamp / duration), animated: false)
             } else {
-                part.backgroundColor = NSColor.white.withAlphaComponent(0.3)
-            }
-            if i == index {
-                selector.frame = NSMakeRect(part.frame.minX, part.frame.minY, part.frame.width, 2)
-                switch state {
-                case let .playing(status):
-                    selector.set(progress: status.timestamp == 0 ? 1 : CGFloat(status.timestamp / duration), animated: animated, duration: duration, beginTime: status.generationTimestamp, offset: status.timestamp, speed: Float(status.baseRate))
-                default:
-                    if let status = state.status {
-                        selector.set(progress: duration == 0 ? 1 : CGFloat(status.timestamp / duration), animated: false)
-                    } else {
-                        selector.set(progress: 0, animated: false)
-                    }
-                }
-                
-
+                selector.set(progress: 0, animated: false)
             }
         }
         CATransaction.commit()
@@ -88,15 +146,6 @@ final class StoryListNavigationView : View {
         self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        let partSize = (size.width - 12 - CGFloat(parts.count - 1) * 2) / CGFloat(parts.count)
-        let itemSize = NSMakeSize(max(2, partSize), 2)
-        
-        
-        var x: CGFloat = 6
-        for part in parts {
-            let rect = CGRect(origin: CGPoint(x: x, y: 0), size: itemSize)
-            transition.updateFrame(view: part, frame: rect)
-            x += itemSize.width + 2
-        }
+        transition.updateFrame(view: listView, frame: NSMakeRect(0, 0, size.width, 2))
     }
 }

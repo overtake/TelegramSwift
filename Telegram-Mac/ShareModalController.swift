@@ -565,6 +565,9 @@ class ShareObject {
     var hasLink: Bool {
         return false
     }
+    var hasFolders: Bool {
+        return true
+    }
     
     func shareLink() {
         
@@ -590,6 +593,10 @@ class SharefilterCallbackObject : ShareObject {
         self.callback = callback
         self.limits = limits
         super.init(context)
+    }
+    
+    override var hasFolders: Bool {
+        return false
     }
     
     override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
@@ -754,6 +761,10 @@ class ShareCallbackPeerTypesObject : ShareObject {
         self.callback = callback
         self.peerTypes = peerTypes
         super.init(context, limit: 1)
+    }
+    
+    override var hasFolders: Bool {
+        return false
     }
     
     override var multipleSelection: Bool {
@@ -1918,22 +1929,28 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             filter.set(data)
         }
         
-        var first: Bool = true
-        let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue
-        filterDisposable.set(filterView.start(next: { filters in
-            updateFilter( { current in
-                var current = current
-                current = current.withUpdatedTabs(filters.list)
-                if !first, let updated = filters.list.first(where: { $0.id == current.filter.id }) {
-                    current = current.withUpdatedFilter(updated)
-                } else {
-                    current = current.withUpdatedFilter(nil)
-                }
-                return current
-            } )
-            first = false
-        }))
         
+        if share.hasFolders {
+            var first: Bool = true
+            let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue
+            filterDisposable.set(filterView.start(next: { filters in
+                updateFilter( { current in
+                    var current = current
+                    current = current.withUpdatedTabs(filters.list)
+                    if !first, let updated = filters.list.first(where: { $0.id == current.filter.id }) {
+                        current = current.withUpdatedFilter(updated)
+                    } else {
+                        current = current.withUpdatedFilter(nil)
+                    }
+                    return current
+                } )
+                first = false
+            }))
+            
+        } else {
+            filter.set(.init())
+        }
+       
         genericView.tableView.set(stickClass: ChatListRevealItem.self, handler: { _ in
             
         })

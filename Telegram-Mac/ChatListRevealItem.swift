@@ -144,24 +144,7 @@ final class ChatListRevealView : TableStickView {
             return false
         }
         
-        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: segmentView.scrollView.contentView, queue: OperationQueue.main, using: { [weak self] notification  in
-            guard let `self` = self else {
-                return
-            }
-            guard let item = self.item else {
-                return
-            }
-            guard let view = item.view as? ChatListRevealView else {
-                return
-            }
-            if !self.segmentView.scrollView.clipView.isAnimateScrolling {
-                if view !== self {
-                    view.segmentView.scrollView.contentView.scroll(to: self.segmentView.scrollView.documentOffset)
-                } else if let view = item.table?.p_stickView as? ChatListRevealView, view !== self {
-                    view.segmentView.scrollView.contentView.scroll(to: self.segmentView.scrollView.documentOffset)
-                }
-            }
-        })
+        
         
     }
     
