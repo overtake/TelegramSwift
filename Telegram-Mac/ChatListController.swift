@@ -574,8 +574,6 @@ class ChatListController : PeersListController {
         }))
 
         
-        let previousfilter = Atomic<FilterData?>(value: self.filterValue)
-
         let chatHistoryView: Signal<(ChatListViewUpdate, FilterData, Bool, ChatFolderUpdates?), NoError> = filterSignal |> mapToSignal { data in
             
             let signal = combineLatest(context.engine.peers.subscribedChatFolderUpdates(folderId: data.filter.id), chatListViewForLocation(chatListLocation: mode.location, location: data.request, filter: data.filter, account: context.account))

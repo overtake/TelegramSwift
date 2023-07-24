@@ -37,6 +37,10 @@ private class AddExceptionCallbackObject : ShareObject {
         super.init(context)
     }
     
+    override var hasFolders: Bool {
+        return false
+    }
+    
     
     override func statusString(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> String? {
         return nil

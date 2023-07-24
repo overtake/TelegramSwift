@@ -1053,6 +1053,9 @@ class PeerListContainerView : Control {
         self.containerBackground.backgroundColor = theme.colors.listBackground
         
         
+//        self.statusContainer.backgroundColor = .random
+//        self.containerView.backgroundColor = theme.colors.listBackground
+
         super.updateLocalizationAndTheme(theme: theme)
         
         updateLayout(self.frame.size, transition: .immediate)
