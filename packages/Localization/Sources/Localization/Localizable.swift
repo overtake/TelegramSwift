@@ -8621,6 +8621,8 @@ public final class L10n {
   public static var peerListTitleChats: String  { return L10n.tr("Localizable", "PeerList.Title.Chats") }
   /// Contacts
   public static var peerListTitleContacts: String  { return L10n.tr("Localizable", "PeerList.Title.Contacts") }
+  /// Forum
+  public static var peerListTitleForum: String  { return L10n.tr("Localizable", "PeerList.Title.Forum") }
   /// Audio
   public static var peerMediaAudio: String  { return L10n.tr("Localizable", "PeerMedia.Audio") }
   /// Groups
@@ -12097,7 +12099,7 @@ public final class L10n {
   public static var storyTooltipVideoSent: String  { return L10n.tr("Localizable", "Story.Tooltip.VideoSent") }
   /// View in Chat
   public static var storyTooltipButtonViewInChat: String  { return L10n.tr("Localizable", "Story.Tooltip.Button.ViewInChat") }
-  /// Stories from **%@** will now be shown in Archived Chats.
+  /// Stories from %@ will now be shown in Archived Chats.
   public static func storyFeedTooltipArchive(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryFeed.TooltipArchive", p1)
   }
@@ -12109,11 +12111,11 @@ public final class L10n {
   public static var storyItemTextShowMore: String  { return L10n.tr("Localizable", "StoryItem.Text.ShowMore") }
   /// My Story
   public static var storyListMyStory: String  { return L10n.tr("Localizable", "StoryList.MyStory") }
-  /// Stories from **%@** will now be shown in Archived Chats.
+  /// Stories from %@ will now be shown in Archived Chats.
   public static func storyListTooltipArchive(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryList.TooltipArchive", p1)
   }
-  /// Stories from **%@** will now be shown in Chats.
+  /// Stories from %@ will now be shown in Chats.
   public static func storyListTooltipUnarchive(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryList.TooltipUnarchive", p1)
   }

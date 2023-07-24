@@ -121,8 +121,12 @@ open class TitleButton: ImageButton {
     }
     
     @discardableResult public override func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
-        _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
         
+        if text.string as? String == "" {
+            return super.sizeToFit(addition, maxSize, thatFit: thatFit)
+        } else {
+            _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
+        }
         var font:NSFont?
         if let fontName = self.text.font as? String {
             font = NSFont(name: fontName, size: text.fontSize)

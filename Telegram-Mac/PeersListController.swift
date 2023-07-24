@@ -123,7 +123,7 @@ struct PeerListState : Equatable {
     var presentation: TelegramPresentationTheme
     
     var hasStories: Bool {
-        if let stories = self.stories, !isContacts {
+        if let stories = self.stories, !isContacts, !mode.isForum {
             if !stories.items.isEmpty {
                 return true
             }
@@ -392,6 +392,7 @@ class PeerListContainerView : Control {
         
         enum Source {
             case contacts
+            case forum
             case chats
             case settings
             case archivedChats
@@ -405,6 +406,8 @@ class PeerListContainerView : Control {
                     return "Settings"
                 case .archivedChats:
                     return strings().peerListTitleArchive
+                case .forum:
+                    return strings().peerListTitleForum
                 }
             }
         }
@@ -429,8 +432,24 @@ class PeerListContainerView : Control {
         }
             
         fileprivate func updateState(_ state: PeerListState, arguments: Arguments, animated: Bool) {
-            let source: Source = state.isContacts ? .contacts : state.mode.groupId != .archive ? .chats : .archivedChats
-            let layout = TextViewLayout(.initialize(string: source.text, color: theme.colors.text, font: .medium(.title)))
+            
+            let source: Source
+            if state.isContacts {
+                source = .contacts
+            } else if state.mode.groupId == .archive {
+                source = .archivedChats
+            } else if state.mode.isForum {
+                source = .forum
+            } else {
+                source = .chats
+            }
+            let text: String
+            if state.mode.isForum {
+                text = state.forumPeer?.peer.title ?? source.text
+            } else {
+                text = source.text
+            }
+            let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.title)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
             
@@ -703,7 +722,7 @@ class PeerListContainerView : Control {
             self.actionView = nil
         }
         
-        self.titleView.isHidden = (state.splitState == .minimisize) || (state.appear == .short && delta == nil) || !mode.isPlain
+        self.titleView.isHidden = (state.splitState == .minimisize) || (state.appear == .short && delta == nil) || (!mode.isPlain)
         
         let componentSize = NSMakeSize(40, 30)
         
@@ -775,7 +794,7 @@ class PeerListContainerView : Control {
             self.foldersView = nil
         }
         
-        if state.mode.groupId == .archive {
+        if state.mode.groupId == .archive || (state.mode.isForum && state.splitState == .minimisize) {
             let current: TitleButton
             if let view = self.backButton {
                 current = view
@@ -788,8 +807,13 @@ class PeerListContainerView : Control {
                 statusContainer.addSubview(current, positioned: .below, relativeTo: statusContainer.subviews.first)
             }
             
-            current.set(text: strings().navigationBack, for: .Normal)
-            current.set(image: theme.icons.chatNavigationBack, for: .Normal)
+            if state.splitState == .minimisize {
+                current.set(image: theme.icons.instantViewBack, for: .Normal)
+                current.set(text: "", for: .Normal)
+            } else {
+                current.set(image: theme.icons.chatNavigationBack, for: .Normal)
+                current.set(text: strings().navigationBack, for: .Normal)
+            }
             current.set(color: theme.colors.accent, for: .Normal)
             current.set(font: .medium(.title), for: .Normal)
             current.sizeToFit(NSMakeSize(0, 20))
@@ -1128,7 +1152,7 @@ class PeerListContainerView : Control {
         if state.splitState == .minimisize {
             switch self.mode {
             case .folder, .forum:
-                offset = 0
+                offset = 50
             default:
                 break
             }
@@ -1387,6 +1411,8 @@ enum PeerListMode : Equatable {
         switch self {
         case .plain:
             return true
+        case .forum:
+            return true
         default:
             if self.groupId == .archive {
                 return true
@@ -1409,6 +1435,14 @@ enum PeerListMode : Equatable {
             return id
         default:
             return nil
+        }
+    }
+    var isForum: Bool {
+        switch self {
+        case let .forum:
+            return true
+        default:
+            return false
         }
     }
     var location: ChatListControllerLocation {
@@ -1521,7 +1555,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         super.init(context)
         
         
-        self.bar = .init(height: mode.isPlain ? 0 : 50)
+        self.bar = .init(height: 0)
 
     }
     
@@ -2073,11 +2107,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
             self.checkSearchMedia()
             self.genericView.tableView.alwaysOpenRowsOnMouseUp = state.splitState == .single
-            self.requestUpdateBackBar()
                         
-            DispatchQueue.main.async {
-                self.requestUpdateBackBar()
-            }
+
             genericView.updateLayout(frame.size, transition: .immediate)
         }
               
@@ -2113,15 +2144,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private var topicRightBar: ImageButton?
-    
-    override func requestUpdateRightBar() {
-        super.requestUpdateRightBar()
-        topicRightBar?.style = navigationButtonStyle
-        topicRightBar?.set(image: theme.icons.chatActions, for: .Normal)
-        topicRightBar?.set(image: theme.icons.chatActionsActive, for: .Highlight)
-        topicRightBar?.setFrameSize(70, 50)
-        topicRightBar?.center()
-    }
     
     private var takeArguments:()->Arguments? = {
         return nil
@@ -2281,45 +2303,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
-    override func requestUpdateBackBar() {
-        switch mode {
-        case .forum:
-            if self.context.layout == .minimisize {
-                self.leftBarView.minWidth = 70
-            } else {
-                self.leftBarView.minWidth = 20
-            }
-        default:
-            self.leftBarView.minWidth = 70
-        }
-        self.centerBarView.isHidden = context.layout == .minimisize
-        self.rightBarView.isHidden = context.layout == .minimisize
-        
-        super.requestUpdateBackBar()
-    }
-    
-    override func getLeftBarViewOnce() -> BarView {
-        let view = BackNavigationBar(self, canBeEmpty: true)
-        switch mode {
-        case .forum:
-            view.minWidth = 20
-        default:
-            view.minWidth = 70
-        }
-        return view
-    }
-    
-    override func backSettings() -> (String, CGImage?) {
-        switch mode {
-        case .forum:
-            if context.layout != .minimisize {
-                return (" ", theme.icons.calendarBack)
-            }
-        default:
-            break
-        }
-        return context.layout == .minimisize ? ("", theme.icons.instantViewBack) : super.backSettings()
-    }
     
     
     private var previousLocation: (ChatLocation?, PeerId?) = (nil, nil)
