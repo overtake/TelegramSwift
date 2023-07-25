@@ -2016,7 +2016,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 self.inputActivities = nil
             }
              
-             photoContainer.userInteractionEnabled = item.avatarStoryIndicator != nil && item.splitState == .single && !item.isSelectedForum
              
              photoContainer.scaleOnClick = true
              let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
@@ -2720,6 +2719,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
        
         guard let item = item as? ChatListRowItem else { return }
                 
+        photoContainer.userInteractionEnabled = item.avatarStoryIndicator != nil && item.context.layout != .minimisize && !item.isSelectedForum
 
         animatedView?.frame = bounds
         
