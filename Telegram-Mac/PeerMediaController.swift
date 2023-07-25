@@ -613,9 +613,10 @@
         guard let navigationController = self.navigationController, isProfileIntended else {
             return
         }
-        
-        navigationController.swapNavigationBar(leftView: nil, centerView: self.centerBarView, rightView: nil, animation: .crossfade)
-        navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: self.rightBarView, animation: .none)
+        if navigationController.controller is PeerInfoController {
+            navigationController.swapNavigationBar(leftView: nil, centerView: self.centerBarView, rightView: nil, animation: .crossfade)
+            navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: self.rightBarView, animation: .none)
+        }
 
     }
      

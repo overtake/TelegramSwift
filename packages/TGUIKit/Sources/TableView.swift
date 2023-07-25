@@ -1210,7 +1210,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
             NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: clipView, queue: nil, using: { [weak self] _ in
                 CATransaction.begin()
-                self?.updateScroll()
+                if self?.superview != nil {
+                    self?.updateScroll()
+                }
                 CATransaction.commit()
             })
             

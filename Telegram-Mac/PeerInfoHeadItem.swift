@@ -1084,7 +1084,6 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         photoView.center()
         photoEditableView?.center()
-        photoVideoView?.frame = photoView.frame
         
 
         nameView.centerX(y: photoContainer.frame.maxY + item.viewType.innerInset.top)

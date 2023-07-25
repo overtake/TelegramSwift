@@ -1126,7 +1126,16 @@ public final class TextViewLayout : Equatable {
         self.selectedRange.range = NSMakeRange(NSNotFound, 0)
     }
     
-    public func selectedRange(startPoint:NSPoint, currentPoint:NSPoint) -> NSRange {
+    private func map(_ index: Int, byWord: Bool, forward: Bool) -> Int {
+        if byWord {
+            return self.attributedString.nextWord(from: index, forward: forward)
+        } else {
+            return index
+        }
+    }
+    
+    public func selectedRange(startPoint:NSPoint, currentPoint:NSPoint, byWord: Bool = false) -> NSRange {
+
         
         var selectedRange:NSRange = NSMakeRange(NSNotFound, 0)
         
@@ -1146,8 +1155,13 @@ public final class TextViewLayout : Equatable {
                 let penOffset = CGFloat( CTLineGetPenOffsetForFlush(lines[i].line, lines[i].penFlush, Double(layoutSize.width)))
                 
                 let lineRange = CTLineGetStringRange(line)
-                var startIndex: CFIndex = CTLineGetStringIndexForPosition(line, startPoint.offsetBy(dx: -penOffset, dy: 0))
-                var endIndex: CFIndex = CTLineGetStringIndexForPosition(line, currentPoint.offsetBy(dx: -penOffset, dy: 0))
+                
+                let sp = startPoint.offsetBy(dx: -penOffset, dy: 0)
+                let cp = currentPoint.offsetBy(dx: -penOffset, dy: 0)
+                
+                var startIndex: CFIndex = CTLineGetStringIndexForPosition(line, sp)
+                var endIndex: CFIndex = CTLineGetStringIndexForPosition(line, cp)
+                
                 if dif > 0 {
                     if i != currentSelectLineIndex {
                         endIndex = (lineRange.length + lineRange.location)
@@ -1177,6 +1191,12 @@ public final class TextViewLayout : Equatable {
                 selectedRange.length += (endIndex - startIndex)
                 i +=  isReversed ? -1 : 1
             }
+        }
+        if selectedRange.location != NSNotFound, selectedRange.length > 0 {
+            let start = selectedRange.min
+            let end = selectedRange.max
+            selectedRange.location = map(start, byWord: byWord, forward: false)
+            selectedRange.length = map(end, byWord: byWord, forward: true) - selectedRange.location
         }
         return selectedRange
     }
@@ -2193,7 +2213,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         
         endSelect = self.convert(event.locationInWindow, from: nil)
         if let layout = textLayout {
-            layout.selectedRange.range = layout.selectedRange(startPoint: beginSelect, currentPoint: endSelect)
+            layout.selectedRange.range = layout.selectedRange(startPoint: beginSelect, currentPoint: endSelect, byWord: event.clickCount == 2)
             layout.selectedRange.cursorAlignment = beginSelect.x > endSelect.x ? .min(layout.selectedRange.range.max) : .max(layout.selectedRange.range.min)
         }
         self.setNeedsDisplayLayer()
