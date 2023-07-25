@@ -658,7 +658,7 @@ class ChatListController : PeersListController {
                     for (i, group) in update.list.groupItems.reversed().enumerated() {
                         mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, hideStatus, state.controllerAppear, state.appear == .short, storyState))
                     }
-                    if state.mode == .plain {
+                    if state.mode == .plain, state.filterData.isFirst {
                         if update.list.groupItems.isEmpty, let storyState = storyState, !storyState.items.isEmpty {
                             mapped.append(.group(0, .init(id: .archive, topMessage: nil, items: [], unreadCount: 0), animateGroupNextTransition.swap(nil) == .archive, hideStatus, state.controllerAppear, state.appear == .short, storyState))
                         }
