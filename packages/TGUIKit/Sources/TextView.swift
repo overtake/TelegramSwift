@@ -1128,7 +1128,12 @@ public final class TextViewLayout : Equatable {
     
     private func map(_ index: Int, byWord: Bool, forward: Bool) -> Int {
         if byWord {
-            return self.attributedString.nextWord(from: index, forward: forward)
+            let range = self.attributedString.doubleClick(at: index)
+            if forward {
+                return range.max
+            } else {
+                return range.min
+            }
         } else {
             return index
         }
