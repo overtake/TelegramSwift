@@ -140,11 +140,13 @@ final class ChatAvatarView : Control {
             avatar.update(component: storyComponent, availableSize: bounds.insetBy(dx: 3, dy: 3).size, transition: transition)
             if let view = self.photoVideoView {
                 transition.updateFrame(view: view, frame: bounds.insetBy(dx: 3, dy: 3))
+                view.layer?.cornerRadius = self.avatar.radius
             }
         } else {
             avatar.update(component: nil, availableSize: bounds.size, transition: transition)
             if let view = self.photoVideoView {
                 transition.updateFrame(view: view, frame: bounds)
+                view.layer?.cornerRadius = self.avatar.radius
             }
         }
         
