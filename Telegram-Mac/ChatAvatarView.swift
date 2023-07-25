@@ -149,7 +149,7 @@ final class ChatAvatarView : Control {
                 view.layer?.cornerRadius = self.avatar.radius
             }
         }
-        
+        backgroundView.backgroundColor = theme.colors.background
         updatePlayerIfNeeded()
     }
     
