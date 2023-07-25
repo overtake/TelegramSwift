@@ -2719,7 +2719,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
        
         guard let item = item as? ChatListRowItem else { return }
                 
-        photoContainer.userInteractionEnabled = item.avatarStoryIndicator != nil && item.context.layout != .minimisize && !item.isSelectedForum
+        photoContainer.userInteractionEnabled = item.avatarStoryIndicator != nil && item.context.layout != .minimisize && item.selectedForum == nil
 
         animatedView?.frame = bounds
         
