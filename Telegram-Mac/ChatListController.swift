@@ -535,11 +535,7 @@ class ChatListController : PeersListController {
                 _ = context.engine.peers.hideChatFolderUpdates(folderId: filter.id).start()
             }
         }, openStory: { [weak self] initialId, singlePeer, isHidden in
-            if self?.navigationController?.controller != self {
-                self?.navigationController?.back()
-            } else {
-                StoryModalController.ShowStories(context: context, isHidden: isHidden, initialId: initialId, singlePeer: singlePeer)
-            }
+            StoryModalController.ShowStories(context: context, isHidden: isHidden, initialId: initialId, singlePeer: singlePeer)
         }, getStoryInterfaceState: { [weak self] in
             guard let `self` = self else {
                 return .empty
