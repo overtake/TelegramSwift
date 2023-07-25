@@ -1334,7 +1334,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 
                 for (_, i) in permissions {
                     if i != -1 {
-                        self.genericView.tableView.item(at: i).view?.shakeView()
+                        self.genericView.tableView.optionalItem(at: i)?.view?.shakeView()
                     } else {
                         self.genericView.textView.shake(beep: true)
                     }

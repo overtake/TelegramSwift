@@ -359,6 +359,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
         let rootPath = containerUrl!
         let window = self.window!
+        
         System.updateScaleFactor(window.backingScaleFactor)
         window.minSize = NSMakeSize(380, 500)
         
