@@ -418,9 +418,9 @@ class ChatListController : PeersListController {
             self.removeRevealStateIfNeeded(nil)
             self.genericView.tableView.scroll(to: .up(true))
             self.folderUpdatesDisposable.set(context.engine.peers.pollChatFolderUpdates(folderId: data.filter.id).start())
+            self.genericView.searchView.change(state: .None,  true)
         }
 
-       // self.genericView.searchView.change(state: .None,  true)
         setCenterTitle(self.defaultBarTitle)
     }
     
