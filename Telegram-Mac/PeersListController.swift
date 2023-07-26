@@ -122,6 +122,43 @@ struct PeerListState : Equatable {
     var filterData: FilterData
     var presentation: TelegramPresentationTheme
     
+    var hasInvites: Bool {
+        let inviteRequestsPending = self.forumPeer?.invitationState?.waitingCount ?? 0
+        let check: Bool
+        if let forumPeer = self.forumPeer {
+            check = FastSettings.canBeShownPendingRequests(forumPeer.invitationState?.importers.compactMap { $0.peer.peer?.id } ?? [], for: forumPeer.peer.id)
+        } else {
+            check = false
+        }
+        let hasInvites: Bool = self.forumPeer != nil && inviteRequestsPending > 0 && self.splitState != .minimisize && check && searchState == .None
+
+        return hasInvites
+    }
+    
+    var hasVoiceChat: Bool {
+        if searchState == .Focus {
+            return false
+        }
+        if splitState == .minimisize {
+            return false
+        }
+        var voiceChat: ChatActiveGroupCallInfo?
+        if let forumPeer = self.forumPeer, forumPeer.call?.data?.groupCall == nil {
+            if let data = forumPeer.call?.data {
+                if data.participantCount == 0 && forumPeer.call?.activeCall.scheduleTimestamp == nil {
+                    voiceChat = nil
+                } else {
+                    voiceChat = forumPeer.call
+                }
+            } else {
+                voiceChat = nil
+            }
+        } else {
+            voiceChat = nil
+        }
+        return voiceChat != nil
+    }
+    
     var hasStories: Bool {
         if let stories = self.stories, !isContacts, !mode.isForum {
             if !stories.items.isEmpty {
@@ -354,7 +391,7 @@ class PeerListContainerView : Control {
             addSubview(textView)
             textView.userInteractionEnabled = false
             textView.isSelectable = false
-            border = [.Top, .Right]
+            border = [.Top]
         }
         
         
@@ -431,7 +468,7 @@ class PeerListContainerView : Control {
             super.updateLocalizationAndTheme(theme: theme)
         }
             
-        fileprivate func updateState(_ state: PeerListState, arguments: Arguments, animated: Bool) {
+        fileprivate func updateState(_ state: PeerListState, arguments: Arguments, maxWidth: CGFloat, animated: Bool) {
             
             let source: Source
             if state.isContacts {
@@ -449,8 +486,8 @@ class PeerListContainerView : Control {
             } else {
                 text = source.text
             }
-            let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.title)))
-            layout.measure(width: .greatestFiniteMagnitude)
+            let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+            layout.measure(width: maxWidth)
             textView.update(layout)
             
             let hasControls = state.splitState != .minimisize && state.mode == .plain
@@ -556,7 +593,7 @@ class PeerListContainerView : Control {
             case .filter:
                 compose.isHidden = true
             case .forum:
-                compose.isHidden = true
+                compose.isHidden = false
             }
             updateLayout(self.frame.size, transition: .immediate)
         }
@@ -596,7 +633,7 @@ class PeerListContainerView : Control {
         
         containerView.addSubview(searchView)
         
-        addSubview(borderView)
+      //  addSubview(borderView)
         
         tableView.getBackgroundColor = {
             .clear
@@ -658,7 +695,7 @@ class PeerListContainerView : Control {
         }
 
         var voiceChat: ChatActiveGroupCallInfo?
-        if let forumPeer = state.forumPeer, forumPeer.call?.data?.groupCall == nil {
+        if let forumPeer = state.forumPeer, forumPeer.call?.data?.groupCall == nil, state.hasVoiceChat {
             if let data = forumPeer.call?.data {
                 if data.participantCount == 0 && forumPeer.call?.activeCall.scheduleTimestamp == nil {
                     voiceChat = nil
@@ -671,14 +708,13 @@ class PeerListContainerView : Control {
         } else {
             voiceChat = nil
         }
-        
+//        self.titleView.updateState(state, arguments: arguments, maxWidth: frame.width - 150, animated: animated)
         self.updateAdditionHeader(state, size: frame.size, arguments: arguments, animated: animated)
 
-        self.titleView.updateState(state, arguments: arguments, animated: animated)
         
-        if let info = voiceChat, state.splitState != .minimisize {
+        if let info = voiceChat {
             let current: ChatGroupCallView
-            var offset: CGFloat = -44
+            var offset: CGFloat = statusHeight
             if let header = header {
                 offset += header.frame.height
             }
@@ -694,7 +730,7 @@ class PeerListContainerView : Control {
                 containerView.addSubview(current, positioned: .below, relativeTo: header)
                 
             }
-            current.border = [.Right, .Bottom]
+            current.border = [.Top]
             current.update(info, animated: animated)
             
         } else if let view = self.callView {
@@ -794,7 +830,7 @@ class PeerListContainerView : Control {
             self.foldersView = nil
         }
         
-        if state.mode.groupId == .archive || (state.mode.isForum && state.splitState == .minimisize) {
+        if state.mode.groupId == .archive || state.mode.isForum {
             let current: TitleButton
             if let view = self.backButton {
                 current = view
@@ -810,6 +846,9 @@ class PeerListContainerView : Control {
             if state.splitState == .minimisize {
                 current.set(image: theme.icons.instantViewBack, for: .Normal)
                 current.set(text: "", for: .Normal)
+            } else if state.mode.isForum {
+                current.set(image: theme.icons.chatNavigationBack, for: .Normal)
+                current.set(text: "", for: .Normal)
             } else {
                 current.set(image: theme.icons.chatNavigationBack, for: .Normal)
                 current.set(text: strings().navigationBack, for: .Normal)
@@ -823,6 +862,22 @@ class PeerListContainerView : Control {
             self.backButton = nil
         }
         
+        if mode.isForum {
+            compose.set(background: .clear, for: .Highlight)
+            compose.set(image: theme.icons.chatActions, for: .Normal)
+            compose.set(image: theme.icons.chatActions, for: .Hover)
+            compose.set(image: theme.icons.chatActionsActive, for: .Highlight)
+        } else if isContacts {
+            compose.set(background: .clear, for: .Highlight)
+            compose.set(image: theme.icons.contactsNewContact, for: .Normal)
+            compose.set(image: theme.icons.contactsNewContact, for: .Hover)
+            compose.set(image: theme.icons.contactsNewContact, for: .Highlight)
+        } else {
+            compose.set(background: theme.colors.accent, for: .Highlight)
+            compose.set(image: theme.icons.composeNewChat, for: .Normal)
+            compose.set(image: theme.icons.composeNewChat, for: .Hover)
+            compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
+        }
         
         if previous?.appear != state.appear {
             self.delta = nil
@@ -840,25 +895,15 @@ class PeerListContainerView : Control {
         } else {
             transition = .immediate
         }
-  
+       // self.updateLocalizationAndTheme(theme: theme)
         self.updateLayout(self.frame.size, transition: transition)
     }
     
 
     
     private func updateAdditionHeader(_ state: PeerListState, size: NSSize, arguments: Arguments, animated: Bool) {
-        
-        let inviteRequestsPending = state.forumPeer?.invitationState?.waitingCount ?? 0
-        let check: Bool
-        if let peer = state.forumPeer?.peer {
-            check = FastSettings.canBeShownPendingRequests(state.forumPeer?.invitationState?.importers.compactMap { $0.peer.peer?.id } ?? [], for: peer.id)
-        } else {
-            check = false
-        }
-        let hasInvites: Bool = state.forumPeer != nil && inviteRequestsPending > 0 && state.splitState != .minimisize && check
-
-        if let state = state.forumPeer?.invitationState, hasInvites {
-            self.updatePendingRequests(state, arguments: arguments, animated: animated)
+        if state.hasInvites {
+            self.updatePendingRequests(state.forumPeer?.invitationState, arguments: arguments, animated: animated)
         } else {
             self.updatePendingRequests(nil, arguments: arguments, animated: animated)
         }
@@ -875,11 +920,9 @@ class PeerListContainerView : Control {
                     performSubviewRemoval(view, animated: animated)
                     self.header = nil
                 }
+                current = .init(context: arguments.context, openAction: arguments.openPendingRequests, dismissAction: arguments.dismissPendingRequests, state: headerState, frame: NSMakeRect(0, statusHeight, frame.width, 44))
                 
-                
-                current = .init(context: arguments.context, openAction: arguments.openPendingRequests, dismissAction: arguments.dismissPendingRequests, state: headerState, frame: NSMakeRect(0, 0, frame.width, 44))
-                
-                current.border = [.Right, .Bottom]
+                current.border = [.Top]
                 self.header = current
                 containerView.addSubview(current)
             }
@@ -1053,18 +1096,7 @@ class PeerListContainerView : Control {
         compose.set(background: .clear, for: .Normal)
         compose.set(background: .clear, for: .Hover)
 
-        if isContacts {
-            compose.set(background: .clear, for: .Highlight)
-            compose.set(image: theme.icons.contactsNewContact, for: .Normal)
-            compose.set(image: theme.icons.contactsNewContact, for: .Hover)
-            compose.set(image: theme.icons.contactsNewContact, for: .Highlight)
-        } else {
-            compose.set(background: theme.colors.accent, for: .Highlight)
-            compose.set(image: theme.icons.composeNewChat, for: .Normal)
-            compose.set(image: theme.icons.composeNewChat, for: .Hover)
-            compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
-            
-        }
+      
              
         compose.layer?.cornerRadius = .cornerRadius
         compose.sizeToFit()
@@ -1139,10 +1171,22 @@ class PeerListContainerView : Control {
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
         
         
-        guard let state = self.state else {
+        guard let state = self.state, let arguments = self.arguments else {
             return
         }
         
+        var maxTitleWidth: CGFloat = size.width - 60
+        if let backButton = backButton {
+            maxTitleWidth -= backButton.frame.width
+        }
+        if !compose.isHidden {
+            maxTitleWidth -= compose.frame.width
+        }
+        if let proxy = proxy {
+            maxTitleWidth -= proxy.frame.width
+        }
+        
+        self.titleView.updateState(state, arguments: arguments, maxWidth: maxTitleWidth, animated: transition.isAnimated)
         
         var offset: CGFloat = navigationHeight
         
@@ -1167,7 +1211,12 @@ class PeerListContainerView : Control {
         let containerSize = NSMakeSize(state.splitState == .minimisize || state.appear == .short ? 70 + (delta ?? 0) : size.width, offset)
                 
         transition.updateFrame(view: self.containerView, frame: NSMakeRect(0, inset, containerSize.width, offset))
+        
+        
         transition.updateFrame(view: self.statusContainer, frame: NSMakeRect(0, 0, containerSize.width, statusHeight))
+        
+        inset = self.statusContainer.frame.maxY
+
 
         transition.updateFrame(view: self.containerBackground, frame: self.containerView.bounds)
 
@@ -1198,6 +1247,12 @@ class PeerListContainerView : Control {
         
         if let storiesItem = storiesItem {
             searchY += (StoryListChatListRowItem.InterfaceState.revealed.height * storiesItem.progress) + 9 * storiesItem.progress
+        }
+        if let callView = self.callView {
+            searchY += callView.frame.height
+        }
+        if let header = self.header {
+            searchY += header.frame.height
         }
         
         let searchRect = NSMakeRect(10, searchY, (size.width - 10 * 2), componentSize.height * progress)
@@ -1263,7 +1318,10 @@ class PeerListContainerView : Control {
             storyX = storyXEnd + (storyXStart - storyXEnd) * (1 - stories.progress)
         }
         
-        
+        titleX -= ((titleXEnd + titleView.frame.width) * (1 - progress))
+        storyX -= ((titleXEnd + titleView.frame.width) * (1 - progress))
+
+
         
         transition.updateFrame(view: titleView, frame: CGRect(origin: CGPoint(x: titleX, y: floorToScreenPixels(bsc, (statusHeight - titleView.size.height) / 2) - 2), size: titleView.size))
         titleView.updateLayout(size: titleView.size, transition: transition)
@@ -1336,6 +1394,12 @@ class PeerListContainerView : Control {
                 offset += 40
             } else if let progress = getDeltaProgress() {
                 offset += 40 * progress
+            }
+            if state.hasVoiceChat {
+                offset += 44
+            }
+            if state.hasInvites {
+                offset += 44
             }
             if let storiesItem = self.storiesItem {
                 offset += storiesItem.navigationHeight
@@ -1935,8 +1999,58 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
 
        
-        
-        if isContacts {
+        if mode.isForum {
+            genericView.compose.contextMenu = { [weak self] in
+                let menu = ContextMenu()
+                if let peer = self?.state?.forumPeer {
+                    var items: [ContextMenuItem] = []
+                    
+                    let chatController = context.bindings.rootNavigation().controller as? ChatController
+                    let infoController = context.bindings.rootNavigation().controller as? PeerInfoController
+                    let topicController = context.bindings.rootNavigation().controller as? InputDataController
+
+                    if infoController == nil || (infoController?.peerId != peer.peer.id || infoController?.threadInfo != nil) {
+                        items.append(ContextMenuItem(strings().forumTopicContextInfo, handler: {
+                            ForumUI.openInfo(peer.peer.id, context: context)
+                        }, itemImage: MenuAnimation.menu_show_info.value))
+                    }
+                    
+                    if chatController == nil || (chatController?.chatInteraction.chatLocation != .peer(peer.peer.id)) {
+                        items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
+                            self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
+                        }, itemImage: MenuAnimation.menu_read.value))
+                    }
+                    
+                    if let call = self?.state?.forumPeer?.call {
+                        if call.data?.groupCall == nil {
+                            if let data = call.data, data.participantCount == 0 && call.activeCall.scheduleTimestamp == nil {
+                                items.append(ContextMenuItem(strings().peerInfoActionVoiceChat, handler: { [weak self] in
+                                    self?.takeArguments()?.joinGroupCall(call)
+                                }, itemImage: MenuAnimation.menu_video_chat.value))
+                            }
+                        }
+                    }
+                    
+                    if peer.peer.hasPermission(.manageTopics) {
+                        if topicController?.identifier != "ForumTopic" {
+                            if !items.isEmpty {
+                                items.append(ContextSeparatorItem())
+                            }
+                            items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
+                                ForumUI.createTopic(peer.peer.id, context: context)
+                            }, itemImage: MenuAnimation.menu_edit.value))
+                        }
+                    }
+                    
+                    if !items.isEmpty {
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                    }
+                }
+                return menu
+            }
+        } else if isContacts {
             genericView.compose.set(handler: { _ in
                 showModal(with: AddContactModalController(context), for: context.window)
             }, for: .Click)
@@ -3013,6 +3127,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     func toggleStoriesState() {
+        
+        if case let .forum(peerId, _) = self.mode {
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+            return
+        }
+        
         let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
         guard let item = optional, storyInterfaceState != .empty else {
             return

@@ -41,6 +41,12 @@ final class ChatListSpaceItem : GeneralRowItem {
                     height += 36
                 }
             }
+            if state.hasVoiceChat {
+                height += 44
+            }
+            if state.hasInvites {
+                height += 44
+            }
         }
         height += getInterfaceState().navigationHeight
         if getInterfaceState().initFromEvent == false, state.hasStories {
