@@ -593,9 +593,10 @@ class PeerListContainerView : Control {
             case .filter:
                 compose.isHidden = true
             case .forum:
-                compose.isHidden = false
+                compose.isHidden = state?.splitState == .minimisize
             }
-            updateLayout(self.frame.size, transition: .immediate)
+            compose.animates = false
+            //updateLayout(self.frame.size, transition: .immediate)
         }
     }
     
@@ -674,6 +675,9 @@ class PeerListContainerView : Control {
         let animated = animated && self.state?.splitState == state.splitState && self.state != nil
         self.state = state
         self.arguments = arguments
+        
+        
+        self.mode = state.mode
         
         if let stories = state.stories, state.hasStories {
             self.storiesItem = .init(frame.size, stableId: 0, context: arguments.context, isArchive: state.mode.groupId == .archive, state: stories, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
@@ -846,16 +850,18 @@ class PeerListContainerView : Control {
             if state.splitState == .minimisize {
                 current.set(image: theme.icons.instantViewBack, for: .Normal)
                 current.set(text: "", for: .Normal)
+                current.sizeToFit(NSMakeSize(20, 20))
             } else if state.mode.isForum {
                 current.set(image: theme.icons.chatNavigationBack, for: .Normal)
                 current.set(text: "", for: .Normal)
+                current.sizeToFit(NSMakeSize(0, 20))
             } else {
                 current.set(image: theme.icons.chatNavigationBack, for: .Normal)
                 current.set(text: strings().navigationBack, for: .Normal)
+                current.sizeToFit(NSMakeSize(20, 20))
             }
             current.set(color: theme.colors.accent, for: .Normal)
             current.set(font: .medium(.title), for: .Normal)
-            current.sizeToFit(NSMakeSize(0, 20))
             
         } else if let view = self.backButton {
             performSubviewRemoval(view, animated: animated)
