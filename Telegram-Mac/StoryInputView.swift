@@ -14,6 +14,8 @@ import Postbox
 import TelegramCore
 import ColorPalette
 
+private let placeholderColor = NSColor.white.withAlphaComponent(0.33)
+
 enum StoryInputState : Equatable {
     case focus
     case none
@@ -205,6 +207,28 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         stickers.set(image: state.emojiState == .emoji ? emoji_image : stickers_image, for: .Normal)
         stickers.set(image: state.emojiState == .emoji ? emoji_image_active : stickers_image_active, for: .Highlight)
+        
+        self.updatePlaceholder()
+    }
+    
+    private let stealthDisposable = MetaDisposable()
+    private func updatePlaceholder() {
+        guard let arguments = self.arguments else {
+            return
+        }
+        let text: String
+        if let cooldown = arguments.interaction.presentation.stealthMode.activeUntilTimestamp {
+            stealthDisposable.set(delaySignal(0.3).start(completed: { [weak self] in
+                self?.updatePlaceholder()
+            }))
+            
+            let timer = smartTimeleftText(Int(cooldown - arguments.context.timestamp))
+            text = strings().storyStealthModePlaceholder(timer)
+        } else {
+            stealthDisposable.set(nil)
+            text = strings().storyInputPlaceholder
+        }
+        textView.setPlaceholderAttributedString(.initialize(string: text, color: placeholderColor, font: .normal(.text)), update: true)
     }
     
     private func updateRecoringState(_ state: StoryInteraction.State, animated: Bool) {
@@ -510,7 +534,6 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         textView.textFont = .normal(.text)
         textView.textColor = .white
-        textView.setPlaceholderAttributedString(.initialize(string: strings().storyInputPlaceholder, color: NSColor.white.withAlphaComponent(0.33), font: .normal(.text)), update: true)
         textView.delegate = self
         textView.inputView.appearance = storyTheme.appearance
                 
@@ -636,6 +659,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     
     deinit {
         rtfAttachmentsDisposable.dispose()
+        stealthDisposable.dispose()
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {

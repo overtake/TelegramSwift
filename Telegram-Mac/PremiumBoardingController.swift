@@ -53,6 +53,7 @@ enum PremiumLogEventsSource : Equatable {
     case gift(from: PeerId, to: PeerId, months: Int32)
     case send_as
     case translations
+    case stealth_mode
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -81,6 +82,8 @@ enum PremiumLogEventsSource : Equatable {
             return "send_as"
         case .translations:
             return "translations"
+        case .stealth_mode:
+            return "stealth_mode"
         }
     }
     var subsource: String? {
@@ -167,8 +170,10 @@ enum PremiumValue : String {
     case profile_badge
     case animated_userpics
     case translations
+    case stories
     func gradient(_ index: Int) -> [NSColor] {
         let colors:[NSColor] = [ NSColor(rgb: 0xF27C30),
+                                 NSColor(rgb: 0xE36850),
                                  NSColor(rgb: 0xE36850),
                                  NSColor(rgb: 0xda5d63),
                                  NSColor(rgb: 0xD15078),
@@ -252,6 +257,8 @@ enum PremiumValue : String {
             return NSImage(named: "Icon_Premium_Boarding_Profile")!.precomposed(theme.colors.accent)
         case .translations:
             return NSImage(named: "Icon_Premium_Boarding_Translations")!.precomposed(theme.colors.accent)
+        case .stories:
+            return NSImage(named: "Icon_Premium_Stories")!.precomposed(theme.colors.accent)
         }
     }
     
@@ -283,6 +290,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingAvatarTitle
         case .translations:
             return strings().premiumBoardingTranslateTitle
+        case .stories:
+            return strings().premiumBoardingStoriesTitle
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -313,6 +322,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingAvatarInfo
         case .translations:
             return strings().premiumBoardingTranslateInfo
+        case .stories:
+            return strings().premiumBoardingStoriesInfo
         }
     }
 }
@@ -320,7 +331,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations]
+    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations]
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?
@@ -941,7 +952,7 @@ final class PremiumBoardingController : ModalViewController {
         |> deliverOnMainQueue
         
         let products: Signal<[InAppPurchaseManager.Product], NoError>
-        #if APP_STORE || DEBUG
+        #if APP_STORE //|| DEBUG
         products = inAppPurchaseManager.availableProducts |> map {
             $0.filter { $0.isSubscription }
         }

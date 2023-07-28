@@ -307,12 +307,16 @@ private final class StoryListContainer : Control {
     }
     
     private func getFrame(_ item: StoryListEntryRowItem, index i: Int, progress: CGFloat) -> NSRect {
+        
         let focusRange = self.focusRange
         
         let w = StoryListChatListRowItem.smallSize.width
         let itemSize = NSMakeSize(w + (item.itemWidth - w) * progress, w + (item.itemHeight - w) * progress)
         
-        let gapBetween: CGFloat = 10.0
+        
+        let cgCount = CGFloat(views.count)
+        let gapBetween = max(10.0, (frame.width - item.itemWidth * cgCount) / (cgCount + 1))
+
         
         var frame = CGRect(origin: .zero, size: itemSize)
         if i < focusRange.location {
@@ -322,7 +326,7 @@ private final class StoryListContainer : Control {
             
             frame.origin.x = (CGFloat(i) * itemSize.width)
 
-            frame.origin.x += (10.0 + (CGFloat(i) * gapBetween))
+            frame.origin.x += (gapBetween + (CGFloat(i) * gapBetween))
         } else {
             
             if i >= focusRange.max {
@@ -333,7 +337,7 @@ private final class StoryListContainer : Control {
             
             frame.origin.x = ((1.0 - progress) * CGFloat(i - focusRange.location)) * itemSize.width + (CGFloat(i) * itemSize.width * progress) + ((1.0 - progress) * 13.0)
             
-            let insets = (10.0 + (CGFloat(i) * gapBetween)) * progress
+            let insets = (gapBetween + (CGFloat(i) * gapBetween)) * progress
             frame.origin.x += insets
             
             if i > focusRange.max {
