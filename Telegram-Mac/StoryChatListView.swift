@@ -695,7 +695,7 @@ final class StoryListChatListRowView: TableRowView {
             index += 1
         }
         
-        for item in item.state.items {
+        for item in item.state.items.prefix(3) {
             if item.storyCount > 0 {
                 let name: StoryChatListEntry.Name = .init(text: item.peer._asPeer().compactDisplayTitle, color: item.hasUnseen ? theme.colors.text : theme.colors.grayText)
                 entries.append(.init(item: item, name: name, index: index, appearance: theme))
