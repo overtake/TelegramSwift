@@ -146,7 +146,7 @@ private final class LocationPreviewMapRowView : TableRowView, MKMapViewDelegate 
         
         
         mapView.showsZoomControls = true
-    //    mapView.showsUserLocation = true
+        mapView.showsUserLocation = true
     }
     
     required init?(coder: NSCoder) {
