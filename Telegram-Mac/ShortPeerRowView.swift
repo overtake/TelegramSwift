@@ -140,7 +140,13 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     
     override var backdorColor: NSColor {
         if let item = item as? ShortPeerRowItem, let theme = item.customTheme {
-            return item.isHighlighted || isRowSelected ? theme.grayForeground : theme.backgroundColor
+            if item.isHighlighted {
+                return theme.grayForeground
+            } else if item.isSelected {
+                return theme.accentColor
+            } else {
+                return theme.backgroundColor
+            }
         }
         if let item = item as? ShortPeerRowItem, item.alwaysHighlight {
             return item.isSelected ? theme.colors.grayForeground : theme.colors.background
