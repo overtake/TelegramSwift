@@ -260,6 +260,10 @@ enum LocalAnimatedSticker : String {
     case menu_save_to_profile
     case menu_move_to_contacts
     case menu_stories
+    case menu_download_circle_lock
+    case menu_download_circle
+    case menu_eye_locked
+    case menu_eye_slash
     
     case emoji_category_activities
     case emoji_category_angry

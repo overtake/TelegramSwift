@@ -24,6 +24,9 @@ final class PremiumPromoOrder {
         if let data = appConfiguration.data {
             if let order = data["premium_promo_order"] as? [String] {
                 premiumValues = order.compactMap { PremiumValue(rawValue: $0) }
+                #if DEBUG
+                premiumValues.insert(.stories, at: 1)
+                #endif
             }
         }
     }

@@ -1157,6 +1157,14 @@ open class ModalViewController : ViewController, ModalControllerHelper {
             self.accent = accent
             self.grayForeground = grayForeground
         }
+        public init(presentation: PresentationTheme) {
+            self.text = presentation.colors.text
+            self.grayText = presentation.colors.grayText
+            self.background = presentation.colors.background
+            self.border = presentation.colors.border
+            self.accent = presentation.colors.accent
+            self.grayForeground = presentation.colors.grayForeground
+        }
     }
     
     open var modalTheme:Theme {

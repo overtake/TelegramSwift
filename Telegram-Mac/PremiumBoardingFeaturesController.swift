@@ -93,6 +93,15 @@ final class PremiumBoardingFeaturesView: View {
             return view
         })
         slideView.addSlide(double_limits)
+        
+        let stories = PremiumFeatureSlideView(frame: slideView.bounds)
+        stories.setup(context: context, type: .stories, decoration: .none, getView: { _ in
+            let view = PremiumBoardingStoriesView(frame: bounds)
+            view.initialize(context: context, initialSize: bounds.size)
+            return view
+        })
+        slideView.addSlide(stories)
+
                 
         let more_upload = PremiumFeatureSlideView(frame: slideView.bounds)
         more_upload.setup(context: context, type: .more_upload, decoration: .dataRain, getView: { _ in
@@ -205,32 +214,32 @@ final class PremiumBoardingFeaturesView: View {
         switch value {
         case .double_limits:
             slideView.displaySlide(at: 0, animated: false)
-        case .more_upload:
+        case .stories:
             slideView.displaySlide(at: 1, animated: false)
-        case .faster_download:
+        case .more_upload:
             slideView.displaySlide(at: 2, animated: false)
-        case .voice_to_text:
+        case .faster_download:
             slideView.displaySlide(at: 3, animated: false)
-        case .no_ads:
+        case .voice_to_text:
             slideView.displaySlide(at: 4, animated: false)
-        case .infinite_reactions:
+        case .no_ads:
             slideView.displaySlide(at: 5, animated: false)
-        case .emoji_status:
+        case .infinite_reactions:
             slideView.displaySlide(at: 6, animated: false)
-        case .premium_stickers:
+        case .emoji_status:
             slideView.displaySlide(at: 7, animated: false)
-        case .animated_emoji:
+        case .premium_stickers:
             slideView.displaySlide(at: 8, animated: false)
-        case .advanced_chat_management:
+        case .animated_emoji:
             slideView.displaySlide(at: 9, animated: false)
-        case .profile_badge:
+        case .advanced_chat_management:
             slideView.displaySlide(at: 10, animated: false)
-        case .animated_userpics:
+        case .profile_badge:
             slideView.displaySlide(at: 11, animated: false)
-        case .translations:
+        case .animated_userpics:
             slideView.displaySlide(at: 12, animated: false)
-        default:
-            break
+        case .translations:
+            slideView.displaySlide(at: 13, animated: false)
         }
         
         needsLayout = true

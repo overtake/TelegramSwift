@@ -159,6 +159,7 @@ final class StoryInteraction : InterfaceObserver {
         var emojiState: EntertainmentState = FastSettings.entertainmentState
         var inputRecording: ChatRecordingState?
         var recordType: RecordingStateSettings = FastSettings.recordingState
+        var stealthMode: Stories.StealthModeState = .init(activeUntilTimestamp: nil, cooldownUntilTimestamp: nil)
         
         var isPaused: Bool {
             return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown
@@ -1895,6 +1896,7 @@ final class StoryModalController : ModalViewController, Notifable {
     private let chatInteraction: ChatInteraction
     
     private let disposable = MetaDisposable()
+    private let actionsDisposable = DisposableSet()
     private let updatesDisposable = MetaDisposable()
     private let inputSwapDisposable = MetaDisposable()
     private var overlayTimer: SwiftSignalKit.Timer?
@@ -2232,6 +2234,21 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.genericView.showTooltip(.justText(text))
         }
         
+        let saveGalleryPremium:()->Void = { [weak self] in
+            self?.genericView.showTooltip(.tooltip(strings().storyTooltipSaveToGalleryPremium, MenuAnimation.menu_save_as))
+        }
+        
+        let enableStealth:()->Void = { [weak self] in
+            _ = context.engine.messages.enableStoryStealthMode().start()
+            self?.genericView.showTooltip(.tooltip(strings().storyTooltipStealthModeActivate("5", "25"), MenuAnimation.menu_eye_slash))
+        }
+        let activeStealthMode:()->Void = { [weak self] in
+            if let timestamp = self?.interactions.presentation.stealthMode.activeUntilTimestamp {
+                self?.genericView.showTooltip(.tooltip(strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))), MenuAnimation.menu_eye_slash))
+            }
+        }
+        
+        
         let react:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
             
             if let entryId = interactions?.presentation.entryId, let id = interactions?.presentation.storyId {
@@ -2359,10 +2376,12 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.genericView.showTooltip(.tooltip(text, MenuAnimation.menu_add_to_favorites))
         }, showTooltipText: { [weak self] text, animation in
             self?.genericView.showTooltip(.tooltip(text, animation))
-        }, storyContextMenu: { story in
+        }, storyContextMenu: { [weak self] story in
             guard let peer = story.peer, peer.id != context.peerId else {
                 return nil
             }
+            let stealthModeState = self?.arguments?.interaction.presentation.stealthMode
+            
             let peerId = peer.id
             let menu = ContextMenu(presentation: .current(storyTheme.colors))
             
@@ -2376,6 +2395,8 @@ final class StoryModalController : ModalViewController, Notifable {
                     share(story)
                 }, itemImage: MenuAnimation.menu_share.value))
             }
+           
+            
             if !story.storyItem.isForwardingDisabled {
                 let resource: TelegramMediaFile?
                 if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
@@ -2394,11 +2415,24 @@ final class StoryModalController : ModalViewController, Notifable {
                 
                 if let resource = resource {
                     menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
-                        saveAs(resource, account: context.account)
+                        if context.isPremium {
+                            saveAs(resource, account: context.account)
+                        } else {
+                            saveGalleryPremium()
+                        }
                     }, itemImage: MenuAnimation.menu_save_as.value))
                 }
             }
             if !peer.isService {
+                
+                menu.addItem(ContextMenuItem(strings().storyControlsMenuStealtMode, handler: {
+                    if stealthModeState?.activeUntilTimestamp != nil {
+                        activeStealthMode()
+                    } else {
+                        showModal(with: StoryStealthModeController(context, enableStealth: enableStealth, presentation: storyTheme), for: context.window)
+                    }
+                }, itemImage: MenuAnimation.menu_eye_slash.value))
+                
                 if peer._asPeer().storyArchived {
                     menu.addItem(ContextMenuItem(strings().storyControlsMenuUnarchive, handler: {                     toggleHide(peer._asPeer(), false)
                     }, itemImage: MenuAnimation.menu_unarchive.value))
@@ -2568,6 +2602,19 @@ final class StoryModalController : ModalViewController, Notifable {
         let signal = stories.state |> deliverOnMainQueue
 
                 
+        let stealthData = context.engine.data.subscribe(
+            TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
+        ) |> deliverOnMainQueue
+        
+        actionsDisposable.add(stealthData.start(next: { [weak self] data in
+            self?.interactions.update({ current in
+                var current = current
+                current.stealthMode = data.stealthModeState
+                return current
+            })
+        }))
+
+        
         disposable.set(combineLatest(signal, genericView.getReady).start(next: { [weak self] state, ready in
             if state.slice == nil {
                 self?.initialId = nil
@@ -2587,7 +2634,10 @@ final class StoryModalController : ModalViewController, Notifable {
                     var current = current
                     current.hasPopover = hasPopover(context.window) || NSApp.windows.contains(where: { ($0 as? Window)?.name == "reactions" })
                     current.hasMenu = contextMenuOnScreen()
-                    current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil || findModal(InputDataModalController.self, isAboveTo: self) != nil || findModal(ShareModalController.self, isAboveTo: self) != nil
+                    current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil
+                    || findModal(InputDataModalController.self, isAboveTo: self) != nil
+                    || findModal(ShareModalController.self, isAboveTo: self) != nil
+                    || findModal(StoryStealthModeController.self, isAboveTo: self) != nil
                     return current
                 }
             }
@@ -2864,6 +2914,7 @@ final class StoryModalController : ModalViewController, Notifable {
         disposable.dispose()
         updatesDisposable.dispose()
         inputSwapDisposable.dispose()
+        actionsDisposable.dispose()
     }
     
     override var containerBackground: NSColor {
