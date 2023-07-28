@@ -851,6 +851,7 @@ class PeerListContainerView : Control {
                 current.set(image: theme.icons.instantViewBack, for: .Normal)
                 current.set(text: "", for: .Normal)
                 current.sizeToFit(NSMakeSize(20, 20))
+                current.direction = .left
             } else if state.mode.isForum {
                 current.set(image: theme.icons.chatNavigationBack, for: .Normal)
                 current.set(text: "", for: .Normal)
@@ -858,7 +859,7 @@ class PeerListContainerView : Control {
             } else {
                 current.set(image: theme.icons.chatNavigationBack, for: .Normal)
                 current.set(text: strings().navigationBack, for: .Normal)
-                current.sizeToFit(NSMakeSize(20, 20))
+                current.sizeToFit(NSMakeSize(0, 20))
             }
             current.set(color: theme.colors.accent, for: .Normal)
             current.set(font: .medium(.title), for: .Normal)
