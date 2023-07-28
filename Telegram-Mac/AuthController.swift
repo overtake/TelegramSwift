@@ -582,8 +582,8 @@ class AuthController : GenericViewController<AuthView> {
                             }
                         })
                         
-                        let timestamp = Int32(Date().timeIntervalSince1970)
-                        let timeout = max(5, token.validUntil - timestamp)
+                        let timestamp = Int32(account.network.globalTime)
+                        let timeout = min(max(5, token.validUntil - timestamp), 30)
                         self.exportTokenDisposable.set((Signal<Never, NoError>.complete()
                             |> delay(Double(timeout), queue: .mainQueue())).start(completed: refreshToken))
                         

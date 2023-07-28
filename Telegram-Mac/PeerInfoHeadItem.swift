@@ -171,11 +171,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     
     
  
-    if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments {
+    if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments, peer.id != item.context.peerId {
         if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
             items.append(ActionItem(text: strings().peerInfoActionMessage, image: theme.icons.profile_message, animation: .menu_show_message, action: arguments.sendMessage))
         }
-        if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
+        if peer.canCall, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
             if let cachedData = item.peerView.cachedData as? CachedUserData, cachedData.voiceCallsAvailable {
                 items.append(ActionItem(text: strings().peerInfoActionCall, image: theme.icons.profile_call, animation: .menu_call, action: {
                     arguments.call(false)
@@ -205,10 +205,13 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         }
-        let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
-        items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: .menu_mute, action: {
-            arguments.toggleNotifications(value)
-        }))
+        if peer.id != item.context.peerId {
+            let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
+            items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: .menu_mute, action: {
+                arguments.toggleNotifications(value)
+            }))
+        }
+        
         if !peer.isBot {
             if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
                 items.append(ActionItem(text: strings().peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, animation: .menu_lock, action: arguments.startSecretChat))
