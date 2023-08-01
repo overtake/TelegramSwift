@@ -83,7 +83,7 @@ enum PremiumLogEventsSource : Equatable {
         case .translations:
             return "translations"
         case .stealth_mode:
-            return "stealth_mode"
+            return "stories__stealth_mode"
         }
     }
     var subsource: String? {
