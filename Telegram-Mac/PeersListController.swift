@@ -605,6 +605,8 @@ class PeerListContainerView : Control {
     }
     private let borderView = View()
     
+    private let fakeBackView = Control()
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         compose.autohighlight = false
@@ -646,6 +648,12 @@ class PeerListContainerView : Control {
         
         updateLocalizationAndTheme(theme: theme)
         
+        
+        fakeBackView.set(handler: { [weak self] _ in
+            self?.backButton?.send(event: .Click)
+        }, for: .Click)
+        
+        statusContainer.addSubview(fakeBackView)
         
     }
     
@@ -841,7 +849,8 @@ class PeerListContainerView : Control {
             } else {
                 current = TitleButton()
                 self.backButton = current
-                backButton?.set(handler: { [weak arguments] _ in
+                current.animates = false
+                self.backButton?.set(handler: { [weak arguments] _ in
                     arguments?.getController()?.navigationController?.back()
                 }, for: .Click)
                 statusContainer.addSubview(current, positioned: .below, relativeTo: statusContainer.subviews.first)
@@ -851,7 +860,6 @@ class PeerListContainerView : Control {
                 current.set(image: theme.icons.instantViewBack, for: .Normal)
                 current.set(text: "", for: .Normal)
                 current.sizeToFit(NSMakeSize(20, 20))
-                current.direction = .left
             } else if state.mode.isForum {
                 current.set(image: theme.icons.chatNavigationBack, for: .Normal)
                 current.set(text: "", for: .Normal)
@@ -1296,6 +1304,7 @@ class PeerListContainerView : Control {
         
         if let view = self.backButton {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: 20))
+            transition.updateFrame(view: fakeBackView, frame: NSMakeRect(0, 0, max(80, view.frame.width), statusContainer.frame.height))
         }
         
 
@@ -1335,14 +1344,9 @@ class PeerListContainerView : Control {
         
         if let storiesItem = storiesItem, let view = storiesView {
             let size = NSMakeSize(size.width, storiesItem.height)
-            let reversed = 1 - storiesItem.progress
-            
-            let middle = size.width / 2
                         
             var rect = CGRect(origin: NSMakePoint(storyX, 10 + storiesItem.getInterfaceState().progress * 40), size: size)
-            
-//            rect.origin.x -= (1 - progress) * (size.width - 70)
-            
+                        
             if storiesItem.itemsCount < 3 {
                 rect.origin.x += (1 - storiesItem.getInterfaceState().progress) * (StoryListChatListRowItem.smallSize.width / 2 * CGFloat(3 - storiesItem.itemsCount))
             }
@@ -3067,8 +3071,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private var scrollPositions: [CGFloat] = []
     private func processScroll() {
         
+        
         guard storyInterfaceState != .empty, initFromEvent == nil || initFromEvent == false else {
             return
+        }
+        if genericView.tableView.liveScrolling {
+//            let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
+//            optional?.view?.layer?.removeAllAnimations()
         }
         
         if storyInterfaceState == .revealed || storyInterfaceState.toHideProgress {

@@ -6847,6 +6847,10 @@ public final class L10n {
   public static var locationSendTitle: String  { return L10n.tr("Localizable", "Location.Send.Title") }
   /// Unknown Location
   public static var locationSendThisLocationUnknown: String  { return L10n.tr("Localizable", "Location.Send.ThisLocation.Unknown") }
+  /// Open in Google Maps
+  public static var locationPreviewOpenInMaps: String  { return L10n.tr("Localizable", "LocationPreview.OpenInMaps") }
+  /// Location Preview
+  public static var locationPreviewTitle: String  { return L10n.tr("Localizable", "LocationPreview.Title") }
   /// code
   public static var loginCodePlaceholder: String  { return L10n.tr("Localizable", "Login.codePlaceholder") }
   /// Continue in English
@@ -12225,6 +12229,42 @@ public final class L10n {
   public static var storyMediaTitleArchive: String  { return L10n.tr("Localizable", "StoryMedia.Title.Archive") }
   /// My Stories
   public static var storyMediaTitleMyStories: String  { return L10n.tr("Localizable", "StoryMedia.Title.MyStories") }
+  /// Block User
+  public static var storyViewContextMenuBlock: String  { return L10n.tr("Localizable", "StoryView.ContextMenu.Block") }
+  /// Delete Contact
+  public static var storyViewContextMenuDeleteContact: String  { return L10n.tr("Localizable", "StoryView.ContextMenu.DeleteContact") }
+  /// Hide My Stories From %@
+  public static func storyViewContextMenuHideMyStories(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryView.ContextMenu.HideMyStories", p1)
+  }
+  /// Show My Stories To %@
+  public static func storyViewContextMenuShowMyStories(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryView.ContextMenu.ShowMyStories", p1)
+  }
+  /// Unblock
+  public static var storyViewContextMenuUnblock: String  { return L10n.tr("Localizable", "StoryView.ContextMenu.Unblock") }
+  /// View Location
+  public static var storyViewMediaAreaViewLocation: String  { return L10n.tr("Localizable", "StoryView.MediaArea.ViewLocation") }
+  /// %@ has blocked.
+  public static func storyViewTooltipBlock(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryView.Tooltip.Block", p1)
+  }
+  /// %@ has deleted from your contacts.
+  public static func storyViewTooltipDeleteContact(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryView.Tooltip.DeleteContact", p1)
+  }
+  /// %@ will not see your stories anymore.
+  public static func storyViewTooltipHideMyStories(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryView.Tooltip.HideMyStories", p1)
+  }
+  /// %@ will now see your stories.
+  public static func storyViewTooltipShowMyStories(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryView.Tooltip.ShowMyStories", p1)
+  }
+  /// %@ has unblocked.
+  public static func storyViewTooltipUnblock(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StoryView.Tooltip.Unblock", p1)
+  }
   /// %d
   public static func storyViewsTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_countable", p1)
