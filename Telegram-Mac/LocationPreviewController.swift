@@ -52,7 +52,7 @@ private func entries(_ state:State, arguments: Arguments) -> [InputDataEntry] {
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map, equatable: InputDataEquatable(state.map), comparable: nil, item: { initialSize, stableId in
-        return LocationPreviewMapRowItem(initialSize, height: 330, stableId: stableId, context: arguments.context, latitude: state.map.latitude, longitude: state.map.longitude, peer: state.peer, viewType: .legacy, presentation: arguments.presentation)
+        return LocationPreviewMapRowItem(initialSize, height: 400, stableId: stableId, context: arguments.context, latitude: state.map.latitude, longitude: state.map.longitude, peer: state.peer, viewType: .legacy, presentation: arguments.presentation)
     }))
     index += 1
     
@@ -98,7 +98,7 @@ func LocationModalPreview(_ context: AccountContext, venue: MediaArea.Venue, pee
         return .none
     }
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(300, 330))
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(380, 400))
     
     modalController.getModalTheme = {
         .init(presentation: presentation)
