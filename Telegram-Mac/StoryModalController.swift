@@ -2367,7 +2367,7 @@ final class StoryModalController : ModalViewController, Notifable {
         }, markAsRead: { [weak self] peerId, storyId in
             self?.stories.markAsSeen(id: .init(peerId: peerId, id: storyId))
         }, showViewers: { [weak self] story in
-            if story.storyItem.expirationTimestamp + 24 * 60 * 60 < context.timestamp {
+            if story.storyItem.expirationTimestamp + 24 * 60 * 60 < context.timestamp, !context.isPremium {
                 self?.genericView.showTooltip(.tooltip(strings().storyAlertViewsExpired, MenuAnimation.menu_clear_history))
             } else if story.storyItem.views?.seenCount == 0 {
                 self?.genericView.showTooltip(.tooltip(strings().storyAlertNoViews, MenuAnimation.menu_clear_history))
