@@ -2763,6 +2763,8 @@ public final class L10n {
   }
   /// imported
   public static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
+  /// OPEN LINK
+  public static var chatMessageOpenLink: String  { return L10n.tr("Localizable", "Chat.Message.OpenLink") }
   /// OPEN STORY
   public static var chatMessageOpenStory: String  { return L10n.tr("Localizable", "Chat.Message.OpenStory") }
   /// recommended

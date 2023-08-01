@@ -204,8 +204,10 @@ class ChatMessageItem: ChatRowItem {
     }
     
     var actionButtonText: String? {
-        if let _ = message?.adAttribute, let author = message?.author {
-            if author.isBot {
+        if let adAtribute = message?.adAttribute, let author = message?.author {
+            if case .webPage = adAtribute.target {
+                return strings().chatMessageOpenLink
+            } else if author.isBot {
                 return strings().chatMessageViewBot
             } else if author.isGroup || author.isSupergroup {
                 return strings().chatMessageViewGroup
@@ -291,7 +293,7 @@ class ChatMessageItem: ChatRowItem {
             case let .join(_, joinHash):
                 link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
             case let .webPage(title, url: url):
-                fatalError("must be supported")
+                link = .external(link: url, false)
             }
             chatInteraction.markAdAction(adAttribute.opaqueId)
             execute(inapp: link)
