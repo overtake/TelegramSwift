@@ -123,7 +123,7 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
         return .none
     }
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(300, 330))
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(380, 330))
     
     close = { [weak modalController] in
         modalController?.close()

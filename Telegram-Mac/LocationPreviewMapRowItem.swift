@@ -208,7 +208,7 @@ private final class LocationPreviewMapRowView : TableRowView, MKMapViewDelegate 
         
         let focus:(Bool)->Void = { [weak self, unowned item] animated in
             let center = item.pin.coordinate
-            let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+            let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
             self?.mapView.setRegion(region, animated: animated)
             self?.doNotUpdateRegion = false
         }

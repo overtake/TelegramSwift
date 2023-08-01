@@ -557,7 +557,7 @@ final class StoryListView : Control, Notifable {
     
     
     private func mediaAreaViewerRect(_ mediaArea: MediaArea) -> NSRect {
-        let referenceSize = self.contentSize
+        let referenceSize = self.controls.frame.size
         let size = CGSize(width: 16.0, height: 16.0)
         var frame = CGRect(x: mediaArea.coordinates.x / 100.0 * referenceSize.width - size.width / 2.0, y: (mediaArea.coordinates.y - mediaArea.coordinates.height * 0.5)  / 100.0 * referenceSize.height - size.height / 2.0, width: size.width, height: size.height)
         frame = frame.offsetBy(dx: 0.0, dy: -8)
@@ -605,9 +605,9 @@ final class StoryListView : Control, Notifable {
             return nil
         }
         
-        let point = NSMakePoint(point.x, point.y + 20)
+        let point = NSMakePoint(point.x, point.y)
                 
-        let referenceSize = self.contentSize
+        let referenceSize = self.controls.frame.size
         
         var selectedMediaArea: MediaArea?
                                                 
@@ -623,6 +623,7 @@ final class StoryListView : Control, Notifable {
             
             return abs(rotatedX) <= area.coordinates.width / 100.0 * referenceSize.width / 2.0 && abs(rotatedY) <= area.coordinates.height / 100.0 * referenceSize.height / 2.0
         }
+
         
         for area in story.storyItem.mediaAreas {
              if isPoint(point, in: area) {
