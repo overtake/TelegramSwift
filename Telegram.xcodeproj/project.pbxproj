@@ -584,6 +584,8 @@
 		27D48B4A2A7273A200721995 /* menu_eye_locked.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D48B462A7273A000721995 /* menu_eye_locked.tgs */; };
 		27D48B4B2A7273A200721995 /* menu_eye_slash.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D48B472A7273A200721995 /* menu_eye_slash.tgs */; };
 		27D48B4D2A72F87000721995 /* PremiumBoardingStoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D48B4C2A72F87000721995 /* PremiumBoardingStoriesController.swift */; };
+		27D48B612A78F6E800721995 /* StoryViewMediaAreaViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D48B602A78F6E800721995 /* StoryViewMediaAreaViewer.swift */; };
+		27D48B632A790BA900721995 /* LocationPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D48B622A790BA900721995 /* LocationPreviewController.swift */; };
 		27D4F6DF261B776200CCAE03 /* Notices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D4F6DE261B776200CCAE03 /* Notices.swift */; };
 		27D604292948A2DD00588C21 /* menu_send_spoiler.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */; };
 		27D6042B294B756700588C21 /* DataStorageExceptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6042A294B756700588C21 /* DataStorageExceptions.swift */; };
@@ -2013,6 +2015,8 @@
 		27D48B462A7273A000721995 /* menu_eye_locked.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_eye_locked.tgs; sourceTree = "<group>"; };
 		27D48B472A7273A200721995 /* menu_eye_slash.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_eye_slash.tgs; sourceTree = "<group>"; };
 		27D48B4C2A72F87000721995 /* PremiumBoardingStoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumBoardingStoriesController.swift; sourceTree = "<group>"; };
+		27D48B602A78F6E800721995 /* StoryViewMediaAreaViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewMediaAreaViewer.swift; sourceTree = "<group>"; };
+		27D48B622A790BA900721995 /* LocationPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPreviewController.swift; sourceTree = "<group>"; };
 		27D4F6DE261B776200CCAE03 /* Notices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Notices.swift; sourceTree = "<group>"; };
 		27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_send_spoiler.tgs; sourceTree = "<group>"; };
 		27D6042A294B756700588C21 /* DataStorageExceptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStorageExceptions.swift; sourceTree = "<group>"; };
@@ -3101,6 +3105,7 @@
 				279B03552A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift */,
 				275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */,
 				27D48B422A72721200721995 /* StoryStealthModeController.swift */,
+				27D48B602A78F6E800721995 /* StoryViewMediaAreaViewer.swift */,
 			);
 			name = stories;
 			sourceTree = "<group>";
@@ -3893,6 +3898,7 @@
 				D0D752C722F8A76100E2CB74 /* Geocoding.swift */,
 				D06C69542539F6BD00DD9005 /* LiveLocationViewController.swift */,
 				D06C695E253DC5DF00DD9005 /* LocationPreviewMapRowItem.swift */,
+				27D48B622A790BA900721995 /* LocationPreviewController.swift */,
 			);
 			name = location;
 			sourceTree = "<group>";
@@ -7185,6 +7191,7 @@
 				C21795E31E795955006A2AA3 /* SecretChatKeyViewController.swift in Sources */,
 				D0E3684824D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift in Sources */,
 				C2CE43E420E2CFE800656543 /* PlayerListController.swift in Sources */,
+				27D48B632A790BA900721995 /* LocationPreviewController.swift in Sources */,
 				9F21A7DC21C290E00037784F /* InstantPageTableItem.swift in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */,
 				C2905E1C207E4D9E00990AD7 /* InstantPageAudioView.swift in Sources */,
@@ -7308,6 +7315,7 @@
 				277DFE6F27848AAB00F78396 /* ContextPeerMenuItem.swift in Sources */,
 				C2DF47E41DE84A67003AA6C0 /* ChatVoiceRowItem.swift in Sources */,
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
+				27D48B612A78F6E800721995 /* StoryViewMediaAreaViewer.swift in Sources */,
 				279BD41029BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift in Sources */,
 				D05F392322FB45450040F341 /* DateSelectorModalController.swift in Sources */,
 				D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */,

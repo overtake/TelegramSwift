@@ -154,6 +154,8 @@ final class StoryInteraction : InterfaceObserver {
         var entryId: PeerId? = nil
         var closed: Bool = false
         
+        var isAreaActivated: Bool = false
+        
         var canRecordVoice: Bool = true
         var isProfileIntended: Bool = false
         var emojiState: EntertainmentState = FastSettings.entertainmentState
@@ -162,7 +164,7 @@ final class StoryInteraction : InterfaceObserver {
         var stealthMode: Stories.StealthModeState = .init(activeUntilTimestamp: nil, cooldownUntilTimestamp: nil)
         
         var isPaused: Bool {
-            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown
+            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated
         }
         
         var inTransition: Bool {
@@ -205,6 +207,22 @@ final class StoryInteraction : InterfaceObserver {
         if oldValue != presentation {
             notifyObservers(value: presentation, oldValue:oldValue, animated: animated)
         }
+    }
+    
+    func activateArea() {
+//        self.update { current in
+//            var current = current
+//            current.isAreaActivated = true
+//            return current
+//        }
+    }
+    
+    func deactivateArea() {
+//        self.update { current in
+//            var current = current
+//            current.isAreaActivated = false
+//            return current
+//        }
     }
     
     func updateMagnify(_ value: CGFloat) {
@@ -325,7 +343,10 @@ final class StoryArguments {
     let showFriendsTooltip:(Control, StoryContentItem)->Void
     let showTooltipText:(String, MenuAnimation)->Void
     let storyContextMenu:(StoryContentItem)->ContextMenu?
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?) {
+    let activateMediaArea:(MediaArea)->Void
+    let deactivateMediaArea:(MediaArea)->Void
+    let invokeMediaArea:(MediaArea)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -354,6 +375,9 @@ final class StoryArguments {
         self.showTooltipText = showTooltipText
         self.react = react
         self.storyContextMenu = storyContextMenu
+        self.activateMediaArea = activateMediaArea
+        self.deactivateMediaArea = deactivateMediaArea
+        self.invokeMediaArea = invokeMediaArea
     }
     
     func longDown() {
@@ -1230,6 +1254,7 @@ private final class StoryViewController: Control, Notifable {
                 current.readingText = false
                 current.mouseDown = false
                 current.longDown = false
+                current.isAreaActivated = false
             }
             return current
         })
@@ -2248,6 +2273,16 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }
         
+        let activateMediaArea:(MediaArea)->Void = { [weak self] area in
+            self?.arguments?.interaction.activateArea()
+            self?.genericView.current?.showMediaAreaViewer(area)
+        }
+        
+        let deactivateMediaArea:(MediaArea)->Void = { [weak self] area in
+            self?.arguments?.interaction.deactivateArea()
+            self?.genericView.current?.hideMediaAreaViewer()
+        }
+        
         
         let react:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
             
@@ -2459,6 +2494,15 @@ final class StoryModalController : ModalViewController, Notifable {
 
             }
             return menu
+        }, activateMediaArea: { area in
+            activateMediaArea(area)
+        }, deactivateMediaArea: { area in
+            deactivateMediaArea(area)
+        }, invokeMediaArea: { [weak self] area in
+            switch area {
+            case let .venue(_, venue):
+                showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: storyTheme), for: context.window)
+            }
         })
         
         self.arguments = arguments
@@ -2655,6 +2699,7 @@ final class StoryModalController : ModalViewController, Notifable {
         }))
         
     }
+    
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -2856,10 +2901,18 @@ final class StoryModalController : ModalViewController, Notifable {
         return interactions.presentation.hasModal || interactions.presentation.hasPopover || interactions.presentation.hasMenu
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         window?.removeObserver(for: self)
         window?.keyUpHandler = nil
+    }
+    
+    override func returnKeyAction() -> KeyHandlerResult {
+        return .invokeNext
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {

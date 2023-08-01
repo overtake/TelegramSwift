@@ -23,13 +23,15 @@ private final class StoryViewerRowItem : GeneralRowItem {
     fileprivate let dateLayout: TextViewLayout
     fileprivate let callback: (PeerId)->Void
     fileprivate let openStory:(PeerId)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer, storyStats: PeerStoryStats?, timestamp: Int32, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void) {
+    fileprivate let contextMenu:(PeerId)->Signal<[ContextMenuItem], NoError>
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer, storyStats: PeerStoryStats?, timestamp: Int32, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>) {
         self.context = context
         self.peer = peer
         self.openStory = openStory
         self.storyStats = storyStats
         self.callback = callback
         self.presentation = presentation
+        self.contextMenu = contextMenu
         
         self.nameLayout = .init(.initialize(string: peer.displayTitle, color: presentation.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         
@@ -49,10 +51,18 @@ private final class StoryViewerRowItem : GeneralRowItem {
         _ = makeSize(initialSize.width)
     }
     
+    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
+        return contextMenu(self.peer.id)
+    }
+    
+    override var menuPresentation: AppMenu.Presentation {
+        return .init(colors: storyTheme.colors)
+    }
+    
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        nameLayout.measure(width: width - 36 - 16 - 16 - 10)
+        nameLayout.measure(width: width - 36 - 16 - 16 - 10 - (peer.isPremium ? 20 : 0))
         dateLayout.measure(width: width - 36 - 16 - 16 - 10 - 18)
 
         return true
@@ -75,7 +85,8 @@ private final class StoryViewerRowView: GeneralRowView {
     private let stateIcon = ImageView()
     private let borderView = View()
     private let content = Control()
-    
+    private var statusControl: PremiumStatusControl?
+
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(content)
@@ -127,6 +138,15 @@ private final class StoryViewerRowView: GeneralRowView {
             return
         }
         
+        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+        if let control = control {
+            self.statusControl = control
+            self.content.addSubview(control)
+        } else if let view = self.statusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.statusControl = nil
+        }
+        
         stateIcon.image = item.presentation.icons.story_view_read
         stateIcon.sizeToFit()
         
@@ -158,8 +178,12 @@ private final class StoryViewerRowView: GeneralRowView {
         
         let contentX = container.frame.maxX + 10
         
+        
         title.setFrameOrigin(NSMakePoint(contentX, 10))
         date.setFrameOrigin(NSMakePoint(contentX + 18, frame.height - date.frame.height - 10))
+
+        
+        statusControl?.setFrameOrigin(NSMakePoint(title.frame.maxX + 3, 10))
 
         stateIcon.setFrameOrigin(NSMakePoint(contentX, frame.height - stateIcon.frame.height - 10))
         
@@ -172,11 +196,13 @@ private final class Arguments {
     let presentation: TelegramPresentationTheme
     let callback:(PeerId)->Void
     let openStory:(PeerId)->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void) {
+    let contextMenu:(PeerId)->Signal<[ContextMenuItem], NoError>
+    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>) {
         self.context = context
         self.presentation = presentation
         self.callback = callback
         self.openStory = openStory
+        self.contextMenu = contextMenu
     }
 }
 
@@ -215,7 +241,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
-                return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory)
+                return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory, contextMenu: arguments.contextMenu)
             }))
             index += 1
         }
@@ -255,6 +281,48 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
         }, setProgress: { value in
             setProgress?(peerId, value)
         }), singlePeer: true)
+    }, contextMenu: { peerId in
+        return combineLatest(getCachedDataView(peerId: peerId, postbox: context.account.postbox), context.account.viewTracker.peerView(peerId)) |> take(1) |> map { cachedData, peerView in
+            var items: [ContextMenuItem] = []
+            if let view = cachedData as? CachedUserData, let peer = peerViewMainPeer(peerView) {
+                let blockedFromStories = view.flags.contains(.isBlockedFromStories)
+                items.append(ContextMenuItem(blockedFromStories ? strings().storyViewContextMenuShowMyStories(peer.compactDisplayTitle) : strings().storyViewContextMenuHideMyStories(peer.compactDisplayTitle), handler: {
+                    let text: String
+                    if blockedFromStories {
+                        _ = context.storiesBlockedPeersContext.remove(peerId: peerId).start()
+                        text = strings().storyViewTooltipShowMyStories(peer.compactDisplayTitle)
+                    } else {
+                        _ = context.storiesBlockedPeersContext.add(peerId: peerId).start()
+                        text = strings().storyViewTooltipHideMyStories(peer.compactDisplayTitle)
+                    }
+                    showModalText(for: context.window, text: text)
+                }, itemImage: MenuAnimation.menu_stories.value))
+                
+                items.append(ContextSeparatorItem())
+                
+                
+                if peerView.peerIsContact {
+                    items.append(ContextMenuItem(strings().storyViewContextMenuDeleteContact, handler: {
+                        let text: String = strings().storyViewTooltipDeleteContact(peer.compactDisplayTitle)
+                        _ = context.engine.contacts.deleteContactPeerInteractively(peerId: peerId).start()
+                        showModalText(for: context.window, text: text)
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                } else {
+                    items.append(ContextMenuItem(view.isBlocked ? strings().storyViewContextMenuUnblock : strings().storyViewContextMenuBlock, handler: {
+                        let text: String
+                        if view.isBlocked {
+                            _ = context.blockedPeersContext.remove(peerId: peerId).start()
+                            text = strings().storyViewTooltipUnblock(peer.compactDisplayTitle)
+                        } else {
+                            _ = context.blockedPeersContext.add(peerId: peerId).start()
+                            text = strings().storyViewTooltipBlock(peer.compactDisplayTitle)
+                        }
+                        showModalText(for: context.window, text: text)
+                    }, itemMode: !view.isBlocked ? .destruct : .normal, itemImage: view.isBlocked ? MenuAnimation.menu_unblock.value : MenuAnimation.menu_delete.value))
+                }
+            }
+            return items
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

@@ -1019,11 +1019,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var _scrollWillStartLiveScrolling:(()->Void)?
     public var _scrollDidLiveScrolling:(()->Void)?
     public var _scrollDidEndLiveScrolling:(()->Void)?
+    
+    public private(set) var liveScrolling: Bool = false
 
     open func scrollWillStartLiveScrolling() {
         self.clipView.layer?.removeAllAnimations()
         liveScrollStartPosition = documentOffset
         _scrollWillStartLiveScrolling?()
+        liveScrolling = true
     }
     private var liveScrollStack:[CGFloat] = []
     open func scrollDidLiveScrolling() {
@@ -1167,6 +1170,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     open func scrollDidEndLiveScrolling() {
+        liveScrolling = false
         if let autohide = self.autohide {
             if let autohideItem = autohide.item {
                 let rect = self.rectOf(item: autohideItem)
