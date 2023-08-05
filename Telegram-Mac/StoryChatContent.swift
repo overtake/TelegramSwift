@@ -348,7 +348,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         entities: item.entities,
                         views: item.views.flatMap { views in
                             return EngineStoryItem.Views(
-                                seenCount: views.seenCount,
+                                seenCount: views.seenCount, reactedCount: views.reactedCount,
                                 seenPeers: views.seenPeerIds.compactMap { id -> EnginePeer? in
                                     return peers[id].flatMap(EnginePeer.init)
                                 }
@@ -363,7 +363,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         isContacts: item.isContacts,
                         isSelectedContacts: item.isSelectedContacts,
                         isForwardingDisabled: item.isForwardingDisabled,
-                        isEdited: item.isEdited
+                        isEdited: item.isEdited,
+                        myReaction: item.myReaction
                     )
                 }
                 var totalCount = peerStoryItemsView.items.count
@@ -387,7 +388,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             isContacts: false,
                             isSelectedContacts: false,
                             isForwardingDisabled: false,
-                            isEdited: false
+                            isEdited: false,
+                            myReaction: nil
                         ))
                         totalCount += 1
                     }
@@ -1215,7 +1217,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     entities: itemValue.entities,
                     views: itemValue.views.flatMap { views in
                         return EngineStoryItem.Views(
-                            seenCount: views.seenCount,
+                            seenCount: views.seenCount, reactedCount: views.reactedCount,
                             seenPeers: views.seenPeerIds.compactMap { id -> EnginePeer? in
                                 return peers[id].flatMap(EnginePeer.init)
                             }
@@ -1230,7 +1232,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     isContacts: itemValue.isContacts,
                     isSelectedContacts: itemValue.isSelectedContacts,
                     isForwardingDisabled: itemValue.isForwardingDisabled,
-                    isEdited: itemValue.isEdited
+                    isEdited: itemValue.isEdited,
+                    myReaction: itemValue.myReaction
                 )
                 
                 let mainItem = StoryContentItem(

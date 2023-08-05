@@ -255,7 +255,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 func StoryViewersModalController(context: AccountContext, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
     
-    let storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, seenPeers: []))
+    let storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: []))
     
     let actionsDisposable = DisposableSet()
 
