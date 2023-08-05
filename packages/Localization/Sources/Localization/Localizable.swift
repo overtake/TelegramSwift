@@ -159,6 +159,8 @@ public final class L10n {
   public static var accountSettingsProxyConnecting: String  { return L10n.tr("Localizable", "AccountSettings.Proxy.Connecting") }
   /// Disabled
   public static var accountSettingsProxyDisabled: String  { return L10n.tr("Localizable", "AccountSettings.Proxy.Disabled") }
+  /// Settings
+  public static var accountViewControllerTitle: String  { return L10n.tr("Localizable", "AccountViewController.Title") }
   /// Update
   public static var accountViewControllerUpdate: String  { return L10n.tr("Localizable", "AccountViewController.Update") }
   /// failed
@@ -12167,7 +12169,7 @@ public final class L10n {
   public static var storyTooltipVideoSent: String  { return L10n.tr("Localizable", "Story.Tooltip.VideoSent") }
   /// View in Chat
   public static var storyTooltipButtonViewInChat: String  { return L10n.tr("Localizable", "Story.Tooltip.Button.ViewInChat") }
-  /// Subscribe to Telegram Premium to save other people's unprotected stories.
+  /// Subscribe to [Telegram Premium](premium) to save other people's unprotected stories.
   public static var storyTooltipSaveToGalleryPremium: String  { return L10n.tr("Localizable", "Story.Tooltip.SaveToGallery.Premium") }
   /// The creator of stories you viewed in the last %1$@ minutes or will view in the next %2$@ minutes won't see you in the viewers' lists.
   public static func storyTooltipStealthModeActivate(_ p1: String, _ p2: String) -> String {

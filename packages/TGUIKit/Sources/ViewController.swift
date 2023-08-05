@@ -471,7 +471,7 @@ open class ViewController : NSObject {
         public let keepLeft: CGFloat
         public let straightMove: Bool
         public let keepIn: Bool
-        
+        public let keepTop: ()->CGFloat
         public var isCustom: Bool {
             if keepLeft > 0 {
                 return true
@@ -482,19 +482,25 @@ open class ViewController : NSObject {
             if keepIn {
                 return true
             }
+            if keepTop() > 0 {
+                return true
+            }
             return false
         }
         
-        public init(keepLeft: CGFloat, straightMove: Bool, keepIn: Bool) {
+        public init(keepLeft: CGFloat, keepTop: @escaping()->CGFloat, straightMove: Bool, keepIn: Bool) {
             self.keepLeft = keepLeft
             self.straightMove = straightMove
             self.keepIn = keepIn
+            self.keepTop = keepTop
         }
         
         public static var `default`: StakeSettings {
-            return .init(keepLeft: 0, straightMove: false, keepIn: false)
+            return .init(keepLeft: 0, keepTop: { 0 }, straightMove: false, keepIn: false)
         }
     }
+    
+    
     
     fileprivate var _view:NSView?
     public var _frameRect:NSRect

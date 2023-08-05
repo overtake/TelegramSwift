@@ -183,7 +183,7 @@ final class AccountContext {
     let diceCache: DiceCache
     let inlinePacksContext: InlineStickersContext
     let cachedGroupCallContexts: AccountGroupCallContextCacheImpl
-    let networkStatusManager: NetworkStatusManager
+    //let networkStatusManager: NetworkStatusManager
     let inAppPurchaseManager: InAppPurchaseManager
     
     #endif
@@ -387,7 +387,7 @@ final class AccountContext {
         self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()
         self.activeSessionsContext = engine.privacy.activeSessions()
         self.webSessions = engine.privacy.webSessions()
-        self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
+        //self.networkStatusManager = NetworkStatusManager(account: account, window: window, sharedContext: sharedContext)
         self.reactions = Reactions(engine)
         #endif
         
@@ -823,7 +823,7 @@ final class AccountContext {
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
-        self.networkStatusManager.cleanup()
+        //self.networkStatusManager.cleanup()
         self.audioPlayer?.cleanup()
         self.audioPlayer = nil
         self.diceCache.cleanup()

@@ -321,6 +321,8 @@ class MainViewController: TelegramViewController {
         
         self.ready.set(combineLatest(queue: prepareQueue, self.chatList.ready.get(), self.settings.ready.get()) |> map { $0 && $1 })
         
+        
+        
         layoutDisposable.set(context.layoutValue.start(next: { [weak self] state in
             guard let `self` = self else {
                 return
@@ -679,7 +681,7 @@ class MainViewController: TelegramViewController {
     
     func isCanMinimisize() -> Bool{
         let current = self.tabController.current
-        return current == navigation || current == contacts || current == phoneCalls
+        return current == navigation
     }
     
     override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {

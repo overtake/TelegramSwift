@@ -363,7 +363,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         isContacts: item.isContacts,
                         isSelectedContacts: item.isSelectedContacts,
                         isForwardingDisabled: item.isForwardingDisabled,
-                        isEdited: item.isEdited
+                        isEdited: item.isEdited,
+                        hasLike: item.hasLike
                     )
                 }
                 var totalCount = peerStoryItemsView.items.count
@@ -387,7 +388,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             isContacts: false,
                             isSelectedContacts: false,
                             isForwardingDisabled: false,
-                            isEdited: false
+                            isEdited: false,
+                            hasLike: false
                         ))
                         totalCount += 1
                     }
@@ -1230,7 +1232,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     isContacts: itemValue.isContacts,
                     isSelectedContacts: itemValue.isSelectedContacts,
                     isForwardingDisabled: itemValue.isForwardingDisabled,
-                    isEdited: itemValue.isEdited
+                    isEdited: itemValue.isEdited,
+                    hasLike: itemValue.hasLike
                 )
                 
                 let mainItem = StoryContentItem(

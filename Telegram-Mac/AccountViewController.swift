@@ -36,14 +36,11 @@ private final class AccountSearchBarView: View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    fileprivate let edit = TitleButton()
     
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(searchView)
-        addSubview(edit)
-        border = [.Bottom, .Right]
         updateLocalizationAndTheme(theme: theme)
     }
     
@@ -51,19 +48,13 @@ private final class AccountSearchBarView: View {
         super.updateLocalizationAndTheme(theme: theme)
         searchView.updateLocalizationAndTheme(theme: theme)
         borderColor = theme.colors.border
-        edit.set(font: .medium(.title), for: .Normal)
-        edit.set(text: strings().navigationEdit, for: .Normal)
-        edit.set(color: theme.colors.accent, for: .Normal)
-        edit.scaleOnClick = true
         needsLayout = true
     }
     
     override func layout() {
         super.layout()
-        searchView.setFrameSize(NSMakeSize(frame.width - 72, 30))
+        searchView.setFrameSize(NSMakeSize(frame.width - 20, 30))
         searchView.centerY(x: 10)
-        edit.sizeToFit(.zero, NSMakeSize(62, 40), thatFit: true)
-        edit.centerY(x: searchView.frame.maxX)
     }
     
 }
@@ -601,25 +592,49 @@ private func prepareEntries(left: [AppearanceWrapperEntry<AccountInfoEntry>], ri
 final class AccountControllerView : Control {
     fileprivate let searchView: AccountSearchBarView
     fileprivate let tableView: TableView
+    fileprivate let edit = TitleButton()
+    private let statusContainer: View
+    private let textView = TextView()
+    
     required init(frame frameRect: NSRect) {
-        searchView = AccountSearchBarView(frame: NSMakeRect(0, 0, frameRect.width, 50))
+        statusContainer = .init(frame: NSMakeRect(0, 0, frameRect.width, 40))
+        searchView = AccountSearchBarView(frame: NSMakeRect(0, 40, frameRect.width, 50))
         tableView = TableView(frame: NSMakeRect(0, 50, frameRect.width, frameRect.height - 50))
         super.init(frame: frameRect)
+        addSubview(statusContainer)
         addSubview(searchView)
         addSubview(tableView)
         border = [.Right]
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+
+        statusContainer.addSubview(edit)
+        statusContainer.addSubview(textView)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         borderColor = theme.colors.border
-        
+        edit.set(font: .medium(.title), for: .Normal)
+        edit.set(text: strings().navigationEdit, for: .Normal)
+        edit.set(color: theme.colors.accent, for: .Normal)
+        edit.scaleOnClick = true
         self.backgroundColor = theme.colors.background
+        
+        let layout = TextViewLayout(.initialize(string: strings().accountViewControllerTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+        layout.measure(width: .greatestFiniteMagnitude)
+        textView.update(layout)
     }
     
     override func layout() {
         super.layout()
-        searchView.frame = NSMakeRect(0, 0, frame.width, 50)
+        statusContainer.frame = NSMakeRect(0, 0, frame.width, 40)
+        edit.sizeToFit(NSMakeSize(10, 14))
+        edit.setFrameOrigin(NSMakePoint(statusContainer.frame.width - edit.frame.width - 10, statusContainer.frame.height - edit.frame.height))
+        textView.centerX(y: 14)
+
+        searchView.frame = NSMakeRect(0, statusContainer.frame.maxY, frame.width, 50)
         tableView.frame = NSMakeRect(0, searchView.frame.maxY, frame.width, frame.height - searchView.frame.maxY)
     }
     
@@ -738,7 +753,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             self?.searchState.set(state)
         })
         
-        genericView.searchView.edit.set(handler: { [weak self] _ in
+        genericView.edit.set(handler: { [weak self] _ in
             guard let `self` = self else {return}
             let first: Atomic<Bool> = Atomic(value: true)
             EditAccountInfoController(context: context, f: { [weak self] controller in

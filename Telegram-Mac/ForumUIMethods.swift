@@ -67,10 +67,10 @@ struct ForumUI {
         
         _ = signal.start(next: { value in
             if value {
+                var parentIsArchive = false
                 let navigation = context.bindings.mainController().effectiveNavigation
-                var isFull: Bool = false
                 if let controller = navigation.controller as? ChatListController {
-                    if case .forum(peerId, _) = controller.mode {
+                    if case .forum(peerId, _, _) = controller.mode {
                         if context.layout == .single {
                             context.bindings.rootNavigation().gotoEmpty()
                         } else {
@@ -78,14 +78,11 @@ struct ForumUI {
                                 controller.view.shake(beep: false)
                             }
                         }
-                        
                         return
                     }
-                    if case .folder = controller.mode {
-                        isFull = true
-                    }
+                    parentIsArchive = controller.mode.groupId == .archive
                 }
-                navigation.push(ChatListController(context, modal: false, mode: .forum(peerId, isFull)))
+                navigation.push(ChatListController(context, modal: false, mode: .forum(peerId, false, parentIsArchive)))
                 if context.layout == .single {
                     context.bindings.rootNavigation().gotoEmpty()
                 }

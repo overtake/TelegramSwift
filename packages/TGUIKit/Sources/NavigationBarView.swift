@@ -38,6 +38,8 @@ public class NavigationBarView: View {
     private var centerView:BarView = BarView(frame: NSZeroRect)
     private var rightView:BarView = BarView(frame: NSZeroRect)
     
+    weak var navigation: NavigationViewController?
+    
     override init() {
         super.init()
    //     self.autoresizingMask = [.width]
@@ -91,6 +93,13 @@ public class NavigationBarView: View {
         return true
     }
     
+    var startPosition: CGFloat {
+        if let navigation = self.navigation {
+            return navigation.navigationBarLeftPosition
+        }
+        return 0
+    }
+    
     
     func layout(left: BarView, center: BarView, right: BarView, force: Bool = false) -> Void {
         
@@ -99,11 +108,13 @@ public class NavigationBarView: View {
         if frame.height > 0 {
             //proportions = 50 / 25 / 25
             
-            let leftWidth = left.isFitted ? left.frame.width : left.fit(to: (right.frame.width == right.minWidth ? frame.width / 3 : frame.width / 4))
-            let rightWidth = right.isFitted ? right.frame.width : right.fit(to: (left.frame.width == left.minWidth ? frame.width / 3 : frame.width / 4))
+            let width = frame.width - startPosition
             
-            left.frame = NSMakeRect(0, 0, leftWidth, frame.height - .borderSize);
-            center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (leftWidth + rightWidth), frame.height - .borderSize);
+            let leftWidth = left.isFitted ? left.frame.width : left.fit(to: (right.frame.width == right.minWidth ? width / 3 : width / 4))
+            let rightWidth = right.isFitted ? right.frame.width : right.fit(to: (left.frame.width == left.minWidth ? width / 3 : width / 4))
+            
+            left.frame = NSMakeRect(startPosition, 0, leftWidth, frame.height - .borderSize);
+            center.frame = NSMakeRect(left.frame.maxX, 0, width - (leftWidth + rightWidth), frame.height - .borderSize);
             right.frame = NSMakeRect(center.frame.maxX, 0, rightWidth, frame.height - .borderSize);
         }
     }
@@ -180,7 +191,6 @@ public class NavigationBarView: View {
         switch direction {
         case .right:
             
-            
             //center
             nLeft_to = round(frame.width - left.frame.width)/2.0 - (round(frame.width - left.frame.width)/2.0) * percent
             nCenter_to = left.frame.maxX + right.frame.width - (right.frame.width * percent)
@@ -190,7 +200,6 @@ public class NavigationBarView: View {
             pCenter_to = self.leftView.frame.width * (1.0 - percent)
             pRight_to = self.leftView.frame.width + self.centerView.frame.width
             
-            break
         case .left:
             
             nLeft_to = 0
@@ -200,7 +209,6 @@ public class NavigationBarView: View {
             pLeft_to = self.leftView.frame.minX
             pCenter_to = self.leftView.frame.width + self.centerView.frame.width * percent
             pRight_to = self.leftView.frame.width + self.centerView.frame.width
-            break
         case .none:
             break
         }
@@ -244,7 +252,7 @@ public class NavigationBarView: View {
         
       //  var animationStyle = AnimationStyle.init(duration: 3.0, function: animationStyle.function)
         
-
+        
         
         if !liveSwiping {
             layout(left: left, center: center, right: right)
@@ -300,9 +308,9 @@ public class NavigationBarView: View {
                 
                 //left
                 pLeft_from = liveSwiping ? pLeft.frame.minX : 0
-                pLeft_to = 0
+                pLeft_to = startPosition
                 nLeft_from = liveSwiping ? left.frame.minX : round(frame.width - left.frame.width)/2.0
-                nLeft_to = 0
+                nLeft_to = startPosition
                 
                 //center
                 pCenter_from = liveSwiping ? pCenter.frame.minX : pLeft.frame.width
@@ -322,9 +330,9 @@ public class NavigationBarView: View {
                 
                 //left
                 pLeft_from = liveSwiping ? pLeft.frame.minX : 0
-                pLeft_to = 0
+                pLeft_to = startPosition
                 nLeft_from = liveSwiping ? left.frame.minX : 0
-                nLeft_to = 0
+                nLeft_to = startPosition
                 
                 //center
                 pCenter_from = liveSwiping ? pCenter.frame.minX : center.frame.minX
