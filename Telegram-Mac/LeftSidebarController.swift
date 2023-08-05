@@ -202,7 +202,7 @@ private enum LeftSibarBarEntry : Comparable, Identifiable {
         case let .folder(_, selected, filter, unreadCount, hasUnmutedUnread):
             return LeftSidebarFolderItem(initialSize, context: arguments.context, folder: filter, selected: selected, unreadCount: unreadCount, hasUnmutedUnread: hasUnmutedUnread, callback: arguments.callback, menuItems: arguments.menuItems)
         case .topOffset:
-            return GeneralRowItem(initialSize, height: 16, stableId: stableId, backgroundColor: .clear)
+            return GeneralRowItem(initialSize, height: 24, stableId: stableId, backgroundColor: .clear)
         }
     }
 }

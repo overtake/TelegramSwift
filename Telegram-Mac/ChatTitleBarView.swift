@@ -531,9 +531,20 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
 
     private var currentPhoto: TelegramPeerPhoto?
     
+    private var mouseDownWindowFrame: NSRect? = nil
+
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        mouseDownWindowFrame = window?.frame
+    }
 
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
+        
+        if mouseDownWindowFrame != window?.frame {
+            return
+        }
         
         let point = convert(event.locationInWindow, from: nil)
 

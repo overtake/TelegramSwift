@@ -54,6 +54,7 @@ enum PremiumLogEventsSource : Equatable {
     case send_as
     case translations
     case stealth_mode
+    case stories__save_to_galery
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -84,6 +85,8 @@ enum PremiumLogEventsSource : Equatable {
             return "translations"
         case .stealth_mode:
             return "stories__stealth_mode"
+        case .stories__save_to_galery:
+            return "stories__save_to_galery"
         }
     }
     var subsource: String? {

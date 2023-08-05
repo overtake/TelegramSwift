@@ -216,10 +216,28 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func updateGraphicContext() {
         ctxLayer?.display()
     }
+
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
       
+//        window.styleMask.insert(.fullSizeContentView)
+//        window.styleMask.insert(.unifiedTitleAndToolbar)
+        //window.styleMask.insert(.borderless)
+        let customToolbar = NSToolbar()
+        customToolbar.showsBaselineSeparator = false
+        
+//        window.titlebarAppearsTransparent = true
+//        window.titleVisibility = .hidden
+        window.toolbar = customToolbar
+        
+        
+        
+//        titleBarAccessoryViewController.view = View()
+//        titleBarAccessoryViewController.view.background = .random
+//
+//        titleBarAccessoryViewController.view.frame = NSMakeRect(0, 0, 0, 100) // Width not used.
+//        window.addTitlebarAccessoryViewController(titleBarAccessoryViewController)
         
         appDelegate = self
         ApiEnvironment.migrate()
@@ -247,12 +265,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         window.contentView?.autoresizesSubviews = true
         
         
-        let ctxLayer = CtxInstallLayer()
-        self.ctxLayer = ctxLayer
-        window.contentView?.layer?.addSublayer(ctxLayer)
+//        let ctxLayer = CtxInstallLayer()
+//        self.ctxLayer = ctxLayer
+//        window.contentView?.layer?.addSublayer(ctxLayer)
         
-        ctxLayer.setNeedsDisplay()
-        ctxLayer.display()
+//        ctxLayer.setNeedsDisplay()
+//        ctxLayer.display()
                 
         let crashed = isCrashedLastTime(containerUrl.path)
         deinitCrashHandler(containerUrl.path)
