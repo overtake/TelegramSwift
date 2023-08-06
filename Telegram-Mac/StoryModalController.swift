@@ -163,6 +163,8 @@ final class StoryInteraction : InterfaceObserver {
         var recordType: RecordingStateSettings = FastSettings.recordingState
         var stealthMode: Stories.StealthModeState = .init(activeUntilTimestamp: nil, cooldownUntilTimestamp: nil)
         
+        var reactions: AvailableReactions?
+        
         var isPaused: Bool {
             return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated
         }
@@ -346,7 +348,8 @@ final class StoryArguments {
     let activateMediaArea:(MediaArea)->Void
     let deactivateMediaArea:(MediaArea)->Void
     let invokeMediaArea:(MediaArea)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void) {
+    let like:(MessageReaction.Reaction?, StoryInteraction.State)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -378,6 +381,7 @@ final class StoryArguments {
         self.activateMediaArea = activateMediaArea
         self.deactivateMediaArea = deactivateMediaArea
         self.invokeMediaArea = invokeMediaArea
+        self.like = like
     }
     
     func longDown() {
@@ -2503,6 +2507,11 @@ final class StoryModalController : ModalViewController, Notifable {
             case let .venue(_, venue):
                 showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: storyTheme), for: context.window)
             }
+        }, like: { [weak self] current, state in
+            guard let peerId = state.entryId, let story = state.storyId else {
+                return
+            }
+            _ = context.engine.messages.setStoryReaction(peerId: peerId, id: story, reaction: current).start()
         })
         
         self.arguments = arguments
@@ -2654,6 +2663,14 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.interactions.update({ current in
                 var current = current
                 current.stealthMode = data.stealthModeState
+                return current
+            })
+        }))
+        
+        actionsDisposable.add(context.reactions.stateValue.start(next: { [weak self] reactions in
+            self?.interactions.update({ current in
+                var current = current
+                current.reactions = reactions
                 return current
             })
         }))

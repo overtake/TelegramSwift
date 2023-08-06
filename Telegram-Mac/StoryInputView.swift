@@ -14,6 +14,12 @@ import Postbox
 import TelegramCore
 import ColorPalette
 
+extension MessageReaction.Reaction {
+    static var defaultStoryLike: MessageReaction.Reaction {
+        return .builtin("❤️".withoutColorizer)
+    }
+}
+
 private let placeholderColor = NSColor.white.withAlphaComponent(0.33)
 
 enum StoryInputState : Equatable {
@@ -40,10 +46,12 @@ protocol StoryInput {
 private var send_image: CGImage {
     NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent)
 }
-
 private var send_image_active: CGImage {
     NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent.darker())
 }
+
+private let like_image: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 0.33))
+private var like_image_active: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 0.53))
 
 
 private let attach_image: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.33))
@@ -71,6 +79,196 @@ private let share_image: CGImage  = NSImage(named: "Icon_StoryShare")!.precompos
 private let share_image_active: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 0.53))
 
 
+private final class StoryLikeActionButton: Control {
+    private let control: ImageButton = ImageButton(frame: NSMakeRect(0, 0, 50, 50))
+    private var myReaction: MessageReaction.Reaction?
+    private var story: StoryContentItem?
+    private var state: StoryInteraction.State?
+    private var reaction: InlineStickerItemLayer?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(control)
+        self.layer?.masksToBounds = false
+        control.userInteractionEnabled = false
+    }
+    
+    override func stateDidUpdate(_ state: ControlState) {
+        control.controlState = state
+    }
+    
+    override var isSelected: Bool {
+        didSet {
+            control.isSelected = isSelected
+        }
+    }
+    
+    func react(_ reaction: MessageReaction.Reaction, state: StoryInteraction.State, context: AccountContext) {
+        self.myReaction = reaction
+        if let view = self.reaction {
+            performSublayerRemoval(view, animated: true, scale: true)
+        }
+        let layer: InlineStickerItemLayer? = makeView(reaction, state: state, context: context, appear: true)
+        if let layer = layer {
+            layer.animateAlpha(from: 0, to: 1, duration: 0.2)
+            layer.isPlayable = true
+        }
+        control.isHidden = layer != nil
+        self.reaction = layer
+        
+        let update: UpdateMessageReaction
+        switch reaction {
+        case let .builtin(string):
+            update = .builtin(string)
+        case let .custom(fileId):
+            update = .custom(fileId: fileId, file: nil)
+        }
+        
+        playReaction(.init(item: update, fromRect: nil), context: context)
+    }
+    
+    
+    func playReaction(_ reaction: StoryReactionAction, context: AccountContext) -> Void {
+         
+                  
+         var file: TelegramMediaFile?
+         var effectFileId: Int64?
+         var effectFile: TelegramMediaFile?
+         switch reaction.item {
+         case let .custom(fileId, f):
+             file = f
+             effectFileId = fileId
+         case let .builtin(string):
+             let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
+             file = reaction?.selectAnimation
+             effectFile = reaction?.aroundAnimation
+         }
+         
+         guard let icon = file else {
+             return
+         }
+                
+                 
+         let finish:()->Void = { [weak self] in
+             
+         }
+                  
+         let play:(NSView, TelegramMediaFile)->Void = { container, icon in
+             
+             if let effectFileId = effectFileId {
+                 let player = CustomReactionEffectView(frame: NSMakeSize(100, 100).bounds, context: context, fileId: effectFileId)
+                 player.isEventLess = true
+                 player.triggerOnFinish = { [weak player] in
+                     player?.removeFromSuperview()
+                     finish()
+                 }
+                 let rect = CGRect(origin: CGPoint(x: (container.frame.width - player.frame.width) / 2, y: (container.frame.height - player.frame.height) / 2), size: player.frame.size)
+                 player.frame = rect
+                 container.addSubview(player)
+                 
+             } else if let effectFile = effectFile {
+                 let player = InlineStickerItemLayer(account: context.account, file: effectFile, size: NSMakeSize(100, 100), playPolicy: .playCount(1))
+                 player.isPlayable = true
+                 player.frame = NSMakeRect((container.frame.width - player.frame.width) / 2, (container.frame.height - player.frame.height) / 2, player.frame.width, player.frame.height)
+                 
+                 container.layer?.addSublayer(player)
+                 player.triggerOnState = (.finished, { [weak player] state in
+                     player?.removeFromSuperlayer()
+                     finish()
+                 })
+             }
+         }
+         
+         let layer = InlineStickerItemLayer(account: context.account, file: icon, size: NSMakeSize(50, 50))
+
+         let completed: (Bool)->Void = { [weak self]  _ in
+             DispatchQueue.main.async {
+                 NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                 DispatchQueue.main.async {
+                     if let container = self {
+                         play(container, icon)
+                     }
+                 }
+             }
+         }
+         if let fromRect = reaction.fromRect {
+             let toRect = self.convert(self.frame.size.bounds, to: nil)
+             
+             let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+             let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+             parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
+         } else {
+             completed(true)
+         }
+     }
+     
+    
+    
+    private func makeView(_ reaction: MessageReaction.Reaction, state: StoryInteraction.State, context: AccountContext, appear: Bool = false) -> InlineStickerItemLayer? {
+        let layer: InlineStickerItemLayer?
+        let size = NSMakeSize(25, 25)
+        switch reaction {
+        case let .custom(fileId):
+            layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .onceEnd)
+        case .builtin:
+            if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
+                let file = appear ? animation.activateAnimation : animation.selectAnimation
+                layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
+            } else {
+                layer = nil
+            }
+        }
+        if let layer = layer {
+            layer.frame = focus(size)
+            self.layer?.addSublayer(layer)
+            layer.isPlayable = false
+        }
+        return layer
+    }
+    
+    func update(_ story: StoryContentItem, state: StoryInteraction.State, context: AccountContext, animated: Bool) {
+        self.story = story
+        self.state = state
+        guard let state = self.state else {
+            return
+        }
+        
+        if let reaction = story.storyItem.myReaction, !state.inputInFocus {
+            if self.myReaction != reaction {
+                if let view = self.reaction {
+                    performSublayerRemoval(view, animated: animated, scale: true)
+                }
+                let layer: InlineStickerItemLayer? = makeView(reaction, state: state, context: context)
+                
+                if let layer = layer {
+                    if animated {
+                        layer.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                }
+                self.reaction = layer
+            }
+            self.myReaction = story.storyItem.myReaction
+        } else if let view = reaction {
+            performSublayerRemoval(view, animated: animated)
+            self.reaction = nil
+            self.myReaction = nil
+        }
+        
+        if state.inputInFocus {
+            control.set(image: state.emojiState == .emoji ? emoji_image : stickers_image, for: .Normal)
+            control.set(image: state.emojiState == .emoji ? emoji_image_active : stickers_image_active, for: .Highlight)
+        } else {
+            control.set(image: like_image, for: .Normal)
+            control.set(image: like_image_active, for: .Highlight)
+        }
+        control.isHidden = self.reaction != nil
+        
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 
 private final class StoryReplyActionButton : View {
     
@@ -205,9 +403,10 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         self.updateInputState(animated: animated)
         self.updateRecoringState(state, animated: animated)
         
-        stickers.set(image: state.emojiState == .emoji ? emoji_image : stickers_image, for: .Normal)
-        stickers.set(image: state.emojiState == .emoji ? emoji_image_active : stickers_image_active, for: .Highlight)
-        
+        if let story = self.story {
+            self.likeAction.update(story, state: state, context: arguments.context, animated: animated)
+        }
+   
         self.updatePlaceholder()
     }
     
@@ -257,6 +456,10 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     
     func update(_ story: StoryContentItem, animated: Bool) {
         self.story = story
+        guard let arguments = self.arguments else {
+            return
+        }
+        self.likeAction.update(story, state: arguments.interaction.presentation, context: arguments.context, animated: animated)
     }
     
     func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
@@ -492,6 +695,8 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         self.inputStateDidUpdate = f
     }
     
+    
+    
     let textView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 100, 34))
     private let textContainer = View()
     private let inputContextContainer = View()
@@ -499,7 +704,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     private let visualEffect: VisualEffect
     private let attach = ImageButton()
     private let action = StoryReplyActionButton(frame: NSMakeRect(0, 0, 50, 50))
-    private let stickers = ImageButton(frame: NSMakeRect(0, 0, 50, 50))
+    private let likeAction = StoryLikeActionButton(frame: NSMakeRect(0, 0, 50, 50))
     
     var actionControl: NSView {
         return action
@@ -514,9 +719,11 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
       //  addSubview(visualEffect)
         addSubview(attach)
         addSubview(action)
-        addSubview(stickers)
+        addSubview(likeAction)
         addSubview(textContainer)
         addSubview(inputContextContainer)
+        
+        self.layer?.masksToBounds = false
         
         inputContextContainer.addSubview(inputContext_Relative)
         
@@ -577,13 +784,25 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             }
             return menu
         }
-        
-        stickers.set(image: stickers_image, for: .Normal)
-        stickers.set(image: stickers_image_active, for: .Highlight)
-        stickers.sizeToFit(.zero, NSMakeSize(50, 50), thatFit: true)
-        
-        stickers.set(handler: { [weak self] control in
-            self?.arguments?.showEmojiPanel(control)
+                
+        likeAction.set(handler: { [weak self] control in
+            
+            let control = control as! StoryLikeActionButton
+            
+            guard let arguments = self?.arguments, let story = self?.story else {
+                return
+            }
+            let state = arguments.interaction.presentation
+            if state.inputInFocus {
+                self?.arguments?.showEmojiPanel(control)
+            } else {
+                if story.storyItem.myReaction != nil {
+                    self?.arguments?.like(nil, state)
+                } else {
+                    self?.arguments?.like(.defaultStoryLike, state)
+                    control.react(.defaultStoryLike, state: state, context: arguments.context)
+                }
+            }
         }, for: .Click)
         
         
@@ -607,7 +826,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
     }
     
     var inputReactionsControl: Control? {
-        return self.stickers
+        return self.likeAction
     }
     
     func resetInputView() {
@@ -667,7 +886,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             return
         }
         transition.updateFrame(view: action, frame: NSMakeRect(size.width - action.frame.width, size.height - action.frame.height, action.frame.width, action.frame.height))
-        transition.updateFrame(view: stickers, frame: NSMakeRect(action.frame.minX - stickers.frame.width, size.height - action.frame.height, stickers.frame.width, stickers.frame.height))
+        transition.updateFrame(view: likeAction, frame: NSMakeRect(action.frame.minX - likeAction.frame.width, size.height - action.frame.height, likeAction.frame.width, likeAction.frame.height))
                 
         
         transition.updateFrame(view: attach, frame: NSMakeRect(0, size.height - attach.frame.height, attach.frame.width, attach.frame.height))
