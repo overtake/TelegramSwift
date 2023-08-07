@@ -36,6 +36,7 @@ protocol StoryInput {
     func makeUrl()
     func resetInputView()
     func updateInputContext(with result:ChatPresentationInputQueryResult?, context: InputContextHelper, animated:Bool)
+    func like(_ like: StoryReactionAction, resetIfNeeded: Bool)
 
     func update(_ story: StoryContentItem, animated: Bool)
     
@@ -102,12 +103,12 @@ private final class StoryLikeActionButton: Control {
         }
     }
     
-    func react(_ reaction: MessageReaction.Reaction, state: StoryInteraction.State, context: AccountContext) {
-        self.myReaction = reaction
+    func react(_ reaction: StoryReactionAction, state: StoryInteraction.State, context: AccountContext) {
+        self.myReaction = reaction.item.reaction
         if let view = self.reaction {
             performSublayerRemoval(view, animated: true, scale: true)
         }
-        let layer: InlineStickerItemLayer? = makeView(reaction, state: state, context: context, appear: true)
+        let layer: InlineStickerItemLayer? = makeView(reaction.item.reaction, state: state, context: context, appear: true)
         if let layer = layer {
             layer.animateAlpha(from: 0, to: 1, duration: 0.2)
             layer.isPlayable = true
@@ -115,15 +116,8 @@ private final class StoryLikeActionButton: Control {
         control.isHidden = layer != nil
         self.reaction = layer
         
-        let update: UpdateMessageReaction
-        switch reaction {
-        case let .builtin(string):
-            update = .builtin(string)
-        case let .custom(fileId):
-            update = .custom(fileId: fileId, file: nil)
-        }
         
-        playReaction(.init(item: update, fromRect: nil), context: context)
+        playReaction(reaction, context: context)
     }
     
     
@@ -155,7 +149,7 @@ private final class StoryLikeActionButton: Control {
          let play:(NSView, TelegramMediaFile)->Void = { container, icon in
              
              if let effectFileId = effectFileId {
-                 let player = CustomReactionEffectView(frame: NSMakeSize(100, 100).bounds, context: context, fileId: effectFileId)
+                 let player = CustomReactionEffectView(frame: NSMakeSize(80, 80).bounds, context: context, fileId: effectFileId)
                  player.isEventLess = true
                  player.triggerOnFinish = { [weak player] in
                      player?.removeFromSuperview()
@@ -166,7 +160,7 @@ private final class StoryLikeActionButton: Control {
                  container.addSubview(player)
                  
              } else if let effectFile = effectFile {
-                 let player = InlineStickerItemLayer(account: context.account, file: effectFile, size: NSMakeSize(100, 100), playPolicy: .playCount(1))
+                 let player = InlineStickerItemLayer(account: context.account, file: effectFile, size: NSMakeSize(80, 80), playPolicy: .playCount(1))
                  player.isPlayable = true
                  player.frame = NSMakeRect((container.frame.width - player.frame.width) / 2, (container.frame.height - player.frame.height) / 2, player.frame.width, player.frame.height)
                  
@@ -178,11 +172,10 @@ private final class StoryLikeActionButton: Control {
              }
          }
          
-         let layer = InlineStickerItemLayer(account: context.account, file: icon, size: NSMakeSize(50, 50))
+         let layer = InlineStickerItemLayer(account: context.account, file: icon, size: NSMakeSize(25, 25))
 
          let completed: (Bool)->Void = { [weak self]  _ in
              DispatchQueue.main.async {
-                 NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                  DispatchQueue.main.async {
                      if let container = self {
                          play(container, icon)
@@ -695,6 +688,19 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         self.inputStateDidUpdate = f
     }
     
+    func like(_ like: StoryReactionAction, resetIfNeeded: Bool) {
+        guard let arguments = self.arguments, let story = self.story else {
+            return
+        }
+        let state = arguments.interaction.presentation
+        if story.storyItem.myReaction == like.item.reaction || (resetIfNeeded && story.storyItem.myReaction != nil) {
+            self.arguments?.like(nil, state)
+        } else {
+            
+            self.arguments?.like(like.item.reaction, state)
+            self.likeAction.react(like, state: state, context: arguments.context)
+        }
+    }
     
     
     let textView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 100, 34))
@@ -789,22 +795,25 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             
             let control = control as! StoryLikeActionButton
             
-            guard let arguments = self?.arguments, let story = self?.story else {
+            guard let arguments = self?.arguments else {
                 return
             }
             let state = arguments.interaction.presentation
             if state.inputInFocus {
                 self?.arguments?.showEmojiPanel(control)
             } else {
-                if story.storyItem.myReaction != nil {
-                    self?.arguments?.like(nil, state)
-                } else {
-                    self?.arguments?.like(.defaultStoryLike, state)
-                    control.react(.defaultStoryLike, state: state, context: arguments.context)
-                }
+                self?.like(.init(item: .builtin("❤️".withoutColorizer), fromRect: nil), resetIfNeeded: true)
             }
         }, for: .Click)
         
+        
+        
+        likeAction.set(handler: { [weak self] control in
+            guard let arguments = self?.arguments else {
+                return
+            }
+            arguments.showLikePanel(control)
+        }, for: .RightDown)
         
         self.layer?.cornerRadius = 10
       //  self.action.update(state: .empty(isVoice: FastSettings.recordingState == .voice), animated: false)

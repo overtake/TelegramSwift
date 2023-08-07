@@ -518,6 +518,9 @@ open class Control: View {
         }
     }
     
+    open var sendRightMouseAnyway: Bool {
+        return true
+    }
     
     open override func rightMouseDown(with event: NSEvent) {
         if let menu = self.contextMenu?(), event.clickCount == 1, userInteractionEnabled {
@@ -527,7 +530,9 @@ open class Control: View {
         if userInteractionEnabled {
             updateState()
             send(event: .RightDown)
-            super.rightMouseDown(with: event)
+            if sendRightMouseAnyway {
+                super.rightMouseDown(with: event)
+            }
         } else {
             super.rightMouseDown(with: event)
         }

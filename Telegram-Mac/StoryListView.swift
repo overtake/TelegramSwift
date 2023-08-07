@@ -505,7 +505,7 @@ final class StoryListView : Control, Notifable {
                     AppMenu.show(menu: menu, event: event, for: control)
                 }
             } else {
-                let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.react, onClose: {
+                let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.likeAction, onClose: {
                 
                 }) |> deliverOnMainQueue
                 
