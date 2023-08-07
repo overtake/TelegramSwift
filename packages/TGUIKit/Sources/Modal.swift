@@ -13,6 +13,11 @@ import AppKit
 private class ModalBackground : Control {
     var isOverlay: Bool = false
     var canRedirectScroll: Bool = false
+    
+    override var sendRightMouseAnyway: Bool {
+        return false
+    }
+    
     fileprivate override func scrollWheel(with event: NSEvent) {
         if canRedirectScroll {
             super.scrollWheel(with: event)

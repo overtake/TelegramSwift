@@ -13,9 +13,12 @@ import TelegramCore
 import Postbox
 
 
+
+
 private final class StoryViewerRowItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let peer: Peer
+    fileprivate let reaction: MessageReaction.Reaction?
     fileprivate let storyStats: PeerStoryStats?
     fileprivate let avatarComponent: AvatarStoryIndicatorComponent?
     fileprivate let presentation: TelegramPresentationTheme
@@ -24,7 +27,7 @@ private final class StoryViewerRowItem : GeneralRowItem {
     fileprivate let callback: (PeerId)->Void
     fileprivate let openStory:(PeerId)->Void
     fileprivate let contextMenu:(PeerId)->Signal<[ContextMenuItem], NoError>
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer, storyStats: PeerStoryStats?, timestamp: Int32, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer, reaction: MessageReaction.Reaction?, storyStats: PeerStoryStats?, timestamp: Int32, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>) {
         self.context = context
         self.peer = peer
         self.openStory = openStory
@@ -32,7 +35,7 @@ private final class StoryViewerRowItem : GeneralRowItem {
         self.callback = callback
         self.presentation = presentation
         self.contextMenu = contextMenu
-        
+        self.reaction = reaction
         self.nameLayout = .init(.initialize(string: peer.displayTitle, color: presentation.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         
         
@@ -62,8 +65,10 @@ private final class StoryViewerRowItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        nameLayout.measure(width: width - 36 - 16 - 16 - 10 - (peer.isPremium ? 20 : 0))
-        dateLayout.measure(width: width - 36 - 16 - 16 - 10 - 18)
+        
+        
+        nameLayout.measure(width: width - 36 - 16 - 16 - 10 - (peer.isPremium ? 20 : 0) - (reaction != nil ? 30 : 0))
+        dateLayout.measure(width: width - 36 - 16 - 16 - 10 - 18 - (reaction != nil ? 30 : 0))
 
         return true
     }
@@ -86,7 +91,7 @@ private final class StoryViewerRowView: GeneralRowView {
     private let borderView = View()
     private let content = Control()
     private var statusControl: PremiumStatusControl?
-
+    private var reaction: InlineStickerItemLayer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(content)
@@ -156,7 +161,21 @@ private final class StoryViewerRowView: GeneralRowView {
         
         self.avatar.setPeer(account: item.context.account, peer: item.peer)
         
-        var transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        
+        
+        if let reaction = item.reaction {
+            let layer = makeView(reaction, context: item.context)
+            if let layer = layer {
+                layer.frame = NSMakeRect(frame.width - 25 - container.frame.minX, (frame.height - 25) / 2, 25, 25)
+                self.layer?.addSublayer(layer)
+                layer.isPlayable = false
+            }
+            self.reaction = layer
+        } else if let view = self.reaction {
+            performSublayerRemoval(view, animated: animated)
+            self.reaction = nil
+        }
         
         if let component = item.avatarComponent {
             self.avatar.update(component: component, availableSize: NSMakeSize(30, 30), transition: transition)
@@ -166,6 +185,26 @@ private final class StoryViewerRowView: GeneralRowView {
         
         self.container.userInteractionEnabled = item.avatarComponent != nil
     }
+    
+    private func makeView(_ reaction: MessageReaction.Reaction, context: AccountContext, appear: Bool = false) -> InlineStickerItemLayer? {
+        let layer: InlineStickerItemLayer?
+        let size = NSMakeSize(25, 25)
+        switch reaction {
+        case let .custom(fileId):
+            layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .onceEnd)
+        case .builtin:
+            if let animation = context.reactions.available?.reactions.first(where: { $0.value == reaction }) {
+                let file = appear ? animation.activateAnimation : animation.selectAnimation
+                layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
+            } else {
+                layer = nil
+            }
+        }
+        
+        return layer
+    }
+
+
     
     func setOpenProgress(_ signal:Signal<Never, NoError>) {
         SetOpenStoryDisposable(self.avatar.pushLoadingStatus(signal: signal))
@@ -227,6 +266,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     struct Tuple: Equatable {
         let peer: PeerEquatable
+        let reaction: MessageReaction.Reaction?
         let storyStats: PeerStoryStats?
         let timestamp: Int32
         let viewType: GeneralViewType
@@ -237,11 +277,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if let list = state.views {
         var items: [Tuple] = []
         for item in list.items {
-            items.append(.init(peer: .init(item.peer._asPeer()), storyStats: item.storyStats, timestamp: item.timestamp, viewType: .legacy))
+            
+            items.append(.init(peer: .init(item.peer._asPeer()), reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, viewType: .legacy))
         }
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
-                return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory, contextMenu: arguments.contextMenu)
+                return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory, contextMenu: arguments.contextMenu)
             }))
             index += 1
         }
@@ -251,6 +292,57 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     // entries
     return entries
+}
+
+private final class StoryViewersTopView : View {
+    fileprivate let segmentControl: CatalinaStyledSegmentController
+    fileprivate let close = ImageButton()
+    fileprivate let filter = ImageButton()
+    required init(frame frameRect: NSRect) {
+        segmentControl = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
+        super.init(frame: frameRect)
+        
+        segmentControl.add(segment: .init(title: strings().storyViewersAll, handler: {
+            
+        }))
+        
+        segmentControl.add(segment: .init(title: strings().storyViewersContacts, handler: {
+            
+        }))
+        
+        close.set(image: NSImage(named: "Icon_ChatAction_Close")!.precomposed(storyTheme.colors.text), for: .Normal)
+        close.autohighlight = false
+        close.scaleOnClick = true
+        close.sizeToFit()
+        
+        filter.set(image: NSImage(named: "Icon_StoryViewers_Filter")!.precomposed(storyTheme.colors.text), for: .Normal)
+        filter.autohighlight = false
+        filter.scaleOnClick = true
+        filter.sizeToFit()
+        
+        self.backgroundColor = storyTheme.colors.background
+        self.borderColor = storyTheme.colors.border
+        self.border = [.Bottom]
+        
+        
+        segmentControl.theme = CatalinaSegmentTheme(backgroundColor: storyTheme.colors.listBackground, foregroundColor: storyTheme.colors.background, activeTextColor: storyTheme.colors.text, inactiveTextColor: storyTheme.colors.listGrayText)
+
+        addSubview(close)
+        addSubview(filter)
+        addSubview(segmentControl.view)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        segmentControl.view.center()
+        close.centerY(x: 15)
+        filter.centerY(x: frame.width - filter.frame.width - 15)
+    }
+    
 }
 
 func StoryViewersModalController(context: AccountContext, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
@@ -329,27 +421,47 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: strings().storyViewsTitleCountable(story.views?.seenCount ?? 0))
+    let controller = InputDataController(dataSignal: signal, title: "")
+    
+    let view = StoryViewersTopView(frame: NSMakeRect(0, 0, controller.frame.width, 50))
+    controller.contextObject = view
+
+    
+    view.filter.contextMenu = {
+        let menu = ContextMenu(presentation: .current(storyTheme.colors))
+        menu.addItem(ContextMenuItem("Reactions first", handler: {
+            
+        }, itemImage: MenuAnimation.menu_check_selected.value))
+        
+        menu.addItem(ContextMenuItem("Recent first", handler: {
+            
+        }))
+        return menu
+    }
+    
+    view.close.set(handler: { _ in
+        close?()
+    }, for: .Click)
     
     controller.getBackgroundColor = {
         presentation.colors.background
     }
-    
-    
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
 
     
-    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(320, 300))
+    
+    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(350, 300))
     
     modalController.getModalTheme = {
         .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: presentation.colors.background, border: presentation.colors.border)
     }
     
-    controller.leftModalHeader = ModalHeaderData(image: presentation.icons.modalClose, handler: { [weak modalController] in
-        modalController?.close()
-    })
+    
+//    controller.leftModalHeader = ModalHeaderData(image: presentation.icons.modalClose, handler: { [weak modalController] in
+//        modalController?.close()
+//    })
     
     close = { [weak modalController] in
         modalController?.close()
@@ -365,9 +477,16 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
             current.views = list
             return current
         }
+        loadMore()
     }))
     
-    controller.didLoaded = { controller, _ in
+    
+    controller.didLoaded = { [weak view] controller, _ in
+        
+        if let view = view {
+            controller.genericView.set(view)
+        }
+        
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
@@ -376,6 +495,8 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
                 break
             }
         }
+        
+        
         getControl = { [weak controller] peerId in
             var control: NSView?
             controller?.tableView.enumerateVisibleItems(with: { item in

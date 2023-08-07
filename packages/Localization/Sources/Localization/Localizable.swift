@@ -2763,7 +2763,7 @@ public final class L10n {
   }
   /// imported
   public static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
-  /// OPEN LINK
+  /// Open Link
   public static var chatMessageOpenLink: String  { return L10n.tr("Localizable", "Chat.Message.OpenLink") }
   /// OPEN STORY
   public static var chatMessageOpenStory: String  { return L10n.tr("Localizable", "Chat.Message.OpenStory") }
@@ -12053,6 +12053,34 @@ public final class L10n {
   public static var storyMediaUnsupported: String  { return L10n.tr("Localizable", "Story.Media.Unsupported") }
   /// Copy Link
   public static var storyMyInputCopyLink: String  { return L10n.tr("Localizable", "Story.MyInput.CopyLink") }
+  /// %d
+  public static func storyMyInputLikesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Likes_countable", p1)
+  }
+  /// %d likes
+  public static func storyMyInputLikesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Likes_few", p1)
+  }
+  /// %d likes
+  public static func storyMyInputLikesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Likes_many", p1)
+  }
+  /// %d like
+  public static func storyMyInputLikesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Likes_one", p1)
+  }
+  /// %d likes
+  public static func storyMyInputLikesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Likes_other", p1)
+  }
+  /// %d likes
+  public static func storyMyInputLikesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Likes_two", p1)
+  }
+  /// %d likes
+  public static func storyMyInputLikesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Story.MyInput.Likes_zero", p1)
+  }
   /// Remove From Profile
   public static var storyMyInputRemoveFromProfile: String  { return L10n.tr("Localizable", "Story.MyInput.RemoveFromProfile") }
   /// Save Media...
@@ -12267,6 +12295,10 @@ public final class L10n {
   public static func storyViewTooltipUnblock(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryView.Tooltip.Unblock", p1)
   }
+  /// All Viewers
+  public static var storyViewersAll: String  { return L10n.tr("Localizable", "StoryViewers.All") }
+  /// Contacts
+  public static var storyViewersContacts: String  { return L10n.tr("Localizable", "StoryViewers.Contacts") }
   /// %d
   public static func storyViewsTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_countable", p1)
