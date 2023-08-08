@@ -149,12 +149,14 @@ public class InputDataModalController : ModalViewController {
     }
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(size.width, 350))), min(size.height - 150, controller.tableView.listHeight)), animated: false)
+        let topHeight = controller.genericView.topView?.frame.height ?? 0
+        self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(size.width, 350))), min(size.height - 150, controller.tableView.listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
+        let topHeight = controller.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(contentSize.height - 150, controller.tableView.listHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(contentSize.height - 150, controller.tableView.listHeight + topHeight)), animated: animated)
         }
     }
     
@@ -308,7 +310,7 @@ struct InputDataSignalValue {
 final class InputDataView : BackgroundView {
     let tableView = TableView()
     
-    private var topView: NSView?
+    fileprivate var topView: NSView?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)

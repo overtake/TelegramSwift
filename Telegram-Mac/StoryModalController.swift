@@ -157,6 +157,7 @@ final class StoryInteraction : InterfaceObserver {
         
         var isAreaActivated: Bool = false
         
+        
         var canRecordVoice: Bool = true
         var isProfileIntended: Bool = false
         var emojiState: EntertainmentState = FastSettings.entertainmentState
@@ -165,7 +166,6 @@ final class StoryInteraction : InterfaceObserver {
         var stealthMode: Stories.StealthModeState = .init(activeUntilTimestamp: nil, cooldownUntilTimestamp: nil)
         
         var reactions: AvailableReactions?
-        
         var isPaused: Bool {
             return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated || hasLikePanel
         }
@@ -970,6 +970,8 @@ private final class StoryViewController: Control, Notifable {
     private let rightBottom = Control()
     
     private var storyContext: StoryContentContext?
+    fileprivate var storyViewList: EngineStoryViewListContext?
+
     
     private var textInputSuggestionsView: InputSwapSuggestionsPanel?
     fileprivate var inputContextHelper: InputContextHelper!
@@ -1270,6 +1272,12 @@ private final class StoryViewController: Control, Notifable {
         
         if updated {
             self.closeTooltip()
+            if state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
+                self.storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: []))
+                self.storyViewList?.loadMore()
+            } else {
+                self.storyViewList = nil
+            }
         }
     }
     
@@ -2459,7 +2467,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 self?.genericView.showTooltip(.tooltip(strings().storyAlertNoViews, MenuAnimation.menu_clear_history))
             } else {
                 if let peerId = story.peer?.id {
-                    showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
+                    let list = self?.genericView.storyViewList
+                    showModal(with: StoryViewersModalController(context: context, list: list, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
                         openPeerInfo(peerId, nil)
                     }), for: context.window)
                 }

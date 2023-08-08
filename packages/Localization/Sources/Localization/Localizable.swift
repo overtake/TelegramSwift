@@ -12057,27 +12057,27 @@ public final class L10n {
   public static func storyMyInputLikesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_countable", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_few", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_many", p1)
   }
-  /// %d like
+  /// %d
   public static func storyMyInputLikesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_one", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_other", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_two", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_zero", p1)
   }
@@ -12299,6 +12299,10 @@ public final class L10n {
   public static var storyViewersAll: String  { return L10n.tr("Localizable", "StoryViewers.All") }
   /// Contacts
   public static var storyViewersContacts: String  { return L10n.tr("Localizable", "StoryViewers.Contacts") }
+  /// Reactions first
+  public static var storyViewersReactionsFirst: String  { return L10n.tr("Localizable", "StoryViewers.ReactionsFirst") }
+  /// Recent first
+  public static var storyViewersRecentFirst: String  { return L10n.tr("Localizable", "StoryViewers.RecentFirst") }
   /// %d
   public static func storyViewsTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_countable", p1)
