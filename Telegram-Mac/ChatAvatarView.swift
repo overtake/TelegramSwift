@@ -54,13 +54,13 @@ final class ChatAvatarView : Control {
         if peer.isPremium || force, peer.hasVideo, !isLite(.animations) {
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             var first = true
-            disposable.set(signal.start(next: { [weak self] photos in
+            self.disposable.set(signal.start(next: { [weak self] photos in
                 self?.updatePhotos(photos.map { $0.value }, context: context, peer: peer, animated: !first)
                 first = false
             }))
         } else {
             self.updatePhotos([], context: context, peer: peer, animated: animated)
-            disposable.set(nil)
+            self.disposable.set(nil)
         }
         
         self.removeAllHandlers()
@@ -201,6 +201,7 @@ final class ChatAvatarView : Control {
         NotificationCenter.default.removeObserver(self)
     }
     deinit {
+        disposable.set(nil)
         NotificationCenter.default.removeObserver(self)
     }
     

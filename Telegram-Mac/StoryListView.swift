@@ -505,9 +505,20 @@ final class StoryListView : Control, Notifable {
                     AppMenu.show(menu: menu, event: event, for: control)
                 }
             } else {
+                
+                var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
+                
+                if let reaction = story.storyItem.myReaction {
+                    switch reaction {
+                    case let .builtin(emoji):
+                        selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
+                    case let .custom(fileId):
+                        selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    }
+                }
                 let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.likeAction, onClose: {
                 
-                }) |> deliverOnMainQueue
+                }, selectedItems: selectedItems) |> deliverOnMainQueue
                 
                 _ = window.start(next: { [weak arguments] panel in
                     if let menu = arguments?.storyContextMenu(story) {
