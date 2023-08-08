@@ -39,7 +39,8 @@ private final class Arguments {
     let tabsMenuItems: (ChatListFilter, Int?, Bool?)->[ContextMenuItem]
     let getController:()->ViewController?
     let navigationBarLeftPosition:()->CGFloat
-    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?, navigationBarLeftPosition:@escaping()->CGFloat) {
+    let contextMenu:()->ContextMenu
+    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], getController:@escaping()->ViewController?, navigationBarLeftPosition:@escaping()->CGFloat, contextMenu: @escaping()->ContextMenu) {
         self.context = context
         self.joinGroupCall = joinGroupCall
         self.joinGroup = joinGroup
@@ -53,6 +54,7 @@ private final class Arguments {
         self.tabsMenuItems = tabsMenuItems
         self.getController = getController
         self.navigationBarLeftPosition = navigationBarLeftPosition
+        self.contextMenu = contextMenu
     }
 }
 
@@ -163,13 +165,13 @@ struct PeerListState : Equatable {
     
     var hasStories: Bool {
         if let stories = self.stories, !isContacts, !mode.isForum {
-            if !stories.items.isEmpty {
-                return true
-            }
             if self.splitState == .minimisize {
                 return false
             }
             if let accountItem = stories.accountItem, accountItem.storyCount > 0, mode.groupId != .archive {
+                return true
+            }
+            if !stories.items.isEmpty {
                 return true
             }
         }
@@ -182,397 +184,480 @@ struct PeerListState : Equatable {
     }
 }
 
-class PeerListContainerView : Control {
-    
-    private final class ProxyView : Control {
-        fileprivate let button:ImageButton = ImageButton()
-        private var connecting: ProgressIndicator?
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            addSubview(button)
-            button.userInteractionEnabled = false
-            button.isEventLess = true
-            self.scaleOnClick = true
-        }
-        
-        func update(_ pref: ProxySettings, connection: ConnectionStatus, animated: Bool) {
-            switch connection {
-            case .connecting, .waitingForNetwork:
-                if pref.enabled {
-                    let current: ProgressIndicator
-                    if let view = self.connecting {
-                        current = view
-                    } else {
-                        current = ProgressIndicator(frame: focus(NSMakeSize(11, 11)))
-                        self.connecting = current
-                        addSubview(current)
-                    }
-                    current.userInteractionEnabled = false
-                    current.isEventLess = true
-                    current.progressColor = theme.colors.accentIcon
-                } else if let view = connecting {
-                    performSubviewRemoval(view, animated: animated)
-                    self.connecting = nil
-                }
-                
-                button.set(image: pref.enabled ? theme.icons.proxyState : theme.icons.proxyEnable, for: .Normal)
-            case .online, .updating:
-                if let view = connecting {
-                    performSubviewRemoval(view, animated: animated)
-                    self.connecting = nil
-                }
-                if pref.enabled  {
-                    button.set(image: theme.icons.proxyEnabled, for: .Normal)
-                } else {
-                    button.set(image: theme.icons.proxyEnable, for: .Normal)
-                }
-            }
-            button.sizeToFit()
-            needsLayout = true
-        }
-        
-        override func layout() {
-            super.layout()
-            button.center()
-            if let connecting = connecting {
-                var rect = connecting.centerFrame()
-                if backingScaleFactor == 2.0 {
-                    rect.origin.x -= 0.5
-                    rect.origin.y -= 0.5
-                }
-                connecting.frame = rect
-            }
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func updateLocalizationAndTheme(theme: PresentationTheme) {
-            super.updateLocalizationAndTheme(theme: theme)
-            connecting?.progressColor = theme.colors.accentIcon
-        }
+
+private final class ProxyView : Control {
+    fileprivate let button:ImageButton = ImageButton()
+    private var connecting: ProgressIndicator?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(button)
+        button.userInteractionEnabled = false
+        button.isEventLess = true
+        self.scaleOnClick = true
     }
     
-    private final class StatusView : Control {
-        fileprivate var button:PremiumStatusControl?
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            layer?.masksToBounds = false
-        }
-        
-        private var peer: Peer?
-        private weak var effectPanel: Window?
-        
-        func update(_ peer: Peer, context: AccountContext, animated: Bool) {
-            
-            
-            var interactiveStatus: Reactions.InteractiveStatus? = nil
-            if visibleRect != .zero, window != nil, let interactive = context.reactions.interactiveStatus, !context.isLite(.emoji_effects) {
-                interactiveStatus = interactive
-            }
-            if let view = self.button, interactiveStatus != nil, interactiveStatus?.fileId != nil {
-                performSubviewRemoval(view, animated: animated, duration: 0.3)
-                self.button = nil
-            }
-            
-            let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, cached: self.button, animated: animated)
-            if let control = control {
-                self.button = control
-                addSubview(control)
-                control.center()
-                
-            } else {
-                self.button?.removeFromSuperview()
-                self.button = nil
-            }
-            self.peer = peer
-            
-            if let interactive = interactiveStatus {
-                self.playAnimation(interactive, context: context)
-            }
-        }
-        
-        private func playAnimation(_  status: Reactions.InteractiveStatus, context: AccountContext) {
-            guard let control = self.button, let window = self.window else {
-                return
-            }
-            
-            guard let fileId = status.fileId else {
-                return
-            }
-            
-            control.isHidden = true
-            
-            let play:(StatusView)->Void = { [weak control] superview in
-                
-                guard let control = control else {
-                    return
-                }
-                control.isHidden = false
-                
-                let panel = Window(contentRect: NSMakeRect(0, 0, 160, 120), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
-                panel._canBecomeMain = false
-                panel._canBecomeKey = false
-                panel.ignoresMouseEvents = true
-                panel.level = .popUpMenu
-                panel.backgroundColor = .clear
-                panel.isOpaque = false
-                panel.hasShadow = false
-
-                let player = CustomReactionEffectView(frame: NSMakeSize(160, 120).bounds, context: context, fileId: fileId)
-                
-                player.isEventLess = true
-                
-                player.triggerOnFinish = { [weak panel] in
-                    if let panel = panel  {
-                        panel.parent?.removeChildWindow(panel)
-                        panel.orderOut(nil)
-                    }
-                }
-                superview.effectPanel = panel
-                        
-                let controlRect = superview.convert(control.frame, to: nil)
-                
-                var rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
-                
-                
-                rect = window.convertToScreen(rect)
-                
-                panel.setFrame(rect, display: true)
-                
-                panel.contentView?.addSubview(player)
-                
-                window.addChildWindow(panel, ordered: .above)
-            }
-            if let fromRect = status.rect {
-                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: control.frame.size)
-                
-                let toRect = control.convert(control.frame.size.bounds, to: nil)
-                
-                let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
-                let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
-                
-                let completed: (Bool)->Void = { [weak self] _ in
-                    DispatchQueue.main.async {
-                        if let container = self {
-                            play(container)
-                            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
-                        }
-                    }
-                }
-                parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
-            } else {
-                play(self)
-            }
-        }
-        
-      
-        override func layout() {
-            super.layout()
-            button?.center()
-        }
-        
-        deinit {
-            if let panel = effectPanel {
-                panel.parent?.removeChildWindow(panel)
-                panel.orderOut(nil)
-            }
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func updateLocalizationAndTheme(theme: PresentationTheme) {
-            super.updateLocalizationAndTheme(theme: theme)
-        }
-    }
-    
-    private final class ActionView : Control {
-        private let textView = TextView()
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            addSubview(textView)
-            textView.userInteractionEnabled = false
-            textView.isSelectable = false
-            border = [.Top]
-        }
-        
-        
-        override func updateLocalizationAndTheme(theme: PresentationTheme) {
-            super.updateLocalizationAndTheme(theme: theme)
-            textView.backgroundColor = theme.colors.background
-        }
-        func update(action: @escaping(PeerId)->Void, peerId: PeerId, title: String) {
-            let layout = TextViewLayout(.initialize(string: title, color: theme.colors.accent, font: .normal(.text)))
-            layout.measure(width: .greatestFiniteMagnitude)
-            textView.update(layout)
-            
-            self.set(background: theme.colors.background, for: .Normal)
-            self.set(background: theme.colors.grayBackground, for: .Highlight)
-
-            self.removeAllHandlers()
-            self.set(handler: { _ in
-                action(peerId)
-            }, for: .Click)
-            
-            needsLayout = true
-        }
-        
-        override func layout() {
-            super.layout()
-            textView.center()
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-    }
-
-    fileprivate final class TitleView : Control {
-        
-        enum Source {
-            case contacts
-            case forum
-            case chats
-            case settings
-            case archivedChats
-            var text: String {
-                switch self {
-                case .contacts:
-                    return strings().peerListTitleContacts
-                case .chats:
-                    return strings().peerListTitleChats
-                case .settings:
-                    return "Settings"
-                case .archivedChats:
-                    return strings().peerListTitleArchive
-                case .forum:
-                    return strings().peerListTitleForum
-                }
-            }
-        }
-        
-        var openStatus:((Control)->Void)? = nil
-        
-        private let textView = TextView()
-        private var premiumStatus: StatusView?
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            addSubview(textView)
-            textView.userInteractionEnabled = false
-            textView.isSelectable = false
-            self.layer?.masksToBounds = false
-        }
-        
-        
-        
-        
-        override func updateLocalizationAndTheme(theme: PresentationTheme) {
-            super.updateLocalizationAndTheme(theme: theme)
-        }
-            
-        fileprivate func updateState(_ state: PeerListState, arguments: Arguments, maxWidth: CGFloat, animated: Bool) {
-            
-            let source: Source
-            if state.isContacts {
-                source = .contacts
-            } else if state.mode.groupId == .archive {
-                source = .archivedChats
-            } else if state.mode.isForum {
-                source = .forum
-            } else {
-                source = .chats
-            }
-            let text: String
-            if state.mode.isForum {
-                text = state.forumPeer?.peer.title ?? source.text
-            } else {
-                text = source.text
-            }
-            let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
-            layout.measure(width: maxWidth)
-            textView.update(layout)
-            
-            let hasStatus = state.peer?.peer.isPremium ?? false && state.mode == .plain
-
-            if hasStatus, let peer = state.peer?.peer, source != .contacts {
-                
-                let current: StatusView
-                if let view = self.premiumStatus {
+    func update(_ pref: ProxySettings, connection: ConnectionStatus, animated: Bool) {
+        switch connection {
+        case .connecting, .waitingForNetwork:
+            if pref.enabled {
+                let current: ProgressIndicator
+                if let view = self.connecting {
                     current = view
                 } else {
-                    current = StatusView(frame: CGRect(origin: NSMakePoint(textView.frame.width + 4, (frame.height - 20) / 2), size: NSMakeSize(20, 20)))
-                    self.premiumStatus = current
-                    self.addSubview(current)
-                    if animated {
-                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
-                    current.set(handler: { [weak self] control in
-                        self?.openStatus?(control)
-                    }, for: .Click)
-                    current.scaleOnClick = true
+                    current = ProgressIndicator(frame: focus(NSMakeSize(11, 11)))
+                    self.connecting = current
+                    addSubview(current)
                 }
-                current.update(peer, context: arguments.context, animated: animated)
-                
-            } else if let view = self.premiumStatus {
+                current.userInteractionEnabled = false
+                current.isEventLess = true
+                current.progressColor = theme.colors.accentIcon
+            } else if let view = connecting {
                 performSubviewRemoval(view, animated: animated)
-                self.premiumStatus = nil
+                self.connecting = nil
+            }
+            
+            button.set(image: pref.enabled ? theme.icons.proxyState : theme.icons.proxyEnable, for: .Normal)
+        case .online, .updating:
+            if let view = connecting {
+                performSubviewRemoval(view, animated: animated)
+                self.connecting = nil
+            }
+            if pref.enabled  {
+                button.set(image: theme.icons.proxyEnabled, for: .Normal)
+            } else {
+                button.set(image: theme.icons.proxyEnable, for: .Normal)
             }
         }
-        
-        var hasPremium: Bool {
-            return premiumStatus != nil
-        }
-        
-        var size: NSSize {
-            var width: CGFloat = textView.frame.width
-            if let premiumStatus = self.premiumStatus {
-                width += premiumStatus.frame.width + 4
+        button.sizeToFit()
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        button.center()
+        if let connecting = connecting {
+            var rect = connecting.centerFrame()
+            if backingScaleFactor == 2.0 {
+                rect.origin.x -= 0.5
+                rect.origin.y -= 0.5
             }
-            return NSMakeSize(width, 20)
-        }
-        
-        override func layout() {
-            super.layout()
-            self.updateLayout(size: frame.size, transition: .immediate)
-        }
-        
-        func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-            transition.updateFrame(view: textView, frame: textView.centerFrameY(x: 0))
-            if let premiumStatus = self.premiumStatus {
-                transition.updateFrame(view: premiumStatus, frame: premiumStatus.centerFrameY(x: textView.frame.width + 4))
-            }
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
+            connecting.frame = rect
         }
     }
     
-    private var callView: ChatGroupCallView?
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        connecting?.progressColor = theme.colors.accentIcon
+    }
+}
+
+private final class StatusView : Control {
+    fileprivate var button:PremiumStatusControl?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        layer?.masksToBounds = false
+    }
+    
+    private var peer: Peer?
+    private weak var effectPanel: Window?
+    
+    func update(_ peer: Peer, context: AccountContext, animated: Bool) {
+        
+        
+        var interactiveStatus: Reactions.InteractiveStatus? = nil
+        if visibleRect != .zero, window != nil, let interactive = context.reactions.interactiveStatus, !context.isLite(.emoji_effects) {
+            interactiveStatus = interactive
+        }
+        if let view = self.button, interactiveStatus != nil, interactiveStatus?.fileId != nil {
+            performSubviewRemoval(view, animated: animated, duration: 0.3)
+            self.button = nil
+        }
+        
+        let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, cached: self.button, animated: animated)
+        if let control = control {
+            self.button = control
+            addSubview(control)
+            control.center()
+            
+        } else {
+            self.button?.removeFromSuperview()
+            self.button = nil
+        }
+        self.peer = peer
+        
+        if let interactive = interactiveStatus {
+            self.playAnimation(interactive, context: context)
+        }
+    }
+    
+    private func playAnimation(_  status: Reactions.InteractiveStatus, context: AccountContext) {
+        guard let control = self.button, let window = self.window else {
+            return
+        }
+        
+        guard let fileId = status.fileId else {
+            return
+        }
+        
+        control.isHidden = true
+        
+        let play:(StatusView)->Void = { [weak control] superview in
+            
+            guard let control = control else {
+                return
+            }
+            control.isHidden = false
+            
+            let panel = Window(contentRect: NSMakeRect(0, 0, 160, 120), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+            panel._canBecomeMain = false
+            panel._canBecomeKey = false
+            panel.ignoresMouseEvents = true
+            panel.level = .popUpMenu
+            panel.backgroundColor = .clear
+            panel.isOpaque = false
+            panel.hasShadow = false
+
+            let player = CustomReactionEffectView(frame: NSMakeSize(160, 120).bounds, context: context, fileId: fileId)
+            
+            player.isEventLess = true
+            
+            player.triggerOnFinish = { [weak panel] in
+                if let panel = panel  {
+                    panel.parent?.removeChildWindow(panel)
+                    panel.orderOut(nil)
+                }
+            }
+            superview.effectPanel = panel
+                    
+            let controlRect = superview.convert(control.frame, to: nil)
+            
+            var rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
+            
+            
+            rect = window.convertToScreen(rect)
+            
+            panel.setFrame(rect, display: true)
+            
+            panel.contentView?.addSubview(player)
+            
+            window.addChildWindow(panel, ordered: .above)
+        }
+        if let fromRect = status.rect {
+            let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: control.frame.size)
+            
+            let toRect = control.convert(control.frame.size.bounds, to: nil)
+            
+            let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+            let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+            
+            let completed: (Bool)->Void = { [weak self] _ in
+                DispatchQueue.main.async {
+                    if let container = self {
+                        play(container)
+                        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                    }
+                }
+            }
+            parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
+        } else {
+            play(self)
+        }
+    }
+    
+  
+    override func layout() {
+        super.layout()
+        button?.center()
+    }
+    
+    deinit {
+        if let panel = effectPanel {
+            panel.parent?.removeChildWindow(panel)
+            panel.orderOut(nil)
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+    }
+}
+
+private final class ActionView : Control {
+    private let textView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        border = [.Top]
+    }
+    
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        textView.backgroundColor = theme.colors.background
+    }
+    func update(action: @escaping(PeerId)->Void, peerId: PeerId, title: String) {
+        let layout = TextViewLayout(.initialize(string: title, color: theme.colors.accent, font: .normal(.text)))
+        layout.measure(width: .greatestFiniteMagnitude)
+        textView.update(layout)
+        
+        self.set(background: theme.colors.background, for: .Normal)
+        self.set(background: theme.colors.grayBackground, for: .Highlight)
+
+        self.removeAllHandlers()
+        self.set(handler: { _ in
+            action(peerId)
+        }, for: .Click)
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        textView.center()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+fileprivate final class TitleView : Control {
+    
+    enum Source {
+        case contacts
+        case forum
+        case chats
+        case archivedChats
+        var text: String {
+            switch self {
+            case .contacts:
+                return strings().peerListTitleContacts
+            case .chats:
+                return strings().peerListTitleChats
+            case .archivedChats:
+                return strings().peerListTitleArchive
+            case .forum:
+                return strings().peerListTitleForum
+            }
+        }
+    }
+    
+    var openStatus:((Control)->Void)? = nil
+    
+    private let textView = TextView()
+    private var premiumStatus: StatusView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(textView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        self.layer?.masksToBounds = false
+    }
+    
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+    }
+        
+    fileprivate func updateState(_ state: PeerListState, arguments: Arguments, maxWidth: CGFloat, animated: Bool) {
+        
+        let source: Source
+        if state.isContacts {
+            source = .contacts
+        } else if state.mode.groupId == .archive {
+            source = .archivedChats
+        } else if state.mode.isForum {
+            source = .forum
+        } else {
+            source = .chats
+        }
+        let text: String
+        if state.mode.isForum {
+            text = state.forumPeer?.peer.title ?? source.text
+        } else {
+            text = source.text
+        }
+        let layout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+        layout.measure(width: maxWidth)
+        textView.update(layout)
+        
+        let hasStatus = state.peer?.peer.isPremium ?? false && state.mode == .plain
+
+        if hasStatus, let peer = state.peer?.peer, source != .contacts {
+            
+            let current: StatusView
+            if let view = self.premiumStatus {
+                current = view
+            } else {
+                current = StatusView(frame: CGRect(origin: NSMakePoint(textView.frame.width + 4, (frame.height - 20) / 2), size: NSMakeSize(20, 20)))
+                self.premiumStatus = current
+                self.addSubview(current)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                current.set(handler: { [weak self] control in
+                    self?.openStatus?(control)
+                }, for: .Click)
+                current.scaleOnClick = true
+            }
+            current.update(peer, context: arguments.context, animated: animated)
+            
+        } else if let view = self.premiumStatus {
+            performSubviewRemoval(view, animated: animated)
+            self.premiumStatus = nil
+        }
+    }
+    
+    var hasPremium: Bool {
+        return premiumStatus != nil
+    }
+    
+    var size: NSSize {
+        var width: CGFloat = textView.frame.width
+        if let premiumStatus = self.premiumStatus {
+            width += premiumStatus.frame.width + 4
+        }
+        return NSMakeSize(width, 20)
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: textView, frame: textView.centerFrameY(x: 0))
+        if let premiumStatus = self.premiumStatus {
+            transition.updateFrame(view: premiumStatus, frame: premiumStatus.centerFrameY(x: textView.frame.width + 4, addition: 1))
+        }
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+private final class TitleForumView : Control {
+    private let title = TextView()
+    private let status = TextView()
+    private let settings = ImageButton()
+    private var state: PeerListState?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(title)
+        addSubview(status)
+        addSubview(settings)
+        
+        title.userInteractionEnabled = false
+        status.userInteractionEnabled = false
+        title.isSelectable = false
+        status.isSelectable = false
+        
+        settings.autohighlight = false
+        settings.scaleOnClick = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(_ state: PeerListState, forumData: PeerListState.ForumData, arguments: Arguments) {
+        self.state = state
+        let size = self.frame.size
+        let hasSidebar = state.filterData.sidebar && !state.filterData.isEmpty
+        let text_w = size.width - (!hasSidebar ? Window.controlsInset + 15 : 0) - 10 - 40
+
+        
+        let t_layout = TextViewLayout(.initialize(string: forumData.peer.displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        t_layout.measure(width: text_w)
+        
+        let s_layout = TextViewLayout(.initialize(string: stringStatus(for: forumData.peerView, context: arguments.context).status.string, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        s_layout.measure(width: text_w)
+
+        
+        self.title.update(t_layout)
+        self.status.update(s_layout)
+        
+        settings.set(image: theme.icons.chatActions, for: .Normal)
+        settings.set(image: theme.icons.chatActionsActive, for: .Highlight)
+        settings.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
+        
+        settings.contextMenu = { [weak arguments] in
+            return arguments?.contextMenu()
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        guard let state = self.state else {
+            return
+        }
+        let hasSidebar = state.filterData.sidebar && !state.filterData.isEmpty
+        let text_w = frame.size.width - (!hasSidebar ? Window.controlsInset + 15 : 0) - 10 - 40
+
+        title.resize(text_w)
+        status.resize(text_w)
+
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        guard let state = self.state else {
+            return
+        }
+        let hasSidebar = state.filterData.sidebar && !state.filterData.isEmpty
+
+        let minX = !hasSidebar ? Window.controlsInset + 15 : 0
+        
+        var title_r = title.centerFrameX(y: 10)
+        title_r.origin.x = max(title_r.minX, minX)
+        
+        var status_r = status.centerFrameX(y: title_r.maxY + 1)
+        status_r.origin.x = max(status_r.minX, minX)
+
+        transition.updateFrame(view: title, frame: title_r)
+        transition.updateFrame(view: status, frame: status_r)
+        
+        transition.updateFrame(view: settings, frame: settings.centerFrameY(x: size.width - 10 - settings.frame.width))
+    }
+}
+
+class PeerListContainerView : Control {
+    
+    
     private var header: NSView?
-    fileprivate var isContacts: Bool = false
+    private var downloads: DownloadsControl?
+    private var proxy: ProxyView?
+    private var compose:ImageButton?
+    private var actionView: ActionView?
+    private var backButton: ImageButton?
+
+    private var forumTitle: TitleForumView?
+    
+
     
     let backgroundView = View(frame: NSZeroRect)
     
     let tableView = TableView(frame:NSZeroRect, drawBorder: true)
     
-    private var backButton: ImageButton?
     
     private let containerView = Control()
     private let statusContainer = Control()
     
     let searchView:SearchView = SearchView(frame:NSMakeRect(10, 0, 0, 0))
-    let compose:ImageButton = ImageButton()
     
     fileprivate let titleView = TitleView(frame: .zero)
-    
-    private var downloads: DownloadsControl?
-    private var proxy: ProxyView?
-    
-    private var actionView: ActionView?
     
     
     fileprivate var showDownloads:(()->Void)? = nil
@@ -587,21 +672,7 @@ class PeerListContainerView : Control {
         return NSMakeRect(0, max(0, y), frame.width, frame.height - y)
     }
 
-    var mode: PeerListMode = .plain {
-        didSet {
-            switch mode {
-            case .folder:
-                compose.isHidden = true
-            case .plain:
-                compose.isHidden = false
-            case .filter:
-                compose.isHidden = true
-            case .forum:
-                compose.isHidden = state?.splitState == .minimisize
-            }
-            compose.animates = false
-        }
-    }
+    var mode: PeerListMode = .plain
     
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
@@ -611,7 +682,6 @@ class PeerListContainerView : Control {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        compose.autohighlight = false
         autoresizesSubviews = false
         
         backgroundView.layer?.opacity = 0
@@ -629,7 +699,6 @@ class PeerListContainerView : Control {
             self?.tableView.scrollWheel(with: event)
         }
         
-        statusContainer.addSubview(compose)
         statusContainer.addSubview(titleView)
         
         containerView.addSubview(statusContainer)
@@ -718,33 +787,6 @@ class PeerListContainerView : Control {
         self.updateAdditionHeader(state, size: frame.size, arguments: arguments, animated: animated)
 
         
-        if let info = voiceChat {
-            let current: ChatGroupCallView
-            var offset: CGFloat = statusHeight
-            if let header = header {
-                offset += header.frame.height
-            }
-            
-            let rect = NSMakeRect(0, offset, frame.width, 44)
-            if let view = self.callView {
-                current = view
-            } else {
-                current = .init({ _, _ in
-                    arguments.joinGroupCall(info)
-                }, context: arguments.context, state: .init(main: .none, voiceChat: info), frame: rect)
-                self.callView = current
-                containerView.addSubview(current, positioned: .below, relativeTo: header)
-                
-            }
-            current.border = [.Top]
-            current.update(info, animated: animated)
-            
-        } else if let view = self.callView {
-            performSubviewRemoval(view, animated: animated)
-            self.callView = nil
-        }
-        
-        
         if let peer = state.forumPeer?.peer, peer.participationStatus == .left, state.splitState != .minimisize {
             let current: ActionView
             if let view = self.actionView {
@@ -764,11 +806,65 @@ class PeerListContainerView : Control {
             self.actionView = nil
         }
         
+        let hasCompose = (state.isContacts || state.mode == .plain)
+        
+        if hasCompose {
+            let current: ImageButton
+            if let view = self.compose {
+                current = view
+            } else {
+                current = ImageButton(frame: NSMakeRect(frame.width - 10 - 40, (statusHeight - 30)/2.0, 40, 30))
+                current.layer?.cornerRadius = .cornerRadius
+                self.compose = current
+                current.autohighlight = false
+                current.animates = false
+                statusContainer.addSubview(current)
+            }
+            if state.isContacts {
+                current.set(background: .clear, for: .Highlight)
+                current.set(image: theme.icons.contactsNewContact, for: .Normal)
+                current.set(image: theme.icons.contactsNewContact, for: .Hover)
+                current.set(image: theme.icons.contactsNewContact, for: .Highlight)
+            } else {
+                current.set(background: theme.colors.accent, for: .Highlight)
+                current.set(image: theme.icons.composeNewChat, for: .Normal)
+                current.set(image: theme.icons.composeNewChat, for: .Hover)
+                current.set(image: theme.icons.composeNewChatActive, for: .Highlight)
+            }
+            current.contextMenu = { [weak arguments] in
+                return arguments?.contextMenu()
+            }
+        } else if let view = self.compose {
+            performSubviewRemoval(view, animated: animated)
+            self.compose = nil
+        }
+        
+        let hasForumTitle = state.splitState != .minimisize && (delta != nil || state.appear == .short)
+        
+        if hasForumTitle, let forumData = state.forumPeer {
+            let current: TitleForumView
+            if let view = self.forumTitle {
+                 current = view
+            } else {
+                current = TitleForumView(frame: NSMakeRect(0, 0, frame.width, 50))
+                self.forumTitle = current
+                statusContainer.addSubview(current)
+            }
+            current.update(state, forumData: forumData, arguments: arguments)
+        } else if let view = self.forumTitle {
+            performSubviewRemoval(view, animated: animated)
+            self.forumTitle = nil
+        }
+        
         self.titleView.isHidden = (state.splitState == .minimisize) || !mode.isPlain
         
         let componentSize = NSMakeSize(40, 30)
         
-        var controlPoint = NSMakePoint(frame.width - 10 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - componentSize.height)/2.0))
+        var controlPoint = NSMakePoint(frame.width - 10, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - componentSize.height)/2.0))
+        
+        if let compose = self.compose {
+            controlPoint.x -= compose.frame.width
+        }
         
         let hasControls = state.splitState != .minimisize && mode.isPlain && mode == .plain
         
@@ -836,7 +932,7 @@ class PeerListContainerView : Control {
             self.foldersView = nil
         }
         
-        if state.mode.groupId == .archive || (state.selectedForum != nil && state.splitState != .minimisize) || state.forumPeer != nil, state.searchState != .Focus {
+        if state.mode.groupId == .archive || (state.selectedForum != nil && state.splitState != .minimisize) || state.mode.isForum || state.appear == .short, state.searchState != .Focus {
             let current: ImageButton
             if let view = self.backButton {
                 current = view
@@ -855,23 +951,13 @@ class PeerListContainerView : Control {
             } else {
                 current.set(image: theme.icons.chatNavigationBack, for: .Normal)
             }
-            current.sizeToFit(.zero, NSMakeSize(40, 30), thatFit: true)
+            current.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
         } else if let view = self.backButton {
             performSubviewRemoval(view, animated: animated)
             self.backButton = nil
         }
         
-        if isContacts {
-            compose.set(background: .clear, for: .Highlight)
-            compose.set(image: theme.icons.contactsNewContact, for: .Normal)
-            compose.set(image: theme.icons.contactsNewContact, for: .Hover)
-            compose.set(image: theme.icons.contactsNewContact, for: .Highlight)
-        } else {
-            compose.set(background: theme.colors.accent, for: .Highlight)
-            compose.set(image: theme.icons.composeNewChat, for: .Normal)
-            compose.set(image: theme.icons.composeNewChat, for: .Hover)
-            compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
-        }
+        
         
         if previous?.appear != state.appear {
             self.delta = nil
@@ -1086,15 +1172,7 @@ class PeerListContainerView : Control {
                 
         self.backgroundColor = theme.colors.background
         self.backgroundView.backgroundColor = theme.colors.listBackground
-        
-        compose.set(background: .clear, for: .Normal)
-        compose.set(background: .clear, for: .Hover)
-
-      
-             
-        compose.layer?.cornerRadius = .cornerRadius
-        compose.sizeToFit()
-        
+                
         searchView.searchTheme = .init(theme.search.backgroundColor, theme.search.searchImage, theme.search.clearImage, {
             return strings().chatListSearchPlaceholder
         }, theme.search.textColor, theme.search.placeholderColor)
@@ -1166,10 +1244,10 @@ class PeerListContainerView : Control {
         }
         
         var maxTitleWidth: CGFloat = max(size.width, 300) - 60
-        if !compose.isHidden {
+        if let compose = self.compose {
             maxTitleWidth -= compose.frame.width
         }
-        if let proxy = proxy {
+        if let proxy = self.proxy {
             maxTitleWidth -= proxy.frame.width
         }
         
@@ -1179,14 +1257,7 @@ class PeerListContainerView : Control {
         
         let progress: CGFloat = getDeltaProgress() ?? (state.appear == .short ? 0.0 : 1.0)
         
-        
-       
-                
         var inset: CGFloat = 0
-        
-        if state.searchState == .Focus {
-           // inset = 50 - navigationHeight
-        }
         
         let containerSize = NSMakeSize(state.splitState == .minimisize ? 70 : size.width, offset)
                 
@@ -1210,12 +1281,7 @@ class PeerListContainerView : Control {
             inset += header.frame.height
         }
         
-        if let callView = self.callView {
-            offset += callView.frame.height
-            transition.updateFrame(view: callView, frame: NSMakeRect(0, inset, size.width, callView.frame.height))
-            
-            inset += callView.frame.height
-        }
+
         
         let statusHeight: CGFloat = self.statusHeight
 
@@ -1228,9 +1294,7 @@ class PeerListContainerView : Control {
         if let storiesItem = storiesItem {
             searchY += (StoryListChatListRowItem.InterfaceState.revealed.height * storiesItem.progress) + 9 * storiesItem.progress
         }
-        if let callView = self.callView {
-            searchY += callView.frame.height
-        }
+        
         if let header = self.header {
             searchY += header.frame.height
         }
@@ -1268,14 +1332,20 @@ class PeerListContainerView : Control {
 
         controlPoint.x -= componentSize.width
         
-        transition.updateFrame(view: compose, frame: CGRect(origin: controlPoint, size: componentSize))
-        
-        if state.splitState == .minimisize {
-            transition.updateAlpha(view: compose, alpha: 1)
-        } else {
-            transition.updateAlpha(view: compose, alpha: progress)
+        if let compose = compose {
+            transition.updateFrame(view: compose, frame: CGRect(origin: controlPoint, size: componentSize))
+            if state.splitState == .minimisize {
+                transition.updateAlpha(view: compose, alpha: 1)
+            } else {
+                transition.updateAlpha(view: compose, alpha: progress)
+            }
         }
-
+        
+        if let view = forumTitle {
+            transition.updateFrame(view: view, frame: CGRect(origin: .zero, size: NSMakeSize(size.width, 50)))
+            transition.updateAlpha(view: view, alpha: 1 - progress)
+        }
+        
         if let view = proxy {
             controlPoint.x -= componentSize.width
             transition.updateFrame(view: view, frame: CGRect(origin: controlPoint, size: componentSize))
@@ -1383,7 +1453,8 @@ class PeerListContainerView : Control {
         guard let state = self.state else {
             return 50
         }
-        if state.forumPeer != nil, state.splitState != .minimisize {
+        
+        if case .forum = state.mode, state.splitState != .minimisize {
             return 0
         }
         var offset: CGFloat = 50
@@ -1555,7 +1626,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return self.stateValue.with { $0.filterData }
     }
 
-    
+    private let forumPeerData: Promise<PeerListState.ForumData?> = Promise(nil)
     let storyList: Signal<EngineStorySubscriptions, NoError>?
 
     
@@ -1704,9 +1775,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let context = self.context
         let mode = self.mode
         let isContacts = self.isContacts
-        
-        genericView.isContacts = isContacts
-        
+                
         genericView.tableView._scrollDidEndLiveScrolling = { [weak self] in
             _ = self?.finishOverscroll()
         }
@@ -1788,70 +1857,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 return nil
             }
         }
-        let forumPeer: Signal<PeerListState.ForumData?, NoError>
-
-        if case let .forum(peerId, _, _) = self.mode {
-            
-            let importState: Promise<PeerInvitationImportersState?> = Promise()
-            
-            let isAllowed: Signal<Bool, NoError> = getPeerView(peerId: peerId, postbox: context.account.postbox) |> map { value in
-                if let peer = value as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
-                    return true
-                } else {
-                    return false
-                }
-            } |> deliverOnMainQueue
-            
-            actionsDisposable.add(isAllowed.start(next: { [weak self] canCreateLink in
-                if canCreateLink {
-                    let current: PeerInvitationImportersContext
-                    if let value = self?.tempImportersContext {
-                        current = value
-                    } else {
-                        current = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
-                        self?.tempImportersContext = current
-                    }
-                    importState.set(current.state |> map(Optional.init))
-                } else {
-                    self?.tempImportersContext = nil
-                    importState.set(.single(nil))
-                }
-
-            }))
-
-            
-            
-
-            let signal = combineLatest(context.account.postbox.peerView(id: peerId), getGroupCallPanelData(context: context, peerId: peerId), importState.get())
-            forumPeer = signal |> mapToSignal { view, call, invitationState in
-                if let peer = peerViewMainPeer(view) as? TelegramChannel, let cachedData = view.cachedData as? CachedChannelData, peer.isForum {
-                    
-                    let info: ChatActiveGroupCallInfo?
-                    if let activeCall = cachedData.activeCall {
-                        info = .init(activeCall: activeCall, data: call, callJoinPeerId: cachedData.callJoinPeerId, joinHash: nil, isLive: peer.isChannel || peer.isGigagroup)
-                    } else {
-                        info = nil
-                    }
-//                    let membersCount = cachedData.participantsSummary.memberCount ?? 0
-//                    let online: Signal<Int32, NoError>
-//                    if membersCount < 200 {
-//                        online = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerId)
-//                    } else {
-//                        online = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)
-//                    }
-//                    return online |> map {
-//                        return .init(peer: peer, peerView: view, online: 0, call: info, invitationState: invitationState)
-//                    }
-                    return .single(.init(peer: peer, peerView: view, online: 0, call: info, invitationState: invitationState))
-
-                } else {
-                    return .single(nil)
-                }
-            }
-            
-        } else {
-            forumPeer = .single(nil)
-        }
+        let forumPeer: Signal<PeerListState.ForumData?, NoError> = self.forumPeerData.get()
+        
+        
         let postbox = context.account.postbox
         let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
         let previousActivities = Atomic<PeerListState.InputActivities?>(value: nil)
@@ -2010,81 +2018,81 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }
 
-       
-        if mode.isForum {
-            genericView.compose.contextMenu = { [weak self] in
-                let menu = ContextMenu()
-                if let peer = self?.state?.forumPeer {
-                    var items: [ContextMenuItem] = []
-                    
-                    let chatController = context.bindings.rootNavigation().controller as? ChatController
-                    let infoController = context.bindings.rootNavigation().controller as? PeerInfoController
-                    let topicController = context.bindings.rootNavigation().controller as? InputDataController
-
-                    if infoController == nil || (infoController?.peerId != peer.peer.id || infoController?.threadInfo != nil) {
-                        items.append(ContextMenuItem(strings().forumTopicContextInfo, handler: {
-                            ForumUI.openInfo(peer.peer.id, context: context)
-                        }, itemImage: MenuAnimation.menu_show_info.value))
-                    }
-                    
-                    if chatController == nil || (chatController?.chatInteraction.chatLocation != .peer(peer.peer.id)) {
-                        items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
-                            self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
-                        }, itemImage: MenuAnimation.menu_read.value))
-                    }
-                    
-                    if let call = self?.state?.forumPeer?.call {
-                        if call.data?.groupCall == nil {
-                            if let data = call.data, data.participantCount == 0 && call.activeCall.scheduleTimestamp == nil {
-                                items.append(ContextMenuItem(strings().peerInfoActionVoiceChat, handler: { [weak self] in
-                                    self?.takeArguments()?.joinGroupCall(call)
-                                }, itemImage: MenuAnimation.menu_video_chat.value))
-                            }
-                        }
-                    }
-                    
-                    if peer.peer.hasPermission(.manageTopics) {
-                        if topicController?.identifier != "ForumTopic" {
-                            if !items.isEmpty {
-                                items.append(ContextSeparatorItem())
-                            }
-                            items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
-                                ForumUI.createTopic(peer.peer.id, context: context)
-                            }, itemImage: MenuAnimation.menu_edit.value))
-                        }
-                    }
-                    
-                    if !items.isEmpty {
-                        for item in items {
-                            menu.addItem(item)
-                        }
-                    }
-                }
-                return menu
-            }
-        } else if isContacts {
-            genericView.compose.set(handler: { _ in
-                showModal(with: AddContactModalController(context), for: context.window)
-            }, for: .Click)
-        } else {
-            genericView.compose.contextMenu = { [weak self] in
-                let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
-                    self?.context.composeCreateGroup()
-                }, itemImage: MenuAnimation.menu_create_group.value),
-                ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
-                    self?.context.composeCreateSecretChat()
-                }, itemImage: MenuAnimation.menu_lock.value),
-                ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
-                    self?.context.composeCreateChannel()
-                }, itemImage: MenuAnimation.menu_channel.value)];
-                
-                let menu = ContextMenu()
-                for item in items {
-                    menu.addItem(item)
-                }
-                return menu
-            }
-        }
+//
+//        if mode.isForum {
+//            genericView.compose.contextMenu = { [weak self] in
+//                let menu = ContextMenu()
+//                if let peer = self?.state?.forumPeer {
+//                    var items: [ContextMenuItem] = []
+//
+//                    let chatController = context.bindings.rootNavigation().controller as? ChatController
+//                    let infoController = context.bindings.rootNavigation().controller as? PeerInfoController
+//                    let topicController = context.bindings.rootNavigation().controller as? InputDataController
+//
+//                    if infoController == nil || (infoController?.peerId != peer.peer.id || infoController?.threadInfo != nil) {
+//                        items.append(ContextMenuItem(strings().forumTopicContextInfo, handler: {
+//                            ForumUI.openInfo(peer.peer.id, context: context)
+//                        }, itemImage: MenuAnimation.menu_show_info.value))
+//                    }
+//
+//                    if chatController == nil || (chatController?.chatInteraction.chatLocation != .peer(peer.peer.id)) {
+//                        items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
+//                            self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
+//                        }, itemImage: MenuAnimation.menu_read.value))
+//                    }
+//
+//                    if let call = self?.state?.forumPeer?.call {
+//                        if call.data?.groupCall == nil {
+//                            if let data = call.data, data.participantCount == 0 && call.activeCall.scheduleTimestamp == nil {
+//                                items.append(ContextMenuItem(strings().peerInfoActionVoiceChat, handler: { [weak self] in
+//                                    self?.takeArguments()?.joinGroupCall(call)
+//                                }, itemImage: MenuAnimation.menu_video_chat.value))
+//                            }
+//                        }
+//                    }
+//
+//                    if peer.peer.hasPermission(.manageTopics) {
+//                        if topicController?.identifier != "ForumTopic" {
+//                            if !items.isEmpty {
+//                                items.append(ContextSeparatorItem())
+//                            }
+//                            items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
+//                                ForumUI.createTopic(peer.peer.id, context: context)
+//                            }, itemImage: MenuAnimation.menu_edit.value))
+//                        }
+//                    }
+//
+//                    if !items.isEmpty {
+//                        for item in items {
+//                            menu.addItem(item)
+//                        }
+//                    }
+//                }
+//                return menu
+//            }
+//        } else if isContacts {
+//            genericView.compose.set(handler: { _ in
+//                showModal(with: AddContactModalController(context), for: context.window)
+//            }, for: .Click)
+//        } else {
+//            genericView.compose.contextMenu = { [weak self] in
+//                let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
+//                    self?.context.composeCreateGroup()
+//                }, itemImage: MenuAnimation.menu_create_group.value),
+//                ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
+//                    self?.context.composeCreateSecretChat()
+//                }, itemImage: MenuAnimation.menu_lock.value),
+//                ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
+//                    self?.context.composeCreateChannel()
+//                }, itemImage: MenuAnimation.menu_channel.value)];
+//
+//                let menu = ContextMenu()
+//                for item in items {
+//                    menu.addItem(item)
+//                }
+//                return menu
+//            }
+//        }
         
         genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
             updateState { current in
@@ -2195,7 +2203,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             if state.filterData.sidebar && !state.filterData.isEmpty {
                 return 0
             } else {
-                if state.forumPeer != nil {
+                if case .forum = state.mode {
                     return 0
                 } else {
                     if state.splitState != .minimisize {
@@ -2205,7 +2213,89 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     }
                 }
             }
+        }, contextMenu: { [weak self] in
+            let menu = ContextMenu()
+            if let peer = self?.state?.forumPeer {
+                var items: [ContextMenuItem] = []
+
+                let chatController = context.bindings.rootNavigation().controller as? ChatController
+                let infoController = context.bindings.rootNavigation().controller as? PeerInfoController
+                let topicController = context.bindings.rootNavigation().controller as? InputDataController
+
+                if infoController == nil || (infoController?.peerId != peer.peer.id || infoController?.threadInfo != nil) {
+                    items.append(ContextMenuItem(strings().forumTopicContextInfo, handler: {
+                        ForumUI.openInfo(peer.peer.id, context: context)
+                    }, itemImage: MenuAnimation.menu_show_info.value))
+                }
+
+                if chatController == nil || (chatController?.chatInteraction.chatLocation != .peer(peer.peer.id)) {
+                    items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
+                        self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
+                    }, itemImage: MenuAnimation.menu_read.value))
+                }
+
+                if peer.peer.hasPermission(.manageTopics) {
+                    if topicController?.identifier != "ForumTopic" {
+                        if !items.isEmpty {
+                            items.append(ContextSeparatorItem())
+                        }
+                        items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
+                            ForumUI.createTopic(peer.peer.id, context: context)
+                        }, itemImage: MenuAnimation.menu_edit.value))
+                    }
+                }
+
+                if !items.isEmpty {
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                }
+            } else if isContacts {
+                
+            } else {
+                let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
+                    self?.context.composeCreateGroup()
+                }, itemImage: MenuAnimation.menu_create_group.value),
+                ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
+                    self?.context.composeCreateSecretChat()
+                }, itemImage: MenuAnimation.menu_lock.value),
+                ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
+                    self?.context.composeCreateChannel()
+                }, itemImage: MenuAnimation.menu_channel.value)];
+
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+            }
+            return menu
         })
+        
+        /*
+         
+ } else if isContacts {
+     genericView.compose.set(handler: { _ in
+         showModal(with: AddContactModalController(context), for: context.window)
+     }, for: .Click)
+ } else {
+     genericView.compose.contextMenu = { [weak self] in
+         let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
+             self?.context.composeCreateGroup()
+         }, itemImage: MenuAnimation.menu_create_group.value),
+         ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
+             self?.context.composeCreateSecretChat()
+         }, itemImage: MenuAnimation.menu_lock.value),
+         ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
+             self?.context.composeCreateChannel()
+         }, itemImage: MenuAnimation.menu_channel.value)];
+
+         let menu = ContextMenu()
+         for item in items {
+             menu.addItem(item)
+         }
+         return menu
+     }
+         */
         
         self.takeArguments = { [weak arguments] in
             return arguments
@@ -2255,15 +2345,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
             genericView.updateLayout(frame.size, transition: .immediate)
         }
-              
-        setCenterTitle(self.defaultBarTitle)
-        if let forum = state.forumPeer {
-            let title = stringStatus(for: forum.peerView, context: context, onlineMemberCount: forum.online, expanded: true)
-            setCenterStatus(title.status.string)
-        } else {
-            setCenterStatus(nil)
-        }
-        
+                      
         let animated = state.splitState == previous?.splitState && !context.window.inLiveResize
         
         self.genericView.searchStateChanged(state, arguments: arguments, animated: animated, updateSearchTags: { [weak self] tags in
@@ -2280,108 +2362,16 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 self.navigationController?.back()
             }
         }
+        
         if previous?.splitState != state.splitState {
             DispatchQueue.main.async {
                 self.genericView.tableView.reloadData()
             }
         }
     }
-    
-    private var topicRightBar: ImageButton?
-    
+        
     private var takeArguments:()->Arguments? = {
         return nil
-    }
-    
-    override func getCenterBarViewOnce() -> TitledBarView {
-        let view = super.getCenterBarViewOnce()
-        switch mode {
-        case .forum:
-            view.textInset = 0
-        default:
-            break
-        }
-        return view
-    }
-    
-    override func getRightBarViewOnce() -> BarView {
-        switch self.mode {
-        case .forum:
-            let bar = BarView(50, controller: self)
-            let button = ImageButton()
-            bar.addSubview(button)
-            let context = self.context
-                
-            self.topicRightBar = button
-            
-            button.contextMenu = { [weak self] in
-                let menu = ContextMenu()
-                
-                if let peer = self?.state?.forumPeer {
-                    var items: [ContextMenuItem] = []
-                    
-                    let chatController = context.bindings.rootNavigation().controller as? ChatController
-                    let infoController = context.bindings.rootNavigation().controller as? PeerInfoController
-                    let topicController = context.bindings.rootNavigation().controller as? InputDataController
-
-                    if infoController == nil || (infoController?.peerId != peer.peer.id || infoController?.threadInfo != nil) {
-                        items.append(ContextMenuItem(strings().forumTopicContextInfo, handler: {
-                            ForumUI.openInfo(peer.peer.id, context: context)
-                        }, itemImage: MenuAnimation.menu_show_info.value))
-                    }
-                    
-                    if chatController == nil || (chatController?.chatInteraction.chatLocation != .peer(peer.peer.id)) {
-                        items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
-                            self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
-                        }, itemImage: MenuAnimation.menu_read.value))
-                    }
-                    
-                    if let call = self?.state?.forumPeer?.call {
-                        if call.data?.groupCall == nil {
-                            if let data = call.data, data.participantCount == 0 && call.activeCall.scheduleTimestamp == nil {
-                                items.append(ContextMenuItem(strings().peerInfoActionVoiceChat, handler: { [weak self] in
-                                    self?.takeArguments()?.joinGroupCall(call)
-                                }, itemImage: MenuAnimation.menu_video_chat.value))
-                            }
-                        }
-                    }
-                    
-                    if peer.peer.hasPermission(.manageTopics) {
-                        if topicController?.identifier != "ForumTopic" {
-                            if !items.isEmpty {
-                                items.append(ContextSeparatorItem())
-                            }
-                            items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
-                                ForumUI.createTopic(peer.peer.id, context: context)
-                            }, itemImage: MenuAnimation.menu_edit.value))
-                        }
-                    }
-                    
-                    if !items.isEmpty {
-                        for item in items {
-                            menu.addItem(item)
-                        }
-                    }
-                }
-                
-                return menu
-            }
-            return bar
-        default:
-            break
-        }
-        return super.getRightBarViewOnce()
-    }
-    
-    override var defaultBarTitle: String {
-        switch self.mode {
-        case .folder:
-            return strings().chatListArchivedChats
-        case .forum:
-            return state?.forumPeer?.peer.displayTitle ?? ""
-        default:
-            return super.defaultBarTitle
-        }
     }
     
     private func checkSearchMedia() {
@@ -2626,7 +2616,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false, forceAnimated: Bool = false, threadId: Int64? = nil) ->Void {
         
         let navigation = context.bindings.rootNavigation()
-//
 
         var addition = addition
         var close = close
@@ -2686,9 +2675,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             } else {
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
-//            _ = updateChatListFolderSettings(context.account.postbox, {
-//                $0.withUpdatedSidebar(true)
-//            }).start()
         case .systemDeprecated:
             break
         case .sharedFolderUpdated:
@@ -2839,6 +2825,56 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 current.selectedForum = peerId
                 return current
             }
+            let context = self.context
+            let forumPeer: Signal<PeerListState.ForumData?, NoError>
+            if let peerId = peerId {
+                let importState: Promise<PeerInvitationImportersState?> = Promise()
+                
+                let isAllowed: Signal<Bool, NoError> = getPeerView(peerId: peerId, postbox: context.account.postbox) |> map { value in
+                    if let peer = value as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
+                        return true
+                    } else {
+                        return false
+                    }
+                } |> deliverOnMainQueue
+                
+                actionsDisposable.add(isAllowed.start(next: { [weak self] canCreateLink in
+                    if canCreateLink {
+                        let current: PeerInvitationImportersContext
+                        if let value = self?.tempImportersContext {
+                            current = value
+                        } else {
+                            current = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
+                            self?.tempImportersContext = current
+                        }
+                        importState.set(current.state |> map(Optional.init))
+                    } else {
+                        self?.tempImportersContext = nil
+                        importState.set(.single(nil))
+                    }
+                }))
+
+
+                let signal = combineLatest(context.account.postbox.peerView(id: peerId), getGroupCallPanelData(context: context, peerId: peerId), importState.get())
+                forumPeer = signal |> mapToSignal { view, call, invitationState in
+                    if let peer = peerViewMainPeer(view) as? TelegramChannel, let cachedData = view.cachedData as? CachedChannelData, peer.isForum {
+                        
+                        let info: ChatActiveGroupCallInfo?
+                        if let activeCall = cachedData.activeCall {
+                            info = .init(activeCall: activeCall, data: call, callJoinPeerId: cachedData.callJoinPeerId, joinHash: nil, isLive: peer.isChannel || peer.isGigagroup)
+                        } else {
+                            info = nil
+                        }
+                        return .single(.init(peer: peer, peerView: view, online: 0, call: info, invitationState: invitationState))
+
+                    } else {
+                        return .single(nil)
+                    }
+                }
+            } else {
+                forumPeer = .single(nil)
+            }
+            self.forumPeerData.set(forumPeer)
         }
     }
     
@@ -2942,9 +2978,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private var _storyInterfaceState: StoryListChatListRowItem.InterfaceState = .concealed
     private var storyInterfaceState: StoryListChatListRowItem.InterfaceState {
         get {
-            if self.state?.splitState == .minimisize {
-                return .empty
-            }
             if self.state?.hasStories == false {
                 return .empty
             }
@@ -2954,6 +2987,19 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         set {
             _storyInterfaceState = newValue
         }
+    }
+    
+    var canStoryOverscroll: Bool {
+        if self.state?.splitState == .minimisize {
+            return false
+        }
+        if state?.forumPeer != nil {
+            return false
+        }
+        if state?.appear == .short {
+            return false
+        }
+        return true
     }
     
     func getStoryInterfaceState() -> StoryListChatListRowItem.InterfaceState {
@@ -3090,7 +3136,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private func processScroll() {
         
         
-        guard storyInterfaceState != .empty, initFromEvent == nil || initFromEvent == false else {
+        guard storyInterfaceState != .empty, canStoryOverscroll, initFromEvent == nil || initFromEvent == false else {
             return
         }
         if genericView.tableView.liveScrolling {
@@ -3140,7 +3186,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
      func processScroll(_ event: NSEvent) -> Bool {
          scrollPositions = []
 
-         guard genericView.tableView.documentOffset.y == 0, storyInterfaceState != .empty else {
+         guard genericView.tableView.documentOffset.y == 0, canStoryOverscroll, storyInterfaceState != .empty else {
              return false
          }
         

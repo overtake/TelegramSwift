@@ -307,6 +307,9 @@ struct InputDataSignalValue {
 
 final class InputDataView : BackgroundView {
     let tableView = TableView()
+    
+    private var topView: NSView?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(tableView)
@@ -326,7 +329,23 @@ final class InputDataView : BackgroundView {
     }
     override func layout() {
         super.layout()
-        tableView.frame = bounds
+        if let topView = topView {
+            topView.frame = NSMakeRect(0, 0, frame.width, topView.frame.height)
+            tableView.frame = NSMakeRect(0, topView.frame.height, frame.width, frame.height - topView.frame.height)
+        } else {
+            tableView.frame = bounds
+        }
+    }
+    
+    func set(_ topView: NSView?) {
+        if let topView = self.topView {
+            topView.removeFromSuperview()
+        }
+        self.topView = topView
+        if let topView = topView {
+            addSubview(topView)
+        }
+        self.needsLayout = true
     }
 }
 

@@ -60,6 +60,7 @@ final class ChatAvatarView : Control {
             }))
         } else {
             self.updatePhotos([], context: context, peer: peer, animated: animated)
+            disposable.set(nil)
         }
         
         self.removeAllHandlers()

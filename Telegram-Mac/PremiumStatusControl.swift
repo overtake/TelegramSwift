@@ -104,7 +104,7 @@ final class PremiumStatusControl : Control {
             }
             if let image = image {
                 current.contents = image
-                var rect = focus(image.backingSize)
+                var rect = focus(self.frame.size)
                 rect.origin.x = 0
                 current.frame = rect
             } else {
@@ -269,7 +269,7 @@ final class PremiumStatusControl : Control {
             if peer.isScam || peer.isFake {
                 addition.width += 20
             }
-            return isBig ? NSMakeSize(25 + addition.width, 25 + addition.height) : NSMakeSize(16 + addition.width, 16 + addition.height)
+            return isBig ? NSMakeSize(20 + addition.width, 20 + addition.height) : NSMakeSize(16 + addition.width, 16 + addition.height)
         } else {
             return nil
         }
