@@ -145,6 +145,7 @@ final class StoryInteraction : InterfaceObserver {
         var lock: Bool = false
         var isRecording: Bool = false
         var hasReactions: Bool = false
+        var hasLikePanel: Bool = false
         var isSpacePaused: Bool = false
         var playingReaction: Bool = false
         var readingText: Bool = false
@@ -163,8 +164,10 @@ final class StoryInteraction : InterfaceObserver {
         var recordType: RecordingStateSettings = FastSettings.recordingState
         var stealthMode: Stories.StealthModeState = .init(activeUntilTimestamp: nil, cooldownUntilTimestamp: nil)
         
+        var reactions: AvailableReactions?
+        
         var isPaused: Bool {
-            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated
+            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated || hasLikePanel
         }
         
         var inTransition: Bool {
@@ -320,7 +323,9 @@ final class StoryArguments {
     let chatInteraction: ChatInteraction
     let showEmojiPanel:(Control)->Void
     let showReactionsPanel:()->Void
+    let showLikePanel:(Control)->Void
     let react:(StoryReactionAction)->Void
+    let likeAction:(StoryReactionAction)->Void
     let attachPhotoOrVideo:(ChatInteraction.AttachMediaType?)->Void
     let attachFile:()->Void
     let nextStory:()->Void
@@ -346,7 +351,8 @@ final class StoryArguments {
     let activateMediaArea:(MediaArea)->Void
     let deactivateMediaArea:(MediaArea)->Void
     let invokeMediaArea:(MediaArea)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void) {
+    let like:(MessageReaction.Reaction?, StoryInteraction.State)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -374,10 +380,13 @@ final class StoryArguments {
         self.showFriendsTooltip = showFriendsTooltip
         self.showTooltipText = showTooltipText
         self.react = react
+        self.likeAction = likeAction
         self.storyContextMenu = storyContextMenu
         self.activateMediaArea = activateMediaArea
         self.deactivateMediaArea = deactivateMediaArea
         self.invokeMediaArea = invokeMediaArea
+        self.like = like
+        self.showLikePanel = showLikePanel
     }
     
     func longDown() {
@@ -1459,6 +1468,10 @@ private final class StoryViewController: Control, Notifable {
         }
 
         transition.updateFrame(view: close, frame: NSMakeRect(size.width - close.frame.width, 0, 50, 50))
+        
+        if let overlay = self.likesOverlay {
+            transition.updateFrame(view: overlay, frame: size.bounds)
+        }
     }
     
     var inputView: NSTextView? {
@@ -1487,6 +1500,8 @@ private final class StoryViewController: Control, Notifable {
     }
     
     private var reactions: NSView? = nil
+    private var likes: NSView? = nil
+    private var likesOverlay: NSView? = nil
     private var makeParabollic: Bool = true
     
     func closeReactions(reactByFirst: Bool = false) {
@@ -1519,6 +1534,25 @@ private final class StoryViewController: Control, Notifable {
             return current
         }
     }
+    
+    func closeLikePanel() {
+        
+        if let view = self.likesOverlay {
+            performSubviewRemoval(view, animated: true)
+            self.likesOverlay = nil
+        }
+        if let view = self.likes {
+            performSubviewRemoval(view, animated: true)
+            self.likes = nil
+        }
+       
+        self.arguments?.interaction.update { current in
+            var current = current
+            current.hasLikePanel = false
+            return current
+        }
+    }
+
     
     fileprivate func closeTooltip() {
         if let view = currentTooltip {
@@ -1665,6 +1699,44 @@ private final class StoryViewController: Control, Notifable {
             return current
         }
     }
+    
+    func showLikePanel(_ view: NSView, control: Control) {
+        
+        guard let current = current, self.likes == nil else {
+            return
+        }
+        
+        
+        
+        let overlay = Control(frame: bounds)
+        self.likesOverlay = overlay
+        addSubview(overlay)
+
+        overlay.set(handler: { [weak self] _ in
+            self?.closeLikePanel()
+        }, for: .Click)
+        
+        view.setFrameOrigin(NSMakePoint((frame.width - view.frame.width) / 2, current.storyRect.maxY - view.frame.height + 15))
+        overlay.addSubview(view)
+        
+        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+        
+        self.likes = view
+        
+        
+        
+        self.arguments?.interaction.update { current in
+            var current = current
+            current.hasLikePanel = true
+            return current
+        }
+    }
+    
+    func like(_ like: StoryReactionAction) {
+        self.current?.inputView.like(like, resetIfNeeded: false)
+    }
+
     
     func animateDisappear(_ initialId: StoryInitialIndex?) {
         if let current = self.current, let id = current.id, let control = initialId?.takeControl?(id, initialId?.messageId, current.storyId?.base as? Int32) {
@@ -2295,7 +2367,21 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.genericView.current?.hideMediaAreaViewer()
         }
         
-        
+        let like:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
+            switch reaction.item {
+            case .builtin:
+                self?.genericView.like(reaction)
+            case let .custom(_, file):
+                if let file = file, file.isPremiumEmoji, !context.isPremium {
+                    showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
+                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                    })
+                } else {
+                    self?.genericView.like(reaction)
+                }
+            }
+        }
+
         let react:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
             
             if let entryId = interactions?.presentation.entryId, let id = interactions?.presentation.storyId {
@@ -2335,7 +2421,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     }
                 })
             }
-        }, react: react, attachPhotoOrVideo: { type in
+        }, react: react, likeAction: like, attachPhotoOrVideo: { type in
             chatInteraction.attachPhotoOrVideo(type)
         }, attachFile: {
             chatInteraction.attachFile(false)
@@ -2515,6 +2601,21 @@ final class StoryModalController : ModalViewController, Notifable {
             case let .venue(_, venue):
                 showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: storyTheme), for: context.window)
             }
+        }, like: { current, state in
+            guard let peerId = state.entryId, let story = state.storyId else {
+                return
+            }
+            _ = context.engine.messages.setStoryReaction(peerId: peerId, id: story, reaction: current).start()
+        }, showLikePanel: { [weak self, weak interactions] control in
+            if let entryId = interactions?.presentation.entryId {
+                _ = storyReactions(context: context, peerId: entryId, react: like, onClose: {
+                    self?.genericView.closeLikePanel()
+                }).start(next: { view in
+                    if let view = view {
+                        self?.genericView.showLikePanel(view, control: control)
+                    }
+                })
+            }
         })
         
         self.arguments = arguments
@@ -2666,6 +2767,14 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.interactions.update({ current in
                 var current = current
                 current.stealthMode = data.stealthModeState
+                return current
+            })
+        }))
+        
+        actionsDisposable.add(context.reactions.stateValue.start(next: { [weak self] reactions in
+            self?.interactions.update({ current in
+                var current = current
+                current.reactions = reactions
                 return current
             })
         }))
@@ -2958,6 +3067,9 @@ final class StoryModalController : ModalViewController, Notifable {
             return .invoked
         } else if interactions.presentation.hasReactions {
             self.genericView.closeReactions()
+            return .invoked
+        } else if interactions.presentation.hasLikePanel {
+            self.genericView.closeLikePanel()
             return .invoked
         } else {
             return super.escapeKeyAction()

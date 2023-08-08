@@ -252,7 +252,9 @@ private final class StoryListContainer : Control {
         //self.scaleOnClick = true
         
         set(handler: { [weak self] _ in
-            self?.item?.reveal()
+            if self?.superview?.layer?.opacity == 1 {
+                self?.item?.reveal()
+            }
         }, for: .Click)
         
         NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: scrollView.clipView, queue: nil, using: { [weak self] _ in
@@ -805,6 +807,24 @@ private final class StoryListEntryRowItem : TableRowItem {
             items.append(.init(strings().storyListContextArchivedStories, handler: {
                 StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: true), standalone: true, isArchived: true)
             }, itemImage: MenuAnimation.menu_archive.value))
+            
+            
+            
+            items.append(.init(strings().storyControlsMenuStealtMode, handler: {
+                showModal(with: StoryStealthModeController(context, enableStealth: {
+                    
+                    let stealthData = context.engine.data.subscribe(
+                        TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
+                    ) |> deliverOnMainQueue
+                    
+                    _ = stealthData.start(next: { value in
+                        if let timestamp = value.stealthModeState.activeUntilTimestamp {
+                             showModalText(for: context.window, text: strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))))
+                        }
+                    })
+                    
+                }, presentation: theme), for: context.window)
+            }, itemImage: MenuAnimation.menu_eye_slash.value))
         }
         
 
