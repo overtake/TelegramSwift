@@ -2356,20 +2356,16 @@ final class StoryModalController : ModalViewController, Notifable {
         }
         
         let like:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
-            if let entryId = interactions?.presentation.entryId, let id = interactions?.presentation.storyId {
-                switch reaction.item {
-                case let .builtin(value):
+            switch reaction.item {
+            case .builtin:
+                self?.genericView.like(reaction)
+            case let .custom(_, file):
+                if let file = file, file.isPremiumEmoji, !context.isPremium {
+                    showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
+                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                    })
+                } else {
                     self?.genericView.like(reaction)
-                case let .custom(fileId, file):
-                    if let file = file, let text = file.customEmojiText {
-                        if file.isPremiumEmoji, !context.isPremium {
-                            showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
-                            })
-                        } else {
-                            self?.genericView.like(reaction)
-                        }
-                    }
                 }
             }
         }
