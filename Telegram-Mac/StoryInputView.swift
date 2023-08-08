@@ -809,10 +809,10 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         
         likeAction.set(handler: { [weak self] control in
-            guard let arguments = self?.arguments else {
+            guard let arguments = self?.arguments, let story = self?.story else {
                 return
             }
-            arguments.showLikePanel(control)
+            arguments.showLikePanel(control, story)
         }, for: .RightDown)
         
         self.layer?.cornerRadius = 10

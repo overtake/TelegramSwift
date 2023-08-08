@@ -323,7 +323,7 @@ final class StoryArguments {
     let chatInteraction: ChatInteraction
     let showEmojiPanel:(Control)->Void
     let showReactionsPanel:()->Void
-    let showLikePanel:(Control)->Void
+    let showLikePanel:(Control, StoryContentItem)->Void
     let react:(StoryReactionAction)->Void
     let likeAction:(StoryReactionAction)->Void
     let attachPhotoOrVideo:(ChatInteraction.AttachMediaType?)->Void
@@ -352,7 +352,7 @@ final class StoryArguments {
     let deactivateMediaArea:(MediaArea)->Void
     let invokeMediaArea:(MediaArea)->Void
     let like:(MessageReaction.Reaction?, StoryInteraction.State)->Void
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control)->Void) {
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -446,8 +446,8 @@ private let close_image = NSImage(named: "Icon_StoryClose")!.precomposed(NSColor
 private let close_image_hover = NSImage(named: "Icon_StoryClose")!.precomposed(NSColor.white.withAlphaComponent(1))
 
 
-func storyReactionsWindow(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void) -> Signal<Window?, NoError> {
-    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose, name: "reactions") |> map { value in
+func storyReactionsWindow(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void, selectedItems: [EmojiesSectionRowItem.SelectedItem]) -> Signal<Window?, NoError> {
+    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose, name: "reactions", selectedItems: selectedItems) |> map { value in
         if let (panel, view) = value {
             panel._canBecomeMain = false
             panel._canBecomeKey = false
@@ -466,11 +466,11 @@ func storyReactionsWindow(context: AccountContext, peerId: PeerId, react: @escap
     }
 }
 
-private func storyReactions(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void) -> Signal<NSView?, NoError> {
-    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose) |> map { $0?.1 }
+private func storyReactions(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void, selectedItems: [EmojiesSectionRowItem.SelectedItem] = []) -> Signal<NSView?, NoError> {
+    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose, selectedItems: selectedItems) |> map { $0?.1 }
 }
 
-private func storyReactionsValues(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void, name: String = "") -> Signal<(Window, NSView)?, NoError> {
+private func storyReactionsValues(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void, name: String = "", selectedItems: [EmojiesSectionRowItem.SelectedItem] = []) -> Signal<(Window, NSView)?, NoError> {
     
     
     let builtin = context.reactions.stateValue
@@ -550,12 +550,12 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
             switch value.content {
             case let .builtin(emoji):
                 if let generic = enabled.first(where: { $0.value.string == emoji }) {
-                    return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: false)
+                    return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: selectedItems.contains(where: { $0.source == .builtin(emoji) }))
                 } else {
                     return nil
                 }
             case let .custom(file):
-                return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: false)
+                return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: selectedItems.contains(where: { $0.source == .custom(file.fileId.id) }))
             }
         }
         
@@ -583,7 +583,7 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
        
         
         reveal = { view in
-            let window = ReactionsWindowController(context, peerId: peerId, selectedItems: [], react: { sticker, fromRect in
+            let window = ReactionsWindowController(context, peerId: peerId, selectedItems: selectedItems, react: { sticker, fromRect in
                 let value: UpdateMessageReaction
                 if let bundle = sticker.file.stickerText {
                     value = .builtin(bundle)
@@ -2594,11 +2594,21 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             _ = context.engine.messages.setStoryReaction(peerId: peerId, id: story, reaction: current).start()
-        }, showLikePanel: { [weak self, weak interactions] control in
+        }, showLikePanel: { [weak self, weak interactions] control, story in
             if let entryId = interactions?.presentation.entryId {
+                
+                var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
+                if let reaction = story.storyItem.myReaction {
+                    switch reaction {
+                    case let .builtin(emoji):
+                        selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
+                    case let .custom(fileId):
+                        selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    }
+                }
                 _ = storyReactions(context: context, peerId: entryId, react: like, onClose: {
                     self?.genericView.closeLikePanel()
-                }).start(next: { view in
+                }, selectedItems: selectedItems).start(next: { view in
                     if let view = view {
                         self?.genericView.showLikePanel(view, control: control)
                     }
