@@ -163,12 +163,6 @@ final class StoryControlsView : Control {
             date.append(string: strings().storyControlsEdited, color: color, font: .medium(.short))
         }
         
-        let textWidth = frame.width - 24 - avatar.frame.width - 10 - (muted.isHidden ? 0 : 18) - (more.isHidden ? 0 : 18) - (closeFriends.isHidden ? 0 : 18)
-
-
-        let dateLayout = TextViewLayout(date, maximumNumberOfLines: 1)
-        dateLayout.measure(width: textWidth)
-
         if hasNoSound {
             muted.set(image: cant_unmute, for: .Normal)
         } else {
@@ -176,7 +170,15 @@ final class StoryControlsView : Control {
         }
         muted.isHidden = !arguments.interaction.canBeMuted(story.storyItem)
         more.isHidden = context.peerId == groupId
+
         
+        let textWidth = frame.width - 24 - avatar.frame.width - 20 - (muted.isHidden ? 0 : 20) - (more.isHidden ? 0 : 20) - (closeFriends.isHidden ? 0 : 20)
+
+
+        let dateLayout = TextViewLayout(date, maximumNumberOfLines: 1)
+        dateLayout.measure(width: textWidth)
+
+               
 
         let authorName = NSMutableAttributedString()
         authorName.append(string: context.peerId == groupId ? strings().storyControlsYourStory : peer.displayTitle, color: .white, font: .medium(.title))
@@ -239,7 +241,7 @@ final class StoryControlsView : Control {
         super.layout()
         
 
-        let width = frame.width - 24 - avatar.frame.width - 10 - (muted.isHidden ? 0 : 18) - (more.isHidden ? 0 : 18) - (closeFriends.isHidden ? 0 : 18)
+        let width = frame.width - 24 - avatar.frame.width - 20 - (muted.isHidden ? 0 : 20) - (more.isHidden ? 0 : 20) - (closeFriends.isHidden ? 0 : 20)
         
         self.textView.resize(width)
         self.dateView.resize(width)

@@ -341,10 +341,10 @@ final class StoryMyInputView : Control, StoryInput {
                 current = view
             } else {
                 current = LikesCountView(frame: NSMakeRect(0, 0, 30, 30))
-                current.update(views.reactedCount)
                 self.views.addSubview(current)
                 self.like = current
             }
+            current.update(views.reactedCount)
         } else if let view = self.like {
             performSubviewRemoval(view, animated: animated)
             self.like = nil
