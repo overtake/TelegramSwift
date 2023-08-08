@@ -255,6 +255,9 @@ private struct State : Equatable {
 private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(id.toInt64())")
 }
+private func _id_miss(_ id: Int) -> InputDataIdentifier {
+    return InputDataIdentifier("_id_miss\(id)")
+}
 private let _id_loading_more = InputDataIdentifier("_id_loading_more")
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -275,6 +278,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var needToLoad: Bool = true
     
     if let list = state.views {
+        
         var items: [Tuple] = []
         for item in list.items {
             
@@ -287,8 +291,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
         
+        let miss = list.totalCount - items.count
+        
+        if miss > 0 {
+            for i in 0 ..< miss {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_miss(i), equatable: nil, comparable: nil, item: { initialSize, stableId in
+                    return GeneralRowItem(initialSize, height: 52, stableId: stableId)
+                }))
+                index += 1
+            }
+        }
     }
-    
     
     // entries
     return entries
@@ -298,8 +311,15 @@ private final class StoryViewersTopView : View {
     fileprivate let segmentControl: CatalinaStyledSegmentController
     fileprivate let close = ImageButton()
     fileprivate let filter = ImageButton()
+    fileprivate let search: SearchView
+    private let top: View
+    private let bottom: View
     required init(frame frameRect: NSRect) {
-        segmentControl = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
+        self.search = .init(frame: NSMakeRect(0, 10, frameRect.width, 30))
+        search.searchTheme = storyTheme.search
+        self.top = View(frame: NSMakeRect(0, 0, frameRect.width, 50))
+        self.bottom = View(frame: NSMakeRect(0, 50, frameRect.width, 40))
+        self.segmentControl = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
         super.init(frame: frameRect)
         
         segmentControl.add(segment: .init(title: strings().storyViewersAll, handler: {
@@ -327,9 +347,14 @@ private final class StoryViewersTopView : View {
         
         segmentControl.theme = CatalinaSegmentTheme(backgroundColor: storyTheme.colors.listBackground, foregroundColor: storyTheme.colors.background, activeTextColor: storyTheme.colors.text, inactiveTextColor: storyTheme.colors.listGrayText)
 
-        addSubview(close)
-        addSubview(filter)
-        addSubview(segmentControl.view)
+        top.addSubview(close)
+        top.addSubview(filter)
+        top.addSubview(segmentControl.view)
+        
+        bottom.addSubview(search)
+        
+        addSubview(top)
+        addSubview(bottom)
     }
     
     required init?(coder: NSCoder) {
@@ -338,22 +363,25 @@ private final class StoryViewersTopView : View {
     
     override func layout() {
         super.layout()
+        top.frame = NSMakeRect(0, 0, frame.width, 50)
+        bottom.frame = NSMakeRect(0, top.frame.maxY, frame.width, 50)
         segmentControl.view.center()
         close.centerY(x: 15)
-        filter.centerY(x: frame.width - filter.frame.width - 15)
+        filter.centerY(x: top.frame.width - filter.frame.width - 15)
+        search.frame = NSMakeRect(15, 0, frame.width - 30, 30)
     }
     
 }
 
-func StoryViewersModalController(context: AccountContext, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
+func StoryViewersModalController(context: AccountContext, list: EngineStoryViewListContext?, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
     
-    let storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: []))
+    let storyViewList = list ?? context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: []))
     
     let actionsDisposable = DisposableSet()
 
     let initialState = State(item: story, views: nil)
     
-    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+    let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
@@ -423,17 +451,23 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
     
     let controller = InputDataController(dataSignal: signal, title: "")
     
-    let view = StoryViewersTopView(frame: NSMakeRect(0, 0, controller.frame.width, 50))
+    let view = StoryViewersTopView(frame: NSMakeRect(0, 0, controller.frame.width, (story.views?.seenCount ?? 0) > 10 ? 90 : 50))
     controller.contextObject = view
 
+    view.search.searchInteractions = .init({ state, animated in
+        
+    }, { state in
+        
+    })
+    
     
     view.filter.contextMenu = {
         let menu = ContextMenu(presentation: .current(storyTheme.colors))
-        menu.addItem(ContextMenuItem("Reactions first", handler: {
+        menu.addItem(ContextMenuItem(strings().storyViewersReactionsFirst, handler: {
             
         }, itemImage: MenuAnimation.menu_check_selected.value))
         
-        menu.addItem(ContextMenuItem("Recent first", handler: {
+        menu.addItem(ContextMenuItem(strings().storyViewersRecentFirst, handler: {
             
         }))
         return menu
@@ -449,20 +483,13 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
-
-    
     
     let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(350, 300))
     
     modalController.getModalTheme = {
         .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: presentation.colors.background, border: presentation.colors.border)
     }
-    
-    
-//    controller.leftModalHeader = ModalHeaderData(image: presentation.icons.modalClose, handler: { [weak modalController] in
-//        modalController?.close()
-//    })
-    
+
     close = { [weak modalController] in
         modalController?.close()
     }
@@ -549,12 +576,6 @@ func StoryViewersModalController(context: AccountContext, peerId: PeerId, story:
     
     return modalController
 }
-
-
-/*
- 
- */
-
 
 
 
