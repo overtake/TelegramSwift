@@ -643,50 +643,54 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let action = action {
                             switch action {
                             case let .attachBot(botname, _, choose):
-                                
-                                let invoke:(Peer)->Void = { peer in
-                                    let signal = context.engine.messages.getAttachMenuBot(botId: peer.id)
-                                    let openAttach:()->Void = {
-                                        let chat = context.bindings.rootNavigation().controller as? ChatController
-                                        chat?.chatInteraction.invokeInitialAction(action: action)
-                                    }
-                                    _ = showModalProgress(signal: signal, for: context.window).start(next: { _ in
-                                        openAttach()
-                                    }, error: { _ in
-                                        if peer.username == botname {
-                                            openAttach()
-                                        } else {
-                                            callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
-                                        }
-                                    })
-                                }
-                                if let choose = choose, !choose.isEmpty {
-                                    var settings:SelectPeerSettings = .init()
-                                    if choose.contains("users") {
-                                        settings.insert(.contacts)
-                                        settings.insert(.remote)
-                                    }
-                                    if choose.contains("bots") {
-                                        settings.insert(.bots)
-                                    }
-                                    if choose.contains("groups") {
-                                        settings.insert(.groups)
-                                    }
-                                    if choose.contains("channels") {
-                                        settings.insert(.channels)
-                                    }
-                                    
-                                    _ = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, limit: 1, behavior: SelectChatsBehavior(settings: settings, excludePeerIds: [], limit: 1)).start(next: { peerIds in
-                                        if let peerId = peerIds.first {
-                                            let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
-                                            _ = signal.start(next: { peer in
-                                                invoke(peer)
-                                            })
-                                        }
-                                    })
+                                if botname == peer.addressName {
+                                    invokeCallback(peer, messageId, action)
                                 } else {
-                                    invoke(peer)
+                                    let invoke:(Peer)->Void = { peer in
+                                        let signal = context.engine.messages.getAttachMenuBot(botId: peer.id)
+                                        let openAttach:()->Void = {
+                                            let chat = context.bindings.rootNavigation().controller as? ChatController
+                                            chat?.chatInteraction.invokeInitialAction(action: action)
+                                        }
+                                        _ = showModalProgress(signal: signal, for: context.window).start(next: { _ in
+                                            openAttach()
+                                        }, error: { _ in
+                                            if peer.username == botname {
+                                                openAttach()
+                                            } else {
+                                                callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+                                            }
+                                        })
+                                    }
+                                    if let choose = choose, !choose.isEmpty {
+                                        var settings:SelectPeerSettings = .init()
+                                        if choose.contains("users") {
+                                            settings.insert(.contacts)
+                                            settings.insert(.remote)
+                                        }
+                                        if choose.contains("bots") {
+                                            settings.insert(.bots)
+                                        }
+                                        if choose.contains("groups") {
+                                            settings.insert(.groups)
+                                        }
+                                        if choose.contains("channels") {
+                                            settings.insert(.channels)
+                                        }
+                                        
+                                        _ = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, limit: 1, behavior: SelectChatsBehavior(settings: settings, excludePeerIds: [], limit: 1)).start(next: { peerIds in
+                                            if let peerId = peerIds.first {
+                                                let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+                                                _ = signal.start(next: { peer in
+                                                    invoke(peer)
+                                                })
+                                            }
+                                        })
+                                    } else {
+                                        invoke(peer)
+                                    }
                                 }
+                                
                             case let .makeWebview(appname, command):
                                 
                                 let botApp = context.engine.messages.getBotApp(botId: peer.id, shortName: appname)
