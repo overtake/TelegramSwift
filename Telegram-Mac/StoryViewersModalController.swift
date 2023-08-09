@@ -135,6 +135,7 @@ private final class StoryViewerRowView: GeneralRowView {
         return .clear
     }
     
+    private var myReaction: MessageReaction.Reaction?
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
@@ -165,16 +166,25 @@ private final class StoryViewerRowView: GeneralRowView {
         
         
         if let reaction = item.reaction {
-            let layer = makeView(reaction, context: item.context)
-            if let layer = layer {
-                layer.frame = NSMakeRect(frame.width - 25 - container.frame.minX, (frame.height - 25) / 2, 25, 25)
-                self.layer?.addSublayer(layer)
-                layer.isPlayable = false
+            if self.myReaction != reaction {
+                if let view = self.reaction {
+                    performSublayerRemoval(view, animated: false)
+                    self.reaction = nil
+                }
+                let layer = makeView(reaction, context: item.context)
+                if let layer = layer {
+                    layer.frame = NSMakeRect(frame.width - 25 - container.frame.minX, (frame.height - 25) / 2, 25, 25)
+                    self.layer?.addSublayer(layer)
+                    layer.isPlayable = false
+                }
+                self.myReaction = reaction
+                self.reaction = layer
             }
-            self.reaction = layer
+            
         } else if let view = self.reaction {
             performSublayerRemoval(view, animated: animated)
             self.reaction = nil
+            self.myReaction = nil
         }
         
         if let component = item.avatarComponent {
@@ -236,19 +246,25 @@ private final class Arguments {
     let callback:(PeerId)->Void
     let openStory:(PeerId)->Void
     let contextMenu:(PeerId)->Signal<[ContextMenuItem], NoError>
-    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>) {
+    let toggleListMode:(EngineStoryViewListContext.ListMode)->Void
+    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>, toggleListMode:@escaping(EngineStoryViewListContext.ListMode)->Void) {
         self.context = context
         self.presentation = presentation
         self.callback = callback
         self.openStory = openStory
         self.contextMenu = contextMenu
+        self.toggleListMode = toggleListMode
     }
 }
+
 
 private struct State : Equatable {
     var item: EngineStoryItem
     var views: EngineStoryViewListContext.State?
     var isLoadingMore: Bool = false
+    var listMode: EngineStoryViewListContext.ListMode
+    var sortMode: EngineStoryViewListContext.SortMode
+    var query: String = ""
 }
 
 
@@ -291,15 +307,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
         
-        let miss = list.totalCount - items.count
+        
+        var totalHeight: CGFloat = 450
+        let totalCount = state.item.views?.seenCount ?? 0
+        if totalCount > 15 {
+            totalHeight -= 40
+        }
+        
+        let miss = totalHeight - CGFloat(items.count) * 52.0
+        
         
         if miss > 0 {
-            for i in 0 ..< miss {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_miss(i), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                    return GeneralRowItem(initialSize, height: 52, stableId: stableId)
-                }))
-                index += 1
-            }
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_miss(0), equatable: .init(miss), comparable: nil, item: { initialSize, stableId in
+                return GeneralRowItem(initialSize, height: miss, stableId: stableId)
+            }))
+            index += 1
         }
     }
     
@@ -309,9 +331,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 private final class StoryViewersTopView : View {
     fileprivate let segmentControl: CatalinaStyledSegmentController
+    fileprivate let titleView = TextView()
     fileprivate let close = ImageButton()
     fileprivate let filter = ImageButton()
     fileprivate let search: SearchView
+    
+    private var arguments: Arguments?
+    
     private let top: View
     private let bottom: View
     required init(frame frameRect: NSRect) {
@@ -322,12 +348,12 @@ private final class StoryViewersTopView : View {
         self.segmentControl = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
         super.init(frame: frameRect)
         
-        segmentControl.add(segment: .init(title: strings().storyViewersAll, handler: {
-            
+        segmentControl.add(segment: .init(title: strings().storyViewersAll, handler: { [weak self] in
+            self?.arguments?.toggleListMode(.everyone)
         }))
         
-        segmentControl.add(segment: .init(title: strings().storyViewersContacts, handler: {
-            
+        segmentControl.add(segment: .init(title: strings().storyViewersContacts, handler: { [weak self] in
+            self?.arguments?.toggleListMode(.contacts)
         }))
         
         close.set(image: NSImage(named: "Icon_ChatAction_Close")!.precomposed(storyTheme.colors.text), for: .Normal)
@@ -347,6 +373,11 @@ private final class StoryViewersTopView : View {
         
         segmentControl.theme = CatalinaSegmentTheme(backgroundColor: storyTheme.colors.listBackground, foregroundColor: storyTheme.colors.background, activeTextColor: storyTheme.colors.text, inactiveTextColor: storyTheme.colors.listGrayText)
 
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        
+        top.addSubview(titleView)
         top.addSubview(close)
         top.addSubview(filter)
         top.addSubview(segmentControl.view)
@@ -355,6 +386,25 @@ private final class StoryViewersTopView : View {
         
         addSubview(top)
         addSubview(bottom)
+    }
+    
+    func update(_ state: State, arguments: Arguments) {
+        self.arguments = arguments
+        let string = strings().storyViewersAll
+        let layout = TextViewLayout(.initialize(string: string, color: storyTheme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+        layout.measure(width: .greatestFiniteMagnitude)
+        self.titleView.update(layout)
+        
+        let totalCount = state.item.views?.seenCount ?? 0
+        let totalLikes = state.item.views?.reactedCount ?? 0
+        let onlyTitle = state.item.privacy != nil && state.item.privacy?.base != .everyone
+        
+        segmentControl.view.isHidden = totalCount <= 20 || onlyTitle
+        titleView.isHidden = totalCount > 20 && !onlyTitle
+        filter.isHidden = totalLikes < 10 || totalLikes == totalCount
+        
+        needsLayout = true
+
     }
     
     required init?(coder: NSCoder) {
@@ -369,17 +419,23 @@ private final class StoryViewersTopView : View {
         close.centerY(x: 15)
         filter.centerY(x: top.frame.width - filter.frame.width - 15)
         search.frame = NSMakeRect(15, 0, frame.width - 30, 30)
+        titleView.center()
     }
     
 }
 
-func StoryViewersModalController(context: AccountContext, list: EngineStoryViewListContext?, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
+func StoryViewersModalController(context: AccountContext, list: EngineStoryViewListContext, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
     
-    let storyViewList = list ?? context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: []))
+    
+    let initialViews = story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [])
+    
+    var storyViewList = list
+    
+    let storyContext: Promise<EngineStoryViewListContext> = Promise(storyViewList)
     
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(item: story, views: nil)
+    let initialState = State(item: story, views: nil, listMode: .everyone, sortMode: .reactionsFirst)
     
     let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -443,6 +499,12 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
             }
             return items
         }
+    }, toggleListMode: { mode in
+        updateState { current in
+            var current = current
+            current.listMode = mode
+            return current
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -451,24 +513,63 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     
     let controller = InputDataController(dataSignal: signal, title: "")
     
-    let view = StoryViewersTopView(frame: NSMakeRect(0, 0, controller.frame.width, (story.views?.seenCount ?? 0) > 10 ? 90 : 50))
+    let seenCount = (story.views?.seenCount ?? 0)
+    
+    let view = StoryViewersTopView(frame: NSMakeRect(0, 0, controller.frame.width, seenCount > 15 ? 90 : 50))
     controller.contextObject = view
+    
+    let updateContext:()->Void = {
+        let listMode = stateValue.with { $0.listMode }
+        let sortMode = stateValue.with { $0.sortMode }
+        let query = stateValue.with { $0.query.isEmpty ? nil : $0.query }
+        
+        var parentSource: EngineStoryViewListContext?
+        if query == nil {
+            parentSource = list
+        } else {
+            parentSource = storyViewList
+        }
+        let contextList: EngineStoryViewListContext
+        if listMode == .everyone, sortMode == .reactionsFirst, query == nil {
+            contextList = list
+        } else {
+            contextList = context.engine.messages.storyViewList(id: story.id, views: initialViews, listMode: listMode, sortMode: sortMode, searchQuery: query, parentSource: parentSource)
+        }
+        storyContext.set(.single(contextList))
+    }
 
     view.search.searchInteractions = .init({ state, animated in
-        
+        updateState { current in
+            var current = current
+            current.query = state.request
+            return current
+        }
     }, { state in
-        
+        updateState { current in
+            var current = current
+            current.query = state.request
+            return current
+        }
     })
+    
     
     
     view.filter.contextMenu = {
         let menu = ContextMenu(presentation: .current(storyTheme.colors))
         menu.addItem(ContextMenuItem(strings().storyViewersReactionsFirst, handler: {
-            
+            updateState { current in
+                var current = current
+                current.sortMode = .reactionsFirst
+                return current
+            }
         }, itemImage: MenuAnimation.menu_check_selected.value))
         
         menu.addItem(ContextMenuItem(strings().storyViewersRecentFirst, handler: {
-            
+            updateState { current in
+                var current = current
+                current.sortMode = .recentFirst
+                return current
+            }
         }))
         return menu
     }
@@ -498,13 +599,28 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         storyViewList.loadMore()
     }
     
-    actionsDisposable.add(storyViewList.state.start(next: { list in
+    let contextSignal: Signal<(EngineStoryViewListContext, EngineStoryViewListContext.State), NoError> = (storyContext.get() |> mapToSignal { context in
+        return context.state |> map {
+            (context, $0)
+        }
+    })
+    
+    actionsDisposable.add(contextSignal.start(next: { context, list in
         updateState { current in
             var current = current
             current.views = list
             return current
         }
+        storyViewList = context
         loadMore()
+    }))
+    
+    var previous = stateValue.with { $0 }
+    actionsDisposable.add(statePromise.get().start(next: { value in
+        if previous.query != value.query || previous.sortMode != value.sortMode || previous.listMode != value.listMode {
+            updateContext()
+        }
+        previous = value
     }))
     
     
@@ -570,6 +686,10 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
             })
             context.account.viewTracker.refreshStoryStatsForPeerIds(peerIds: refreshStoryPeerIds)
         }))
+    }
+    
+    controller.afterTransaction = { [weak view] _ in
+        view?.update(stateValue.with { $0 }, arguments: arguments)
     }
     
     loadMore()

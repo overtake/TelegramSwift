@@ -6849,6 +6849,12 @@ public final class L10n {
   public static var locationSendTitle: String  { return L10n.tr("Localizable", "Location.Send.Title") }
   /// Unknown Location
   public static var locationSendThisLocationUnknown: String  { return L10n.tr("Localizable", "Location.Send.ThisLocation.Unknown") }
+  /// %@ away
+  public static func locationPreviewDistanceAway(_ p1: String) -> String {
+    return L10n.tr("Localizable", "LocationPreview.DistanceAway", p1)
+  }
+  /// Location
+  public static var locationPreviewLocation: String  { return L10n.tr("Localizable", "LocationPreview.Location") }
   /// Open in Google Maps
   public static var locationPreviewOpenInMaps: String  { return L10n.tr("Localizable", "LocationPreview.OpenInMaps") }
   /// Location Preview
@@ -12307,27 +12313,27 @@ public final class L10n {
   public static func storyViewsTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_countable", p1)
   }
-  /// %d views
+  /// %d Views
   public static func storyViewsTitleFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_few", p1)
   }
-  /// %d views
+  /// %d Views
   public static func storyViewsTitleMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_many", p1)
   }
-  /// %d view
+  /// %d View
   public static func storyViewsTitleOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_one", p1)
   }
-  /// %d views
+  /// %d Views
   public static func storyViewsTitleOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_other", p1)
   }
-  /// %d views
+  /// %d Views
   public static func storyViewsTitleTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_two", p1)
   }
-  /// %d views
+  /// %d Views
   public static func storyViewsTitleZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_zero", p1)
   }
