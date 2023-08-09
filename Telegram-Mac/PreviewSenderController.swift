@@ -1717,7 +1717,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let input = state.effectiveInput
         let textInputContextState = textInputStateContextQueryRangeAndType(input, includeContext: false)
         let chatInteraction = self.contextChatInteraction
-        var cleanup = false
+        var cleanup = true
         if let textInputContextState = textInputContextState {
             if textInputContextState.1.contains(.swapEmoji) {
                 let stringRange = textInputContextState.0
@@ -1729,8 +1729,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
                         self?.genericView.updateTextInputSuggestions(files, chatInteraction: chatInteraction, range: range, animated: animated)
                     }))
-                    cleanup = true
-                } else {
+                    cleanup = false
                 }
             }
         }
