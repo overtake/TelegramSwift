@@ -150,13 +150,13 @@ public class InputDataModalController : ModalViewController {
     
     override open func measure(size: NSSize) {
         let topHeight = controller.genericView.topView?.frame.height ?? 0
-        self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(size.width, 350))), min(size.height - 150, controller.tableView.listHeight + topHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(size.width, 350))), min(min(size.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         let topHeight = controller.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(contentSize.height - 150, controller.tableView.listHeight + topHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: animated)
         }
     }
     
