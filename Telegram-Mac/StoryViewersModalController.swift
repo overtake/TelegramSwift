@@ -275,7 +275,7 @@ private func _id_miss(_ id: Int) -> InputDataIdentifier {
     return InputDataIdentifier("_id_miss\(id)")
 }
 private let _id_loading_more = InputDataIdentifier("_id_loading_more")
-
+private let _id_empty = InputDataIdentifier("_id_empty")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -307,22 +307,32 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
         
-        
         var totalHeight: CGFloat = 450
         let totalCount = state.item.views?.seenCount ?? 0
         if totalCount > 15 {
             totalHeight -= 40
         }
+
         
-        let miss = totalHeight - CGFloat(items.count) * 52.0
-        
-        
-        if miss > 0 {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_miss(0), equatable: .init(miss), comparable: nil, item: { initialSize, stableId in
-                return GeneralRowItem(initialSize, height: miss, stableId: stableId)
+        if items.isEmpty, !state.query.isEmpty {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                return SearchEmptyRowItem(initialSize, stableId: stableId, height: totalHeight)
             }))
-            index += 1
+        } else {
+            
+            let miss = totalHeight - CGFloat(items.count) * 52.0
+            
+            
+            if miss > 0 {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_miss(0), equatable: .init(miss), comparable: nil, item: { initialSize, stableId in
+                    return GeneralRowItem(initialSize, height: miss, stableId: stableId)
+                }))
+                index += 1
+            }
         }
+        
+        
+       
     }
     
     // entries
@@ -390,7 +400,7 @@ private final class StoryViewersTopView : View {
     
     func update(_ state: State, arguments: Arguments) {
         self.arguments = arguments
-        let string = strings().storyViewersAll
+        let string = strings().storyViewersViewers
         let layout = TextViewLayout(.initialize(string: string, color: storyTheme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         layout.measure(width: .greatestFiniteMagnitude)
         self.titleView.update(layout)
@@ -402,7 +412,7 @@ private final class StoryViewersTopView : View {
         segmentControl.view.isHidden = totalCount <= 20 || onlyTitle
         titleView.isHidden = totalCount > 20 && !onlyTitle
         filter.isHidden = totalLikes < 10 || totalLikes == totalCount
-        
+        search.isHidden = totalCount < 15
         needsLayout = true
 
     }
@@ -622,6 +632,19 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         }
         previous = value
     }))
+    
+    
+    controller._externalFirstResponder = { [weak view] in
+        if let view = view, !view.search.isHidden  {
+            return view.search.input
+        } else {
+            return nil
+        }
+    }
+    
+    controller._becomeFirstResponder = {
+        return false
+    }
     
     
     controller.didLoaded = { [weak view] controller, _ in

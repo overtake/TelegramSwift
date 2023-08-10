@@ -420,6 +420,8 @@ private final class MapDataRowItemView: TableRowView {
             let loc2 = CLLocation(latitude: userLocation.coordinate.latitude, longitude: userLocation.coordinate.longitude)
             let dis = loc1.distance(from: loc2)
             distance += strings().locationPreviewDistanceAway(stringForDistance(distance: dis))
+        } else {
+            distance += "\(item.location.latitude), \(item.location.longitude)"
         }
         
         
@@ -526,6 +528,8 @@ func LocationModalPreview(_ context: AccountContext, venue: MediaArea.Venue, pee
         
         return .none
     }
+    
+    
     
     focusSelf = { [weak controller] in
         let view = controller?.tableView.firstItem?.view as? MapRowItemView
