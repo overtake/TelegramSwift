@@ -386,7 +386,8 @@ class InputDataController: GenericViewController<InputDataView> {
     var ignoreRightBarHandler: Bool = false
     
     var inputLimitReached:(Int)->Void = { _ in }
-    
+    var _externalFirstResponder:(()->NSResponder?)? = nil
+    var _becomeFirstResponder:(()->Bool)?
     var contextObject: Any?
     var didAppear: ((InputDataController)->Void)?
     
@@ -698,6 +699,9 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override func becomeFirstResponder() -> Bool? {
+        if let value = _becomeFirstResponder?() {
+            return value
+        }
         return true
     }
     
@@ -713,6 +717,9 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func firstResponder() -> NSResponder? {
         
+        if let responder = _externalFirstResponder?() {
+            return responder
+        }
         let responder = window?.firstResponder as? NSView
         
         var responderInController: Bool = false

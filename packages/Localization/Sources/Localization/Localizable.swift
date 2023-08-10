@@ -12309,6 +12309,8 @@ public final class L10n {
   public static var storyViewersReactionsFirst: String  { return L10n.tr("Localizable", "StoryViewers.ReactionsFirst") }
   /// Recent first
   public static var storyViewersRecentFirst: String  { return L10n.tr("Localizable", "StoryViewers.RecentFirst") }
+  /// Viewers
+  public static var storyViewersViewers: String  { return L10n.tr("Localizable", "StoryViewers.Viewers") }
   /// %d
   public static func storyViewsTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_countable", p1)
