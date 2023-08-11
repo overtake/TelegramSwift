@@ -13,12 +13,42 @@ import TGUIKit
 import SwiftSignalKit
 import MapKit
 
+
+private var sharedShortDistanceFormatter: MKDistanceFormatter?
+func shortStringForDistance(distance: Int32) -> String {
+    let distanceFormatter: MKDistanceFormatter
+    if let currentDistanceFormatter = sharedShortDistanceFormatter {
+        distanceFormatter = currentDistanceFormatter
+    } else {
+        distanceFormatter = MKDistanceFormatter()
+        distanceFormatter.unitStyle = .abbreviated
+        sharedShortDistanceFormatter = distanceFormatter
+    }
+    
+    let locale = appAppearance.locale
+    if distanceFormatter.locale != locale {
+        distanceFormatter.locale = locale
+    }
+    
+    let distance = max(1, distance)
+    var result = distanceFormatter.string(fromDistance: Double(distance))
+    if result.hasPrefix("0 ") {
+        result = result.replacingOccurrences(of: "0 ", with: "1 ")
+    }
+    return result
+}
+
+
 private final class Arguments {
     let context:AccountContext
     let presentation: TelegramPresentationTheme
-    init(context: AccountContext, presentation: TelegramPresentationTheme) {
+    let focusVenue:()->Void
+    let updateUserLocation:(MKUserLocation)->Void
+    init(context: AccountContext, presentation: TelegramPresentationTheme, focusVenue:@escaping()->Void, updateUserLocation:@escaping(MKUserLocation)->Void) {
         self.context = context
         self.presentation = presentation
+        self.focusVenue = focusVenue
+        self.updateUserLocation = updateUserLocation
     }
 }
 
@@ -32,14 +62,19 @@ private struct State : Equatable {
         } else if (lhs.peer != nil) != (rhs.peer != nil) {
             return false
         }
+        if lhs.userLocation != rhs.userLocation {
+            return false
+        }
         return lhs.map == rhs.map
     }
     
     var map: MediaArea.Venue
     var peer: Peer?
-    init(map: MediaArea.Venue, peer: Peer?) {
+    var userLocation: MKUserLocation?
+    init(map: MediaArea.Venue, peer: Peer?, userLocation: MKUserLocation?) {
         self.map = map
         self.peer = peer
+        self.userLocation = userLocation
     }
 }
 
@@ -56,6 +91,17 @@ private final class MapPin : NSObject, MKAnnotation
     {
         self.coordinate = coordinate
         self.account = account
+    }
+}
+
+private final class MapPinView: View {
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        background = .random
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
@@ -96,7 +142,9 @@ private final class AnnotationView : MKAnnotationView {
     }
     
     private func update() {
-        
+        if let annotation = self.annotation as? MapPin {
+           
+        }
     }
     
     
@@ -114,10 +162,12 @@ private final class AnnotationView : MKAnnotationView {
 private class MapRowItem: GeneralRowItem {
     let context: AccountContext
     let presentation: TelegramPresentationTheme
+    let updateUserLocation: (MKUserLocation)->Void
     fileprivate let pin: MapPin
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, context: AccountContext, latitude: Double, longitude: Double, viewType: GeneralViewType, presentation: TelegramPresentationTheme) {
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, context: AccountContext, latitude: Double, longitude: Double, viewType: GeneralViewType, presentation: TelegramPresentationTheme, updateUserLocation: @escaping(MKUserLocation)->Void) {
         self.context = context
         self.presentation = presentation
+        self.updateUserLocation = updateUserLocation
         self.pin = MapPin(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), account: context.account)
         super.init(initialSize, height: height, stableId: stableId, viewType: viewType)
     }
@@ -177,6 +227,23 @@ private final class MapRowItemView : TableRowView, MKMapViewDelegate {
         mapView.setRegion(region, animated: true)
     }
     
+    func focusVenue() {
+        guard let item = item as? MapRowItem else {
+            return
+        }
+        let userLocation = item.pin.coordinate
+        var region = MKCoordinateRegion()
+        var span = MKCoordinateSpan()
+        span.latitudeDelta = CLLocationDegrees(0.005)
+        span.longitudeDelta = CLLocationDegrees(0.005)
+        var location = CLLocationCoordinate2D()
+        location.latitude = userLocation.latitude
+        location.longitude = userLocation.longitude
+        region.span = span
+        region.center = location
+        mapView.setRegion(region, animated: true)
+    }
+    
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         switch annotation {
         case is MapPin:
@@ -184,6 +251,13 @@ private final class MapRowItemView : TableRowView, MKMapViewDelegate {
         default:
             return nil
         }
+    }
+    
+    func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
+        guard let item = item as? MapRowItem else {
+            return
+        }
+        item.updateUserLocation(userLocation)
     }
     
     private var doNotUpdateRegion: Bool = false
@@ -214,6 +288,8 @@ private final class MapRowItemView : TableRowView, MKMapViewDelegate {
             return
         }
         
+        item.updateUserLocation(mapView.userLocation)
+        
         mapView.appearance = item.presentation.appearance
         
         let focus:(Bool)->Void = { [weak self, unowned item] animated in
@@ -241,13 +317,19 @@ private final class MapRowItemView : TableRowView, MKMapViewDelegate {
 
 private class MapDataRowItem : TableRowItem {
     fileprivate let presentation: TelegramPresentationTheme
-    init(_ initialSize: NSSize, presentation: TelegramPresentationTheme) {
+    fileprivate let location: MediaArea.Venue
+    fileprivate let callback:()->Void
+    fileprivate let userLocation: MKUserLocation?
+    init(_ initialSize: NSSize, location: MediaArea.Venue, userLocation: MKUserLocation?, presentation: TelegramPresentationTheme, callback:@escaping()->Void) {
+        self.location = location
+        self.callback = callback
         self.presentation = presentation
+        self.userLocation = userLocation
         super.init(initialSize)
     }
     
     override var height: CGFloat {
-        return 50
+        return 60
     }
     override var stableId: AnyHashable {
         return 2
@@ -259,23 +341,112 @@ private class MapDataRowItem : TableRowItem {
 }
 
 private final class MapDataRowItemView: TableRowView {
+    private let control = Control()
+    private let titleView = TextView()
+    private let distance = TextView()
+    private let imageView = ImageView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        distance.userInteractionEnabled = false
+        distance.isSelectable = false
+        border = [.Top]
+        addSubview(control)
+        control.set(handler: { [weak self] _ in
+            if let item = self?.item as? MapDataRowItem {
+                item.callback()
+            }
+        }, for: .Click)
+        
+        control.addSubview(titleView)
+        control.addSubview(distance)
+        control.addSubview(imageView)
+        
+        control.set(handler: { control in
+            control.layer?.opacity = 0.8
+        }, for: .Highlight)
+        
+        control.set(handler: { control in
+            control.layer?.opacity = 1.0
+        }, for: .Normal)
+        
+        control.set(handler: { control in
+            control.layer?.opacity = 1.0
+        }, for: .Normal)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override var borderColor: NSColor {
+        guard let item = item as? MapDataRowItem else {
+            return .clear
+        }
+        return item.presentation.colors.border
+    }
+    
     override var backdorColor: NSColor {
         guard let item = item as? MapDataRowItem else {
-            return super.backdorColor
+            return .clear
         }
         return item.presentation.colors.background
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
+        
+        guard let item = item as? MapDataRowItem else {
+            return
+        }
+        
+        imageView.image = item.presentation.icons.locationPin
+        imageView.sizeToFit()
+        
+        let string = item.location.venue?.title ?? strings().locationPreviewLocation
+        let layout = TextViewLayout(.initialize(string: string, color: item.presentation.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        layout.measure(width: frame.width - 70)
+        titleView.update(layout)
+        
+        var distance: String = ""
+        if let address = item.location.venue?.address {
+            distance += address
+            distance += " \(strings().bullet) "
+        }
+        if let userLocation = item.userLocation {
+            let loc1 = CLLocation(latitude: item.location.latitude, longitude: item.location.longitude)
+            let loc2 = CLLocation(latitude: userLocation.coordinate.latitude, longitude: userLocation.coordinate.longitude)
+            let dis = loc1.distance(from: loc2)
+            distance += strings().locationPreviewDistanceAway(stringForDistance(distance: dis))
+        } else {
+            distance += "\(item.location.latitude), \(item.location.longitude)"
+        }
+        
+        
+        let distanceLayout = TextViewLayout(.initialize(string: distance, color: item.presentation.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        distanceLayout.measure(width: frame.width - 70)
+        self.distance.update(distanceLayout)
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        control.frame = bounds
+        imageView.centerY(x: 10)
+        
+        titleView.resize(frame.width - 70)
+        distance.resize(frame.width - 70)
+
+        if distance.textLayout?.attributedString.string.isEmpty == true {
+            titleView.centerY(x: imageView.frame.maxX + 10)
+        } else {
+            titleView.setFrameOrigin(NSMakePoint(imageView.frame.maxX + 10, 11))
+            distance.setFrameOrigin(NSMakePoint(imageView.frame.maxX + 10, control.frame.height - 11 - distance.frame.height))
+        }
+
     }
 }
 
@@ -292,12 +463,12 @@ private func entries(_ state:State, arguments: Arguments) -> [InputDataEntry] {
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map, equatable: InputDataEquatable(state.map), comparable: nil, item: { initialSize, stableId in
-        return MapRowItem(initialSize, height: 400, stableId: stableId, context: arguments.context, latitude: state.map.latitude, longitude: state.map.longitude, viewType: .legacy, presentation: arguments.presentation)
+        return MapRowItem(initialSize, height: 400, stableId: stableId, context: arguments.context, latitude: state.map.latitude, longitude: state.map.longitude, viewType: .legacy, presentation: arguments.presentation, updateUserLocation: arguments.updateUserLocation)
     }))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map_data, equatable: InputDataEquatable(state.map), comparable: nil, item: { initialSize, stableId in
-        return MapDataRowItem(initialSize, presentation: arguments.presentation)
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map_data, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+        return MapDataRowItem(initialSize, location: state.map, userLocation: state.userLocation, presentation: arguments.presentation, callback: arguments.focusVenue)
     }))
     index += 1
     
@@ -306,7 +477,7 @@ private func entries(_ state:State, arguments: Arguments) -> [InputDataEntry] {
 @available(macOS 10.13, *)
 func LocationModalPreview(_ context: AccountContext, venue: MediaArea.Venue, peer: Peer?, presentation: TelegramPresentationTheme) -> InputDataModalController {
     
-    let initialState = State(map: venue, peer: peer)
+    let initialState = State(map: venue, peer: peer, userLocation: nil)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -315,8 +486,17 @@ func LocationModalPreview(_ context: AccountContext, venue: MediaArea.Venue, pee
     }
     
     var focusSelf:(()->Void)? = nil
+    var focusVenue:(()->Void)? = nil
     
-    let arguments = Arguments(context: context, presentation: presentation)
+    let arguments = Arguments(context: context, presentation: presentation, focusVenue: {
+        focusVenue?()
+    }, updateUserLocation: { location in
+        updateState { current in
+            var current = current
+            current.userLocation = location
+            return current
+        }
+    })
     
     
     let signal = statePromise.get() |> map { state in
@@ -349,9 +529,15 @@ func LocationModalPreview(_ context: AccountContext, venue: MediaArea.Venue, pee
         return .none
     }
     
+    
+    
     focusSelf = { [weak controller] in
         let view = controller?.tableView.firstItem?.view as? MapRowItemView
         view?.focusSelf()
+    }
+    focusVenue = { [weak controller] in
+        let view = controller?.tableView.firstItem?.view as? MapRowItemView
+        view?.focusVenue()
     }
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(380, 400))

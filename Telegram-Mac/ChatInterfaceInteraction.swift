@@ -590,7 +590,7 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withoutInitialAction()
                 })
-                showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: .simple(url: url, bot: botPeer.peer, buttonText: "", isInline: true), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
             case .makeWebview:
                 update(animated: animated, {
                     $0.withoutInitialAction()

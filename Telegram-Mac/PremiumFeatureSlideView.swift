@@ -62,9 +62,10 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
     }
     private var bgDecoration: BackgroundDecoration = .none
 
-    
+    private let presentation: TelegramPresentationTheme
 
-    required init(frame frameRect: NSRect) {
+    init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
+        self.presentation = presentation
         super.init(frame: frameRect)
         bottom.addSubview(descView)
         bottom.addSubview(nameView)
@@ -84,6 +85,10 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
     var appear: (()->Void)? = nil
     var disappear: (()->Void)? = nil
 
@@ -95,8 +100,8 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         let title = type.title(context.premiumLimits)
         let info = type.info(context.premiumLimits)
         
-        let titleLayout = TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.title)), alignment: .center)
-        let infoLayout = TextViewLayout(.initialize(string: info, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        let titleLayout = TextViewLayout(.initialize(string: title, color: presentation.colors.text, font: .medium(.title)), alignment: .center)
+        let infoLayout = TextViewLayout(.initialize(string: info, color: presentation.colors.text, font: .normal(.text)), alignment: .center)
         
         
         titleLayout.measure(width: frame.width - 40)

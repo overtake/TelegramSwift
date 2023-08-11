@@ -15,10 +15,11 @@ class SearchEmptyRowItem: GeneralRowItem {
     let icon:CGImage
     let text:TextViewLayout?
 
-    
-    init(_ initialSize: NSSize, stableId:AnyHashable, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, text:String? = nil, border:BorderType = [], viewType: GeneralViewType = .legacy, customTheme: GeneralRowItem.Theme? = nil) {
+    private let _heightValue: CGFloat?
+    init(_ initialSize: NSSize, stableId:AnyHashable, height: CGFloat? = nil, isLoading:Bool = false, icon:CGImage = theme.icons.emptySearch, text:String? = nil, border:BorderType = [], viewType: GeneralViewType = .legacy, customTheme: GeneralRowItem.Theme? = nil) {
         self.isLoading = isLoading
         self.icon = icon
+        self._heightValue = height
         if let text = text {
             self.text = TextViewLayout(.initialize(string: text, color: customTheme?.grayTextColor ?? theme.colors.grayText, font: .normal(.title)), alignment: .center)
             self.text?.measure(width: initialSize.width - 60)
@@ -35,6 +36,9 @@ class SearchEmptyRowItem: GeneralRowItem {
     }
     
     override var height: CGFloat {
+        if let height = _heightValue {
+            return height
+        }
         if let table = table {
             var basic:CGFloat = 0
             table.enumerateItems(with: { [weak self] item in

@@ -786,6 +786,22 @@ private final class StoryListEntryRowItem : TableRowItem {
                     PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
                 }, itemImage: MenuAnimation.menu_open_profile.value))
                 
+                items.append(.init(strings().storyControlsMenuStealtMode, handler: {
+                    showModal(with: StoryStealthModeController(context, enableStealth: {
+                        
+                        let stealthData = context.engine.data.subscribe(
+                            TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
+                        ) |> deliverOnMainQueue
+                        
+                        _ = stealthData.start(next: { value in
+                            if let timestamp = value.stealthModeState.activeUntilTimestamp {
+                                 showModalText(for: context.window, text: strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))))
+                            }
+                        })
+                        
+                    }, presentation: theme), for: context.window)
+                }, itemImage: MenuAnimation.menu_eye_slash.value))
+                
                 let peer = self.entry.item.peer._asPeer()
                 if peer.storyArchived {
                     items.append(.init(strings().storyListContextUnarchive, handler: {
