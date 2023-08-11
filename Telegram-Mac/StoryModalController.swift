@@ -2363,14 +2363,14 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.genericView.current?.hideMediaAreaViewer()
         }
         
-        let like:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
+        let like:(StoryReactionAction)->Void = { [weak self] reaction in
             switch reaction.item {
             case .builtin:
                 self?.genericView.like(reaction)
             case let .custom(_, file):
                 if let file = file, file.isPremiumEmoji, !context.isPremium {
                     showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: storyTheme), for: context.window)
                     })
                 } else {
                     self?.genericView.like(reaction)
@@ -2461,9 +2461,7 @@ final class StoryModalController : ModalViewController, Notifable {
         }, markAsRead: { [weak self] peerId, storyId in
             self?.stories.markAsSeen(id: .init(peerId: peerId, id: storyId))
         }, showViewers: { [weak self] story in
-            if story.storyItem.expirationTimestamp + 24 * 60 * 60 < context.timestamp, !context.isPremium {
-                self?.genericView.showTooltip(.tooltip(strings().storyAlertViewsExpired, MenuAnimation.menu_clear_history))
-            } else if story.storyItem.views?.seenCount == 0 {
+            if story.storyItem.views?.seenCount == 0 {
                 self?.genericView.showTooltip(.tooltip(strings().storyAlertNoViews, MenuAnimation.menu_clear_history))
             } else {
                 if let peerId = story.peer?.id {

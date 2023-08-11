@@ -3088,6 +3088,7 @@
 		270B7CB829F66638009C994C /* stories */ = {
 			isa = PBXGroup;
 			children = (
+				27C0CC612A86237E00C573F4 /* viewers */,
 				2719D80E2A16047100081079 /* media-list */,
 				270B7CB929F66649009C994C /* StoryModalController.swift */,
 				270B7CBB29F67361009C994C /* StoryView.swift */,
@@ -3099,7 +3100,6 @@
 				2718244E2A05413000AFBD4C /* StoryMyInputView.swift */,
 				271824502A08C60400AFBD4C /* StoryChatListView.swift */,
 				2719D8002A139B9D00081079 /* StoryRecordingView.swift */,
-				2719D8132A1774BC00081079 /* StoryViewersModalController.swift */,
 				2719D8152A1F555500081079 /* StoryChatContent.swift */,
 				27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */,
 				279B03552A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift */,
@@ -3458,6 +3458,14 @@
 				27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */,
 			);
 			name = capturer;
+			sourceTree = "<group>";
+		};
+		27C0CC612A86237E00C573F4 /* viewers */ = {
+			isa = PBXGroup;
+			children = (
+				2719D8132A1774BC00081079 /* StoryViewersModalController.swift */,
+			);
+			name = viewers;
 			sourceTree = "<group>";
 		};
 		27CE153E297966A6001F8CE8 /* categories */ = {

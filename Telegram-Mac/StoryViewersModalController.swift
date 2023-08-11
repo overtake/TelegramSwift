@@ -13,6 +13,169 @@ import TelegramCore
 import Postbox
 
 
+private final class StoryViewerEmptyRowItem : GeneralRowItem {
+    fileprivate let state: State
+    fileprivate let openPremium: ()->Void
+    fileprivate let context: AccountContext
+    fileprivate let presentation: TelegramPresentationTheme
+    fileprivate let sticker: LocalAnimatedSticker = LocalAnimatedSticker.duck_empty
+    fileprivate let text: TextViewLayout
+    fileprivate let premiumText: TextViewLayout?
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, presentation: TelegramPresentationTheme, context: AccountContext, state: State, openPremium: @escaping()->Void) {
+        self.openPremium = openPremium
+        self.state = state
+        self.context = context
+        self.presentation = presentation
+        self.text = .init(.initialize(string: strings().storyAlertViewsExpired, color: presentation.colors.grayText, font: .normal(.text)), alignment: .center)
+        
+        if !context.isPremium {
+            let attr = parseMarkdownIntoAttributedString(strings().storyViewersPremiumUnlock, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.grayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.link), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { value in
+                    openPremium()
+                }))
+            }))
+            
+            self.premiumText = .init(attr, alignment: .center)
+            self.premiumText?.interactions = globalLinkExecutor
+        } else {
+            self.premiumText = nil
+        }
+        
+        super.init(initialSize, height: height, stableId: stableId)
+    }
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        self.text.measure(width: width - 40)
+        self.premiumText?.measure(width: width - 40)
+        
+        return true
+    }
+    
+    override func viewClass() -> AnyClass {
+        return StoryViewerEmptyRowView.self
+    }
+}
+
+private final class StoryViewerEmptyRowView : TableRowView {
+    private let textView = TextView()
+    private let imageView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 120, 120))
+    private let container = View()
+    private var button: TitleButton?
+    private var premiumText: TextView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        container.addSubview(imageView)
+        container.addSubview(textView)
+        addSubview(container)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        guard let item = item as? StoryViewerEmptyRowItem else {
+            return
+        }
+        var size = imageView.frame.size
+
+        let params = item.sticker.parameters
+
+        imageView.update(with: item.sticker.file, size: imageView.frame.size, context: item.context, parent: nil, table: item.table, parameters: params, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+
+        textView.update(item.text)
+        size.height += textView.frame.height + 10
+        
+        if let premiumText = item.premiumText {
+            let current: TextView
+            if let view = self.premiumText {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = true
+                current.isSelectable = false
+                self.premiumText = current
+                container.addSubview(current)
+            }
+            current.update(premiumText)
+            size.height += current.frame.height + 10
+        } else {
+            if let premiumText = self.premiumText {
+                performSubviewRemoval(premiumText, animated: animated)
+                self.premiumText = nil
+            }
+            if let button = self.button {
+                performSubviewRemoval(button, animated: animated)
+                self.button = nil
+            }
+        }
+        
+        if !item.context.isPremium {
+            let current: TitleButton
+            if let view = self.button {
+                current = view
+            } else {
+                current = TitleButton()
+                current.scaleOnClick = true
+                current.autohighlight = false
+                self.button = current
+                container.addSubview(current)
+                
+            }
+            
+            current.removeAllHandlers()
+            current.set(handler: { [weak item] _ in
+                item?.openPremium()
+            }, for: .Click)
+
+            current.set(text: strings().storyViewersPremiumLearnMore, for: .Normal)
+            current.set(background: item.presentation.colors.accent, for: .Normal)
+            current.set(font: .medium(.title), for: .Normal)
+            current.set(color: item.presentation.colors.underSelectedColor, for: .Normal)
+            current.sizeToFit(NSMakeSize(40, 20))
+            current.layer?.cornerRadius = .cornerRadius
+            
+            size.height += current.frame.height + 20
+        } else {
+            if let premiumText = self.premiumText {
+                performSubviewRemoval(premiumText, animated: animated)
+                self.premiumText = nil
+            }
+            if let button = self.button {
+                performSubviewRemoval(button, animated: animated)
+                self.button = nil
+            }
+        }
+        
+        let views = [imageView, textView, button, premiumText].compactMap({ $0 }).map { $0.frame.width }
+        size.width = views.max()!
+        container.setFrameSize(size)
+        
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        imageView.centerX(y: 0)
+        container.center()
+        textView.centerX(y: imageView.frame.maxY + 10)
+        if let text = self.premiumText {
+            text.centerX(y: textView.frame.maxY + 10)
+            if let button = self.button {
+                button.centerX(y: text.frame.maxY + 20)
+            }
+        }
+    }
+}
 
 
 private final class StoryViewerRowItem : GeneralRowItem {
@@ -64,8 +227,6 @@ private final class StoryViewerRowItem : GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
-        
-        
         
         nameLayout.measure(width: width - 36 - 16 - 16 - 10 - (peer.isPremium ? 20 : 0) - (reaction != nil ? 30 : 0))
         dateLayout.measure(width: width - 36 - 16 - 16 - 10 - 18 - (reaction != nil ? 30 : 0))
@@ -247,13 +408,15 @@ private final class Arguments {
     let openStory:(PeerId)->Void
     let contextMenu:(PeerId)->Signal<[ContextMenuItem], NoError>
     let toggleListMode:(EngineStoryViewListContext.ListMode)->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>, toggleListMode:@escaping(EngineStoryViewListContext.ListMode)->Void) {
+    let openPremium:()->Void
+    init(context: AccountContext, presentation: TelegramPresentationTheme, callback: @escaping(PeerId)->Void, openStory:@escaping(PeerId)->Void, contextMenu:@escaping(PeerId)->Signal<[ContextMenuItem], NoError>, toggleListMode:@escaping(EngineStoryViewListContext.ListMode)->Void, openPremium:@escaping()->Void) {
         self.context = context
         self.presentation = presentation
         self.callback = callback
         self.openStory = openStory
         self.contextMenu = contextMenu
         self.toggleListMode = toggleListMode
+        self.openPremium = openPremium
     }
 }
 
@@ -276,6 +439,7 @@ private func _id_miss(_ id: Int) -> InputDataIdentifier {
 }
 private let _id_loading_more = InputDataIdentifier("_id_loading_more")
 private let _id_empty = InputDataIdentifier("_id_empty")
+private let _id_empty_holder = InputDataIdentifier("_id_empty_holder")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -307,32 +471,35 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
         
+        let expired = state.item.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp
+        
         var totalHeight: CGFloat = 450
         let totalCount = state.item.views?.seenCount ?? 0
-        if totalCount > 15 {
+        if totalCount > 15 && !expired {
             totalHeight -= 40
         }
 
         
-        if items.isEmpty, !state.query.isEmpty {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-                return SearchEmptyRowItem(initialSize, stableId: stableId, height: totalHeight)
-            }))
+        if items.isEmpty {
+            if !state.query.isEmpty {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                    return SearchEmptyRowItem(initialSize, stableId: stableId, height: totalHeight)
+                }))
+            } else {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty_holder, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                    return StoryViewerEmptyRowItem(initialSize, height: totalHeight, stableId: stableId, presentation: arguments.presentation, context: arguments.context, state: state, openPremium: arguments.openPremium)
+                }))
+            }
+            
         } else {
-            
             let miss = totalHeight - CGFloat(items.count) * 52.0
-            
-            
             if miss > 0 {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_miss(0), equatable: .init(miss), comparable: nil, item: { initialSize, stableId in
-                    return GeneralRowItem(initialSize, height: miss, stableId: stableId)
+                    return GeneralRowItem(initialSize, height: miss, stableId: stableId, backgroundColor: storyTheme.colors.background)
                 }))
                 index += 1
             }
         }
-        
-        
-       
     }
     
     // entries
@@ -400,19 +567,20 @@ private final class StoryViewersTopView : View {
     
     func update(_ state: State, arguments: Arguments) {
         self.arguments = arguments
-        let string = strings().storyViewersViewers
+        let string = strings().storyViewsTitleCountable(state.item.views?.seenCount ?? 0)
         let layout = TextViewLayout(.initialize(string: string, color: storyTheme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         layout.measure(width: .greatestFiniteMagnitude)
         self.titleView.update(layout)
         
         let totalCount = state.item.views?.seenCount ?? 0
         let totalLikes = state.item.views?.reactedCount ?? 0
-        let onlyTitle = state.item.privacy != nil && state.item.privacy?.base != .everyone
-        
+        let expired = state.item.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp && !arguments.context.isPremium
+        let onlyTitle = (state.item.privacy != nil && state.item.privacy?.base != .everyone) || expired
+
         segmentControl.view.isHidden = totalCount <= 20 || onlyTitle
         titleView.isHidden = totalCount > 20 && !onlyTitle
-        filter.isHidden = totalLikes < 10 || totalLikes == totalCount
-        search.isHidden = totalCount < 15
+        filter.isHidden = totalLikes < 10 || totalLikes == totalCount || expired
+        search.isHidden = totalCount < 15 || expired
         needsLayout = true
 
     }
@@ -515,6 +683,8 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
             current.listMode = mode
             return current
         }
+    }, openPremium: {
+        showModal(with: PremiumBoardingController(context: context, source: .story_viewers, openFeatures: true, presentation: storyTheme), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -524,8 +694,9 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     let controller = InputDataController(dataSignal: signal, title: "")
     
     let seenCount = (story.views?.seenCount ?? 0)
-    
-    let view = StoryViewersTopView(frame: NSMakeRect(0, 0, controller.frame.width, seenCount > 15 ? 90 : 50))
+    let expired = story.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp && !arguments.context.isPremium
+
+    let view = StoryViewersTopView(frame: NSMakeRect(0, 0, controller.frame.width, seenCount > 15 && !expired ? 90 : 50))
     controller.contextObject = view
     
     let updateContext:()->Void = {
@@ -646,13 +817,15 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         return false
     }
     
-    
-    controller.didLoaded = { [weak view] controller, _ in
+    controller.afterViewDidLoad = { [weak view, weak modalController] in
         
         if let view = view {
             controller.genericView.set(view)
+            modalController?.viewDidResized(.zero)
         }
-        
+    }
+    
+    controller.didLoaded = { controller, _ in
         controller.tableView.setScrollHandler { position in
             switch position.direction {
             case .bottom:

@@ -390,6 +390,7 @@ class InputDataController: GenericViewController<InputDataView> {
     var _becomeFirstResponder:(()->Bool)?
     var contextObject: Any?
     var didAppear: ((InputDataController)->Void)?
+    var afterViewDidLoad:(()->Void)?
     
     var _abolishWhenNavigationSame: Bool = false
 
@@ -587,7 +588,7 @@ class InputDataController: GenericViewController<InputDataView> {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        self.afterViewDidLoad?()
         genericView.tableView.getBackgroundColor = self.getBackgroundColor
         
         
