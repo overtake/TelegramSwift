@@ -471,7 +471,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
         
-        let expired = state.item.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp
+        let expired = state.item.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp && !arguments.context.isPremium
         
         var totalHeight: CGFloat = 450
         let totalCount = state.item.views?.seenCount ?? 0
