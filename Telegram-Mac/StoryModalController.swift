@@ -2495,14 +2495,18 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             let text: String
+            let icon: MenuAnimation
             if story.storyItem.isCloseFriends {
                 text = strings().storyTooltipCloseFriends(peer.compactDisplayTitle)
+                icon = MenuAnimation.menu_add_to_favorites
             } else if story.storyItem.isContacts {
                 text = strings().storyTooltipContacts(peer.compactDisplayTitle)
+                icon = MenuAnimation.menu_create_group
             } else {
+                icon = MenuAnimation.menu_create_group
                 text = strings().storyTooltipSelectedContacts(peer.compactDisplayTitle)
             }
-            self?.genericView.showTooltip(.tooltip(text, MenuAnimation.menu_add_to_favorites))
+            self?.genericView.showTooltip(.tooltip(text, icon))
         }, showTooltipText: { [weak self] text, animation in
             self?.genericView.showTooltip(.tooltip(text, animation))
         }, storyContextMenu: { [weak self] story in
