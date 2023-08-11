@@ -3372,8 +3372,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                             }
                             strongSelf.chatInteraction.focusMessageId(fromId, postId, TableScrollState.CenterEmpty)
-                        } else {
-                            strongSelf.view.shake(beep: false)
                         }
                         if let action = action {
                             strongSelf.chatInteraction.update({ $0.updatedInitialAction(action) })

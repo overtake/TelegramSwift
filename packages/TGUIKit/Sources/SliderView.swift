@@ -183,7 +183,6 @@ public class SliderView: Control {
         if slideToDisplay === displayedSlide {
             return
         }
-        slideToDisplay.willAppear()
         slideToDisplay.frame = bounds
         slideToDisplay.autoresizingMask = [.width, .height]
         
@@ -191,6 +190,7 @@ public class SliderView: Control {
             contentView.addSubview(slideToDisplay)
             displayedSlide = slideToDisplay
             indexOfDisplayedSlide = aIndex
+            slideToDisplay.willAppear()
             return
         }
         
@@ -203,7 +203,7 @@ public class SliderView: Control {
             contentView.animator().replaceSubview(displayedSlide, with: slideToDisplay)
         }
         NSAnimationContext.endGrouping()
-        
+        slideToDisplay.willAppear()
         displayedSlide = slideToDisplay
         indexOfDisplayedSlide = aIndex
     }

@@ -6851,6 +6851,12 @@ public final class L10n {
   public static var locationSendTitle: String  { return L10n.tr("Localizable", "Location.Send.Title") }
   /// Unknown Location
   public static var locationSendThisLocationUnknown: String  { return L10n.tr("Localizable", "Location.Send.ThisLocation.Unknown") }
+  /// %@ away
+  public static func locationPreviewDistanceAway(_ p1: String) -> String {
+    return L10n.tr("Localizable", "LocationPreview.DistanceAway", p1)
+  }
+  /// Location
+  public static var locationPreviewLocation: String  { return L10n.tr("Localizable", "LocationPreview.Location") }
   /// Open in Google Maps
   public static var locationPreviewOpenInMaps: String  { return L10n.tr("Localizable", "LocationPreview.OpenInMaps") }
   /// Location Preview
@@ -12059,27 +12065,27 @@ public final class L10n {
   public static func storyMyInputLikesCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_countable", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_few", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_many", p1)
   }
-  /// %d like
+  /// %d
   public static func storyMyInputLikesOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_one", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_other", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_two", p1)
   }
-  /// %d likes
+  /// %d
   public static func storyMyInputLikesZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Story.MyInput.Likes_zero", p1)
   }
@@ -12301,6 +12307,16 @@ public final class L10n {
   public static var storyViewersAll: String  { return L10n.tr("Localizable", "StoryViewers.All") }
   /// Contacts
   public static var storyViewersContacts: String  { return L10n.tr("Localizable", "StoryViewers.Contacts") }
+  /// Reactions first
+  public static var storyViewersReactionsFirst: String  { return L10n.tr("Localizable", "StoryViewers.ReactionsFirst") }
+  /// Recent first
+  public static var storyViewersRecentFirst: String  { return L10n.tr("Localizable", "StoryViewers.RecentFirst") }
+  /// Viewers
+  public static var storyViewersViewers: String  { return L10n.tr("Localizable", "StoryViewers.Viewers") }
+  /// Learn More
+  public static var storyViewersPremiumLearnMore: String  { return L10n.tr("Localizable", "StoryViewers.Premium.LearnMore") }
+  /// To unlock viewers' lists for expired and saved stories, subscribe to [Telegram Premium]().
+  public static var storyViewersPremiumUnlock: String  { return L10n.tr("Localizable", "StoryViewers.Premium.Unlock") }
   /// %d
   public static func storyViewsTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_countable", p1)
@@ -12329,7 +12345,7 @@ public final class L10n {
   public static func storyViewsTitleZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_zero", p1)
   }
-  /// No Views yet
+  /// No views yet
   public static var storyViewsTitleZeroValueHolder: String  { return L10n.tr("Localizable", "StoryViews.Title_ZeroValueHolder") }
   /// Suggest Frequent Contacts
   public static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }

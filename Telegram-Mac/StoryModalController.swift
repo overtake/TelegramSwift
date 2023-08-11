@@ -157,6 +157,7 @@ final class StoryInteraction : InterfaceObserver {
         
         var isAreaActivated: Bool = false
         
+        
         var canRecordVoice: Bool = true
         var isProfileIntended: Bool = false
         var emojiState: EntertainmentState = FastSettings.entertainmentState
@@ -165,7 +166,6 @@ final class StoryInteraction : InterfaceObserver {
         var stealthMode: Stories.StealthModeState = .init(activeUntilTimestamp: nil, cooldownUntilTimestamp: nil)
         
         var reactions: AvailableReactions?
-        
         var isPaused: Bool {
             return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated || hasLikePanel
         }
@@ -982,6 +982,8 @@ private final class StoryViewController: Control, Notifable {
     private let rightBottom = Control()
     
     private var storyContext: StoryContentContext?
+    fileprivate var storyViewList: EngineStoryViewListContext?
+
     
     private var textInputSuggestionsView: InputSwapSuggestionsPanel?
     fileprivate var inputContextHelper: InputContextHelper!
@@ -1282,6 +1284,12 @@ private final class StoryViewController: Control, Notifable {
         
         if updated {
             self.closeTooltip()
+            if state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
+                self.storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: []), listMode: .everyone, sortMode: .reactionsFirst)
+                self.storyViewList?.loadMore()
+            } else {
+                self.storyViewList = nil
+            }
         }
     }
     
@@ -2367,14 +2375,14 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.genericView.current?.hideMediaAreaViewer()
         }
         
-        let like:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
+        let like:(StoryReactionAction)->Void = { [weak self] reaction in
             switch reaction.item {
             case .builtin:
                 self?.genericView.like(reaction)
             case let .custom(_, file):
                 if let file = file, file.isPremiumEmoji, !context.isPremium {
                     showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: storyTheme), for: context.window)
                     })
                 } else {
                     self?.genericView.like(reaction)
@@ -2465,15 +2473,15 @@ final class StoryModalController : ModalViewController, Notifable {
         }, markAsRead: { [weak self] peerId, storyId in
             self?.stories.markAsSeen(id: .init(peerId: peerId, id: storyId))
         }, showViewers: { [weak self] story in
-            if story.storyItem.expirationTimestamp + 24 * 60 * 60 < context.timestamp, !context.isPremium {
-                self?.genericView.showTooltip(.tooltip(strings().storyAlertViewsExpired, MenuAnimation.menu_clear_history))
-            } else if story.storyItem.views?.seenCount == 0 {
+            if story.storyItem.views?.seenCount == 0 {
                 self?.genericView.showTooltip(.tooltip(strings().storyAlertNoViews, MenuAnimation.menu_clear_history))
             } else {
                 if let peerId = story.peer?.id {
-                    showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
-                        openPeerInfo(peerId, nil)
-                    }), for: context.window)
+                    if let list = self?.genericView.storyViewList {
+                        showModal(with: StoryViewersModalController(context: context, list: list, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
+                            openPeerInfo(peerId, nil)
+                        }), for: context.window)
+                    }
                 }
             }
             
@@ -2499,14 +2507,18 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             let text: String
+            let icon: MenuAnimation
             if story.storyItem.isCloseFriends {
                 text = strings().storyTooltipCloseFriends(peer.compactDisplayTitle)
+                icon = MenuAnimation.menu_add_to_favorites
             } else if story.storyItem.isContacts {
                 text = strings().storyTooltipContacts(peer.compactDisplayTitle)
+                icon = MenuAnimation.menu_create_group
             } else {
+                icon = MenuAnimation.menu_create_group
                 text = strings().storyTooltipSelectedContacts(peer.compactDisplayTitle)
             }
-            self?.genericView.showTooltip(.tooltip(text, MenuAnimation.menu_add_to_favorites))
+            self?.genericView.showTooltip(.tooltip(text, icon))
         }, showTooltipText: { [weak self] text, animation in
             self?.genericView.showTooltip(.tooltip(text, animation))
         }, storyContextMenu: { [weak self] story in

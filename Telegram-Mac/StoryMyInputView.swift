@@ -24,7 +24,7 @@ private func makeItem(_ peer: Peer, context: AccountContext, callback:@escaping(
     let item = ReactionPeerMenu(title: title, handler: {
         callback(peer.id)
     }, peer: peer, context: context, reaction: nil, destination: .common)
-
+    
     ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), selfAsSaved: false)
     
     return item
@@ -44,9 +44,15 @@ final class StoryMyInputView : Control, StoryInput {
             
             
             let count: CGFloat = peers != nil ? CGFloat(peers!.count) : 3
-            let viewSize = NSMakeSize(size.width * count - (count - 1) * 1, size.height)
+            var sz = size.width + CGFloat(count) * (size.width / 2)
+            if count == 1 {
+                sz-=size.width/2
+            }
+            let viewSize = NSMakeSize(sz - (count - 1) * 1, size.height)
             
             super.init(frame: CGRect(origin: .zero, size: viewSize))
+            
+            layer?.masksToBounds = false
             
             if let peers = peers {
                 let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
@@ -324,9 +330,8 @@ final class StoryMyInputView : Control, StoryInput {
                 self.avatars = nil
             }
         }
-        let expired = story.storyItem.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp && !arguments.context.isPremium
         
-        if let views = story.storyItem.views, views.seenCount > 3 || views.seenCount == 0 || expired {
+        if let views = story.storyItem.views, views.seenCount > 3 || views.seenCount == 0 {
             self.views.removeAllHandlers()
             self.views.set(handler: { [weak arguments] _ in
                 arguments?.showViewers(story)
@@ -450,7 +455,8 @@ final class StoryMyInputView : Control, StoryInput {
             }
             transition.updateFrame(view: views, frame: viewsRect)
             transition.updateFrame(view: avatars, frame: avatars.centerFrameY(x: 0))
-            transition.updateFrame(view: viewsText, frame: viewsText.centerFrameY(x: avatars.frame.maxX - 10))
+            
+            transition.updateFrame(view: viewsText, frame: viewsText.centerFrameY(x: avatars.frame.maxX + 5))
             
             if let view = self.like {
                 transition.updateFrame(view: view, frame: view.centerFrameY(x: viewsText.frame.maxX + 5))
@@ -458,6 +464,10 @@ final class StoryMyInputView : Control, StoryInput {
         } else {
             transition.updateFrame(view: views, frame: viewsRect)
             transition.updateFrame(view: viewsText, frame: viewsText.centerFrameY(x: 0))
+            
+            if let view = self.like {
+                transition.updateFrame(view: view, frame: view.centerFrameY(x: viewsText.frame.maxX + 5))
+            }
         }
     }
     
