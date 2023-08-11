@@ -89,13 +89,7 @@ struct PeerListState : Equatable {
             } else if (lhs.peerView.cachedData != nil) != (rhs.peerView.cachedData != nil) {
                 return false
             }
-            if lhs.call != rhs.call {
-                return false
-            }
             if lhs.online != rhs.online {
-                return false
-            }
-            if lhs.invitationState != rhs.invitationState {
                 return false
             }
             return true
@@ -104,8 +98,6 @@ struct PeerListState : Equatable {
         var peer: TelegramChannel
         var peerView: PeerView
         var online: Int32
-        var call: ChatActiveGroupCallInfo?
-        var invitationState: PeerInvitationImportersState?
     }
     
     var proxySettings: ProxySettings
@@ -125,43 +117,6 @@ struct PeerListState : Equatable {
     var isContacts: Bool
     var filterData: FilterData
     var presentation: TelegramPresentationTheme
-    
-    var hasInvites: Bool {
-        let inviteRequestsPending = self.forumPeer?.invitationState?.waitingCount ?? 0
-        let check: Bool
-        if let forumPeer = self.forumPeer {
-            check = FastSettings.canBeShownPendingRequests(forumPeer.invitationState?.importers.compactMap { $0.peer.peer?.id } ?? [], for: forumPeer.peer.id)
-        } else {
-            check = false
-        }
-        let hasInvites: Bool = self.forumPeer != nil && inviteRequestsPending > 0 && self.splitState != .minimisize && check && searchState == .None
-
-        return hasInvites
-    }
-    
-    var hasVoiceChat: Bool {
-        if searchState == .Focus {
-            return false
-        }
-        if splitState == .minimisize {
-            return false
-        }
-        var voiceChat: ChatActiveGroupCallInfo?
-        if let forumPeer = self.forumPeer, forumPeer.call?.data?.groupCall == nil {
-            if let data = forumPeer.call?.data {
-                if data.participantCount == 0 && forumPeer.call?.activeCall.scheduleTimestamp == nil {
-                    voiceChat = nil
-                } else {
-                    voiceChat = forumPeer.call
-                }
-            } else {
-                voiceChat = nil
-            }
-        } else {
-            voiceChat = nil
-        }
-        return voiceChat != nil
-    }
     
     var hasStories: Bool {
         if let stories = self.stories, !isContacts, !mode.isForum {
@@ -636,11 +591,9 @@ private final class TitleForumView : Control {
 class PeerListContainerView : Control {
     
     
-    private var header: NSView?
     private var downloads: DownloadsControl?
     private var proxy: ProxyView?
     private var compose:ImageButton?
-    private var actionView: ActionView?
     private var backButton: ImageButton?
 
     private var forumTitle: TitleForumView?
@@ -770,41 +723,6 @@ class PeerListContainerView : Control {
             self.foldersItem = nil
         }
 
-        var voiceChat: ChatActiveGroupCallInfo?
-        if let forumPeer = state.forumPeer, forumPeer.call?.data?.groupCall == nil, state.hasVoiceChat {
-            if let data = forumPeer.call?.data {
-                if data.participantCount == 0 && forumPeer.call?.activeCall.scheduleTimestamp == nil {
-                    voiceChat = nil
-                } else {
-                    voiceChat = forumPeer.call
-                }
-            } else {
-                voiceChat = nil
-            }
-        } else {
-            voiceChat = nil
-        }
-        self.updateAdditionHeader(state, size: frame.size, arguments: arguments, animated: animated)
-
-        
-        if let peer = state.forumPeer?.peer, peer.participationStatus == .left, state.splitState != .minimisize {
-            let current: ActionView
-            if let view = self.actionView {
-                current = view
-            } else {
-                current = ActionView(frame: NSMakeRect(0, frame.height - 50, frame.width, 50))
-                self.actionView = current
-                addSubview(current)
-                
-                if animated {
-                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                }
-            }
-            current.update(action: arguments.joinGroup, peerId: peer.id, title: strings().chatInputJoin)
-        } else if let view = self.actionView {
-            performSubviewRemoval(view, animated: animated)
-            self.actionView = nil
-        }
         
         let hasCompose = (state.isContacts || state.mode == .plain)
         
@@ -977,42 +895,6 @@ class PeerListContainerView : Control {
             transition = .immediate
         }
         self.updateLayout(self.frame.size, transition: transition)
-    }
-    
-
-    
-    private func updateAdditionHeader(_ state: PeerListState, size: NSSize, arguments: Arguments, animated: Bool) {
-        if state.hasInvites {
-            self.updatePendingRequests(state.forumPeer?.invitationState, arguments: arguments, animated: animated)
-        } else {
-            self.updatePendingRequests(nil, arguments: arguments, animated: animated)
-        }
-    }
-    
-    private func updatePendingRequests(_ state: PeerInvitationImportersState?, arguments: Arguments, animated: Bool) {
-        if let state = state {
-            let current: ChatPendingRequests
-            let headerState: ChatHeaderState = .init(main: .pendingRequests(Int(state.count), state.importers))
-            if let view = self.header as? ChatPendingRequests {
-                current = view
-            } else {
-                if let view = self.header {
-                    performSubviewRemoval(view, animated: animated)
-                    self.header = nil
-                }
-                current = .init(context: arguments.context, openAction: arguments.openPendingRequests, dismissAction: arguments.dismissPendingRequests, state: headerState, frame: NSMakeRect(0, statusHeight, frame.width, 44))
-                
-                current.border = [.Top]
-                self.header = current
-                containerView.addSubview(current)
-            }
-            current.update(with: headerState, animated: animated)
-        } else {
-            if let view = self.header {
-                performSubviewRemoval(view, animated: animated)
-                self.header = nil
-            }
-        }
     }
     
     
@@ -1275,13 +1157,6 @@ class PeerListContainerView : Control {
         transition.updateAlpha(view: borderView, alpha: state.searchState == .Focus ? 0 : 1)
 
 
-        if let header = self.header {
-            offset += header.frame.height
-            transition.updateFrame(view: header, frame: NSMakeRect(0, inset, size.width, header.frame.height))
-            inset += header.frame.height
-        }
-        
-
         
         let statusHeight: CGFloat = self.statusHeight
 
@@ -1294,10 +1169,7 @@ class PeerListContainerView : Control {
         if let storiesItem = storiesItem {
             searchY += (StoryListChatListRowItem.InterfaceState.revealed.height * storiesItem.progress) + 9 * storiesItem.progress
         }
-        
-        if let header = self.header {
-            searchY += header.frame.height
-        }
+
         
         var leftSearchInset: CGFloat = 0
         if let _ = self.backButton {
@@ -1311,9 +1183,6 @@ class PeerListContainerView : Control {
         
         
         var bottomInset: CGFloat = 0
-        if let actionView = self.actionView {
-            bottomInset += actionView.frame.height
-        }
         
         transition.updateFrame(view: searchView, frame: searchRect)
         searchView.updateLayout(size: searchRect.size, transition: transition)
@@ -1372,10 +1241,6 @@ class PeerListContainerView : Control {
         }
         
 
-        if let actionView = self.actionView {
-            transition.updateFrame(view: actionView, frame: CGRect(origin: CGPoint(x: 0, y: size.height - actionView.frame.height), size: NSMakeSize(frame.width, actionView.frame.height)))
-        }
-        
         let titlePlusStorySize = titleView.frame.width + (59)
         var titlePlusStoryStartX = (size.width - titlePlusStorySize) / 2
         titlePlusStoryStartX = max(arguments.navigationBarLeftPosition() + 20, titlePlusStoryStartX)
@@ -1462,17 +1327,9 @@ class PeerListContainerView : Control {
         
         
         if state.splitState != .minimisize, state.mode.isPlain {
-//            if state.appear == .normal {
-                offset += 40
-//            }
-            //offset += 40
-            
-            if state.hasVoiceChat {
-                offset += 44
-            }
-            if state.hasInvites {
-                offset += 44
-            }
+
+            offset += 40
+
             if let storiesItem = self.storiesItem {
                 offset += storiesItem.navigationHeight
             }
@@ -2156,13 +2013,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }, dismissPendingRequests: { peerIds in
             if case let .forum(peerId, _, _) = mode {
                 FastSettings.dismissPendingRequests(peerIds, for: peerId)
-                updateState { current in
-                    var current = current
-                    current.forumPeer?.invitationState = nil
-                    return current
-                }
             }
-
         }, openStory: { initialId, singlePeer, isHidden in
             StoryModalController.ShowStories(context: context, isHidden: isHidden, initialId: initialId, singlePeer: singlePeer)
         }, getStoryInterfaceState: { [weak self] in
@@ -2828,45 +2679,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             let context = self.context
             let forumPeer: Signal<PeerListState.ForumData?, NoError>
             if let peerId = peerId {
-                let importState: Promise<PeerInvitationImportersState?> = Promise()
-                
-                let isAllowed: Signal<Bool, NoError> = getPeerView(peerId: peerId, postbox: context.account.postbox) |> map { value in
-                    if let peer = value as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
-                        return true
-                    } else {
-                        return false
-                    }
-                } |> deliverOnMainQueue
-                
-                actionsDisposable.add(isAllowed.start(next: { [weak self] canCreateLink in
-                    if canCreateLink {
-                        let current: PeerInvitationImportersContext
-                        if let value = self?.tempImportersContext {
-                            current = value
-                        } else {
-                            current = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
-                            self?.tempImportersContext = current
-                        }
-                        importState.set(current.state |> map(Optional.init))
-                    } else {
-                        self?.tempImportersContext = nil
-                        importState.set(.single(nil))
-                    }
-                }))
-
-
-                let signal = combineLatest(context.account.postbox.peerView(id: peerId), getGroupCallPanelData(context: context, peerId: peerId), importState.get())
-                forumPeer = signal |> mapToSignal { view, call, invitationState in
+                forumPeer = context.account.postbox.peerView(id: peerId) |> mapToSignal { view in
                     if let peer = peerViewMainPeer(view) as? TelegramChannel, let cachedData = view.cachedData as? CachedChannelData, peer.isForum {
-                        
-                        let info: ChatActiveGroupCallInfo?
-                        if let activeCall = cachedData.activeCall {
-                            info = .init(activeCall: activeCall, data: call, callJoinPeerId: cachedData.callJoinPeerId, joinHash: nil, isLive: peer.isChannel || peer.isGigagroup)
-                        } else {
-                            info = nil
-                        }
-                        return .single(.init(peer: peer, peerView: view, online: 0, call: info, invitationState: invitationState))
-
+                        return .single(.init(peer: peer, peerView: view, online: 0))
                     } else {
                         return .single(nil)
                     }

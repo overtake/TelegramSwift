@@ -803,7 +803,6 @@ private final class StoryViewController: Control, Notifable {
             self.state = .active
             self.material = .ultraDark
             self.blendingMode = .withinWindow
-            //textView.userInteractionEnabled = false
             textView.isSelectable = false
             addSubview(textView)
             addSubview(media)
@@ -907,12 +906,8 @@ private final class StoryViewController: Control, Notifable {
             
             self.media.layer?.addSublayer(mediaLayer)
             
-//            let attr = NSMutableAttributedString()
-//
-            let attr = parseMarkdownIntoAttributedString(title, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: storyTheme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: storyTheme.colors.text), link: MarkdownAttributeSet(font: .bold(.text), textColor: storyTheme.colors.accentIcon), linkAttribute: { contents in
-                return (NSAttributedString.Key.link.rawValue, contents)
-            })).mutableCopy() as! NSMutableAttributedString
-            
+            let attr = NSMutableAttributedString()
+            _ = attr.append(string: title, color: storyTheme.colors.text, font: .normal(.text))
             attr.detectBoldColorInString(with: .medium(.text))
             let layout = TextViewLayout(attr)
             
@@ -926,10 +921,14 @@ private final class StoryViewController: Control, Notifable {
             layout.measure(width: size.width - 16 - (button.isHidden ? 0 : 16 + self.button.frame.width) - media.frame.width - 10 - 10)
             textView.update(layout)
 
+            
+            layout.measure(width: size.width - 16 - (button.isHidden ? 0 : 16 + self.button.frame.width) - media.frame.width - 10 - 10)
+            textView.update(layout)
+
             layout.interactions = .init(processURL: { url in
                 if let url = url as? String {
                     if url == "premium" {
-                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_galery), for: context.window)
+                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery), for: context.window)
                     }
                 }
             })
