@@ -882,7 +882,7 @@ class SelectivePrivacySettingsController: TableViewController {
                 case .contacts:
                     settings = SelectivePrivacySettings.enableContacts(enableFor: current.enableFor, disableFor: current.disableFor)
                 case .nobody:
-                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor, enableForCloseFriends: true)
+                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor, enableForCloseFriends: false)
                 }
 
                 if let mode = current.callP2PMode {
@@ -892,7 +892,7 @@ class SelectivePrivacySettingsController: TableViewController {
                     case .contacts:
                         callSettings = SelectivePrivacySettings.enableContacts(enableFor: current.callP2PEnableFor, disableFor: current.callP2PDisableFor)
                     case .nobody:
-                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor, enableForCloseFriends: true)
+                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor, enableForCloseFriends: false)
                     }
                 }
                 current.saving = true

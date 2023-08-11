@@ -12305,6 +12305,8 @@ public final class L10n {
   public static var storyViewersAll: String  { return L10n.tr("Localizable", "StoryViewers.All") }
   /// Contacts
   public static var storyViewersContacts: String  { return L10n.tr("Localizable", "StoryViewers.Contacts") }
+  /// Other viewers' hasn't been recorded
+  public static var storyViewersNotRecorded: String  { return L10n.tr("Localizable", "StoryViewers.NotRecorded") }
   /// Reactions first
   public static var storyViewersReactionsFirst: String  { return L10n.tr("Localizable", "StoryViewers.ReactionsFirst") }
   /// Recent first

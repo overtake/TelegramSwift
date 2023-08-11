@@ -487,7 +487,7 @@ private class AccountInfoView : GeneralContainableRowView {
         container.centerY(x: avatarView.frame.maxX + 25)
         
         if let statusControl = statusControl {
-            statusControl.setFrameOrigin(titleView.frame.maxX + 3, 0)
+            statusControl.setFrameOrigin(titleView.frame.maxX + 3, 3)
         }
         
         actionView.centerY(x: containerView.frame.width - actionView.frame.width - 15)
