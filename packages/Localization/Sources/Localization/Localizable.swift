@@ -12311,35 +12311,39 @@ public final class L10n {
   public static var storyViewersRecentFirst: String  { return L10n.tr("Localizable", "StoryViewers.RecentFirst") }
   /// Viewers
   public static var storyViewersViewers: String  { return L10n.tr("Localizable", "StoryViewers.Viewers") }
+  /// Learn More
+  public static var storyViewersPremiumLearnMore: String  { return L10n.tr("Localizable", "StoryViewers.Premium.LearnMore") }
+  /// To unlock viewers' lists for expired and saved stories, subscribe to [Telegram Premium]().
+  public static var storyViewersPremiumUnlock: String  { return L10n.tr("Localizable", "StoryViewers.Premium.Unlock") }
   /// %d
   public static func storyViewsTitleCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_countable", p1)
   }
-  /// %d Views
+  /// %d views
   public static func storyViewsTitleFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_few", p1)
   }
-  /// %d Views
+  /// %d views
   public static func storyViewsTitleMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_many", p1)
   }
-  /// %d View
+  /// %d view
   public static func storyViewsTitleOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_one", p1)
   }
-  /// %d Views
+  /// %d views
   public static func storyViewsTitleOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_other", p1)
   }
-  /// %d Views
+  /// %d views
   public static func storyViewsTitleTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_two", p1)
   }
-  /// %d Views
+  /// %d views
   public static func storyViewsTitleZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StoryViews.Title_zero", p1)
   }
-  /// No Views yet
+  /// No views yet
   public static var storyViewsTitleZeroValueHolder: String  { return L10n.tr("Localizable", "StoryViews.Title_ZeroValueHolder") }
   /// Suggest Frequent Contacts
   public static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }

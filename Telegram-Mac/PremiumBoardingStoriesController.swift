@@ -13,13 +13,15 @@ final class PremiumBoardingStoryRowItem : GeneralRowItem {
     let title: TextViewLayout
     let info: TextViewLayout
     let itemType: PremiumBoardingStoriesItem
-    init(_ initialSize: NSSize, type: PremiumBoardingStoriesItem) {
+    let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, type: PremiumBoardingStoriesItem, presentation: TelegramPresentationTheme) {
         self.itemType = type
-        self.title = .init(.initialize(string: type.title, color: theme.colors.text, font: .medium(.title)))
+        self.presentation = presentation
+        self.title = .init(.initialize(string: type.title, color: presentation.colors.text, font: .medium(.title)))
         
         
         let info = NSMutableAttributedString()
-        _ = info.append(string: type.info, color: theme.colors.grayText, font: .normal(.text))
+        _ = info.append(string: type.info, color: presentation.colors.grayText, font: .normal(.text))
         info.detectLinks(type: .Links)
         self.info = .init(info)
 
@@ -65,6 +67,13 @@ private final class PremiumBoardingStoriesRowView : TableRowView {
         titleView.isSelectable = false
         infoView.isSelectable = false
         
+    }
+    
+    override var backdorColor: NSColor {
+        guard let item = item as? PremiumBoardingStoryRowItem else {
+            return super.backdorColor
+        }
+        return item.presentation.colors.background
     }
     
     override func layout() {
@@ -183,18 +192,21 @@ final class PremiumBoardingStoriesView: View, PremiumSlideView {
     final class HeaderView: View {
         private let container = View()
         private let titleView = TextView()
-        required init(frame frameRect: NSRect) {
+        private let presentation: TelegramPresentationTheme
+        init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
+            self.presentation = presentation
             super.init(frame: frameRect)
             
             titleView.userInteractionEnabled = false
             titleView.isSelectable = false
             titleView.isEventLess = true
             
-            container.backgroundColor = theme.colors.background
+            container.backgroundColor = presentation.colors.background
             container.border = [.Bottom]
+            container.borderColor = presentation.colors.border
             container.isEventLess = true
 
-            let layout = TextViewLayout(.initialize(string: strings().premiumBoardingStoriesTitle, color: theme.colors.text, font: .medium(.header)))
+            let layout = TextViewLayout(.initialize(string: strings().premiumBoardingStoriesTitle, color: presentation.colors.text, font: .medium(.header)))
             layout.measure(width: 300)
             
             titleView.update(layout)
@@ -214,21 +226,32 @@ final class PremiumBoardingStoriesView: View, PremiumSlideView {
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
+        
+        required init(frame frameRect: NSRect) {
+            fatalError("init(frame:) has not been implemented")
+        }
     }
     
 
 
-    let headerView = HeaderView(frame: .zero)
+    let headerView: HeaderView
     let bottomBorder = View(frame: .zero)
     
     let tableView: TableView = TableView()
-    required init(frame frameRect: NSRect) {
+    let presentation: TelegramPresentationTheme
+    required init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
+        self.presentation = presentation
+        self.headerView = HeaderView(frame: .zero, presentation: presentation)
         super.init(frame: frameRect)
         addSubview(tableView)
         addSubview(headerView)
         
+        tableView.getBackgroundColor = {
+            presentation.colors.background
+        }
+        
         addSubview(bottomBorder)
-        bottomBorder.backgroundColor = theme.colors.border
+        bottomBorder.backgroundColor = presentation.colors.border
         
     }
     
@@ -244,14 +267,18 @@ final class PremiumBoardingStoriesView: View, PremiumSlideView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
     
     func initialize(context: AccountContext, initialSize: NSSize) {
-        _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
+        _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15, backgroundColor: presentation.colors.background))
         
         for type in PremiumBoardingStoriesItem.all {
-            let item = PremiumBoardingStoryRowItem(initialSize, type: type)
+            let item = PremiumBoardingStoryRowItem(initialSize, type: type, presentation: presentation)
             _ = self.tableView.addItem(item: item)
-            _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
+            _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15, backgroundColor: presentation.colors.background))
         }
         
     }

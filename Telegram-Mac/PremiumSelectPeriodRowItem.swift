@@ -92,11 +92,13 @@ final class PremiumSelectPeriodRowItem : GeneralRowItem {
     let context: AccountContext
     let selectedPeriod: PremiumPeriod
     let callback: (PremiumPeriod)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, periods: [PremiumPeriod], selectedPeriod: PremiumPeriod, viewType: GeneralViewType, callback:@escaping(PremiumPeriod)->Void) {
+    let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, presentation: TelegramPresentationTheme, periods: [PremiumPeriod], selectedPeriod: PremiumPeriod, viewType: GeneralViewType, callback:@escaping(PremiumPeriod)->Void) {
         self.periods = periods
         self.callback = callback
         self.context = context
         self.selectedPeriod = selectedPeriod
+        self.presentation = presentation
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 20, right: 20))
     }
     
@@ -145,7 +147,6 @@ private final class PremiumSelectPeriodRowView: GeneralContainableRowView {
             addSubview(discount)
             addSubview(borderView)
 
-            self.backgroundColor = theme.colors.background
         }
         
         override func layout() {
@@ -163,29 +164,31 @@ private final class PremiumSelectPeriodRowView: GeneralContainableRowView {
             
         }
         
-        func update(_ option: PremiumPeriod, selected: Bool, isLast: Bool, context: AccountContext, animated: Bool, select: @escaping(PremiumPeriod)->Void) {
+        func update(_ option: PremiumPeriod, presentation: TelegramPresentationTheme, selected: Bool, isLast: Bool, context: AccountContext, animated: Bool, select: @escaping(PremiumPeriod)->Void) {
             
-            let selected_image = generateChatGroupToggleSelected(foregroundColor: theme.colors.premium, backgroundColor: theme.colors.underSelectedColor)
+            let selected_image = generateChatGroupToggleSelected(foregroundColor: presentation.colors.premium, backgroundColor: presentation.colors.underSelectedColor)
             
-            let unselected_image = generateChatGroupToggleUnselected(foregroundColor: theme.colors.grayIcon.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.05))
+            let unselected_image = generateChatGroupToggleUnselected(foregroundColor: presentation.colors.grayIcon.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.05))
 
             
             self.imageView.image = selected ? selected_image : unselected_image
             self.imageView.setFrameSize(20, 20)
             
-            self.borderView.backgroundColor = theme.colors.border
+            self.backgroundColor = presentation.colors.background
+            
+            self.borderView.backgroundColor = presentation.colors.border
             
             self.borderView.isHidden = isLast
             
             
 
-            let titleLayout = TextViewLayout(.initialize(string: option.titleString, color: theme.colors.text, font: .normal(.title)))
+            let titleLayout = TextViewLayout(.initialize(string: option.titleString, color: presentation.colors.text, font: .normal(.title)))
             titleLayout.measure(width: .greatestFiniteMagnitude)
 
-            let commonPriceLayout = TextViewLayout(.initialize(string: option.priceString, color: theme.colors.grayText, font: .normal(.title)))
+            let commonPriceLayout = TextViewLayout(.initialize(string: option.priceString, color: presentation.colors.grayText, font: .normal(.title)))
             commonPriceLayout.measure(width: .greatestFiniteMagnitude)
 
-            let discountLayout = TextViewLayout(.initialize(string: "-\(option.discountString)%", color: theme.colors.underSelectedColor, font: .medium(.small)), alignment: .center)
+            let discountLayout = TextViewLayout(.initialize(string: "-\(option.discountString)%", color: presentation.colors.underSelectedColor, font: .medium(.small)), alignment: .center)
             discountLayout.measure(width: .greatestFiniteMagnitude)
 
 
@@ -196,7 +199,7 @@ private final class PremiumSelectPeriodRowView: GeneralContainableRowView {
             self.discount.update(discountLayout)
             self.discount.setFrameSize(discountLayout.layoutSize.width + 8, discountLayout.layoutSize.height + 4)
             self.discount.layer?.cornerRadius = .cornerRadius
-            self.discount.backgroundColor = theme.colors.premium
+            self.discount.backgroundColor = presentation.colors.premium
 
 
             self.discount.isHidden = option.discountString == 0
@@ -238,12 +241,22 @@ private final class PremiumSelectPeriodRowView: GeneralContainableRowView {
         }
     }
     
+    override var backdorColor: NSColor {
+        guard let item = item as? PremiumSelectPeriodRowItem else {
+            return super.backdorColor
+        }
+        return item.presentation.colors.background
+    }
+    
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
         guard let item = item as? PremiumSelectPeriodRowItem else {
             return
         }
+        
+        self.backgroundColor = item.presentation.colors.background
+
         
         while optionsView.subviews.count > item.periods.count {
             optionsView.subviews.last?.removeFromSuperview()
@@ -255,7 +268,7 @@ private final class PremiumSelectPeriodRowView: GeneralContainableRowView {
         
         for (i, option) in item.periods.enumerated() {
             let subview = optionsView.subviews.compactMap { $0 as? OptionView }[i]
-            subview.update(option, selected: option == item.selectedPeriod, isLast: i == item.periods.count - 1, context: item.context, animated: animated, select: item.callback)
+            subview.update(option, presentation: item.presentation, selected: option == item.selectedPeriod, isLast: i == item.periods.count - 1, context: item.context, animated: animated, select: item.callback)
         }
         
         needsLayout = true
