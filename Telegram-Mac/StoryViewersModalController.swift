@@ -440,6 +440,7 @@ private func _id_miss(_ id: Int) -> InputDataIdentifier {
 private let _id_loading_more = InputDataIdentifier("_id_loading_more")
 private let _id_empty = InputDataIdentifier("_id_empty")
 private let _id_empty_holder = InputDataIdentifier("_id_empty_holder")
+private let _id_not_recorded_text = InputDataIdentifier("_id_not_recorded_text")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -460,10 +461,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if let list = state.views {
         
         var items: [Tuple] = []
-        for item in list.items {
+        if !arguments.context.isPremium, state.item.views?.reactedCount == 0 {
             
-            items.append(.init(peer: .init(item.peer._asPeer()), reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, viewType: .legacy))
+        } else {
+            for item in list.items {
+                items.append(.init(peer: .init(item.peer._asPeer()), reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, viewType: .legacy))
+            }
         }
+        
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
                 return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory, contextMenu: arguments.contextMenu)
@@ -478,12 +483,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if totalCount > 15 && !expired {
             totalHeight -= 40
         }
-
+        
         
         if items.isEmpty {
-            if !state.query.isEmpty {
+            if !state.query.isEmpty || state.listMode != .everyone {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-                    return SearchEmptyRowItem(initialSize, stableId: stableId, height: totalHeight)
+                    return SearchEmptyRowItem(initialSize, stableId: stableId, height: totalHeight, icon: arguments.presentation.icons.emptySearch, customTheme: .initialize(arguments.presentation))
                 }))
             } else {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty_holder, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
@@ -492,7 +497,28 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
         } else {
-            let miss = totalHeight - CGFloat(items.count) * 52.0
+            var additionHeight: CGFloat = 0
+            if state.listMode == .everyone, state.query.isEmpty {
+                if state.views?.totalCount == items.count, state.item.views?.seenCount != state.views?.totalCount {
+                    let text: String
+                    if arguments.context.isPremium {
+                        text = strings().storyViewersNotRecorded
+                    } else {
+                        text = strings().storyViewersPremiumUnlock
+                    }
+                    let viewType: GeneralViewType = .modern(position: .single, insets: .init())
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_not_recorded_text, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                        return GeneralTextRowItem(initialSize, height: 40, text: .markdown(text, linkHandler: { _ in
+                            arguments.openPremium()
+                        }), textColor: arguments.presentation.colors.grayText, alignment: .center, centerViewAlignment: true, viewType: viewType)
+                    }))
+                    additionHeight += 40
+                    
+                }
+            }
+            
+            
+            let miss = totalHeight - (CGFloat(items.count) * 52.0 + additionHeight)
             if miss > 0 {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_miss(0), equatable: .init(miss), comparable: nil, item: { initialSize, stableId in
                     return GeneralRowItem(initialSize, height: miss, stableId: stableId, backgroundColor: storyTheme.colors.background)

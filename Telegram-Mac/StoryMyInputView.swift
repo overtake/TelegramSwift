@@ -447,12 +447,11 @@ final class StoryMyInputView : Control, StoryInput {
         transition.updateFrame(view: delete, frame: delete.centerFrameY(x: size.width - delete.frame.width - 16))
         transition.updateFrame(view: more, frame: more.centerFrameY(x: delete.frame.minX - more.frame.width - 10))
         var viewsRect = NSMakeRect(16, 0, viewsText.frame.width, size.height)
+        if let view = self.like {
+            viewsRect.size.width += (view.frame.width + 5)
+        }
         if let avatars = self.avatars {
             viewsRect.size.width += avatars.frame.width + 5
-
-            if let view = self.like {
-                viewsRect.size.width += (view.frame.width + 5)
-            }
             transition.updateFrame(view: views, frame: viewsRect)
             transition.updateFrame(view: avatars, frame: avatars.centerFrameY(x: 0))
             
