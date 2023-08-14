@@ -292,7 +292,7 @@ final class StoryStealthModeController: ModalViewController {
                 self?.enableStealth()
                 self?.close()
             } else {
-                showModal(with: PremiumBoardingController(context: context, source: .stories__stealth_mode), for: context.window)
+                showModal(with: PremiumBoardingController(context: context, source: .stories__stealth_mode, presentation: storyTheme), for: context.window)
             }
         }, for: .Click)
     }
