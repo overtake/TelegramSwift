@@ -14,14 +14,16 @@ final class PremiumBoardingDoubleRowItem : GeneralRowItem {
     let info: TextViewLayout
     let itemType: PremiumBoardingDoubleItem
     let limits: PremiumLimitConfig
-    init(_ initialSize: NSSize, limits: PremiumLimitConfig, type: PremiumBoardingDoubleItem) {
+    let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, presentation: TelegramPresentationTheme, limits: PremiumLimitConfig, type: PremiumBoardingDoubleItem) {
         self.itemType = type
         self.limits = limits
-        self.title = .init(.initialize(string: type.title(limits), color: theme.colors.text, font: .medium(.title)))
+        self.presentation = presentation
+        self.title = .init(.initialize(string: type.title(limits), color: presentation.colors.text, font: .medium(.title)))
         
         
         let info = NSMutableAttributedString()
-        _ = info.append(string: type.info(limits), color: theme.colors.grayText, font: .normal(.text))
+        _ = info.append(string: type.info(limits), color: presentation.colors.grayText, font: .normal(.text))
         info.detectLinks(type: .Links)
         self.info = .init(info)
 
@@ -80,14 +82,14 @@ private final class PremiumBoardingDoubleRowView : TableRowView {
             normalCount.isSelectable = false
         }
         
-        func update(_ itemType: PremiumBoardingDoubleItem, limits: PremiumLimitConfig) {
-            let normalLayout = TextViewLayout(.initialize(string: strings().premiumLimitFree, color: theme.colors.text, font: .medium(13)))
+        func update(_ itemType: PremiumBoardingDoubleItem, presentation: TelegramPresentationTheme, limits: PremiumLimitConfig) {
+            let normalLayout = TextViewLayout(.initialize(string: strings().premiumLimitFree, color: presentation.colors.text, font: .medium(13)))
             normalLayout.measure(width: .greatestFiniteMagnitude)
             
             normalText.update(normalLayout)
             
             
-            let normalCountLayout = TextViewLayout(.initialize(string: itemType.defaultLimit(limits), color: theme.colors.text, font: .medium(.text)))
+            let normalCountLayout = TextViewLayout(.initialize(string: itemType.defaultLimit(limits), color: presentation.colors.text, font: .medium(.text)))
             normalCountLayout.measure(width: .greatestFiniteMagnitude)
 
             normalCount.update(normalCountLayout)
@@ -104,7 +106,7 @@ private final class PremiumBoardingDoubleRowView : TableRowView {
             premiumText.update(premiumLayout)
 
             
-            normalBackground.backgroundColor = theme.colors.grayForeground
+            normalBackground.backgroundColor = presentation.colors.grayForeground
             premiumBackground.backgroundColor = itemType.color
             
             needsLayout = true
@@ -163,6 +165,13 @@ private final class PremiumBoardingDoubleRowView : TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override var backdorColor: NSColor {
+        guard let item = item as? PremiumBoardingDoubleRowItem else {
+            return super.background
+        }
+        return item.presentation.colors.background
+    }
+    
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
         
@@ -172,7 +181,7 @@ private final class PremiumBoardingDoubleRowView : TableRowView {
         titleView.update(item.title)
         infoView.update(item.info)
         
-        lineView.update(item.itemType, limits: item.limits)
+        lineView.update(item.itemType, presentation: item.presentation, limits: item.limits)
         
         needsLayout = true
 

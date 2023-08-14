@@ -195,6 +195,7 @@ final class AccountContext {
     
     let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
     let blockedPeersContext: BlockedPeersContext
+    let storiesBlockedPeersContext: BlockedPeersContext
     let cacheCleaner: AccountClearCache
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
@@ -380,7 +381,8 @@ final class AccountContext {
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.inlinePacksContext = .init(postbox: account.postbox, engine: self.engine)
         self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl(postbox: account.postbox, accountManager: sharedContext.accountManager))
-        self.blockedPeersContext = BlockedPeersContext(account: account)
+        self.blockedPeersContext = BlockedPeersContext(account: account, subject: .blocked)
+        self.storiesBlockedPeersContext = BlockedPeersContext(account: account, subject: .stories)
         self.cacheCleaner = AccountClearCache(account: account)
         self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()
         self.activeSessionsContext = engine.privacy.activeSessions()

@@ -1236,10 +1236,11 @@ func canReportMessage(_ message: Message, _ context: AccountContext) -> Bool {
 //        }
 //    }
     if let peer = coreMessageMainPeer(message), message.author?.id != context.peerId {
-        return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer(context.peerId)?.isBot == true)
-    } else {
-        return false
+        if message.flags.contains(.Incoming) {
+            return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer(context.peerId)?.isBot == true)
+        }
     }
+    return false
 }
 
 

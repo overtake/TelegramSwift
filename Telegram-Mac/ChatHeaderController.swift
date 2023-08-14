@@ -2507,10 +2507,8 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
         textView.center()
         self.avatarsContainer.centerY(x: 22)
         
-        var x = textView.frame.minX
-        if x < self.avatarsContainer.frame.maxX {
-            x = self.avatarsContainer.frame.maxX + 10
-        }
+        let minX = 30 + CGFloat(self.avatars.count) * 15
+        let x = max(textView.frame.minX, minX)
         textView.setFrameOrigin(NSMakePoint(x, textView.frame.minY))
 
     }

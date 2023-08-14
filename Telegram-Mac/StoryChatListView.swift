@@ -307,12 +307,16 @@ private final class StoryListContainer : Control {
     }
     
     private func getFrame(_ item: StoryListEntryRowItem, index i: Int, progress: CGFloat) -> NSRect {
+        
         let focusRange = self.focusRange
         
         let w = StoryListChatListRowItem.smallSize.width
         let itemSize = NSMakeSize(w + (item.itemWidth - w) * progress, w + (item.itemHeight - w) * progress)
         
-        let gapBetween: CGFloat = 10.0
+        
+        let cgCount = CGFloat(views.count)
+        let gapBetween = max(10.0, (frame.width - item.itemWidth * cgCount) / (cgCount + 1))
+
         
         var frame = CGRect(origin: .zero, size: itemSize)
         if i < focusRange.location {
@@ -322,7 +326,7 @@ private final class StoryListContainer : Control {
             
             frame.origin.x = (CGFloat(i) * itemSize.width)
 
-            frame.origin.x += (10.0 + (CGFloat(i) * gapBetween))
+            frame.origin.x += (gapBetween + (CGFloat(i) * gapBetween))
         } else {
             
             if i >= focusRange.max {
@@ -333,7 +337,7 @@ private final class StoryListContainer : Control {
             
             frame.origin.x = ((1.0 - progress) * CGFloat(i - focusRange.location)) * itemSize.width + (CGFloat(i) * itemSize.width * progress) + ((1.0 - progress) * 13.0)
             
-            let insets = (10.0 + (CGFloat(i) * gapBetween)) * progress
+            let insets = (gapBetween + (CGFloat(i) * gapBetween)) * progress
             frame.origin.x += insets
             
             if i > focusRange.max {
@@ -780,6 +784,22 @@ private final class StoryListEntryRowItem : TableRowItem {
                     PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
                 }, itemImage: MenuAnimation.menu_open_profile.value))
                 
+                items.append(.init(strings().storyControlsMenuStealtMode, handler: {
+                    showModal(with: StoryStealthModeController(context, enableStealth: {
+                        
+                        let stealthData = context.engine.data.subscribe(
+                            TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
+                        ) |> deliverOnMainQueue
+                        
+                        _ = stealthData.start(next: { value in
+                            if let timestamp = value.stealthModeState.activeUntilTimestamp {
+                                 showModalText(for: context.window, text: strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))))
+                            }
+                        })
+                        
+                    }, presentation: theme), for: context.window)
+                }, itemImage: MenuAnimation.menu_eye_slash.value))
+                
                 let peer = self.entry.item.peer._asPeer()
                 if peer.storyArchived {
                     items.append(.init(strings().storyListContextUnarchive, handler: {
@@ -801,6 +821,24 @@ private final class StoryListEntryRowItem : TableRowItem {
             items.append(.init(strings().storyListContextArchivedStories, handler: {
                 StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: true), standalone: true, isArchived: true)
             }, itemImage: MenuAnimation.menu_archive.value))
+            
+            
+            
+            items.append(.init(strings().storyControlsMenuStealtMode, handler: {
+                showModal(with: StoryStealthModeController(context, enableStealth: {
+                    
+                    let stealthData = context.engine.data.subscribe(
+                        TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
+                    ) |> deliverOnMainQueue
+                    
+                    _ = stealthData.start(next: { value in
+                        if let timestamp = value.stealthModeState.activeUntilTimestamp {
+                             showModalText(for: context.window, text: strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))))
+                        }
+                    })
+                    
+                }, presentation: theme), for: context.window)
+            }, itemImage: MenuAnimation.menu_eye_slash.value))
         }
         
 

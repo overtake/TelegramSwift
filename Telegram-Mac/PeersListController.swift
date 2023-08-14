@@ -3071,8 +3071,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private var scrollPositions: [CGFloat] = []
     private func processScroll() {
         
+        
         guard storyInterfaceState != .empty, initFromEvent == nil || initFromEvent == false else {
             return
+        }
+        if genericView.tableView.liveScrolling {
+//            let optional = self.genericView.tableView.item(stableId: UIChatListEntryId.space) as? ChatListSpaceItem
+//            optional?.view?.layer?.removeAllAnimations()
         }
         
         if storyInterfaceState == .revealed || storyInterfaceState.toHideProgress {
@@ -3133,7 +3138,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
          case .ended, .cancelled:
              return finishOverscroll()
          default:
-             return finishOverscroll()
+             return finishOverscroll() || (event.phase.rawValue == 0 && event.momentumPhase == .ended)
          }
     }
     

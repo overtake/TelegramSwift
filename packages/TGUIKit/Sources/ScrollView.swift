@@ -189,8 +189,10 @@ open class ScrollView: NSScrollView{
             return
         }
         
-        if let applyExternalScroll = self.applyExternalScroll, applyExternalScroll(event) {
-            return
+        if let applyExternalScroll = self.applyExternalScroll {
+            if applyExternalScroll(event) {
+                return
+            }
         }
         
         if !window.inLiveSwiping, super.responds(to: #selector(scrollWheel(with:))) {

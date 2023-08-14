@@ -24,16 +24,19 @@ final class PremiumBoardingFeaturesView: View {
     private var slideView = SliderView(frame: .zero)
     private let contentView = View()
     private var playbackDisposable: Disposable?
-    required init(frame frameRect: NSRect) {
+    private let presentation: TelegramPresentationTheme
+    init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
+        self.presentation = presentation
         super.init(frame: frameRect)
         addSubview(headerView)
         addSubview(bottomView)
         addSubview(contentView)
         contentView.addSubview(slideView)
-        slideView.normalColor = theme.colors.grayIcon.withAlphaComponent(0.8)
+        slideView.normalColor = presentation.colors.grayIcon.withAlphaComponent(0.8)
         slideView.highlightColor = NSColor(0x976FFF)
         slideView.moveOnTime = false
         
+        //slideView.backgroundColor = presentation.colors.background
         
         addSubview(dismiss)
         
@@ -69,32 +72,48 @@ final class PremiumBoardingFeaturesView: View {
         if let control = control {
             self.accept = control
             self.bottomView.addSubview(control)
+            bottomView.backgroundColor = presentation.colors.background
         }
         needsLayout = true
     }
     
-    func setup(context: AccountContext, value: PremiumValue, stickers: [TelegramMediaFile], configuration: PremiumPromoConfiguration) {
+    func setup(context: AccountContext, presentation: TelegramPresentationTheme, value: PremiumValue, stickers: [TelegramMediaFile], configuration: PremiumPromoConfiguration) {
         
         let bounds = slideView.bounds
 
         
-        let double_limits = PremiumFeatureSlideView(frame: slideView.bounds)
+        let double_limits = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         
         double_limits.appear = { [weak self] in
-            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(theme.colors.grayIcon), for: .Normal)
+            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(presentation.colors.grayIcon), for: .Normal)
         }
         double_limits.disappear = { [weak self] in
             self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(.white), for: .Normal)
         }
         
         double_limits.setup(context: context, type: .double_limits, decoration: .none, getView: { _ in
-            let view = PremiumBoardingDoubleView(frame: bounds)
+            let view = PremiumBoardingDoubleView(frame: bounds, presentation: presentation)
             view.initialize(context: context, initialSize: bounds.size)
             return view
         })
         slideView.addSlide(double_limits)
+        
+        let stories = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        stories.setup(context: context, type: .stories, decoration: .none, getView: { _ in
+            let view = PremiumBoardingStoriesView(frame: bounds, presentation: presentation)
+            view.initialize(context: context, initialSize: bounds.size)
+            return view
+        })
+        slideView.addSlide(stories)
+
+        stories.appear = { [weak self] in
+            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(presentation.colors.grayIcon), for: .Normal)
+        }
+        stories.disappear = { [weak self] in
+            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(.white), for: .Normal)
+        }
                 
-        let more_upload = PremiumFeatureSlideView(frame: slideView.bounds)
+        let more_upload = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         more_upload.setup(context: context, type: .more_upload, decoration: .dataRain, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.more_upload.rawValue], position: .bottom)
@@ -102,7 +121,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(more_upload)
         
-        let faster_download = PremiumFeatureSlideView(frame: slideView.bounds)
+        let faster_download = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         faster_download.setup(context: context, type: .faster_download, decoration: .fasterStars, getView: { [weak self] parentView in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.faster_download.rawValue], position: .top)
@@ -120,7 +139,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(faster_download)
         
-        let voice_to_text = PremiumFeatureSlideView(frame: slideView.bounds)
+        let voice_to_text = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         voice_to_text.setup(context: context, type: .voice_to_text, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.voice_to_text.rawValue], position: .top)
@@ -128,7 +147,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(voice_to_text)
         
-        let no_ads = PremiumFeatureSlideView(frame: slideView.bounds)
+        let no_ads = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         no_ads.setup(context: context, type: .no_ads, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.no_ads.rawValue], position: .bottom)
@@ -136,7 +155,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(no_ads)
         
-        let unique_reactions = PremiumFeatureSlideView(frame: slideView.bounds)
+        let unique_reactions = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         unique_reactions.setup(context: context, type: .infinite_reactions, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.infinite_reactions.rawValue], position: .top)
@@ -144,7 +163,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(unique_reactions)
         
-        let statuses = PremiumFeatureSlideView(frame: slideView.bounds)
+        let statuses = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         statuses.setup(context: context, type: .emoji_status, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.emoji_status.rawValue], position: .top)
@@ -152,7 +171,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(statuses)
         
-        let premium_stickers = PremiumFeatureSlideView(frame: slideView.bounds)
+        let premium_stickers = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         
         
         premium_stickers.setup(context: context, type: .premium_stickers, decoration: .none, getView: { _ in
@@ -161,7 +180,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(premium_stickers)
         
-        let animated_emoji = PremiumFeatureSlideView(frame: slideView.bounds)
+        let animated_emoji = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         animated_emoji.setup(context: context, type: .animated_emoji, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.animated_emoji.rawValue], position: .bottom)
@@ -169,7 +188,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(animated_emoji)
         
-        let advanced_chat_management = PremiumFeatureSlideView(frame: slideView.bounds)
+        let advanced_chat_management = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         advanced_chat_management.setup(context: context, type: .advanced_chat_management, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.advanced_chat_management.rawValue], position: .top)
@@ -177,7 +196,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(advanced_chat_management)
         
-        let profile_badge = PremiumFeatureSlideView(frame: slideView.bounds)
+        let profile_badge = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         profile_badge.setup(context: context, type: .profile_badge, decoration: .badgeStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.profile_badge.rawValue], position: .top)
@@ -185,7 +204,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(profile_badge)
         
-        let animated_userpics = PremiumFeatureSlideView(frame: slideView.bounds)
+        let animated_userpics = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         animated_userpics.setup(context: context, type: .animated_userpics, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.animated_userpics.rawValue], position: .top)
@@ -194,7 +213,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(animated_userpics)
         
         
-        let translations = PremiumFeatureSlideView(frame: slideView.bounds)
+        let translations = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         translations.setup(context: context, type: .translations, decoration: .hello, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.translations.rawValue], position: .top)
@@ -205,32 +224,32 @@ final class PremiumBoardingFeaturesView: View {
         switch value {
         case .double_limits:
             slideView.displaySlide(at: 0, animated: false)
-        case .more_upload:
+        case .stories:
             slideView.displaySlide(at: 1, animated: false)
-        case .faster_download:
+        case .more_upload:
             slideView.displaySlide(at: 2, animated: false)
-        case .voice_to_text:
+        case .faster_download:
             slideView.displaySlide(at: 3, animated: false)
-        case .no_ads:
+        case .voice_to_text:
             slideView.displaySlide(at: 4, animated: false)
-        case .infinite_reactions:
+        case .no_ads:
             slideView.displaySlide(at: 5, animated: false)
-        case .emoji_status:
+        case .infinite_reactions:
             slideView.displaySlide(at: 6, animated: false)
-        case .premium_stickers:
+        case .emoji_status:
             slideView.displaySlide(at: 7, animated: false)
-        case .animated_emoji:
+        case .premium_stickers:
             slideView.displaySlide(at: 8, animated: false)
-        case .advanced_chat_management:
+        case .animated_emoji:
             slideView.displaySlide(at: 9, animated: false)
-        case .profile_badge:
+        case .advanced_chat_management:
             slideView.displaySlide(at: 10, animated: false)
-        case .animated_userpics:
+        case .profile_badge:
             slideView.displaySlide(at: 11, animated: false)
-        case .translations:
+        case .animated_userpics:
             slideView.displaySlide(at: 12, animated: false)
-        default:
-            break
+        case .translations:
+            slideView.displaySlide(at: 13, animated: false)
         }
         
         needsLayout = true
@@ -238,6 +257,10 @@ final class PremiumBoardingFeaturesView: View {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
 }
 
@@ -247,8 +270,10 @@ final class PremiumBoardingFeaturesController : TelegramGenericViewController<Pr
     private let configuration: PremiumPromoConfiguration
     private let value: PremiumValue
     private let stickers: [TelegramMediaFile]
-    init(_ context: AccountContext, value: PremiumValue, stickers: [TelegramMediaFile], configuration: PremiumPromoConfiguration, back: @escaping()->Void, makeAcceptView: @escaping()->Control?) {
+    private let presentation: TelegramPresentationTheme
+    init(_ context: AccountContext, presentation: TelegramPresentationTheme, value: PremiumValue, stickers: [TelegramMediaFile], configuration: PremiumPromoConfiguration, back: @escaping()->Void, makeAcceptView: @escaping()->Control?) {
         self.back = back
+        self.presentation = presentation
         self.value = value
         self.stickers = stickers
         self.makeAcceptView = makeAcceptView
@@ -263,7 +288,7 @@ final class PremiumBoardingFeaturesController : TelegramGenericViewController<Pr
         let context = self.context
         
         
-        self.genericView.setup(context: context, value: value, stickers: stickers, configuration: configuration)
+        self.genericView.setup(context: context, presentation: presentation, value: value, stickers: stickers, configuration: configuration)
 
         genericView.dismiss.set(handler: { [weak self] _ in
             self?.back()
@@ -272,8 +297,10 @@ final class PremiumBoardingFeaturesController : TelegramGenericViewController<Pr
         genericView.setAccept(self.makeAcceptView())
         
         self.readyOnce()
-
-        
+    }
+    
+    override func initializer() -> PremiumBoardingFeaturesView {
+        return .init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), presentation: presentation)
     }
     
     deinit {

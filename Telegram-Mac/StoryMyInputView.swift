@@ -16,19 +16,26 @@ import SwiftSignalKit
 
 private let more_image = NSImage(named: "Icon_StoryMore")!.precomposed(NSColor.white)
 private let delete_image = NSImage(named: "Icon_StoryDelete")!.precomposed(NSColor.white)
+private let like_image = NSImage(named: "Icon_StoryLike_Count")!.precomposed()
+
 
 private func makeItem(_ peer: Peer, context: AccountContext, callback:@escaping(PeerId)->Void) -> ContextMenuItem {
     let title = peer.displayTitle.prefixWithDots(20)
     let item = ReactionPeerMenu(title: title, handler: {
         callback(peer.id)
     }, peer: peer, context: context, reaction: nil, destination: .common)
-
+    
     ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), selfAsSaved: false)
     
     return item
 }
 
 final class StoryMyInputView : Control, StoryInput {
+    
+    func like(_ like: StoryReactionAction, resetIfNeeded: Bool) {
+        
+    }
+    
     
     private final class AvatarContentView: View {
         private var disposable: Disposable?
@@ -37,9 +44,15 @@ final class StoryMyInputView : Control, StoryInput {
             
             
             let count: CGFloat = peers != nil ? CGFloat(peers!.count) : 3
-            let viewSize = NSMakeSize(size.width * count - (count - 1) * 1, size.height)
+            var sz = size.width + CGFloat(count) * (size.width / 2)
+            if count == 1 {
+                sz-=size.width/2
+            }
+            let viewSize = NSMakeSize(sz - (count - 1) * 1, size.height)
             
             super.init(frame: CGRect(origin: .zero, size: viewSize))
+            
+            layer?.masksToBounds = false
             
             if let peers = peers {
                 let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
@@ -72,13 +85,12 @@ final class StoryMyInputView : Control, StoryInput {
             
             
             let mergedImageSize: CGFloat = frame.height
-            let mergedImageSpacing: CGFloat = frame.height - 2
+            let mergedImageSpacing: CGFloat = frame.height - 10
             
             context.setBlendMode(.copy)
             context.setFillColor(NSColor.clear.cgColor)
             context.fill(bounds)
             
-            context.setBlendMode(.copy)
             
             
             var currentX = mergedImageSize + mergedImageSpacing * CGFloat(images.count - 1) - mergedImageSize
@@ -93,9 +105,11 @@ final class StoryMyInputView : Control, StoryInput {
                 context.translateBy(x: -frame.width / 2.0, y: -frame.height / 2.0)
                 
                 let imageRect = CGRect(origin: CGPoint(x: currentX, y: 0.0), size: CGSize(width: mergedImageSize, height: mergedImageSize))
-                context.setFillColor(NSColor.clear.cgColor)
-                context.fillEllipse(in: imageRect.insetBy(dx: -1.0, dy: -1.0))
                 
+                context.setBlendMode(.clear)
+                context.setFillColor(NSColor.red.cgColor)
+                context.fillEllipse(in: imageRect.insetBy(dx: -1.0, dy: -1.0))
+                context.setBlendMode(.normal)
                 context.draw(image, in: imageRect)
                 
                 currentX -= mergedImageSpacing
@@ -120,6 +134,41 @@ final class StoryMyInputView : Control, StoryInput {
             fatalError("init(frame:) has not been implemented")
         }
     }
+    
+    private final class LikesCountView : View {
+        private let textView: TextView = TextView()
+        private let imageView = ImageView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(imageView)
+            addSubview(textView)
+            imageView.image = like_image
+            imageView.sizeToFit()
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+        }
+        
+        func update(_ count: Int) {
+            let string = strings().storyMyInputLikesCountable(count)
+            
+            let text: NSAttributedString = .initialize(string: string, color: storyTheme.colors.text, font: .normal(.short))
+            let layout = TextViewLayout(text)
+            layout.measure(width: .greatestFiniteMagnitude)
+            textView.update(layout)
+            setFrameSize(NSMakeSize(layout.layoutSize.width + imageView.frame.width + 5, frame.height))
+            
+        }
+        
+        override func layout() {
+            super.layout()
+            imageView.centerY(x: 0)
+            textView.centerY(x: imageView.frame.maxX + 5)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
 
     private var photos:[PeerId]? = nil
 
@@ -129,6 +178,8 @@ final class StoryMyInputView : Control, StoryInput {
     private let more = ImageButton()
     private let views = Control()
     private let viewsText = TextView()
+    
+    private var like: LikesCountView?
     
     private var arguments: StoryArguments?
     private var story: StoryContentItem?
@@ -159,59 +210,11 @@ final class StoryMyInputView : Control, StoryInput {
         delete.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
         
         more.contextMenu = { [weak self] in
-            
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
-            
-            if let story = self?.story, let context = self?.arguments?.context {
-               
-                
-                if !story.storyItem.isPinned {
-                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveToProfile, handler: {
-                        self?.arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_save_to_profile.value))
-                } else {
-                    menu.addItem(ContextMenuItem(strings().storyMyInputRemoveFromProfile, handler: {
-                        self?.arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_delete.value))
-                }
-                let resource: TelegramMediaFile?
-                if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
-                    if let res = media.representations.last?.resource {
-                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
-                    } else {
-                        resource = nil
-                    }
-                    
-                } else if let media = story.storyItem.media._asMedia() as? TelegramMediaFile {
-                    resource = media
-                } else {
-                    resource = nil
-                }
-                
-                
-                if let resource = resource {
-                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
-                        saveAs(resource, account: context.account)
-                    }, itemImage: MenuAnimation.menu_save_as.value))
-                }
-                
-                if story.sharable {
-                   
-                    if !story.storyItem.isForwardingDisabled {
-                        menu.addItem(ContextMenuItem(strings().storyMyInputShare, handler: {
-                            self?.arguments?.share(story)
-                        }, itemImage: MenuAnimation.menu_share.value))
-                    }
-                    
-                    if story.canCopyLink {
-                        menu.addItem(ContextMenuItem(strings().storyMyInputCopyLink, handler: {
-                            self?.arguments?.copyLink(story)
-                        }, itemImage: MenuAnimation.menu_copy_link.value))
-                    }
-                }
+            if let story = self?.story, let menu = self?.arguments?.storyContextMenu(story) {
+                return menu
             }
-
-            return menu
+            return nil
         }
         
         delete.set(handler: { [weak self] _ in
@@ -280,15 +283,29 @@ final class StoryMyInputView : Control, StoryInput {
                 self.avatars = nil
             }
         }
-        let expired = story.storyItem.expirationTimestamp + 24 * 60 * 60 < arguments.context.timestamp
         
-        if let views = story.storyItem.views, views.seenCount > 3 || views.seenCount == 0 || expired {
+        if let views = story.storyItem.views, views.seenCount > 3 || views.seenCount == 0 {
             self.views.removeAllHandlers()
             self.views.set(handler: { [weak arguments] _ in
                 arguments?.showViewers(story)
             }, for: .SingleClick)
         } else {
             self.views.removeAllHandlers()
+        }
+        
+        if let views = story.storyItem.views, views.reactedCount != 0 {
+            let current: LikesCountView
+            if let view = self.like {
+                current = view
+            } else {
+                current = LikesCountView(frame: NSMakeRect(0, 0, 30, 30))
+                self.views.addSubview(current)
+                self.like = current
+            }
+            current.update(views.reactedCount)
+        } else if let view = self.like {
+            performSubviewRemoval(view, animated: animated)
+            self.like = nil
         }
         
         self.views.contextMenu = { [weak self] in
@@ -383,15 +400,26 @@ final class StoryMyInputView : Control, StoryInput {
         transition.updateFrame(view: delete, frame: delete.centerFrameY(x: size.width - delete.frame.width - 16))
         transition.updateFrame(view: more, frame: more.centerFrameY(x: delete.frame.minX - more.frame.width - 10))
         var viewsRect = NSMakeRect(16, 0, viewsText.frame.width, size.height)
+        if let view = self.like {
+            viewsRect.size.width += (view.frame.width + 5)
+        }
         if let avatars = self.avatars {
             viewsRect.size.width += avatars.frame.width + 5
-
             transition.updateFrame(view: views, frame: viewsRect)
             transition.updateFrame(view: avatars, frame: avatars.centerFrameY(x: 0))
+            
             transition.updateFrame(view: viewsText, frame: viewsText.centerFrameY(x: avatars.frame.maxX + 5))
+            
+            if let view = self.like {
+                transition.updateFrame(view: view, frame: view.centerFrameY(x: viewsText.frame.maxX + 5))
+            }
         } else {
             transition.updateFrame(view: views, frame: viewsRect)
             transition.updateFrame(view: viewsText, frame: viewsText.centerFrameY(x: 0))
+            
+            if let view = self.like {
+                transition.updateFrame(view: view, frame: view.centerFrameY(x: viewsText.frame.maxX + 5))
+            }
         }
     }
     
@@ -399,7 +427,5 @@ final class StoryMyInputView : Control, StoryInput {
         super.layout()
         self.updateLayout(size: self.frame.size, transition: .immediate)
     }
-    
-    
     
 }

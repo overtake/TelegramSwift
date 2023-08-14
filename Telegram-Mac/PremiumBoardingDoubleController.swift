@@ -162,18 +162,21 @@ final class PremiumBoardingDoubleView: View, PremiumSlideView {
     final class HeaderView: View {
         private let container = View()
         private let titleView = TextView()
-        required init(frame frameRect: NSRect) {
+        private let presentation: TelegramPresentationTheme
+        required init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
+            self.presentation = presentation
             super.init(frame: frameRect)            
             
             titleView.userInteractionEnabled = false
             titleView.isSelectable = false
             titleView.isEventLess = true
             
-            container.backgroundColor = theme.colors.background
+            container.backgroundColor = presentation.colors.background
+            container.borderColor = presentation.colors.border
             container.border = [.Bottom]
             container.isEventLess = true
 
-            let layout = TextViewLayout(.initialize(string: strings().premiumBoardingDoubleTitle, color: theme.colors.text, font: .medium(.header)))
+            let layout = TextViewLayout(.initialize(string: strings().premiumBoardingDoubleTitle, color: presentation.colors.text, font: .medium(.header)))
             layout.measure(width: 300)
             
             titleView.update(layout)
@@ -193,21 +196,30 @@ final class PremiumBoardingDoubleView: View, PremiumSlideView {
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
+        
+        required init(frame frameRect: NSRect) {
+            fatalError("init(frame:) has not been implemented")
+        }
     }
     
 
 
-    let headerView = HeaderView(frame: .zero)
+    let headerView: HeaderView
     let bottomBorder = View(frame: .zero)
-    
+    let presentation: TelegramPresentationTheme
     let tableView: TableView = TableView()
-    required init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
+        self.presentation = presentation
+        self.headerView = HeaderView(frame: .zero, presentation: presentation)
         super.init(frame: frameRect)
         addSubview(tableView)
         addSubview(headerView)
         
         addSubview(bottomBorder)
-        bottomBorder.backgroundColor = theme.colors.border
+        bottomBorder.backgroundColor = presentation.colors.border
+        tableView.getBackgroundColor = {
+            presentation.colors.background
+        }
         
     }
     
@@ -223,14 +235,18 @@ final class PremiumBoardingDoubleView: View, PremiumSlideView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
     
     func initialize(context: AccountContext, initialSize: NSSize) {
-        _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
+        _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15, backgroundColor: presentation.colors.background))
         
         for type in PremiumBoardingDoubleItem.all {
-            let item = PremiumBoardingDoubleRowItem(initialSize, limits: context.premiumLimits, type: type)
+            let item = PremiumBoardingDoubleRowItem(initialSize, presentation: presentation, limits: context.premiumLimits, type: type)
             _ = self.tableView.addItem(item: item)
-            _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15))
+            _ = self.tableView.addItem(item: GeneralRowItem(initialSize, height: 15, backgroundColor: presentation.colors.background))
         }
         
     }

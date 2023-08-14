@@ -14,9 +14,9 @@ import SwiftSignalKit
 import TGModernGrowingTextView
 
 final class StoryNoReplyInput : Control, StoryInput {
-    
-    
-   
+    func like(_ like: StoryReactionAction, resetIfNeeded: Bool) {
+        
+    }
     
     
     private let textView: TextView = TextView()

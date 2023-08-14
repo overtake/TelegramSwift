@@ -299,7 +299,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
                 }
                 
                 if component.theme.colors.isDark {
-                    inactiveColors = [component.theme.colors.grayText.withAlphaComponent(0.7), component.theme.colors.grayText.withAlphaComponent(0.7)]
+                    inactiveColors = [component.theme.colors.grayText.withAlphaComponent(0.5), component.theme.colors.grayText.withAlphaComponent(0.5)]
                 } else {
                     inactiveColors = [NSColor(rgb: 0xD8D8E1), NSColor(rgb: 0xD8D8E1)]
                 }
@@ -456,7 +456,7 @@ public final class AvatarStoryIndicatorComponent : Equatable {
                     }
                 } else {
                     if component.theme.colors.isDark {
-                        colors = [component.theme.colors.grayText.withAlphaComponent(0.7), component.theme.colors.grayText.withAlphaComponent(0.7)].map(\.cgColor)
+                        colors = [component.theme.colors.grayText.withAlphaComponent(0.5), component.theme.colors.grayText.withAlphaComponent(0.5)].map(\.cgColor)
                     } else {
                         colors = [NSColor(rgb: 0xD8D8E1), NSColor(rgb: 0xD8D8E1)].map(\.cgColor)
                     }

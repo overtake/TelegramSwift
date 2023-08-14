@@ -145,6 +145,7 @@ final class StoryInteraction : InterfaceObserver {
         var lock: Bool = false
         var isRecording: Bool = false
         var hasReactions: Bool = false
+        var hasLikePanel: Bool = false
         var isSpacePaused: Bool = false
         var playingReaction: Bool = false
         var readingText: Bool = false
@@ -154,14 +155,19 @@ final class StoryInteraction : InterfaceObserver {
         var entryId: PeerId? = nil
         var closed: Bool = false
         
+        var isAreaActivated: Bool = false
+        
+        
         var canRecordVoice: Bool = true
         var isProfileIntended: Bool = false
         var emojiState: EntertainmentState = FastSettings.entertainmentState
         var inputRecording: ChatRecordingState?
         var recordType: RecordingStateSettings = FastSettings.recordingState
+        var stealthMode: Stories.StealthModeState = .init(activeUntilTimestamp: nil, cooldownUntilTimestamp: nil)
         
+        var reactions: AvailableReactions?
         var isPaused: Bool {
-            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown
+            return mouseDown || inputInFocus || hasPopover || hasModal || !windowIsKey || inTransition || isRecording || hasMenu || hasReactions || playingReaction || isSpacePaused || readingText || inputRecording != nil || lock || closed || magnified || longDown || isAreaActivated || hasLikePanel
         }
         
         var inTransition: Bool {
@@ -204,6 +210,22 @@ final class StoryInteraction : InterfaceObserver {
         if oldValue != presentation {
             notifyObservers(value: presentation, oldValue:oldValue, animated: animated)
         }
+    }
+    
+    func activateArea() {
+//        self.update { current in
+//            var current = current
+//            current.isAreaActivated = true
+//            return current
+//        }
+    }
+    
+    func deactivateArea() {
+//        self.update { current in
+//            var current = current
+//            current.isAreaActivated = false
+//            return current
+//        }
     }
     
     func updateMagnify(_ value: CGFloat) {
@@ -301,7 +323,9 @@ final class StoryArguments {
     let chatInteraction: ChatInteraction
     let showEmojiPanel:(Control)->Void
     let showReactionsPanel:()->Void
+    let showLikePanel:(Control, StoryContentItem)->Void
     let react:(StoryReactionAction)->Void
+    let likeAction:(StoryReactionAction)->Void
     let attachPhotoOrVideo:(ChatInteraction.AttachMediaType?)->Void
     let attachFile:()->Void
     let nextStory:()->Void
@@ -324,7 +348,11 @@ final class StoryArguments {
     let showFriendsTooltip:(Control, StoryContentItem)->Void
     let showTooltipText:(String, MenuAnimation)->Void
     let storyContextMenu:(StoryContentItem)->ContextMenu?
-    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?) {
+    let activateMediaArea:(MediaArea)->Void
+    let deactivateMediaArea:(MediaArea)->Void
+    let invokeMediaArea:(MediaArea)->Void
+    let like:(MessageReaction.Reaction?, StoryInteraction.State)->Void
+    init(context: AccountContext, interaction: StoryInteraction, chatInteraction: ChatInteraction, showEmojiPanel:@escaping(Control)->Void, showReactionsPanel:@escaping()->Void, react:@escaping(StoryReactionAction)->Void, likeAction:@escaping(StoryReactionAction)->Void, attachPhotoOrVideo:@escaping(ChatInteraction.AttachMediaType?)->Void, attachFile:@escaping()->Void, nextStory:@escaping()->Void, prevStory:@escaping()->Void, close:@escaping()->Void, openPeerInfo:@escaping(PeerId, NSView?)->Void, openChat:@escaping(PeerId, MessageId?, ChatInitialAction?)->Void, sendMessage:@escaping(PeerId, Int32)->Void, toggleRecordType:@escaping()->Void, deleteStory:@escaping(StoryContentItem)->Void, markAsRead:@escaping(PeerId, Int32)->Void, showViewers:@escaping(StoryContentItem)->Void, share:@escaping(StoryContentItem)->Void, copyLink: @escaping(StoryContentItem)->Void, startRecording: @escaping(Bool)->Void, togglePinned:@escaping(StoryContentItem)->Void, hashtag:@escaping(String)->Void, report:@escaping(PeerId, Int32, ReportReason)->Void, toggleHide:@escaping(Peer, Bool)->Void, showFriendsTooltip:@escaping(Control, StoryContentItem)->Void, showTooltipText:@escaping(String, MenuAnimation)->Void, storyContextMenu:@escaping(StoryContentItem)->ContextMenu?, activateMediaArea:@escaping(MediaArea)->Void, deactivateMediaArea:@escaping(MediaArea)->Void, invokeMediaArea:@escaping(MediaArea)->Void, like:@escaping(MessageReaction.Reaction?, StoryInteraction.State)->Void, showLikePanel:@escaping(Control, StoryContentItem)->Void) {
         self.context = context
         self.interaction = interaction
         self.chatInteraction = chatInteraction
@@ -352,7 +380,13 @@ final class StoryArguments {
         self.showFriendsTooltip = showFriendsTooltip
         self.showTooltipText = showTooltipText
         self.react = react
+        self.likeAction = likeAction
         self.storyContextMenu = storyContextMenu
+        self.activateMediaArea = activateMediaArea
+        self.deactivateMediaArea = deactivateMediaArea
+        self.invokeMediaArea = invokeMediaArea
+        self.like = like
+        self.showLikePanel = showLikePanel
     }
     
     func longDown() {
@@ -412,8 +446,8 @@ private let close_image = NSImage(named: "Icon_StoryClose")!.precomposed(NSColor
 private let close_image_hover = NSImage(named: "Icon_StoryClose")!.precomposed(NSColor.white.withAlphaComponent(1))
 
 
-func storyReactionsWindow(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void) -> Signal<Window?, NoError> {
-    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose, name: "reactions") |> map { value in
+func storyReactionsWindow(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void, selectedItems: [EmojiesSectionRowItem.SelectedItem]) -> Signal<Window?, NoError> {
+    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose, name: "reactions", selectedItems: selectedItems) |> map { value in
         if let (panel, view) = value {
             panel._canBecomeMain = false
             panel._canBecomeKey = false
@@ -432,11 +466,11 @@ func storyReactionsWindow(context: AccountContext, peerId: PeerId, react: @escap
     }
 }
 
-private func storyReactions(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void) -> Signal<NSView?, NoError> {
-    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose) |> map { $0?.1 }
+private func storyReactions(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void, selectedItems: [EmojiesSectionRowItem.SelectedItem] = []) -> Signal<NSView?, NoError> {
+    return storyReactionsValues(context: context, peerId: peerId, react: react, onClose: onClose, selectedItems: selectedItems) |> map { $0?.1 }
 }
 
-private func storyReactionsValues(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void, name: String = "") -> Signal<(Window, NSView)?, NoError> {
+private func storyReactionsValues(context: AccountContext, peerId: PeerId, react: @escaping(StoryReactionAction)->Void, onClose: @escaping()->Void, name: String = "", selectedItems: [EmojiesSectionRowItem.SelectedItem] = []) -> Signal<(Window, NSView)?, NoError> {
     
     
     let builtin = context.reactions.stateValue
@@ -516,12 +550,12 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
             switch value.content {
             case let .builtin(emoji):
                 if let generic = enabled.first(where: { $0.value.string == emoji }) {
-                    return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: false)
+                    return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: selectedItems.contains(where: { $0.source == .builtin(emoji) }))
                 } else {
                     return nil
                 }
             case let .custom(file):
-                return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: false)
+                return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: selectedItems.contains(where: { $0.source == .custom(file.fileId.id) }))
             }
         }
         
@@ -549,7 +583,7 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
        
         
         reveal = { view in
-            let window = ReactionsWindowController(context, peerId: peerId, selectedItems: [], react: { sticker, fromRect in
+            let window = ReactionsWindowController(context, peerId: peerId, selectedItems: selectedItems, react: { sticker, fromRect in
                 let value: UpdateMessageReaction
                 if let bundle = sticker.file.stickerText {
                     value = .builtin(bundle)
@@ -769,7 +803,6 @@ private final class StoryViewController: Control, Notifable {
             self.state = .active
             self.material = .ultraDark
             self.blendingMode = .withinWindow
-            textView.userInteractionEnabled = false
             textView.isSelectable = false
             addSubview(textView)
             addSubview(media)
@@ -889,6 +922,18 @@ private final class StoryViewController: Control, Notifable {
             textView.update(layout)
 
             
+            layout.measure(width: size.width - 16 - (button.isHidden ? 0 : 16 + self.button.frame.width) - media.frame.width - 10 - 10)
+            textView.update(layout)
+
+            layout.interactions = .init(processURL: { url in
+                if let url = url as? String {
+                    if url == "premium" {
+                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery), for: context.window)
+                    }
+                }
+            })
+            
+            
             self.button.set(handler: { _ in
                 callback()
             }, for: .Click)
@@ -936,6 +981,8 @@ private final class StoryViewController: Control, Notifable {
     private let rightBottom = Control()
     
     private var storyContext: StoryContentContext?
+    fileprivate var storyViewList: EngineStoryViewListContext?
+
     
     private var textInputSuggestionsView: InputSwapSuggestionsPanel?
     fileprivate var inputContextHelper: InputContextHelper!
@@ -1229,12 +1276,19 @@ private final class StoryViewController: Control, Notifable {
                 current.readingText = false
                 current.mouseDown = false
                 current.longDown = false
+                current.isAreaActivated = false
             }
             return current
         })
         
         if updated {
             self.closeTooltip()
+            if state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
+                self.storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
+                self.storyViewList?.loadMore()
+            } else {
+                self.storyViewList = nil
+            }
         }
     }
     
@@ -1421,6 +1475,10 @@ private final class StoryViewController: Control, Notifable {
         }
 
         transition.updateFrame(view: close, frame: NSMakeRect(size.width - close.frame.width, 0, 50, 50))
+        
+        if let overlay = self.likesOverlay {
+            transition.updateFrame(view: overlay, frame: size.bounds)
+        }
     }
     
     var inputView: NSTextView? {
@@ -1449,6 +1507,8 @@ private final class StoryViewController: Control, Notifable {
     }
     
     private var reactions: NSView? = nil
+    private var likes: NSView? = nil
+    private var likesOverlay: NSView? = nil
     private var makeParabollic: Bool = true
     
     func closeReactions(reactByFirst: Bool = false) {
@@ -1481,6 +1541,25 @@ private final class StoryViewController: Control, Notifable {
             return current
         }
     }
+    
+    func closeLikePanel() {
+        
+        if let view = self.likesOverlay {
+            performSubviewRemoval(view, animated: true)
+            self.likesOverlay = nil
+        }
+        if let view = self.likes {
+            performSubviewRemoval(view, animated: true)
+            self.likes = nil
+        }
+       
+        self.arguments?.interaction.update { current in
+            var current = current
+            current.hasLikePanel = false
+            return current
+        }
+    }
+
     
     fileprivate func closeTooltip() {
         if let view = currentTooltip {
@@ -1627,6 +1706,44 @@ private final class StoryViewController: Control, Notifable {
             return current
         }
     }
+    
+    func showLikePanel(_ view: NSView, control: Control) {
+        
+        guard let current = current, self.likes == nil else {
+            return
+        }
+        
+        
+        
+        let overlay = Control(frame: bounds)
+        self.likesOverlay = overlay
+        addSubview(overlay)
+
+        overlay.set(handler: { [weak self] _ in
+            self?.closeLikePanel()
+        }, for: .Click)
+        
+        view.setFrameOrigin(NSMakePoint((frame.width - view.frame.width) / 2, current.storyRect.maxY - view.frame.height + 15))
+        overlay.addSubview(view)
+        
+        view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        view.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+        
+        self.likes = view
+        
+        
+        
+        self.arguments?.interaction.update { current in
+            var current = current
+            current.hasLikePanel = true
+            return current
+        }
+    }
+    
+    func like(_ like: StoryReactionAction) {
+        self.current?.inputView.like(like, resetIfNeeded: false)
+    }
+
     
     func animateDisappear(_ initialId: StoryInitialIndex?) {
         if let current = self.current, let id = current.id, let control = initialId?.takeControl?(id, initialId?.messageId, current.storyId?.base as? Int32) {
@@ -1895,6 +2012,7 @@ final class StoryModalController : ModalViewController, Notifable {
     private let chatInteraction: ChatInteraction
     
     private let disposable = MetaDisposable()
+    private let actionsDisposable = DisposableSet()
     private let updatesDisposable = MetaDisposable()
     private let inputSwapDisposable = MetaDisposable()
     private var overlayTimer: SwiftSignalKit.Timer?
@@ -2232,6 +2350,45 @@ final class StoryModalController : ModalViewController, Notifable {
             self?.genericView.showTooltip(.justText(text))
         }
         
+        let saveGalleryPremium:()->Void = { [weak self] in
+            self?.genericView.showTooltip(.tooltip(strings().storyTooltipSaveToGalleryPremium, MenuAnimation.menu_save_as))
+        }
+        
+        let enableStealth:()->Void = { [weak self] in
+            _ = context.engine.messages.enableStoryStealthMode().start()
+            self?.genericView.showTooltip(.tooltip(strings().storyTooltipStealthModeActivate("5", "25"), MenuAnimation.menu_eye_slash))
+        }
+        let activeStealthMode:()->Void = { [weak self] in
+            if let timestamp = self?.interactions.presentation.stealthMode.activeUntilTimestamp {
+                self?.genericView.showTooltip(.tooltip(strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))), MenuAnimation.menu_eye_slash))
+            }
+        }
+        
+        let activateMediaArea:(MediaArea)->Void = { [weak self] area in
+            self?.arguments?.interaction.activateArea()
+            self?.genericView.current?.showMediaAreaViewer(area)
+        }
+        
+        let deactivateMediaArea:(MediaArea)->Void = { [weak self] area in
+            self?.arguments?.interaction.deactivateArea()
+            self?.genericView.current?.hideMediaAreaViewer()
+        }
+        
+        let like:(StoryReactionAction)->Void = { [weak self] reaction in
+            switch reaction.item {
+            case .builtin:
+                self?.genericView.like(reaction)
+            case let .custom(_, file):
+                if let file = file, file.isPremiumEmoji, !context.isPremium {
+                    showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
+                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: storyTheme), for: context.window)
+                    })
+                } else {
+                    self?.genericView.like(reaction)
+                }
+            }
+        }
+
         let react:(StoryReactionAction)->Void = { [weak self, weak interactions] reaction in
             
             if let entryId = interactions?.presentation.entryId, let id = interactions?.presentation.storyId {
@@ -2271,7 +2428,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     }
                 })
             }
-        }, react: react, attachPhotoOrVideo: { type in
+        }, react: react, likeAction: like, attachPhotoOrVideo: { type in
             chatInteraction.attachPhotoOrVideo(type)
         }, attachFile: {
             chatInteraction.attachFile(false)
@@ -2315,15 +2472,15 @@ final class StoryModalController : ModalViewController, Notifable {
         }, markAsRead: { [weak self] peerId, storyId in
             self?.stories.markAsSeen(id: .init(peerId: peerId, id: storyId))
         }, showViewers: { [weak self] story in
-            if story.storyItem.expirationTimestamp + 24 * 60 * 60 < context.timestamp {
-                self?.genericView.showTooltip(.tooltip(strings().storyAlertViewsExpired, MenuAnimation.menu_clear_history))
-            } else if story.storyItem.views?.seenCount == 0 {
+            if story.storyItem.views?.seenCount == 0 {
                 self?.genericView.showTooltip(.tooltip(strings().storyAlertNoViews, MenuAnimation.menu_clear_history))
             } else {
                 if let peerId = story.peer?.id {
-                    showModal(with: StoryViewersModalController(context: context, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
-                        openPeerInfo(peerId, nil)
-                    }), for: context.window)
+                    if let list = self?.genericView.storyViewList {
+                        showModal(with: StoryViewersModalController(context: context, list: list, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
+                            openPeerInfo(peerId, nil)
+                        }), for: context.window)
+                    }
                 }
             }
             
@@ -2349,38 +2506,118 @@ final class StoryModalController : ModalViewController, Notifable {
                 return
             }
             let text: String
+            let icon: MenuAnimation
             if story.storyItem.isCloseFriends {
                 text = strings().storyTooltipCloseFriends(peer.compactDisplayTitle)
+                icon = MenuAnimation.menu_add_to_favorites
             } else if story.storyItem.isContacts {
                 text = strings().storyTooltipContacts(peer.compactDisplayTitle)
+                icon = MenuAnimation.menu_create_group
             } else {
+                icon = MenuAnimation.menu_create_group
                 text = strings().storyTooltipSelectedContacts(peer.compactDisplayTitle)
             }
-            self?.genericView.showTooltip(.tooltip(text, MenuAnimation.menu_add_to_favorites))
+            self?.genericView.showTooltip(.tooltip(text, icon))
         }, showTooltipText: { [weak self] text, animation in
             self?.genericView.showTooltip(.tooltip(text, animation))
-        }, storyContextMenu: { story in
-            guard let peer = story.peer, peer.id != context.peerId else {
+        }, storyContextMenu: { [weak self] story in
+            guard let peer = story.peer else {
                 return nil
             }
-            let peerId = peer.id
             let menu = ContextMenu(presentation: .current(storyTheme.colors))
-            
-            if story.canCopyLink {
-                menu.addItem(ContextMenuItem(strings().storyControlsMenuCopyLink, handler: {
-                    copyLink(story)
-                }, itemImage: MenuAnimation.menu_copy_link.value))
-            }
-            if story.sharable && !story.storyItem.isForwardingDisabled {
-                menu.addItem(ContextMenuItem(strings().storyControlsMenuShare, handler: {
-                    share(story)
-                }, itemImage: MenuAnimation.menu_share.value))
-            }
-            if !story.storyItem.isForwardingDisabled {
+
+            if peer.id != context.peerId {
+                let stealthModeState = self?.arguments?.interaction.presentation.stealthMode
+                
+                let peerId = peer.id
+                
+                if story.canCopyLink {
+                    menu.addItem(ContextMenuItem(strings().storyControlsMenuCopyLink, handler: {
+                        copyLink(story)
+                    }, itemImage: MenuAnimation.menu_copy_link.value))
+                }
+                if story.sharable && !story.storyItem.isForwardingDisabled {
+                    menu.addItem(ContextMenuItem(strings().storyControlsMenuShare, handler: {
+                        share(story)
+                    }, itemImage: MenuAnimation.menu_share.value))
+                }
+               
+                
+                if !story.storyItem.isForwardingDisabled {
+                    let resource: TelegramMediaFile?
+                    if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
+                        if let res = media.representations.last?.resource {
+                            resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
+                        } else {
+                            resource = nil
+                        }
+                        
+                    } else if let media = story.storyItem.media._asMedia() as? TelegramMediaFile {
+                        resource = media
+                    } else {
+                        resource = nil
+                    }
+                    
+                    
+                    if let resource = resource {
+                        menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
+                            if context.isPremium {
+                                saveAs(resource, account: context.account)
+                            } else {
+                                saveGalleryPremium()
+                            }
+                        }, itemImage: MenuAnimation.menu_save_as.value))
+                    }
+                }
+                if !peer.isService {
+                    
+                    menu.addItem(ContextMenuItem(strings().storyControlsMenuStealtMode, handler: {
+                        if stealthModeState?.activeUntilTimestamp != nil {
+                            activeStealthMode()
+                        } else {
+                            showModal(with: StoryStealthModeController(context, enableStealth: enableStealth, presentation: storyTheme), for: context.window)
+                        }
+                    }, itemImage: MenuAnimation.menu_eye_slash.value))
+                    
+                    if peer._asPeer().storyArchived {
+                        menu.addItem(ContextMenuItem(strings().storyControlsMenuUnarchive, handler: {             toggleHide(peer._asPeer(), false)
+                        }, itemImage: MenuAnimation.menu_unarchive.value))
+
+                    } else {
+                        menu.addItem(ContextMenuItem(strings().storyControlsMenuArchive, handler: {
+                            toggleHide(peer._asPeer(), true)
+                        }, itemImage: MenuAnimation.menu_archive.value))
+                    }
+                    let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
+                    
+                    let submenu = ContextMenu()
+                                
+                    let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+                    let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
+                    
+                    for i in 0 ..< options.count {
+                        submenu.addItem(ContextMenuItem(options[i].title, handler: {
+                            report(peerId, story.storyItem.id, options[i])
+                        }, itemImage: animation[i].value))
+                    }
+                    reportItem.submenu = submenu
+                    menu.addItem(reportItem)
+
+                }
+            } else {
+                if !story.storyItem.isPinned {
+                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveToProfile, handler: {
+                        self?.arguments?.togglePinned(story)
+                    }, itemImage: MenuAnimation.menu_save_to_profile.value))
+                } else {
+                    menu.addItem(ContextMenuItem(strings().storyMyInputRemoveFromProfile, handler: {
+                        self?.arguments?.togglePinned(story)
+                    }, itemImage: MenuAnimation.menu_delete.value))
+                }
                 let resource: TelegramMediaFile?
                 if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
                     if let res = media.representations.last?.resource {
-                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
+                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
                     } else {
                         resource = nil
                     }
@@ -2391,40 +2628,62 @@ final class StoryModalController : ModalViewController, Notifable {
                     resource = nil
                 }
                 
-                
                 if let resource = resource {
                     menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
                         saveAs(resource, account: context.account)
                     }, itemImage: MenuAnimation.menu_save_as.value))
                 }
-            }
-            if !peer.isService {
-                if peer._asPeer().storyArchived {
-                    menu.addItem(ContextMenuItem(strings().storyControlsMenuUnarchive, handler: {                     toggleHide(peer._asPeer(), false)
-                    }, itemImage: MenuAnimation.menu_unarchive.value))
-
-                } else {
-                    menu.addItem(ContextMenuItem(strings().storyControlsMenuArchive, handler: {
-                        toggleHide(peer._asPeer(), true)
-                    }, itemImage: MenuAnimation.menu_archive.value))
-                }
-                let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
                 
-                let submenu = ContextMenu()
-                            
-                let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-                let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-                
-                for i in 0 ..< options.count {
-                    submenu.addItem(ContextMenuItem(options[i].title, handler: {
-                        report(peerId, story.storyItem.id, options[i])
-                    }, itemImage: animation[i].value))
+                if story.sharable {
+                    if !story.storyItem.isForwardingDisabled {
+                        menu.addItem(ContextMenuItem(strings().storyMyInputShare, handler: {
+                            self?.arguments?.share(story)
+                        }, itemImage: MenuAnimation.menu_share.value))
+                    }
+                    
+                    if story.canCopyLink {
+                        menu.addItem(ContextMenuItem(strings().storyMyInputCopyLink, handler: {
+                            self?.arguments?.copyLink(story)
+                        }, itemImage: MenuAnimation.menu_copy_link.value))
+                    }
                 }
-                reportItem.submenu = submenu
-                menu.addItem(reportItem)
-
             }
+           
             return menu
+        }, activateMediaArea: { area in
+            activateMediaArea(area)
+        }, deactivateMediaArea: { area in
+            deactivateMediaArea(area)
+        }, invokeMediaArea: { [weak self] area in
+            switch area {
+            case let .venue(_, venue):
+                showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: storyTheme), for: context.window)
+            }
+        }, like: { current, state in
+            guard let peerId = state.entryId, let story = state.storyId else {
+                return
+            }
+            _ = context.engine.messages.setStoryReaction(peerId: peerId, id: story, reaction: current).start()
+        }, showLikePanel: { [weak self, weak interactions] control, story in
+            if let entryId = interactions?.presentation.entryId {
+                
+                var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
+                if let reaction = story.storyItem.myReaction {
+                    switch reaction {
+                    case let .builtin(emoji):
+                        selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
+                    case let .custom(fileId):
+                        selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    }
+                }
+                _ = storyReactions(context: context, peerId: entryId, react: like, onClose: {
+                    self?.genericView.closeLikePanel()
+                }, selectedItems: selectedItems).start(next: { view in
+                    if let view = view {
+                        self?.genericView.showLikePanel(view, control: control)
+                    }
+                })
+            }
         })
         
         self.arguments = arguments
@@ -2568,6 +2827,27 @@ final class StoryModalController : ModalViewController, Notifable {
         let signal = stories.state |> deliverOnMainQueue
 
                 
+        let stealthData = context.engine.data.subscribe(
+            TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
+        ) |> deliverOnMainQueue
+        
+        actionsDisposable.add(stealthData.start(next: { [weak self] data in
+            self?.interactions.update({ current in
+                var current = current
+                current.stealthMode = data.stealthModeState
+                return current
+            })
+        }))
+        
+        actionsDisposable.add(context.reactions.stateValue.start(next: { [weak self] reactions in
+            self?.interactions.update({ current in
+                var current = current
+                current.reactions = reactions
+                return current
+            })
+        }))
+
+        
         disposable.set(combineLatest(signal, genericView.getReady).start(next: { [weak self] state, ready in
             if state.slice == nil {
                 self?.initialId = nil
@@ -2587,7 +2867,10 @@ final class StoryModalController : ModalViewController, Notifable {
                     var current = current
                     current.hasPopover = hasPopover(context.window) || NSApp.windows.contains(where: { ($0 as? Window)?.name == "reactions" })
                     current.hasMenu = contextMenuOnScreen()
-                    current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil || findModal(InputDataModalController.self, isAboveTo: self) != nil || findModal(ShareModalController.self, isAboveTo: self) != nil
+                    current.hasModal = findModal(PreviewSenderController.self, isAboveTo: self) != nil
+                    || findModal(InputDataModalController.self, isAboveTo: self) != nil
+                    || findModal(ShareModalController.self, isAboveTo: self) != nil
+                    || findModal(StoryStealthModeController.self, isAboveTo: self) != nil
                     return current
                 }
             }
@@ -2605,6 +2888,7 @@ final class StoryModalController : ModalViewController, Notifable {
         }))
         
     }
+    
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -2806,10 +3090,18 @@ final class StoryModalController : ModalViewController, Notifable {
         return interactions.presentation.hasModal || interactions.presentation.hasPopover || interactions.presentation.hasMenu
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         window?.removeObserver(for: self)
         window?.keyUpHandler = nil
+    }
+    
+    override func returnKeyAction() -> KeyHandlerResult {
+        return .invokeNext
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {
@@ -2844,6 +3136,9 @@ final class StoryModalController : ModalViewController, Notifable {
         } else if interactions.presentation.hasReactions {
             self.genericView.closeReactions()
             return .invoked
+        } else if interactions.presentation.hasLikePanel {
+            self.genericView.closeLikePanel()
+            return .invoked
         } else {
             return super.escapeKeyAction()
         }
@@ -2864,6 +3159,7 @@ final class StoryModalController : ModalViewController, Notifable {
         disposable.dispose()
         updatesDisposable.dispose()
         inputSwapDisposable.dispose()
+        actionsDisposable.dispose()
     }
     
     override var containerBackground: NSColor {
