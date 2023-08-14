@@ -1284,7 +1284,7 @@ private final class StoryViewController: Control, Notifable {
         if updated {
             self.closeTooltip()
             if state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
-                self.storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: []), listMode: .everyone, sortMode: .reactionsFirst)
+                self.storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
                 self.storyViewList?.loadMore()
             } else {
                 self.storyViewList = nil

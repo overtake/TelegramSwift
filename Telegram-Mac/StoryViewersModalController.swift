@@ -631,7 +631,7 @@ private final class StoryViewersTopView : View {
 func StoryViewersModalController(context: AccountContext, list: EngineStoryViewListContext, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
     
     
-    let initialViews = story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [])
+    let initialViews = story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [], hasList: false)
     
     var storyViewList = list
     
