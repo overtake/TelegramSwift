@@ -158,12 +158,12 @@ private final class StoryStealthModeView : Control {
         let infoLayout = TextViewLayout(.initialize(string: state.isPremium ? strings().storyStealthModeInfoText : strings().storyStealthModeInfoSubscribe, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
         self.descView.update(infoLayout)
         
-        infoView1.layout(image: NSImage(named: "Icon_Story_StealthMode_Rewind_5")!.precomposed(), title: strings().storyStealthModeFirstTitle, text: strings().storyStealthModeFirstInfo, width: frame.width, presentation: theme)
+        infoView1.layout(image: NSImage(named: "Icon_Story_StealthMode_Rewind_5")!.precomposed(theme.colors.accent), title: strings().storyStealthModeFirstTitle, text: strings().storyStealthModeFirstInfo, width: frame.width, presentation: theme)
         
-        infoView2.layout(image: NSImage(named: "Icon_Story_StealthMode_Rewind_25")!.precomposed(), title: strings().storyStealthModeSecondTitle, text: strings().storyStealthModeSecondInfo, width: frame.width, presentation: theme)
+        infoView2.layout(image: NSImage(named: "Icon_Story_StealthMode_Rewind_25")!.precomposed(theme.colors.accent), title: strings().storyStealthModeSecondTitle, text: strings().storyStealthModeSecondInfo, width: frame.width, presentation: theme)
 
         
-        button.set(font: .normal(.text), for: .Normal)
+        button.set(font: .medium(.text), for: .Normal)
         if state.isPremium {
             if let cooldown = state.stealthMode.cooldownUntilTimestamp {
                 button.set(text: strings().storyStealthModeButtonAvailable(smartTimeleftText(Int(cooldown - context.timestamp))), for: .Normal)

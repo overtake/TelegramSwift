@@ -91,7 +91,6 @@ final class StoryMyInputView : Control, StoryInput {
             context.setFillColor(NSColor.clear.cgColor)
             context.fill(bounds)
             
-            context.setBlendMode(.normal)
             
             
             var currentX = mergedImageSize + mergedImageSpacing * CGFloat(images.count - 1) - mergedImageSize
@@ -106,9 +105,11 @@ final class StoryMyInputView : Control, StoryInput {
                 context.translateBy(x: -frame.width / 2.0, y: -frame.height / 2.0)
                 
                 let imageRect = CGRect(origin: CGPoint(x: currentX, y: 0.0), size: CGSize(width: mergedImageSize, height: mergedImageSize))
-                context.setFillColor(storyTheme.colors.background.cgColor)
-                context.fillEllipse(in: imageRect.insetBy(dx: -1.0, dy: -1.0))
                 
+                context.setBlendMode(.clear)
+                context.setFillColor(NSColor.red.cgColor)
+                context.fillEllipse(in: imageRect.insetBy(dx: -1.0, dy: -1.0))
+                context.setBlendMode(.normal)
                 context.draw(image, in: imageRect)
                 
                 currentX -= mergedImageSpacing
