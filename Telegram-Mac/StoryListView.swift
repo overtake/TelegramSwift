@@ -516,9 +516,14 @@ final class StoryListView : Control, Notifable {
                         selectedItems.append(.init(source: .custom(fileId), type: .transparent))
                     }
                 }
-                let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.likeAction, onClose: {
-                
-                }, selectedItems: selectedItems) |> deliverOnMainQueue
+                let window: Signal<Window?, NoError>
+                if story.peerId == arguments.context.peerId {
+                    window = .single(nil)
+                } else {
+                    window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.likeAction, onClose: {
+                        
+                    }, selectedItems: selectedItems) |> deliverOnMainQueue
+                }
                 
                 _ = window.start(next: { [weak arguments] panel in
                     if let menu = arguments?.storyContextMenu(story) {

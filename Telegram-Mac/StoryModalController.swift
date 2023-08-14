@@ -2521,31 +2521,103 @@ final class StoryModalController : ModalViewController, Notifable {
         }, showTooltipText: { [weak self] text, animation in
             self?.genericView.showTooltip(.tooltip(text, animation))
         }, storyContextMenu: { [weak self] story in
-            guard let peer = story.peer, peer.id != context.peerId else {
+            guard let peer = story.peer else {
                 return nil
             }
-            let stealthModeState = self?.arguments?.interaction.presentation.stealthMode
-            
-            let peerId = peer.id
             let menu = ContextMenu(presentation: .current(storyTheme.colors))
-            
-            if story.canCopyLink {
-                menu.addItem(ContextMenuItem(strings().storyControlsMenuCopyLink, handler: {
-                    copyLink(story)
-                }, itemImage: MenuAnimation.menu_copy_link.value))
-            }
-            if story.sharable && !story.storyItem.isForwardingDisabled {
-                menu.addItem(ContextMenuItem(strings().storyControlsMenuShare, handler: {
-                    share(story)
-                }, itemImage: MenuAnimation.menu_share.value))
-            }
-           
-            
-            if !story.storyItem.isForwardingDisabled {
+
+            if peer.id != context.peerId {
+                let stealthModeState = self?.arguments?.interaction.presentation.stealthMode
+                
+                let peerId = peer.id
+                
+                if story.canCopyLink {
+                    menu.addItem(ContextMenuItem(strings().storyControlsMenuCopyLink, handler: {
+                        copyLink(story)
+                    }, itemImage: MenuAnimation.menu_copy_link.value))
+                }
+                if story.sharable && !story.storyItem.isForwardingDisabled {
+                    menu.addItem(ContextMenuItem(strings().storyControlsMenuShare, handler: {
+                        share(story)
+                    }, itemImage: MenuAnimation.menu_share.value))
+                }
+               
+                
+                if !story.storyItem.isForwardingDisabled {
+                    let resource: TelegramMediaFile?
+                    if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
+                        if let res = media.representations.last?.resource {
+                            resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
+                        } else {
+                            resource = nil
+                        }
+                        
+                    } else if let media = story.storyItem.media._asMedia() as? TelegramMediaFile {
+                        resource = media
+                    } else {
+                        resource = nil
+                    }
+                    
+                    
+                    if let resource = resource {
+                        menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
+                            if context.isPremium {
+                                saveAs(resource, account: context.account)
+                            } else {
+                                saveGalleryPremium()
+                            }
+                        }, itemImage: MenuAnimation.menu_save_as.value))
+                    }
+                }
+                if !peer.isService {
+                    
+                    menu.addItem(ContextMenuItem(strings().storyControlsMenuStealtMode, handler: {
+                        if stealthModeState?.activeUntilTimestamp != nil {
+                            activeStealthMode()
+                        } else {
+                            showModal(with: StoryStealthModeController(context, enableStealth: enableStealth, presentation: storyTheme), for: context.window)
+                        }
+                    }, itemImage: MenuAnimation.menu_eye_slash.value))
+                    
+                    if peer._asPeer().storyArchived {
+                        menu.addItem(ContextMenuItem(strings().storyControlsMenuUnarchive, handler: {             toggleHide(peer._asPeer(), false)
+                        }, itemImage: MenuAnimation.menu_unarchive.value))
+
+                    } else {
+                        menu.addItem(ContextMenuItem(strings().storyControlsMenuArchive, handler: {
+                            toggleHide(peer._asPeer(), true)
+                        }, itemImage: MenuAnimation.menu_archive.value))
+                    }
+                    let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
+                    
+                    let submenu = ContextMenu()
+                                
+                    let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+                    let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
+                    
+                    for i in 0 ..< options.count {
+                        submenu.addItem(ContextMenuItem(options[i].title, handler: {
+                            report(peerId, story.storyItem.id, options[i])
+                        }, itemImage: animation[i].value))
+                    }
+                    reportItem.submenu = submenu
+                    menu.addItem(reportItem)
+
+                }
+            } else {
+                if !story.storyItem.isPinned {
+                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveToProfile, handler: {
+                        self?.arguments?.togglePinned(story)
+                    }, itemImage: MenuAnimation.menu_save_to_profile.value))
+                } else {
+                    menu.addItem(ContextMenuItem(strings().storyMyInputRemoveFromProfile, handler: {
+                        self?.arguments?.togglePinned(story)
+                    }, itemImage: MenuAnimation.menu_delete.value))
+                }
                 let resource: TelegramMediaFile?
                 if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
                     if let res = media.representations.last?.resource {
-                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
+                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
                     } else {
                         resource = nil
                     }
@@ -2556,52 +2628,27 @@ final class StoryModalController : ModalViewController, Notifable {
                     resource = nil
                 }
                 
-                
                 if let resource = resource {
                     menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
-                        if context.isPremium {
-                            saveAs(resource, account: context.account)
-                        } else {
-                            saveGalleryPremium()
-                        }
+                        saveAs(resource, account: context.account)
                     }, itemImage: MenuAnimation.menu_save_as.value))
                 }
-            }
-            if !peer.isService {
                 
-                menu.addItem(ContextMenuItem(strings().storyControlsMenuStealtMode, handler: {
-                    if stealthModeState?.activeUntilTimestamp != nil {
-                        activeStealthMode()
-                    } else {
-                        showModal(with: StoryStealthModeController(context, enableStealth: enableStealth, presentation: storyTheme), for: context.window)
+                if story.sharable {
+                    if !story.storyItem.isForwardingDisabled {
+                        menu.addItem(ContextMenuItem(strings().storyMyInputShare, handler: {
+                            self?.arguments?.share(story)
+                        }, itemImage: MenuAnimation.menu_share.value))
                     }
-                }, itemImage: MenuAnimation.menu_eye_slash.value))
-                
-                if peer._asPeer().storyArchived {
-                    menu.addItem(ContextMenuItem(strings().storyControlsMenuUnarchive, handler: {                     toggleHide(peer._asPeer(), false)
-                    }, itemImage: MenuAnimation.menu_unarchive.value))
-
-                } else {
-                    menu.addItem(ContextMenuItem(strings().storyControlsMenuArchive, handler: {
-                        toggleHide(peer._asPeer(), true)
-                    }, itemImage: MenuAnimation.menu_archive.value))
+                    
+                    if story.canCopyLink {
+                        menu.addItem(ContextMenuItem(strings().storyMyInputCopyLink, handler: {
+                            self?.arguments?.copyLink(story)
+                        }, itemImage: MenuAnimation.menu_copy_link.value))
+                    }
                 }
-                let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
-                
-                let submenu = ContextMenu()
-                            
-                let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-                let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-                
-                for i in 0 ..< options.count {
-                    submenu.addItem(ContextMenuItem(options[i].title, handler: {
-                        report(peerId, story.storyItem.id, options[i])
-                    }, itemImage: animation[i].value))
-                }
-                reportItem.submenu = submenu
-                menu.addItem(reportItem)
-
             }
+           
             return menu
         }, activateMediaArea: { area in
             activateMediaArea(area)

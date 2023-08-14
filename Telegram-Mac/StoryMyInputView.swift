@@ -210,59 +210,11 @@ final class StoryMyInputView : Control, StoryInput {
         delete.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
         
         more.contextMenu = { [weak self] in
-            
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
-            
-            if let story = self?.story, let context = self?.arguments?.context {
-               
-                
-                if !story.storyItem.isPinned {
-                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveToProfile, handler: {
-                        self?.arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_save_to_profile.value))
-                } else {
-                    menu.addItem(ContextMenuItem(strings().storyMyInputRemoveFromProfile, handler: {
-                        self?.arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_delete.value))
-                }
-                let resource: TelegramMediaFile?
-                if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
-                    if let res = media.representations.last?.resource {
-                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
-                    } else {
-                        resource = nil
-                    }
-                    
-                } else if let media = story.storyItem.media._asMedia() as? TelegramMediaFile {
-                    resource = media
-                } else {
-                    resource = nil
-                }
-                
-                
-                if let resource = resource {
-                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
-                        saveAs(resource, account: context.account)
-                    }, itemImage: MenuAnimation.menu_save_as.value))
-                }
-                
-                if story.sharable {
-                   
-                    if !story.storyItem.isForwardingDisabled {
-                        menu.addItem(ContextMenuItem(strings().storyMyInputShare, handler: {
-                            self?.arguments?.share(story)
-                        }, itemImage: MenuAnimation.menu_share.value))
-                    }
-                    
-                    if story.canCopyLink {
-                        menu.addItem(ContextMenuItem(strings().storyMyInputCopyLink, handler: {
-                            self?.arguments?.copyLink(story)
-                        }, itemImage: MenuAnimation.menu_copy_link.value))
-                    }
-                }
+            if let story = self?.story, let menu = self?.arguments?.storyContextMenu(story) {
+                return menu
             }
-
-            return menu
+            return nil
         }
         
         delete.set(handler: { [weak self] _ in
