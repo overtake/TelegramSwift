@@ -2657,7 +2657,11 @@ final class StoryModalController : ModalViewController, Notifable {
         }, invokeMediaArea: { [weak self] area in
             switch area {
             case let .venue(_, venue):
-                showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: storyTheme), for: context.window)
+                if #available(macOS 10.13, *) {
+                    showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: storyTheme), for: context.window)
+                } else {
+                    execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", venue.latitude)),\(String(format:"%f", venue.longitude))", false))
+                }
             }
         }, like: { current, state in
             guard let peerId = state.entryId, let story = state.storyId else {
