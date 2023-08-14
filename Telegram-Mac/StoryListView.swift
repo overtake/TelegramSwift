@@ -14,6 +14,21 @@ import Postbox
 import TGModernGrowingTextView
 
 
+extension MediaArea {
+    var title: String {
+        switch self {
+        case .venue:
+            return strings().storyViewMediaAreaViewLocation
+        }
+    }
+    var menu: MenuAnimation {
+        switch self {
+        case .venue:
+            return MenuAnimation.menu_location
+        }
+    }
+}
+
 
 final class StoryListView : Control, Notifable {
     
@@ -439,6 +454,8 @@ final class StoryListView : Control, Notifable {
     private var nextStoryView: ShadowView?
     
     private var pauseOverlay: Control? = nil
+    
+    private var mediaAreaViewer: StoryViewMediaAreaViewer?
         
     var storyDidUpdate:((Message)->Void)?
     
@@ -488,9 +505,25 @@ final class StoryListView : Control, Notifable {
                     AppMenu.show(menu: menu, event: event, for: control)
                 }
             } else {
-                let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.react, onClose: {
                 
-                }) |> deliverOnMainQueue
+                var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
+                
+                if let reaction = story.storyItem.myReaction {
+                    switch reaction {
+                    case let .builtin(emoji):
+                        selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
+                    case let .custom(fileId):
+                        selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                    }
+                }
+                let window: Signal<Window?, NoError>
+                if story.peerId == arguments.context.peerId {
+                    window = .single(nil)
+                } else {
+                    window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.likeAction, onClose: {
+                        
+                    }, selectedItems: selectedItems) |> deliverOnMainQueue
+                }
                 
                 _ = window.start(next: { [weak arguments] panel in
                     if let menu = arguments?.storyContextMenu(story) {
@@ -521,22 +554,100 @@ final class StoryListView : Control, Notifable {
         controls.set(handler: { [weak self] control in
             if let event = NSApp.currentEvent {
                 let point = control.convert(event.locationInWindow, from: nil)
-                if point.x < control.frame.width / 2 {
-                    self?.arguments?.prevStory()
+                if let value = self?.findMediaArea(point) {
+                    self?.arguments?.activateMediaArea(value)
                 } else {
-                    self?.arguments?.nextStory()
+                    if point.x < control.frame.width / 2 {
+                        self?.arguments?.prevStory()
+                    } else {
+                        self?.arguments?.nextStory()
+                    }
+                    self?.updateSides()
                 }
             }
-            self?.updateSides()
         }, for: .Click)
         
         
-//        
-//        set(handler: { [weak self] _ in
-//            self?.resetInputView()
-//        }, for: .Click)
-             
         self.userInteractionEnabled = false
+    }
+    
+    
+    private func mediaAreaViewerRect(_ mediaArea: MediaArea) -> NSRect {
+        let referenceSize = self.controls.frame.size
+        let size = CGSize(width: 16.0, height: 16.0)
+        var frame = CGRect(x: mediaArea.coordinates.x / 100.0 * referenceSize.width - size.width / 2.0, y: (mediaArea.coordinates.y - mediaArea.coordinates.height * 0.5)  / 100.0 * referenceSize.height - size.height / 2.0, width: size.width, height: size.height)
+        frame = frame.offsetBy(dx: 0.0, dy: -8)
+
+        return frame
+    }
+    
+    func showMediaAreaViewer(_ mediaArea: MediaArea) {
+        guard let event = NSApp.currentEvent else {
+            return
+        }
+        if let viewer = self.mediaAreaViewer {
+            performSubviewRemoval(viewer, animated: false)
+            self.mediaAreaViewer = nil
+        }
+        
+        let rect = self.mediaAreaViewerRect(mediaArea)
+        
+        let view = StoryViewMediaAreaViewer(frame: rect)
+        self.mediaAreaViewer = view
+        
+        self.content.addSubview(view)
+                
+        var items: [ContextMenuItem] = []
+        
+        items.append(ContextMenuItem(mediaArea.title, handler: { [weak self] in
+            self?.arguments?.invokeMediaArea(mediaArea)
+        }, itemImage: mediaArea.menu.value))
+
+        ContextMenu.show(items: items, view: view, event: event, onClose: { [weak self] in
+            self?.arguments?.deactivateMediaArea(mediaArea)
+        }, presentation: .current(storyTheme.colors))
+    }
+    
+    func hideMediaAreaViewer() {
+        if let viewer = self.mediaAreaViewer {
+            performSubviewRemoval(viewer, animated: false)
+            self.mediaAreaViewer = nil
+        }
+    }
+    
+    
+    private func findMediaArea(_ point: NSPoint) -> MediaArea? {
+        guard let story = self.story else {
+            return nil
+        }
+        
+        let point = NSMakePoint(point.x, point.y)
+                
+        let referenceSize = self.controls.frame.size
+        
+        var selectedMediaArea: MediaArea?
+                                                
+        func isPoint(_ point: CGPoint, in area: MediaArea) -> Bool {
+            let tx = point.x - area.coordinates.x / 100.0 * referenceSize.width
+            let ty = point.y - area.coordinates.y / 100.0 * referenceSize.height
+            
+            let rad = -area.coordinates.rotation * Double.pi / 180.0
+            let cosTheta = cos(rad)
+            let sinTheta = sin(rad)
+            let rotatedX = tx * cosTheta - ty * sinTheta
+            let rotatedY = tx * sinTheta + ty * cosTheta
+            
+            return abs(rotatedX) <= area.coordinates.width / 100.0 * referenceSize.width / 2.0 && abs(rotatedY) <= area.coordinates.height / 100.0 * referenceSize.height / 2.0
+        }
+
+        
+        for area in story.storyItem.mediaAreas {
+             if isPoint(point, in: area) {
+                selectedMediaArea = area
+                break
+            }
+        }
+        return selectedMediaArea
     }
     
     private func updateSides(animated: Bool = true) {
@@ -881,6 +992,13 @@ final class StoryListView : Control, Notifable {
             previous.disappear()
         }
         
+        if previous?.story?.id != entry.item.storyItem.id {
+            if let text = self.text {
+                performSubviewRemoval(text, animated: false)
+                self.text = nil
+            }
+        }
+        
         let story = entry.item
         
 
@@ -942,6 +1060,7 @@ final class StoryListView : Control, Notifable {
         self.updateStoryState(current.state)
 
         self.inputView.update(entry.item, animated: false)
+        
         
         self.updateText(story.storyItem, state: .concealed, animated: false, context: context)
         

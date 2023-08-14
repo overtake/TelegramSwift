@@ -578,6 +578,14 @@
 		27D43DCD27919202006968A6 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAD27917735006968A6 /* libjpeg.a */; };
 		27D43DCE27919229006968A6 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DB12791774A006968A6 /* libcrypto.a */; };
 		27D43DCF27919229006968A6 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAF27917747006968A6 /* libssl.a */; };
+		27D48B432A72721200721995 /* StoryStealthModeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D48B422A72721200721995 /* StoryStealthModeController.swift */; };
+		27D48B482A7273A200721995 /* menu_download_circle.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D48B442A72739E00721995 /* menu_download_circle.tgs */; };
+		27D48B492A7273A200721995 /* menu_download_circle_lock.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D48B452A72739F00721995 /* menu_download_circle_lock.tgs */; };
+		27D48B4A2A7273A200721995 /* menu_eye_locked.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D48B462A7273A000721995 /* menu_eye_locked.tgs */; };
+		27D48B4B2A7273A200721995 /* menu_eye_slash.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D48B472A7273A200721995 /* menu_eye_slash.tgs */; };
+		27D48B4D2A72F87000721995 /* PremiumBoardingStoriesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D48B4C2A72F87000721995 /* PremiumBoardingStoriesController.swift */; };
+		27D48B612A78F6E800721995 /* StoryViewMediaAreaViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D48B602A78F6E800721995 /* StoryViewMediaAreaViewer.swift */; };
+		27D48B632A790BA900721995 /* LocationPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D48B622A790BA900721995 /* LocationPreviewController.swift */; };
 		27D4F6DF261B776200CCAE03 /* Notices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D4F6DE261B776200CCAE03 /* Notices.swift */; };
 		27D604292948A2DD00588C21 /* menu_send_spoiler.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */; };
 		27D6042B294B756700588C21 /* DataStorageExceptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6042A294B756700588C21 /* DataStorageExceptions.swift */; };
@@ -2001,6 +2009,14 @@
 		27D43DB327917798006968A6 /* libmac_framework_objc_static.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmac_framework_objc_static.a; path = "core-xprojects/webrtc/build/webrtc/libmac_framework_objc_static.a"; sourceTree = "<group>"; };
 		27D43DB527918ABB006968A6 /* Mozjpeg */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Mozjpeg; path = submodules/Mozjpeg; sourceTree = "<group>"; };
 		27D43DBD27919152006968A6 /* OpenSSLEncryptionProvider */ = {isa = PBXFileReference; lastKnownFileType = folder; name = OpenSSLEncryptionProvider; path = "submodules/telegram-ios/submodules/OpenSSLEncryptionProvider"; sourceTree = "<group>"; };
+		27D48B422A72721200721995 /* StoryStealthModeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryStealthModeController.swift; sourceTree = "<group>"; };
+		27D48B442A72739E00721995 /* menu_download_circle.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_download_circle.tgs; sourceTree = "<group>"; };
+		27D48B452A72739F00721995 /* menu_download_circle_lock.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_download_circle_lock.tgs; sourceTree = "<group>"; };
+		27D48B462A7273A000721995 /* menu_eye_locked.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_eye_locked.tgs; sourceTree = "<group>"; };
+		27D48B472A7273A200721995 /* menu_eye_slash.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_eye_slash.tgs; sourceTree = "<group>"; };
+		27D48B4C2A72F87000721995 /* PremiumBoardingStoriesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumBoardingStoriesController.swift; sourceTree = "<group>"; };
+		27D48B602A78F6E800721995 /* StoryViewMediaAreaViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryViewMediaAreaViewer.swift; sourceTree = "<group>"; };
+		27D48B622A790BA900721995 /* LocationPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPreviewController.swift; sourceTree = "<group>"; };
 		27D4F6DE261B776200CCAE03 /* Notices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Notices.swift; sourceTree = "<group>"; };
 		27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_send_spoiler.tgs; sourceTree = "<group>"; };
 		27D6042A294B756700588C21 /* DataStorageExceptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStorageExceptions.swift; sourceTree = "<group>"; };
@@ -3072,6 +3088,7 @@
 		270B7CB829F66638009C994C /* stories */ = {
 			isa = PBXGroup;
 			children = (
+				27C0CC612A86237E00C573F4 /* viewers */,
 				2719D80E2A16047100081079 /* media-list */,
 				270B7CB929F66649009C994C /* StoryModalController.swift */,
 				270B7CBB29F67361009C994C /* StoryView.swift */,
@@ -3083,11 +3100,12 @@
 				2718244E2A05413000AFBD4C /* StoryMyInputView.swift */,
 				271824502A08C60400AFBD4C /* StoryChatListView.swift */,
 				2719D8002A139B9D00081079 /* StoryRecordingView.swift */,
-				2719D8132A1774BC00081079 /* StoryViewersModalController.swift */,
 				2719D8152A1F555500081079 /* StoryChatContent.swift */,
 				27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */,
 				279B03552A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift */,
 				275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */,
+				27D48B422A72721200721995 /* StoryStealthModeController.swift */,
+				27D48B602A78F6E800721995 /* StoryViewMediaAreaViewer.swift */,
 			);
 			name = stories;
 			sourceTree = "<group>";
@@ -3406,6 +3424,7 @@
 				2703404F28212EE700D0156C /* ReactionCarouselView.swift */,
 				27841869285A05840010E0F1 /* StickersCarouselView.swift */,
 				2738A2E728A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift */,
+				27D48B4C2A72F87000721995 /* PremiumBoardingStoriesController.swift */,
 			);
 			name = features;
 			sourceTree = "<group>";
@@ -3439,6 +3458,14 @@
 				27F023D325A5C19F008F1C81 /* DesktopCapturerWindow.swift */,
 			);
 			name = capturer;
+			sourceTree = "<group>";
+		};
+		27C0CC612A86237E00C573F4 /* viewers */ = {
+			isa = PBXGroup;
+			children = (
+				2719D8132A1774BC00081079 /* StoryViewersModalController.swift */,
+			);
+			name = viewers;
 			sourceTree = "<group>";
 		};
 		27CE153E297966A6001F8CE8 /* categories */ = {
@@ -3481,6 +3508,10 @@
 				276F9B872931155D00E35997 /* menu_bio.tgs */,
 				27E60C1029ED35E200E10E39 /* menu_online.tgs */,
 				279B03582A4F1CB3007D2AB9 /* menu_stories.tgs */,
+				27D48B452A72739F00721995 /* menu_download_circle_lock.tgs */,
+				27D48B442A72739E00721995 /* menu_download_circle.tgs */,
+				27D48B462A7273A000721995 /* menu_eye_locked.tgs */,
+				27D48B472A7273A200721995 /* menu_eye_slash.tgs */,
 				27BCE4102A41C1090015E5EE /* menu_save_to_profile.tgs */,
 				2747FD3A2927BFBE0045B95C /* menu_hide.tgs */,
 				276279D5298D32EF0096F904 /* menu_more.tgs */,
@@ -3875,6 +3906,7 @@
 				D0D752C722F8A76100E2CB74 /* Geocoding.swift */,
 				D06C69542539F6BD00DD9005 /* LiveLocationViewController.swift */,
 				D06C695E253DC5DF00DD9005 /* LocationPreviewMapRowItem.swift */,
+				27D48B622A790BA900721995 /* LocationPreviewController.swift */,
 			);
 			name = location;
 			sourceTree = "<group>";
@@ -6277,6 +6309,7 @@
 				27F4F18228463BF100A3B4D4 /* premium_double.tgs in Resources */,
 				2786368027C7CF1200690B10 /* group_call_maxmin.tgs in Resources */,
 				27672EB226F8D62E00297DB4 /* 4.m4a in Resources */,
+				27D48B482A7273A200721995 /* menu_download_circle.tgs in Resources */,
 				27336731276231E80027441E /* menu_seen.tgs in Resources */,
 				27672EB326F8D63100297DB4 /* 5.m4a in Resources */,
 				27672EB426F8D63300297DB4 /* 6.m4a in Resources */,
@@ -6407,6 +6440,7 @@
 				27F2BBC527BE4E7B00A37463 /* code_note.tgs in Resources */,
 				2773A54625FA324B00AB45E9 /* voice_chat_mute.tgs in Resources */,
 				9F03681622771A9700456348 /* anim_mute.json in Resources */,
+				27D48B4B2A7273A200721995 /* menu_eye_slash.tgs in Resources */,
 				27F4F192284E401200A3B4D4 /* menu_gear.tgs in Resources */,
 				C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */,
 				27E969E12589172D00CB9F64 /* call down.mp3 in Resources */,
@@ -6418,6 +6452,7 @@
 				27F37A262850F8F200AC8B90 /* voice_dots.tgs in Resources */,
 				27803C0727A3E944007B0FA9 /* menu_folder_personal.tgs in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
+				27D48B4A2A7273A200721995 /* menu_eye_locked.tgs in Resources */,
 				2733674927625BD80027441E /* menu_promote.tgs in Resources */,
 				D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */,
 				27CB17682763886200DD25E0 /* menu_channel.tgs in Resources */,
@@ -6578,6 +6613,7 @@
 				27CB1764276383C200DD25E0 /* menu_video_chat.tgs in Resources */,
 				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
 				27A7D37E2600F58A00A67737 /* voip_group_recording_started.mp3 in Resources */,
+				27D48B492A7273A200721995 /* menu_download_circle_lock.tgs in Resources */,
 				27CE155E297966D8001F8CE8 /* emoji_category_heart.tgs in Resources */,
 				A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */,
 				2747FD422930FD570045B95C /* global_autoremove.tgs in Resources */,
@@ -6722,6 +6758,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27D48B432A72721200721995 /* StoryStealthModeController.swift in Sources */,
 				27A6977D273D0AED00B33415 /* GroupVideoView.swift in Sources */,
 				27A69770273D0ADF00B33415 /* GroupCallSpeakButton.swift in Sources */,
 				27A69771273D0ADF00B33415 /* GroupCallTitleView.swift in Sources */,
@@ -7162,6 +7199,7 @@
 				C21795E31E795955006A2AA3 /* SecretChatKeyViewController.swift in Sources */,
 				D0E3684824D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift in Sources */,
 				C2CE43E420E2CFE800656543 /* PlayerListController.swift in Sources */,
+				27D48B632A790BA900721995 /* LocationPreviewController.swift in Sources */,
 				9F21A7DC21C290E00037784F /* InstantPageTableItem.swift in Sources */,
 				D098C73A1D7E1C40007784E4 /* AuthController.swift in Sources */,
 				C2905E1C207E4D9E00990AD7 /* InstantPageAudioView.swift in Sources */,
@@ -7228,6 +7266,7 @@
 				D071E8B5214C1935001B6024 /* TouchBarEmojiItemView.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
 				27F4F17C2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift in Sources */,
+				27D48B4D2A72F87000721995 /* PremiumBoardingStoriesController.swift in Sources */,
 				27361ED4282122C700808241 /* StickerPremiumHolderView.swift in Sources */,
 				D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */,
 				270B7CBA29F66649009C994C /* StoryModalController.swift in Sources */,
@@ -7284,6 +7323,7 @@
 				277DFE6F27848AAB00F78396 /* ContextPeerMenuItem.swift in Sources */,
 				C2DF47E41DE84A67003AA6C0 /* ChatVoiceRowItem.swift in Sources */,
 				C2A5067B1DF5BE6900971A93 /* GeneralTextRowItem.swift in Sources */,
+				27D48B612A78F6E800721995 /* StoryViewMediaAreaViewer.swift in Sources */,
 				279BD41029BB2CFD00A8B640 /* InvitePrivacyLimitedController.swift in Sources */,
 				D05F392322FB45450040F341 /* DateSelectorModalController.swift in Sources */,
 				D00746CA257691760000DF74 /* StickerShimmerEffectView.swift in Sources */,
@@ -7735,8 +7775,8 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 9.7.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 10.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -7782,8 +7822,8 @@
 					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 9.7.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 10.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -7827,8 +7867,8 @@
 					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 9.7.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 10.0;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -7943,8 +7983,8 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 9.7.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 10.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";

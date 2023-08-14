@@ -113,15 +113,15 @@ private final class LocationAnnotationView : MKAnnotationView {
 }
 @available(macOS 10.13, *)
 class LocationPreviewMapRowItem: GeneralRowItem {
-    let map: TelegramMediaMap
     let peer: Peer?
     let context: AccountContext
+    let presentation: TelegramPresentationTheme
     fileprivate let pin: MapPin
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, context: AccountContext, map: TelegramMediaMap, peer: Peer?, viewType: GeneralViewType) {
-        self.map = map
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, context: AccountContext, latitude: Double, longitude: Double, peer: Peer?, viewType: GeneralViewType, presentation: TelegramPresentationTheme) {
         self.peer = peer
         self.context = context
-        self.pin = MapPin(coordinate: CLLocationCoordinate2D(latitude: map.latitude, longitude: map.longitude), account: context.account, peer: peer)
+        self.presentation = presentation
+        self.pin = MapPin(coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), account: context.account, peer: peer)
         super.init(initialSize, height: height, stableId: stableId, viewType: viewType)
     }
     
@@ -146,7 +146,11 @@ private final class LocationPreviewMapRowView : TableRowView, MKMapViewDelegate 
         
         
         mapView.showsZoomControls = true
-    //    mapView.showsUserLocation = true
+        mapView.showsUserLocation = true
+        if #available(macOS 11.0, *) {
+            mapView.showsPitchControl = true
+        }
+        mapView.showsBuildings = true
     }
     
     required init?(coder: NSCoder) {
@@ -199,9 +203,12 @@ private final class LocationPreviewMapRowView : TableRowView, MKMapViewDelegate 
             return
         }
         
+        mapView.appearance = item.presentation.appearance
+
+        
         let focus:(Bool)->Void = { [weak self, unowned item] animated in
-            let center = CLLocationCoordinate2D(latitude: item.map.latitude, longitude: item.map.longitude)
-            let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+            let center = item.pin.coordinate
+            let region = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
             self?.mapView.setRegion(region, animated: animated)
             self?.doNotUpdateRegion = false
         }

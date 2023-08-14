@@ -343,14 +343,15 @@ final class StoryContentContextImpl: StoryContentContext {
                         timestamp: item.timestamp,
                         expirationTimestamp: item.expirationTimestamp,
                         media: EngineMedia(media),
+                        mediaAreas: item.mediaAreas,
                         text: item.text,
                         entities: item.entities,
                         views: item.views.flatMap { views in
                             return EngineStoryItem.Views(
-                                seenCount: views.seenCount,
+                                seenCount: views.seenCount, reactedCount: views.reactedCount,
                                 seenPeers: views.seenPeerIds.compactMap { id -> EnginePeer? in
                                     return peers[id].flatMap(EnginePeer.init)
-                                }
+                                }, hasList: views.hasList
                             )
                         },
                         privacy: item.privacy.flatMap(EngineStoryPrivacy.init),
@@ -362,7 +363,8 @@ final class StoryContentContextImpl: StoryContentContext {
                         isContacts: item.isContacts,
                         isSelectedContacts: item.isSelectedContacts,
                         isForwardingDisabled: item.isForwardingDisabled,
-                        isEdited: item.isEdited
+                        isEdited: item.isEdited,
+                        myReaction: item.myReaction
                     )
                 }
                 var totalCount = peerStoryItemsView.items.count
@@ -373,6 +375,7 @@ final class StoryContentContextImpl: StoryContentContext {
                             timestamp: item.timestamp,
                             expirationTimestamp: Int32.max,
                             media: EngineMedia(item.media),
+                            mediaAreas: item.mediaAreas,
                             text: item.text,
                             entities: item.entities,
                             views: nil,
@@ -385,7 +388,8 @@ final class StoryContentContextImpl: StoryContentContext {
                             isContacts: false,
                             isSelectedContacts: false,
                             isForwardingDisabled: false,
-                            isEdited: false
+                            isEdited: false,
+                            myReaction: nil
                         ))
                         totalCount += 1
                     }
@@ -1208,14 +1212,15 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     timestamp: itemValue.timestamp,
                     expirationTimestamp: itemValue.expirationTimestamp,
                     media: EngineMedia(media),
+                    mediaAreas: itemValue.mediaAreas,
                     text: itemValue.text,
                     entities: itemValue.entities,
                     views: itemValue.views.flatMap { views in
                         return EngineStoryItem.Views(
-                            seenCount: views.seenCount,
+                            seenCount: views.seenCount, reactedCount: views.reactedCount,
                             seenPeers: views.seenPeerIds.compactMap { id -> EnginePeer? in
                                 return peers[id].flatMap(EnginePeer.init)
-                            }
+                            }, hasList: views.hasList
                         )
                     },
                     privacy: itemValue.privacy.flatMap(EngineStoryPrivacy.init),
@@ -1227,7 +1232,8 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     isContacts: itemValue.isContacts,
                     isSelectedContacts: itemValue.isSelectedContacts,
                     isForwardingDisabled: itemValue.isForwardingDisabled,
-                    isEdited: itemValue.isEdited
+                    isEdited: itemValue.isEdited,
+                    myReaction: itemValue.myReaction
                 )
                 
                 let mainItem = StoryContentItem(

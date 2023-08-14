@@ -63,7 +63,7 @@ private func entries(_ state:LocationPreviewState, arguments: LocationPreviewArg
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_map, equatable: InputDataEquatable(state.map), comparable: nil, item: { initialSize, stableId in
-        return LocationPreviewMapRowItem(initialSize, height: 330, stableId: stableId, context: arguments.context, map: state.map, peer: state.peer, viewType: .legacy)
+        return LocationPreviewMapRowItem(initialSize, height: 330, stableId: stableId, context: arguments.context, latitude: state.map.latitude, longitude: state.map.longitude, peer: state.peer, viewType: .legacy, presentation: theme)
     }))
     index += 1
     
@@ -100,7 +100,7 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Location Preview")
+    let controller = InputDataController(dataSignal: signal, title: strings().locationPreviewTitle)
     
     controller.afterDisappear = {
         disposable.dispose()
@@ -108,7 +108,7 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
     
     var close: (()->Void)? = nil
     
-    let modalInteractions = ModalInteractions(acceptTitle: "Open in Google Maps", accept: {
+    let modalInteractions = ModalInteractions(acceptTitle: strings().locationPreviewOpenInMaps, accept: {
         close?()
         execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", stateValue.with { $0.map.latitude })),\(String(format:"%f", stateValue.with { $0.map.longitude }))", false))
     }, height: 50, singleButton: true)
@@ -123,7 +123,7 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
         return .none
     }
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(300, 330))
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(380, 330))
     
     close = { [weak modalController] in
         modalController?.close()

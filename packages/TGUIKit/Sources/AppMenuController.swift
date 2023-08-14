@@ -579,6 +579,9 @@ final class AppMenuController : NSObject  {
                     panel = nil
                 })
             }
+            
+            self.onClose()
+            
             self.windows.removeAll()
             self.parent?.removeAllHandlers(for: self)
             self.strongHolder = nil
@@ -594,7 +597,6 @@ final class AppMenuController : NSObject  {
                 })
             }
             
-            self.onClose()
         }
         self.menu.isShown = false
         self.isClosed = true

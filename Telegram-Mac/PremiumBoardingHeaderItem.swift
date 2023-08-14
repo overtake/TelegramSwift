@@ -19,11 +19,13 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
     let peer: Peer?
     let context: AccountContext
     let status: PremiumEmojiStatusInfo?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isPremium: Bool, peer: Peer?, emojiStatus: PremiumEmojiStatusInfo?, source: PremiumLogEventsSource, premiumText: NSAttributedString?, viewType: GeneralViewType) {
+    let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, presentation: TelegramPresentationTheme, isPremium: Bool, peer: Peer?, emojiStatus: PremiumEmojiStatusInfo?, source: PremiumLogEventsSource, premiumText: NSAttributedString?, viewType: GeneralViewType) {
         
         self.context = context
         self.peer = peer
         self.status = emojiStatus
+        self.presentation = presentation
         
         let title: NSAttributedString
         if let peer = peer {
@@ -34,7 +36,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                 } else {
                     text = strings().premiumBoardingPeerGiftTitle(peer.displayTitle, "\(months)")
                 }
-                title = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                title = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
                     return (NSAttributedString.Key.link.rawValue, contents)
                 }))
             } else if let status = emojiStatus {
@@ -43,7 +45,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                     let packName: String = info.title
                     let packFile: TelegramMediaFile = status.items.first?.file ?? status.file
                     
-                    let attr = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusCustomTitle(peer.displayTitle, packName), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                    let attr = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusCustomTitle(peer.displayTitle, packName), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
                         return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
                             showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.emoji(.name(info.shortName))]), for: context.window)
                         }))
@@ -56,19 +58,19 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                     
                     title = attr
                 } else {
-                    title = .initialize(string: strings().premiumBoardingPeerStatusDefaultTitle(peer.displayTitle), color: theme.colors.text, font: .medium(.header))
+                    title = .initialize(string: strings().premiumBoardingPeerStatusDefaultTitle(peer.displayTitle), color: presentation.colors.text, font: .medium(.header))
                 }
             } else {
-                title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: presentation.colors.peerAvatarVioletBottom), linkAttribute: { contents in
                     return (NSAttributedString.Key.link.rawValue, contents)
                 }))
             }
             
         } else {
             if isPremium {
-                title = .initialize(string: strings().premiumBoardingGotTitle, color: theme.colors.text, font: .medium(.header))
+                title = .initialize(string: strings().premiumBoardingGotTitle, color: presentation.colors.text, font: .medium(.header))
             } else {
-                title = .initialize(string: strings().premiumBoardingTitle, color: theme.colors.text, font: .medium(.header))
+                title = .initialize(string: strings().premiumBoardingTitle, color: presentation.colors.text, font: .medium(.header))
             }
         }
         self.titleLayout = .init(title, alignment: .center)
@@ -85,11 +87,11 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                 } else {
                     text = strings().premiumBoardingPeerGiftInfo
                 }
-                _ = info.append(string: text, color: theme.colors.text, font: .normal(.text))
+                _ = info.append(string: text, color: presentation.colors.text, font: .normal(.text))
             } else if let _ = peer?.emojiStatus {
-                _ = info.append(string: strings().premiumBoardingPeerStatusInfo, color: theme.colors.text, font: .normal(.text))
+                _ = info.append(string: strings().premiumBoardingPeerStatusInfo, color: presentation.colors.text, font: .normal(.text))
             } else {
-                _ = info.append(string: strings().premiumBoardingPeerInfo, color: theme.colors.text, font: .normal(.text))
+                _ = info.append(string: strings().premiumBoardingPeerInfo, color: presentation.colors.text, font: .normal(.text))
             }
             info.detectBoldColorInString(with: .medium(.text))
             
@@ -97,7 +99,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
             if isPremium, let premiumText = premiumText {
                 info = premiumText.mutableCopy() as! NSMutableAttributedString
             } else {
-                _ = info.append(string: strings().premiumBoardingInfo, color: theme.colors.text, font: .normal(.text))
+                _ = info.append(string: strings().premiumBoardingInfo, color: presentation.colors.text, font: .normal(.text))
                 info.detectBoldColorInString(with: .medium(.text))
             }
         }
@@ -151,7 +153,10 @@ private final class PremiumBoardingHeaderView : TableRowView {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.listBackground
+        guard let item = item as? PremiumBoardingHeaderItem else {
+            return theme.colors.listBackground
+        }
+        return item.presentation.colors.listBackground
     }
     
     
