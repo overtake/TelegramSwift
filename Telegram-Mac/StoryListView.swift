@@ -987,6 +987,13 @@ final class StoryListView : Control, Notifable {
             previous.disappear()
         }
         
+        if previous?.story?.id != entry.item.storyItem.id {
+            if let text = self.text {
+                performSubviewRemoval(text, animated: false)
+                self.text = nil
+            }
+        }
+        
         let story = entry.item
         
 
@@ -1048,6 +1055,7 @@ final class StoryListView : Control, Notifable {
         self.updateStoryState(current.state)
 
         self.inputView.update(entry.item, animated: false)
+        
         
         self.updateText(story.storyItem, state: .concealed, animated: false, context: context)
         

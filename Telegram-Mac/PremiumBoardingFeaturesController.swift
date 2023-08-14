@@ -36,7 +36,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.highlightColor = NSColor(0x976FFF)
         slideView.moveOnTime = false
         
-        slideView.backgroundColor = presentation.colors.background
+        //slideView.backgroundColor = presentation.colors.background
         
         addSubview(dismiss)
         
