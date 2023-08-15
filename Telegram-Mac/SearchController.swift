@@ -128,13 +128,15 @@ final class SearchControllerArguments {
     let clearRecent:()->Void
     let openTopPeer:(PopularItemType)->Void
     let setPeerAsTag:(Peer)->Void
-    init(context: AccountContext, target: SearchController.Target, removeRecentPeerId:@escaping(PeerId)->Void, clearRecent:@escaping()->Void, openTopPeer:@escaping(PopularItemType)->Void, setPeerAsTag: @escaping(Peer)->Void) {
+    let openStory:(StoryInitialIndex?)->Void
+    init(context: AccountContext, target: SearchController.Target, removeRecentPeerId:@escaping(PeerId)->Void, clearRecent:@escaping()->Void, openTopPeer:@escaping(PopularItemType)->Void, setPeerAsTag: @escaping(Peer)->Void, openStory:@escaping(StoryInitialIndex?)->Void) {
         self.context = context
         self.target = target
         self.removeRecentPeerId = removeRecentPeerId
         self.clearRecent = clearRecent
         self.openTopPeer = openTopPeer
         self.setPeerAsTag = setPeerAsTag
+        self.openStory = openStory
     }
     
 }
@@ -198,9 +200,9 @@ private struct SearchSecretChatWrapper : Equatable {
 
 
 fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
-    case localPeer(Peer, Int, SearchSecretChatWrapper?, UnreadSearchBadge, Bool, Bool)
+    case localPeer(Peer, Int, SearchSecretChatWrapper?, UnreadSearchBadge, Bool, Bool, PeerStoryStats?)
     case topic(EngineChatList.Item, Int, UnreadSearchBadge, Bool, Bool)
-    case recentlySearch(Peer, Int, SearchSecretChatWrapper?, PeerStatusStringResult, UnreadSearchBadge, Bool)
+    case recentlySearch(Peer, Int, SearchSecretChatWrapper?, PeerStatusStringResult, UnreadSearchBadge, Bool, PeerStoryStats?)
     case globalPeer(FoundPeer, UnreadSearchBadge, Int)
     case savedMessages(Peer)
     case message(Message, String, CombinedPeerReadState?, MessageHistoryThreadData?, Int)
@@ -209,7 +211,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     case emptySearch
     var stableId: ChatListSearchEntryStableId {
         switch self {
-        case let .localPeer(peer, _, secretChat, _, _, _):
+        case let .localPeer(peer, _, secretChat, _, _, _, _):
             if let secretChat = secretChat {
                 return .secretChat(secretChat.peerId)
             }
@@ -224,7 +226,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return .savedMessages
         case let .separator(_,index, _):
             return .separator(index)
-        case let .recentlySearch(peer, _, secretChat, _, _, _):
+        case let .recentlySearch(peer, _, secretChat, _, _, _, _):
             if let secretChat = secretChat {
                 return .secretChat(secretChat.peerId)
             }
@@ -238,7 +240,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     
     var index:Int {
         switch self {
-        case let .localPeer(_,index, _, _, _, _):
+        case let .localPeer(_,index, _, _, _, _, _):
             return index
         case let .topic(_,index, _, _, _):
             return index
@@ -250,7 +252,7 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             return -1
         case let .separator(_,index, _):
             return index
-        case let .recentlySearch(_,index, _, _, _, _):
+        case let .recentlySearch(_,index, _, _, _, _, _):
             return index
         case let .topPeers(index, _, _, _, _, _, _):
             return index
@@ -261,8 +263,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
     
     static func ==(lhs: ChatListSearchEntry, rhs: ChatListSearchEntry) -> Bool {
         switch lhs {
-        case let .localPeer(lhsPeer, index, isSecretChat, badge, drawBorder, canAddAsTag):
-            if case .localPeer(let rhsPeer, index, isSecretChat, badge, drawBorder, canAddAsTag) = rhs, lhsPeer.isEqual(rhsPeer) {
+        case let .localPeer(lhsPeer, index, isSecretChat, badge, drawBorder, canAddAsTag, peerStoryStats):
+            if case .localPeer(let rhsPeer, index, isSecretChat, badge, drawBorder, canAddAsTag, peerStoryStats) = rhs, lhsPeer.isEqual(rhsPeer) {
                 return true
             } else {
                 return false
@@ -273,8 +275,8 @@ fileprivate enum ChatListSearchEntry: Comparable, Identifiable {
             } else {
                 return false
             }
-        case let .recentlySearch(lhsPeer, index, isSecretChat, status, badge, drawBorder):
-            if case .recentlySearch(let rhsPeer, index, isSecretChat, status, badge, drawBorder) = rhs, lhsPeer.isEqual(rhsPeer) {
+        case let .recentlySearch(lhsPeer, index, isSecretChat, status, badge, drawBorder, storyStats):
+            if case .recentlySearch(let rhsPeer, index, isSecretChat, status, badge, drawBorder, storyStats) = rhs, lhsPeer.isEqual(rhsPeer) {
                 return true
             } else {
                 return false
@@ -492,15 +494,15 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
             return RecentPeerRowItem(initialSize, peer: foundPeer.peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, statusStyle:ControlStyle(font:.normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: status, borderType: [.Right], contextMenuItems: {
                 return peerContextMenuItems(peer: foundPeer.peer, pinnedItems: pinnedItems, arguments: arguments)
             }, unreadBadge: badge)
-        case let .localPeer(peer, _, secretChat, badge, drawBorder, canAddAsTag):
+        case let .localPeer(peer, _, secretChat, badge, drawBorder, canAddAsTag, storyStats):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: false, controlAction: {
                 arguments.setPeerAsTag(peer)
             }, contextMenuItems: {
                 return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
-            }, unreadBadge: badge, canAddAsTag: canAddAsTag)
+            }, unreadBadge: badge, canAddAsTag: canAddAsTag, storyStats: storyStats, openStory: arguments.openStory)
         case let .topic(item, _, badge, border, canAddAsTag):
             return SearchTopicRowItem(initialSize, stableId: entry.stableId, item: item, context: arguments.context)
-        case let .recentlySearch(peer, _, secretChat, status, badge, drawBorder):
+        case let .recentlySearch(peer, _, secretChat, status, badge, drawBorder, storyStats):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: secretChat != nil ? theme.colors.accent : theme.colors.text, highlightColor:.white), statusStyle: ControlStyle(font:.normal(.text), foregroundColor: status.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor ?? theme.colors.grayText, highlightColor:.white), status: status.status.string, borderType: [.Right], drawCustomSeparator: drawBorder, isLookSavedMessage: true, drawLastSeparator: true, canRemoveFromRecent: true, controlAction: {
                 if let secretChat = secretChat {
                     arguments.removeRecentPeerId(secretChat.peerId)
@@ -509,7 +511,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ChatListSearchEntry
                 }
             }, contextMenuItems: {
                 return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
-            }, unreadBadge: badge)
+            }, unreadBadge: badge, storyStats: storyStats)
         case let .savedMessages(peer):
             return RecentPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, titleStyle: ControlStyle(font: .medium(.text), foregroundColor: theme.colors.text, highlightColor:.white), borderType: [.Right], drawCustomSeparator: true, isLookSavedMessage: true, contextMenuItems: {
                 return peerContextMenuItems(peer: peer, pinnedItems: pinnedItems, arguments: arguments)
@@ -689,7 +691,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 var all = query.transformKeyboard
                 all.insert(query.lowercased(), at: 0)
                 all = all.uniqueElements
-                let localPeers:Signal<([RenderedPeer], [PeerId: UnreadSearchBadge]), NoError> = combineLatest(all.map {
+                let localPeers:Signal<([RenderedPeer], [PeerId: UnreadSearchBadge], EngineDataMap<TelegramEngine.EngineData.Item.Peer.StoryStats>.Result), NoError> = combineLatest(all.map {
                     return context.account.postbox.searchPeers(query: $0)
                 }) |> map { result in
                     return Array(result.joined())
@@ -701,7 +703,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return .peer(id: peer.peerId, handleThreads: peer.peer?.isForum == true)
                     }
                     
-                    return context.account.postbox.unreadMessageCountsView(items: items) |> take(1) |> map { values in
+                    return context.account.postbox.unreadMessageCountsView(items: items) |> take(1) |> map { values -> ([RenderedPeer], [PeerId: UnreadSearchBadge]) in
                         var unread:[PeerId: UnreadSearchBadge] = [:]
                         for peerView in peerViews {
                             let isMuted = peerView.isMuted
@@ -711,6 +713,15 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             }
                         }
                         return (peers, unread)
+                    } |> mapToSignal { peers, unread in
+                        
+                        return context.engine.data.subscribe(
+                            EngineDataMap(
+                                peers.map { $0.peerId }.map(TelegramEngine.EngineData.Item.Peer.StoryStats.init(id:))
+                            )
+                        ) |> map { stats in
+                            return (peers, unread, stats)
+                        }
                     }
                 }
                 
@@ -739,7 +750,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             if let peer = inLinkPeer {
                                 if ids[peer.id] == nil {
                                     ids[peer.id] = peer.id
-                                    entries.append(.localPeer(peer, index, nil, .none, true, false))
+                                    entries.append(.localPeer(peer, index, nil, .none, true, false, nil))
                                     index += 1
                                 }
                             }
@@ -752,7 +763,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                         if rendered.peers[rendered.peerId] is TelegramSecretChat {
                                             wrapper = SearchSecretChatWrapper(peerId: rendered.peerId)
                                         }
-                                        entries.append(.localPeer(peer, index, wrapper, peers.1[rendered.peerId] ?? .none, true, true))
+                                        entries.append(.localPeer(peer, index, wrapper, peers.1[rendered.peerId] ?? .none, true, true, peers.2[peer.id] ?? nil))
                                         index += 1
                                     }
                                     
@@ -827,7 +838,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     var local: [ChatListSearchEntry] = []
                                     var index = 1000
                                     for peer in _local {
-                                        local.append(.localPeer(peer.peer, index, nil, unread[peer.peer.id] ?? .none, true, true))
+                                        local.append(.localPeer(peer.peer, index, nil, unread[peer.peer.id] ?? .none, true, true, nil))
                                         index += 1
                                     }
                                     
@@ -986,8 +997,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         }
                         return true
                     }
-                } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), NoError> in
-                    return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer(id: $0.peerId, handleThreads: peerViewMainPeer($0)?.isForum == true)}) |> map { values in
+                } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge], EngineDataMap<TelegramEngine.EngineData.Item.Peer.StoryStats>.Result), NoError> in
+                    return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer(id: $0.peerId, handleThreads: peerViewMainPeer($0)?.isForum == true)}) |> map { values -> ([PeerView], [PeerId: UnreadSearchBadge]) in
                             
                             var unread:[PeerId: UnreadSearchBadge] = [:]
                             for peerView in peerViews {
@@ -998,7 +1009,15 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 }
                             }
                             return (peerViews, unread)
+                    } |> mapToSignal { peerViews, unread in
+                        return context.engine.data.subscribe(
+                            EngineDataMap(
+                                peerViews.map { $0.peerId }.map(TelegramEngine.EngineData.Item.Peer.StoryStats.init(id:))
+                            )
+                        ) |> map { stats in
+                            return (peerViews, unread, stats)
                         }
+                    }
                     
                 } |> deliverOnPrepareQueue
                 
@@ -1059,7 +1078,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                     }
                                     let result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.title)))
 
-                                    entries.append(.recentlySearch(peer, i, wrapper, result, recent.1[peerView.peerId] ?? .none, true))
+                                    entries.append(.recentlySearch(peer, i, wrapper, result, recent.1[peerView.peerId] ?? .none, true, recent.2[peerView.peerId] ?? nil))
                                     i += 1
                                 }
 
@@ -1341,6 +1360,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             }
         }, setPeerAsTag: { peer in
             setPeerAsTag?(peer)
+        }, openStory: { index in
+            StoryModalController.ShowStories(context: context, isHidden: false, initialId: index, singlePeer: true)
         })
         super.init(frame:frame)
         self.bar = .init(height: 0)
