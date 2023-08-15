@@ -155,6 +155,10 @@ final class StoryInteraction : InterfaceObserver {
         var entryId: PeerId? = nil
         var closed: Bool = false
         
+        var wideInput: Bool {
+            return inputInFocus || hasPopover
+        }
+        
         var isAreaActivated: Bool = false
         
         
@@ -928,7 +932,7 @@ private final class StoryViewController: Control, Notifable {
             layout.interactions = .init(processURL: { url in
                 if let url = url as? String {
                     if url == "premium" {
-                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery), for: context.window)
+                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery, presentation: storyTheme), for: context.window)
                     }
                 }
             })
@@ -1528,8 +1532,10 @@ private final class StoryViewController: Control, Notifable {
         }
         var resetInput = false
         if self.arguments?.interaction.presentation.input.inputText.isEmpty == true, hasReactions {
-            self.resetInputView()
-            resetInput = true
+            if self.arguments?.interaction.presentation.hasPopover == false {
+                self.resetInputView()
+                resetInput = true
+            }
         }
         
         self.arguments?.interaction.update { current in
@@ -2400,7 +2406,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     if let file = file, let text = file.customEmojiText {
                         if file.isPremiumEmoji, !context.isPremium {
                             showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: storyTheme), for: context.window)
                             })
                         } else {
                             sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil, nil)]), entryId, id, .reaction(reaction))
@@ -2416,7 +2422,7 @@ final class StoryModalController : ModalViewController, Notifable {
         
         let arguments = StoryArguments(context: context, interaction: self.interactions, chatInteraction: chatInteraction, showEmojiPanel: { [weak self] control in
             if let panel = self?.entertainment {
-                showPopover(for: control, with: panel, edge: .maxX, inset:NSMakePoint(0 + 38, 10), delayBeforeShown: 0.1)
+                showPopover(for: control, with: panel, edge: .maxX, inset:NSMakePoint(0 + 38, 10), delayBeforeShown: 0)
             }
         }, showReactionsPanel: { [weak self, weak interactions] in
             if let entryId = interactions?.presentation.entryId {
@@ -2486,6 +2492,9 @@ final class StoryModalController : ModalViewController, Notifable {
             
         }, share: share, copyLink: copyLink, startRecording: { [weak self] autohold in
             guard let `self` = self else {
+                return
+            }
+            if self.context.peerId == self.interactions.presentation.entryId {
                 return
             }
             if !self.interactions.presentation.canRecordVoice {
@@ -2875,6 +2884,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     || findModal(InputDataModalController.self, isAboveTo: self) != nil
                     || findModal(ShareModalController.self, isAboveTo: self) != nil
                     || findModal(StoryStealthModeController.self, isAboveTo: self) != nil
+                    || findModal(PremiumBoardingController.self, isAboveTo: self) != nil
                     return current
                 }
             }

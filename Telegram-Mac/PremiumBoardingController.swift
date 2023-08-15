@@ -185,9 +185,9 @@ private final class Arguments {
     let showTerms:()->Void
     let showPrivacy:()->Void
     let openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void
-    let openFeature:(PremiumValue)->Void
+    let openFeature:(PremiumValue, Bool)->Void
     let togglePeriod:(PremiumPeriod)->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue)->Void, togglePeriod:@escaping(PremiumPeriod)->Void) {
+    init(context: AccountContext, presentation: TelegramPresentationTheme, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue, Bool)->Void, togglePeriod:@escaping(PremiumPeriod)->Void) {
         self.context = context
         self.presentation = presentation
         self.showPrivacy = showPrivacy
@@ -424,7 +424,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(value), comparable: nil, item: { initialSize, stableId in
-            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, callback: arguments.openFeature)
+            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, callback: { value in
+                arguments.openFeature(value, true)
+            })
         }))
         index += 1
     }
@@ -848,11 +850,11 @@ final class PremiumBoardingController : ModalViewController {
         return PremiumBoardingView.self
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         if self.openFeatures {
             if let value = self.source.features {
-                arguments?.openFeature(value)
+                arguments?.openFeature(value, false)
             }
         }
     }
@@ -873,8 +875,8 @@ final class PremiumBoardingController : ModalViewController {
         
         PremiumLogEvents.promo_screen_show(source).send(context: context)
         
-        let close: ()->Void = {
-            closeAllModals()
+        let close: ()->Void = { [weak self] in
+            self?.close()
         }
 
         var canMakePayment: Bool = true
@@ -906,7 +908,7 @@ final class PremiumBoardingController : ModalViewController {
             context.bindings.rootNavigation().push(controller)
             
             close()
-        }, openFeature: { [weak self] value in
+        }, openFeature: { [weak self] value, animated in
             guard let strongSelf = self else {
                 return
             }
@@ -914,7 +916,7 @@ final class PremiumBoardingController : ModalViewController {
                 _ = strongSelf?.escapeKeyAction()
             }, makeAcceptView: { [weak strongSelf] in
                 return strongSelf?.genericView.makeAcceptView()
-            }), animated: true)
+            }), animated: animated)
         }, togglePeriod: { period in
             updateState { current in
                 var current = current
@@ -1190,11 +1192,6 @@ final class PremiumBoardingController : ModalViewController {
                     needToShow = false
                 }
             })
-
-            
-            
-
-
         }
         
       

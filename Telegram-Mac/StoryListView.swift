@@ -747,7 +747,7 @@ final class StoryListView : Control, Notifable {
                 
 
         
-        if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.inputInFocus || value.inputRecording != nil || value.hasReactions {
+        if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.wideInput || value.inputRecording != nil || value.hasReactions {
             let current: Control
             if let view = self.pauseOverlay {
                 current = view
@@ -782,7 +782,7 @@ final class StoryListView : Control, Notifable {
             self.controls.change(opacity: isControlHid ? 0 : 1, animated: animated)
             self.navigator.change(opacity: isControlHid ? 0 : 1, animated: animated)
         }
-        self.text?.change(opacity: isControlHid || value.inputInFocus ? 0 : 1, animated: animated)
+        self.text?.change(opacity: isControlHid || value.wideInput ? 0 : 1, animated: animated)
 
         self.updateSides(animated: animated)
     }
@@ -797,7 +797,7 @@ final class StoryListView : Control, Notifable {
         let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
         let aspect = StoryView.size.aspectFitted(maxSize)
         let containerSize: NSSize
-        if let arguments = self.arguments, arguments.interaction.presentation.inputInFocus || arguments.interaction.presentation.inputRecording != nil {
+        if let arguments = self.arguments, arguments.interaction.presentation.wideInput || arguments.interaction.presentation.inputRecording != nil {
             containerSize = NSMakeSize(min(aspect.width + 60, size.width - 20), aspect.height)
         } else {
             containerSize = aspect

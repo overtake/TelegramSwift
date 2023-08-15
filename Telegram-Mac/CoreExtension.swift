@@ -1129,6 +1129,10 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
         return false
     }
     
+    if message.media.first is TelegramMediaStory {
+        return false
+    }
+    
     if message.peers[message.id.peerId] is TelegramSecretChat {
         return false
     }
