@@ -334,8 +334,8 @@ public extension TableScrollState {
     
     var isNone: Bool {
         switch self {
-        case .none:
-            return true
+        case let .none(animation):
+            return animation != nil
         default:
             return false
         }
@@ -2613,7 +2613,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[(Int, TableRowItem)] = []
                 
-        if transition.grouping && !transition.isEmpty {
+        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
             self.tableView.beginUpdates()
         }
         
@@ -2634,7 +2634,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
-        if transition.grouping && !transition.isEmpty {
+        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
             self.tableView.endUpdates()
         }
                 
