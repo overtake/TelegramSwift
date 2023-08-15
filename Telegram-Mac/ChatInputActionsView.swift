@@ -157,7 +157,9 @@ class ChatInputActionsView: View {
             }
             return emoji
         }
-        return chatInteraction.context.bindings.entertainment()
+        let controller = chatInteraction.context.bindings.entertainment()
+        controller.update(with: chatInteraction)
+        return controller
     }
     
     private func addHoverObserver() {
