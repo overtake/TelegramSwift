@@ -183,7 +183,8 @@ private final class MultiTargetAnimationContext {
     }
     
     deinit {
-       
+       var bp = 0
+        bp += 1
     }
     
     func add(_ handlers: Handlers) -> Int {
@@ -623,7 +624,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 data = account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: sync)
             }
             if file.isAnimatedSticker || file.isVideoSticker || (file.isCustomEmoji && (file.isSticker || file.isVideo)) {
-                self.resourceDisposable.set((data |> map { resourceData -> Data? in
+                self.resourceDisposable.set((data |> deliverOn(lottieThreadPool) |> map { resourceData -> Data? in
                     if resourceData.complete {
                         if file.isWebm {
                             return resourceData.path.data(using: .utf8)!
