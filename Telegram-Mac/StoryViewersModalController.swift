@@ -26,7 +26,13 @@ private final class StoryViewerEmptyRowItem : GeneralRowItem {
         self.state = state
         self.context = context
         self.presentation = presentation
-        self.text = .init(.initialize(string: strings().storyAlertViewsExpired, color: presentation.colors.grayText, font: .normal(.text)), alignment: .center)
+        let string: String
+        if state.views?.totalCount == 0 {
+            string = strings().storyAlertNoViews
+        } else {
+            string = strings().storyAlertViewsExpired
+        }
+        self.text = .init(.initialize(string: string, color: presentation.colors.grayText, font: .normal(.text)), alignment: .center)
         
         if !context.isPremium {
             let attr = parseMarkdownIntoAttributedString(strings().storyViewersPremiumUnlock, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.grayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.link), linkAttribute: { contents in
@@ -424,6 +430,7 @@ private final class Arguments {
 private struct State : Equatable {
     var item: EngineStoryItem
     var views: EngineStoryViewListContext.State?
+    var previous: EngineStoryViewListContext.State?
     var isLoadingMore: Bool = false
     var listMode: EngineStoryViewListContext.ListMode
     var sortMode: EngineStoryViewListContext.SortMode
@@ -458,7 +465,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     var needToLoad: Bool = true
     
-    if let list = state.views {
+    var views = state.views
+    if views == nil {
+        views = state.previous
+    } else if views?.items.count == 0, views?.totalCount != 0 {
+        views = state.previous
+    }
+    
+    if let list = views {
         
         var items: [Tuple] = []
         if !arguments.context.isPremium, state.item.views?.reactedCount == 0 {
@@ -499,7 +513,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         } else {
             var additionHeight: CGFloat = 0
             if state.listMode == .everyone, state.query.isEmpty {
-                if state.views?.totalCount == items.count, state.item.views?.seenCount != state.views?.totalCount {
+                if list.totalCount == items.count, state.item.views?.seenCount != list.totalCount {
                     let text: String
                     if arguments.context.isPremium {
                         text = strings().storyViewersNotRecorded
@@ -526,6 +540,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 index += 1
             }
         }
+    } else {
+        var bp = 0
+        bp += 1
     }
     
     // entries
@@ -639,7 +656,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(item: story, views: nil, listMode: .everyone, sortMode: .reactionsFirst)
+    let initialState = State(item: story, views: nil, previous: nil, listMode: .everyone, sortMode: .reactionsFirst)
     
     let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -742,6 +759,12 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         } else {
             contextList = context.engine.messages.storyViewList(id: story.id, views: initialViews, listMode: listMode, sortMode: sortMode, searchQuery: query, parentSource: parentSource)
         }
+        var previous = stateValue.with { $0.views }
+        updateState { current in
+            var current = current
+            current.previous = previous
+            return current
+        }
         storyContext.set(.single(contextList))
     }
 
@@ -769,7 +792,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
                 current.sortMode = .reactionsFirst
                 return current
             }
-        }, itemImage: MenuAnimation.menu_check_selected.value))
+        }, itemImage: stateValue.with { $0.sortMode == .reactionsFirst } ? MenuAnimation.menu_check_selected.value : nil))
         
         menu.addItem(ContextMenuItem(strings().storyViewersRecentFirst, handler: {
             updateState { current in
@@ -777,7 +800,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
                 current.sortMode = .recentFirst
                 return current
             }
-        }))
+        }, itemImage: stateValue.with { $0.sortMode == .recentFirst } ? MenuAnimation.menu_check_selected.value : nil))
         return menu
     }
     
@@ -823,9 +846,11 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     }))
     
     var previous = stateValue.with { $0 }
-    actionsDisposable.add(statePromise.get().start(next: { value in
+    actionsDisposable.add((statePromise.get()).start(next: { value in
         if previous.query != value.query || previous.sortMode != value.sortMode || previous.listMode != value.listMode {
-            updateContext()
+            DispatchQueue.main.async {
+                updateContext()
+            }
         }
         previous = value
     }))

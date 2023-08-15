@@ -105,7 +105,9 @@ final class StoryControlsView : Control {
      
         closeFriends.set(handler: { [weak self] control in
             if let story = self?.story {
-                self?.arguments?.showFriendsTooltip(control, story)
+                if story.peerId != self?.arguments?.context.peerId {
+                    self?.arguments?.showFriendsTooltip(control, story)
+                }
             }
         }, for: .Click)
         

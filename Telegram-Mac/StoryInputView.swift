@@ -225,7 +225,7 @@ private final class StoryLikeActionButton: Control {
             return
         }
         
-        if let reaction = story.storyItem.myReaction, !state.inputInFocus {
+        if let reaction = story.storyItem.myReaction, !state.wideInput {
             if self.myReaction != reaction {
                 if let view = self.reaction {
                     performSublayerRemoval(view, animated: animated, scale: true)
@@ -246,7 +246,7 @@ private final class StoryLikeActionButton: Control {
             self.myReaction = nil
         }
         
-        if state.inputInFocus {
+        if state.wideInput {
             control.set(image: state.emojiState == .emoji ? emoji_image : stickers_image, for: .Normal)
             control.set(image: state.emojiState == .emoji ? emoji_image_active : stickers_image_active, for: .Highlight)
         } else {
@@ -649,14 +649,13 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             textView.inputView.isSelectable = true
             textView.inputView.isEditable = !arguments.interaction.presentation.inTransition
         } else {
-            switch self.inputState {
-            case .focus:
+            if arguments.interaction.presentation.wideInput {
                 size = NSMakeSize(min(supersize.width + 60, wWdith - 20), self.textViewSize(self.textView).height + 16)
                 textView.inputView.textContainer?.maximumNumberOfLines = 0
                 textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
                 textView.inputView.isSelectable = true
                 textView.inputView.isEditable = !arguments.interaction.presentation.inTransition
-            case .none:
+            } else {
                 size = NSMakeSize(supersize.width, self.textViewSize(self.textView).height + 16)
                 textView.inputView.textContainer?.maximumNumberOfLines = 1
                 textView.inputView.textContainer?.lineBreakMode = .byTruncatingTail
@@ -799,7 +798,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 return
             }
             let state = arguments.interaction.presentation
-            if state.inputInFocus {
+            if state.wideInput {
                 self?.arguments?.showEmojiPanel(control)
             } else {
                 self?.like(.init(item: .builtin("❤️".withoutColorizer), fromRect: nil), resetIfNeeded: true)

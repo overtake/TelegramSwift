@@ -352,7 +352,7 @@ fileprivate class PreviewSenderView : Control {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(self.textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction)
+                current = InputSwapSuggestionsPanel(self.textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: self.theme)
                 self.textInputSuggestionsView = current
                 isNew = true
             }

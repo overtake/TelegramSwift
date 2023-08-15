@@ -1362,9 +1362,11 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
                 selectInteraction.action(peerId, nil)
             }, customTheme: .initialize(theme))
         case let .separator(text, _):
-            return SeparatorRowItem(initialSize, entry.stableId, string: text)
+            let theme = share.presentation ?? theme
+            return SeparatorRowItem(initialSize, entry.stableId, string: text, customTheme: .initialize(theme))
         case .emptySearch:
-            return SearchEmptyRowItem(initialSize, stableId: entry.stableId)
+            let theme = share.presentation ?? theme
+            return SearchEmptyRowItem(initialSize, stableId: entry.stableId, icon: theme.icons.emptySearch, customTheme: .initialize(theme))
         case let .folders(filters, current):
             return ChatListRevealItem(initialSize, context: context, tabs: filters, selected: current, counters: ChatListFilterBadges(total: 0, filters: []), action: selectInteraction.updateFolder, presentation: share.presentation ?? theme)
         }
