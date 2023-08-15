@@ -275,13 +275,18 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self.leftController.tabController.select(index: self.leftController.chatIndex)
             self.leftController.globalSearch(search)
         }, entertainment: { [weak self] () -> EntertainmentViewController in
-            guard let `self` = self else {
-                return EntertainmentViewController.init(size: NSZeroSize, context: context)
-            }
-            if self.entertainment == nil {
-                self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: self.context)
-            }
-            return self.entertainment!
+//            guard let `self` = self else {
+//                return EntertainmentViewController(size: NSZeroSize, context: context)
+//            }
+            return EntertainmentViewController(size: NSMakeSize(350, 350), context: context)
+            
+//            guard let `self` = self else {
+//                return EntertainmentViewController.init(size: NSZeroSize, context: context)
+//            }
+//            if self.entertainment == nil {
+//                self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: self.context)
+//            }
+//            return self.entertainment!
         }, switchSplitLayout: { [weak self] state in
             guard let `self` = self else {
                 fatalError("Cannot use bindings. Application context is not exists")
