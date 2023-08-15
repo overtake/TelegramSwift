@@ -2613,7 +2613,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[(Int, TableRowItem)] = []
                 
-        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
+        if transition.grouping && !transition.isEmpty {
             self.tableView.beginUpdates()
         }
         
@@ -2634,7 +2634,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
-        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
+        if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
         }
                 
