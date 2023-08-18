@@ -80,7 +80,7 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
             paused = false
             self.always = always
             self.onSpeaking = onSpeaking
-            let signal = combineLatest(devices.signal, voiceCallSettings(accountManager), requestMicrophonePermission()) |> deliverOn(queue)
+            let signal = combineLatest(queue: queue, devices.signal, voiceCallSettings(accountManager), requestMicrophonePermission())
             
             devicesDisposable.set(signal.start(next: { [weak self] devices, settings, permission in
                 let device = settings.audioInputDeviceId == nil ? devices.audioInput.first : devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })

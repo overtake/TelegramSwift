@@ -957,7 +957,6 @@ final class StoryListView : Control, Notifable {
                 self.updateStoryState(current.state)
                 self.controls.update(context: context, arguments: arguments, groupId: entry.peer.id, peer: entry.peer._asPeer(), slice: entry, story: entry.item, animated: true)
                 self.inputView.update(entry.item, animated: true)
-                self.arguments?.markAsRead(entry.peer.id, entry.item.storyItem.id)
             } else {
                 self.redraw()
             }
@@ -985,7 +984,7 @@ final class StoryListView : Control, Notifable {
         let current = StoryView.makeView(for: entry.item.storyItem, peerId: entry.peer.id, peer: entry.peer._asPeer(), context: context, frame: aspect.bounds)
         
         self.current = current
-        
+        self.firstPlayingState = true
         
         if let previous = previous {
             previous.onStateUpdate = nil
@@ -1048,10 +1047,8 @@ final class StoryListView : Control, Notifable {
 
         
         arguments.interaction.flushPauses()
-        if arguments.interaction.presentation.entryId == groupId {
-            arguments.markAsRead(groupId, story.storyItem.id)
-        }
-
+        
+        
         current.onStateUpdate = { [weak self] state in
             self?.updateStoryState(state)
         }
@@ -1116,6 +1113,8 @@ final class StoryListView : Control, Notifable {
         }
     }
     
+    private var firstPlayingState = true
+    
     private func updateStoryState(_ state: StoryView.State) {
         guard let view = self.current, let entry = self.entry else {
             return
@@ -1124,6 +1123,10 @@ final class StoryListView : Control, Notifable {
         switch state {
         case .playing:
             self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, state: view.state, duration: view.duration, animated: true)
+            if firstPlayingState {
+                self.arguments?.markAsRead(entry.peer.id, entry.item.storyItem.id)
+            }
+            firstPlayingState = false
         case .finished:
             self.arguments?.nextStory()
         default:
