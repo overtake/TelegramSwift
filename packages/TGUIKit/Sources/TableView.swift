@@ -3389,5 +3389,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     
+    public func sizeToFitIfNeeded() {
+        clipView.documentView?.setFrameSize(NSMakeSize(tableView.frame.width, min(tableView.frame.height, listHeight)))
+        clipView.needsLayout = true
+    }
     
 }

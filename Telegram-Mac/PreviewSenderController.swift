@@ -744,16 +744,18 @@ private final class PreviewMedia : Comparable, Identifiable {
         return lhs.index < rhs.index
     }
     static func == (lhs: PreviewMedia, rhs: PreviewMedia) -> Bool {
-        return lhs.container == rhs.container
+        return lhs.container == rhs.container && lhs.isCollage == rhs.isCollage
     }
     let container: MediaSenderContainer
     let index: Int
+    let isCollage: Bool
     private(set) var media: Media?
 
-    init(container: MediaSenderContainer, index: Int, media: Media?) {
+    init(container: MediaSenderContainer, index: Int, media: Media?, isCollage: Bool) {
         self.container = container
         self.index = index
         self.media = media
+        self.isCollage = isCollage
     }
     
 
@@ -763,7 +765,7 @@ private final class PreviewMedia : Comparable, Identifiable {
     }
     
     func withApplyCachedMedia(_ media: Media) -> PreviewMedia {
-        return PreviewMedia(container: container, index: index, media: media)
+        return PreviewMedia(container: container, index: index, media: media, isCollage: isCollage)
     }
     
     func generateMedia(account: Account, isSecretRelated: Bool, isCollage: Bool) -> Media {
@@ -794,12 +796,12 @@ private final class PreviewMedia : Comparable, Identifiable {
 }
 
 
-private func previewMedias(containers:[MediaSenderContainer], savedState: [PreviewMedia]?) -> [PreviewMedia] {
+private func previewMedias(containers:[MediaSenderContainer], savedState: [PreviewMedia]?, isCollage: Bool) -> [PreviewMedia] {
     var index: Int = 0
     var result:[PreviewMedia] = []
     for container in containers {
         let found = savedState?.first(where: {$0.stableId == .container(container)})
-        result.append(PreviewMedia(container: container, index: index, media: found?.media))
+        result.append(PreviewMedia(container: container, index: index, media: found?.media, isCollage: isCollage))
         index += 1
     }
     return result
@@ -882,6 +884,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private let animated: Atomic<Bool> = Atomic(value: false)
 
     private func updateSize(_ width: CGFloat, animated: Bool) {
+        
         if let contentSize = context.window.contentView?.frame.size {
             
             var listHeight = genericView.tableView.listHeight
@@ -901,7 +904,17 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
 
             
             self.modal?.resize(with: NSMakeSize(width, min(contentSize.height - 70, height)), animated: animated)
-           // genericView.layout()
+            
+            // idk fucking why, but it fixes resize bug
+            delay(0.2, closure: { [weak self] in
+                guard let `self` = self else {
+                    return
+                }
+                self.genericView.tableView.beginTableUpdates()
+                _ = self.genericView.tableView.addItem(item: GeneralRowItem(.zero, height: 1))
+                self.genericView.tableView.remove(at: self.genericView.tableView.count - 1)
+                self.genericView.tableView.endTableUpdates()
+            })
         }
     }
   
@@ -1125,7 +1138,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 containers.append(ArchiverSenderContainer(path: dir, files: urls))
             }
             
-            return (previewMedias(containers: containers, savedState: savedStateMedias.with { $0[state]}), urls, state)
+            return (previewMedias(containers: containers, savedState: savedStateMedias.with { $0[state]}, isCollage: state.isCollage), urls, state)
         } |> map { previews, urls, state in
             return (prepareMedias(left: previousMedias.swap(previews), right: previews, isSecretRelated: isSecretRelated, isCollage: state.isCollage, account: context.account), urls, state, previews)
         }
@@ -1200,6 +1213,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             
             CATransaction.begin()
             self.genericView.tableView.merge(with: transition)
+            self.genericView.tableView.reloadHeight()
             CATransaction.commit()
             
             self.genericView.textView.setPlaceholderAttributedString(.initialize(string: self.inputPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
