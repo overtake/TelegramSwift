@@ -230,26 +230,26 @@ final class DevicesContext : NSObject {
         
         let previous: Atomic<IODevices?> = Atomic(value: nil)
         
-        let signal = self.signal |> afterDisposed {
-            let devices = previous.swap(nil)
-            if let list = devices?.audioOutput {
-                for device in list {
-                    AudioObjectRemovePropertyListener(device, &AudioAddress.nominalSampleRates, AudioListener.nominalSampler, nil)
-                }
-            }
-        }
-        
-        updateSampler.set(signal.start(next: { devices in
-            let previous = previous.swap(devices)
-            if let list = previous?.audioOutput {
-                for device in list {
-                    AudioObjectRemovePropertyListener(device, &AudioAddress.nominalSampleRates, AudioListener.nominalSampler, nil)
-                }
-            }
-            for device in devices.audioOutput {
-                AudioObjectAddPropertyListener(device, &AudioAddress.nominalSampleRates, AudioListener.nominalSampler, nil)
-            }
-        }))
+//        let signal = self.signal |> afterDisposed {
+//            let devices = previous.swap(nil)
+//            if let list = devices?.audioOutput {
+//                for device in list {
+//                    AudioObjectRemovePropertyListener(device, &AudioAddress.nominalSampleRates, AudioListener.nominalSampler, nil)
+//                }
+//            }
+//        }
+//
+//        updateSampler.set(signal.start(next: { devices in
+//            let previous = previous.swap(devices)
+//            if let list = previous?.audioOutput {
+//                for device in list {
+//                    AudioObjectRemovePropertyListener(device, &AudioAddress.nominalSampleRates, AudioListener.nominalSampler, nil)
+//                }
+//            }
+//            for device in devices.audioOutput {
+//                AudioObjectAddPropertyListener(device, &AudioAddress.nominalSampleRates, AudioListener.nominalSampler, nil)
+//            }
+//        }))
         
         update()
     }
