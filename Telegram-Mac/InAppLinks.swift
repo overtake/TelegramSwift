@@ -643,7 +643,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let action = action {
                             switch action {
                             case let .attachBot(botname, _, choose):
-                                if botname == peer.addressName, choose == nil || choose!.isEmpty {
+                                
+                                let standart = ["users", "groups", "channels", "bots"]
+                                
+                                if let choose = choose, choose.count == 1, !choose.contains(where: { value in standart.contains(value) }) {
                                     invokeCallback(peer, messageId, action)
                                 } else {
                                     let invoke:(Peer)->Void = { peer in
