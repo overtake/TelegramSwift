@@ -73,14 +73,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
 
-    open override var translatesAutoresizingMaskIntoConstraints: Bool {
-        get {
-            return false
-        }
-        set {
-
-        }
-    }
+//    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+//        get {
+//            return false
+//        }
+//        set {
+//
+//        }
+//    }
     
     open func updateColors() {
         self.layer?.backgroundColor = backdorColor.cgColor
@@ -88,10 +88,6 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func smartMagnify(with event: NSEvent) {
         super.smartMagnify(with: event)
-    }
-    
-    open func layerClass() ->AnyClass {
-        return CALayer.self;
     }
     
     
@@ -121,6 +117,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         var bp:Int = 0
         bp += 1
     }
+    
     open func updateIsResorting() {
         
     }

@@ -150,7 +150,7 @@ final class ChatAvatarView : Control {
                 view.layer?.cornerRadius = self.avatar.radius
             }
         }
-        backgroundView.backgroundColor = theme.colors.background
+        backgroundView.backgroundColor = .clear
         updatePlayerIfNeeded()
     }
     
@@ -211,6 +211,6 @@ final class ChatAvatarView : Control {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        backgroundView.backgroundColor = theme.colors.background
+        backgroundView.backgroundColor = .clear
     }
 }
