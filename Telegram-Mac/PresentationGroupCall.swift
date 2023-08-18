@@ -782,15 +782,24 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.hasScreencast = false
 
         self.devicesContext = accountContext.sharedContext.devicesContext
+        
+        struct DevicesData: Equatable {
+            let networkState: PresentationGroupCallState.NetworkState
+            let input: String?
+            let output: String?
+        }
+        let signal: Signal<DevicesData, NoError> = combineLatest(queue: .mainQueue(), devicesContext.updater(), state) |> map { devices, state in
+            return .init(networkState: state.networkState, input: devices.input, output: devices.output)
+        } |> filter { $0.networkState == .connected } |> distinctUntilChanged
 
-        devicesDisposable.set(devicesContext.updater().start(next: { [weak self] values in
-            guard let `self` = self, self.stateValue.networkState == .connected else {
+        devicesDisposable.set(signal.start(next: { [weak self] data in
+            guard let `self` = self else {
                 return
             }
-            if let id = values.input {
+            if let id = data.input {
                 self.genericCallContext?.switchAudioInput(id)
             }
-            if let id = values.output {
+            if let id = data.output {
                 self.genericCallContext?.switchAudioOutput(id)
             }
         }))
