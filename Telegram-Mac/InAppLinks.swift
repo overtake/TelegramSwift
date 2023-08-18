@@ -643,7 +643,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let action = action {
                             switch action {
                             case let .attachBot(botname, _, choose):
-                                if botname == peer.addressName {
+                                
+                                let standart = ["users", "groups", "channels", "bots"]
+                                
+                                if let choose = choose, choose.count == 1, !choose.contains(where: { value in standart.contains(value) }) {
                                     invokeCallback(peer, messageId, action)
                                 } else {
                                     let invoke:(Peer)->Void = { peer in
@@ -1672,7 +1675,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
 
                         if vars[keyURLStartattach] != nil || empty.contains(keyURLStartattach) {
                             let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
-                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach], choose)
+                            let attach = vars[keyURLAttach]?.split(separator: "+").compactMap { String($0) }
+                            //?? vars[keyURLAttach].map(Array.init(_:))
+                            action = .attachBot(username, vars[keyURLStartattach], choose ?? attach)
                         } else if components.contains(keyURLLivestream) {
                             action = .joinVoiceChat(nil)
                         }

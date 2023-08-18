@@ -855,9 +855,9 @@ final class AnimationPlayerContext {
         self.animation = animation
         self.rendererRef = QueueLocalObject(queue: animation.runOnQueue, generate: {
             return PlayerRenderer(animation: animation, displayFrame: displayFrame, release: release, updateState: { state in
-                Queue.mainQueue().async {
+                delay(0.032, closure: {
                     updateState(state)
-                }
+                })
             })
         })
         

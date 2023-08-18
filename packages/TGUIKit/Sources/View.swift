@@ -404,14 +404,14 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         return false
     }
     
-    open override var translatesAutoresizingMaskIntoConstraints: Bool {
-        get {
-            return true
-        }
-        set {
-
-        }
-    }
+//    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+//        get {
+//            return true
+//        }
+//        set {
+//
+//        }
+//    }
     
     open override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)

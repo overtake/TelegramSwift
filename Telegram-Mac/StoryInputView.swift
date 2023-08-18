@@ -322,8 +322,9 @@ private final class StoryReplyActionButton : View {
         
         if state == .share, story?.storyItem.isForwardingDisabled == true {
             if story?.canCopyLink == false {
-                tooltip(for: current, text: strings().storyInputCantShare)
+                current.appTooltip = strings().storyInputCantShare
             } else {
+                current.appTooltip = nil
                 current.contextMenu = {
                     let menu = ContextMenu()
                     menu.addItem(ContextMenuItem(strings().modalCopyLink, handler: { [weak arguments, weak story] in
@@ -336,6 +337,7 @@ private final class StoryReplyActionButton : View {
             }
             
         } else {
+            current.appTooltip = nil
             current.contextMenu = nil
             
             current.set(handler: { [weak arguments, weak self] _ in
