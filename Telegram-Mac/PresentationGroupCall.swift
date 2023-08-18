@@ -784,7 +784,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.devicesContext = accountContext.sharedContext.devicesContext
 
         devicesDisposable.set(devicesContext.updater().start(next: { [weak self] values in
-            guard let `self` = self else {
+            guard let `self` = self, self.stateValue.networkState == .connected else {
                 return
             }
             if let id = values.input {
@@ -2237,12 +2237,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             return
         }
         
-        if let id = devicesContext.currentMicroId {
-            self.genericCallContext?.switchAudioInput(id)
-        }
-        if let id = devicesContext.currentOutputId {
-            self.genericCallContext?.switchAudioOutput(id)
-        }
+        
         
         switch self.isMutedValue {
         case .muted:
@@ -2286,12 +2281,20 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
             self.genericCallContext?.setIsMuted(isEffectivelyMuted)
             
+
             if isVisuallyMuted {
                 self.stateValue.muteState = GroupCallParticipantsContext.Participant.MuteState(canUnmute: true, mutedByYou: false)
             } else {
                 self.stateValue.muteState = nil
             }
-            
+            if !isEffectivelyMuted {
+                if let id = self.devicesContext.currentMicroId {
+                    self.genericCallContext?.switchAudioInput(id)
+                }
+                if let id = self.devicesContext.currentOutputId {
+                    self.genericCallContext?.switchAudioOutput(id)
+                }
+            }
         })
     }
     
