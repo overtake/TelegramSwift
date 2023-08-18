@@ -489,9 +489,9 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         return flip
     }
     
-    override func draw(_ dirtyRect: NSRect) {
-       
-    }
+//    override func draw(_ dirtyRect: NSRect) {
+//
+//    }
     override var isOpaque: Bool {
         return false
     }
@@ -887,7 +887,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.tableView.style = .fullWidth
         }
         self.automaticallyAdjustsContentInsets = false
-        tableView.translatesAutoresizingMaskIntoConstraints = false
+       // tableView.translatesAutoresizingMaskIntoConstraints = false
 
         clipView.autoresizingMask = []
         clipView.autoresizesSubviews = false
@@ -1055,6 +1055,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private func updateScroll() {
         
+
         Queue.mainQueue().justDispatch { [weak self] in
             self?.scrollDidChangedBounds()
         }
@@ -1129,15 +1130,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         }
-//        if !NSEqualRanges(scroll.current.visibleRows, dispatchRange) {
-//            tableView.beginUpdates()
-//            self.enumerateVisibleItems(with: { item in
-//                item.view?.setFrameOrigin(self.rectOf(item: item).origin)
-//                return true
-//            })
-//            tableView.endUpdates()
-//            dispatchRange = scroll.current.visibleRows
-//        }
     }
     
     open func scrollDidChangedBounds() {
@@ -1337,7 +1329,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         y = nrect.minY - visible.1
                     }
                     
-                    self.clipView.scroll(to: NSMakePoint(0, y))
+                    self.clipView.updateBounds(to: NSMakePoint(0, y))
                    // reflectScrolledClipView(clipView)
                    // flashScrollers()
                     break
@@ -1878,7 +1870,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         NSAnimationContext.current.timingFunction = animation == .none ? nil : CAMediaTimingFunction(name: .easeOut)
         if(redraw) {
             self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
-            self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: at))
+          //  self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: at))
         }
         
         return true;
@@ -2586,6 +2578,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private func merge(with transition:TableUpdateTransition, forceApply: Bool, appearAnimated: Bool) -> Void {
         
         
+        
         if processedIds.contains(transition.uniqueId)  {
             return
         }
@@ -2601,7 +2594,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let documentOffset = self.documentOffset
         
         
-        
         let visibleItems = self.visibleItems()
         let visibleRange = self.visibleRows()
         
@@ -2612,6 +2604,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[(Int, TableRowItem)] = []
+        
+        CATransaction.begin()
                 
         if transition.grouping && !transition.isEmpty, !transition.state.isNone {
             self.tableView.beginUpdates()
@@ -2639,7 +2633,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
                 
 
-        if transition.grouping && !transition.isEmpty {
+        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
             self.tableView.beginUpdates()
         }
         
@@ -2661,10 +2655,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
-        if transition.grouping && !transition.isEmpty {
+        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
             self.tableView.endUpdates()
         }
         
+
+        CATransaction.commit()
         
         for inserted in inserted {
             var accept: Bool = true
@@ -2826,22 +2822,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         for (index, item) in animatedItems {
             replace(item: item, at: index, animated: true)
         }
-       // self.endTableUpdates()
-        
-//        self.tableView.tile()
-//        self.reflectScrolledClipView(clipView)
-//
-        
-//        if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {
-//            if let y = getScrollY(visible) {
-//                let current = contentView.bounds
-//                if current.minY != y {
-//                    self.clipView.scroll(to: NSMakePoint(0, max(y, 0)))
-//                    self.clipView.layer?.animateBoundsOriginYAdditive(from: current.minY - clipView.bounds.minY, to: 0, duration: 0.2)
-//                }
-//            }
-//        }
-
+       
         
         self.endUpdates()
         
@@ -3279,6 +3260,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         scrollListener.handler(self.scrollPosition().current)
                         self.removeScroll(listener: scrollListener)
                         completion(completed)
+                        self.scrollDidChangedBounds()
                     }
                 })
             } else {

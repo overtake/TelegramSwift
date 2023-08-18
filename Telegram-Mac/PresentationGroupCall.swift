@@ -2237,6 +2237,13 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             return
         }
         
+        if let id = devicesContext.currentMicroId {
+            self.genericCallContext?.switchAudioInput(id)
+        }
+        if let id = devicesContext.currentOutputId {
+            self.genericCallContext?.switchAudioOutput(id)
+        }
+        
         switch self.isMutedValue {
         case .muted:
             self.setIsMuted(action: .unmuted)

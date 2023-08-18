@@ -167,7 +167,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     public func updateBounds(to point: NSPoint) {
-        self.bounds.origin = point
+        if self.bounds.origin != point {
+            super.scroll(to: point)
+        }
     }
         
     private(set) var point: NSPoint?
@@ -196,7 +198,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 self.scrollCompletion?(point == self.bounds.origin)
             })
         } else {
-            self.setBoundsOrigin(point)
+            self.updateBounds(to: point)
             self.point = nil
             self.destinationOrigin = nil
             self.scrollCompletion?(false)
