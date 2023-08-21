@@ -340,7 +340,7 @@ private final class StoryViewerRowView: GeneralRowView {
                 }
                 let layer = makeView(reaction, context: item.context)
                 if let layer = layer {
-                    layer.frame = NSMakeRect(frame.width - 25 - container.frame.minX, (frame.height - 25) / 2, 25, 25)
+                    layer.frame = NSMakeRect(frame.width - layer.frame.width - container.frame.minX, (frame.height - layer.frame.height) / 2, layer.frame.width, layer.frame.height)
                     self.layer?.addSublayer(layer)
                     layer.isPlayable = false
                 }
@@ -365,17 +365,24 @@ private final class StoryViewerRowView: GeneralRowView {
     
     private func makeView(_ reaction: MessageReaction.Reaction, context: AccountContext, appear: Bool = false) -> InlineStickerItemLayer? {
         let layer: InlineStickerItemLayer?
-        let size = NSMakeSize(25, 25)
+        var size = NSMakeSize(25, 25)
         switch reaction {
         case let .custom(fileId):
             layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .onceEnd)
         case .builtin:
-            if let animation = context.reactions.available?.reactions.first(where: { $0.value == reaction }) {
-                let file = appear ? animation.activateAnimation : animation.selectAnimation
+            if reaction == .defaultStoryLike {
+                size = NSMakeSize(30, 30)
+                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: storyTheme.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
             } else {
-                layer = nil
+                if let animation = context.reactions.available?.reactions.first(where: { $0.value == reaction }) {
+                    let file = appear ? animation.activateAnimation : animation.selectAnimation
+                    layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
+                } else {
+                    layer = nil
+                }
             }
+            
         }
         
         return layer

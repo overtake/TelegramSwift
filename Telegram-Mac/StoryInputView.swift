@@ -111,6 +111,8 @@ private final class StoryLikeActionButton: Control {
         let layer: InlineStickerItemLayer? = makeView(reaction.item.reaction, state: state, context: context, appear: true)
         if let layer = layer {
             layer.animateAlpha(from: 0, to: 1, duration: 0.2)
+            layer.animateScale(from: 0.1, to: 1, duration: 0.2)
+
             layer.isPlayable = true
         }
         control.isHidden = layer != nil
@@ -198,17 +200,25 @@ private final class StoryLikeActionButton: Control {
     
     private func makeView(_ reaction: MessageReaction.Reaction, state: StoryInteraction.State, context: AccountContext, appear: Bool = false) -> InlineStickerItemLayer? {
         let layer: InlineStickerItemLayer?
-        let size = NSMakeSize(25, 25)
+        var size = NSMakeSize(25, 25)
         switch reaction {
         case let .custom(fileId):
             layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .onceEnd)
         case .builtin:
-            if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
-                let file = appear ? animation.activateAnimation : animation.selectAnimation
+            if reaction == .defaultStoryLike {
+                size = NSMakeSize(30, 30)
+                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: storyTheme.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
             } else {
-                layer = nil
+                
+                if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
+                    let file = appear ? animation.activateAnimation : animation.selectAnimation
+                    layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
+                } else {
+                    layer = nil
+                }
             }
+            
         }
         if let layer = layer {
             layer.frame = focus(size)

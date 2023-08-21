@@ -112,6 +112,12 @@ private final class AnnotationView : MKAnnotationView {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         
         
+        self.wantsLayer = true
+        
+        layer?.masksToBounds = false
+        
+        
+        
         locationPin.image = storyTheme.icons.locationMapPin
         locationPin.sizeToFit()
 
@@ -120,6 +126,7 @@ private final class AnnotationView : MKAnnotationView {
         wantsLayer = true
                 
         control.frame = bounds
+        
         
         addSubview(locationPin)
         addSubview(control)
@@ -139,6 +146,7 @@ private final class AnnotationView : MKAnnotationView {
     override func layout() {
         super.layout()
         locationPin.center()
+        locationPin.setFrameOrigin(NSMakePoint(locationPin.frame.minX, locationPin.frame.minY - locationPin.frame.height / 2))
     }
     
     private func update() {
