@@ -2805,19 +2805,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         
-//        let visible = self.visibleItems()
-        
+        let visible = self.visibleItems()
+
         self.beginTableUpdates()
         for (index, item) in nonAnimatedItems {
             replace(item: item, at: index, animated: false)
         }
         self.endTableUpdates()
-        
+        if !tableView.isFlipped, case .none = transition.state {
+            saveScrollState(visible)
+        }
 
-//        if !tableView.isFlipped, case .none = transition.state {
-//            saveScrollState(visible)
-//        }
-        
        // self.beginTableUpdates()
         for (index, item) in animatedItems {
             replace(item: item, at: index, animated: true)
