@@ -509,7 +509,7 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withSelectionState().withoutInitialAction().withUpdatedRepotMode(reason)
                 })
-            case let .attachBot(botname, payload, choose):
+            case let .attachBot(botname, payload, _):
                 update({
                     $0.withoutInitialAction()
                 })
