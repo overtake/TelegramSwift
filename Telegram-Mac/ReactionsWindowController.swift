@@ -181,6 +181,7 @@ final class ReactionsWindowController : NSObject {
     private var onClose:(()->Void)?
     private let presentation: TelegramPresentationTheme
     private let name: String
+    private var skipAppearAnimation = false
     init(_ context: AccountContext, peerId: PeerId, selectedItems: [EmojiesSectionRowItem.SelectedItem], react: @escaping(StickerPackItem, NSRect?)->Void, onClose:(()->Void)? = nil, presentation: TelegramPresentationTheme = theme, name: String = "") {
         self.context = context
         self.presentation = presentation
@@ -209,6 +210,10 @@ final class ReactionsWindowController : NSObject {
     }
     
     private func animateAppearanceItems(_ items: [TableRowItem], initialPlayers:[Int: LottiePlayerView]) {
+        
+        if skipAppearAnimation {
+            return
+        }
         let sections = items.compactMap {
             $0 as? EmojiesSectionRowItem
         }
@@ -246,8 +251,14 @@ final class ReactionsWindowController : NSObject {
     
     private func ready(_ initialView: NSView & StickerFramesCollector, animated: Bool) {
         
+        guard let screen = NSScreen.main else {
+            return
+        }
+        
         let initialWindow = initialView.window!
         let initialScreenRect = initialWindow.convertToScreen(initialView.convert(initialView.bounds, to: nil))
+        
+                
         
         self.emojies.view.frame = self.emojies.view.bounds
         let (panel, view) = makeView(self.emojies.view, initialView, initialScreenRect, animated: animated, theme: self.presentation)
@@ -338,14 +349,23 @@ final class ReactionsWindowController : NSObject {
         
         let ready = emojies.ready.get() |> take(1)
         _ = ready.start(next: { [weak view, weak initialView, weak self] _ in
-            guard let view = view, let initialView = initialView else {
+            guard let view = view, let initialView = initialView, let `self` = self else {
                 return
             }
-            self?.initialPlayers = initialView.collect()
+            CATransaction.begin()
+            initialView.removeFromSuperview()
+            CATransaction.commit()
+
+            self.initialPlayers = initialView.collect()
             CATransaction.begin()
             view.appearAnimated(from: initialView.frame, to: view.frame)
             CATransaction.commit()
-            initialView.removeFromSuperview()
+            
+            if initialScreenRect.origin.y - 200 < 0, let panel = self.panel {
+                self.skipAppearAnimation = true
+                panel.setFrame(NSMakeRect(panel.frame.minX, panel.frame.minY + 100, panel.frame.width, panel.frame.height), display: true, animate: true)
+            }
+            
         })
         
     }

@@ -1945,16 +1945,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         sizeValue.set(size)
         self.updateFloatingPhotos(genericView.scroll, animated: false)
     }
-    
-    private let checker = Atomic<Bool>(value: false)
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if checker.swap(true) == true {
-            var bp = 0
-            bp += 1
-        }
         
         sizeValue.set(frame.size)
         self.chatInteraction.add(observer: self)

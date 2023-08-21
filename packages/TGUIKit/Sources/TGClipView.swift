@@ -77,7 +77,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         super.init(frame: frameRect)
 //        self.backgroundColor = .clear
         self.wantsLayer = true
-       // self.layerContentsRedrawPolicy = .never
+        self.layerContentsRedrawPolicy = .never
       //  self.layer?.drawsAsynchronously = System.drawAsync
         //self.layer?.delegate = self
 //        createDisplayLink()
@@ -99,9 +99,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 //
-//    public override func draw(_ dirtyRect: NSRect) {
-//
-//    }
+    public override func draw(_ dirtyRect: NSRect) {
+       
+    }
 //
 ////    override public func setNeedsDisplay(_ invalidRect: NSRect) {
 ////
