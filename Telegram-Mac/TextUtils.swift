@@ -42,7 +42,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
     let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
     
-    if message.id.peerId == supportId, message.flags.contains(.Incoming), !notifications {
+    if message.id.peerId == supportId, message.flags.contains(.Incoming), !notifications, message.id.namespace == Namespaces.Message.Cloud {
         let regexPattern = #"[\d\-]{5,7}"#
         do {
             let regex = try NSRegularExpression(pattern: regexPattern, options: [])

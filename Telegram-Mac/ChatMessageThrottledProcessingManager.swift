@@ -74,7 +74,7 @@ final class ChatMessageThrottledProcessingManager {
                         }
                         let buffer = strongSelf.buffer
                         strongSelf.buffer.removeAll()
-
+                        strongSelf.processed.removeAll()
                         if let submitInterval = strongSelf.submitInterval {
                             strongSelf.disposable.set(delaySignal(submitInterval).start(completed: { [weak strongSelf]in
                                 strongSelf?.add(Array(buffer))

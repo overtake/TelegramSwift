@@ -224,11 +224,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 //        window.styleMask.insert(.fullSizeContentView)
 //        window.styleMask.insert(.unifiedTitleAndToolbar)
         //window.styleMask.insert(.borderless)
-        let customToolbar = NSToolbar(identifier: "main")
-        customToolbar.showsBaselineSeparator = false
-//        window.titlebarAppearsTransparent = true
-//        window.titleVisibility = .hidden
-        window.toolbar = customToolbar
+//        let customToolbar = NSToolbar(identifier: "main")
+//        customToolbar.showsBaselineSeparator = false
+////        window.titlebarAppearsTransparent = true
+////        window.titleVisibility = .hidden
+//        window.toolbar = customToolbar
         
         
         

@@ -645,6 +645,8 @@ private final class PlayerRenderer {
         var playedCount: Int32 = 0
         var loopCount: Int32 = 0
         var previousFrame: Int32 = 0
+        var currentPlayerState: LottiePlayerState? = nil
+        
         let render:()->Void = { [weak self, weak stateValue] in
             var hungry: Bool = false
             var cancelled: Bool = false
@@ -668,7 +670,10 @@ private final class PlayerRenderer {
                         displayFrame(current, .init(fps: fps))
                         playedCount += 1
                         if current.frame > 0 {
-                            updateState(.playing)
+                            if currentPlayerState != .playing {
+                                updateState(.playing)
+                                currentPlayerState = .playing
+                            }
                         }
                         
                         if previousFrame > current.frame {
@@ -710,7 +715,10 @@ private final class PlayerRenderer {
                         let finish:()->Void = {
                             renderer.finished = true
                             cancelled = true
-                            updateState(.finished)
+                            if currentPlayerState != .finished {
+                                updateState(.finished)
+                                currentPlayerState = .finished
+                            }
                             renderer.renderToken?.deinstall()
                             framesTask?.cancel()
                             let onFinish = renderer.animation.onFinish ?? {}

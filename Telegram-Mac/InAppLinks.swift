@@ -643,8 +643,18 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let action = action {
                             switch action {
                             case let .attachBot(botname, _, choose):
-                                if botname == peer.addressName {
-                                    invokeCallback(peer, messageId, action)
+                                
+                                let standart = ["users", "groups", "channels", "bots"]
+                                
+                                if let choose = choose, choose.count == 1, !choose.contains(where: { value in standart.contains(value) }) {
+                                    let signal = context.engine.peers.resolvePeerByName(name: choose[0]) |> deliverOnMainQueue
+                                    
+                                    _ = signal.start(next: { peer in
+                                        if let peer = peer {
+                                            invokeCallback(peer._asPeer(), messageId, action)
+                                        }
+                                    })
+
                                 } else {
                                     let invoke:(Peer)->Void = { peer in
                                         let signal = context.engine.messages.getAttachMenuBot(botId: peer.id)
@@ -1633,7 +1643,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             break loop;
                         case keyURLAttach:
                             let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
-                            action = .attachBot(value, nil, choose)
+                            let attach = vars[keyURLAttach]?.split(separator: "+").compactMap { String($0) }
+                            action = .attachBot(value, nil, attach ?? choose)
                             break loop
                         default:
                             break
@@ -1672,7 +1683,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
 
                         if vars[keyURLStartattach] != nil || empty.contains(keyURLStartattach) {
                             let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
-                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach], choose)
+                            let attach = vars[keyURLAttach]?.split(separator: "+").compactMap { String($0) }
+                            //?? vars[keyURLAttach].map(Array.init(_:))
+                            action = .attachBot(username, vars[keyURLStartattach], choose ?? attach)
                         } else if components.contains(keyURLLivestream) {
                             action = .joinVoiceChat(nil)
                         }
@@ -1820,7 +1833,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 break loop
                             case keyURLAttach:
                                 let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
-                                action = .attachBot(value, vars[keyURLStartattach], choose)
+                                let attach = vars[keyURLAttach]?.split(separator: "+").compactMap { String($0) }
+                                action = .attachBot(value, vars[keyURLStartattach], attach ?? choose)
                                 break loop
                             case keyURLAppname:
                                 action = .makeWebview(appname: value, command: vars[keyURLStartapp])
@@ -1833,7 +1847,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             action = .joinVoiceChat(nil)
                         } else if action == nil, vars[keyURLStartattach] != nil || vars[keyURLAttach] != nil {
                             let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
-                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach], choose)
+                            let attach = vars[keyURLAttach]?.split(separator: "+").compactMap { String($0) }
+                            action = .attachBot(username, vars[keyURLStartattach], attach ?? choose)
                         }
                         if username == legacyPassportUsername {
                             return inApp(for: external.replacingOccurrences(of: "tg://resolve", with: "tg://passport").nsstring, context: context, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)

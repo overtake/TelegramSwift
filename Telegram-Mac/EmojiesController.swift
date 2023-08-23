@@ -647,7 +647,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     index += 1
                 }
                 
-                let chunks = animatedEmoji.chunks(16)
+                let chunks = animatedEmoji.chunks(24)
                 var string: String = "a"
                 for chunk in chunks {
                     let tuple = Tuple(items: chunk, selected: state.selectedItems)
@@ -887,7 +887,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             var tuples:[Tuple] = []
             
-            let chunks = section.items.chunks(16)
+            let chunks = section.items.chunks(24)
             var string: String = "a"
             
             for (i, items) in chunks.enumerated() {

@@ -57,6 +57,46 @@ final class Scroller : NSScroller {
     }
 }
 
+extension NSScroller {
+    
+}
+
+final class OverlayScroller : NSScroller {
+    weak var scrollView: NSScrollView?
+
+    init() {
+        super.init(frame: .zero)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    override var scrollerStyle: NSScroller.Style {
+        get {
+            return .overlay
+        }
+        set {
+            super.scrollerStyle = .overlay
+        }
+    }
+    private var drawKnowIfNeeded = false
+    
+    override func draw(_ dirtyRect: NSRect) {
+        drawKnowIfNeeded = true
+        super.draw(dirtyRect)
+//        if let tableView = self.scrollView as? TableView {
+//            if tableView.liveScrolling || tableView.clipView.isAnimateScrolling, drawKnowIfNeeded {
+//                drawKnob()
+//            }
+//        }
+    }
+    override func drawKnob() {
+        super.drawKnob()
+        drawKnowIfNeeded = false
+    }
+}
+
 open class ScrollView: NSScrollView{
     private var currentpos:ScrollPosition = ScrollPosition()
     public var deltaCorner:Int64 = 60
@@ -67,14 +107,14 @@ open class ScrollView: NSScrollView{
         return true
     }
     
-    open override var translatesAutoresizingMaskIntoConstraints: Bool {
-        get {
-            return false
-        }
-        set {
-
-        }
-    }
+//    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+//        get {
+//            return false
+//        }
+//        set {
+//
+//        }
+//    }
 
     public func scrollPosition(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0))  -> (current: ScrollPosition, previous: ScrollPosition) {
         
@@ -158,8 +198,8 @@ open class ScrollView: NSScrollView{
         drawsBackground = false
         layerContentsRedrawPolicy = .never
         
-        self.hasHorizontalScroller = false 
-        self.horizontalScrollElasticity = .automatic
+       // self.hasHorizontalScroller = false
+       // self.horizontalScrollElasticity = .automatic
       //  self.verticalScroller?.scrollerStyle = .overlay
         autoresizingMask = []
         self.wantsLayer = true;
@@ -168,21 +208,22 @@ open class ScrollView: NSScrollView{
         //allowsMagnification = true
         //self.hasVerticalScroller = false
         
-       // self.scrollerStyle = .overlay
+        self.scrollerStyle = .overlay
+         
          if NSScroller.preferredScrollerStyle == .legacy {
              let scroller = Scroller()
              scroller.scrollView = self
              self.verticalScroller = scroller
-         }
+         } 
  
     }
     
     
     
     open override func draw(_ dirtyRect: NSRect) {
-        
+
     }
-    
+//
     
     open override func scrollWheel(with event: NSEvent) {
         
@@ -197,16 +238,16 @@ open class ScrollView: NSScrollView{
             }
         }
         
-        if !window.inLiveSwiping, super.responds(to: #selector(scrollWheel(with:))) {
+        if !window.inLiveSwiping {
             super.scrollWheel(with: event)
         }
 //
     }
     
-    open override func setNeedsDisplay(_ invalidRect: NSRect) {
-        
-    }
-    
+//    open override func setNeedsDisplay(_ invalidRect: NSRect) {
+//
+//    }
+//    
     open override var scrollerStyle: NSScroller.Style {
         set {
             super.scrollerStyle = .overlay
@@ -218,14 +259,14 @@ open class ScrollView: NSScrollView{
     
   
 //    
-//    open override var hasVerticalScroller: Bool {
-//        get {
-//            return true
-//        }
-//        set {
-//            super.hasVerticalScroller = newValue
-//        }
-//    }
+    open override var hasVerticalScroller: Bool {
+        get {
+            return true
+        }
+        set {
+            super.hasVerticalScroller = newValue
+        }
+    }
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -234,107 +275,6 @@ open class ScrollView: NSScrollView{
     deinit {
         assertOnMainThread()
     }
-    
-    
-//    override open func scrollWheel(with event: NSEvent) {
-//        NSLog("\(event)")
-//        var scrollPoint = self.contentView.bounds.origin
-//       // var isInverted = CBool(UserDefaults.standard.object(forKey: "com.apple.swipescrolldirection")!)
-////        if !isInverted {
-////            scrollPoint.x += (event.scrollingDeltaY() + event.scrollingDeltaX())
-////        }
-////        else {
-//            scrollPoint.y -= (event.scrollingDeltaY + event.scrollingDeltaY)
-//       // }
-//        self.clipView.scroll(to: scrollPoint)
-//    }
-    
-    let dynamic:CGFloat = 100.0
-
-//    open override func scrollWheel(with event: NSEvent) {
-//
-//        if deltaCorner > 0 {
-//            var origin = clipView.bounds.origin
-//
-//            deltaCorner = max(Int64(floorToScreenPixels(backingScaleFactor, frame.height / 6.0)),40)
-//
-//
-//
-//            let deltaScrollY = min(max(Int64(event.scrollingDeltaY),-deltaCorner),deltaCorner)
-//
-//
-//            // NSLog("\(event.deltaY)")
-//
-//            if  let cgEvent = event.cgEvent?.copy() {
-//
-//
-//
-//                // cgEvent.setDoubleValueField(.scrollWheelEventDeltaAxis1, value: Double(min(max(-4,event.deltaY),4)))
-//
-//
-//                //if delta == deltaCorner || delta == -deltaCorner || delta == 0 {
-//                cgEvent.setIntegerValueField(.scrollWheelEventScrollCount, value: min(1,cgEvent.getIntegerValueField(.scrollWheelEventScrollCount)))
-//                // }
-//                cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: deltaScrollY)
-//                //            if event.scrollingDeltaY > 0 {
-//                //
-//                //            } else {
-//                //                cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: )
-//                //            }
-//
-//                //   NSLog("\(cgEvent.getIntegerValueField(.scrollWheelEventScrollCount)) == \(delta)")
-//
-//                //  cgEvent.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: 10)
-//                // cgEvent.setIntegerValueField(.scrollWheelEventScrollCount, value: Int64(delta))
-//
-//                let newEvent = NSEvent(cgEvent: cgEvent)!
-//
-//                super.scrollWheel(with: newEvent)
-//
-//
-//            }  else {
-//                //NSLog("\(cgEvent.getIntegerValueField(.scrollWheelEventScrollCount))")
-//
-//                super.scrollWheel(with: event)
-//            }
-//
-//
-//            if origin == clipView.bounds.origin, abs(deltaScrollY) >= deltaCorner
-//            {
-//
-//                if let documentView = documentView, !(self is HorizontalTableView) {
-//
-//                    if frame.minY < origin.y - frame.height - 50 {
-//                        if origin.y > documentView.frame.maxY + dynamic {
-//                            clipView.scroll(to: NSMakePoint(origin.x, documentView.frame.minY))
-//                        }
-//
-//                        if origin.y < documentView.frame.height {
-//                            if documentView.isFlipped {
-//                                if origin.y < documentView.frame.height - (frame.height + frame.minY) {
-//                                    origin.y -= CGFloat(deltaScrollY)
-//                                    clipView.scroll(to: origin)
-//                                    reflectScrolledClipView(clipView)
-//                                }
-//                            } else {
-//                                if origin.y + frame.height < documentView.frame.height {
-//                                    origin.y += CGFloat(deltaScrollY)
-//                                    clipView.scroll(to: origin)
-//                                    reflectScrolledClipView(clipView)
-//                                }
-//
-//                            }
-//                        }
-//                    } else if origin.y < -dynamic {
-//                        clipView.scroll(to: NSMakePoint(origin.x, 0))
-//                    }
-//                }
-//            }
-//        } else {
-//            super.scrollWheel(with: event)
-//        }
-//    }
-
     
     public func change(pos position: NSPoint, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) -> Void  {
         super._change(pos: position, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)

@@ -516,9 +516,14 @@ final class StoryListView : Control, Notifable {
                         selectedItems.append(.init(source: .custom(fileId), type: .transparent))
                     }
                 }
-                let window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.likeAction, onClose: {
-                
-                }, selectedItems: selectedItems) |> deliverOnMainQueue
+                let window: Signal<Window?, NoError>
+                if story.peerId == arguments.context.peerId {
+                    window = .single(nil)
+                } else {
+                    window = storyReactionsWindow(context: arguments.context, peerId: peerId, react: arguments.likeAction, onClose: {
+                        
+                    }, selectedItems: selectedItems) |> deliverOnMainQueue
+                }
                 
                 _ = window.start(next: { [weak arguments] panel in
                     if let menu = arguments?.storyContextMenu(story) {
@@ -742,7 +747,7 @@ final class StoryListView : Control, Notifable {
                 
 
         
-        if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.inputInFocus || value.inputRecording != nil || value.hasReactions {
+        if isPaused, let storyView = self.current, self.entry?.peer.id == value.entryId, value.wideInput || value.inputRecording != nil || value.hasReactions {
             let current: Control
             if let view = self.pauseOverlay {
                 current = view
@@ -777,7 +782,7 @@ final class StoryListView : Control, Notifable {
             self.controls.change(opacity: isControlHid ? 0 : 1, animated: animated)
             self.navigator.change(opacity: isControlHid ? 0 : 1, animated: animated)
         }
-        self.text?.change(opacity: isControlHid || value.inputInFocus ? 0 : 1, animated: animated)
+        self.text?.change(opacity: isControlHid || value.wideInput ? 0 : 1, animated: animated)
 
         self.updateSides(animated: animated)
     }
@@ -792,7 +797,7 @@ final class StoryListView : Control, Notifable {
         let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
         let aspect = StoryView.size.aspectFitted(maxSize)
         let containerSize: NSSize
-        if let arguments = self.arguments, arguments.interaction.presentation.inputInFocus || arguments.interaction.presentation.inputRecording != nil {
+        if let arguments = self.arguments, arguments.interaction.presentation.wideInput || arguments.interaction.presentation.inputRecording != nil {
             containerSize = NSMakeSize(min(aspect.width + 60, size.width - 20), aspect.height)
         } else {
             containerSize = aspect
@@ -952,7 +957,6 @@ final class StoryListView : Control, Notifable {
                 self.updateStoryState(current.state)
                 self.controls.update(context: context, arguments: arguments, groupId: entry.peer.id, peer: entry.peer._asPeer(), slice: entry, story: entry.item, animated: true)
                 self.inputView.update(entry.item, animated: true)
-                self.arguments?.markAsRead(entry.peer.id, entry.item.storyItem.id)
             } else {
                 self.redraw()
             }
@@ -980,11 +984,18 @@ final class StoryListView : Control, Notifable {
         let current = StoryView.makeView(for: entry.item.storyItem, peerId: entry.peer.id, peer: entry.peer._asPeer(), context: context, frame: aspect.bounds)
         
         self.current = current
-        
+        self.firstPlayingState = true
         
         if let previous = previous {
             previous.onStateUpdate = nil
             previous.disappear()
+        }
+        
+        if previous?.story?.id != entry.item.storyItem.id {
+            if let text = self.text {
+                performSubviewRemoval(text, animated: false)
+                self.text = nil
+            }
         }
         
         let story = entry.item
@@ -1036,10 +1047,8 @@ final class StoryListView : Control, Notifable {
 
         
         arguments.interaction.flushPauses()
-        if arguments.interaction.presentation.entryId == groupId {
-            arguments.markAsRead(groupId, story.storyItem.id)
-        }
-
+        
+        
         current.onStateUpdate = { [weak self] state in
             self?.updateStoryState(state)
         }
@@ -1048,6 +1057,7 @@ final class StoryListView : Control, Notifable {
         self.updateStoryState(current.state)
 
         self.inputView.update(entry.item, animated: false)
+        
         
         self.updateText(story.storyItem, state: .concealed, animated: false, context: context)
         
@@ -1103,6 +1113,8 @@ final class StoryListView : Control, Notifable {
         }
     }
     
+    private var firstPlayingState = true
+    
     private func updateStoryState(_ state: StoryView.State) {
         guard let view = self.current, let entry = self.entry else {
             return
@@ -1111,6 +1123,10 @@ final class StoryListView : Control, Notifable {
         switch state {
         case .playing:
             self.navigator.set(entry.item.dayCounters?.position ?? entry.item.position ?? 0, state: view.state, duration: view.duration, animated: true)
+            if firstPlayingState {
+                self.arguments?.markAsRead(entry.peer.id, entry.item.storyItem.id)
+            }
+            firstPlayingState = false
         case .finished:
             self.arguments?.nextStory()
         default:

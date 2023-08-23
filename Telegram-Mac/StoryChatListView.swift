@@ -775,6 +775,33 @@ private final class StoryListEntryRowItem : TableRowItem {
         let peerId = self.entry.item.peer.id
         let context = self.context
         
+        let addStealthMode:()->Void = {
+            items.append(.init(strings().storyControlsMenuStealtMode, handler: {
+                let stealthData = context.engine.data.subscribe(
+                    TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
+                ) |> deliverOnMainQueue |> take(1)
+                
+                _ = stealthData.start(next: { value in
+                    if let timestamp = value.stealthModeState.activeUntilTimestamp {
+                        showModalText(for: context.window, text: strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))))
+                    } else {
+                        showModal(with: StoryStealthModeController(context, enableStealth: {
+                            _ = context.engine.messages.enableStoryStealthMode().start()
+                            let stealthData = context.engine.data.subscribe(
+                                TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
+                            ) |> deliverOnMainQueue |> take(1)
+                            
+                            _ = stealthData.start(next: { value in
+                                if let timestamp = value.stealthModeState.activeUntilTimestamp {
+                                     showModalText(for: context.window, text: strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))))
+                                }
+                            })
+                        }, presentation: theme), for: context.window)
+                    }
+                })
+            }, itemImage: MenuAnimation.menu_eye_slash.value))
+        }
+        
         if context.peerId != peerId {
             if !self.entry.item.peer.isService {
                 
@@ -786,21 +813,9 @@ private final class StoryListEntryRowItem : TableRowItem {
                     PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
                 }, itemImage: MenuAnimation.menu_open_profile.value))
                 
-                items.append(.init(strings().storyControlsMenuStealtMode, handler: {
-                    showModal(with: StoryStealthModeController(context, enableStealth: {
-                        
-                        let stealthData = context.engine.data.subscribe(
-                            TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
-                        ) |> deliverOnMainQueue
-                        
-                        _ = stealthData.start(next: { value in
-                            if let timestamp = value.stealthModeState.activeUntilTimestamp {
-                                 showModalText(for: context.window, text: strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))))
-                            }
-                        })
-                        
-                    }, presentation: theme), for: context.window)
-                }, itemImage: MenuAnimation.menu_eye_slash.value))
+                
+                addStealthMode()
+               
                 
                 let peer = self.entry.item.peer._asPeer()
                 if peer.storyArchived {
@@ -824,23 +839,7 @@ private final class StoryListEntryRowItem : TableRowItem {
                 StoryMediaController.push(context: context, peerId: context.peerId, listContext: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: true), standalone: true, isArchived: true)
             }, itemImage: MenuAnimation.menu_archive.value))
             
-            
-            
-            items.append(.init(strings().storyControlsMenuStealtMode, handler: {
-                showModal(with: StoryStealthModeController(context, enableStealth: {
-                    
-                    let stealthData = context.engine.data.subscribe(
-                        TelegramEngine.EngineData.Item.Configuration.StoryConfigurationState()
-                    ) |> deliverOnMainQueue
-                    
-                    _ = stealthData.start(next: { value in
-                        if let timestamp = value.stealthModeState.activeUntilTimestamp {
-                             showModalText(for: context.window, text: strings().storyTooltipStealthModeActive(smartTimeleftText(Int(timestamp - context.timestamp))))
-                        }
-                    })
-                    
-                }, presentation: theme), for: context.window)
-            }, itemImage: MenuAnimation.menu_eye_slash.value))
+            addStealthMode()
         }
         
 

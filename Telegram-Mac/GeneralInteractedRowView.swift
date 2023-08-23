@@ -359,6 +359,7 @@ class GeneralInteractedRowView: GeneralRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        containerView.layerContentsRedrawPolicy = .duringViewResize
         
         nextView.sizeToFit()
         containerView.addSubview(nextView)
@@ -564,8 +565,6 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
             }
         }
-        
-        
     }
     
 }

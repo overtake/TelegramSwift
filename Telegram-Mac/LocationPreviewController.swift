@@ -43,8 +43,8 @@ private final class Arguments {
     let context:AccountContext
     let presentation: TelegramPresentationTheme
     let focusVenue:()->Void
-    let updateUserLocation:(MKUserLocation)->Void
-    init(context: AccountContext, presentation: TelegramPresentationTheme, focusVenue:@escaping()->Void, updateUserLocation:@escaping(MKUserLocation)->Void) {
+    let updateUserLocation:(CLLocation)->Void
+    init(context: AccountContext, presentation: TelegramPresentationTheme, focusVenue:@escaping()->Void, updateUserLocation:@escaping(CLLocation)->Void) {
         self.context = context
         self.presentation = presentation
         self.focusVenue = focusVenue
@@ -70,8 +70,8 @@ private struct State : Equatable {
     
     var map: MediaArea.Venue
     var peer: Peer?
-    var userLocation: MKUserLocation?
-    init(map: MediaArea.Venue, peer: Peer?, userLocation: MKUserLocation?) {
+    var userLocation: CLLocation?
+    init(map: MediaArea.Venue, peer: Peer?, userLocation: CLLocation?) {
         self.map = map
         self.peer = peer
         self.userLocation = userLocation
@@ -112,6 +112,12 @@ private final class AnnotationView : MKAnnotationView {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         
         
+        self.wantsLayer = true
+        
+        layer?.masksToBounds = false
+        
+        
+        
         locationPin.image = storyTheme.icons.locationMapPin
         locationPin.sizeToFit()
 
@@ -120,6 +126,7 @@ private final class AnnotationView : MKAnnotationView {
         wantsLayer = true
                 
         control.frame = bounds
+        
         
         addSubview(locationPin)
         addSubview(control)
@@ -139,6 +146,7 @@ private final class AnnotationView : MKAnnotationView {
     override func layout() {
         super.layout()
         locationPin.center()
+        locationPin.setFrameOrigin(NSMakePoint(locationPin.frame.minX, locationPin.frame.minY - locationPin.frame.height / 2))
     }
     
     private func update() {
@@ -162,9 +170,9 @@ private final class AnnotationView : MKAnnotationView {
 private class MapRowItem: GeneralRowItem {
     let context: AccountContext
     let presentation: TelegramPresentationTheme
-    let updateUserLocation: (MKUserLocation)->Void
+    let updateUserLocation: (CLLocation)->Void
     fileprivate let pin: MapPin
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, context: AccountContext, latitude: Double, longitude: Double, viewType: GeneralViewType, presentation: TelegramPresentationTheme, updateUserLocation: @escaping(MKUserLocation)->Void) {
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, context: AccountContext, latitude: Double, longitude: Double, viewType: GeneralViewType, presentation: TelegramPresentationTheme, updateUserLocation: @escaping(CLLocation)->Void) {
         self.context = context
         self.presentation = presentation
         self.updateUserLocation = updateUserLocation
@@ -194,9 +202,7 @@ private final class MapRowItemView : TableRowView, MKMapViewDelegate {
         
         mapView.showsZoomControls = true
         mapView.showsUserLocation = true
-        if #available(macOS 11.0, *) {
-            mapView.showsPitchControl = true
-        }
+        
         mapView.showsBuildings = true
     }
     
@@ -254,11 +260,19 @@ private final class MapRowItemView : TableRowView, MKMapViewDelegate {
     }
     
     func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
-        guard let item = item as? MapRowItem else {
+        guard let item = item as? MapRowItem, let location = userLocation.location else {
             return
         }
-        item.updateUserLocation(userLocation)
+        item.updateUserLocation(location)
     }
+    
+    func mapViewDidStopLocatingUser(_ mapView: MKMapView) {
+        guard let item = item as? MapRowItem, let location = mapView.userLocation.location else {
+            return
+        }
+        item.updateUserLocation(location)
+    }
+    
     
     private var doNotUpdateRegion: Bool = false
     
@@ -266,6 +280,10 @@ private final class MapRowItemView : TableRowView, MKMapViewDelegate {
         if location != nil {
             doNotUpdateRegion = true
         }
+        guard let item = item as? MapRowItem, let location = mapView.userLocation.location else {
+            return
+        }
+        item.updateUserLocation(location)
     }
 
     private var location: NSPoint? = nil
@@ -287,8 +305,9 @@ private final class MapRowItemView : TableRowView, MKMapViewDelegate {
         guard let item = item as? MapRowItem else {
             return
         }
-        
-        item.updateUserLocation(mapView.userLocation)
+        if let location = mapView.userLocation.location {
+            item.updateUserLocation(location)
+        }
         
         mapView.appearance = item.presentation.appearance
         
@@ -319,8 +338,8 @@ private class MapDataRowItem : TableRowItem {
     fileprivate let presentation: TelegramPresentationTheme
     fileprivate let location: MediaArea.Venue
     fileprivate let callback:()->Void
-    fileprivate let userLocation: MKUserLocation?
-    init(_ initialSize: NSSize, location: MediaArea.Venue, userLocation: MKUserLocation?, presentation: TelegramPresentationTheme, callback:@escaping()->Void) {
+    fileprivate let userLocation: CLLocation?
+    init(_ initialSize: NSSize, location: MediaArea.Venue, userLocation: CLLocation?, presentation: TelegramPresentationTheme, callback:@escaping()->Void) {
         self.location = location
         self.callback = callback
         self.presentation = presentation

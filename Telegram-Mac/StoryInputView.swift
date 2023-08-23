@@ -111,6 +111,8 @@ private final class StoryLikeActionButton: Control {
         let layer: InlineStickerItemLayer? = makeView(reaction.item.reaction, state: state, context: context, appear: true)
         if let layer = layer {
             layer.animateAlpha(from: 0, to: 1, duration: 0.2)
+            layer.animateScale(from: 0.1, to: 1, duration: 0.2)
+
             layer.isPlayable = true
         }
         control.isHidden = layer != nil
@@ -198,17 +200,25 @@ private final class StoryLikeActionButton: Control {
     
     private func makeView(_ reaction: MessageReaction.Reaction, state: StoryInteraction.State, context: AccountContext, appear: Bool = false) -> InlineStickerItemLayer? {
         let layer: InlineStickerItemLayer?
-        let size = NSMakeSize(25, 25)
+        var size = NSMakeSize(25, 25)
         switch reaction {
         case let .custom(fileId):
             layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .onceEnd)
         case .builtin:
-            if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
-                let file = appear ? animation.activateAnimation : animation.selectAnimation
+            if reaction == .defaultStoryLike {
+                size = NSMakeSize(30, 30)
+                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: storyTheme.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
             } else {
-                layer = nil
+                
+                if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
+                    let file = appear ? animation.activateAnimation : animation.selectAnimation
+                    layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
+                } else {
+                    layer = nil
+                }
             }
+            
         }
         if let layer = layer {
             layer.frame = focus(size)
@@ -225,7 +235,7 @@ private final class StoryLikeActionButton: Control {
             return
         }
         
-        if let reaction = story.storyItem.myReaction, !state.inputInFocus {
+        if let reaction = story.storyItem.myReaction, !state.wideInput {
             if self.myReaction != reaction {
                 if let view = self.reaction {
                     performSublayerRemoval(view, animated: animated, scale: true)
@@ -246,7 +256,7 @@ private final class StoryLikeActionButton: Control {
             self.myReaction = nil
         }
         
-        if state.inputInFocus {
+        if state.wideInput {
             control.set(image: state.emojiState == .emoji ? emoji_image : stickers_image, for: .Normal)
             control.set(image: state.emojiState == .emoji ? emoji_image_active : stickers_image_active, for: .Highlight)
         } else {
@@ -322,8 +332,9 @@ private final class StoryReplyActionButton : View {
         
         if state == .share, story?.storyItem.isForwardingDisabled == true {
             if story?.canCopyLink == false {
-                tooltip(for: current, text: strings().storyInputCantShare)
+                current.appTooltip = strings().storyInputCantShare
             } else {
+                current.appTooltip = nil
                 current.contextMenu = {
                     let menu = ContextMenu()
                     menu.addItem(ContextMenuItem(strings().modalCopyLink, handler: { [weak arguments, weak story] in
@@ -336,6 +347,7 @@ private final class StoryReplyActionButton : View {
             }
             
         } else {
+            current.appTooltip = nil
             current.contextMenu = nil
             
             current.set(handler: { [weak arguments, weak self] _ in
@@ -649,14 +661,13 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             textView.inputView.isSelectable = true
             textView.inputView.isEditable = !arguments.interaction.presentation.inTransition
         } else {
-            switch self.inputState {
-            case .focus:
+            if arguments.interaction.presentation.wideInput {
                 size = NSMakeSize(min(supersize.width + 60, wWdith - 20), self.textViewSize(self.textView).height + 16)
                 textView.inputView.textContainer?.maximumNumberOfLines = 0
                 textView.inputView.textContainer?.lineBreakMode = .byWordWrapping
                 textView.inputView.isSelectable = true
                 textView.inputView.isEditable = !arguments.interaction.presentation.inTransition
-            case .none:
+            } else {
                 size = NSMakeSize(supersize.width, self.textViewSize(self.textView).height + 16)
                 textView.inputView.textContainer?.maximumNumberOfLines = 1
                 textView.inputView.textContainer?.lineBreakMode = .byTruncatingTail
@@ -799,7 +810,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 return
             }
             let state = arguments.interaction.presentation
-            if state.inputInFocus {
+            if state.wideInput {
                 self?.arguments?.showEmojiPanel(control)
             } else {
                 self?.like(.init(item: .builtin("❤️".withoutColorizer), fromRect: nil), resetIfNeeded: true)

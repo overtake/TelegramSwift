@@ -94,9 +94,9 @@ public class NavigationBarView: View {
     }
     
     var startPosition: CGFloat {
-        if let navigation = self.navigation {
-            return navigation.navigationBarLeftPosition
-        }
+//        if let navigation = self.navigation {
+//            return navigation.navigationBarLeftPosition
+//        }
         return 0
     }
     
