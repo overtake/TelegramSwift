@@ -418,8 +418,8 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     var index:Int = 0
         
     if let peer = peerViewMainPeer(peerView) as? TelegramUser {
-        entries.append(.whiteSpace(index: index, height: 20))
-        index += 1
+//        entries.append(.whiteSpace(index: index, height: 20))
+//        index += 1
         entries.append(.info(index: index, viewType: .singleItem, PeerEquatable(peer), storyStats?.accountItem))
         index += 1
         

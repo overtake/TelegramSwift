@@ -36,7 +36,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.highlightColor = NSColor(0x976FFF)
         slideView.moveOnTime = false
         
-        slideView.backgroundColor = presentation.colors.background
+        //slideView.backgroundColor = presentation.colors.background
         
         addSubview(dismiss)
         
@@ -82,6 +82,22 @@ final class PremiumBoardingFeaturesView: View {
         let bounds = slideView.bounds
 
         
+        let stories = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
+        stories.setup(context: context, type: .stories, decoration: .none, getView: { _ in
+            let view = PremiumBoardingStoriesView(frame: bounds, presentation: presentation)
+            view.initialize(context: context, initialSize: bounds.size)
+            return view
+        })
+        slideView.addSlide(stories)
+
+        stories.appear = { [weak self] in
+            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(presentation.colors.grayIcon), for: .Normal)
+        }
+        stories.disappear = { [weak self] in
+            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(.white), for: .Normal)
+        }
+        
+        
         let double_limits = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         
         double_limits.appear = { [weak self] in
@@ -98,20 +114,7 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(double_limits)
         
-        let stories = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
-        stories.setup(context: context, type: .stories, decoration: .none, getView: { _ in
-            let view = PremiumBoardingStoriesView(frame: bounds, presentation: presentation)
-            view.initialize(context: context, initialSize: bounds.size)
-            return view
-        })
-        slideView.addSlide(stories)
 
-        stories.appear = { [weak self] in
-            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(presentation.colors.grayIcon), for: .Normal)
-        }
-        stories.disappear = { [weak self] in
-            self?.dismiss.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(.white), for: .Normal)
-        }
                 
         let more_upload = PremiumFeatureSlideView(frame: slideView.bounds, presentation: presentation)
         more_upload.setup(context: context, type: .more_upload, decoration: .dataRain, getView: { _ in
@@ -223,9 +226,9 @@ final class PremiumBoardingFeaturesView: View {
         
         switch value {
         case .double_limits:
-            slideView.displaySlide(at: 0, animated: false)
-        case .stories:
             slideView.displaySlide(at: 1, animated: false)
+        case .stories:
+            slideView.displaySlide(at: 0, animated: false)
         case .more_upload:
             slideView.displaySlide(at: 2, animated: false)
         case .faster_download:

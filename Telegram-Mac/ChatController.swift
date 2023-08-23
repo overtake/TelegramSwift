@@ -417,6 +417,7 @@ class ChatControllerView : View, ChatInputDelegate {
     }
         
     func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
+        let animated = animated && !inLiveResize && !tableView.clipView.isAnimateScrolling
         var added:[NSView] = []
         for value in values {
             if let view = value.photoView {
@@ -1788,10 +1789,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let gap: CGFloat = 13
             let inset: CGFloat = 3
             
-            genericView.tableView.beginTableUpdates()
             let lastMax: CGFloat = items[items.count - 1].frame.maxY - inset
             let firstMin: CGFloat = items[0].frame.minY + inset
-            genericView.tableView.endTableUpdates()
             
             if offset.y >= lastMax - ph - gap {
                 point.y = lastMax - offset.y - ph
@@ -1946,16 +1945,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         sizeValue.set(size)
         self.updateFloatingPhotos(genericView.scroll, animated: false)
     }
-    
-    private let checker = Atomic<Bool>(value: false)
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if checker.swap(true) == true {
-            var bp = 0
-            bp += 1
-        }
         
         sizeValue.set(frame.size)
         self.chatInteraction.add(observer: self)

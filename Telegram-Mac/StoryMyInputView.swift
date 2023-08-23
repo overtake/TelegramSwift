@@ -91,7 +91,6 @@ final class StoryMyInputView : Control, StoryInput {
             context.setFillColor(NSColor.clear.cgColor)
             context.fill(bounds)
             
-            context.setBlendMode(.normal)
             
             
             var currentX = mergedImageSize + mergedImageSpacing * CGFloat(images.count - 1) - mergedImageSize
@@ -106,9 +105,11 @@ final class StoryMyInputView : Control, StoryInput {
                 context.translateBy(x: -frame.width / 2.0, y: -frame.height / 2.0)
                 
                 let imageRect = CGRect(origin: CGPoint(x: currentX, y: 0.0), size: CGSize(width: mergedImageSize, height: mergedImageSize))
-                context.setFillColor(storyTheme.colors.background.cgColor)
-                context.fillEllipse(in: imageRect.insetBy(dx: -1.0, dy: -1.0))
                 
+                context.setBlendMode(.clear)
+                context.setFillColor(NSColor.red.cgColor)
+                context.fillEllipse(in: imageRect.insetBy(dx: -1.0, dy: -1.0))
+                context.setBlendMode(.normal)
                 context.draw(image, in: imageRect)
                 
                 currentX -= mergedImageSpacing
@@ -209,59 +210,11 @@ final class StoryMyInputView : Control, StoryInput {
         delete.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
         
         more.contextMenu = { [weak self] in
-            
             let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
-            
-            if let story = self?.story, let context = self?.arguments?.context {
-               
-                
-                if !story.storyItem.isPinned {
-                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveToProfile, handler: {
-                        self?.arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_save_to_profile.value))
-                } else {
-                    menu.addItem(ContextMenuItem(strings().storyMyInputRemoveFromProfile, handler: {
-                        self?.arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_delete.value))
-                }
-                let resource: TelegramMediaFile?
-                if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
-                    if let res = media.representations.last?.resource {
-                        resource = .init(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: res, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "image/jpeg", size: nil, attributes: [.FileName(fileName: "My Story \(stringForFullDate(timestamp: story.storyItem.timestamp)).jpeg")])
-                    } else {
-                        resource = nil
-                    }
-                    
-                } else if let media = story.storyItem.media._asMedia() as? TelegramMediaFile {
-                    resource = media
-                } else {
-                    resource = nil
-                }
-                
-                
-                if let resource = resource {
-                    menu.addItem(ContextMenuItem(strings().storyMyInputSaveMedia, handler: {
-                        saveAs(resource, account: context.account)
-                    }, itemImage: MenuAnimation.menu_save_as.value))
-                }
-                
-                if story.sharable {
-                   
-                    if !story.storyItem.isForwardingDisabled {
-                        menu.addItem(ContextMenuItem(strings().storyMyInputShare, handler: {
-                            self?.arguments?.share(story)
-                        }, itemImage: MenuAnimation.menu_share.value))
-                    }
-                    
-                    if story.canCopyLink {
-                        menu.addItem(ContextMenuItem(strings().storyMyInputCopyLink, handler: {
-                            self?.arguments?.copyLink(story)
-                        }, itemImage: MenuAnimation.menu_copy_link.value))
-                    }
-                }
+            if let story = self?.story, let menu = self?.arguments?.storyContextMenu(story) {
+                return menu
             }
-
-            return menu
+            return nil
         }
         
         delete.set(handler: { [weak self] _ in
@@ -447,12 +400,11 @@ final class StoryMyInputView : Control, StoryInput {
         transition.updateFrame(view: delete, frame: delete.centerFrameY(x: size.width - delete.frame.width - 16))
         transition.updateFrame(view: more, frame: more.centerFrameY(x: delete.frame.minX - more.frame.width - 10))
         var viewsRect = NSMakeRect(16, 0, viewsText.frame.width, size.height)
+        if let view = self.like {
+            viewsRect.size.width += (view.frame.width + 5)
+        }
         if let avatars = self.avatars {
             viewsRect.size.width += avatars.frame.width + 5
-
-            if let view = self.like {
-                viewsRect.size.width += (view.frame.width + 5)
-            }
             transition.updateFrame(view: views, frame: viewsRect)
             transition.updateFrame(view: avatars, frame: avatars.centerFrameY(x: 0))
             

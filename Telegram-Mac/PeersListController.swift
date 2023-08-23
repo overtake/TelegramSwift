@@ -117,7 +117,8 @@ struct PeerListState : Equatable {
     var isContacts: Bool
     var filterData: FilterData
     var presentation: TelegramPresentationTheme
-    
+    var privacy: GlobalPrivacySettings?
+
     var hasStories: Bool {
         if let stories = self.stories, !isContacts, !mode.isForum {
             if self.splitState == .minimisize {
@@ -133,8 +134,8 @@ struct PeerListState : Equatable {
         return false
     }
     
-    static var initialize: PeerListState {
-        return .init(proxySettings: .defaultSettings, connectionStatus: .waitingForNetwork, splitState: .dual, searchState: .None, peer: nil, forumPeer: nil, mode: .plain, activities: .init(activities: [:]), appear: .normal, controllerAppear: .normal, hiddenItems: .default, selectedForum: nil, stories: nil, isContacts: false, filterData: FilterData(), presentation: theme)
+    static func initialize(_ isContacts: Bool) -> PeerListState {
+        return .init(proxySettings: .defaultSettings, connectionStatus: .waitingForNetwork, splitState: .dual, searchState: .None, peer: nil, forumPeer: nil, mode: .plain, activities: .init(activities: [:]), appear: .normal, controllerAppear: .normal, hiddenItems: .default, selectedForum: nil, stories: nil, isContacts: isContacts, filterData: FilterData(), presentation: theme, privacy: nil)
 
     }
 }
@@ -425,7 +426,7 @@ fileprivate final class TitleView : Control {
     }
         
     fileprivate func updateState(_ state: PeerListState, arguments: Arguments, maxWidth: CGFloat, animated: Bool) {
-        
+                
         let source: Source
         if state.isContacts {
             source = .contacts
@@ -446,9 +447,9 @@ fileprivate final class TitleView : Control {
         layout.measure(width: maxWidth)
         textView.update(layout)
         
-        let hasStatus = state.peer?.peer.isPremium ?? false && state.mode == .plain
+        let hasStatus = state.peer?.peer.isPremium ?? false && state.mode == .plain && source != .contacts
 
-        if hasStatus, let peer = state.peer?.peer, source != .contacts {
+        if hasStatus, let peer = state.peer?.peer {
             
             let current: StatusView
             if let view = self.premiumStatus {
@@ -724,7 +725,7 @@ class PeerListContainerView : Control {
         }
 
         
-        let hasCompose = (state.isContacts || state.mode == .plain)
+        let hasCompose = (state.isContacts || state.mode == .plain || (state.mode.groupId == .archive && state.splitState != .minimisize))
         
         if hasCompose {
             let current: ImageButton
@@ -743,6 +744,11 @@ class PeerListContainerView : Control {
                 current.set(image: theme.icons.contactsNewContact, for: .Normal)
                 current.set(image: theme.icons.contactsNewContact, for: .Hover)
                 current.set(image: theme.icons.contactsNewContact, for: .Highlight)
+            } else if state.mode.groupId == .archive {
+                current.set(background: .clear, for: .Highlight)
+                current.set(image: theme.icons.chatActions, for: .Normal)
+                current.set(image: theme.icons.chatActions, for: .Hover)
+                current.set(image: theme.icons.chatActionsActive, for: .Highlight)
             } else {
                 current.set(background: theme.colors.accent, for: .Highlight)
                 current.set(image: theme.icons.composeNewChat, for: .Normal)
@@ -850,16 +856,17 @@ class PeerListContainerView : Control {
             self.foldersView = nil
         }
         
-        if state.mode.groupId == .archive || (state.selectedForum != nil && state.splitState != .minimisize) || state.mode.isForum || state.appear == .short, state.searchState != .Focus {
+        if state.mode.groupId == .archive || (state.selectedForum != nil && state.splitState != .minimisize) || state.mode.isForum || state.appear == .short {
             let current: ImageButton
             if let view = self.backButton {
                 current = view
             } else {
-                current = ImageButton(frame: NSMakeRect(10, statusHeight, 40, 30))
+                current = ImageButton(frame: NSMakeRect(10, 10, 40, 30))
                 self.backButton = current
                 current.animates = false
-                self.backButton?.set(handler: { [weak arguments] _ in
+                self.backButton?.set(handler: { [weak arguments, weak self] _ in
                     arguments?.getController()?.navigationController?.back()
+                    self?.searchView.cancel(true)
                 }, for: .Click)
                 containerView.addSubview(current, positioned: .below, relativeTo: searchView)
             }
@@ -869,7 +876,7 @@ class PeerListContainerView : Control {
             } else {
                 current.set(image: theme.icons.chatNavigationBack, for: .Normal)
             }
-            current.sizeToFit(.zero, NSMakeSize(30, 30), thatFit: true)
+            current.sizeToFit(.zero, NSMakeSize(40, 30), thatFit: true)
         } else if let view = self.backButton {
             performSubviewRemoval(view, animated: animated)
             self.backButton = nil
@@ -1172,13 +1179,13 @@ class PeerListContainerView : Control {
 
         
         var leftSearchInset: CGFloat = 0
-        if let _ = self.backButton {
-            if state.mode.groupId == .archive {
-                leftSearchInset += 40
-            } else {
-                leftSearchInset += (40 * (1 - progress))
-            }
-        }
+//        if let _ = self.backButton {
+//            if state.mode.groupId == .archive {
+//                leftSearchInset += 40
+//            } else {
+//                leftSearchInset += (40 * (1 - progress))
+//            }
+//        }
         let searchRect = NSMakeRect(10 + leftSearchInset, searchY, (size.width - 10 * 2) - leftSearchInset, componentSize.height)
         
         
@@ -1223,13 +1230,9 @@ class PeerListContainerView : Control {
         
         if let view = self.backButton {
             if state.splitState == .minimisize {
-                if state.filterData.sidebar, !state.filterData.isEmpty {
-                    transition.updateFrame(view: view, frame: view.centerFrameX(y: 10))
-                } else {
-                    transition.updateFrame(view: view, frame: view.centerFrameX(y: 30))
-                }
+                transition.updateFrame(view: view, frame: view.centerFrameX(y: 10))
             } else {
-                let rect = NSMakeRect(10, searchRect.minY, 40, searchRect.height)
+                let rect = NSMakeRect(10, 10, 40, searchRect.height)
                 transition.updateFrame(view: view, frame: rect)
                 if state.mode.groupId == .archive {
                     transition.updateAlpha(view: view, alpha: 1)
@@ -1263,7 +1266,6 @@ class PeerListContainerView : Control {
             titleX = titleXEnd - (titleXEnd - titleXStart) * (1 - stories.progress)
             storyX = storyXEnd + (storyXStart - storyXEnd) * (1 - stories.progress)
         }
-        
 
 
         transition.updateFrame(view: titleView, frame: CGRect(origin: CGPoint(x: titleX, y: floorToScreenPixels(bsc, (statusHeight - titleView.size.height) / 2) - 2), size: titleView.size))
@@ -1337,9 +1339,9 @@ class PeerListContainerView : Control {
                 offset += foldersItem.height
             }
         } else if state.splitState == .minimisize {
-            if !state.filterData.sidebar {
-                offset += 20
-            }
+//            if !state.filterData.sidebar {
+//                offset += 20
+//            }
         }
         return offset
     }
@@ -1352,11 +1354,11 @@ class PeerListContainerView : Control {
         }
         var height: CGFloat = 50
         
-        if state.splitState == .minimisize {
-            if !state.filterData.sidebar {
-                height += 40
-            }
-        }
+//        if state.splitState == .minimisize {
+//            if !state.filterData.sidebar {
+//                height += 40
+//            }
+//        }
         return height
     }
     
@@ -1469,8 +1471,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return nil
     }
     
-    let stateValue: Atomic<PeerListState> = Atomic(value: .initialize)
-    private let stateSignal: ValuePromise<PeerListState> = ValuePromise(.initialize, ignoreRepeated: true)
+    let stateValue: Atomic<PeerListState>
+    private let stateSignal: ValuePromise<PeerListState>
     var stateUpdater: Signal<PeerListState, NoError> {
         return stateSignal.get()
     }
@@ -1543,6 +1545,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     init(_ context: AccountContext, isContacts: Bool = false, followGlobal:Bool = true, mode: PeerListMode = .plain, searchOptions: AppSearchOptions = [.chats, .messages]) {
         self.followGlobal = followGlobal
         self.mode = mode
+        self.stateValue = Atomic(value: .initialize(isContacts))
+        self.stateSignal = ValuePromise(.initialize(isContacts), ignoreRepeated: true)
+
         self.isContacts = isContacts
         self.searchOptions = searchOptions
         switch mode {
@@ -1815,7 +1820,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             storyState = .single(nil)
         }
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, appearance in
+        let privacy: Promise<GlobalPrivacySettings?> = Promise(nil)
+       
+        
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, storyState, appearMode.get(), privacy.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, storyState, appearMode, privacy, appearance in
             updateState { value in
                 var current: PeerListState = value
                 current.proxySettings = pref.0
@@ -1830,9 +1838,14 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 current.appear = layout == .minimisize ? .normal : appearMode
                 current.isContacts = isContacts
                 current.presentation = appearance.presentation
+                current.privacy = privacy
                 return current
             }
         }))
+        
+        if self.mode.groupId == .archive {
+            privacy.set(context.engine.privacy.requestAccountPrivacySettings() |> map { $0.globalSettings } |> map(Optional.init))
+        }
         
         let pushController:(ViewController)->Void = { [weak self] c in
             self?.context.bindings.rootNavigation().push(c)
@@ -1875,82 +1888,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }
 
-//
-//        if mode.isForum {
-//            genericView.compose.contextMenu = { [weak self] in
-//                let menu = ContextMenu()
-//                if let peer = self?.state?.forumPeer {
-//                    var items: [ContextMenuItem] = []
-//
-//                    let chatController = context.bindings.rootNavigation().controller as? ChatController
-//                    let infoController = context.bindings.rootNavigation().controller as? PeerInfoController
-//                    let topicController = context.bindings.rootNavigation().controller as? InputDataController
-//
-//                    if infoController == nil || (infoController?.peerId != peer.peer.id || infoController?.threadInfo != nil) {
-//                        items.append(ContextMenuItem(strings().forumTopicContextInfo, handler: {
-//                            ForumUI.openInfo(peer.peer.id, context: context)
-//                        }, itemImage: MenuAnimation.menu_show_info.value))
-//                    }
-//
-//                    if chatController == nil || (chatController?.chatInteraction.chatLocation != .peer(peer.peer.id)) {
-//                        items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
-//                            self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
-//                        }, itemImage: MenuAnimation.menu_read.value))
-//                    }
-//
-//                    if let call = self?.state?.forumPeer?.call {
-//                        if call.data?.groupCall == nil {
-//                            if let data = call.data, data.participantCount == 0 && call.activeCall.scheduleTimestamp == nil {
-//                                items.append(ContextMenuItem(strings().peerInfoActionVoiceChat, handler: { [weak self] in
-//                                    self?.takeArguments()?.joinGroupCall(call)
-//                                }, itemImage: MenuAnimation.menu_video_chat.value))
-//                            }
-//                        }
-//                    }
-//
-//                    if peer.peer.hasPermission(.manageTopics) {
-//                        if topicController?.identifier != "ForumTopic" {
-//                            if !items.isEmpty {
-//                                items.append(ContextSeparatorItem())
-//                            }
-//                            items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
-//                                ForumUI.createTopic(peer.peer.id, context: context)
-//                            }, itemImage: MenuAnimation.menu_edit.value))
-//                        }
-//                    }
-//
-//                    if !items.isEmpty {
-//                        for item in items {
-//                            menu.addItem(item)
-//                        }
-//                    }
-//                }
-//                return menu
-//            }
-//        } else if isContacts {
-//            genericView.compose.set(handler: { _ in
-//                showModal(with: AddContactModalController(context), for: context.window)
-//            }, for: .Click)
-//        } else {
-//            genericView.compose.contextMenu = { [weak self] in
-//                let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
-//                    self?.context.composeCreateGroup()
-//                }, itemImage: MenuAnimation.menu_create_group.value),
-//                ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
-//                    self?.context.composeCreateSecretChat()
-//                }, itemImage: MenuAnimation.menu_lock.value),
-//                ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
-//                    self?.context.composeCreateChannel()
-//                }, itemImage: MenuAnimation.menu_channel.value)];
-//
-//                let menu = ContextMenu()
-//                for item in items {
-//                    menu.addItem(item)
-//                }
-//                return menu
-//            }
-//        }
-        
+
         genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
             updateState { current in
                 var current = current
@@ -2096,13 +2034,23 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     }
                 }
 
-                if !items.isEmpty {
-                    for item in items {
-                        menu.addItem(item)
-                    }
+                for item in items {
+                    menu.addItem(item)
                 }
             } else if isContacts {
-                
+                menu.addItem(ContextMenuItem(strings().newContactTitle, handler: {
+                    showModal(with: AddContactModalController(context), for: context.window)
+                }, itemImage: MenuAnimation.menu_add_member.value))
+            } else if self?.state?.mode.groupId == .archive {
+                menu.addItem(ContextMenuItem(strings().peerListArchiveSettings, handler: {
+                    pushController(ArchiveSettingsController(context: context, privacy: self?.state?.privacy, update: { updated in
+                        updateState { current in
+                            var current = current
+                            current.privacy = updated
+                            return current
+                        }
+                    }))
+                }, itemImage: MenuAnimation.menu_gear.value))
             } else {
                 let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
                     self?.context.composeCreateGroup()
@@ -2114,39 +2062,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     self?.context.composeCreateChannel()
                 }, itemImage: MenuAnimation.menu_channel.value)];
 
-                let menu = ContextMenu()
                 for item in items {
                     menu.addItem(item)
                 }
             }
             return menu
         })
-        
-        /*
-         
- } else if isContacts {
-     genericView.compose.set(handler: { _ in
-         showModal(with: AddContactModalController(context), for: context.window)
-     }, for: .Click)
- } else {
-     genericView.compose.contextMenu = { [weak self] in
-         let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
-             self?.context.composeCreateGroup()
-         }, itemImage: MenuAnimation.menu_create_group.value),
-         ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
-             self?.context.composeCreateSecretChat()
-         }, itemImage: MenuAnimation.menu_lock.value),
-         ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
-             self?.context.composeCreateChannel()
-         }, itemImage: MenuAnimation.menu_channel.value)];
-
-         let menu = ContextMenu()
-         for item in items {
-             menu.addItem(item)
-         }
-         return menu
-     }
-         */
         
         self.takeArguments = { [weak arguments] in
             return arguments
@@ -2336,7 +2257,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
             let initialTags: SearchTags
             let target: SearchController.Target
-            if let peerId = self.state?.selectedForum {
+            if let peerId = self.state?.forumPeer?.peer.id {
                 initialTags = .init(messageTags: nil, peerTag: nil)
                 target = .forum(peerId)
             } else {
@@ -2680,7 +2601,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             let forumPeer: Signal<PeerListState.ForumData?, NoError>
             if let peerId = peerId {
                 forumPeer = context.account.postbox.peerView(id: peerId) |> mapToSignal { view in
-                    if let peer = peerViewMainPeer(view) as? TelegramChannel, let cachedData = view.cachedData as? CachedChannelData, peer.isForum {
+                    if let peer = peerViewMainPeer(view) as? TelegramChannel, peer.isForum {
                         return .single(.init(peer: peer, peerView: view, online: 0))
                     } else {
                         return .single(nil)

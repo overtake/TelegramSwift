@@ -26,7 +26,13 @@ private final class StoryViewerEmptyRowItem : GeneralRowItem {
         self.state = state
         self.context = context
         self.presentation = presentation
-        self.text = .init(.initialize(string: strings().storyAlertViewsExpired, color: presentation.colors.grayText, font: .normal(.text)), alignment: .center)
+        let string: String
+        if state.views?.totalCount == 0 {
+            string = strings().storyAlertNoViews
+        } else {
+            string = strings().storyAlertViewsExpired
+        }
+        self.text = .init(.initialize(string: string, color: presentation.colors.grayText, font: .normal(.text)), alignment: .center)
         
         if !context.isPremium {
             let attr = parseMarkdownIntoAttributedString(strings().storyViewersPremiumUnlock, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.grayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.link), linkAttribute: { contents in
@@ -334,7 +340,7 @@ private final class StoryViewerRowView: GeneralRowView {
                 }
                 let layer = makeView(reaction, context: item.context)
                 if let layer = layer {
-                    layer.frame = NSMakeRect(frame.width - 25 - container.frame.minX, (frame.height - 25) / 2, 25, 25)
+                    layer.frame = NSMakeRect(frame.width - layer.frame.width - container.frame.minX, (frame.height - layer.frame.height) / 2, layer.frame.width, layer.frame.height)
                     self.layer?.addSublayer(layer)
                     layer.isPlayable = false
                 }
@@ -359,17 +365,24 @@ private final class StoryViewerRowView: GeneralRowView {
     
     private func makeView(_ reaction: MessageReaction.Reaction, context: AccountContext, appear: Bool = false) -> InlineStickerItemLayer? {
         let layer: InlineStickerItemLayer?
-        let size = NSMakeSize(25, 25)
+        var size = NSMakeSize(25, 25)
         switch reaction {
         case let .custom(fileId):
             layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .onceEnd)
         case .builtin:
-            if let animation = context.reactions.available?.reactions.first(where: { $0.value == reaction }) {
-                let file = appear ? animation.activateAnimation : animation.selectAnimation
+            if reaction == .defaultStoryLike {
+                size = NSMakeSize(30, 30)
+                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: storyTheme.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
             } else {
-                layer = nil
+                if let animation = context.reactions.available?.reactions.first(where: { $0.value == reaction }) {
+                    let file = appear ? animation.activateAnimation : animation.selectAnimation
+                    layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
+                } else {
+                    layer = nil
+                }
             }
+            
         }
         
         return layer
@@ -424,6 +437,7 @@ private final class Arguments {
 private struct State : Equatable {
     var item: EngineStoryItem
     var views: EngineStoryViewListContext.State?
+    var previous: EngineStoryViewListContext.State?
     var isLoadingMore: Bool = false
     var listMode: EngineStoryViewListContext.ListMode
     var sortMode: EngineStoryViewListContext.SortMode
@@ -440,6 +454,7 @@ private func _id_miss(_ id: Int) -> InputDataIdentifier {
 private let _id_loading_more = InputDataIdentifier("_id_loading_more")
 private let _id_empty = InputDataIdentifier("_id_empty")
 private let _id_empty_holder = InputDataIdentifier("_id_empty_holder")
+private let _id_not_recorded_text = InputDataIdentifier("_id_not_recorded_text")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -457,13 +472,24 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     var needToLoad: Bool = true
     
-    if let list = state.views {
+    var views = state.views
+    if views == nil {
+        views = state.previous
+    } else if views?.items.count == 0, views?.totalCount != 0 {
+        views = state.previous
+    }
+    
+    if let list = views {
         
         var items: [Tuple] = []
-        for item in list.items {
+        if !arguments.context.isPremium, state.item.views?.reactedCount == 0 {
             
-            items.append(.init(peer: .init(item.peer._asPeer()), reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, viewType: .legacy))
+        } else {
+            for item in list.items {
+                items.append(.init(peer: .init(item.peer._asPeer()), reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, viewType: .legacy))
+            }
         }
+        
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
                 return StoryViewerRowItem(initialSize, stableId: stableId, context: arguments.context, peer: item.peer.peer, reaction: item.reaction, storyStats: item.storyStats, timestamp: item.timestamp, presentation: arguments.presentation, callback: arguments.callback, openStory: arguments.openStory, contextMenu: arguments.contextMenu)
@@ -478,12 +504,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if totalCount > 15 && !expired {
             totalHeight -= 40
         }
-
+        
         
         if items.isEmpty {
-            if !state.query.isEmpty {
+            if !state.query.isEmpty || state.listMode != .everyone {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-                    return SearchEmptyRowItem(initialSize, stableId: stableId, height: totalHeight)
+                    return SearchEmptyRowItem(initialSize, stableId: stableId, height: totalHeight, icon: arguments.presentation.icons.emptySearch, customTheme: .initialize(arguments.presentation))
                 }))
             } else {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty_holder, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
@@ -492,7 +518,28 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
         } else {
-            let miss = totalHeight - CGFloat(items.count) * 52.0
+            var additionHeight: CGFloat = 0
+            if state.listMode == .everyone, state.query.isEmpty {
+                if list.totalCount == items.count, state.item.views?.seenCount != list.totalCount {
+                    let text: String
+                    if arguments.context.isPremium {
+                        text = strings().storyViewersNotRecorded
+                    } else {
+                        text = strings().storyViewersPremiumUnlock
+                    }
+                    let viewType: GeneralViewType = .modern(position: .single, insets: .init())
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_not_recorded_text, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+                        return GeneralTextRowItem(initialSize, height: 40, text: .markdown(text, linkHandler: { _ in
+                            arguments.openPremium()
+                        }), textColor: arguments.presentation.colors.grayText, alignment: .center, centerViewAlignment: true, viewType: viewType)
+                    }))
+                    additionHeight += 40
+                    
+                }
+            }
+            
+            
+            let miss = totalHeight - (CGFloat(items.count) * 52.0 + additionHeight)
             if miss > 0 {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_miss(0), equatable: .init(miss), comparable: nil, item: { initialSize, stableId in
                     return GeneralRowItem(initialSize, height: miss, stableId: stableId, backgroundColor: storyTheme.colors.background)
@@ -500,6 +547,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 index += 1
             }
         }
+    } else {
+        var bp = 0
+        bp += 1
     }
     
     // entries
@@ -605,7 +655,7 @@ private final class StoryViewersTopView : View {
 func StoryViewersModalController(context: AccountContext, list: EngineStoryViewListContext, peerId: PeerId, story: EngineStoryItem, presentation: TelegramPresentationTheme, callback:@escaping(PeerId)->Void) -> InputDataModalController {
     
     
-    let initialViews = story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [])
+    let initialViews = story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [], hasList: false)
     
     var storyViewList = list
     
@@ -613,7 +663,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(item: story, views: nil, listMode: .everyone, sortMode: .reactionsFirst)
+    let initialState = State(item: story, views: nil, previous: nil, listMode: .everyone, sortMode: .reactionsFirst)
     
     let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -716,6 +766,12 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         } else {
             contextList = context.engine.messages.storyViewList(id: story.id, views: initialViews, listMode: listMode, sortMode: sortMode, searchQuery: query, parentSource: parentSource)
         }
+        var previous = stateValue.with { $0.views }
+        updateState { current in
+            var current = current
+            current.previous = previous
+            return current
+        }
         storyContext.set(.single(contextList))
     }
 
@@ -743,7 +799,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
                 current.sortMode = .reactionsFirst
                 return current
             }
-        }, itemImage: MenuAnimation.menu_check_selected.value))
+        }, itemImage: stateValue.with { $0.sortMode == .reactionsFirst } ? MenuAnimation.menu_check_selected.value : nil))
         
         menu.addItem(ContextMenuItem(strings().storyViewersRecentFirst, handler: {
             updateState { current in
@@ -751,7 +807,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
                 current.sortMode = .recentFirst
                 return current
             }
-        }))
+        }, itemImage: stateValue.with { $0.sortMode == .recentFirst } ? MenuAnimation.menu_check_selected.value : nil))
         return menu
     }
     
@@ -797,9 +853,11 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     }))
     
     var previous = stateValue.with { $0 }
-    actionsDisposable.add(statePromise.get().start(next: { value in
+    actionsDisposable.add((statePromise.get()).start(next: { value in
         if previous.query != value.query || previous.sortMode != value.sortMode || previous.listMode != value.listMode {
-            updateContext()
+            DispatchQueue.main.async {
+                updateContext()
+            }
         }
         previous = value
     }))

@@ -313,7 +313,7 @@ final class GroupCallContext {
                 self?.invikeClose(last: last)
             }
         } else {
-            invikeClose(last: last)
+            invikeClose(last: last || call.sharedContext.getCrossAccountGroupCall() == nil)
         }
         
     }

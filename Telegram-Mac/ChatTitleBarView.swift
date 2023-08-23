@@ -509,7 +509,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     
     func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
         if chatInteraction.presentation.mainPeer?.largeProfileImage?.resource.id.stringRepresentation == stableId.base as? String {
-            return avatarControl
+            return avatarControl.avatar
         }
         return nil
     }

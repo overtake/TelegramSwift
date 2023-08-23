@@ -395,7 +395,9 @@ open class Control: View {
                     handler.handler(self)
                 }
             }
-            super.mouseDown(with: event)
+            if sendRightMouseAnyway {
+                super.mouseDown(with: event)
+            }
             return
         }
         

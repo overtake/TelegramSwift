@@ -327,7 +327,8 @@ class ContactsController: PeersListController {
         super.viewDidLoad()
         backgroundColor = theme.colors.background
     }
-    
+    let first:Atomic<Bool> = Atomic(value:false)
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
 
@@ -335,7 +336,7 @@ class ContactsController: PeersListController {
         
         let previousEntries = self.previousEntries
         let initialSize = self.atomicSize
-        let first:Atomic<Bool> = Atomic(value:false)
+        let first = self.first
         
         let arguments = ContactsArguments(addContact: {
             showModal(with: AddContactModalController(context), for: context.window)
@@ -353,9 +354,10 @@ class ContactsController: PeersListController {
         let transition = combineLatest(queue: prepareQueue, contacts, accountPeer, appearanceSignal)
             |> mapToQueue { view, accountPeer, appearance -> Signal<TableUpdateTransition, NoError> in
                 let first:Bool = !first.swap(true)
-                let entries = entriesForView(view, storyList: nil, accountPeer: accountPeer).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                let entries = entriesForView(view, storyList: nil, accountPeer: accountPeer)
+                    .map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
 
-                return prepareEntries(from: previousEntries.swap(entries), to: entries, context: context, initialSize: initialSize.modify({$0}), arguments: arguments, animated: !first) |> runOn(first ? .mainQueue() : prepareQueue)
+                return prepareEntries(from: previousEntries.swap(entries), to: entries, context: context, initialSize: initialSize.with { $0 }, arguments: arguments, animated: !first) |> runOn(first ? .mainQueue() : prepareQueue)
 
             }
         |> deliverOnMainQueue
@@ -370,7 +372,6 @@ class ContactsController: PeersListController {
     
     override func afterTransaction(_ transition: TableUpdateTransition) {
         super.afterTransaction(transition)
-        self.updateLocalizationAndTheme(theme: theme)
     }
     
     override func scrollup(force: Bool = false) {
@@ -379,10 +380,7 @@ class ContactsController: PeersListController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        _ = previousEntries.swap(nil)
-        genericView.tableView.cancelSelection()
-        genericView.tableView.removeAll()
-        genericView.tableView.documentView?.removeAllSubviews()
+//        _ = previousEntries.swap(nil)
         disposable.set(nil)
     }
 

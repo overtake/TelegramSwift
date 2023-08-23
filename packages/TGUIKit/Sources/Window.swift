@@ -34,20 +34,20 @@ public class AppWindow : Window {
         }
     }
     private func updateButtons() {
-        if !isFullScreen {
-            var point: NSPoint = initialButtonPoint.point
-            self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
-            point.x += 20
-            self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)
-            point.x += 20
-            self.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
-        }
+//        if !isFullScreen {
+//            var point: NSPoint = initialButtonPoint.point
+//            self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
+//            point.x += 20
+//            self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)
+//            point.x += 20
+//            self.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
+//        }
     }
     
     public override func layoutIfNeeded() {
         super.layoutIfNeeded()
-        toolbar?.isVisible = !isFullScreen
-        updateButtons()
+      //  toolbar?.isVisible = !isFullScreen
+        //updateButtons()
     }
 }
 

@@ -552,7 +552,7 @@ class ChatListController : PeersListController {
             self?.revealStoriesState()
         }, getState: { [weak self] in
             guard let state = self?.state else {
-                return .initialize
+                return .initialize(self?.isContacts ?? false)
             }
             return state
         }, getDeltaProgress: { [weak self] in

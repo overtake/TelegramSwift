@@ -77,7 +77,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         super.init(frame: frameRect)
 //        self.backgroundColor = .clear
         self.wantsLayer = true
-       // self.layerContentsRedrawPolicy = .never
+        self.layerContentsRedrawPolicy = .never
       //  self.layer?.drawsAsynchronously = System.drawAsync
         //self.layer?.delegate = self
 //        createDisplayLink()
@@ -99,9 +99,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 //
-//    public override func draw(_ dirtyRect: NSRect) {
-//
-//    }
+    public override func draw(_ dirtyRect: NSRect) {
+       
+    }
 //
 ////    override public func setNeedsDisplay(_ invalidRect: NSRect) {
 ////
@@ -167,7 +167,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     public func updateBounds(to point: NSPoint) {
-        self.bounds.origin = point
+        if self.bounds.origin != point {
+            super.scroll(to: point)
+        }
     }
         
     private(set) var point: NSPoint?
@@ -196,7 +198,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 self.scrollCompletion?(point == self.bounds.origin)
             })
         } else {
-            self.setBoundsOrigin(point)
+            self.updateBounds(to: point)
             self.point = nil
             self.destinationOrigin = nil
             self.scrollCompletion?(false)
@@ -214,9 +216,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         }
     }
     
-    public override func scroll(to newOrigin: NSPoint) {
-        bounds.origin = newOrigin
-    }
+//    public override func scroll(to newOrigin: NSPoint) {
+//        bounds.origin = newOrigin
+//    }
     
     func handleCompletionIfNeeded(withSuccess success: Bool) {
         self.destinationOrigin = nil

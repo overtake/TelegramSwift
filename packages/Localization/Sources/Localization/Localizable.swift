@@ -405,6 +405,22 @@ public final class L10n {
   }
   /// Insufficient Data
   public static var applyLanguageUnsufficientDataTitle: String  { return L10n.tr("Localizable", "ApplyLanguage.UnsufficientDataTitle") }
+  /// Archive Settings
+  public static var archiveTitle: String  { return L10n.tr("Localizable", "Archive.Title") }
+  /// Keep archived chats from folders in the Archive even if they are unmuted and get a new message.
+  public static var archiveFoldersDesc: String  { return L10n.tr("Localizable", "Archive.Folders.Desc") }
+  /// Always Keep Archived
+  public static var archiveFoldersText: String  { return L10n.tr("Localizable", "Archive.Folders.Text") }
+  /// CHATS FROM FOLDERS
+  public static var archiveFoldersTitle: String  { return L10n.tr("Localizable", "Archive.Folders.Title") }
+  /// Automatically archive and mute new private chats, groups and channels from non-contacts.
+  public static var archiveNewChatsDesc: String  { return L10n.tr("Localizable", "Archive.NewChats.Desc") }
+  /// This setting is available only to the subscribers of [Telegram Premium]()
+  public static var archiveNewChatsPremium: String  { return L10n.tr("Localizable", "Archive.NewChats.Premium") }
+  /// Automatically Archive
+  public static var archiveNewChatsText: String  { return L10n.tr("Localizable", "Archive.NewChats.Text") }
+  /// NEW CHATS FROM UNKNOWN USERS
+  public static var archiveNewChatsTitle: String  { return L10n.tr("Localizable", "Archive.NewChats.Title") }
   /// unmuted chats will get unarchived if new messages arrive.
   public static var archiveTooltipFirstText: String  { return L10n.tr("Localizable", "Archive.Tooltip.First.Text") }
   /// Chat Archived
@@ -419,6 +435,12 @@ public final class L10n {
   public static var archiveTooltipThirdText: String  { return L10n.tr("Localizable", "Archive.Tooltip.Third.Text") }
   /// Chat Archived
   public static var archiveTooltipThirdTitle: String  { return L10n.tr("Localizable", "Archive.Tooltip.Third.Title") }
+  /// Keep archived chats in the Archive even if they are unmuted and get a new message.
+  public static var archiveUnmutedChatsDesc: String  { return L10n.tr("Localizable", "Archive.UnmutedChats.Desc") }
+  /// Always Keep Archived
+  public static var archiveUnmutedChatsText: String  { return L10n.tr("Localizable", "Archive.UnmutedChats.Text") }
+  /// UNMUTED CHATS
+  public static var archiveUnmutedChatsTitle: String  { return L10n.tr("Localizable", "Archive.UnmutedChats.Title") }
   /// You can have up to 200 sticker sets installed. Unused stickers are archived when you add more.
   public static var archivedStickersDescription: String  { return L10n.tr("Localizable", "ArchivedStickers.Description") }
   /// Your archived sticker packs will appear here
@@ -8629,6 +8651,8 @@ public final class L10n {
   }
   /// Verified Account
   public static var peerInfoVerifiedTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Verified.Tooltip") }
+  /// Archive Settings
+  public static var peerListArchiveSettings: String  { return L10n.tr("Localizable", "PeerList.Archive.Settings") }
   /// Archived Chats
   public static var peerListTitleArchive: String  { return L10n.tr("Localizable", "PeerList.Title.Archive") }
   /// Chats
@@ -9271,17 +9295,17 @@ public final class L10n {
   public static var premiumRestoreSuccess: String  { return L10n.tr("Localizable", "Premium.Restore.Success") }
   /// Set custom expiration durations like 6 or 48 hours for your stories.
   public static var premiumBoardingStoriesExpirationDurationInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.ExpirationDuration.Info") }
-  /// Expiration Durations
+  /// Expiration Options
   public static var premiumBoardingStoriesExpirationDurationTitle: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.ExpirationDuration.Title") }
-  /// Add links and formatting in captions to your stories.
+  /// Add links and formatting to your story captions.
   public static var premiumBoardingStoriesLinkFormattingInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.LinkFormatting.Info") }
   /// Links and Formatting
   public static var premiumBoardingStoriesLinkFormattingTitle: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.LinkFormatting.Title") }
-  /// Add ten times longer captions to your stories.
+  /// Add 10x longer captions to your stories.
   public static var premiumBoardingStoriesLongerCaptionInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.LongerCaption.Info") }
   /// Longer Captions
   public static var premiumBoardingStoriesLongerCaptionTitle: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.LongerCaption.Title") }
-  /// Check who opens your stories - even after they expire.
+  /// See who viewed your stories - even after they expire.
   public static var premiumBoardingStoriesPermanentHistoryViewInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.PermanentHistoryView.Info") }
   /// Permanent Views History
   public static var premiumBoardingStoriesPermanentHistoryViewTitle: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.PermanentHistoryView.Title") }
@@ -9289,7 +9313,7 @@ public final class L10n {
   public static var premiumBoardingStoriesPriorityOrderInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.PriorityOrder.Info") }
   /// Priority Order
   public static var premiumBoardingStoriesPriorityOrderTitle: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.PriorityOrder.Title") }
-  /// Save other people’s unprotected stories to your Gallery.
+  /// Save other people's stories that are not protected.
   public static var premiumBoardingStoriesSaveToGalleryInfo: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.SaveToGallery.Info") }
   /// Save Stories to Gallery
   public static var premiumBoardingStoriesSaveToGalleryTitle: String  { return L10n.tr("Localizable", "PremiumBoarding.Stories.SaveToGallery.Title") }
@@ -12145,19 +12169,19 @@ public final class L10n {
   public static var storyStealthModeButtonEnable: String  { return L10n.tr("Localizable", "Story.StealthMode.Button.Enable") }
   /// Unlock Stealth Mode
   public static var storyStealthModeButtonUnlock: String  { return L10n.tr("Localizable", "Story.StealthMode.Button.Unlock") }
-  /// Hide my views in the last 5 minutes.
+  /// Hide my views from the past 5 minutes.
   public static var storyStealthModeFirstInfo: String  { return L10n.tr("Localizable", "Story.StealthMode.First.Info") }
   /// Hide Recent Views
   public static var storyStealthModeFirstTitle: String  { return L10n.tr("Localizable", "Story.StealthMode.First.Title") }
-  /// Subscribe to Telegram Premium to hide yje fact that you viewed peoples stories from them.
+  /// Subscribe to Telegram Premium to watch stories without appearing in the list of viewers.
   public static var storyStealthModeInfoSubscribe: String  { return L10n.tr("Localizable", "Story.StealthMode.Info.Subscribe") }
-  /// Turn Stealth Mode on to hide the fact that you viewed peoples' stories from them.
+  /// Turn Stealth Mode on  to watch stories without appearing in the list of viewers.
   public static var storyStealthModeInfoText: String  { return L10n.tr("Localizable", "Story.StealthMode.Info.Text") }
   /// Hide my views in the next 25 minutes.
   public static var storyStealthModeSecondInfo: String  { return L10n.tr("Localizable", "Story.StealthMode.Second.Info") }
-  /// Hide Next Views
+  /// Hide Upcoming Views
   public static var storyStealthModeSecondTitle: String  { return L10n.tr("Localizable", "Story.StealthMode.Second.Title") }
-  /// Please wait until the Stealth Mode is ready to use again.
+  /// Please wait until Stealth Mode is ready to use again.
   public static var storyStealthModeTooltipWait: String  { return L10n.tr("Localizable", "Story.StealthMode.Tooltip.Wait") }
   /// Stories from **%@** will now be shown in Archived Chats.
   public static func storyTooltipArchive(_ p1: String) -> String {
@@ -12203,7 +12227,7 @@ public final class L10n {
   public static var storyTooltipVideoSent: String  { return L10n.tr("Localizable", "Story.Tooltip.VideoSent") }
   /// View in Chat
   public static var storyTooltipButtonViewInChat: String  { return L10n.tr("Localizable", "Story.Tooltip.Button.ViewInChat") }
-  /// Subscribe to [Telegram Premium](premium) to save other people's unprotected stories.
+  /// Subscribe to Telegram Premium to save other people's unprotected stories.
   public static var storyTooltipSaveToGalleryPremium: String  { return L10n.tr("Localizable", "Story.Tooltip.SaveToGallery.Premium") }
   /// The creator of stories you viewed in the last %1$@ minutes or will view in the next %2$@ minutes won't see you in the viewers' lists.
   public static func storyTooltipStealthModeActivate(_ p1: String, _ p2: String) -> String {
@@ -12259,7 +12283,7 @@ public final class L10n {
   public static var storyMediaContextArchive: String  { return L10n.tr("Localizable", "StoryMedia.Context.Archive") }
   /// Open Archive
   public static var storyMediaEmptyOpen: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Open") }
-  /// Open the Archive so select stories you want to be displayed in your profile.
+  /// Open the Archive so select stories you want to be displayed on your profile.
   public static var storyMediaEmptyText: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Text") }
   /// No Saved Stories
   public static var storyMediaEmptyTitle: String  { return L10n.tr("Localizable", "StoryMedia.Empty.Title") }
@@ -12283,11 +12307,11 @@ public final class L10n {
   public static var storyViewContextMenuUnblock: String  { return L10n.tr("Localizable", "StoryView.ContextMenu.Unblock") }
   /// View Location
   public static var storyViewMediaAreaViewLocation: String  { return L10n.tr("Localizable", "StoryView.MediaArea.ViewLocation") }
-  /// %@ has blocked.
+  /// %@ was blocked.
   public static func storyViewTooltipBlock(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryView.Tooltip.Block", p1)
   }
-  /// %@ has deleted from your contacts.
+  /// %@ was deleted from your contacts.
   public static func storyViewTooltipDeleteContact(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryView.Tooltip.DeleteContact", p1)
   }
@@ -12299,7 +12323,7 @@ public final class L10n {
   public static func storyViewTooltipShowMyStories(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryView.Tooltip.ShowMyStories", p1)
   }
-  /// %@ has unblocked.
+  /// %@ was unblocked.
   public static func storyViewTooltipUnblock(_ p1: String) -> String {
     return L10n.tr("Localizable", "StoryView.Tooltip.Unblock", p1)
   }
@@ -12307,15 +12331,17 @@ public final class L10n {
   public static var storyViewersAll: String  { return L10n.tr("Localizable", "StoryViewers.All") }
   /// Contacts
   public static var storyViewersContacts: String  { return L10n.tr("Localizable", "StoryViewers.Contacts") }
+  /// Information about other viewers wasn't recorded
+  public static var storyViewersNotRecorded: String  { return L10n.tr("Localizable", "StoryViewers.NotRecorded") }
   /// Reactions first
   public static var storyViewersReactionsFirst: String  { return L10n.tr("Localizable", "StoryViewers.ReactionsFirst") }
-  /// Recent first
+  /// Newest first
   public static var storyViewersRecentFirst: String  { return L10n.tr("Localizable", "StoryViewers.RecentFirst") }
   /// Viewers
   public static var storyViewersViewers: String  { return L10n.tr("Localizable", "StoryViewers.Viewers") }
   /// Learn More
   public static var storyViewersPremiumLearnMore: String  { return L10n.tr("Localizable", "StoryViewers.Premium.LearnMore") }
-  /// To unlock viewers' lists for expired and saved stories, subscribe to [Telegram Premium]().
+  /// To unlock lists of viewers for expired and saved stories, subscribe to [Telegram Premium]().
   public static var storyViewersPremiumUnlock: String  { return L10n.tr("Localizable", "StoryViewers.Premium.Unlock") }
   /// %d
   public static func storyViewsTitleCountable(_ p1: Int) -> String {

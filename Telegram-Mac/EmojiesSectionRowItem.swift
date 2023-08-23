@@ -980,6 +980,11 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         return super.isEmojiLite
     }
     
+    deinit {
+        var bp = 0
+        bp += 1
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

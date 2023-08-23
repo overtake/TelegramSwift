@@ -2788,9 +2788,9 @@ func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Window? = n
         }
         window.contentView?.background = theme.colors.background
         window.contentView?.subviews.first?.background = theme.colors.background
-        window.appearance = .init(named: .vibrantDark)
+        window.appearance = theme.appearance
         
-//        NSAppearance.current = theme.appearance
+       // NSAppearance.current = theme.appearance
        // window.titl
         window.backgroundColor = theme.colors.grayBackground
         window.titlebarAppearsTransparent = true//theme.dark

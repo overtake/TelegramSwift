@@ -183,7 +183,8 @@ private final class MultiTargetAnimationContext {
     }
     
     deinit {
-       
+       var bp = 0
+        bp += 1
     }
     
     func add(_ handlers: Handlers) -> Int {
@@ -442,7 +443,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.frame = size.bounds
         self.initialize()
         self.file = file
-        self.updateSize(size: size, sync: true)
+        self.updateSize(size: size, sync: false)
         
     }
 
@@ -639,7 +640,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 data = account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: sync)
             }
             if file.isAnimatedSticker || file.isVideoSticker || (file.isCustomEmoji && (file.isSticker || file.isVideo)) {
-                self.resourceDisposable.set((data |> map { resourceData -> Data? in
+                self.resourceDisposable.set((data |> deliverOn(lottieThreadPool) |> map { resourceData -> Data? in
                     if resourceData.complete {
                         if file.isWebm {
                             return resourceData.path.data(using: .utf8)!
@@ -674,7 +675,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 self.resourceDisposable.set(nil)
             }
             
-            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: mediaResource).start())
+//            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: mediaResource).start())
             let shimmerColor = self.shimmerColor
             let fillColor: NSColor? = getColors?(file).first?.color
             let emptyColor: TransformImageEmptyColor?

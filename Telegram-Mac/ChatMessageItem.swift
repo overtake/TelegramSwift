@@ -119,7 +119,7 @@ final class InlineStickerItem : Hashable {
                     let insertString = NSAttributedString(string: "🤡", attributes: updatedAttributes)
                     copy.replaceCharacters(in: range, with: insertString)
 
-                } 
+                }
             }
         }
     }
@@ -389,7 +389,7 @@ class ChatMessageItem: ChatRowItem {
 
                 
                 
-                var formatting: Bool = messageAttr.length > 0 
+                var formatting: Bool = messageAttr.length > 0
                 var index:Int = 0
                 while formatting {
                     var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
@@ -668,7 +668,7 @@ class ChatMessageItem: ChatRowItem {
                     chatInteraction?.markAdAction(adAttribute.opaqueId)
                     globalLinkExecutor.processURL(link)
                 }
-            } 
+            }
             interactions.copy = {
                 selectManager.copy(selectManager)
                 return !selectManager.isEmpty
