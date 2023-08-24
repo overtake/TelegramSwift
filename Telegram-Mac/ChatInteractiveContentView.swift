@@ -605,7 +605,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         let isSpoiler = (messageSpoiler || forceSpoiler) && (parameters?.isRevealed == false)
 
         
-        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || animated || self.frame.size != size || previousIsSpoiler != isSpoiler
+        let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || self.frame.size != size || previousIsSpoiler != isSpoiler
         
         self.previousIsSpoiler = isSpoiler
 
