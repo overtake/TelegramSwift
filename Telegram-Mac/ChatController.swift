@@ -5116,6 +5116,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         switch self.mode {
         case .history:
             availableGroupCall = getGroupCallPanelData(context: context, peerId: peerId)
+        case .thread:
+            if self.mode.isTopicMode {
+                availableGroupCall = getGroupCallPanelData(context: context, peerId: peerId)
+            } else {
+                availableGroupCall = .single(nil)
+            }
         default:
             availableGroupCall = .single(nil)
         }

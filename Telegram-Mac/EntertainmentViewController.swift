@@ -757,7 +757,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendText) {
                     showModalText(for: context.window, text: text)
                 } else {
-                    let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
+                    let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").normalizedEmoji
                     self?.chatInteraction?.appendAttributedText(.makeAnimated(sticker.file, text: text, info: info?.id, fromRect: fromRect))
                 }
             }
