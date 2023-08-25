@@ -1231,6 +1231,7 @@ class PeerListContainerView : Control {
         if let view = self.backButton {
             if state.splitState == .minimisize {
                 transition.updateFrame(view: view, frame: view.centerFrameX(y: 10))
+                transition.updateAlpha(view: view, alpha: 1)
             } else {
                 let rect = NSMakeRect(10, 10, 40, searchRect.height)
                 transition.updateFrame(view: view, frame: rect)
