@@ -2671,6 +2671,8 @@ final class StoryModalController : ModalViewController, Notifable {
                 } else {
                     execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", venue.latitude)),\(String(format:"%f", venue.longitude))", false))
                 }
+            default:
+                break
             }
         }, like: { current, state in
             guard let peerId = state.entryId, let story = state.storyId else {

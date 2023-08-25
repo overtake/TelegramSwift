@@ -245,6 +245,7 @@ private final class StoryLikeActionButton: Control {
                 if let layer = layer {
                     if animated {
                         layer.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        layer.animateScale(from: 0.1, to: 1, duration: 0.35, timingFunction: .spring)
                     }
                 }
                 self.reaction = layer
