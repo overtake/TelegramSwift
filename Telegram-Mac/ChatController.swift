@@ -1945,16 +1945,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         sizeValue.set(size)
         self.updateFloatingPhotos(genericView.scroll, animated: false)
     }
-    
-    private let checker = Atomic<Bool>(value: false)
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if checker.swap(true) == true {
-            var bp = 0
-            bp += 1
-        }
         
         sizeValue.set(frame.size)
         self.chatInteraction.add(observer: self)
@@ -5122,6 +5116,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         switch self.mode {
         case .history:
             availableGroupCall = getGroupCallPanelData(context: context, peerId: peerId)
+        case .thread:
+            if self.mode.isTopicMode {
+                availableGroupCall = getGroupCallPanelData(context: context, peerId: peerId)
+            } else {
+                availableGroupCall = .single(nil)
+            }
         default:
             availableGroupCall = .single(nil)
         }

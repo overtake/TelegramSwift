@@ -192,6 +192,8 @@ open class ScrollView: NSScrollView{
         
         let clipView = TGClipView(frame:self.contentView.frame)
         self.contentView = clipView;
+         
+         self.automaticallyAdjustsContentInsets = false
         
         drawsBackground = false
         layerContentsRedrawPolicy = .never

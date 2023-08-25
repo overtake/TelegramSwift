@@ -252,7 +252,9 @@ private final class StoryListContainer : Control {
         //self.scaleOnClick = true
         
         set(handler: { [weak self] _ in
-            self?.item?.reveal()
+            if self?.superview?.layer?.opacity == 1 {
+                self?.item?.reveal()
+            }
         }, for: .Click)
         
         NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: scrollView.clipView, queue: nil, using: { [weak self] _ in
@@ -533,7 +535,7 @@ private final class StoryListContainer : Control {
     var documentSize: NSSize {
         if views.count > 0, let view = views.last, let item = view.item {
             let index = views.count - 1
-            return NSMakeSize(max(frame.width, getFrame(item, index: index, progress: 1.0).maxX + 10), frame.height)
+            return NSMakeSize(max(frame.width, getFrame(item, index: index, progress: progress).maxX + 10), frame.height)
         } else {
             return frame.size
         }

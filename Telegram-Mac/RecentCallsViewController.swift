@@ -497,7 +497,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
     }
     
     override func backSettings() -> (String, CGImage?) {
-        return ("", theme.icons.callSettings)
+        return ("", nil)
     }
     
     override func scrollup(force: Bool = false) {
@@ -505,9 +505,9 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
         self.genericView.scroll(to: .up(true))
     }
     
-    override func executeReturn() {
-        showModal(with: CallSettingsModalController(context.sharedContext), for: context.window)
-    }
+//    override func executeReturn() {
+//        showModal(with: CallSettingsModalController(context.sharedContext), for: context.window)
+//    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

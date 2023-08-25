@@ -262,7 +262,7 @@ class MainViewController: TelegramViewController {
     let chatList: ChatListController
     let navigation: NavigationViewController
     let tabController:TabBarController = TabBarController()
-    let contacts:ContactsController
+    let contacts:NavigationViewController
     let settings:AccountViewController
     private let phoneCalls:RecentCallsViewController
     private let layoutDisposable:MetaDisposable = MetaDisposable()
@@ -277,21 +277,35 @@ class MainViewController: TelegramViewController {
         super.viewDidResized(size)
         tabController.view.frame = bounds
         self.navigation.frame = bounds
+        self.contacts.frame = bounds
         #if !APP_STORE
         updateController.updateLayout(context.layout, parentSize: size, isChatList: true)
         #endif
     }
     
     override func loadView() {
+        
+        navigation.hasBarRightBorder = true
+        navigation.hasBarLeftBorder = true
+        
+        self.contacts.applyAppearOnLoad = false
+        self.contacts.hasBarRightBorder = true
+        self.contacts.hasBarLeftBorder = true
+        self.contacts._frameRect = self._frameRect
+
+        tabController._frameRect = self._frameRect
+        self.navigation._frameRect = self._frameRect
+
         super.loadView()
         
         let context = self.context
         
-        navigation.hasBarRightBorder = true
-        navigation.hasBarLeftBorder = true
+        
 
-        tabController._frameRect = self._frameRect
-        self.navigation._frameRect = self._frameRect
+
+        
+
+        
         self.bar = .init(height: 0)
         self.tabController.bar = .init(height: 0)
         
@@ -320,6 +334,8 @@ class MainViewController: TelegramViewController {
         tabController.updateLocalizationAndTheme(theme: theme)
         
         self.ready.set(combineLatest(queue: prepareQueue, self.chatList.ready.get(), self.settings.ready.get()) |> map { $0 && $1 })
+        
+        
         
         layoutDisposable.set(context.layoutValue.start(next: { [weak self] state in
             guard let `self` = self else {
@@ -679,7 +695,7 @@ class MainViewController: TelegramViewController {
     
     func isCanMinimisize() -> Bool{
         let current = self.tabController.current
-        return current == navigation || current == contacts || current == phoneCalls
+        return current == navigation
     }
     
     override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
@@ -690,7 +706,7 @@ class MainViewController: TelegramViewController {
     override init(_ context: AccountContext) {
         
         self.chatList = ChatListController(context, mode: .plain)
-        self.contacts = ContactsController(context)
+        self.contacts = NavigationViewController(ContactsController(context), context.window)
         self.settings = AccountViewController(context)
         self.phoneCalls = RecentCallsViewController(context)
         self.navigation = NavigationViewController(self.chatList, context.window)
