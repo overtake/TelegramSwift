@@ -14,7 +14,7 @@ import SwiftSignalKit
 import Postbox
 
 
-private struct AutoarchiveConfiguration : Equatable {
+struct AutoarchiveConfiguration : Equatable {
     let autoarchive_setting_available: Bool
     init(autoarchive_setting_available: Bool) {
         self.autoarchive_setting_available = autoarchive_setting_available
@@ -587,18 +587,18 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    
-    let autoarchiveConfiguration = AutoarchiveConfiguration.with(appConfiguration: context.appConfiguration)
-
-    
-    if autoarchiveConfiguration.autoarchive_setting_available {
-        entries.append(.autoArchiveHeader(sectionId: sectionId))
-        entries.append(.autoArchiveToggle(sectionId: sectionId, value: privacySettings?.globalSettings.automaticallyArchiveAndMuteNonContacts, viewType: .singleItem))
-        entries.append(.autoArchiveDesc(sectionId: sectionId))
-        
-        entries.append(.section(sectionId: sectionId))
-        sectionId += 1
-    }
+//    
+//    let autoarchiveConfiguration = AutoarchiveConfiguration.with(appConfiguration: context.appConfiguration)
+//
+//    
+//    if autoarchiveConfiguration.autoarchive_setting_available {
+//        entries.append(.autoArchiveHeader(sectionId: sectionId))
+//        entries.append(.autoArchiveToggle(sectionId: sectionId, value: privacySettings?.globalSettings.automaticallyArchiveAndMuteNonContacts, viewType: .singleItem))
+//        entries.append(.autoArchiveDesc(sectionId: sectionId))
+//        
+//        entries.append(.section(sectionId: sectionId))
+//        sectionId += 1
+//    }
 
     entries.append(.accountHeader(sectionId: sectionId))
 

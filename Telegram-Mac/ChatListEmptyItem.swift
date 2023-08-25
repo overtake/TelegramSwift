@@ -13,10 +13,12 @@ final class ChatListSpaceItem : GeneralRowItem {
     let getInterfaceState:()-> StoryListChatListRowItem.InterfaceState
     let getState:()->PeerListState
     let getDeltaProgress:()->CGFloat?
-    init(_ initialSize: NSSize, stableId: AnyHashable, getState:@escaping()->PeerListState, getDeltaProgress:@escaping()->CGFloat?, getInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState) {
+    let getNavigationHeight: ()->CGFloat
+    init(_ initialSize: NSSize, stableId: AnyHashable, getState:@escaping()->PeerListState, getDeltaProgress:@escaping()->CGFloat?, getInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, getNavigationHeight: @escaping()->CGFloat) {
         self.getInterfaceState = getInterfaceState
         self.getState = getState
         self.getDeltaProgress = getDeltaProgress
+        self.getNavigationHeight = getNavigationHeight
         super.init(initialSize, stableId: stableId)
     }
     
@@ -26,33 +28,7 @@ final class ChatListSpaceItem : GeneralRowItem {
         guard let table = self.table else {
             return 1
         }
-        let state = getState()
-        var height: CGFloat = 50
-        if state.mode.isPlain, state.splitState != .minimisize {
-            if let progress = getDeltaProgress() {
-                height += 40 * progress
-            } else if state.appear == .normal {
-                height += 40
-            }
-            if !state.filterData.isEmpty, !state.filterData.sidebar, state.searchState == .None {
-                if let progress = getDeltaProgress() {
-                    height += 36 * progress
-                } else if state.appear == .normal {
-                    height += 36
-                }
-            }
-            if state.hasVoiceChat {
-                height += 44
-            }
-            if state.hasInvites {
-                height += 44
-            }
-        }
-        height += getInterfaceState().navigationHeight
-        if getInterfaceState().initFromEvent == false, state.hasStories {
-            height += min(table.documentOffset.y, 0)
-        }
-        return height
+        return self.getNavigationHeight()
     }
     override func viewClass() -> AnyClass {
         return ChatListSpaceItemView.self

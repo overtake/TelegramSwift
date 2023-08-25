@@ -25,10 +25,11 @@ private final class Arguments {
     let hideSharedFolderUpdates:()->Void
     let openStory:(StoryInitialIndex?, Bool, Bool)->Void
     let getStoryInterfaceState:()->StoryListChatListRowItem.InterfaceState
+    let getNavigationHeight:()->CGFloat
     let revealStoriesState:()->Void
     let getState:()->PeerListState
     let getDeltaProgress:()->CGFloat?
-    init(context: AccountContext, openFilterSettings: @escaping(ChatListFilter)->Void, createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, revealStoriesState:@escaping()->Void, getState:@escaping()->PeerListState, getDeltaProgress:@escaping()->CGFloat?) {
+    init(context: AccountContext, openFilterSettings: @escaping(ChatListFilter)->Void, createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, getNavigationHeight: @escaping()->CGFloat, revealStoriesState:@escaping()->Void, getState:@escaping()->PeerListState, getDeltaProgress:@escaping()->CGFloat?) {
         self.context = context
         self.openFilterSettings = openFilterSettings
         self.createTopic = createTopic
@@ -39,6 +40,7 @@ private final class Arguments {
         self.hideSharedFolderUpdates = hideSharedFolderUpdates
         self.openStory = openStory
         self.getStoryInterfaceState = getStoryInterfaceState
+        self.getNavigationHeight = getNavigationHeight
         self.revealStoriesState = revealStoriesState
         self.getState = getState
         self.getDeltaProgress = getDeltaProgress
@@ -282,7 +284,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             case .space:
-                return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState) //StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: arguments.context, state: state, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
+                return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState, getNavigationHeight: arguments.getNavigationHeight) //StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: arguments.context, state: state, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
             }
         }
         
@@ -508,14 +510,14 @@ class ChatListController : PeersListController {
             }
         }, createTopic: {
             switch mode {
-            case let .forum(peerId, _):
+            case let .forum(peerId, _, _):
                 ForumUI.createTopic(peerId, context: context)
             default:
                 break
             }
         }, switchOffForum: {
             switch mode {
-            case let .forum(peerId, _):
+            case let .forum(peerId, _, _):
                 _ = context.engine.peers.setChannelForumMode(id: peerId, isForum: false).start()
             default:
                 break
@@ -534,18 +536,23 @@ class ChatListController : PeersListController {
             if let filter = self?.filterValue.filter {
                 _ = context.engine.peers.hideChatFolderUpdates(folderId: filter.id).start()
             }
-        }, openStory: { [weak self] initialId, singlePeer, isHidden in
+        }, openStory: { initialId, singlePeer, isHidden in
             StoryModalController.ShowStories(context: context, isHidden: isHidden, initialId: initialId, singlePeer: singlePeer)
         }, getStoryInterfaceState: { [weak self] in
             guard let `self` = self else {
                 return .empty
             }
             return self.getStoryInterfaceState()
+        }, getNavigationHeight: { [weak self] in
+            guard let `self` = self else {
+                return 0
+            }
+            return self.genericView.navigationHeight
         }, revealStoriesState: { [weak self] in
             self?.revealStoriesState()
         }, getState: { [weak self] in
             guard let state = self?.state else {
-                return .initialize
+                return .initialize(self?.isContacts ?? false)
             }
             return state
         }, getDeltaProgress: { [weak self] in
@@ -803,10 +810,6 @@ class ChatListController : PeersListController {
         let filterBadges = chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue |> distinctUntilChanged
         
         switch mode {
-        case .folder, .forum:
-            self.updateFilter( {
-                $0.withUpdatedTabs([]).withUpdatedFilter(nil)
-            } )
         case let .filter(filterId):
             filterDisposable.set(combineLatest(filterView, filterBadges).start(next: { [weak self] filters, badges in
                 var shouldBack: Bool = false
@@ -988,7 +991,7 @@ class ChatListController : PeersListController {
     private func resortPinned(_ from: Int, _ to: Int) {
         let context = self.context
         switch mode {
-        case let .forum(peerId, _):
+        case let .forum(peerId, _, _):
             var items:[Int64] = []
 
             var offset: Int = 0

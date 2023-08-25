@@ -823,7 +823,7 @@ final class AccountContext {
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
-        self.networkStatusManager.cleanup()
+        //self.networkStatusManager.cleanup()
         self.audioPlayer?.cleanup()
         self.audioPlayer = nil
         self.diceCache.cleanup()

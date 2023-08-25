@@ -322,6 +322,22 @@ final class InlineStickerView: View {
 
 
 final class InlineStickerItemLayer : SimpleLayer {
+    
+    override init(layer: Any) {
+        let layer = layer as! InlineStickerItemLayer
+        self.aspectFilled = layer.aspectFilled
+        self.account = layer.account
+        self.playPolicy = layer.playPolicy
+        self.getColors = layer.getColors
+        self.textColor = layer.textColor
+        self.shimmerColor = layer.shimmerColor
+        self.fileId = layer.fileId
+        self.size = layer.size
+        self.ignorePreview = layer.ignorePreview
+        self.synchronyous = layer.synchronyous
+        super.init()
+    }
+    
     struct Key: Hashable {
         var id: Int64
         var index: Int

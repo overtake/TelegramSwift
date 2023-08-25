@@ -84,6 +84,7 @@
 		272934162778E05000F10D3C /* menu_music.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 272934152778E05000F10D3C /* menu_music.tgs */; };
 		2729341C2779A35C00F10D3C /* menu_select_multiple.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */; };
 		272C1830267D00350030B5FB /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272C182F267D00350030B5FB /* CoreMediaIO.framework */; };
+		272C7DB62A94BF9300F89190 /* ArchiveSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DB52A94BF9300F89190 /* ArchiveSettingsController.swift */; };
 		273274E626A818AE00E04289 /* WallpaperColorPickerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */; };
 		273274E826A8190F00E04289 /* WallpaperAdditionColorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */; };
 		2733670D2760F3010027441E /* ChatMessageMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2733670C2760F3010027441E /* ChatMessageMenuItems.swift */; };
@@ -170,6 +171,7 @@
 		274B9E44273035DE009993C7 /* ChatCalendarHeaderRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */; };
 		274BB56D264013AD00620D03 /* cameraon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56C264013AC00620D03 /* cameraon.tgs */; };
 		274BB570264013B900620D03 /* cameraoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56F264013B800620D03 /* cameraoff.tgs */; };
+		274E58602A825A6600EEBDBF /* PeersStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274E585F2A825A6600EEBDBF /* PeersStatusView.swift */; };
 		2751015129C86A15004CEFF3 /* menu_speed.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751015029C86A15004CEFF3 /* menu_speed.tgs */; };
 		2751015329C9BAC1004CEFF3 /* ChatListSystemDeprecatedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2751015229C9BAC1004CEFF3 /* ChatListSystemDeprecatedItem.swift */; };
 		2751017D29D2BA02004CEFF3 /* TextInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2751017C29D2BA02004CEFF3 /* TextInputController.swift */; };
@@ -1558,6 +1560,7 @@
 		2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_select_multiple.tgs; sourceTree = "<group>"; };
 		2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInviteRowItem.swift; sourceTree = "<group>"; };
 		272C182F267D00350030B5FB /* CoreMediaIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMediaIO.framework; path = System/Library/Frameworks/CoreMediaIO.framework; sourceTree = SDKROOT; };
+		272C7DB52A94BF9300F89190 /* ArchiveSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSettingsController.swift; sourceTree = "<group>"; };
 		273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperColorPickerContainerView.swift; sourceTree = "<group>"; };
 		273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperAdditionColorView.swift; sourceTree = "<group>"; };
 		27335F0225C8295100FD040C /* GroupVideoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
@@ -1636,6 +1639,7 @@
 		274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarHeaderRowItem.swift; sourceTree = "<group>"; };
 		274BB56C264013AC00620D03 /* cameraon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraon.tgs; sourceTree = "<group>"; };
 		274BB56F264013B800620D03 /* cameraoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraoff.tgs; sourceTree = "<group>"; };
+		274E585F2A825A6600EEBDBF /* PeersStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeersStatusView.swift; sourceTree = "<group>"; };
 		275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallDisplayAsController.swift; sourceTree = "<group>"; };
 		2751015029C86A15004CEFF3 /* menu_speed.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_speed.tgs; sourceTree = "<group>"; };
 		2751015229C9BAC1004CEFF3 /* ChatListSystemDeprecatedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListSystemDeprecatedItem.swift; sourceTree = "<group>"; };
@@ -3202,6 +3206,16 @@
 			name = modern;
 			sourceTree = "<group>";
 		};
+		274E585E2A825A4300EEBDBF /* peers */ = {
+			isa = PBXGroup;
+			children = (
+				C232EA0D1E155E9400C4D38C /* PeersListController.swift */,
+				274E585F2A825A6600EEBDBF /* PeersStatusView.swift */,
+				272C7DB52A94BF9300F89190 /* ArchiveSettingsController.swift */,
+			);
+			name = peers;
+			sourceTree = "<group>";
+		};
 		2760E55726970666001C59F8 /* views */ = {
 			isa = PBXGroup;
 			children = (
@@ -4600,6 +4614,7 @@
 		C2303E871D9A766900098E12 /* left */ = {
 			isa = PBXGroup;
 			children = (
+				274E585E2A825A4300EEBDBF /* peers */,
 				D001E972243B19C4009025F9 /* folders-sidebar */,
 				A7F282FE2395166D00742C20 /* settings-search */,
 				C2FB2FA91EBF73AE0093C8BA /* calls */,
@@ -4608,7 +4623,6 @@
 				C2271F521D9D41FC00424F7B /* contacts */,
 				C22E06301D8043A000A11C88 /* chatlist */,
 				C2303E891D9A76D800098E12 /* MainViewController.swift */,
-				C232EA0D1E155E9400C4D38C /* PeersListController.swift */,
 			);
 			name = left;
 			sourceTree = "<group>";
@@ -6933,6 +6947,7 @@
 				2764A5B125E0173900F9A20D /* AutoDeleteContextMenuView.swift in Sources */,
 				A731925525DA7AA400218E0E /* GigagroupLanding.swift in Sources */,
 				D0A75F25244843D3001F84A0 /* EditImageCanvasController.swift in Sources */,
+				272C7DB62A94BF9300F89190 /* ArchiveSettingsController.swift in Sources */,
 				9F21A7D321C167000037784F /* InstantPageImageItem.swift in Sources */,
 				9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */,
 				27916F1E287C76E10046DB44 /* EmojiTabsItem.swift in Sources */,
@@ -7230,6 +7245,7 @@
 				C250B0231DB6927C004E9FBE /* WPArticleContentView.swift in Sources */,
 				275C14152A6549F8000DDACF /* StoryNoReplyInput.swift in Sources */,
 				273274E826A8190F00E04289 /* WallpaperAdditionColorView.swift in Sources */,
+				274E58602A825A6600EEBDBF /* PeersStatusView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
 				2719D8142A1774BC00081079 /* StoryViewersModalController.swift in Sources */,
 				2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */,

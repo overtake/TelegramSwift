@@ -664,7 +664,7 @@ final class StoryListView : Control, Notifable {
                 isPrev = nil
             }
             
-            if let isPrev = isPrev {
+            if let isPrev = isPrev, mediaAreaViewer == nil {
                 self.prevStoryView?.change(opacity: isPrev ? 1 : 0, animated: animated)
                 self.nextStoryView?.change(opacity: !isPrev ? 1 : 0, animated: animated)
             } else {
