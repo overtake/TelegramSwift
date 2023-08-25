@@ -2973,7 +2973,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         guard let item = optional, storyInterfaceState != .empty else {
             return false
         }
+        
         if self.storyInterfaceState != .revealed {
+            self.genericView.searchView.cancel(true)
             self.storyInterfaceState = .revealed
             CATransaction.begin()
             self.genericView.tableView.scroll(to: .up(false), ignoreLayerAnimation: true)
