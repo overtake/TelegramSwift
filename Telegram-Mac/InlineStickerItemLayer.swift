@@ -196,6 +196,10 @@ private final class MultiTargetAnimationContext {
         self.handlers.removeValue(forKey: token)
         return self.handlers.isEmpty
     }
+    
+    func playAgain() {
+        self.context.playAgain()
+    }
 }
 
 
@@ -529,6 +533,15 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
         }
     }
+    
+    func playAgain() {
+        if let key = self.contextToken {
+            if let context = MultiTargetContextCache.find(key.1) {
+                context.playAgain()
+            }
+        }
+    }
+    
     private var isPreviousPreview: Bool = false
     
     private var contextToken: (Int, MultiTargetContextCache.Key)?
