@@ -787,9 +787,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             let networkState: PresentationGroupCallState.NetworkState
             let input: String?
             let output: String?
+            let sampleUpdateIndex: Int?
         }
         let signal: Signal<DevicesData, NoError> = combineLatest(queue: .mainQueue(), devicesContext.updater(), state) |> map { devices, state in
-            return .init(networkState: state.networkState, input: devices.input, output: devices.output)
+            return .init(networkState: state.networkState, input: devices.input, output: devices.output, sampleUpdateIndex: devices.sampleUpdateIndex)
         } |> filter { $0.networkState == .connected } |> distinctUntilChanged
 
         devicesDisposable.set(signal.start(next: { [weak self] data in

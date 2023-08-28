@@ -618,7 +618,7 @@ class MainViewController: TelegramViewController {
     }
     
     func globalSearch(_ query: String) {
-        let controller = navigation.controller
+        let controller = navigation.empty
         if let controller = controller as? ChatListController {
             controller.globalSearch(query)
         } else if let controller = controller as? TabBarController {
