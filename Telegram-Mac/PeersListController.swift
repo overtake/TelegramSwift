@@ -1608,7 +1608,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     self.downloadsController = controller
                     
                     controller.frame = self.genericView.searchViewRect
-                    self.addSubview(controller.view)
+                    self.navigationController?.addSubview(controller.view)
                     
                     if animated {
                         controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
