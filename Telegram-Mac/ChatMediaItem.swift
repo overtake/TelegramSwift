@@ -617,11 +617,9 @@ class ChatMediaItem: ChatRowItem {
 
 class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
     
-    private var pinchToZoom: PinchToZoom?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        pinchToZoom = PinchToZoom(parentView: contentView)
     }
     
     required init?(coder: NSCoder) {
@@ -773,11 +771,6 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                 contentNode.updateLayout(size: item.contentSize, transition: transition)
             }
             
-            if item.isPinchable {
-                self.pinchToZoom?.add(to: contentNode!, size: item.contentSize)
-            } else {
-                self.pinchToZoom?.remove()
-            }
         }
     }
         

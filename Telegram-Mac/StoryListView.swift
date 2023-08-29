@@ -13,6 +13,16 @@ import TelegramCore
 import Postbox
 import TGModernGrowingTextView
 
+private extension NSImage {
+    func tint(color: NSColor) -> NSImage {
+        return NSImage(size: size, flipped: false) { (rect) -> Bool in
+            color.set()
+            rect.fill()
+            self.draw(in: rect, from: NSRect(origin: .zero, size: self.size), operation: .destinationIn, fraction: 1.0)
+            return true
+        }
+    }
+}
 
 extension MediaArea {
     var title: String {
@@ -47,28 +57,49 @@ private protocol InteractiveMedia {
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition)
 }
 
-private final class Reaction_InteractiveMedia : View, InteractiveMedia {
+private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
     
     let _mediaArea: MediaArea
     
     var mediaArea: MediaArea {
         return _mediaArea
     }
+    private static let shadowImage: NSImage = {
+        return NSImage(named: "Icon_Story_InlineReaction_Shadow")!
+    }()
     
-    private let control = Control()
+    private static let coverImage: NSImage = {
+        return NSImage(named: "Icon_Story_InlineReaction")!
+    }()
+
     
+    private let bg_view: NSImageView = NSImageView()
+    private let shadow_view: NSImageView = NSImageView()
+
     private var reactionLayer: InlineStickerItemLayer?
     private var arguments: StoryArguments?
+    
+    private let control = View()
     required init(frame frameRect: NSRect, mediaArea: MediaArea) {
         _mediaArea = mediaArea
         super.init(frame: frameRect)
-        control.frame = frameRect.size.bounds
-        addSubview(control)
-        backgroundColor = .white
+        addSubview(shadow_view)
+        addSubview(bg_view)
         self.layer?.cornerRadius = frameRect.height / 2
-        control.scaleOnClick = true
+        self.scaleOnClick = true
         
-        control.set(handler: { [weak self] _ in
+        addSubview(control)
+        
+        bg_view.wantsLayer = true
+        shadow_view.wantsLayer = true
+        
+        control.layer?.masksToBounds = false
+        
+        bg_view.image = Reaction_InteractiveMedia.coverImage
+        shadow_view.image = Reaction_InteractiveMedia.shadowImage
+        
+
+        self.set(handler: { [weak self] _ in
             self?.action()
         }, for: .Click)
         
@@ -93,7 +124,7 @@ private final class Reaction_InteractiveMedia : View, InteractiveMedia {
         
         let update: UpdateMessageReaction?
         switch self.mediaArea {
-        case let .reaction(_, reaction):
+        case let .reaction(_, reaction, _):
             switch reaction {
             case let .builtin(string):
                 update = .builtin(string)
@@ -121,35 +152,28 @@ private final class Reaction_InteractiveMedia : View, InteractiveMedia {
         self.reactionLayer = nil
         
         switch area {
-        case let .reaction(coordinate, reaction):
+        case let .reaction(_, reaction, flags):
             self.reactionLayer = makeView(reaction, state: arguments.interaction.presentation, context: arguments.context)
             
-            guard let layer = self.reactionLayer else {
-                return
-            }
-            
-            self.layer?.opacity = 0
-            layer.contentDidUpdate = { [weak self] img in
-                self?.layer?.opacity = 1.0
-            }
-            
-            layer.transform = CATransform3DMakeRotation(-coordinate.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
+            self.bg_view.image = Reaction_InteractiveMedia.coverImage.tint(color: flags.contains(.isDark) ? NSColor(rgb: 0x000000, alpha: 0.5) : NSColor.white)
+
         default:
             break
         }
-        
-        
+        self.updateLayout(size: frame.size, transition: .immediate)
     }
     
-    private func makeView(_ reaction: MessageReaction.Reaction, state: StoryInteraction.State, context: AccountContext, appear: Bool = false) -> InlineStickerItemLayer? {
+    private func makeView(_ reaction: MessageReaction.Reaction, state: StoryInteraction.State, context: AccountContext) -> InlineStickerItemLayer? {
         let layer: InlineStickerItemLayer?
-        let size = NSMakeSize(frame.width - 20, frame.height - 20)
+        let minSide = floor(min(frame.width, frame.height) * 0.6)
+        let size = CGSize(width: minSide, height: minSide)
+        
         switch reaction {
         case let .custom(fileId):
             layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .once)
         case .builtin:
             if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
-                let file = appear ? animation.activateAnimation : animation.selectAnimation
+                let file = animation.selectAnimation
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .once)
             } else {
                 layer = nil
@@ -164,12 +188,33 @@ private final class Reaction_InteractiveMedia : View, InteractiveMedia {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        let insets = NSEdgeInsets(top: -0.08, left: -0.05, bottom: -0.01, right: -0.02)
+        let bg_rect = CGRect(origin: CGPoint(x: size.width * insets.left, y: size.height * insets.top), size: CGSize(width: size.width - size.width * insets.left - size.width * insets.right, height: size.height - size.height * insets.top - size.height * insets.bottom))
+                
+        
+
+        transition.updateFrame(view: shadow_view, frame: bg_rect)
+        transition.updateFrame(view: bg_view, frame: bg_rect)
+        
         transition.updateFrame(view: control, frame: size.bounds)
+        
+        
         if let layer = self.reactionLayer {
-            let layerSize = NSMakeSize(size.width - 20, size.height - 20)
-            transition.updateFrame(layer: layer, frame: size.bounds.focus(layerSize))
-            layer.transform = CATransform3DMakeRotation(-mediaArea.coordinates.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
+            let rect = size.centered(around: CGPoint(x: size.width * 0.5, y: size.height * 0.47))
+            transition.updateFrame(layer: layer, frame: rect)
+            layer.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
         }
+        bg_view.layer?.position = CGPoint(x: bg_view.frame.midX, y: bg_view.frame.midY)
+        bg_view.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
+        bg_view.layer?.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
+        
+        shadow_view.layer?.position = CGPoint(x: shadow_view.frame.midX, y: shadow_view.frame.midY)
+        shadow_view.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
+        shadow_view.layer?.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
+        
+
+
     }
     
     override func layout() {
@@ -181,16 +226,13 @@ private final class Reaction_InteractiveMedia : View, InteractiveMedia {
          
         let size = NSMakeSize(self.frame.width * 3.0, self.frame.height * 3.0)
         
-         var file: TelegramMediaFile?
          var effectFileId: Int64?
          var effectFile: TelegramMediaFile?
          switch reaction.item {
-         case let .custom(fileId, f):
-             file = f
+         case let .custom(fileId, _):
              effectFileId = fileId
          case let .builtin(string):
              let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
-             file = reaction?.selectAnimation
              effectFile = reaction?.aroundAnimation
          }
          
@@ -825,19 +867,14 @@ final class StoryListView : Control, Notifable {
     }
     
     
-    private func mediaRect(_ area: MediaArea) -> (point: NSPoint, radius: CGFloat) {
+    private func mediaRect(_ area: MediaArea) -> NSRect {
         let referenceSize = self.controls.frame.size
+        let coordinates = area.coordinates
         
-        let tx = area.coordinates.x / 100.0 * referenceSize.width
-        let ty = area.coordinates.y / 100.0 * referenceSize.height
-        let rad: Double = -0//area.coordinates.rotation * Double.pi / 180.0
-        let cosTheta = cos(rad)
-        let sinTheta = sin(rad)
-        let rotatedX = tx * cosTheta - ty * sinTheta
-        let rotatedY = tx * sinTheta + ty * cosTheta
-
-        let radius = (area.coordinates.width - 7) / 100.0 * referenceSize.width / 2
-        return (point: NSMakePoint(abs(rotatedX), abs(rotatedY)), radius: radius)
+        let areaSize = CGSize(width: coordinates.width / 100.0 * referenceSize.width, height: coordinates.height / 100.0 * referenceSize.height)
+        let targetFrame = CGRect(x: coordinates.x / 100.0 * referenceSize.width - areaSize.width * 0.5, y: coordinates.y / 100.0 * referenceSize.height - areaSize.height * 0.5, width: areaSize.width, height: areaSize.height)
+        
+        return targetFrame
     }
     
     private func findMediaArea(_ point: NSPoint) -> MediaArea? {
@@ -1312,8 +1349,7 @@ final class StoryListView : Control, Notifable {
         for media in medias {
             switch media {
             case .reaction:
-                let (point, radius) = mediaRect(media)
-                let rect = CGRect(origin: point.offsetBy(dx: -radius, dy: -radius), size: NSMakeSize(radius * 2, radius * 2))
+                let rect = mediaRect(media)
                 let view = Reaction_InteractiveMedia(frame: rect, mediaArea: media)
                 view.apply(area: media, arguments: arguments, animated: animated)
                 interactiveMedias.addSubview(view)
@@ -1321,13 +1357,13 @@ final class StoryListView : Control, Notifable {
                 break
             }
         }
+        self.layoutInteractiveMedia(transition: .immediate)
     }
     
     func layoutInteractiveMedia(transition: ContainedViewLayoutTransition) {
         let views = interactiveMedias.subviews.compactMap({ $0 as? (InteractiveMedia & NSView) })
         for view in views {
-            let (point, radius) = mediaRect(view.mediaArea)
-            let rect = CGRect(origin: point.offsetBy(dx: -radius, dy: -radius), size: NSMakeSize(radius * 2, radius * 2))
+            let rect = mediaRect(view.mediaArea)
             transition.updateFrame(view: view, frame: rect)
             view.updateLayout(size: rect.size, transition: .immediate)
         }

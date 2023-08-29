@@ -823,7 +823,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         }, setStatus: { control, user in
             setStatus(control, user)
         }, runStatusPopover: { [weak self] in
-            guard let item = self?.tableView.item(at: 1) as? AccountInfoItem else {
+            guard let item = self?.tableView.item(at: 0) as? AccountInfoItem else {
                 return
             }
             if let control = item.statusControl {

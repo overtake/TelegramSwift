@@ -2191,14 +2191,19 @@ extension CGPoint {
     }
 }
 
-extension CGSize {
-    public var cgPoint: CGPoint {
+public extension CGSize {
+    var cgPoint: CGPoint {
         return CGPoint(x: width, y: height)
     }
     
-    public init(point: CGPoint) {
+    init(point: CGPoint) {
         self.init(width: point.x, height: point.y)
     }
+    
+    func centered(around position: CGPoint) -> CGRect {
+        return CGRect(origin: CGPoint(x: position.x - self.width / 2.0, y: position.y - self.height / 2.0), size: self)
+    }
+
 }
 
 public func + (left: CGPoint, right: CGPoint) -> CGPoint {

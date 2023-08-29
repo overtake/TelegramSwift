@@ -531,7 +531,7 @@ private final class TitleForumView : Control {
         self.state = state
         let size = self.frame.size
         let hasSidebar = state.filterData.sidebar && !state.filterData.isEmpty
-        let text_w = size.width - (!hasSidebar ? Window.controlsInset + 15 : 0) - 10 - 40
+        let text_w = size.width - (!hasSidebar ? Window.controlsInset + 15 : 0) - 10 - 40 - 30
 
         
         let t_layout = TextViewLayout(.initialize(string: forumData.peer.displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
@@ -559,7 +559,7 @@ private final class TitleForumView : Control {
             return
         }
         let hasSidebar = state.filterData.sidebar && !state.filterData.isEmpty
-        let text_w = frame.size.width - (!hasSidebar ? Window.controlsInset + 15 : 0) - 10 - 40
+        let text_w = frame.size.width - (!hasSidebar ? Window.controlsInset + 15 : 0) - 10 - 40 - 30
 
         title.resize(text_w)
         status.resize(text_w)
@@ -1161,7 +1161,7 @@ class PeerListContainerView : Control {
         transition.updateFrame(view: self.backgroundView, frame: size.bounds)
         
         transition.updateFrame(view: self.borderView, frame: CGRect(origin: CGPoint.init(x: 0, y: navigationHeight - .borderSize), size: CGSize(width: size.width, height: .borderSize)))
-        transition.updateAlpha(view: borderView, alpha: state.searchState == .Focus ? 0 : 1)
+        transition.updateAlpha(view: borderView, alpha: state.appear == .short ? 1 : 0)
 
 
         
@@ -2258,7 +2258,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
             let initialTags: SearchTags
             let target: SearchController.Target
-            if let peerId = self.state?.forumPeer?.peer.id {
+            if let peerId = self.state?.forumPeer?.peer.id, navigationController?.controller != self {
                 initialTags = .init(messageTags: nil, peerTag: nil)
                 target = .forum(peerId)
             } else {
@@ -2734,6 +2734,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             return false
         }
         if state?.appear == .short {
+            return false
+        }
+        if state?.searchState == .Focus {
             return false
         }
         return true

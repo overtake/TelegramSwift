@@ -473,6 +473,10 @@ public final class L10n {
   public static func authLoginConfirmPhone(_ p1: String) -> String {
     return L10n.tr("Localizable", "Auth.Login.ConfirmPhone", p1)
   }
+  /// You allowed this bot to message you when you opened %@.
+  public static func authSessionsMessageApp(_ p1: String) -> String {
+    return L10n.tr("Localizable", "AuthSessions.MessageApp", p1)
+  }
   /// , 
   public static var autoDownloadSettingsDelimeter: String  { return L10n.tr("Localizable", "AutoDownloadSettings.Delimeter") }
   ///  and 
@@ -4971,6 +4975,12 @@ public final class L10n {
   public static var contextAlertCopied: String  { return L10n.tr("Localizable", "Context.Alert.Copied") }
   /// This link will only work for members of this chat
   public static var contextAlertCopyPrivate: String  { return L10n.tr("Localizable", "Context.Alert.CopyPrivate") }
+  /// The bot will know your phone number. This can be useful for integration with other services.
+  public static var conversationShareBotContactConfirmation: String  { return L10n.tr("Localizable", "Conversation.ShareBotContactConfirmation") }
+  /// Share
+  public static var conversationShareBotContactConfirmationOK: String  { return L10n.tr("Localizable", "Conversation.ShareBotContactConfirmationOK") }
+  /// Share Your Phone Number?
+  public static var conversationShareBotContactConfirmationTitle: String  { return L10n.tr("Localizable", "Conversation.ShareBotContactConfirmationTitle") }
   /// Are you sure? This action cannot be undone.
   public static var convertToSuperGroupConfirm: String  { return L10n.tr("Localizable", "ConvertToSuperGroup.Confirm") }
   /// Something went wrong, sorry. Please try again later.
@@ -14119,6 +14129,14 @@ public final class L10n {
   public static var webAuthorizationsLoggedInDescrpiption: String  { return L10n.tr("Localizable", "WebAuthorizations.LoggedIn.Descrpiption") }
   /// You can log in on websites that support signing in with Telegram.
   public static var webAuthorizationsLogoutAllDescription: String  { return L10n.tr("Localizable", "WebAuthorizations.LogoutAll.Description") }
+  /// Allow
+  public static var webappAllowMessagesOK: String  { return L10n.tr("Localizable", "Webapp.AllowMessages.OK") }
+  /// Allow %@ to send messages?
+  public static func webappAllowMessagesText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Webapp.AllowMessages.Text", p1)
+  }
+  /// Allow Sending Messages?
+  public static var webappAllowMessagesTitle: String  { return L10n.tr("Localizable", "Webapp.AllowMessages.Title") }
   /// Changes that you made may not be saved.
   public static var webpageConfirmClose: String  { return L10n.tr("Localizable", "Webpage.Confirm.Close") }
   /// Close Anyway
