@@ -626,6 +626,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             text = value
         case let .botDomainAccessGranted(domain):
             text = strings().chatServiceBotPermissionAllowed(domain)
+        case  let .botAppAccessGranted(appName, _):
+            text = strings().authSessionsMessageApp(appName)
         case let .botSentSecureValues(types):
             let permissions = types.map({$0.rawValue}).joined(separator: ", ")
             text = strings().chatServiceSecureIdAccessGranted(peer.displayTitle, permissions)
