@@ -1041,6 +1041,8 @@ public struct ChatAvailableMessageActionOptions: OptionSet {
 func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> Bool {
     if message.peers[message.id.peerId] is TelegramChannel || message.peers[message.id.peerId] is TelegramSecretChat {
         return false
+    } else if let user = message.peers[message.id.peerId] as? TelegramUser, user.isBot {
+        return false
     } else if message.peers[message.id.peerId] is TelegramUser || message.peers[message.id.peerId] is TelegramGroup {
         if message.id.peerId == repliesPeerId {
             return false

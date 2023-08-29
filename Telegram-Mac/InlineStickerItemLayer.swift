@@ -252,16 +252,16 @@ private final class MultiTargetContextCache {
 final class InlineStickerView: View {
     private let isPlayable: Bool
     let animateLayer: InlineStickerItemLayer
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true) {
-        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, getColors: getColors, shimmerColor: shimmerColor)
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop) {
+        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor)
         self.isPlayable = isPlayable
         self.animateLayer = layer
         super.init(frame: size.bounds)
         self.layer?.addSublayer(layer)
         layer.superview = self
     }
-    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true) {
-        let layer = InlineStickerItemLayer(account: account, file: file, size: size, getColors: getColors, shimmerColor: shimmerColor)
+    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop) {
+        let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor)
         self.isPlayable = isPlayable
         self.animateLayer = layer
         super.init(frame: size.bounds)
