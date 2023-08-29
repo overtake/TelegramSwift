@@ -17,7 +17,7 @@ private extension NSImage {
     func tint(color: NSColor) -> NSImage {
         return NSImage(size: size, flipped: false) { (rect) -> Bool in
             color.set()
-            rect.fill()
+            rect.insetBy(dx: 2, dy: 2).fill()
             self.draw(in: rect, from: NSRect(origin: .zero, size: self.size), operation: .destinationIn, fraction: 1.0)
             return true
         }
@@ -88,6 +88,9 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         self.layer?.cornerRadius = frameRect.height / 2
         self.scaleOnClick = true
         
+        bg_view.imageScaling = .scaleAxesIndependently
+        shadow_view.imageScaling = .scaleAxesIndependently
+
         addSubview(control)
         
         bg_view.wantsLayer = true
@@ -129,7 +132,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
             case let .builtin(string):
                 update = .builtin(string)
             case let .custom(fileId):
-                update = .custom(fileId: fileId, file: nil)
+                update = .custom(fileId: fileId, file: layer.file)
             }
             arguments.like(reaction, arguments.interaction.presentation)
         default:
@@ -189,6 +192,14 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
+        let isFlipped: Bool
+        switch self.mediaArea {
+        case let .reaction(_, _, flags):
+            isFlipped = flags.contains(.isFlipped)
+        default:
+            isFlipped = false
+        }
+        
         let insets = NSEdgeInsets(top: -0.08, left: -0.05, bottom: -0.01, right: -0.02)
         let bg_rect = CGRect(origin: CGPoint(x: size.width * insets.left, y: size.height * insets.top), size: CGSize(width: size.width - size.width * insets.left - size.width * insets.right, height: size.height - size.height * insets.top - size.height * insets.bottom))
                 
@@ -205,13 +216,20 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
             transition.updateFrame(layer: layer, frame: rect)
             layer.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
         }
+        
+        var transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0, 0.0, 1.0)
+        
+        if isFlipped {
+            transform = CATransform3DScale(transform, -1, 1, 1)
+        }
+        
         bg_view.layer?.position = CGPoint(x: bg_view.frame.midX, y: bg_view.frame.midY)
         bg_view.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
-        bg_view.layer?.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
+        bg_view.layer?.transform = transform
         
         shadow_view.layer?.position = CGPoint(x: shadow_view.frame.midX, y: shadow_view.frame.midY)
         shadow_view.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
-        shadow_view.layer?.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
+        shadow_view.layer?.transform = transform
         
 
 
@@ -229,41 +247,46 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
          var effectFileId: Int64?
          var effectFile: TelegramMediaFile?
          switch reaction.item {
-         case let .custom(fileId, _):
+         case let .custom(fileId, file):
              effectFileId = fileId
+             effectFile = file
          case let .builtin(string):
              let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
              effectFile = reaction?.aroundAnimation
          }
          
                 
-         let play:(NSView)->Void = { container in
-             
+         let play:(NSView)->Void = { [weak self] container in
+             guard let `self` = self else {
+                 return
+             }
              if let effectFileId = effectFileId {
-                 let player = CustomReactionEffectView(frame: size.bounds, context: context, fileId: effectFileId)
+                 let player = CustomReactionEffectView(frame: NSMakeSize(size.width * 2, size.height * 2).bounds, context: context, fileId: effectFileId, file: effectFile)
                  player.isEventLess = true
                  player.triggerOnFinish = { [weak player] in
                      player?.removeFromSuperview()
                  }
-                 let rect = CGRect(origin: CGPoint(x: (container.frame.width - player.frame.width) / 2, y: (container.frame.height - player.frame.height) / 2), size: player.frame.size)
+                 let rect = player.frame.size.centered(around: NSMakePoint(self.frame.midX, self.frame.midY))
                  player.frame = rect
                  container.addSubview(player)
                  
              } else if let effectFile = effectFile {
-                 let player = InlineStickerItemLayer(account: context.account, file: effectFile, size: size, playPolicy: .playCount(1))
-                 player.isPlayable = true
-                 player.frame = NSMakeRect((container.frame.width - player.frame.width) / 2, (container.frame.height - player.frame.height) / 2, player.frame.width, player.frame.height)
+                 let player = InlineStickerView(account: context.account, file: effectFile, size: size, playPolicy: .playCount(1))
+                 player.isEventLess = true
+                 let rect = player.frame.size.centered(around: NSMakePoint(self.frame.midX, self.frame.midY))
+
+                 player.frame = rect
                  
-                 container.layer?.addSublayer(player)
-                 player.triggerOnState = (.finished, { [weak player] state in
-                     player?.removeFromSuperlayer()
+                 container.addSubview(player)
+                 player.animateLayer.triggerOnState = (.finished, { [weak player] state in
+                     player?.removeFromSuperview()
                  })
              }
          }
          
          let completed: (Bool)->Void = { [weak self]  _ in
              DispatchQueue.main.async {
-                 if let container = self?.control {
+                 if let container = self?.superview {
                      play(container)
                  }
              }
@@ -1183,6 +1206,10 @@ final class StoryListView : Control, Notifable {
         self.context = context
         self.entry = entry
         self.controls.isHidden = entry == nil
+        
+        guard let arguments = self.arguments else {
+            return
+        }
 
         if let entry = entry {
             self.navigator.initialize(count: entry.item.dayCounters?.totalCount ?? entry.totalCount)
@@ -1218,12 +1245,16 @@ final class StoryListView : Control, Notifable {
             
             if let current = self.current, !current.isEqual(to: entry.item.storyItem.id) {
                 self.redraw()
-            } else if let current = self.current, let arguments = arguments {
+                self.fillInteractiveMedia(current, arguments: arguments, animated: false)
+            } else if let current = self.current {
                 self.updateStoryState(current.state)
                 self.controls.update(context: context, arguments: arguments, groupId: entry.peer.id, peer: entry.peer._asPeer(), slice: entry, story: entry.item, animated: true)
                 self.inputView.update(entry.item, animated: true)
             } else {
                 self.redraw()
+                if let current = self.current {
+                    self.fillInteractiveMedia(current, arguments: arguments, animated: false)
+                }
             }
         } else {
             let size = NSMakeSize(frame.width - 100, frame.height - 110)
@@ -1325,7 +1356,6 @@ final class StoryListView : Control, Notifable {
         
         
         self.updateText(story.storyItem, state: .concealed, animated: false, context: context)
-        self.fillInteractiveMedia(current, arguments: arguments, animated: false)
 
         self.ready.set(true)
         
@@ -1344,7 +1374,10 @@ final class StoryListView : Control, Notifable {
             return
         }
         
-        interactiveMedias.removeAllSubviews()
+        self.interactiveMedias.removeAllSubviews()
+        while let layers = interactiveMedias.layer?.sublayers, !layers.isEmpty {
+            layers.last?.removeFromSuperlayer()
+        }
         
         for media in medias {
             switch media {
