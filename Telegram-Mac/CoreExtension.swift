@@ -793,6 +793,15 @@ public extension Message {
         return nil
     }
     
+    var authInfoAttribute: AuthSessionInfoAttribute? {
+        for attr in attributes {
+            if let attr = attr as? AuthSessionInfoAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var storyAttribute: ReplyStoryAttribute? {
         for attr in attributes {
             if let attr = attr as? ReplyStoryAttribute {
