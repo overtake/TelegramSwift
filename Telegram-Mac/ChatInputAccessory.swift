@@ -120,14 +120,14 @@ class ChatInputAccessory: View {
                     self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
                 })
             }
-            let setHideAction = { [weak self] hide in
+            let setHideAction:(Bool)->Void = { [weak self] hide in
                 self?.chatInteraction.update {
                     $0.updatedInterfaceState {
                         $0.withUpdatedHideSendersName(hide)
                     }
                 }
             }
-            let setHideCaption = { [weak self] hide in
+            let setHideCaption:(Bool)->Void = { [weak self] hide in
                 self?.chatInteraction.update {
                     $0.updatedInterfaceState {
                         $0.withUpdatedHideCaption(hide)

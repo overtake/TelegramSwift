@@ -458,9 +458,11 @@ class ChatGroupedItem: ChatRowItem {
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var _message: Message? = nil
         
+        var useGroupIfNeeded = true
         for i in 0 ..< layout.count {
             if NSPointInRect(location, layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 _message = layout.messages[i]
+                useGroupIfNeeded = false
                 break
             }
         }
@@ -478,7 +480,7 @@ class ChatGroupedItem: ChatRowItem {
 
 
         if let message = msg {
-            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil)
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil || useGroupIfNeeded)
         }
         return super.menuItems(in: location)
     }
