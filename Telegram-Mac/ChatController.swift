@@ -392,6 +392,7 @@ class ChatControllerView : View, ChatInputDelegate {
             if let state = self?.historyState {
                 self?.updateScroller(state)
             }
+            
         }))
         
         tableView.backgroundColor = .clear
@@ -407,11 +408,11 @@ class ChatControllerView : View, ChatInputDelegate {
             guard let `self` = self else {
                 return
             }
-//            self.tableView.enumerateVisibleViews(with: { view in
-//                if let view = view as? ChatRowView {
-//                    view.updateBackground(animated: false, item: view.item)
-//                }
-//            })
+            self.tableView.enumerateVisibleViews(with: { view in
+                if let view = view as? ChatRowView {
+                    view.updateBackground(animated: false, item: view.item)
+                }
+            })
         }))
        
     }

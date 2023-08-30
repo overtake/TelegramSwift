@@ -2258,7 +2258,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
             let initialTags: SearchTags
             let target: SearchController.Target
-            if let peerId = self.state?.forumPeer?.peer.id {
+            if let peerId = self.state?.forumPeer?.peer.id, self.state?.appear == .short {
                 initialTags = .init(messageTags: nil, peerTag: nil)
                 target = .forum(peerId)
             } else {
