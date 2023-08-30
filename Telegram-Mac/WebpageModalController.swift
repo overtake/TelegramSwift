@@ -1102,7 +1102,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case "web_app_request_phone":
             self.shareAccountContact()
         case "web_app_invoke_custom_method":
-            if let json, let requestId = json["req_id"] as? String, let method = json["method"] as? String, let params = json["params"] {
+            if let json = json, let requestId = json["req_id"] as? String, let method = json["method"] as? String, let params = json["params"] {
                 var paramsString: String?
                 if let string = params as? String {
                     paramsString = string

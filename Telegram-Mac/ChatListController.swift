@@ -595,6 +595,22 @@ class ChatListController : PeersListController {
             storyState = .single(nil)
         }
         
+        let sessionMessage: Signal<RecentAccountSession?, NoError> = combineLatest(context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: supportId, threadId: nil), count: 100), context.activeSessionsContext.state) |> map { view, sessions in
+            for entry in view.0.entries.reversed() {
+                if let attribute = entry.message.authInfoAttribute {
+                    if attribute.timestamp + 24 * 60 * 60 > context.timestamp {
+                        return sessions.sessions.first(where: { $0.hash == attribute.sessionId })
+                    }
+                }
+            }
+            return nil
+        }
+        
+        
+        sessionMessage.start(next: { session in
+            var bp = 0
+            bp += 1
+        })
         
         let previousLayout: Atomic<SplitViewState> = Atomic(value: context.layout)
 
