@@ -607,10 +607,10 @@ class ChatListController : PeersListController {
         }
         
         
-        sessionMessage.start(next: { session in
-            var bp = 0
-            bp += 1
-        })
+//        sessionMessage.start(next: { session in
+//            var bp = 0
+//            bp += 1
+//        })
         
         let previousLayout: Atomic<SplitViewState> = Atomic(value: context.layout)
 
