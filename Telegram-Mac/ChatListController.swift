@@ -599,7 +599,7 @@ class ChatListController : PeersListController {
             for entry in view.0.entries.reversed() {
                 if let attribute = entry.message.authInfoAttribute {
                     if attribute.timestamp + 24 * 60 * 60 > context.timestamp {
-                        return sessions.sessions.first(where: { $0.hash == attribute.sessionId })
+                        return sessions.sessions.first(where: { $0.hash == attribute.hash })
                     }
                 }
             }
