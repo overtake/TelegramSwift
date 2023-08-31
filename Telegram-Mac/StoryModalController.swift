@@ -719,7 +719,7 @@ private final class StoryViewController: Control, Notifable {
                     }
                     
                     if self.preview == nil {
-                        let preview = Preview(frame: focus(StoryView.size.aspectFitted(NSMakeSize(150, 150))))
+                        let preview = Preview(frame: focus(StoryLayoutView.size.aspectFitted(NSMakeSize(150, 150))))
                         addSubview(preview)
                         self.preview = preview
                         
@@ -772,7 +772,7 @@ private final class StoryViewController: Control, Notifable {
             if let preview = self.preview, preview.isHidden {
                 button.center()
             } else {
-                let rect = focus(StoryView.size.aspectFitted(NSMakeSize(150, 150)))
+                let rect = focus(StoryLayoutView.size.aspectFitted(NSMakeSize(150, 150)))
                 if isNext {
                     button.centerY(x: rect.minX - button.frame.width)
                 } else {
@@ -1287,8 +1287,8 @@ private final class StoryViewController: Control, Notifable {
         
         if updated {
             self.closeTooltip()
-            if state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
-                self.storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
+            if let peerId = state.slice?.peer.id, state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
+                self.storyViewList = context.engine.messages.storyViewList(peerId: peerId, id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
                 self.storyViewList?.loadMore()
             } else {
                 self.storyViewList = nil
@@ -2470,7 +2470,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     } else {
                         self?.close()
                     }
-                    _ = context.engine.messages.deleteStories(ids: [slice.item.storyItem.id]).start()
+                    _ = context.engine.messages.deleteStories(peerId: slice.peer.id, ids: [slice.item.storyItem.id]).start()
                 }
 
                 
@@ -2503,8 +2503,10 @@ final class StoryModalController : ModalViewController, Notifable {
                 self.interactions.startRecording(context: context, autohold: autohold, sendMedia: self.chatInteraction.sendMedia)
             }
         }, togglePinned: { [weak self] story in
-            _ = context.engine.messages.updateStoriesArePinned(ids: [story.storyItem.id : story.storyItem], isPinned: !story.storyItem.isPinned).start()
-            self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile : .addedToProfile)
+            if let peerId = story.peerId {
+                _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: [story.storyItem.id : story.storyItem], isPinned: !story.storyItem.isPinned).start()
+                self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile : .addedToProfile)
+            }
         }, hashtag: { [weak self] string in
             self?.close()
             self?.context.bindings.globalSearch(string)

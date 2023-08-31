@@ -764,7 +764,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
         if listMode == .everyone, sortMode == .reactionsFirst, query == nil {
             contextList = list
         } else {
-            contextList = context.engine.messages.storyViewList(id: story.id, views: initialViews, listMode: listMode, sortMode: sortMode, searchQuery: query, parentSource: parentSource)
+            contextList = context.engine.messages.storyViewList(peerId: peerId, id: story.id, views: initialViews, listMode: listMode, sortMode: sortMode, searchQuery: query, parentSource: parentSource)
         }
         var previous = stateValue.with { $0.views }
         updateState { current in

@@ -483,7 +483,7 @@ class ChatListController : PeersListController {
                            if let mediaId = info.media.id {
                                validIds.append(mediaId)
                                if self.preloadStoryResourceDisposables[mediaId] == nil {
-                                   self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: self.context, peer: info.peer, storyId: info.storyId, media: info.media).start()
+                                   self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: self.context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).start()
                                }
                            }
                        }

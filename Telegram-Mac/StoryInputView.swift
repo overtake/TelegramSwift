@@ -485,7 +485,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         }
                 
         let wSize = NSMakeSize(window.contentView!.frame.width - 100, window.contentView!.frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(wSize)
+        let aspect = StoryLayoutView.size.aspectFitted(wSize)
         
         var size = size
         if self.inputState == .focus, let inputContextSize = self.inputContextSize {
@@ -653,7 +653,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         let wWdith = window.contentView!.frame.width
         
         let maxSize = NSMakeSize(wWdith - 100, window.contentView!.frame.height - 110)
-        let supersize = StoryView.size.aspectFitted(maxSize)
+        let supersize = StoryLayoutView.size.aspectFitted(maxSize)
         let size: NSSize
         if arguments.interaction.presentation.inputRecording != nil {
             size = NSMakeSize(min(supersize.width + 60, wWdith - 20), self.textViewSize(self.textView).height + 16)

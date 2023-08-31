@@ -544,11 +544,11 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                     stories[story.id] = story
                 }
             }
-            _ = context.engine.messages.updateStoriesArePinned(ids: stories, isPinned: isArchived).start()
+            _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: stories, isPinned: isArchived).start()
             if isArchived {
-                showModalText(for: context.window, text: "Saved stories can be viewed by others on your profile until you remove them.", title: "Stories Saved")
+                showModalText(for: context.window, text: strings().storyTooltipSavedToProfile, title: strings().storyTooltipSavedTitle)
             } else {
-                showModalText(for: context.window, text: "Story removed from your profile.", title: "Stories Removed")
+                showModalText(for: context.window, text: strings().storyTooltipRemovedFromProfile, title: strings().storyTooltipRemovedTitle)
             }
             self?.updateState({ current in
                 var current = current
@@ -556,12 +556,12 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 return current
             })
         }, toggleStory: { story in
-            _ = context.engine.messages.updateStoriesArePinned(ids: [story.id : story], isPinned: isArchived).start()
+            _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: [story.id : story], isPinned: isArchived).start()
             
             if isArchived {
-                showModalText(for: context.window, text: "Saved stories can be viewed by others on your profile until you remove them.", title: "Story Saved")
+                showModalText(for: context.window, text: strings().storyTooltipSavedToProfile, title: strings().storyTooltipSavedTitle)
             } else {
-                showModalText(for: context.window, text: "Story removed from your profile.", title: "Story Removed")
+                showModalText(for: context.window, text: strings().storyTooltipRemovedFromProfile, title: strings().storyTooltipRemovedTitle)
             }
         })
 
