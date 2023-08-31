@@ -121,7 +121,7 @@ final class StoryListNavigationView : View {
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     
-    func set(_ index: Int, state: StoryView.State, duration: Double, animated: Bool) {
+    func set(_ index: Int, state: StoryLayoutView.State, duration: Double, animated: Bool) {
         self.selected = index
                 
         CATransaction.begin()

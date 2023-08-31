@@ -6902,7 +6902,7 @@ public final class L10n {
   /// Please enter the code you've just received in Telegram on your other device.
   public static var loginEnterCodeFromApp: String  { return L10n.tr("Localizable", "Login.EnterCodeFromApp") }
   /// You have enabled Two-Step Verification, your account is now protected with an additional password.
-  public static var loginEnterPasswordDescription: String  { return L10n.tr("Localizable", "Login.EnterPasswordDescription") }
+  public static var loginEnterPasswoуrdDescription: String  { return L10n.tr("Localizable", "Login.EnterPasswoуrdDescription") }
   /// Too many attempts, please try again later.
   public static var loginFloodWait: String  { return L10n.tr("Localizable", "Login.FloodWait") }
   /// Invalid Country Code
@@ -12237,8 +12237,12 @@ public final class L10n {
   public static var storyTooltipVideoSent: String  { return L10n.tr("Localizable", "Story.Tooltip.VideoSent") }
   /// View in Chat
   public static var storyTooltipButtonViewInChat: String  { return L10n.tr("Localizable", "Story.Tooltip.Button.ViewInChat") }
+  /// Stories Saved
+  public static var storyTooltipRemovedTitle: String  { return L10n.tr("Localizable", "Story.Tooltip.Removed.Title") }
   /// Subscribe to Telegram Premium to save other people's unprotected stories.
   public static var storyTooltipSaveToGalleryPremium: String  { return L10n.tr("Localizable", "Story.Tooltip.SaveToGallery.Premium") }
+  /// Stories Saved
+  public static var storyTooltipSavedTitle: String  { return L10n.tr("Localizable", "Story.Tooltip.Saved.Title") }
   /// The creator of stories you viewed in the last %1$@ minutes or will view in the next %2$@ minutes won't see you in the viewers' lists.
   public static func storyTooltipStealthModeActivate(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Story.Tooltip.StealthMode.Activate", p1, p2)

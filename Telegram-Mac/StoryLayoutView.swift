@@ -13,7 +13,7 @@ import SwiftSignalKit
 import Postbox
 
 
-class StoryView : Control {
+class StoryLayoutView : Control {
     
     fileprivate var magnifyView: MagnifyView!
     
@@ -326,8 +326,8 @@ class StoryView : Control {
     
     static public var size: NSSize = NSMakeSize(9 * 40, 16 * 40)
     
-    static func makeView(for story: EngineStoryItem, peerId: PeerId, peer: Peer?, context: AccountContext, frame: NSRect) -> StoryView {
-        let view: StoryView
+    static func makeView(for story: EngineStoryItem, peerId: PeerId, peer: Peer?, context: AccountContext, frame: NSRect) -> StoryLayoutView {
+        let view: StoryLayoutView
         if story.media._asMedia() is TelegramMediaImage {
             view = StoryImageView(frame: frame)
         } else if let file = story.media._asMedia() as? TelegramMediaFile, file.isVideo {
@@ -342,7 +342,7 @@ class StoryView : Control {
 }
 
 
-class StoryUnsupportedView : StoryView {
+class StoryUnsupportedView : StoryLayoutView {
     private let textView = TextView()
     private let bgView = View()
     required init(frame frameRect: NSRect) {
@@ -380,7 +380,7 @@ class StoryUnsupportedView : StoryView {
 }
 
 
-class StoryImageView : StoryView {
+class StoryImageView : StoryLayoutView {
     private let imageView = TransformImageView()
     private let awaitingDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {

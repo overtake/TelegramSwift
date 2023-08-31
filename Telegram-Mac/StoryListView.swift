@@ -697,7 +697,7 @@ final class StoryListView : Control, Notifable {
     
     private var entry: StoryContentContextState.FocusedSlice? = nil
     private let magnifyDispsosable = MetaDisposable()
-    private var current: StoryView? {
+    private var current: StoryLayoutView? {
         didSet {
             if let magnify = current?.magnify {
                 controls.redirectView = magnify
@@ -1079,7 +1079,7 @@ final class StoryListView : Control, Notifable {
         
         
         let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(maxSize)
+        let aspect = StoryLayoutView.size.aspectFitted(maxSize)
         let containerSize: NSSize
         if let arguments = self.arguments, arguments.interaction.presentation.wideInput || arguments.interaction.presentation.inputRecording != nil {
             containerSize = NSMakeSize(min(aspect.width + 60, size.width - 20), aspect.height)
@@ -1216,7 +1216,7 @@ final class StoryListView : Control, Notifable {
             
             if self.inputView == nil {
                 let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
-                let aspect = StoryView.size.aspectFitted(maxSize)
+                let aspect = StoryLayoutView.size.aspectFitted(maxSize)
                 
                 if entry.peer.isService {
                     self.inputView = StoryNoReplyInput(frame: NSMakeRect(0, 0, aspect.width, 50))
@@ -1258,8 +1258,8 @@ final class StoryListView : Control, Notifable {
             }
         } else {
             let size = NSMakeSize(frame.width - 100, frame.height - 110)
-            let aspect = StoryView.size.aspectFitted(size)
-            let current = StoryView(frame: aspect.bounds)
+            let aspect = StoryLayoutView.size.aspectFitted(size)
+            let current = StoryLayoutView(frame: aspect.bounds)
             self.current = current
             content.addSubview(current, positioned: .below, relativeTo: self.controls)
             self.updateLayout(size: frame.size, transition: .immediate)
@@ -1276,8 +1276,8 @@ final class StoryListView : Control, Notifable {
         let previous = self.current
         
         let size = NSMakeSize(frame.width - 100, frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(size)
-        let current = StoryView.makeView(for: entry.item.storyItem, peerId: entry.peer.id, peer: entry.peer._asPeer(), context: context, frame: aspect.bounds)
+        let aspect = StoryLayoutView.size.aspectFitted(size)
+        let current = StoryLayoutView.makeView(for: entry.item.storyItem, peerId: entry.peer.id, peer: entry.peer._asPeer(), context: context, frame: aspect.bounds)
         
         self.current = current
         self.firstPlayingState = true
@@ -1369,7 +1369,7 @@ final class StoryListView : Control, Notifable {
         
     }
     
-    private func fillInteractiveMedia(_ storyView: StoryView, arguments: StoryArguments, animated: Bool) {
+    private func fillInteractiveMedia(_ storyView: StoryLayoutView, arguments: StoryArguments, animated: Bool) {
         guard let medias = self.entry?.item.storyItem.mediaAreas.filter({ $0.canDraw }) else {
             return
         }
@@ -1444,7 +1444,7 @@ final class StoryListView : Control, Notifable {
     
     private var firstPlayingState = true
     
-    private func updateStoryState(_ state: StoryView.State) {
+    private func updateStoryState(_ state: StoryLayoutView.State) {
         guard let view = self.current, let entry = self.entry else {
             return
         }
@@ -1468,7 +1468,7 @@ final class StoryListView : Control, Notifable {
     }
     var contentRect: CGRect {
         let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(maxSize)
+        let aspect = StoryLayoutView.size.aspectFitted(maxSize)
         return CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor, (frame.width - aspect.width) / 2), y: 20), size: NSMakeSize(aspect.width, frame.height))
     }
     var storyRect: CGRect {

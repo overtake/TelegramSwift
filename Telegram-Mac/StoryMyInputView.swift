@@ -389,7 +389,7 @@ final class StoryMyInputView : Control, StoryInput {
         }
         
         let wSize = NSMakeSize(window.frame.width - 100, superview.frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(wSize)
+        let aspect = StoryLayoutView.size.aspectFitted(wSize)
 
         transition.updateFrame(view: self, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor,  (superview.frame.width - size.width) / 2), y: aspect.height + 10 - size.height + 30), size: size))
         self.updateLayout(size: size, transition: transition)
