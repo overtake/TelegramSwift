@@ -1097,11 +1097,131 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             if let json = json, let colorKey = json["color_key"] as? String, ["bg_color", "secondary_bg_color"].contains(colorKey) {
                 self._headerColorKey = colorKey
             }
+        case "web_app_request_write_access":
+            self.requestWriteAccess()
+        case "web_app_request_phone":
+            self.shareAccountContact()
+        case "web_app_invoke_custom_method":
+            if let json = json, let requestId = json["req_id"] as? String, let method = json["method"] as? String, let params = json["params"] {
+                var paramsString: String?
+                if let string = params as? String {
+                    paramsString = string
+                } else if let data1 = try? JSONSerialization.data(withJSONObject: params, options: []), let convertedString = String(data: data1, encoding: String.Encoding.utf8) {
+                    paramsString = convertedString
+                }
+                self.invokeCustomMethod(requestId: requestId, method: method, params: paramsString ?? "{}")
+            }
+
+
         default:
             break
         }
 
     }
+    
+    
+    fileprivate func requestWriteAccess() {
+        guard let data = self.requestData else {
+            return
+        }
+        let context = self.context
+        
+        let sendEvent: (Bool) -> Void = { [weak self] success in
+            var paramsString: String
+            if success {
+                paramsString = "{status: \"allowed\"}"
+            } else {
+                paramsString = "{status: \"cancelled\"}"
+            }
+            self?.sendEvent(name: "write_access_requested", data: paramsString)
+        }
+        
+        let _ = showModalProgress(signal: self.context.engine.messages.canBotSendMessages(botId: data.bot.id), for: context.window).start(next: { result in
+            if result {
+                sendEvent(true)
+            } else {
+                confirm(for: context.window, header: strings().webappAllowMessagesTitle, information: strings().webappAllowMessagesText(data.bot.displayTitle), okTitle: strings().webappAllowMessagesOK, successHandler: { _ in
+                    let _ = showModalProgress(signal: context.engine.messages.allowBotSendMessages(botId: data.bot.id), for: context.window).start(completed: {
+                        sendEvent(true)
+                    })
+                }, cancelHandler: {
+                    sendEvent(false)
+                })
+            }
+        })
+
+    }
+    fileprivate func shareAccountContact() {
+        guard let data = self.requestData else {
+            return
+        }
+        let context = self.context
+        
+        let sendEvent: (Bool) -> Void = { [weak self] success in
+            var paramsString: String
+            if success {
+                paramsString = "{status: \"sent\"}"
+            } else {
+                paramsString = "{status: \"cancelled\"}"
+            }
+            self?.sendEvent(name: "phone_requested", data: paramsString)
+        }
+        
+        let isBlocked = context.engine.data.get(
+            TelegramEngine.EngineData.Item.Peer.IsBlocked(id: data.bot.id)
+        )
+        |> deliverOnMainQueue
+        |> map { $0.knownValue ?? false }
+        |> take(1)
+        
+        _ = isBlocked.start(next: { isBlocked in
+            let text: String
+            if isBlocked {
+                text = strings().conversationShareBotContactConfirmationUnblock(data.bot.displayTitle)
+            } else {
+                text = strings().conversationShareBotContactConfirmation(data.bot.displayTitle)
+            }
+            confirm(for: context.window, header: strings().conversationShareBotContactConfirmationTitle, information: text, okTitle: strings().conversationShareBotContactConfirmationOK, successHandler: { _ in
+                
+                
+                let _ = (context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnMainQueue).start(next: { peer in
+                    if let peer = peer as? TelegramUser, let phone = peer.phone, !phone.isEmpty {
+                        
+                        let invoke:()->Void = {
+                            let _ = enqueueMessages(account: context.account, peerId: data.bot.id, messages: [
+                                .message(text: "", attributes: [], inlineStickers: [:], mediaReference: .standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: phone, peerId: peer.id, vCardData: nil)), replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])
+                            ]).start()
+                            sendEvent(true)
+                        }
+                        if isBlocked {
+                            _ = (context.blockedPeersContext.remove(peerId: data.bot.id) |> deliverOnMainQueue).start(completed: invoke)
+                        } else {
+                            invoke()
+                        }
+                    }
+                })
+            }, cancelHandler: {
+                sendEvent(false)
+            })
+        })
+        
+       
+    }
+
+    fileprivate func invokeCustomMethod(requestId: String, method: String, params: String) {
+        guard let data = self.requestData else {
+            return
+        }
+        let _ = (self.context.engine.messages.invokeBotCustomMethod(botId: data.bot.id, method: method, params: params)
+        |> deliverOnMainQueue).start(next: { [weak self] result in
+            guard let `self` = self else {
+                return
+            }
+            let paramsString = "{req_id: \"\(requestId)\", result: \(result)}"
+            self.sendEvent(name: "custom_method_invoked", data: paramsString)
+        })
+    }
+
     
     private func webAppReady() {
         genericView.update(inProgress: false, preload: self.preloadData, animated: true)
