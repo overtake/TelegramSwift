@@ -368,7 +368,7 @@
  }
  
  private extension PeerMediaCollectionMode {
-    var title: String {
+     func title(_ peer: Peer?) -> String {
         if self == .members {
             return strings().peerMediaMembers
         }
@@ -394,7 +394,11 @@
             return strings().peerMediaGifs
         }
         if self == .stories {
-            return "Stories"
+            if peer is TelegramChannel {
+                return strings().peerMediaPosts
+            } else {
+                return strings().peerMediaStories
+            }
         }
         return ""
     }
@@ -839,7 +843,7 @@
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
         }
         
-        if peerId.namespace == Namespaces.Peer.CloudUser {
+        if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
             storiesTab = storyListContext.state |> map { state -> (exist: Bool, loaded: Bool) in
                 return (exist: state.totalCount > 0, loaded: state.peerReference != nil)
             } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
@@ -1155,7 +1159,7 @@
                 let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
                 let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
                 for (i, tab)  in tabs.enumerated() {
-                    items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+                    items.append(ScrollableSegmentItem(title: tab.title(self.peer), index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
                 }
                 self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
                 if let selected = selected {

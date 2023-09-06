@@ -396,7 +396,6 @@ class InputDataController: GenericViewController<InputDataView> {
 
     var getTitle:(()->String)? = nil
     var getStatus:(()->String?)? = nil
-    
     var doneString: ()->String
     
     var autoInputAction: Bool = false
@@ -456,7 +455,7 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override var responderPriority: HandlerPriority {
-        return .modal
+        return .medium
     }
     var tableView: TableView {
         return self.genericView.tableView

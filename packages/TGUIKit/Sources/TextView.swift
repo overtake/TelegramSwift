@@ -2148,7 +2148,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         if let layout = textLayout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)
             let index = layout.findIndex(location: point)
-            if point.x > layout.lines[index].frame.maxX {
+            if point.x > layout.lines[index].frame.maxX, isSelectable {
                 superview?.mouseDown(with: event)
             } else {
                 _mouseDown(with: event)

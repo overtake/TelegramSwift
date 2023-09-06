@@ -156,7 +156,7 @@ final class StoryInteraction : InterfaceObserver {
         var closed: Bool = false
         
         var wideInput: Bool {
-            return inputInFocus || hasPopover
+            return (inputInFocus || hasPopover) && self.entryId?.namespace == Namespaces.Peer.CloudUser
         }
         
         var isAreaActivated: Bool = false
@@ -788,8 +788,8 @@ private final class StoryViewController: Control, Notifable {
             case reaction(StoryReactionAction)
             case media([Media])
             case text
-            case addedToProfile
-            case removedFromProfile
+            case addedToProfile(Peer)
+            case removedFromProfile(Peer)
             case linkCopied
             case justText(String)
             case tooltip(String, MenuAnimation)
@@ -874,12 +874,12 @@ private final class StoryViewController: Control, Notifable {
                 title = strings().storyTooltipMessageSent
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = true
-            case .addedToProfile:
-                title = strings().storyTooltipSavedToProfile
+            case let .addedToProfile(peer):
+                title = peer.isChannel ? strings().storyTooltipSavedToProfileChannel : strings().storyTooltipSavedToProfile
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = false
-            case .removedFromProfile:
-                title = strings().storyTooltipRemovedFromProfile
+            case let .removedFromProfile(peer):
+                title = peer.isChannel ? strings().storyTooltipRemovedFromProfileChannel : strings().storyTooltipRemovedFromProfile
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = false
             case .linkCopied:
@@ -1288,7 +1288,7 @@ private final class StoryViewController: Control, Notifable {
         if updated {
             self.closeTooltip()
             if let peerId = state.slice?.peer.id, state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
-                self.storyViewList = context.engine.messages.storyViewList(peerId: peerId, id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
+                self.storyViewList = context.engine.messages.storyViewList(peerId: peerId, id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, forwardCount: 0, seenPeers: [], reactions: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
                 self.storyViewList?.loadMore()
             } else {
                 self.storyViewList = nil
@@ -2257,7 +2257,9 @@ final class StoryModalController : ModalViewController, Notifable {
                             break
                         }
                         
-                        secondBlock.append(ContextMenuItem(strings().storyAvatarContextSendMessage, handler: {
+                        let chatText = peer._asPeer().isChannel ? strings().storyAvatarContextOpenChannel : strings().storyAvatarContextSendMessage
+                        
+                        secondBlock.append(ContextMenuItem(chatText, handler: {
                             openChat(peerId, nil, nil)
                         }, itemImage: MenuAnimation.menu_read.value))
                         
@@ -2417,6 +2419,21 @@ final class StoryModalController : ModalViewController, Notifable {
             }
         }
         
+        let deleteStory:(StoryContentItem)->Void = { [weak self] story in
+            confirm(for: context.window, information: strings().storyConfirmDelete, successHandler: { _ in
+                if let stateValue = self?.stories.stateValue, let slice = stateValue.slice {
+                    if slice.nextItemId != nil {
+                        self?.stories.navigate(navigation: .item(.next))
+                    } else if slice.previousItemId != nil {
+                        self?.stories.navigate(navigation: .item(.previous))
+                    } else {
+                        self?.close()
+                    }
+                    _ = context.engine.messages.deleteStories(peerId: slice.peer.id, ids: [slice.item.storyItem.id]).start()
+                }
+            }, appearance: storyTheme.appearance)
+        }
+        
         self.chatInteraction.add(observer: self)
         interactions.add(observer: self)
         
@@ -2460,22 +2477,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 current.recordType = FastSettings.recordingState
                 return current
             }
-        }, deleteStory: { [weak self] story in
-            confirm(for: context.window, information: strings().storyConfirmDelete, successHandler: { _ in
-                if let stateValue = self?.stories.stateValue, let slice = stateValue.slice {
-                    if slice.nextItemId != nil {
-                        self?.stories.navigate(navigation: .item(.next))
-                    } else if slice.previousItemId != nil {
-                        self?.stories.navigate(navigation: .item(.previous))
-                    } else {
-                        self?.close()
-                    }
-                    _ = context.engine.messages.deleteStories(peerId: slice.peer.id, ids: [slice.item.storyItem.id]).start()
-                }
-
-                
-            }, appearance: storyTheme.appearance)
-        }, markAsRead: { [weak self] peerId, storyId in
+        }, deleteStory: deleteStory, markAsRead: { [weak self] peerId, storyId in
             self?.stories.markAsSeen(id: .init(peerId: peerId, id: storyId))
         }, showViewers: { [weak self] story in
             if story.storyItem.views?.seenCount == 0 {
@@ -2503,9 +2505,10 @@ final class StoryModalController : ModalViewController, Notifable {
                 self.interactions.startRecording(context: context, autohold: autohold, sendMedia: self.chatInteraction.sendMedia)
             }
         }, togglePinned: { [weak self] story in
-            if let peerId = story.peerId {
+            if let peerId = story.peerId, let peer = story.peer {
                 _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: [story.storyItem.id : story.storyItem], isPinned: !story.storyItem.isPinned).start()
-                self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile : .addedToProfile)
+                
+                self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile(peer._asPeer()) : .addedToProfile(peer._asPeer()))
             }
         }, hashtag: { [weak self] string in
             self?.close()
@@ -2582,6 +2585,18 @@ final class StoryModalController : ModalViewController, Notifable {
                 }
                 if !peer.isService {
                     
+                    if let peer = peer._asPeer() as? TelegramChannel, peer.hasPermission(.postStories) {
+                        if !story.storyItem.isPinned {
+                            menu.addItem(ContextMenuItem(strings().storyChannelInputSaveToProfile, handler: {
+                                self?.arguments?.togglePinned(story)
+                            }, itemImage: MenuAnimation.menu_save_to_profile.value))
+                        } else {
+                            menu.addItem(ContextMenuItem(strings().storyChannelInputRemoveFromProfile, handler: {
+                                self?.arguments?.togglePinned(story)
+                            }, itemImage: MenuAnimation.menu_clear_history.value))
+                        }
+                    }
+                    
                     menu.addItem(ContextMenuItem(strings().storyControlsMenuStealtMode, handler: {
                         if stealthModeState?.activeUntilTimestamp != nil {
                             activeStealthMode()
@@ -2599,21 +2614,27 @@ final class StoryModalController : ModalViewController, Notifable {
                             toggleHide(peer._asPeer(), true)
                         }, itemImage: MenuAnimation.menu_archive.value))
                     }
-                    let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
-                    
-                    let submenu = ContextMenu()
-                                
-                    let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-                    let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-                    
-                    for i in 0 ..< options.count {
-                        submenu.addItem(ContextMenuItem(options[i].title, handler: {
-                            report(peerId, story.storyItem.id, options[i])
-                        }, itemImage: animation[i].value))
+                    if let peer = peer._asPeer() as? TelegramChannel, peer.hasPermission(.deleteStories) || story.storyItem.isMy {
+                        menu.addItem(ContextSeparatorItem())
+                        menu.addItem(ContextMenuItem(strings().messageContextDelete, handler: {
+                            deleteStory(story)
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    } else {
+                        let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
+                        
+                        let submenu = ContextMenu()
+                                    
+                        let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+                        let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
+                        
+                        for i in 0 ..< options.count {
+                            submenu.addItem(ContextMenuItem(options[i].title, handler: {
+                                report(peerId, story.storyItem.id, options[i])
+                            }, itemImage: animation[i].value))
+                        }
+                        reportItem.submenu = submenu
+                        menu.addItem(reportItem)
                     }
-                    reportItem.submenu = submenu
-                    menu.addItem(reportItem)
-
                 }
             } else {
                 if !story.storyItem.isPinned {
@@ -2623,7 +2644,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 } else {
                     menu.addItem(ContextMenuItem(strings().storyMyInputRemoveFromProfile, handler: {
                         self?.arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_delete.value))
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
                 }
                 let resource: TelegramMediaFile?
                 if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {

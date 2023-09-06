@@ -546,9 +546,11 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             }
             _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: stories, isPinned: isArchived).start()
             if isArchived {
-                showModalText(for: context.window, text: strings().storyTooltipSavedToProfile, title: strings().storyTooltipSavedTitle)
+                let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipSavedToProfileChannel : strings().storyTooltipSavedToProfile
+                showModalText(for: context.window, text: text, title: strings().storyTooltipSavedTitle)
             } else {
-                showModalText(for: context.window, text: strings().storyTooltipRemovedFromProfile, title: strings().storyTooltipRemovedTitle)
+                let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipRemovedFromProfileChannel : strings().storyTooltipRemovedFromProfile
+                showModalText(for: context.window, text: text, title: strings().storyTooltipRemovedTitle)
             }
             self?.updateState({ current in
                 var current = current
@@ -559,9 +561,11 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
             _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: [story.id : story], isPinned: isArchived).start()
             
             if isArchived {
-                showModalText(for: context.window, text: strings().storyTooltipSavedToProfile, title: strings().storyTooltipSavedTitle)
+                let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipSavedToProfileChannel : strings().storyTooltipSavedToProfile
+                showModalText(for: context.window, text: text, title: strings().storyTooltipSavedTitle)
             } else {
-                showModalText(for: context.window, text: strings().storyTooltipRemovedFromProfile, title: strings().storyTooltipRemovedTitle)
+                let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipRemovedFromProfileChannel : strings().storyTooltipRemovedFromProfile
+                showModalText(for: context.window, text: text, title: strings().storyTooltipRemovedTitle)
             }
         })
 

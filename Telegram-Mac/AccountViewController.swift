@@ -73,7 +73,8 @@ fileprivate final class AccountInfoArguments {
     let runStatusPopover:()->Void
     let set2Fa:(TwoStepVeriticationAccessConfiguration?)->Void
     let openStory:(StoryInitialIndex?)->Void
-    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void) {
+    let openWebBot:(AttachMenuBot)->Void
+    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openWebBot:@escaping(AttachMenuBot)->Void) {
         self.context = context
         self.storyList = storyList
         self.presentController = presentController
@@ -86,6 +87,7 @@ fileprivate final class AccountInfoArguments {
         self.runStatusPopover = runStatusPopover
         self.set2Fa = set2Fa
         self.openStory = openStory
+        self.openWebBot = openWebBot
     }
 }
 
@@ -114,6 +116,24 @@ private final class AnyUpdateStateEquatable  : Equatable {
     }
 }
 
+extension AttachMenuBot : Equatable {
+    public static func ==(lhs: AttachMenuBot, rhs: AttachMenuBot) -> Bool {
+        if lhs.flags != rhs.flags {
+            return false
+        }
+        if lhs.shortName != rhs.shortName {
+            return false
+        }
+        if lhs.peerTypes != rhs.peerTypes {
+            return false
+        }
+        if PeerEquatable(lhs.peer._asPeer()) != PeerEquatable(rhs.peer._asPeer()) {
+            return false
+        }
+        return true
+    }
+}
+
 private enum AccountInfoEntry : TableItemListNodeEntry {
     case info(index:Int, viewType: GeneralViewType, PeerEquatable, EngineStorySubscriptions.Item?)
     case setStatus(index:Int, viewType: GeneralViewType, PeerEquatable)
@@ -123,6 +143,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case addAccount(index: Int, [AccountWithInfo], viewType: GeneralViewType)
     case proxy(index: Int, viewType: GeneralViewType, status: String?)
     case stories(index: Int, viewType: GeneralViewType)
+    case attach(index: Int, AttachMenuBot, viewType: GeneralViewType)
     case general(index: Int, viewType: GeneralViewType)
     case stickers(index: Int, viewType: GeneralViewType)
     case notifications(index: Int, viewType: GeneralViewType, status: UNUserNotifications.AuthorizationStatus)
@@ -189,6 +210,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(20)
         case .about:
             return .index(21)
+        case let .attach(index, _, _):
+            return .index(22 + index)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -209,6 +232,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .addAccount(index, _, _):
             return index
         case let  .stories(index, _):
+            return index
+        case let .attach(index, _, _):
             return index
         case let  .general(index, _):
             return index
@@ -304,6 +329,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .stories(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsMyStories, icon: theme.icons.settingsStories, activeIcon: theme.icons.settingsStoriesActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, listContext: arguments.storyList, standalone: true), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .attach(_, bot, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: bot.shortName, icon: theme.icons.settingsWallet, activeIcon: theme.icons.settingsWalletActive, type: .next, viewType: viewType, action: {
+                arguments.openWebBot(bot)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .proxy(_, viewType, status):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), viewType: viewType, action: {
@@ -412,7 +441,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?, storyStats: EngineStorySubscriptions?) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?, storyStats: EngineStorySubscriptions?, attachMenuBots: [AttachMenuBot]) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
@@ -496,6 +525,13 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     
     entries.append(.stories(index: index, viewType: .singleItem))
     index += 1
+    
+    for bot in attachMenuBots {
+        if bot.flags.contains(.showInSettings) {
+            entries.append(.attach(index: index, bot, viewType: .singleItem))
+            index += 1
+        }
+    }
     
     if !proxySettings.0.servers.isEmpty {
         entries.append(.whiteSpace(index: index, height: 10))
@@ -768,6 +804,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         }, passportPromise.get()))
         
         
+        
+        
         syncLocalizations.set(context.engine.localization.synchronizedLocalizationListState().start())
         
         
@@ -843,6 +881,24 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             }))
         }, openStory: { initialId in
             StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
+        }, openWebBot: { bot in
+            let open:()->Void = {
+                let signal = context.engine.messages.requestSimpleWebView(botId: bot.peer.id, url: nil, source: .settings, themeParams: generateWebAppThemeParams(theme))
+                _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
+                    showModal(with: WebpageModalController(context: context, url: url, title: bot.shortName, requestData: .simple(url: url, bot: bot.peer._asPeer(), buttonText: "", source: .settings), chatInteraction: nil, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                })
+            }
+            if true {
+                let third = parseMarkdownIntoAttributedString(strings().webBotAccountDisclaimerThird, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, contents)
+                }))
+                
+                modernConfirm(for: context.window, header: strings().webBotAccountDisclaimerTitle, information: strings().webBotAccountDisclaimerText, okTitle: strings().webBotAccountDisclaimerOK, thridTitle: third.string, thirdAttributed: third, mustChecked: true, successHandler: { result in
+                    open()
+                })
+            } else {
+                open()
+            }
         })
         
         self.arguments = arguments
@@ -872,8 +928,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         
         let storyStats = context.engine.messages.storySubscriptions(isHidden: false)
         
-        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep, storyStats) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration, storyStats -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration, storyStats: storyStats).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep, storyStats, context.engine.messages.attachMenuBots()) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration, storyStats, attachMenuBots -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration, storyStats: storyStats, attachMenuBots: attachMenuBots).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)

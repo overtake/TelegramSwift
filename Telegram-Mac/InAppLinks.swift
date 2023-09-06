@@ -782,7 +782,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             })
         }
         afterComplete(true)
-    case let .inviteBotToGroup(_, username, context, action, rights, callback):
+    case let .inviteBotToGroup(_, username, context, action, rights, isChannel, callback):
         let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: context.window).start(next: { botPeerId in
             
             
@@ -795,8 +795,16 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     break
                 }
             }
+            let title: String
+            if isChannel {
+                title = strings().selectPeersTitleSelectChannel
+            } else if payload.isEmpty {
+                title = strings().selectPeersTitleSelectGroupOrChannel
+            } else {
+                title = strings().selectPeersTitleSelectGroup
+            }
             
-            let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectChatsBehavior(settings: payload.isEmpty ? [.groups, .channels, .checkInvite] : [.groups, .checkInvite], limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            let result = selectModalPeers(window: context.window, context: context, title: title, behavior: SelectChatsBehavior(settings: isChannel ? [.channels, .checkInvite] : payload.isEmpty ? [.groups, .channels, .checkInvite] : [.groups, .checkInvite], limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 return .single(true)
             })
             |> filter { $0.first != nil }
@@ -1149,6 +1157,14 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         loadAndShowSharedFolder(context: context, slug: slug)
     case let .loginCode(_, code):
         appDelegate?.applyExternalLoginCode(code)
+    case let .boost(_, username, context):
+        let signal = context.engine.peers.resolvePeerByName(name: username)
+
+        _ = showModalProgress(signal: signal, for: context.window).start(next: { peer in
+            if let peer = peer {
+                showModal(with: BoostChannelModalController(context: context, peer: peer._asPeer()), for: context.window)
+            }
+        })
     }
     
 }
@@ -1260,7 +1276,7 @@ enum inAppLink {
     case followResolvedName(link: String, username:String, postId:Int32?, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case comments(link: String, username:String, context: AccountContext, threadId: Int32, commentId: Int32?)
     case topic(link: String, username:String, context: AccountContext, threadId: Int32, commentId: Int32?)
-    case inviteBotToGroup(link: String, username:String, context: AccountContext, action:ChatInitialAction?, rights: String?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
+    case inviteBotToGroup(link: String, username:String, context: AccountContext, action:ChatInitialAction?, rights: String?, isChannel: Bool, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case botCommand(String, (String)->Void)
     case callback(String, (String)->Void)
     case code(String, (String)->Void)
@@ -1288,6 +1304,7 @@ enum inAppLink {
     case loginCode(link: String, code: String)
     case folder(link: String, slug: String, context: AccountContext)
     case story(link: String, username: String, storyId: Int32, messageId: MessageId?, context: AccountContext)
+    case boost(link: String, username: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1303,7 +1320,7 @@ enum inAppLink {
             return link
         case let .followResolvedName(link, _, _, _, _, _):
             return link
-        case let .inviteBotToGroup(link, _, _, _, _, _):
+        case let .inviteBotToGroup(link, _, _, _, _, _, _):
             return link
         case let .botCommand(link, _), let .callback(link, _), let .code(link, _), let .hashtag(link, _):
             return link
@@ -1349,6 +1366,8 @@ enum inAppLink {
             return link
         case let .story(link, _, _, _, _):
             return link
+        case let .boost(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1382,6 +1401,7 @@ private let keyURLVoiceChat = "voicechat";
 private let keyURLStartattach = "startattach";
 private let keyURLAttach = "attach";
 private let keyURLStartGroup = "startgroup";
+private let keyURLStartChannel = "startchannel";
 private let keyURLSecret = "secret";
 private let keyURLproxy = "proxy";
 private let keyURLLivestream = "livestream";
@@ -1397,6 +1417,7 @@ private let keyURLCode = "code";
 
 private let keyURLAppname = "appname";
 private let keyURLStartapp = "startapp";
+
 
 
 private let keyURLHost = "server";
@@ -1632,10 +1653,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         case keyURLStart:
                             action = .start(parameter: value, behavior: .none)
                             break loop;
-                        case keyURLStartGroup:
+                        case keyURLStartGroup, keyURLStartChannel:
                             if let openInfo = openInfo, let context = context {
                                 let rights = vars[keyURLAdmin]
-                                return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .automatic), rights: rights, callback: openInfo)
+                                return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .automatic), rights: rights, isChannel: key == keyURLStartChannel, callback: openInfo)
                             }
                             break loop;
                         case keyURLVoiceChat:
@@ -1692,7 +1713,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if username.hasPrefix("$") {
                             return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
                         }
-                        if let storyId = vars[keyURLStoryId]?.nsstring.intValue {
+                        if components.count == 2, components[1] == "boost" {
+                            return .boost(link: urlString, username: username, context: context)
+                        } else if let storyId = vars[keyURLStoryId]?.nsstring.intValue {
                             return .story(link: urlString, username: username, storyId: storyId, messageId: messageId, context: context)
                         } else if let topicId = vars[keyURLTopicId]?.nsstring.intValue {
                             return .topic(link: urlString, username: username, context: context, threadId: topicId, commentId: nil)
@@ -1823,10 +1846,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             case keyURLStart:
                                 action = .start(parameter: value, behavior: .none)
                                 break loop;
-                            case keyURLStartGroup:
+                            case keyURLStartGroup, keyURLStartChannel:
                                 if let context = context {
                                     let rights = vars[keyURLAdmin]
-                                    return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .none), rights: rights, callback: openInfo)
+                                    return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .none), rights: rights, isChannel: key == keyURLStartChannel, callback: openInfo)
                                 }
                             case keyURLVoiceChat:
                                 action = .joinVoiceChat(value)

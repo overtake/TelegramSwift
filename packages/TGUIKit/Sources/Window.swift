@@ -789,6 +789,7 @@ open class Window: NSWindow {
             self.keyUpHandler?(event)
         }
         
+        
         let eventType = event.type
         if sheets.isEmpty {
             if eventType == .keyDown {

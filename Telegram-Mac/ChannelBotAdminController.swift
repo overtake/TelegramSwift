@@ -52,6 +52,11 @@ public struct ResolvedBotAdminRights: OptionSet {
     public static let canBeAnonymous = ResolvedBotAdminRights(rawValue: 1024)
     public static let manageChat = ResolvedBotAdminRights(rawValue: 2048)
     
+    public static let postStories = ResolvedBotAdminRights(rawValue: 4096)
+    public static let editStories = ResolvedBotAdminRights(rawValue: 8192)
+    public static let deleteStories = ResolvedBotAdminRights(rawValue: 16384)
+
+    
     public var chatAdminRights: TelegramChatAdminRightsFlags? {
         var flags = TelegramChatAdminRightsFlags()
         
@@ -85,7 +90,15 @@ public struct ResolvedBotAdminRights: OptionSet {
         if self.contains(ResolvedBotAdminRights.canBeAnonymous) {
             flags.insert(.canBeAnonymous)
         }
-        
+        if self.contains(ResolvedBotAdminRights.postStories) {
+            flags.insert(.canPostStories)
+        }
+        if self.contains(ResolvedBotAdminRights.editStories) {
+            flags.insert(.canEditStories)
+        }
+        if self.contains(ResolvedBotAdminRights.deleteStories) {
+            flags.insert(.canDeleteStories)
+        }
         if flags.isEmpty && !self.contains(ResolvedBotAdminRights.manageChat) {
             return nil
         }
@@ -106,6 +119,15 @@ extension ResolvedBotAdminRights {
         }
         if components.contains("delete_messages") {
             rawValue |= ResolvedBotAdminRights.deleteMessages.rawValue
+        }
+        if components.contains("post_stories") {
+            rawValue |= ResolvedBotAdminRights.postStories.rawValue
+        }
+        if components.contains("edit_stories") {
+            rawValue |= ResolvedBotAdminRights.editStories.rawValue
+        }
+        if components.contains("delete_stories") {
+            rawValue |= ResolvedBotAdminRights.deleteStories.rawValue
         }
         if components.contains("restrict_members") {
             rawValue |= ResolvedBotAdminRights.restrictMembers.rawValue
@@ -141,11 +163,13 @@ extension ResolvedBotAdminRights {
 private final class Arguments {
     let context: AccountContext
     let toggleIsAdmin: ()->Void
-    let toggleAdminRight: (TelegramChatAdminRightsFlags)->Void
-    init(context: AccountContext, toggleIsAdmin: @escaping()->Void, toggleAdminRight: @escaping(TelegramChatAdminRightsFlags)->Void) {
+    let toggleRight: (RightsItem, Bool) -> Void
+    let toggleIsOptionExpanded: (RightsItem.Sub) -> Void
+    init(context: AccountContext, toggleIsAdmin: @escaping()->Void, toggleRight: @escaping(RightsItem, Bool) -> Void, toggleIsOptionExpanded: @escaping(RightsItem.Sub) -> Void) {
         self.context = context
         self.toggleIsAdmin = toggleIsAdmin
-        self.toggleAdminRight = toggleAdminRight
+        self.toggleRight = toggleRight
+        self.toggleIsOptionExpanded = toggleIsOptionExpanded
     }
 }
 
@@ -155,14 +179,22 @@ private struct State : Equatable {
     var isAdmin: Bool = true
     var rights: TelegramChatAdminRightsFlags
     var title: String?
+    var expandedPermissions: Set<RightsItem.Sub> = Set()
 }
 
 
 private let _id_header = InputDataIdentifier("_id_header")
 private let _id_admin_rights = InputDataIdentifier("_id_admin_rights")
 private let _id_title = InputDataIdentifier("_id_title")
-private func _id_admin_right(_ right: TelegramChatAdminRightsFlags) -> InputDataIdentifier {
-    return .init("_id_admin_right_\(right.rawValue)")
+private func _id_admin_right(_ right: RightsItem) -> InputDataIdentifier {
+    switch right {
+    case let .direct(right):
+        return .init("_id_admin_right_\(right.rawValue)")
+    case let .sub(_, rights):
+        return rights.reduce(InputDataIdentifier(""), { current, value in
+            return .init(current.identifier + _id_admin_right(.direct(value)).identifier)
+        })
+    }
 }
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -179,50 +211,142 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let color:NSColor = theme.colors.grayText
         return ShortPeerRowItem(initialSize, peer: state.admin.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, inset: NSEdgeInsets(left: 30, right: 30), viewType: .singleItem, action: {})
     }))
-    index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_rights, data: .init(name: strings().channelAddBotAdminRights, color: theme.colors.text, type: .switchable(state.isAdmin), viewType: .singleItem, action: arguments.toggleIsAdmin)))
-    index += 1
     
     if state.isAdmin {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
+                
+        let isGroup: Bool
+        let maskRightsFlags: TelegramChatAdminRightsFlags
+        let rightsOrder: [RightsItem]
         
-        let rightsOrder: [TelegramChatAdminRightsFlags]
-        
-        rightsOrder = [
-            .canChangeInfo,
-            .canDeleteMessages,
-            .canBanUsers,
-            .canInviteUsers,
-            .canPinMessages,
-            .canManageTopics,
-            .canBeAnonymous
-        ]
-        
-        
-        
-        for (i, right) in rightsOrder.enumerated() {
-            let text = stringForRight(right: right, isGroup: state.peer.peer.isGroup || state.peer.peer.isChannel, defaultBannedRights: nil)
-            
-            
-            var enabled: Bool = state.peer.peer.groupAccess.isCreator
-            
-            let peer = state.peer.peer as? TelegramChannel
-            
-            if let adminRights = peer?.adminRights {
-                enabled = adminRights.rights.contains(right)
+        if let channel = state.peer.peer as? TelegramChannel {
+            maskRightsFlags = .peerSpecific(peer: .init(channel))
+            switch channel.info {
+            case .broadcast:
+                isGroup = false
+                rightsOrder = [
+                    .direct(.canChangeInfo),
+                    .sub(.messages, messageRelatedFlags),
+                    .sub(.stories, storiesRelatedFlags),
+                    .direct(.canInviteUsers),
+                    .direct(.canManageCalls),
+                    .direct(.canAddAdmins)
+                ]
+            case .group:
+                isGroup = true
+                if channel.flags.contains(.isForum) {
+                    rightsOrder = [
+                        .direct(.canChangeInfo),
+                        .direct(.canDeleteMessages),
+                        .direct(.canBanUsers),
+                        .direct(.canInviteUsers),
+                        .direct(.canPinMessages),
+                        .direct(.canManageTopics),
+                        .direct(.canManageCalls),
+                        .direct(.canBeAnonymous),
+                        .direct(.canAddAdmins)
+                    ]
+                } else {
+                    rightsOrder = [
+                        .direct(.canChangeInfo),
+                        .direct(.canDeleteMessages),
+                        .direct(.canBanUsers),
+                        .direct(.canInviteUsers),
+                        .direct(.canPinMessages),
+                        .direct(.canManageCalls),
+                        .direct(.canBeAnonymous),
+                        .direct(.canAddAdmins)
+                    ]
+                }
             }
-            
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_right(right), data: .init(name: text, color: theme.colors.text, type: .switchable(state.rights.contains(right)), viewType: bestGeneralViewType(rightsOrder, for: i), enabled: enabled, action: {
-                arguments.toggleAdminRight(right)
-            })))
-            index += 1
+        } else {
+            isGroup = true
+            maskRightsFlags = .internal_groupSpecific
+            rightsOrder = [
+                .direct(.canChangeInfo),
+                .direct(.canDeleteMessages),
+                .direct(.canBanUsers),
+                .direct(.canInviteUsers),
+                .direct(.canManageCalls),
+                .direct(.canPinMessages),
+                .direct(.canBeAnonymous),
+                .direct(.canAddAdmins)
+            ]
+        }
+        
+        
+        for (i, rights) in rightsOrder.enumerated() {
+            switch rights {
+            case let .direct(right):
+                let text = stringForRight(right: right, isGroup: state.peer.peer.isGroup || state.peer.peer.isSupergroup, defaultBannedRights: nil)
+                
+                
+                var enabled: Bool = state.peer.peer.groupAccess.isCreator
+                
+                let peer = state.peer.peer as? TelegramChannel
+                
+                if let adminRights = peer?.adminRights, !enabled {
+                    enabled = adminRights.rights.contains(right)
+                }
+                
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_right(rights), data: .init(name: text, color: theme.colors.text, type: .switchable(state.rights.contains(right)), viewType: bestGeneralViewType(rightsOrder, for: i), enabled: enabled, action: {
+                    // arguments.toggleAdminRight(right)
+                })))
+            case let .sub(type, subRights):
+                
+                let isExpanded = state.expandedPermissions.contains(type)
+                
+                let text: String
+                switch type {
+                case .messages:
+                    text = strings().channelEditAdminPermissionManageMessages
+                case .stories:
+                    text = strings().channelEditAdminPermissionManageStories
+                }
+                
+                var enabled: Bool = state.peer.peer.groupAccess.isCreator
+                                
+                if let adminRights = (state.peer.peer as? TelegramChannel)?.adminRights, !enabled {
+                    let subRights = subRights.filter { adminRights.rights.contains($0) }
+                    enabled = !subRights.isEmpty
+                }
+                let isSelected = subRights.filter({ state.rights.contains($0) }).count == subRights.count
+                
+                let string: NSMutableAttributedString = NSMutableAttributedString()
+                string.append(string: text, color: theme.colors.text, font: .normal(.title))
+                
+                let selectedCount = subRights.filter { state.rights.contains($0) }.count
+                string.append(string: " \(selectedCount)/\(subRights.count)", color: theme.colors.text, font: .bold(.short))
+                
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_right(rights), data: .init(name: text, color: theme.colors.text, type: .switchable(isSelected), viewType: bestGeneralViewType(rightsOrder, for: i), enabled: enabled, action: {
+                    switch rights {
+                    case .direct:
+                        arguments.toggleRight(rights, !isSelected)
+                    case let .sub(type, _):
+                        arguments.toggleIsOptionExpanded(type)
+                    }
+                }, switchAction: {
+                    arguments.toggleRight(rights, !isSelected)
+                }, nameAttributed: string)))
+                
+                if isExpanded {
+                    for right in subRights {
+                        let text = stringForRight(right: right, isGroup: state.peer.peer.isGroup || state.peer.peer.isSupergroup, defaultBannedRights: nil)
+                        let isSelected = state.rights.contains(right)
+                        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_right(.direct(right)), data: .init(name: text, color: theme.colors.text, type: .selectableLeft(isSelected), viewType: .innerItem, enabled: enabled, action: {
+                            arguments.toggleRight(.direct(right), !isSelected)
+                        })))
+                    }
+                }
+            }
         }
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -234,7 +358,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             return filtered
         }, limit: 16))
-        index += 1
 
     }
         
@@ -271,15 +394,39 @@ func ChannelBotAdminController(context: AccountContext, peer: Peer, admin: Peer,
             current.isAdmin = !current.isAdmin
             return current
         }
-    }, toggleAdminRight: { right in
+    }, toggleRight: { rights, value in
         updateState { current in
             var current = current
-            if current.rights.contains(right) {
-                current.rights.remove(right)
-            } else {
-                current.rights.insert(right)
+            var updated = current.rights
+            var combinedRight: TelegramChatAdminRightsFlags
+            switch rights {
+            case let .direct(right):
+                combinedRight = right
+            case let .sub(_, right):
+                combinedRight = []
+                for flag in right {
+                    combinedRight.insert(flag)
+                }
             }
+            if !value {
+                updated.remove(combinedRight)
+            } else {
+                updated.insert(combinedRight)
+            }
+            current.rights = updated
             return current
+        }
+    }, toggleIsOptionExpanded: { flag in
+        updateState { state in
+            var state = state
+            
+            if state.expandedPermissions.contains(flag) {
+                state.expandedPermissions.remove(flag)
+            } else {
+                state.expandedPermissions.insert(flag)
+            }
+            
+            return state
         }
     })
     

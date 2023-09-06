@@ -24,7 +24,6 @@
 		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
 		270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* WidgetStickersController.swift */; };
 		270B7CBA29F66649009C994C /* StoryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CB929F66649009C994C /* StoryModalController.swift */; };
-		270B7CBC29F67361009C994C /* StoryLayoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBB29F67361009C994C /* StoryLayoutView.swift */; };
 		270B7CBE29F7BCCA009C994C /* StoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBD29F7BCCA009C994C /* StoryListView.swift */; };
 		270B7CC029F7BFF0009C994C /* StoryInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CBF29F7BFF0009C994C /* StoryInputView.swift */; };
 		270B7CC229F7CC66009C994C /* StoryFetchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC129F7CC66009C994C /* StoryFetchManager.swift */; };
@@ -85,6 +84,9 @@
 		2729341C2779A35C00F10D3C /* menu_select_multiple.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */; };
 		272C1830267D00350030B5FB /* CoreMediaIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 272C182F267D00350030B5FB /* CoreMediaIO.framework */; };
 		272C7DB62A94BF9300F89190 /* ArchiveSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DB52A94BF9300F89190 /* ArchiveSettingsController.swift */; };
+		272C7DF02AA07EDD00F89190 /* StoryLayoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DEF2AA07EDD00F89190 /* StoryLayoutView.swift */; };
+		272C7DF32AA090F900F89190 /* StoryChannelInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DF22AA090F900F89190 /* StoryChannelInputView.swift */; };
+		272C7DF62AA1C10C00F89190 /* SuspiciousAuthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DF52AA1C10C00F89190 /* SuspiciousAuthRowItem.swift */; };
 		273274E626A818AE00E04289 /* WallpaperColorPickerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */; };
 		273274E826A8190F00E04289 /* WallpaperAdditionColorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */; };
 		2733670D2760F3010027441E /* ChatMessageMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2733670C2760F3010027441E /* ChatMessageMenuItems.swift */; };
@@ -164,6 +166,12 @@
 		2748C56527BA959F00F05503 /* Auth_PhoneNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */; };
 		2748D44527C61DCF0057CF99 /* libtgvoip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2748D44427C61DCF0057CF99 /* libtgvoip.framework */; };
 		2748D44927C624690057CF99 /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */; };
+		274952802AA1D8AB00499498 /* SuspiciousRevokeModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2749527F2AA1D8AB00499498 /* SuspiciousRevokeModal.swift */; };
+		274952822AA1E79E00499498 /* hand_animation.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274952812AA1E79E00499498 /* hand_animation.tgs */; };
+		274952852AA472F600499498 /* BoostChannelModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274952842AA472F600499498 /* BoostChannelModalController.swift */; };
+		274952872AA48A7200499498 /* menu_lighting.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274952862AA48A7200499498 /* menu_lighting.tgs */; };
+		274952892AA49E3D00499498 /* ChannelBoostStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274952882AA49E3D00499498 /* ChannelBoostStatsController.swift */; };
+		2749528B2AA4A2ED00499498 /* ChannelStatsSegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2749528A2AA4A2ED00499498 /* ChannelStatsSegmentController.swift */; };
 		274B831826F0C0A700E6E474 /* EmojiScreenEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */; };
 		274B9E32272C2253009993C7 /* ChatCalendarModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */; };
 		274B9E40273008EB009993C7 /* sent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 274B9E3F273008EB009993C7 /* sent.mp3 */; };
@@ -1496,7 +1504,6 @@
 		2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStatusStatusRowItem.swift; sourceTree = "<group>"; };
 		270A2629269D8F1000B31B2B /* WidgetStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStickersController.swift; sourceTree = "<group>"; };
 		270B7CB929F66649009C994C /* StoryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryModalController.swift; sourceTree = "<group>"; };
-		270B7CBB29F67361009C994C /* StoryLayoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryLayoutView.swift; sourceTree = "<group>"; };
 		270B7CBD29F7BCCA009C994C /* StoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListView.swift; sourceTree = "<group>"; };
 		270B7CBF29F7BFF0009C994C /* StoryInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryInputView.swift; sourceTree = "<group>"; };
 		270B7CC129F7CC66009C994C /* StoryFetchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryFetchManager.swift; sourceTree = "<group>"; };
@@ -1561,6 +1568,9 @@
 		2729712026135C94006D38E2 /* GroupCallInviteRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInviteRowItem.swift; sourceTree = "<group>"; };
 		272C182F267D00350030B5FB /* CoreMediaIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMediaIO.framework; path = System/Library/Frameworks/CoreMediaIO.framework; sourceTree = SDKROOT; };
 		272C7DB52A94BF9300F89190 /* ArchiveSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveSettingsController.swift; sourceTree = "<group>"; };
+		272C7DEF2AA07EDD00F89190 /* StoryLayoutView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoryLayoutView.swift; sourceTree = "<group>"; };
+		272C7DF22AA090F900F89190 /* StoryChannelInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChannelInputView.swift; sourceTree = "<group>"; };
+		272C7DF52AA1C10C00F89190 /* SuspiciousAuthRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspiciousAuthRowItem.swift; sourceTree = "<group>"; };
 		273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperColorPickerContainerView.swift; sourceTree = "<group>"; };
 		273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperAdditionColorView.swift; sourceTree = "<group>"; };
 		27335F0225C8295100FD040C /* GroupVideoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
@@ -1631,6 +1641,12 @@
 		2748D44427C61DCF0057CF99 /* libtgvoip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libtgvoip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OngoingCallThreadLocalContext.mm; sourceTree = "<group>"; };
 		2748D44827C624690057CF99 /* OngoingCallThreadLocalContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OngoingCallThreadLocalContext.h; sourceTree = "<group>"; };
+		2749527F2AA1D8AB00499498 /* SuspiciousRevokeModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspiciousRevokeModal.swift; sourceTree = "<group>"; };
+		274952812AA1E79E00499498 /* hand_animation.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = hand_animation.tgs; sourceTree = "<group>"; };
+		274952842AA472F600499498 /* BoostChannelModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoostChannelModalController.swift; sourceTree = "<group>"; };
+		274952862AA48A7200499498 /* menu_lighting.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_lighting.tgs; sourceTree = "<group>"; };
+		274952882AA49E3D00499498 /* ChannelBoostStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBoostStatsController.swift; sourceTree = "<group>"; };
+		2749528A2AA4A2ED00499498 /* ChannelStatsSegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelStatsSegmentController.swift; sourceTree = "<group>"; };
 		274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInvitation.swift; sourceTree = "<group>"; };
 		274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiScreenEffect.swift; sourceTree = "<group>"; };
 		274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarModalController.swift; sourceTree = "<group>"; };
@@ -3092,22 +3108,20 @@
 		270B7CB829F66638009C994C /* stories */ = {
 			isa = PBXGroup;
 			children = (
+				272C7DF12AA090EB00F89190 /* input */,
 				27C0CC612A86237E00C573F4 /* viewers */,
 				2719D80E2A16047100081079 /* media-list */,
 				270B7CB929F66649009C994C /* StoryModalController.swift */,
-				270B7CBB29F67361009C994C /* StoryLayoutView.swift */,
+				272C7DEF2AA07EDD00F89190 /* StoryLayoutView.swift */,
 				270B7CBD29F7BCCA009C994C /* StoryListView.swift */,
-				270B7CBF29F7BFF0009C994C /* StoryInputView.swift */,
 				270B7CC129F7CC66009C994C /* StoryFetchManager.swift */,
 				270B7CC329FA925D009C994C /* StoryControlsView.swift */,
 				270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */,
-				2718244E2A05413000AFBD4C /* StoryMyInputView.swift */,
 				271824502A08C60400AFBD4C /* StoryChatListView.swift */,
 				2719D8002A139B9D00081079 /* StoryRecordingView.swift */,
 				2719D8152A1F555500081079 /* StoryChatContent.swift */,
 				27BCE40E2A409FDD0015E5EE /* StoryContactHiddenItem.swift */,
 				279B03552A4EDB41007D2AB9 /* AvatarStoryIndicatorComponent.swift */,
-				275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */,
 				27D48B422A72721200721995 /* StoryStealthModeController.swift */,
 				27D48B602A78F6E800721995 /* StoryViewMediaAreaViewer.swift */,
 			);
@@ -3142,6 +3156,26 @@
 				2728991B26CBCDA900F4D288 /* TitleAndInfoAlertItem.swift */,
 			);
 			name = items;
+			sourceTree = "<group>";
+		};
+		272C7DF12AA090EB00F89190 /* input */ = {
+			isa = PBXGroup;
+			children = (
+				270B7CBF29F7BFF0009C994C /* StoryInputView.swift */,
+				2718244E2A05413000AFBD4C /* StoryMyInputView.swift */,
+				272C7DF22AA090F900F89190 /* StoryChannelInputView.swift */,
+				275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */,
+			);
+			name = input;
+			sourceTree = "<group>";
+		};
+		272C7DF42AA1C0E200F89190 /* suspicious-auth */ = {
+			isa = PBXGroup;
+			children = (
+				272C7DF52AA1C10C00F89190 /* SuspiciousAuthRowItem.swift */,
+				2749527F2AA1D8AB00499498 /* SuspiciousRevokeModal.swift */,
+			);
+			name = "suspicious-auth";
 			sourceTree = "<group>";
 		};
 		27361ED2282122B500808241 /* premium */ = {
@@ -3204,6 +3238,14 @@
 				27F2BBD227BF8CD300A37463 /* Auth_Signup.swift */,
 			);
 			name = modern;
+			sourceTree = "<group>";
+		};
+		274952832AA4729300499498 /* boost */ = {
+			isa = PBXGroup;
+			children = (
+				274952842AA472F600499498 /* BoostChannelModalController.swift */,
+			);
+			name = boost;
 			sourceTree = "<group>";
 		};
 		274E585E2A825A4300EEBDBF /* peers */ = {
@@ -3534,6 +3576,7 @@
 				279BD40D29BB283700A8B640 /* menu_atsign.tgs */,
 				279B03532A4ECCC3007D2AB9 /* menu_move_to_contacts.tgs */,
 				2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */,
+				274952862AA48A7200499498 /* menu_lighting.tgs */,
 				27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */,
 				2747FD392927BFBD0045B95C /* menu_show.tgs */,
 				277C208827A2858D0070B3BF /* menu_speaker_muted.tgs */,
@@ -4092,6 +4135,8 @@
 				D0A2764F249CE588005E3C77 /* GroupsStatsController.swift */,
 				D0ABA3F225499C5A00031678 /* MessageStatsController.swift */,
 				D0ABA3F62549C37E00031678 /* MessageSharedRowItem.swift */,
+				274952882AA49E3D00499498 /* ChannelBoostStatsController.swift */,
+				2749528A2AA4A2ED00499498 /* ChannelStatsSegmentController.swift */,
 			);
 			name = stats;
 			sourceTree = "<group>";
@@ -4590,6 +4635,7 @@
 		C22E06301D8043A000A11C88 /* chatlist */ = {
 			isa = PBXGroup;
 			children = (
+				272C7DF42AA1C0E200F89190 /* suspicious-auth */,
 				2786368327C8B73E00690B10 /* downloads */,
 				A789E08223E05E9A00AEB34A /* filters */,
 				C22E06311D8044CC00A11C88 /* ChatListController.swift */,
@@ -4614,6 +4660,7 @@
 		C2303E871D9A766900098E12 /* left */ = {
 			isa = PBXGroup;
 			children = (
+				274952832AA4729300499498 /* boost */,
 				274E585E2A825A4300EEBDBF /* peers */,
 				D001E972243B19C4009025F9 /* folders-sidebar */,
 				A7F282FE2395166D00742C20 /* settings-search */,
@@ -5762,6 +5809,7 @@
 				27D91312283646CA007CF40F /* text_to_voice.tgs */,
 				277E228128E5DC9D00001689 /* forum_topic.tgs */,
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
+				274952812AA1E79E00499498 /* hand_animation.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
 				275C14122A61780F000DDACF /* expired_story.tgs */,
@@ -6313,6 +6361,7 @@
 				27CB17662763855C00DD25E0 /* menu_show_info.tgs in Resources */,
 				2733671327620B600027441E /* menu_copy.tgs in Resources */,
 				27E7E4A0270E040600CF3A24 /* thumbsup.tgs in Resources */,
+				274952872AA48A7200499498 /* menu_lighting.tgs in Resources */,
 				2751E7A127F34415003E3937 /* menu_autodelete_1d.tgs in Resources */,
 				27803BF727A3E944007B0FA9 /* menu_folder_star.tgs in Resources */,
 				27D9131F283BC0EB007CF40F /* flecks.jpg in Resources */,
@@ -6418,6 +6467,7 @@
 				9F03681322771A9700456348 /* anim_delete.json in Resources */,
 				27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */,
 				9F03681822771A9700456348 /* anim_group.json in Resources */,
+				274952822AA1E79E00499498 /* hand_animation.tgs in Resources */,
 				D07450E9233D61B800769D7F /* keyboard_typing.tgs in Resources */,
 				9F03681422771A9700456348 /* anim_unread.json in Resources */,
 				27B8AFEB26380B4E0044C71B /* screenon.tgs in Resources */,
@@ -6774,6 +6824,7 @@
 			files = (
 				27D48B432A72721200721995 /* StoryStealthModeController.swift in Sources */,
 				27A6977D273D0AED00B33415 /* GroupVideoView.swift in Sources */,
+				274952802AA1D8AB00499498 /* SuspiciousRevokeModal.swift in Sources */,
 				27A69770273D0ADF00B33415 /* GroupCallSpeakButton.swift in Sources */,
 				27A69771273D0ADF00B33415 /* GroupCallTitleView.swift in Sources */,
 				27F4F17A2844F7C700A3B4D4 /* EmojiesSectionRowItem.swift in Sources */,
@@ -6791,6 +6842,7 @@
 				27A6977B273D0AE000B33415 /* GroupCallTextAndLabelRowItem.swift in Sources */,
 				27A6976F273D0AB100B33415 /* GroupCallTileView.swift in Sources */,
 				27A6976E273D0A6000B33415 /* GroupCallParticipantRowItem.swift in Sources */,
+				272C7DF62AA1C10C00F89190 /* SuspiciousAuthRowItem.swift in Sources */,
 				27A6976C273D0A3300B33415 /* GroupCallView.swift in Sources */,
 				27A6976D273D0A3300B33415 /* GroupCallVideoOrientationRowItem.swift in Sources */,
 				27A6976B273D09E800B33415 /* GroupCallMainVideoContainer.swift in Sources */,
@@ -6798,7 +6850,6 @@
 				27A6976A273D09AA00B33415 /* DesktopCapturePreviewItem.swift in Sources */,
 				27A69768273D096700B33415 /* DesktopCapturerWindow.swift in Sources */,
 				27A69767273D096200B33415 /* CallSettingsController.swift in Sources */,
-				270B7CBC29F67361009C994C /* StoryLayoutView.swift in Sources */,
 				27A69766273D093500B33415 /* CameraViews.swift in Sources */,
 				271824512A08C60400AFBD4C /* StoryChatListView.swift in Sources */,
 				27A69765273D092C00B33415 /* CallWindowController.swift in Sources */,
@@ -6816,6 +6867,7 @@
 				27A6975E273D086400B33415 /* PushToTalkRowItem.swift in Sources */,
 				27EBC7B0275795DE00C6A820 /* ChatReactionsView.swift in Sources */,
 				27A6975D273D085F00B33415 /* GroupCallSettingsController.swift in Sources */,
+				272C7DF02AA07EDD00F89190 /* StoryLayoutView.swift in Sources */,
 				27A6975C273D085A00B33415 /* GroupCallController.swift in Sources */,
 				27A6975B273D085500B33415 /* PresentationGroupCallManager.swift in Sources */,
 				27A69759273D084E00B33415 /* GroupCallWindow.swift in Sources */,
@@ -6887,6 +6939,7 @@
 				C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */,
 				9F0368012277091800456348 /* LAnimationButton.swift in Sources */,
 				C26505931E0301A5001954DC /* MGalleryPhotoItem.swift in Sources */,
+				2749528B2AA4A2ED00499498 /* ChannelStatsSegmentController.swift in Sources */,
 				D00CE50D2289C9B7008C1B4F /* MediaAnimatedStickerView.swift in Sources */,
 				27D6043E2955D75B00588C21 /* StorageUsageBlockController.swift in Sources */,
 				C205FEA61EB39DE400455808 /* SidebarCapViewController.swift in Sources */,
@@ -6951,6 +7004,7 @@
 				9F21A7D321C167000037784F /* InstantPageImageItem.swift in Sources */,
 				9F12D343209251CF0072928B /* EditAccountInfoItem.swift in Sources */,
 				27916F1E287C76E10046DB44 /* EmojiTabsItem.swift in Sources */,
+				274952892AA49E3D00499498 /* ChannelBoostStatsController.swift in Sources */,
 				C210959A1E9FE04700E10BDB /* ChatVideoMessageContentView.swift in Sources */,
 				C20CAD151FE436E300EFF8BF /* SelectSizeRowItem.swift in Sources */,
 				D01C731722A9814C000DA008 /* InputPasswordController.swift in Sources */,
@@ -7213,6 +7267,7 @@
 				C2FD33E91E696A86008D13D4 /* GroupsInCommonViewController.swift in Sources */,
 				C21795E31E795955006A2AA3 /* SecretChatKeyViewController.swift in Sources */,
 				D0E3684824D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift in Sources */,
+				274952852AA472F600499498 /* BoostChannelModalController.swift in Sources */,
 				C2CE43E420E2CFE800656543 /* PlayerListController.swift in Sources */,
 				27D48B632A790BA900721995 /* LocationPreviewController.swift in Sources */,
 				9F21A7DC21C290E00037784F /* InstantPageTableItem.swift in Sources */,
@@ -7231,6 +7286,7 @@
 				270B7CC029F7BFF0009C994C /* StoryInputView.swift in Sources */,
 				C230B9241DD4C78E0057F596 /* ChatGIFMediaItem.swift in Sources */,
 				C230B9161DD39E780057F596 /* CreateGroupViewController.swift in Sources */,
+				272C7DF32AA090F900F89190 /* StoryChannelInputView.swift in Sources */,
 				C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */,
 				A7393D442408F84300CE44CA /* DiceCache.swift in Sources */,
 				D0B6D72A22AA65D3008E36FE /* NewContactController.swift in Sources */,
@@ -7792,7 +7848,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.0.2;
+				MARKETING_VERSION = 10.0.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -7839,7 +7895,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.0.2;
+				MARKETING_VERSION = 10.0.3;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -7884,7 +7940,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.0.2;
+				MARKETING_VERSION = 10.0.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -8000,7 +8056,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.0.2;
+				MARKETING_VERSION = 10.0.3;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";

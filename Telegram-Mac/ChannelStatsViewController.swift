@@ -236,6 +236,19 @@ private func statsEntries(_ state: ChannelStatsContextState, uiState: UIStatsSta
     return entries
 }
 
+private final class SegmentedBarView : BarView {
+    private let segmentControl: CatalinaStyledSegmentController
+    required init(frame frameRect: NSRect) {
+        self.segmentControl = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
+        super.init(frame: frameRect)
+        addSubview(segmentControl.view)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 
 func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datacenterId: Int32) -> ViewController {
 
@@ -301,6 +314,7 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
         controller.tableView.alwaysOpenRowsOnMouseUp = true
         controller.tableView.needUpdateVisibleAfterScroll = true
     }
+    
     
     controller.onDeinit = {
         detailedDisposable.dispose()

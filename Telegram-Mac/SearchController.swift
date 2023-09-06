@@ -1408,6 +1408,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             messageId = item.message?.id
             peerId = item.peerId
             id = item.entryId
+            
+            if let message = item.message {
+                context.engine.messages.ensureMessagesAreLocallyAvailable(messages: [.init(message)])
+            }
         } else if let item = item as? ShortPeerRowItem {
             if let stableId = item.stableId.base as? ChatListSearchEntryStableId {
                 switch stableId {
@@ -1465,16 +1469,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         var storedPeer: Signal<PeerId, NoError>
         if let peer = peer {
-             storedPeer = context.account.postbox.transaction { transaction -> Void in
-                if transaction.getPeer(peer.id) == nil {
-                    updatePeersCustom(transaction: transaction, peers: [peer], update: { (previous, updated) -> Peer? in
-                        return updated
-                    })
-                }
-                
-            } |> mapToSignal {
-                return storedMessageFromSearchPeer(account: context.account, peer: peer)
-            }
+             storedPeer = storedMessageFromSearchPeer(account: context.account, peer: peer)
         } else if let peerId = peerId {
             storedPeer = .single(peerId)
         } else {
@@ -1493,6 +1488,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             }
         }
 
+        
+        
         
         let recently: Signal<Void, NoError>
         if let peerId = peerId {

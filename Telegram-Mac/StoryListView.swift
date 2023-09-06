@@ -49,21 +49,45 @@ extension MediaArea {
             return true
         }
     }
+    var reaction: MessageReaction.Reaction? {
+        switch self {
+        case .venue:
+            return nil
+        case let .reaction(_, reaction, _):
+            return reaction
+        }
+    }
+    var isDark: Bool {
+        switch self {
+        case .venue:
+            return false
+        case let .reaction(_, _, flags):
+            return flags.contains(.isDark)
+        }
+    }
 }
 
 private protocol InteractiveMedia {
     var mediaArea: MediaArea { get }
-    func apply(area: MediaArea, arguments: StoryArguments, animated: Bool)
+    func apply(area: MediaArea, count: Int32?, arguments: StoryArguments, animated: Bool)
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition)
 }
 
+
 private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
     
-    let _mediaArea: MediaArea
+    var _mediaArea: MediaArea
     
     var mediaArea: MediaArea {
         return _mediaArea
     }
+    
+    private final class Container : NSImageView {
+        override var isFlipped: Bool {
+            return true
+        }
+    }
+    
     private static let shadowImage: NSImage = {
         return NSImage(named: "Icon_Story_InlineReaction_Shadow")!
     }()
@@ -79,7 +103,15 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
     private var reactionLayer: InlineStickerItemLayer?
     private var arguments: StoryArguments?
     
+    private var counterText: DynamicCounterTextView?
+
+    
     private let control = View()
+    private let counter = Container()
+    
+    
+    private var reaction: MessageReaction.Reaction?
+    
     required init(frame frameRect: NSRect, mediaArea: MediaArea) {
         _mediaArea = mediaArea
         super.init(frame: frameRect)
@@ -91,12 +123,17 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         bg_view.imageScaling = .scaleAxesIndependently
         shadow_view.imageScaling = .scaleAxesIndependently
 
-        addSubview(control)
+        self.addSubview(control)
+        self.addSubview(counter)
+        
+        counter.wantsLayer = true
         
         bg_view.wantsLayer = true
         shadow_view.wantsLayer = true
         
         control.layer?.masksToBounds = false
+        counter.layer?.masksToBounds = false
+
         
         bg_view.image = Reaction_InteractiveMedia.coverImage
         shadow_view.image = Reaction_InteractiveMedia.shadowImage
@@ -106,7 +143,9 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
             self?.action()
         }, for: .Click)
         
-        self.layer?.masksToBounds = false 
+        self.layer?.masksToBounds = false
+        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     required init?(coder: NSCoder) {
@@ -148,21 +187,53 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
     }
     
     
-    func apply(area: MediaArea, arguments: StoryArguments, animated: Bool) {
+    func apply(area: MediaArea, count: Int32?, arguments: StoryArguments, animated: Bool) {
         self.arguments = arguments
+        self._mediaArea = mediaArea
         
-        self.reactionLayer?.removeFromSuperlayer()
-        self.reactionLayer = nil
-        
-        switch area {
-        case let .reaction(_, reaction, flags):
+        let isDark: Bool = area.isDark
+
+        if self.reaction != area.reaction, let reaction = area.reaction {
+            self.reactionLayer?.removeFromSuperlayer()
+            self.reactionLayer = nil
+            
             self.reactionLayer = makeView(reaction, state: arguments.interaction.presentation, context: arguments.context)
             
-            self.bg_view.image = Reaction_InteractiveMedia.coverImage.tint(color: flags.contains(.isDark) ? NSColor(rgb: 0x000000, alpha: 0.5) : NSColor.white)
-
-        default:
-            break
+            self.bg_view.image = Reaction_InteractiveMedia.coverImage.tint(color: isDark ? NSColor(rgb: 0x000000, alpha: 0.5) : NSColor.white)
+            
         }
+        self.reaction = area.reaction
+
+        
+        if let count = count, count > 0 {
+            let current: DynamicCounterTextView
+            var isNew = false
+            if let view = self.counterText {
+                current = view
+            } else {
+                current = DynamicCounterTextView(frame: .zero)
+                self.counterText = current
+                counter.addSubview(current)
+                isNew = true
+            }
+            
+            let counterScale = max(0.01, min(1.8, frame.width / 140.0))
+
+
+            let text = DynamicCounterTextView.make(for: Int(count).prettyNumber, count: "\(count)", font: .digitalRound(17 * counterScale), textColor: isDark ? .white : .black, width: .greatestFiniteMagnitude)
+            current.update(text, animated: animated && !isNew)
+            current.change(size: text.size, animated: animated && !isNew)
+            
+            if isNew, animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+            }
+            
+        } else if let view = self.counterText {
+            performSubviewRemoval(view, animated: animated)
+            self.counterText = nil
+        }
+        
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     
@@ -209,7 +280,17 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         transition.updateFrame(view: bg_view, frame: bg_rect)
         
         transition.updateFrame(view: control, frame: size.bounds)
+        transition.updateFrame(view: counter, frame: size.bounds)
         
+        
+        if let counterText = self.counterText {
+            let point = CGPoint(x: size.width * 0.5 - counterText.frame.width * 0.5, y: floorToScreenPixels(backingScaleFactor, size.height * 0.765 - 0.5))
+            transition.updateFrame(view: counterText, frame: CGRect(origin: point, size: counterText.frame.size))
+        }
+        
+        counter.layer?.position = CGPoint(x: counter.frame.midX, y: counter.frame.midY)
+        counter.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
+        counter.layer?.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0, 0.0, 1.0)
         
         if let layer = self.reactionLayer {
             let rect = size.centered(around: CGPoint(x: size.width * 0.5, y: size.height * 0.47))
@@ -271,8 +352,9 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
                  container.addSubview(player)
                  
              } else if let effectFile = effectFile {
-                 let player = InlineStickerView(account: context.account, file: effectFile, size: size, playPolicy: .playCount(1))
+                 let player = InlineStickerView(account: context.account, file: effectFile, size: size, playPolicy: .playCount(1), controlContent: false)
                  player.isEventLess = true
+                 player.animateLayer.isPlayable = true
                  let rect = player.frame.size.centered(around: NSMakePoint(self.frame.midX, self.frame.midY))
 
                  player.frame = rect
@@ -721,7 +803,8 @@ final class StoryListView : Control, Notifable {
     private var nextStoryView: ShadowView?
     
     private var interactiveMedias:View = View(frame: .zero)
-    
+    private var interactiveMedias_values:[InteractiveMedia & NSView] = []
+
     private var pauseOverlay: Control? = nil
     
     private var mediaAreaViewer: StoryViewMediaAreaViewer?
@@ -1218,7 +1301,9 @@ final class StoryListView : Control, Notifable {
                 let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
                 let aspect = StoryLayoutView.size.aspectFitted(maxSize)
                 
-                if entry.peer.isService {
+                if entry.peer._asPeer() is TelegramChannel {
+                    self.inputView = StoryChannelInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
+                } else if entry.peer.isService {
                     self.inputView = StoryNoReplyInput(frame: NSMakeRect(0, 0, aspect.width, 50))
                 } else if entry.peer.id == context.peerId {
                     self.inputView = StoryMyInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
@@ -1245,15 +1330,16 @@ final class StoryListView : Control, Notifable {
             
             if let current = self.current, !current.isEqual(to: entry.item.storyItem.id) {
                 self.redraw()
-                self.fillInteractiveMedia(current, arguments: arguments, animated: false)
+                self.initInteractiveMedia(current, arguments: arguments, animated: false)
             } else if let current = self.current {
                 self.updateStoryState(current.state)
                 self.controls.update(context: context, arguments: arguments, groupId: entry.peer.id, peer: entry.peer._asPeer(), slice: entry, story: entry.item, animated: true)
                 self.inputView.update(entry.item, animated: true)
+                self.updateInteractiveMedia(current, arguments: arguments, animated: true)
             } else {
                 self.redraw()
                 if let current = self.current {
-                    self.fillInteractiveMedia(current, arguments: arguments, animated: false)
+                    self.initInteractiveMedia(current, arguments: arguments, animated: false)
                 }
             }
         } else {
@@ -1369,28 +1455,52 @@ final class StoryListView : Control, Notifable {
         
     }
     
-    private func fillInteractiveMedia(_ storyView: StoryLayoutView, arguments: StoryArguments, animated: Bool) {
+    private func updateInteractiveMedia(_ storyView: StoryLayoutView, arguments: StoryArguments, animated: Bool) {
         guard let medias = self.entry?.item.storyItem.mediaAreas.filter({ $0.canDraw }) else {
             return
         }
         
-        self.interactiveMedias.removeAllSubviews()
-        while let layers = interactiveMedias.layer?.sublayers, !layers.isEmpty {
-            layers.last?.removeFromSuperlayer()
-        }
-        
+        var index: Int = 0
+      
         for media in medias {
             switch media {
-            case .reaction:
+            case let .reaction(_, reaction, _):
                 let rect = mediaRect(media)
-                let view = Reaction_InteractiveMedia(frame: rect, mediaArea: media)
-                view.apply(area: media, arguments: arguments, animated: animated)
-                interactiveMedias.addSubview(view)
+                let entryViews = self.entry?.item.storyItem.views
+                var count = entryViews?.reactions.first(where: { $0.value == reaction })?.count
+                if self.entry?.item.storyItem.myReaction != nil, count == nil {
+                    count = 1
+                }
+                interactiveMedias_values[index].apply(area: media, count: count, arguments: arguments, animated: animated)
+                
+                index += 1
             case .venue:
                 break
             }
         }
         self.layoutInteractiveMedia(transition: .immediate)
+    }
+    private func initInteractiveMedia(_ storyView: StoryLayoutView, arguments: StoryArguments, animated: Bool) {
+        guard let medias = self.entry?.item.storyItem.mediaAreas.filter({ $0.canDraw }) else {
+            return
+        }
+        
+        self.interactiveMedias.removeAllSubviews()
+        self.interactiveMedias_values.removeAll()
+        
+        
+        for media in medias {
+            switch media {
+            case let .reaction(_, reaction, _):
+                let rect = mediaRect(media)
+                let view = Reaction_InteractiveMedia(frame: rect, mediaArea: media)
+                interactiveMedias.addSubview(view)
+                interactiveMedias_values.append(view)
+            case .venue:
+                break
+            }
+        }
+        self.updateInteractiveMedia(storyView, arguments: arguments, animated: animated)
     }
     
     func layoutInteractiveMedia(transition: ContainedViewLayoutTransition) {

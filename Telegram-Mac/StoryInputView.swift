@@ -51,36 +51,36 @@ private var send_image_active: CGImage {
     NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent.darker())
 }
 
-private let like_image: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 0.33))
-private var like_image_active: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 0.53))
+private let like_image: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 1))
+private var like_image_active: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 0.8))
 
 
-private let attach_image: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.33))
-private let attach_image_active: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.53))
+private let attach_image: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 1))
+private let attach_image_active: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.8))
 
-private let voice_image: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.33))
-private let voice_image_active: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.53))
+private let voice_image: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 1))
+private let voice_image_active: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.8))
 
-private let video_message_image: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.33))
-private let video_message_image_active: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.53))
-
-
-private let stickers_image: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.33))
-private var stickers_image_active: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.53))
-
-private let emoji_image: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 0.33))
-private var emoji_image_active: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 0.53))
+private let video_message_image: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 1))
+private let video_message_image_active: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.8))
 
 
+private let stickers_image: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 1))
+private var stickers_image_active: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.8))
 
-private let story_like: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.33))
-private let story_like_active: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.53))
-
-private let share_image: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 0.33))
-private let share_image_active: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 0.53))
+private let emoji_image: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 1))
+private var emoji_image_active: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 0.8))
 
 
-private final class StoryLikeActionButton: Control {
+
+private let story_like: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 1))
+private let story_like_active: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.8))
+
+private let share_image: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 1))
+private let share_image_active: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 0.8))
+
+
+final class StoryLikeActionButton: Control {
     private let control: ImageButton = ImageButton(frame: NSMakeRect(0, 0, 50, 50))
     private var myReaction: MessageReaction.Reaction?
     private var story: StoryContentItem?
@@ -828,7 +828,6 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         }, for: .RightDown)
         
         self.layer?.cornerRadius = 10
-      //  self.action.update(state: .empty(isVoice: FastSettings.recordingState == .voice), animated: false)
     }
     
     required init?(coder: NSCoder) {

@@ -518,8 +518,8 @@ final class ChatInteraction : InterfaceObserver  {
                 
                 let installed: Signal<Peer?, NoError> = context.engine.messages.attachMenuBots() |> map { items in
                     for item in items {
-                        if item.peer.username?.lowercased() == botname.lowercased() {
-                            return item.peer
+                        if item.peer.addressName?.lowercased() == botname.lowercased() {
+                            return item.peer._asPeer()
                         }
                     }
                     return nil
@@ -710,9 +710,9 @@ final class ChatInteraction : InterfaceObserver  {
         let context = self.context
         let peerId = self.peerId
         if simple {
-            let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, inline: false, themeParams: generateWebAppThemeParams(theme))
+            let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, source: inline ? .inline : .generic, themeParams: generateWebAppThemeParams(theme))
             _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, isInline: inline), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, source: inline ? .inline : .generic), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
             })
         } else {
             _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak self] attach in
