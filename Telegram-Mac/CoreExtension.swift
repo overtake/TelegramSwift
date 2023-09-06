@@ -1462,6 +1462,9 @@ extension Peer {
         if let user = self as? TelegramUser {
             return user.storiesHidden ?? false
         }
+        if let user = self as? TelegramChannel {
+            return user.storiesHidden ?? false
+        }
         return false
     }
 

@@ -223,6 +223,7 @@ final class InputDataGeneralData : Equatable {
 
     
     let name: String
+    let nameAttributed: NSAttributedString?
     let color: NSColor
     let icon: CGImage?
     let type: GeneralInteractedType
@@ -230,12 +231,13 @@ final class InputDataGeneralData : Equatable {
     let description: String?
     let action: (()->Void)?
     let disabledAction:(()->Void)?
+    let switchAction: (()->Void)?
     let enabled: Bool
     let justUpdate: Int64?
     let menuItems:(()->[ContextMenuItem])?
     let theme: GeneralRowItem.Theme?
     let disableBorder: Bool
-    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, disabledAction: (()->Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, theme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false) {
+    init(name: String, color: NSColor, icon: CGImage? = nil, type: GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, enabled: Bool = true, description: String? = nil, justUpdate: Int64? = nil, action: (()->Void)? = nil, switchAction: (()->Void)? = nil, disabledAction: (()->Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, theme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, nameAttributed: NSAttributedString? = nil) {
         self.name = name
         self.color = color
         self.icon = icon
@@ -243,16 +245,18 @@ final class InputDataGeneralData : Equatable {
         self.viewType = viewType
         self.description = description
         self.action = action
+        self.switchAction = switchAction
         self.enabled = enabled
         self.justUpdate = justUpdate
         self.disabledAction = disabledAction
         self.menuItems = menuItems
         self.theme = theme
         self.disableBorder = disableBorder
+        self.nameAttributed = nameAttributed
     }
     
     static func ==(lhs: InputDataGeneralData, rhs: InputDataGeneralData) -> Bool {
-        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType && lhs.enabled == rhs.enabled && lhs.justUpdate == rhs.justUpdate && lhs.theme == rhs.theme && lhs.disableBorder == rhs.disableBorder
+        return lhs.name == rhs.name && lhs.icon === rhs.icon && lhs.color.hexString == rhs.color.hexString && lhs.type == rhs.type && lhs.description == rhs.description && lhs.viewType == rhs.viewType && lhs.enabled == rhs.enabled && lhs.justUpdate == rhs.justUpdate && lhs.theme == rhs.theme && lhs.disableBorder == rhs.disableBorder && lhs.nameAttributed == rhs.nameAttributed
     }
 }
 
@@ -482,9 +486,9 @@ enum InputDataEntry : Identifiable, Comparable {
         case let .dataSelector(_, _, _, error, _, placeholder, description, icon, action):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: placeholder, icon: icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent), description: description, type: .none, action: action, error: error)
         case let .general(_, _, value, error, identifier, data):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, viewType: data.viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: data.name, nameAttributed: data.nameAttributed, icon: data.icon, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: data.color), description: data.description, type: data.type, viewType: data.viewType, action: {
                 data.action != nil ? data.action?() : arguments.select((identifier, value))
-            }, enabled: data.enabled, error: error, disabledAction: data.disabledAction ?? {}, menuItems: data.menuItems, customTheme: data.theme, disableBorder: data.disableBorder)
+            }, enabled: data.enabled, error: error, disabledAction: data.disabledAction ?? {}, menuItems: data.menuItems, customTheme: data.theme, disableBorder: data.disableBorder, switchAction: data.switchAction)
         case let .dateSelector(_, _, value, error, _, placeholder):
             return InputDataDateRowItem(initialSize, stableId: stableId, value: value, error: error, updated: arguments.dataUpdated, placeholder: placeholder)
         case let .input(_, _, value, error, _, mode, data, placeholder, inputPlaceholder, filter, limit: limit):

@@ -29,7 +29,9 @@ private final class Arguments {
     let revealStoriesState:()->Void
     let getState:()->PeerListState
     let getDeltaProgress:()->CGFloat?
-    init(context: AccountContext, openFilterSettings: @escaping(ChatListFilter)->Void, createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, getNavigationHeight: @escaping()->CGFloat, revealStoriesState:@escaping()->Void, getState:@escaping()->PeerListState, getDeltaProgress:@escaping()->CGFloat?) {
+    let acceptSession:(NewSessionReview)->Void
+    let revokeSession:(NewSessionReview)->Void
+    init(context: AccountContext, openFilterSettings: @escaping(ChatListFilter)->Void, createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, getNavigationHeight: @escaping()->CGFloat, revealStoriesState:@escaping()->Void, getState:@escaping()->PeerListState, getDeltaProgress:@escaping()->CGFloat?, acceptSession:@escaping(NewSessionReview)->Void, revokeSession:@escaping(NewSessionReview)->Void) {
         self.context = context
         self.openFilterSettings = openFilterSettings
         self.createTopic = createTopic
@@ -44,6 +46,8 @@ private final class Arguments {
         self.revealStoriesState = revealStoriesState
         self.getState = getState
         self.getDeltaProgress = getDeltaProgress
+        self.acceptSession = acceptSession
+        self.revokeSession = revokeSession
     }
 }
 
@@ -57,6 +61,7 @@ enum UIChatListEntryId : Hashable {
     case systemDeprecated
     case sharedFolderUpdated
     case space
+    case suspicious
 }
 
 
@@ -101,6 +106,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     case empty(ChatListFilter, PeerListMode, SplitViewState, PeerEquatable?)
     case systemDeprecated(ChatListFilter)
     case sharedFolderUpdated(ChatFolderUpdates)
+    case suspicious(NewSessionReview)
     case space
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
@@ -143,6 +149,12 @@ enum UIChatListEntry : Identifiable, Comparable {
             }
         case let .sharedFolderUpdated(updates):
             if case .sharedFolderUpdated(updates) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .suspicious(session):
+            if case .suspicious(session) = rhs {
                 return true
             } else {
                 return false
@@ -199,6 +211,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .systemDeprecated:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
+        case .suspicious:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .sharedFolderUpdated:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .loading:
@@ -230,6 +244,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .sharedFolderUpdated
         case .loading:
             return .loading
+        case .suspicious:
+            return .suspicious
         case .space:
             return .space
         }
@@ -281,6 +297,8 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 return ChatListFolderUpdatedRowItem(initialSize, stableId: entry.stableId, updates: updates, action: {
                     arguments.applySharedFolderUpdates(updates)
                 }, hide: arguments.hideSharedFolderUpdates)
+            case let .suspicious(session):
+                return SuspiciousAuthRowItem(initialSize, stableId: entry.stableId, context: arguments.context, session: session, accept: arguments.acceptSession, revoke: arguments.revokeSession)
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
             case .space:
@@ -557,8 +575,15 @@ class ChatListController : PeersListController {
             return state
         }, getDeltaProgress: { [weak self] in
             return self?.getDeltaProgress()
+        }, acceptSession: { session in
+            showModalText(for: context.window, text: strings().newSessionReviewAcceptText, title: strings().newSessionReviewAcceptTitle, callback: { _ in
+                context.bindings.rootNavigation().push(RecentSessionsController(context))
+            })
+            _ = context.engine.privacy.confirmNewSessionReview(id: session.id).start()
+        }, revokeSession: { session in
+            _ = context.engine.privacy.terminateAnotherSession(id: session.id).start()
+            showModal(with: SuspiciousRevokeModal(context: context, session: session), for: context.window)
         })
-        
         
         let previousLocation: Atomic<ChatLocation?> = Atomic(value: nil)
         globalPeerDisposable.set(context.globalPeerHandler.get().start(next: { [weak self] location in
@@ -595,26 +620,13 @@ class ChatListController : PeersListController {
             storyState = .single(nil)
         }
         
-        let sessionMessage: Signal<RecentAccountSession?, NoError> = combineLatest(context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: supportId, threadId: nil), count: 100), context.activeSessionsContext.state) |> map { view, sessions in
-            for entry in view.0.entries.reversed() {
-                if let attribute = entry.message.authInfoAttribute {
-                    if attribute.timestamp + 24 * 60 * 60 > context.timestamp {
-                        return sessions.sessions.first(where: { $0.hash == attribute.hash })
-                    }
-                }
-            }
-            return nil
-        }
+        let suspiciousSession: Signal<[NewSessionReview], NoError> = newSessionReviews(postbox: context.account.postbox)
+
         
-        
-//        sessionMessage.start(next: { session in
-//            var bp = 0
-//            bp += 1
-//        })
         
         let previousLayout: Atomic<SplitViewState> = Atomic(value: context.layout)
 
-        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState) |> mapToQueue { value, appearance, state, inAppSettings, filtersCounter, storyState -> Signal<TableUpdateTransition, NoError> in
+        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession) |> mapToQueue { value, appearance, state, inAppSettings, filtersCounter, storyState, suspiciousSession -> Signal<TableUpdateTransition, NoError> in
                                 
             let filterData = value.1
             let folderUpdates = value.3
@@ -698,6 +710,10 @@ class ChatListController : PeersListController {
                     mapped.append(.loading(filterData.filter))
                 }
             }
+            if let suspiciousSession = suspiciousSession.first {
+                mapped.append(.suspicious(suspiciousSession))
+            }
+            
 //            if !filterData.isEmpty && !filterData.sidebar, state.appear == .normal {
 //                mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
 //            }
@@ -1589,6 +1605,9 @@ class ChatListController : PeersListController {
             return false
         }
         if item is ChatListSystemDeprecatedItem {
+            return false
+        }
+        if item is SuspiciousAuthRowItem {
             return false
         }
         return true

@@ -158,6 +158,10 @@ class ChatGroupedItem: ChatRowItem {
                 layout.layout.interactions = globalLinkExecutor
                 
                 captionLayouts.append(layout)
+                
+                if let range = selectManager.find(stableId) {
+                    layout.layout.selectedRange.range = range
+                }
             }
             
         } else {
@@ -458,9 +462,11 @@ class ChatGroupedItem: ChatRowItem {
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var _message: Message? = nil
         
+        var useGroupIfNeeded = true
         for i in 0 ..< layout.count {
             if NSPointInRect(location, layout.frame(at: i).insetBy(dx: -20, dy: 0)) {
                 _message = layout.messages[i]
+                useGroupIfNeeded = false
                 break
             }
         }
@@ -478,7 +484,7 @@ class ChatGroupedItem: ChatRowItem {
 
 
         if let message = msg {
-            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil)
+            return chatMenuItems(for: message, entry: entry, textLayout: (caption, nil), chatInteraction: self.chatInteraction, useGroupIfNeeded: _message == nil || useGroupIfNeeded)
         }
         return super.menuItems(in: location)
     }
@@ -700,6 +706,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 let node = item.contentNode(for: i)
                 let view = node.init(frame:NSZeroRect)
                 contents.append(view)
+                addSubview(view)
             }
         }
         
@@ -707,15 +714,17 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             if contents[i].className != item.contentNode(for: i).className()  {
                 let node = item.contentNode(for: i)
                 let view = node.init(frame:NSZeroRect)
+                contents[i].removeFromSuperview()
                 contents[i] = view
+                addSubview(view)
             }
         }
         
-        self.contentView.removeAllSubviews()
+        //self.contentView.removeAllSubviews()
         
-        for content in contents {
-            addSubview(content)
-        }
+//        for content in contents {
+//            addSubview(content)
+//        }
         
         super.set(item: item, animated: animated)
 

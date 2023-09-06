@@ -517,7 +517,7 @@ class SelectPeersBehavior {
         }
         if peer.isChannel {
             if settings.contains(.channels) {
-                return true
+                return !settings.contains(.checkInvite) || peer.canInviteUsers
             }
         }
         if peer.isBot {

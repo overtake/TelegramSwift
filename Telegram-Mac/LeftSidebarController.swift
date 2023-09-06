@@ -320,7 +320,7 @@ func navigateToChatListFilter(_ filter: Int32, context: AccountContext) {
     let leftController = context.bindings.mainController()
     leftController.showChatList()
     
-    leftController.navigation.close(animated: context.layout != .single || rootNavigation.stackCount == 1)
+    leftController.navigation.close(animated: true)
     
     if context.layout == .single {
         rootNavigation.close(animated: true)

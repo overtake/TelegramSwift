@@ -360,9 +360,11 @@ final class StoryContentContextImpl: StoryContentContext {
                             return EngineStoryItem.Views(
                                 seenCount: views.seenCount,
                                 reactedCount: views.reactedCount,
+                                forwardCount: views.forwardCount,
                                 seenPeers: views.seenPeerIds.compactMap { id -> EnginePeer? in
                                     return peers[id].flatMap(EnginePeer.init)
                                 },
+                                reactions: views.reactions,
                                 hasList: views.hasList
                             )
                         },
@@ -376,6 +378,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         isSelectedContacts: item.isSelectedContacts,
                         isForwardingDisabled: item.isForwardingDisabled,
                         isEdited: item.isEdited,
+                        isMy: item.isMy,
                         myReaction: item.myReaction
                     )
                 }
@@ -409,6 +412,7 @@ final class StoryContentContextImpl: StoryContentContext {
                                 isSelectedContacts: item.privacy.base == .nobody,
                                 isForwardingDisabled: false,
                                 isEdited: false,
+                                isMy: true,
                                 myReaction: nil
                             ))
                             totalCount += 1
@@ -1265,9 +1269,11 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                         return EngineStoryItem.Views(
                             seenCount: views.seenCount,
                             reactedCount: views.reactedCount,
+                            forwardCount: views.forwardCount,
                             seenPeers: views.seenPeerIds.compactMap { id -> EnginePeer? in
                                 return peers[id].flatMap(EnginePeer.init)
                             },
+                            reactions: views.reactions,
                             hasList: views.hasList
                         )
                     },
@@ -1281,6 +1287,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                     isSelectedContacts: itemValue.isSelectedContacts,
                     isForwardingDisabled: itemValue.isForwardingDisabled,
                     isEdited: itemValue.isEdited,
+                    isMy: itemValue.isMy,
                     myReaction: itemValue.myReaction
                 )
                 

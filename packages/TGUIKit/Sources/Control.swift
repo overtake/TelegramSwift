@@ -381,9 +381,7 @@ open class Control: View {
     override open func mouseDown(with event: NSEvent) {
         longInvoked = false
         longOverHandleDisposable.set(nil)
-        
-        mouseDownWindowFrame = window?.frame
-        
+                
         if event.modifierFlags.contains(.control) {
             
             if let menu = self.contextMenu?(), event.clickCount == 1 {
@@ -440,7 +438,6 @@ open class Control: View {
     }
     
     public var moveNextEventDeep: Bool = false
-    private var mouseDownWindowFrame: NSRect? = nil
     
     override open func mouseUp(with event: NSEvent) {
         longHandleDisposable.set(nil)
@@ -459,27 +456,23 @@ open class Control: View {
                 if longInvoked {
                     send(event: .LongMouseUp)
                 }
-                if window?.frame == self.mouseDownWindowFrame || self.mouseDownWindowFrame == nil {
-                    if mouseInside() && !longInvoked {
-                        if event.clickCount == 1  {
-                            send(event: .SingleClick)
-                        }
-                        if event.clickCount == 2 {
-                            send(event: .DoubleClick)
-                        }
-                        send(event: .Click)
+                if mouseInside() && !longInvoked {
+                    if event.clickCount == 1  {
+                        send(event: .SingleClick)
                     }
+                    if event.clickCount == 2 {
+                        send(event: .DoubleClick)
+                    }
+                    send(event: .Click)
                 }
             } else {
                 if mouseInside() && !longInvoked {
                     //NSSound.beep()
                 }
             }
-            self.mouseDownWindowFrame = nil
             updateState()
             
         } else {
-            self.mouseDownWindowFrame = nil
             if userInteractionEnabled && event.modifierFlags.contains(.control) {
                 send(event: .RightUp)
                 return

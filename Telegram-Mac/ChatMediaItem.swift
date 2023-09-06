@@ -501,6 +501,10 @@ class ChatMediaItem: ChatRowItem {
                         })
                     })
                 }), isLoading: isLoading))
+                
+                if let range = selectManager.find(entry.stableId) {
+                    captionLayouts[0].layout.selectedRange.range = range
+                }
             }
             
             let interactions = globalLinkExecutor

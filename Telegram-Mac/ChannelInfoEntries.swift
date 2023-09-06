@@ -545,7 +545,7 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func stats(_ datacenterId: Int32) {
-        self.pushViewController(ChannelStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
+        self.pushViewController(ChannelStatsSegmentController(context, datacenterId: datacenterId, peerId: peerId))
     }
     func share() {
         let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> deliverOnMainQueue

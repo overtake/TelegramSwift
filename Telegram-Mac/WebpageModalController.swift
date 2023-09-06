@@ -91,8 +91,13 @@ private final class HeaderView : View {
     }
     
     private var prevLeft: Left?
+    private var title: String = ""
+    private var subtitle: String = ""
     
     func update(title: String, subtitle: String, left: Left, animated: Bool, leftCallback: @escaping()->Void, contextMenu:@escaping()->ContextMenu?) {
+        
+        self.subtitle = subtitle
+        self.title = title
         
         let prevLeft = self.prevLeft
         self.prevLeft = left
@@ -100,20 +105,18 @@ private final class HeaderView : View {
         self.leftCallback = leftCallback
         self.rightCallback = contextMenu
         
-        titleView.update(TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
+        let color: NSColor = self.backgroundColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+        
+        titleView.update(TextViewLayout(.initialize(string: title, color: color, font: .medium(.title)), maximumNumberOfLines: 1))
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
+                
+        subtitleView.update(TextViewLayout(.initialize(string: subtitle, color: color, font: .normal(.text)), maximumNumberOfLines: 1))
         
-        backgroundColor = theme.colors.background
-        borderColor = theme.colors.border
-        border = [.Bottom]
-        
-        subtitleView.update(TextViewLayout(.initialize(string: subtitle, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
-        
-        rightButton.set(image: theme.icons.chatActions, for: .Normal)
+        rightButton.set(image: NSImage(named: "Icon_ChatActionsActive")!.precomposed(color), for: .Normal)
         rightButton.sizeToFit()
         
-        if prevLeft != left || prevLeft == nil {
+        if prevLeft != left || prevLeft == nil || !animated {
             let previousBtn = self.leftButton
             let button: Control
         
@@ -121,16 +124,16 @@ private final class HeaderView : View {
             case .dismiss:
                 let btn = ImageButton()
                 btn.autohighlight = false
-                btn.set(image: theme.icons.modalClose, for: .Normal)
+                btn.set(image: NSImage(named: "Icon_ChatSearchCancel")!.precomposed(color), for: .Normal)
                 btn.sizeToFit()
                 button = btn
             case .back:
                 let btn = TitleButton()
                 btn.autohighlight = false
-                btn.set(image: theme.icons.chatNavigationBack, for: .Normal)
+                btn.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(color), for: .Normal)
                 btn.set(text: strings().navigationBack, for: .Normal)
                 btn.set(font: .normal(.title), for: .Normal)
-                btn.set(color: theme.colors.accent, for: .Normal)
+                btn.set(color: color, for: .Normal)
                 btn.sizeToFit()
                 button = btn
             }
@@ -147,7 +150,16 @@ private final class HeaderView : View {
                 button.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
         }
+        
         needsLayout = true
+    }
+    
+    override var backgroundColor: NSColor {
+        didSet {
+            if let prevLeft = prevLeft, let leftCallback = leftCallback, let rightCallback = rightCallback {
+                self.update(title: self.title, subtitle: self.subtitle, left: prevLeft, animated: false, leftCallback: leftCallback, contextMenu: rightCallback)
+            }
+        }
     }
     
     override func layout() {
@@ -279,6 +291,11 @@ private final class WebpageView : View {
             updateLocalizationAndTheme(theme: theme)
         }
     }
+    var _headerColor: NSColor? {
+        didSet {
+            updateLocalizationAndTheme(theme: theme)
+        }
+    }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
@@ -290,6 +307,8 @@ private final class WebpageView : View {
             } else {
                 self.headerView.backgroundColor = theme.colors.listBackground
             }
+        } else if let color = _headerColor {
+            self.headerView.backgroundColor = color
         } else {
             self.headerView.backgroundColor = self.backgroundColor
         }
@@ -439,7 +458,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     enum RequestData {
-        case simple(url: String, bot: Peer, buttonText: String, isInline: Bool)
+        case simple(url: String, bot: Peer, buttonText: String, source: RequestSimpleWebViewSource)
         case normal(url: String?, peerId: PeerId, threadId: Int64?, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, hasSettings: Bool, complete:(()->Void)?)
         
         var bot: Peer {
@@ -460,8 +479,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         var isInline: Bool {
             switch self {
-            case let .simple(_, _, _, isInline):
-                return isInline
+            case let .simple(_, _, _, source):
+                return source == .inline
             case .normal:
                 return false
             }
@@ -542,7 +561,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             genericView._headerColorKey = _headerColorKey
         }
     }
-
+    private var _headerColor: NSColor? {
+        didSet {
+            genericView._headerColor = _headerColor
+        }
+    }
     
     init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil, thumbFile: TelegramMediaFile? = nil) {
         self.url = url
@@ -651,8 +674,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             
             switch requestData {
-            case let .simple( url, bot, _, inline):
-                let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, inline: inline, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
+            case let .simple( url, bot, _, source):
+                let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, source: source, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
                                 
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
                     self?.url = url
@@ -1089,13 +1112,17 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     })
                 }
             }
-            case "web_app_set_background_color":
+        case "web_app_set_background_color":
             if let json = json, let colorValue = json["color"] as? String, let color = NSColor(hexString: colorValue) {
                 self._backgroundColor = color
             }
         case "web_app_set_header_color":
             if let json = json, let colorKey = json["color_key"] as? String, ["bg_color", "secondary_bg_color"].contains(colorKey) {
                 self._headerColorKey = colorKey
+                self._headerColor = nil
+            } else if let json = json, let color = json["color"] as? String {
+                self._headerColor = NSColor(hexString: color)
+                self._headerColorKey = nil
             }
         case "web_app_request_write_access":
             self.requestWriteAccess()
@@ -1165,19 +1192,45 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             self?.sendEvent(name: "phone_requested", data: paramsString)
         }
         
-        confirm(for: context.window, header: strings().conversationShareBotContactConfirmationTitle, information: strings().conversationShareBotContactConfirmation, okTitle: strings().conversationShareBotContactConfirmationOK, successHandler: { _ in
-            let _ = (self.context.account.postbox.loadedPeerWithId(self.context.account.peerId)
-            |> deliverOnMainQueue).start(next: { peer in
-                if let peer = peer as? TelegramUser, let phone = peer.phone, !phone.isEmpty {
-                    let _ = enqueueMessages(account: context.account, peerId: data.bot.id, messages: [
-                        .message(text: "", attributes: [], inlineStickers: [:], mediaReference: .standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: phone, peerId: peer.id, vCardData: nil)), replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])
-                    ]).start()
-                    sendEvent(true)
-                }
+        let isBlocked = context.engine.data.get(
+            TelegramEngine.EngineData.Item.Peer.IsBlocked(id: data.bot.id)
+        )
+        |> deliverOnMainQueue
+        |> map { $0.knownValue ?? false }
+        |> take(1)
+        
+        _ = isBlocked.start(next: { isBlocked in
+            let text: String
+            if isBlocked {
+                text = strings().conversationShareBotContactConfirmationUnblock(data.bot.displayTitle)
+            } else {
+                text = strings().conversationShareBotContactConfirmation(data.bot.displayTitle)
+            }
+            confirm(for: context.window, header: strings().conversationShareBotContactConfirmationTitle, information: text, okTitle: strings().conversationShareBotContactConfirmationOK, successHandler: { _ in
+                
+                
+                let _ = (context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnMainQueue).start(next: { peer in
+                    if let peer = peer as? TelegramUser, let phone = peer.phone, !phone.isEmpty {
+                        
+                        let invoke:()->Void = {
+                            let _ = enqueueMessages(account: context.account, peerId: data.bot.id, messages: [
+                                .message(text: "", attributes: [], inlineStickers: [:], mediaReference: .standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: phone, peerId: peer.id, vCardData: nil)), replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])
+                            ]).start()
+                            sendEvent(true)
+                        }
+                        if isBlocked {
+                            _ = (context.blockedPeersContext.remove(peerId: data.bot.id) |> deliverOnMainQueue).start(completed: invoke)
+                        } else {
+                            invoke()
+                        }
+                    }
+                })
+            }, cancelHandler: {
+                sendEvent(false)
             })
-        }, cancelHandler: {
-            sendEvent(false)
         })
+        
+       
     }
     
     fileprivate func invokeCustomMethod(requestId: String, method: String, params: String) {

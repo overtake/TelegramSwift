@@ -362,6 +362,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     override func mouseUp(with event: NSEvent) {
+            
         if event.modifierFlags.contains(.control) {
             super.mouseUp(with: event)
             return

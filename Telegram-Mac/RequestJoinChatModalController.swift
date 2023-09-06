@@ -40,7 +40,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     // entries
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("value"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        return RequestJoinChatRowItem(initialSize, stableId: stableId, context: arguments.context, photo: state.photoRepresentation, title: state.title, about: state.about, participantsCount: Int(state.participantsCount), isChannelOrMegagroup: state.isChannelOrMegagroup, viewType: .singleItem)
+        return RequestJoinChatRowItem(initialSize, stableId: stableId, context: arguments.context, photo: state.photoRepresentation, title: state.title, about: state.about, participantsCount: Int(state.participantsCount), flags: state.flags, isChannelOrMegagroup: state.isChannelOrMegagroup, viewType: .singleItem)
     }))
     index += 1
     
