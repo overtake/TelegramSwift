@@ -131,7 +131,7 @@ func fetchMovMediaResource(resource: LocalFileVideoMediaResource) -> Signal<Medi
     }
 }
 
-func fetchArchiveMediaResource(account: Account, resource: LocalFileArchiveMediaResource) -> Signal<MediaResourceDataFetchResult, MediaResourceDataFetchError> {
+func fetchArchiveMediaResource(resource: LocalFileArchiveMediaResource) -> Signal<MediaResourceDataFetchResult, MediaResourceDataFetchError> {
     return Signal { subscriber in
         subscriber.putNext(.reset)
         let source: ArchiveSource = .resource(resource)
