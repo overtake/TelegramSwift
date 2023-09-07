@@ -1,0 +1,58 @@
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
+
+#define WORKGROUP_SIZE 32
+layout (local_size_x = WORKGROUP_SIZE, local_size_y = WORKGROUP_SIZE, local_size_z = 1 ) in;
+
+struct Pixel{
+  vec4 value;
+};
+
+layout(std140, binding = 0) buffer buf
+{
+   Pixel imageData[];
+};
+
+layout( push_constant ) uniform Constants {
+  float time;
+  int frame;
+  int width;
+  int height;
+} PushConstant;
+
+float iTime;
+int iFrame;
+vec3 iResolution;
+vec4 iMouse;
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord );
+
+void main()
+{
+	iTime = PushConstant.time;
+	iFrame = PushConstant.frame;
+	iResolution = vec3(float(PushConstant.width), float(PushConstant.height), 0.0);
+	iMouse = vec4(0.0, 0.0, 0.0, 0.0);
+	vec2 coord = vec2(float(gl_GlobalInvocationID.x),
+			iResolution.y - float(gl_GlobalInvocationID.y));
+	vec4 outColor;
+
+	if(coord.x >= iResolution.x || coord.y >= iResolution.y)
+		return;
+
+	mainImage(outColor, coord);
+
+	imageData[PushConstant.width * gl_GlobalInvocationID.y +
+			gl_GlobalInvocationID.x].value = outColor;
+}
+
+//#include "plasma-globe.comp"
+//#include "mandelbrot-distance.comp"
+#include "disk-intersection.comp"
+//#include "ring-twister.comp"
+//#include "gears.comp"
+//#include "protean-clouds.comp"
+//#include "flame.comp"
+//#include "shader.comp"
+//#include "raymarching-primitives.comp"
+//#include "3d-primitives.comp"

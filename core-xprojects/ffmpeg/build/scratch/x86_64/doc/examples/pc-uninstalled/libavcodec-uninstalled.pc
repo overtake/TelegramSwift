@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../../../libavcodec
+includedir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/submodules/ffmpeg/Sources/FFMpeg/ffmpeg-4.1
+
+Name: libavcodec
+Description: FFmpeg codec library
+Version: 58.35.100
+Requires:  libavutil >= 56.22.100
+Conflicts:
+Libs: -L${libdir} -Wl,-rpath,${libdir} -lavcodec -L/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/ffmpeg/build/../../libvpx/build/libvpx/lib -lVPX -pthread -liconv -lm -L/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/ffmpeg/build/../../libopus/build/libopus/lib -lopus
+Cflags: -I${includedir}

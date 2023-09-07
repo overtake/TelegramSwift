@@ -1,0 +1,62 @@
+# PulseAudio config file for PipeWire version @VERSION@ #
+
+context.properties = {
+    ## Configure properties in the system.
+    #mem.warn-mlock  = false
+    #mem.allow-mlock = true
+    #mem.mlock-all   = false
+    #log.level       = 2
+}
+
+context.spa-libs = {
+    audio.convert.* = audioconvert/libspa-audioconvert
+    support.*       = support/libspa-support
+}
+
+context.modules = [
+    {   name = libpipewire-module-rtkit
+        args = {
+            #nice.level   = -11
+            #rt.prio      = 88
+            #rt.time.soft = 200000
+            #rt.time.hard = 200000
+        }
+        flags = [ ifexists nofail ]
+    }
+    {   name = libpipewire-module-protocol-native }
+    {   name = libpipewire-module-client-node }
+    {   name = libpipewire-module-adapter }
+    {   name = libpipewire-module-metadata }
+
+    {   name = libpipewire-module-protocol-pulse
+        args = {
+	    # the addresses this server listens on
+            server.address = [
+                "unix:native"
+                # "tcp:4713"
+            ]
+	    #pulse.min.req = 256/48000              # 5ms
+	    #pulse.default.req = 960/48000          # 20 milliseconds
+	    #pulse.min.frag = 256/48000             # 5ms
+	    #pulse.default.frag = 96000/48000       # 2 seconds
+	    #pulse.default.tlength = 96000/48000    # 2 seconds
+	    #pulse.min.quantum = 256/48000          # 5ms
+	    #pulse.default.format = F32
+	    #pulse.default.position = [ FL FR ]
+            # These overrides are only applied when running in a vm.
+            vm.overrides = {
+	        pulse.min.quantum = 1024/48000         # 22ms
+            }
+        }
+    }
+]
+
+stream.properties = {
+    #node.latency = 1024/48000
+    #node.autoconnect = true
+    #resample.quality = 4
+    #channelmix.normalize = false
+    #channelmix.mix-lfe = false
+    #channelmix.upmix = false
+    #channelmix.lfe-cutoff = 0
+}

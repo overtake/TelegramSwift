@@ -1,0 +1,58 @@
+<?xml version="1.0"?><!--*-nxml-*-->
+<!DOCTYPE manpage SYSTEM "xmltoman.dtd">
+<?xml-stylesheet type="text/xsl" href="xmltoman.xsl" ?>
+
+<!--
+This file is part of PipeWire.
+-->
+
+<manpage name="pipewire" section="1" desc="The PipeWire media server">
+
+  <synopsis>
+    <cmd>pipewire [<arg>options</arg>]</cmd>
+  </synopsis>
+
+  <description>
+    <p>PipeWire is a service that facilitates sharing of multimedia content
+	  between devices and applications. </p>
+
+    <p>The pipewire daemon reads a config file that is further documented in
+    <manref name="pipewire.conf" section="5"/></p>
+  </description>
+
+  <options>
+
+    <option>
+      <p><opt>-h | --help</opt></p>
+
+      <optdesc><p>Show help.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt> --version</opt></p>
+
+      <optdesc><p>Show version information.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>-n | --name</opt><arg>=NAME</arg></p>
+
+      <optdesc><p>Set the daemon name (Default pipewire-0).</p></optdesc>
+    </option>
+
+  </options>
+
+  <section name="Authors">
+    <p>The PipeWire Developers &lt;@PACKAGE_BUGREPORT@&gt;;
+		  PipeWire is available from <url href="@PACKAGE_URL@"/></p>
+  </section>
+
+  <section name="See also">
+    <p>
+      <manref name="pw-mon" section="1"/>,
+      <manref name="pw-cat" section="1"/>,
+      <manref name="pw-cli" section="1"/>,
+    </p>
+  </section>
+
+</manpage>

@@ -1,0 +1,34 @@
+[Unit]
+Description=Multimedia Service
+
+# We require pipewire.socket to be active before starting the daemon, because
+# while it is possible to use the service without the socket, it is not clear
+# why it would be desirable.
+#
+# Installing pipewire and doing `systemctl start pipewire` will not get the
+# socket started, which might be confusing and problematic if the server is to
+# be restarted later on, as the client autospawn feature might kick in. Also, a
+# start of the socket unit will fail, adding to the confusion.
+#
+# After=pipewire.socket is not needed, as it is already implicit in the
+# socket-service relationship, see systemd.socket(5).
+Requires=pipewire.socket
+
+[Service]
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+NoNewPrivileges=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+Type=simple
+ExecStart=@PW_BINARY@
+Restart=on-failure
+RuntimeDirectory=pipewire
+RuntimeDirectoryPreserve=yes
+User=pipewire
+Environment=PIPEWIRE_RUNTIME_DIR=%t/pipewire
+
+[Install]
+Also=pipewire.socket
+WantedBy=default.target

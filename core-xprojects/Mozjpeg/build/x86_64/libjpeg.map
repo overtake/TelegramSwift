@@ -1,0 +1,11 @@
+LIBJPEGTURBO_8.0 {
+  
+  local:
+    jsimd_*;
+    jconst_*;
+};
+
+LIBJPEG_8.0 {
+  global:
+    *;
+};

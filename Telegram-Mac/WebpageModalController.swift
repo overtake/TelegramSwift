@@ -13,6 +13,7 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 import WebKit
+import HackUtils
 
 //
 //private class SelectChatRequired : SelectPeersBehavior {
@@ -31,7 +32,12 @@ import WebKit
 //}
 
 
-
+private class NoScrollWebView: WKWebView {
+    override func scrollWheel(with theEvent: NSEvent) {
+        super.scrollWheel(with: theEvent)
+        
+    }
+}
 
 private let durgerKingBotIds: [Int64] = [5104055776, 2200339955]
 
@@ -267,16 +273,20 @@ private final class WebpageView : View {
     
     private let headerView = HeaderView(frame: .zero)
     
+    private let halfTop = View()
+    private let halfBottom = View()
+    
     required init(frame frameRect: NSRect, configuration: WKWebViewConfiguration!) {
-        _holder = WKWebView(frame: frameRect.size.bounds, configuration: configuration)
+        _holder = NoScrollWebView(frame: frameRect.size.bounds, configuration: configuration)
         super.init(frame: frameRect)
+        addSubview(halfTop)
+        addSubview(halfBottom)
         addSubview(webview)
         addSubview(loading)
         addSubview(headerView)
-        self.webview.background = theme.colors.background
         
         webview.wantsLayer = true
-        
+                
         updateLocalizationAndTheme(theme: theme)
 
     }
@@ -301,6 +311,10 @@ private final class WebpageView : View {
         super.updateLocalizationAndTheme(theme: theme)
         loading.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
         self.backgroundColor = _backgroundColor ?? theme.colors.background
+        
+//        halfBottom.backgroundColor = .red
+//        halfTop.backgroundColor = .blue
+
         if let key = _headerColorKey {
             if key == "bg_color" {
                 self.headerView.backgroundColor = self.backgroundColor
@@ -428,6 +442,9 @@ private final class WebpageView : View {
             transition.updateFrame(view: indicator, frame: indicator.centerFrame())
         }
         transition.updateFrame(view: self.loading, frame: NSMakeRect(0, 0, size.width, 2))
+        
+        transition.updateFrame(view: halfTop, frame: NSMakeRect(0, 0, size.width, size.height / 2))
+        transition.updateFrame(view: halfBottom, frame: NSMakeRect(0, size.height / 2, size.width, size.height / 2))
     }
     
     required init?(coder: NSCoder) {
@@ -833,18 +850,20 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-               if navigationAction.targetFrame == nil, let url = navigationAction.request.url {
-                   let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: chatInteraction?.applyProxy, confirm: true)
-                   switch link {
-                   case .external:
-                       break
-                   default:
-                       self.close()
-                   }
-                   execute(inapp: link)
-               }
-               return nil
-           }
+        if navigationAction.targetFrame == nil, let url = navigationAction.request.url {
+            let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: chatInteraction?.applyProxy, confirm: true)
+            switch link {
+            case .external:
+                break
+            default:
+                self.close()
+            }
+            execute(inapp: link)
+        }
+        return nil
+    }
+    
+    
 
     
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {

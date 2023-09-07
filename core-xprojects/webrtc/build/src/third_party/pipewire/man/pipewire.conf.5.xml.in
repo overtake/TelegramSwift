@@ -1,0 +1,85 @@
+<?xml version="1.0"?><!--*-nxml-*-->
+<!DOCTYPE manpage SYSTEM "xmltoman.dtd">
+<?xml-stylesheet type="text/xsl" href="xmltoman.xsl" ?>
+
+<!--
+This file is part of PipeWire.
+-->
+
+<manpage name="pipewire.conf" section="5" desc="The PipeWire server configuration file">
+
+  <synopsis>
+    <p><file>@PIPEWIRE_CONFIG_DIR@/pipewire.conf</file></p>
+  </synopsis>
+
+  <description>
+    <p>PipeWire is a service that facilitates sharing of multimedia content
+       between devices and applications. </p>
+
+    <p>On startup, the daemon reads a configuration file to configure
+    itself. It executes a series of commands listed in the config
+    file.</p>
+
+    <p>The config file in the default location is used but the
+    environment variables PIPEWIRE_CONFIG_DIR, PIPEWIRE_CONFIG_PREFIX
+    and PIPEWIRE_CONFIG_NAME can be used to specify an alternative config
+    directory, subdirectory and file respectively.</p>
+  </description>
+
+  <section name="General Commands">
+
+    <option>
+      <p><opt>help</opt></p>
+      <optdesc><p>Show a quick help on the commands available.</p></optdesc>
+    </option>
+  </section>
+
+  <section name="Properties">
+    <option>
+      <p><opt>set-prop</opt> <arg>key</arg> <arg>value</arg></p>
+      <optdesc><p>Sets a property with the given key to value.</p></optdesc>
+    </option>
+  </section>
+
+  <section name="Plugin mapping">
+    <option>
+      <p><opt>add-spa-lib</opt> <arg>pattern</arg> <arg>library</arg></p>
+      <optdesc><p>Maps the plugin features that match <opt>pattern</opt>
+	to <opt>library</opt>.</p> When the system needs a plugin feature</optdesc>
+    </option>
+  </section>
+
+  <section name="Module Management">
+    <option>
+    <p><opt>load-module</opt> [<arg>options</arg>] <arg>name</arg> [<arg>arguments...</arg>]</p>
+      <optdesc><p>Load a module specified by its name and arguments. For most
+      modules it is OK to be loaded more than once.</p></optdesc>
+    </option>
+  </section>
+
+  <section name="Object Create">
+    <option>
+    <p><opt>create-object</opt> [<arg>options</arg>] <arg>factory</arg> [<arg>arguments...</arg>]</p>
+      <optdesc><p>Create an object from the specified factory with arguments.
+      </p></optdesc>
+    </option>
+  </section>
+
+  <section name="Exec">
+    <option>
+    <p><opt>exec</opt> <arg>program</arg></p>
+      <optdesc><p>Execute program. This is usually the session manager.</p></optdesc>
+    </option>
+  </section>
+  <section name="Authors">
+    <p>The PipeWire Developers &lt;@PACKAGE_BUGREPORT@&gt;; PipeWire is available from <url href="@PACKAGE_URL@"/></p>
+  </section>
+
+  <section name="See also">
+    <p>
+      <manref name="pipewire" section="1"/>,
+      <manref name="pw-mon" section="1"/>,
+    </p>
+  </section>
+
+</manpage>

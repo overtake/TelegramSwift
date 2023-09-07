@@ -1,0 +1,19 @@
+[Unit]
+Description=Multimedia Service Session Manager
+After=pipewire.service
+BindsTo=pipewire.service
+
+[Service]
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+NoNewPrivileges=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+Type=simple
+ExecStart=@PW_MEDIA_SESSION_BINARY@
+Restart=on-failure
+Slice=session.slice
+
+[Install]
+WantedBy=pipewire.service

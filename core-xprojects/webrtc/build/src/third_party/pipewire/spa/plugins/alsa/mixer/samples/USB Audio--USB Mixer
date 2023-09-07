@@ -1,0 +1,37 @@
+Simple mixer control 'Master',0
+  Capabilities: pvolume pvolume-joined pswitch pswitch-joined
+  Playback channels: Mono
+  Limits: Playback 0 - 255
+  Mono: Playback 105 [41%] [-28.97dB] [on]
+Simple mixer control 'Line',0
+  Capabilities: pvolume cvolume pswitch pswitch-joined cswitch cswitch-joined
+  Playback channels: Front Left - Front Right
+  Capture channels: Front Left - Front Right
+  Limits: Playback 0 - 255 Capture 0 - 128
+  Front Left: Playback 191 [75%] [34.38dB] [off] Capture 0 [0%] [0.18dB] [off]
+  Front Right: Playback 191 [75%] [34.38dB] [off] Capture 0 [0%] [0.18dB] [off]
+Simple mixer control 'Mic',0
+  Capabilities: pvolume pvolume-joined cvolume cvolume-joined pswitch pswitch-joined cswitch cswitch-joined cswitch-exclusive
+  Capture exclusive group: 0
+  Playback channels: Mono
+  Capture channels: Mono
+  Limits: Playback 0 - 255 Capture 0 - 128
+  Mono: Playback 191 [75%] [34.38dB] [off] Capture 0 [0%] [0.18dB] [on]
+Simple mixer control 'Mic Capture',0
+  Capabilities: pswitch pswitch-joined
+  Playback channels: Mono
+  Mono: Playback [off]
+Simple mixer control 'IEC958 In',0
+  Capabilities: cswitch cswitch-joined
+  Capture channels: Mono
+  Mono: Capture [off]
+Simple mixer control 'Input 1',0
+  Capabilities: cswitch cswitch-joined cswitch-exclusive
+  Capture exclusive group: 0
+  Capture channels: Mono
+  Mono: Capture [off]
+Simple mixer control 'Input 2',0
+  Capabilities: cswitch cswitch-joined cswitch-exclusive
+  Capture exclusive group: 0
+  Capture channels: Mono
+  Mono: Capture [off]

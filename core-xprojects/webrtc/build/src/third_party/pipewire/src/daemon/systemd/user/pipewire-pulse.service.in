@@ -1,0 +1,35 @@
+[Unit]
+Description=PipeWire PulseAudio
+
+# We require pipewire-pulse.socket to be active before starting the daemon, because
+# while it is possible to use the service without the socket, it is not clear
+# why it would be desirable.
+#
+# A user installing pipewire and doing `systemctl --user start pipewire-pulse`
+# will not get the socket started, which might be confusing and problematic if
+# the server is to be restarted later on, as the client autospawn feature
+# might kick in. Also, a start of the socket unit will fail, adding to the
+# confusion.
+#
+# After=pipewire-pulse.socket is not needed, as it is already implicit in the
+# socket-service relationship, see systemd.socket(5).
+Requires=pipewire-pulse.socket
+ConditionUser=!root
+Wants=pipewire.service
+After=pipewire.service
+
+[Service]
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+NoNewPrivileges=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+Type=simple
+ExecStart=@PW_PULSE_BINARY@
+Restart=on-failure
+Slice=session.slice
+
+[Install]
+Also=pipewire-pulse.socket
+WantedBy=default.target

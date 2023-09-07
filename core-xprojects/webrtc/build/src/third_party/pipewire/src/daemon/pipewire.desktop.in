@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Name=PipeWire Media System
+Comment=Start the PipeWire Media System
+Exec=pipewire
+Terminal=false
+Type=Application
+X-GNOME-Autostart-Phase=Initialization
+X-KDE-autostart-phase=1
