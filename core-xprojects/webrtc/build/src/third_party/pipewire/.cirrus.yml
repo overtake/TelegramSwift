@@ -1,0 +1,31 @@
+task:
+  freebsd_instance:
+    matrix:
+      - image_family: freebsd-11-4-snap
+      - image_family: freebsd-13-0-snap
+  env:
+    # /usr/ports/Mk/Uses/localbase.mk localbase:ldflags
+    LOCALBASE: /usr/local
+    CFLAGS: -isystem $LOCALBASE/include
+    CPPFLAGS: $CFLAGS
+    CXXFLAGS: $CFLAGS
+    LDFLAGS: -L$LOCALBASE/lib
+  deps_script:
+    # alsa-lib >=1.1.7 is not in the FreeBSD ports tree yet (see FreeBSD PR/245321)
+    - fetch 'https://codeberg.org/ei/misc/raw/branch/main/alsa-lib-122-standalone-on-bb7b892.tar.xz'
+    - sha256 -c '9855f082e17d95c44785e8576e7460601a1746538f05253432bc271cd4deded6' alsa-lib-122-standalone-on-bb7b892.tar.xz
+    - tar -C / -xf alsa-lib-122-standalone-on-bb7b892.tar.xz
+    - cd /usr/ports/audio/alsa-lib
+    - make BATCH=yes install
+    - sed -i.bak -e 's/quarterly/latest/' /etc/pkg/FreeBSD.conf
+    - pkg install -y meson pkgconf dbus glib libepoll-shim libudev-devd vulkan-loader vulkan-headers gstreamer1 gstreamer1-plugins libinotify gettext libsndfile sdl2
+    - sysrc dbus_enable=YES
+    - service dbus restart
+  build_script:
+    - mkdir build
+    - cd build
+    - meson setup -Dalsa=enabled -Dpipewire-alsa=enabled -Dbluez5=disabled -Djack=disabled -Dmedia-session=enabled -Dpipewire-jack=disabled -Dpw-cat=enabled -Dv4l2=disabled -Dsdl2=enabled -Dsystemd=disabled ..
+    - ninja
+  test_script:
+    - cd build
+    - ninja test

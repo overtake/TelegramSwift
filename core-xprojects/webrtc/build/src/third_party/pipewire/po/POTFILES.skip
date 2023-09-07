@@ -1,0 +1,2 @@
+src/daemon/systemd/system/pipewire-media-session.service.in
+src/daemon/systemd/system/pipewire.service.in

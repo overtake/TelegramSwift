@@ -1,0 +1,352 @@
+The target system is: Darwin -  - AMD64
+The host system is: Darwin - 21.1.0 - arm64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang 
+Build flags: -Wall;-arch;x86_64;-mmacosx-version-min=10.11;-funwind-tables
+Id flags:  
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is AppleClang, found in "/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/3.22.1/CompilerIdC/a.out"
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_510ca/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_510ca.dir/build.make CMakeFiles/cmTC_510ca.dir/build
+Building C object CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11   -v -Wl,-v -MD -MT CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/Cellar/cmake/3.22.1/share/cmake/Modules/CMakeCCompilerABI.c
+Apple clang version 13.0.0 (clang-1300.0.29.30)
+Target: x86_64-apple-darwin21.1.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+clang: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
+ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple x86_64-apple-macosx10.11.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=all -fno-strict-return -fno-rounding-math -munwind-tables -faligned-alloc-unavailable -target-sdk-version=12.1 -fvisibility-inlines-hidden-static-local-var -target-cpu core2 -tune-cpu generic -debugger-tuning=lldb -target-linker-version 711 -v -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0 -dependency-file CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -Wall -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-error -fdebug-compilation-dir /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp -ferror-limit 19 -stack-protector 1 -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fmax-type-align=16 -fcommon -clang-vendor-feature=+nullptrToBoolConversion -clang-vendor-feature=+messageToSelfInClassMethodIdReturnType -clang-vendor-feature=+disableInferNewAvailabilityFromInit -clang-vendor-feature=+disableNeonImmediateRangeCheck -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+revert09abecef7bbf -mllvm -disable-aligned-alloc-awareness=1 -mllvm -enable-dse-memoryssa=0 -o CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/Cellar/cmake/3.22.1/share/cmake/Modules/CMakeCCompilerABI.c
+clang -cc1 version 13.0.0 (clang-1300.0.29.30) default target arm64-apple-darwin21.1.0
+ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/local/include"
+ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/Library/Frameworks"
+#include "..." search starts here:
+#include <...> search starts here:
+ /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/include
+ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/include
+ /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include
+ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/System/Library/Frameworks (framework directory)
+End of search list.
+Linking C executable cmTC_510ca
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_510ca.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -o cmTC_510ca 
+Apple clang version 13.0.0 (clang-1300.0.29.30)
+Target: x86_64-apple-darwin21.1.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch x86_64 -platform_version macos 10.11.0 12.1 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -o cmTC_510ca -headerpad_max_install_names -v CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/lib/darwin/libclang_rt.osx.a
+@(#)PROGRAM:ld  PROJECT:ld64-711
+BUILD 21:57:24 Nov 17 2021
+configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
+Library search paths:
+	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/lib
+Framework search paths:
+	/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/System/Library/Frameworks/
+
+
+
+Parsed C implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/include]
+    add: [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/include]
+    add: [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include]
+  end of search list found
+  collapse include dir [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/include] ==> [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/include]
+  collapse include dir [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/include] ==> [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/include]
+  collapse include dir [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include] ==> [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include]
+  implicit include dirs: [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/include;/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/include;/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include]
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_510ca/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_510ca.dir/build.make CMakeFiles/cmTC_510ca.dir/build]
+  ignore line: [Building C object CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11   -v -Wl -v -MD -MT CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -MF CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o.d -o CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -c /opt/homebrew/Cellar/cmake/3.22.1/share/cmake/Modules/CMakeCCompilerABI.c]
+  ignore line: [Apple clang version 13.0.0 (clang-1300.0.29.30)]
+  ignore line: [Target: x86_64-apple-darwin21.1.0]
+  ignore line: [Thread model: posix]
+  ignore line: [InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin]
+  ignore line: [clang: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
+  ignore line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang" -cc1 -triple x86_64-apple-macosx10.11.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -disable-llvm-verifier -discard-value-names -main-file-name CMakeCCompilerABI.c -mrelocation-model pic -pic-level 2 -mframe-pointer=all -fno-strict-return -fno-rounding-math -munwind-tables -faligned-alloc-unavailable -target-sdk-version=12.1 -fvisibility-inlines-hidden-static-local-var -target-cpu core2 -tune-cpu generic -debugger-tuning=lldb -target-linker-version 711 -v -resource-dir /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0 -dependency-file CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -sys-header-deps -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -internal-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/local/include -internal-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/include -internal-externc-isystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include -Wall -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-error -fdebug-compilation-dir /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp -ferror-limit 19 -stack-protector 1 -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fmax-type-align=16 -fcommon -clang-vendor-feature=+nullptrToBoolConversion -clang-vendor-feature=+messageToSelfInClassMethodIdReturnType -clang-vendor-feature=+disableInferNewAvailabilityFromInit -clang-vendor-feature=+disableNeonImmediateRangeCheck -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+revert09abecef7bbf -mllvm -disable-aligned-alloc-awareness=1 -mllvm -enable-dse-memoryssa=0 -o CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -x c /opt/homebrew/Cellar/cmake/3.22.1/share/cmake/Modules/CMakeCCompilerABI.c]
+  ignore line: [clang -cc1 version 13.0.0 (clang-1300.0.29.30) default target arm64-apple-darwin21.1.0]
+  ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/local/include"]
+  ignore line: [ignoring nonexistent directory "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/Library/Frameworks"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/include]
+  ignore line: [ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/include]
+  ignore line: [ /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include]
+  ignore line: [ /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/System/Library/Frameworks (framework directory)]
+  ignore line: [End of search list.]
+  ignore line: [Linking C executable cmTC_510ca]
+  ignore line: [/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_510ca.dir/link.txt --verbose=1]
+  ignore line: [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl -headerpad_max_install_names  -v -Wl -v CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -o cmTC_510ca ]
+  ignore line: [Apple clang version 13.0.0 (clang-1300.0.29.30)]
+  ignore line: [Target: x86_64-apple-darwin21.1.0]
+  ignore line: [Thread model: posix]
+  ignore line: [InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin]
+  link line: [ "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld" -demangle -lto_library /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib -dynamic -arch x86_64 -platform_version macos 10.11.0 12.1 -syslibroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -o cmTC_510ca -headerpad_max_install_names -v CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o -lSystem /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/lib/darwin/libclang_rt.osx.a]
+    arg [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld] ==> ignore
+    arg [-demangle] ==> ignore
+    arg [-lto_library] ==> ignore, skip following value
+    arg [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/libLTO.dylib] ==> skip value of -lto_library
+    arg [-dynamic] ==> ignore
+    arg [-arch] ==> ignore
+    arg [x86_64] ==> ignore
+    arg [-platform_version] ==> ignore
+    arg [macos] ==> ignore
+    arg [10.11.0] ==> ignore
+    arg [12.1] ==> ignore
+    arg [-syslibroot] ==> ignore
+    arg [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_510ca] ==> ignore
+    arg [-headerpad_max_install_names] ==> ignore
+    arg [-v] ==> ignore
+    arg [CMakeFiles/cmTC_510ca.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [-lSystem] ==> lib [System]
+    arg [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/lib/darwin/libclang_rt.osx.a] ==> lib [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/lib/darwin/libclang_rt.osx.a]
+  Library search paths: [;/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/lib]
+  Framework search paths: [;/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/System/Library/Frameworks/]
+  remove lib [System]
+  remove lib [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.0.0/lib/darwin/libclang_rt.osx.a]
+  collapse library dir [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/lib] ==> [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/lib]
+  collapse framework dir [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/System/Library/Frameworks/] ==> [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/System/Library/Frameworks]
+  implicit libs: []
+  implicit objs: []
+  implicit dirs: [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/usr/lib]
+  implicit fwks: [/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk/System/Library/Frameworks]
+
+
+Determining if the include file sys/types.h exists passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_ac3e0/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_ac3e0.dir/build.make CMakeFiles/cmTC_ac3e0.dir/build
+Building C object CMakeFiles/cmTC_ac3e0.dir/CheckIncludeFile.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_ac3e0.dir/CheckIncludeFile.c.o -MF CMakeFiles/cmTC_ac3e0.dir/CheckIncludeFile.c.o.d -o CMakeFiles/cmTC_ac3e0.dir/CheckIncludeFile.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_ac3e0
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ac3e0.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_ac3e0.dir/CheckIncludeFile.c.o -o cmTC_ac3e0 
+
+
+
+Determining if the include file stdint.h exists passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_07de7/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_07de7.dir/build.make CMakeFiles/cmTC_07de7.dir/build
+Building C object CMakeFiles/cmTC_07de7.dir/CheckIncludeFile.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_07de7.dir/CheckIncludeFile.c.o -MF CMakeFiles/cmTC_07de7.dir/CheckIncludeFile.c.o.d -o CMakeFiles/cmTC_07de7.dir/CheckIncludeFile.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_07de7
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_07de7.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_07de7.dir/CheckIncludeFile.c.o -o cmTC_07de7 
+
+
+
+Determining if the include file stddef.h exists passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_30d15/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_30d15.dir/build.make CMakeFiles/cmTC_30d15.dir/build
+Building C object CMakeFiles/cmTC_30d15.dir/CheckIncludeFile.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_30d15.dir/CheckIncludeFile.c.o -MF CMakeFiles/cmTC_30d15.dir/CheckIncludeFile.c.o.d -o CMakeFiles/cmTC_30d15.dir/CheckIncludeFile.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_30d15
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_30d15.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_30d15.dir/CheckIncludeFile.c.o -o cmTC_30d15 
+
+
+
+Determining size of size_t passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_cd759/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_cd759.dir/build.make CMakeFiles/cmTC_cd759.dir/build
+Building C object CMakeFiles/cmTC_cd759.dir/SIZE_T.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_cd759.dir/SIZE_T.c.o -MF CMakeFiles/cmTC_cd759.dir/SIZE_T.c.o.d -o CMakeFiles/cmTC_cd759.dir/SIZE_T.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CheckTypeSize/SIZE_T.c
+Linking C executable cmTC_cd759
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cd759.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_cd759.dir/SIZE_T.c.o -o cmTC_cd759 
+
+
+
+Determining size of unsigned long passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_87573/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_87573.dir/build.make CMakeFiles/cmTC_87573.dir/build
+Building C object CMakeFiles/cmTC_87573.dir/UNSIGNED_LONG.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_87573.dir/UNSIGNED_LONG.c.o -MF CMakeFiles/cmTC_87573.dir/UNSIGNED_LONG.c.o.d -o CMakeFiles/cmTC_87573.dir/UNSIGNED_LONG.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CheckTypeSize/UNSIGNED_LONG.c
+Linking C executable cmTC_87573
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_87573.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_87573.dir/UNSIGNED_LONG.c.o -o cmTC_87573 
+
+
+
+Performing C SOURCE FILE Test HAVE_BUILTIN_CTZL succeeded with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_443de/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_443de.dir/build.make CMakeFiles/cmTC_443de.dir/build
+Building C object CMakeFiles/cmTC_443de.dir/src.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -DHAVE_BUILTIN_CTZL  -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_443de.dir/src.c.o -MF CMakeFiles/cmTC_443de.dir/src.c.o.d -o CMakeFiles/cmTC_443de.dir/src.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_443de
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_443de.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_443de.dir/src.c.o -o cmTC_443de 
+
+
+Source file was:
+int main(int argc, char **argv) { unsigned long a = argc;  return __builtin_ctzl(a); }
+Determining if files locale.h exist passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_49eac/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_49eac.dir/build.make CMakeFiles/cmTC_49eac.dir/build
+Building C object CMakeFiles/cmTC_49eac.dir/HAVE_LOCALE_H.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_49eac.dir/HAVE_LOCALE_H.c.o -MF CMakeFiles/cmTC_49eac.dir/HAVE_LOCALE_H.c.o.d -o CMakeFiles/cmTC_49eac.dir/HAVE_LOCALE_H.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CheckIncludeFiles/HAVE_LOCALE_H.c
+Linking C executable cmTC_49eac
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_49eac.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_49eac.dir/HAVE_LOCALE_H.c.o -o cmTC_49eac 
+
+
+
+Determining if files stdlib.h exist passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_da4c9/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_da4c9.dir/build.make CMakeFiles/cmTC_da4c9.dir/build
+Building C object CMakeFiles/cmTC_da4c9.dir/HAVE_STDLIB_H.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_da4c9.dir/HAVE_STDLIB_H.c.o -MF CMakeFiles/cmTC_da4c9.dir/HAVE_STDLIB_H.c.o.d -o CMakeFiles/cmTC_da4c9.dir/HAVE_STDLIB_H.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CheckIncludeFiles/HAVE_STDLIB_H.c
+Linking C executable cmTC_da4c9
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_da4c9.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_da4c9.dir/HAVE_STDLIB_H.c.o -o cmTC_da4c9 
+
+
+
+Determining if files sys/types.h exist passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_3c948/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_3c948.dir/build.make CMakeFiles/cmTC_3c948.dir/build
+Building C object CMakeFiles/cmTC_3c948.dir/NEED_SYS_TYPES_H.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_3c948.dir/NEED_SYS_TYPES_H.c.o -MF CMakeFiles/cmTC_3c948.dir/NEED_SYS_TYPES_H.c.o.d -o CMakeFiles/cmTC_3c948.dir/NEED_SYS_TYPES_H.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CheckIncludeFiles/NEED_SYS_TYPES_H.c
+Linking C executable cmTC_3c948
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3c948.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_3c948.dir/NEED_SYS_TYPES_H.c.o -o cmTC_3c948 
+
+
+
+Determining if the memset exist passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_00247/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_00247.dir/build.make CMakeFiles/cmTC_00247.dir/build
+Building C object CMakeFiles/cmTC_00247.dir/CheckSymbolExists.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_00247.dir/CheckSymbolExists.c.o -MF CMakeFiles/cmTC_00247.dir/CheckSymbolExists.c.o.d -o CMakeFiles/cmTC_00247.dir/CheckSymbolExists.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_00247
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_00247.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_00247.dir/CheckSymbolExists.c.o -o cmTC_00247 
+
+
+File /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <string.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef memset
+  return ((int*)(&memset))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the memcpy exist passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_73400/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_73400.dir/build.make CMakeFiles/cmTC_73400.dir/build
+Building C object CMakeFiles/cmTC_73400.dir/CheckSymbolExists.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_73400.dir/CheckSymbolExists.c.o -MF CMakeFiles/cmTC_73400.dir/CheckSymbolExists.c.o.d -o CMakeFiles/cmTC_73400.dir/CheckSymbolExists.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_73400
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_73400.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_73400.dir/CheckSymbolExists.c.o -o cmTC_73400 
+
+
+File /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <string.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef memcpy
+  return ((int*)(&memcpy))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining size of unsigned char passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_45c4c/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_45c4c.dir/build.make CMakeFiles/cmTC_45c4c.dir/build
+Building C object CMakeFiles/cmTC_45c4c.dir/UNSIGNED_CHAR.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_45c4c.dir/UNSIGNED_CHAR.c.o -MF CMakeFiles/cmTC_45c4c.dir/UNSIGNED_CHAR.c.o.d -o CMakeFiles/cmTC_45c4c.dir/UNSIGNED_CHAR.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CheckTypeSize/UNSIGNED_CHAR.c
+Linking C executable cmTC_45c4c
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_45c4c.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_45c4c.dir/UNSIGNED_CHAR.c.o -o cmTC_45c4c 
+
+
+
+Determining size of unsigned short passed with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_cfec4/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_cfec4.dir/build.make CMakeFiles/cmTC_cfec4.dir/build
+Building C object CMakeFiles/cmTC_cfec4.dir/UNSIGNED_SHORT.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang   -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_cfec4.dir/UNSIGNED_SHORT.c.o -MF CMakeFiles/cmTC_cfec4.dir/UNSIGNED_SHORT.c.o.d -o CMakeFiles/cmTC_cfec4.dir/UNSIGNED_SHORT.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CheckTypeSize/UNSIGNED_SHORT.c
+Linking C executable cmTC_cfec4
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cfec4.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_cfec4.dir/UNSIGNED_SHORT.c.o -o cmTC_cfec4 
+
+
+
+Performing C SOURCE FILE Test INCOMPLETE_TYPES succeeded with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_fd4c9/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_fd4c9.dir/build.make CMakeFiles/cmTC_fd4c9.dir/build
+Building C object CMakeFiles/cmTC_fd4c9.dir/src.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -DINCOMPLETE_TYPES  -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_fd4c9.dir/src.c.o -MF CMakeFiles/cmTC_fd4c9.dir/src.c.o.d -o CMakeFiles/cmTC_fd4c9.dir/src.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_fd4c9
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_fd4c9.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_fd4c9.dir/src.c.o -o cmTC_fd4c9 
+
+
+Source file was:
+int main(void) { typedef struct undefined_structure *undef_struct_ptr;  undef_struct_ptr ptr = 0;  return ptr != 0; }
+Performing C SOURCE FILE Test INLINE_WORKS succeeded with the following output:
+Change Dir: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/Applications/Xcode.app/Contents/Developer/usr/bin/make -f Makefile cmTC_7195e/fast && /Applications/Xcode.app/Contents/Developer/usr/bin/make  -f CMakeFiles/cmTC_7195e.dir/build.make CMakeFiles/cmTC_7195e.dir/build
+Building C object CMakeFiles/cmTC_7195e.dir/src.c.o
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -DINLINE_WORKS  -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -MD -MT CMakeFiles/cmTC_7195e.dir/src.c.o -MF CMakeFiles/cmTC_7195e.dir/src.c.o.d -o CMakeFiles/cmTC_7195e.dir/src.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_7195e
+/opt/homebrew/Cellar/cmake/3.22.1/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7195e.dir/link.txt --verbose=1
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Wall -arch x86_64 -mmacosx-version-min=10.11 -funwind-tables  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -Wl,-headerpad_max_install_names CMakeFiles/cmTC_7195e.dir/src.c.o -o cmTC_7195e 
+
+
+Source file was:
+__inline__ __attribute__((always_inline)) static int foo(void) { return 0; } int main(void) { return foo(); }
+Looking for a ASM_NASM compiler passed with the following output:
+-- The ASM_NASM compiler identification is YASM
+-- Found assembler: /opt/homebrew/bin/yasm
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/simd/CMakeFiles/CheckASM_NASM
+
+Checking whether the ASM_NASM compiler is YASM using "--version" matched "(yasm)":
+yasm 1.3.0
+Compiled on Oct 23 2021.
+Copyright (c) 2001-2014 Peter Johnson and other Yasm developers.
+Run yasm --license for licensing overview and summary.

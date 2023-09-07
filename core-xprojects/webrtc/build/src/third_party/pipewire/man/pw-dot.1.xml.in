@@ -1,0 +1,85 @@
+<?xml version="1.0"?><!--*-nxml-*-->
+<!DOCTYPE manpage SYSTEM "xmltoman.dtd">
+<?xml-stylesheet type="text/xsl" href="xmltoman.xsl" ?>
+
+<!--
+This file is part of PipeWire.
+-->
+
+<manpage name="pw-dot" section="1" desc="The PipeWire dot graph dump">
+
+  <synopsis>
+    <cmd>pw-dot [<arg>options</arg>]</cmd>
+  </synopsis>
+
+  <description>
+    <p>Create a .dot file of the PipeWire graph.</p>
+
+    <p>The .dot file can then be visualized with a tool like <cmd>dotty</cmd>
+    or rendered to a png file with <cmd>dot -Tpng pw.dot -o pw.png</cmd>.</p>
+  </description>
+
+  <options>
+
+    <option>
+       <p><opt>-r | --remote</opt><arg>=NAME</arg></p>
+       <optdesc><p>The name the remote instance to connect to. If left unspecified,
+       a connection is made to the default PipeWire instance.</p></optdesc>
+     </option>
+
+     <option>
+      <p><opt>-h | --help</opt></p>
+
+      <optdesc><p>Show help.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>--version</opt></p>
+      <optdesc><p>Show version information.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>-a | --all</opt></p>
+      <optdesc><p>Show all object types.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>-s | --smart</opt></p>
+      <optdesc><p>Show linked objects only.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>-d | --detail</opt></p>
+      <optdesc><p>Show all object properties.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>-o FILE | --output</opt><arg>=FILE</arg></p>
+      <optdesc><p>Output file name (Default pw.dot). Use - for stdout.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>-L | --lr</opt></p>
+      <optdesc><p>Lay the graph from left to right, instead of dot's default top to bottom.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>-9 | --90</opt></p>
+      <optdesc><p>Lay the graph using 90-degree angles in edges.</p></optdesc>
+    </option>
+
+  </options>
+
+  <section name="Authors">
+    <p>The PipeWire Developers &lt;@PACKAGE_BUGREPORT@&gt;; PipeWire is available from <url href="@PACKAGE_URL@"/></p>
+  </section>
+
+  <section name="See also">
+    <p>
+      <manref name="pipewire" section="1"/>,
+      <manref name="pw-cli" section="1"/>,
+      <manref name="pw-mon" section="1"/>,
+    </p>
+  </section>
+
+</manpage>

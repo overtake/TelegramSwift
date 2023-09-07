@@ -1,0 +1,14 @@
+prefix=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/ffmpeg/build/thin/arm64
+exec_prefix=${prefix}
+libdir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/ffmpeg/build/thin/arm64/lib
+includedir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/ffmpeg/build/thin/arm64/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 56.22.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil -pthread -lm -framework VideoToolbox -framework CoreFoundation -framework CoreMedia -framework CoreVideo -framework CoreServices
+Libs.private: 
+Cflags: -I${includedir}

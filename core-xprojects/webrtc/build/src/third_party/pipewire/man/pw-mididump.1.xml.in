@@ -1,0 +1,58 @@
+<?xml version="1.0"?><!--*-nxml-*-->
+<!DOCTYPE manpage SYSTEM "xmltoman.dtd">
+<?xml-stylesheet type="text/xsl" href="xmltoman.xsl" ?>
+
+<!--
+This file is part of PipeWire.
+-->
+
+<manpage name="pw-mididump" section="1" desc="The PipeWire midi dump">
+
+  <synopsis>
+	  <cmd>pw-mididump [<arg>options</arg>]  [<arg>FILE</arg>]</cmd>
+  </synopsis>
+
+  <description>
+    <p>Dump midi messages to stdout.</p>
+
+    <p>When a midi file is given, the events inside the file are printed.</p>
+
+    <p>When no file is given, <cmd>pw-mididump</cmd> creates a PipeWire
+       midi input stream and will print all midi events received on the port to
+       stdout.</p>
+  </description>
+
+  <options>
+
+    <option>
+       <p><opt>-r | --remote</opt><arg>=NAME</arg></p>
+       <optdesc><p>The name the remote instance to monitor. If left unspecified,
+       a connection is made to the default PipeWire instance.</p></optdesc>
+     </option>
+
+     <option>
+      <p><opt>-h | --help</opt></p>
+
+      <optdesc><p>Show help.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>--version</opt></p>
+
+      <optdesc><p>Show version information.</p></optdesc>
+    </option>
+
+  </options>
+
+  <section name="Authors">
+    <p>The PipeWire Developers &lt;@PACKAGE_BUGREPORT@&gt;; PipeWire is available from <url href="@PACKAGE_URL@"/></p>
+  </section>
+
+  <section name="See also">
+    <p>
+      <manref name="pipewire" section="1"/>,
+      <manref name="pw-cat" section="1"/>,
+    </p>
+  </section>
+
+</manpage>

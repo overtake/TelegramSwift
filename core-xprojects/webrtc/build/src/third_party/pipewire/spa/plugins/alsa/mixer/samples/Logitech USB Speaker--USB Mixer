@@ -1,0 +1,27 @@
+Simple mixer control 'Bass',0
+  Capabilities: volume volume-joined
+  Playback channels: Mono
+  Capture channels: Mono
+  Limits: 0 - 48
+  Mono: 22 [46%]
+Simple mixer control 'Bass Boost',0
+  Capabilities: pswitch pswitch-joined
+  Playback channels: Mono
+  Mono: Playback [off]
+Simple mixer control 'Treble',0
+  Capabilities: volume volume-joined
+  Playback channels: Mono
+  Capture channels: Mono
+  Limits: 0 - 48
+  Mono: 25 [52%]
+Simple mixer control 'PCM',0
+  Capabilities: pvolume pswitch pswitch-joined
+  Playback channels: Front Left - Front Right
+  Limits: Playback 0 - 44
+  Mono:
+  Front Left: Playback 10 [23%] [-31.00dB] [on]
+  Front Right: Playback 10 [23%] [-31.00dB] [on]
+Simple mixer control 'Auto Gain Control',0
+  Capabilities: pswitch pswitch-joined
+  Playback channels: Mono
+  Mono: Playback [off]

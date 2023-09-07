@@ -1,0 +1,3 @@
+celt/arm/armcpu.lo: celt/arm/armcpu.c config.h
+
+config.h:

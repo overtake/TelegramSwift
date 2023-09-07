@@ -1,0 +1,289 @@
+# This file is part of PulseAudio.
+#
+# PulseAudio is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of the
+# License, or (at your option) any later version.
+#
+# PulseAudio is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+
+; Mixer path for PulseAudio's ALSA backend, common elements for all
+; input paths. If multiple options by the same id are discovered they
+; will be suffixed with a number to distinguish them, in the same
+; order they appear here.
+;
+; Source selection should use the following names:
+;
+;       input                       -- If we don't know the exact kind of input
+;       input-microphone
+;       input-microphone-internal
+;       input-microphone-external
+;       input-linein
+;       input-video
+;       input-radio
+;       input-docking-microphone
+;       input-docking-linein
+;       input-docking
+;
+;  We explicitly don't want to wrap the following sources:
+;
+;       CD
+;       Synth/MIDI
+;       Phone
+;       Mix
+;       Digital/SPDIF
+;       Master
+;       PC Speaker
+;
+; See analog-output.conf.common for an explanation on the directives
+
+;;; 'Input Source Select'
+
+[Element Input Source Select]
+enumeration = select
+
+[Option Input Source Select:Input1]
+name = input
+priority = 10
+
+[Option Input Source Select:Input2]
+name = input
+priority = 5
+
+;;; 'Input Source'
+
+[Element Input Source]
+enumeration = select
+
+[Option Input Source:Digital Mic]
+name = input-microphone
+priority = 20
+
+[Option Input Source:Microphone]
+name = input-microphone
+priority = 20
+
+[Option Input Source:Front Microphone]
+name = input-microphone
+priority = 19
+
+[Option Input Source:Internal Mic 1]
+name = input-microphone
+priority = 19
+
+[Option Input Source:Line-In]
+name = input-linein
+priority = 18
+
+[Option Input Source:Line In]
+name = input-linein
+priority = 18
+
+[Option Input Source:Docking-Station]
+name = input-docking
+priority = 17
+
+[Option Input Source:AUX IN]
+name = input
+priority = 10
+
+;;; 'Capture Source'
+
+[Element Capture Source]
+enumeration = select
+
+[Option Capture Source:TV Tuner]
+name = input-video
+
+[Option Capture Source:FM]
+name = input-radio
+
+[Option Capture Source:Mic/Line]
+name = input
+
+[Option Capture Source:Line/Mic]
+name = input
+
+[Option Capture Source:Microphone]
+name = input-microphone
+
+[Option Capture Source:Int DMic]
+name = input-microphone-internal
+
+[Option Capture Source:iMic]
+name = input-microphone-internal
+
+[Option Capture Source:i-Mic]
+name = input-microphone-internal
+
+[Option Capture Source:Internal Microphone]
+name = input-microphone-internal
+
+[Option Capture Source:Front Microphone]
+name = input-microphone
+
+[Option Capture Source:Mic1]
+name = input-microphone
+
+[Option Capture Source:Mic2]
+name = input-microphone
+
+[Option Capture Source:D-Mic]
+name = input-microphone
+
+[Option Capture Source:IntMic]
+name = input-microphone-internal
+
+[Option Capture Source:ExtMic]
+name = input-microphone-external
+
+[Option Capture Source:Ext Mic]
+name = input-microphone-external
+
+[Option Capture Source:E-Mic]
+name = input-microphone-external
+
+[Option Capture Source:e-Mic]
+name = input-microphone-external
+
+[Option Capture Source:LineIn]
+name = input-linein
+
+[Option Capture Source:Analog]
+name = input
+
+[Option Capture Source:Line-In]
+name = input-linein
+
+[Option Capture Source:Line In]
+name = input-linein
+
+[Option Capture Source:Video]
+name = input-video
+
+[Option Capture Source:Aux]
+name = input
+
+[Option Capture Source:Aux0]
+name = input
+
+[Option Capture Source:Aux1]
+name = input
+
+[Option Capture Source:Aux2]
+name = input
+
+[Option Capture Source:Aux3]
+name = input
+
+[Option Capture Source:AUX IN]
+name = input
+
+[Option Capture Source:Aux In]
+name = input
+
+[Option Capture Source:AOUT]
+name = input
+
+[Option Capture Source:AUX]
+name = input
+
+[Option Capture Source:Cam Mic]
+name = input-microphone
+
+[Option Capture Source:Digital Mic]
+name = input-microphone
+
+[Option Capture Source:Digital Mic 1]
+name = input-microphone
+
+[Option Capture Source:Digital Mic 2]
+name = input-microphone
+
+[Option Capture Source:Analog Inputs]
+name = input
+
+[Option Capture Source:Unknown1]
+name = input
+
+[Option Capture Source:Unknown2]
+name = input
+
+[Option Capture Source:Docking-Station]
+name = input-docking
+
+;;; 'Mic Jack Mode'
+
+[Element Mic Jack Mode]
+enumeration = select
+
+[Option Mic Jack Mode:Mic In]
+name = input-microphone
+
+[Option Mic Jack Mode:Line In]
+name = input-linein
+
+;;; 'Digital Input Source'
+
+[Element Digital Input Source]
+enumeration = select
+
+[Option Digital Input Source:Digital Mic 1]
+name = input-microphone
+
+[Option Digital Input Source:Analog Inputs]
+name = input
+
+[Option Digital Input Source:Digital Mic 2]
+name = input-microphone
+
+;;; 'Analog Source'
+
+[Element Analog Source]
+enumeration = select
+
+[Option Analog Source:Mic]
+name = input-microphone
+
+[Option Analog Source:Line in]
+name = input-linein
+
+[Option Analog Source:Aux]
+name = input
+
+;;; 'Shared Mic/Line in'
+
+[Element Shared Mic/Line in]
+enumeration = select
+
+[Option Shared Mic/Line in:Mic in]
+name = input-microphone
+
+[Option Shared Mic/Line in:Line in]
+name = input-linein
+
+;;; Various Boosts
+
+[Element Capture Boost]
+switch = select
+
+[Option Capture Boost:on]
+name = input-boost-on
+
+[Option Capture Boost:off]
+name = input-boost-off
+
+[Element Auto Gain Control]
+switch = select
+
+[Option Auto Gain Control:on]
+name = input-agc-on
+
+[Option Auto Gain Control:off]
+name = input-agc-off

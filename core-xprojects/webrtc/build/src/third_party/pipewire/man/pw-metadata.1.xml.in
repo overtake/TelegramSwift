@@ -1,0 +1,79 @@
+<?xml version="1.0"?><!--*-nxml-*-->
+<!DOCTYPE manpage SYSTEM "xmltoman.dtd">
+<?xml-stylesheet type="text/xsl" href="xmltoman.xsl" ?>
+
+<!--
+This file is part of PipeWire.
+-->
+
+<manpage name="pw-metadata" section="1" desc="The PipeWire metadata">
+
+  <synopsis>
+  <cmd>pw-metadata [<arg>options</arg>] [<arg>id</arg> [<arg>key</arg> [<arg>value</arg> [<arg>type</arg> ] ] ] ]</cmd>
+  </synopsis>
+
+  <description>
+    <p>Monitor, set and delete metadata on PipeWire objects.</p>
+
+    <p>Metadata are key/type/value triplets attached to objects identified
+    by <arg>id</arg>. The metadata is shared between all applications
+    binding to the same metadata object. When an object is destroyed, all its
+    metadata is automatically removed.</p>
+
+    <p>When no <arg>value</arg> is given, <cmd>pw-metadata</cmd> will query and
+    log the metadata matching the optional arguments <arg>id</arg>
+    and <arg>key</arg>. Without any arguments, all metadata is displayed.</p>
+
+    <p>When <arg>value</arg> is given, <cmd>pw-metadata</cmd> will set the
+    metadata for <arg>id</arg> and <arg>key</arg> to <arg>value</arg> and
+    an optional <arg>type</arg>.</p>
+  </description>
+
+  <options>
+
+    <option>
+       <p><opt>-r | --remote</opt><arg>=NAME</arg></p>
+       <optdesc><p>The name the remote instance to use. If left unspecified,
+       a connection is made to the default PipeWire instance.</p></optdesc>
+     </option>
+
+     <option>
+      <p><opt>-h | --help</opt></p>
+
+      <optdesc><p>Show help.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>--version</opt></p>
+      <optdesc><p>Show version information.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>-m | --monitor</opt></p>
+      <optdesc><p>Keeps running and log the changes to the metadata.</p></optdesc>
+    </option>
+
+    <option>
+      <p><opt>-d | --delete</opt></p>
+      <optdesc>
+         <p>Delete all metadata for <arg>id</arg> or for the
+		 specified <arg>key</arg> of object <arg>id</arg></p>
+         <p>Without any option, all metadata is removed</p>
+      </optdesc>
+    </option>
+
+  </options>
+
+  <section name="Authors">
+    <p>The PipeWire Developers &lt;@PACKAGE_BUGREPORT@&gt;; PipeWire is available from <url href="@PACKAGE_URL@"/></p>
+  </section>
+
+  <section name="See also">
+    <p>
+      <manref name="pipewire" section="1"/>,
+      <manref name="pw-mon" section="1"/>,
+      <manref name="pw-cli" section="1"/>,
+    </p>
+  </section>
+
+</manpage>

@@ -1,0 +1,9 @@
+[Unit]
+Description=Multimedia System
+
+[Socket]
+Priority=6
+ListenStream=%t/pipewire-0
+
+[Install]
+WantedBy=sockets.target

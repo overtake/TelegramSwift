@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+	<title>mozjpeg</title>
+	<welcome file="Welcome.rtf" />
+	<readme file="ReadMe.txt" />
+	<license file="License.rtf" />
+	<domains
+		enable_anywhere="false"
+		enable_currentUserHome="false"
+		enable_localSystem="true"
+	/>
+	<options customize="never" />
+	<choices-outline>
+		<line choice="default">
+			<line choice="com.mozjpeg.mozjpeg"/>
+		</line>
+	</choices-outline>
+	<choice id="default"/>
+	<choice id="com.mozjpeg.mozjpeg" visible="false">
+		<pkg-ref id="com.mozjpeg.mozjpeg"/>
+	</choice>
+	<pkg-ref auth="root"
+		id="com.mozjpeg.mozjpeg">mozjpeg.pkg</pkg-ref>
+</installer-gui-script>

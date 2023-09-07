@@ -3,11 +3,3 @@ fastlane/report.xml
 xcuserdata
 xcuserstate
 .DS_Store
-core-xprojects/Mozjpeg/build
-core-xprojects/openssl/build
-core-xprojects/libwebp/build
-core-xprojects/libopus/build
-core-xprojects/ffmpeg/build
-core-xprojects/webrtc/build
-core-xprojects/libvpx/build
-core-xprojects/webrtc/build-debug

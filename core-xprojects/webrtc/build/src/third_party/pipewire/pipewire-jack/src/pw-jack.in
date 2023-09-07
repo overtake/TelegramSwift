@@ -1,0 +1,74 @@
+#!/bin/sh
+
+# This file is part of PipeWire.
+#
+# Copyright © 2020 Wim Taymans
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+
+SAMPLERATE=48000
+
+while getopts 'hr:vs:p:' param ; do
+	case $param in
+		r)
+			PIPEWIRE_REMOTE="$OPTARG"
+			export PIPEWIRE_REMOTE
+			;;
+		v)
+			if [ x"$PIPEWIRE_DEBUG" = x ]; then
+				PIPEWIRE_DEBUG=3
+			else
+				PIPEWIRE_DEBUG=$(( $PIPEWIRE_DEBUG + 1 ))
+			fi
+			export PIPEWIRE_DEBUG
+			;;
+		s)
+			SAMPLERATE="$OPTARG"
+			;;
+		p)
+			PERIOD="$OPTARG"
+			;;
+		*)
+			echo "$0 - run JACK applications on PipeWire"
+			echo " "
+			echo "$0 [options] application [arguments]"
+			echo " "
+			echo "options:"
+			echo "	-h                  show brief help"
+			echo "	-r <remote>         remote daemon name"
+			echo "	-v                  verbose debug info"
+			echo "	-s                  samplerate (default "$SAMPLERATE")"
+			echo "	-p                  period in samples"
+			exit 0
+			;;
+	esac
+done
+
+shift $(( $OPTIND - 1 ))
+
+if [ x"$PERIOD" != x ]; then
+	PIPEWIRE_LATENCY="$PERIOD/$SAMPLERATE"
+	export PIPEWIRE_LATENCY
+fi
+LD_LIBRARY_PATH='@LIBJACK_PATH@'"${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}"
+export LD_LIBRARY_PATH
+
+exec "$@"

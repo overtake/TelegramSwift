@@ -1,0 +1,14 @@
+prefix=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/ffmpeg/build/thin/arm64
+exec_prefix=${prefix}
+libdir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/ffmpeg/build/thin/arm64/lib
+includedir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/ffmpeg/build/thin/arm64/include
+
+Name: libavformat
+Description: FFmpeg container format library
+Version: 58.20.100
+Requires: libavcodec >= 58.35.100, libavutil >= 56.22.100
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavformat -lm -lbz2 -lz
+Libs.private: 
+Cflags: -I${includedir}

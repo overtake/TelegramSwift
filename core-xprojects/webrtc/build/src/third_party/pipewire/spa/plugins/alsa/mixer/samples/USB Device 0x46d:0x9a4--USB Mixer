@@ -1,0 +1,5 @@
+Simple mixer control 'Mic',0
+  Capabilities: cvolume cvolume-joined cswitch cswitch-joined
+  Capture channels: Mono
+  Limits: Capture 0 - 3072
+  Mono: Capture 1536 [50%] [23.00dB] [on]

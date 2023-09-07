@@ -1,0 +1,186 @@
+# This file is part of PulseAudio.
+#
+# PulseAudio is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as
+# published by the Free Software Foundation; either version 2.1 of the
+# License, or (at your option) any later version.
+#
+# PulseAudio is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+
+; Common part of all paths
+
+; So here's generally how mixer paths are used by PA: PA goes through
+; a mixer path file from top to bottom and checks if a mixer element
+; described therein exists. If so it is added to the list of mixer
+; elements PA will control, keeping the order it read them in. If a
+; mixer element described here has set the required= or
+; required-absent= directives a path might not be accepted as valid
+; and is ignored in its entirety (see below). However usually if a
+; element listed here is missing this one element is ignored but not
+; the entire path.
+;
+; When a device shall be muted/unmuted *all* elements listed in a path
+; file with "switch = mute" will be toggled.
+;
+; When a device shall change its volume, PA will got through the list
+; of all elements with "volume = merge" and set the volume on the
+; first element. If that element does not support dB volumes, this is
+; where the story ends. If it does support dB volumes, PA divides the
+; requested volume by the volume that was set on this element, and
+; then go on to the next element with "volume = merge" and then set
+; that there, and so on.  That way the first volume element in the
+; path will be the one that does the 'biggest' part of the overall
+; volume adjustment, with the remaining elements usually being set to
+; some value next to 0dB. This logic makes sure we get the full range
+; over all volume sliders and a very high granularity of volumes
+; already in hardware.
+;
+; All switches and enumerations set to "select" are exposed via the
+; "port" functionality of sinks/sources. Basically every possible
+; switch setting and every possible enumeration setting will be
+; combined and made into a "port". So make sure you don't list too
+; many switches/enums for exposing, because the number of ports might
+; rise exponentially.
+;
+; Only one path can be selected at a time. All paths that are valid
+; for an audio device will be exposed as "port" for the sink/source.
+
+
+; [General]
+; type = ...                             # The device type. It's highly recommended to set a type for every path.
+;                                        # See parse_type() in alsa-mixer.c for supported values.
+; priority = ...                         # Priority for this path
+; description-key = ...                  # The path description is looked up from a table in path_verify() in
+;                                        # src/modules/alsa/alsa-mixer.c. By default the path name (i.e. the file name
+;                                        # minus the ".conf" suffix) is used as the lookup key, but if this option is
+;                                        # set, then the given string is used as the key instead. In any case the
+;                                        # "description" option can be used to override the path description.
+; description = ...                      # Description for this path. Overrides the normal description lookup logic, as
+;                                        # described in the "description-key" documentation above.
+; mute-during-activation = yes | no      # If this path supports hardware mute, should the hw mute be used while activating this
+;                                        # path? In some cases this can reduce extra noises during port switching, while in other
+;                                        # cases this can increase such noises. Default: no.
+; eld-device = ...                       # If this is an HDMI port, set to "auto" so that PulseAudio will try to read
+;                                        # the monitor ELD information from the ALSA mixer. By default the ELD information
+;                                        # is not read, because it's only applicable with HDMI. Earlier the "auto" option
+;                                        # didn't exist, and the hw device index had to be manually configured. For
+;                                        # backwards compatibility, it's still possible to manually configure the device
+;                                        # index using this option.
+;
+; [Properties]                           # Property list for this path. The list is merged into the port property list.
+; <key> = <value>                        # Each property is defined on its own line.
+; ...
+;
+; [Option ...:...]                       # For each option of an enumeration or switch element
+;                                        # that shall be exposed as a sink/source port. Needs to
+;                                        # be named after the Element, followed by a colon, followed
+;                                        # by the option name, resp. on/off if the element is a switch.
+; name = ...                             # Logical name to use in the path identifier
+; priority = ...                         # Priority if this is made into a device port
+; required = ignore | enumeration | any            # In this element, this option must exist or the path will be invalid. ("any" is an alias for "enumeration".)
+; required-any = ignore | enumeration | any        # In this element, either this or another option must exist (or an element)
+; required-absent = ignore | enumeration | any     # In this element, this option must not exist or the path will be invalid
+;
+; [Element ...]                          # For each element that we shall control. The "..." here is the element name,
+;                                        # or name and index separated by a comma.
+; required = ignore | switch | volume | enumeration | any     # If set, require this element to be of this kind and available,
+;                                                             # otherwise don't consider this path valid for the card
+; required-any = ignore | switch | volume | enumeration | any # If set, at least one of the elements or jacks with required-any in this
+;                                                             # path must be present, otherwise this path is invalid for the card
+; required-absent = ignore | switch | volume                  # If set, require this element to not be of this kind and not
+;                                                             # available, otherwise don't consider this path valid for the card
+;
+; switch = ignore | mute | off | on | select # What to do with this switch: ignore it, make it follow mute status,
+;                                            # always set it to off, always to on, or make it selectable as port.
+;                                            # If set to 'select' you need to define an Option section for on
+;                                            # and off
+; volume = ignore | merge | off | zero | <volume step> # What to do with this volume: ignore it, merge it into the device
+;                                                      # volume slider, always set it to the lowest value possible, or always
+;                                                      # set it to 0 dB (for whatever that means), or always set it to
+;                                                      # <volume step> (this only makes sense in path configurations where
+;                                                      # the exact hardware and driver are known beforehand).
+; volume-limit = <volume step>           # Limit the maximum volume by disabling the volume steps above <volume step>.
+; enumeration = ignore | select          # What to do with this enumeration, ignore it or make it selectable
+;                                        # via device ports. If set to 'select' you need to define an Option section
+;                                        # for each of the items you want to expose
+; direction = playback | capture         # Is this relevant only for playback or capture? If not set this will implicitly be
+;                                        # set the direction of the PCM device is opened as. Generally this doesn't need to be set
+;                                        # unless you have a broken driver that has playback controls marked for capture or vice
+;                                        # versa
+; direction-try-other = no | yes         # If the element does not supported what is requested, try the other direction, too?
+;
+; override-map.1 = ...                   # Override the channel mask of the mixer control if the control only exposes a single channel
+; override-map.2 = ...                   # Override the channel masks of the mixer control if the control only exposes two channels
+;                                        # Override maps should list for each element channel which high-level channels it controls via a
+;                                        # channel mask. A channel mask may either be the name of a single channel, or the words "all-left",
+;                                        # "all-right", "all-center", "all-front", "all-rear", and "all" to encode a specific subset of
+;                                        # channels in a mask
+; [Jack ...]                           # For each jack that we will use for jack detection
+;                                      # The name 'Jack Foo' must match ALSA's 'Foo Jack' control.
+; required = ignore | any              # If not set to ignore, make the path invalid if this jack control is not present.
+; required-absent = ignore | any       # If not set to ignore, make the path invalid if this jack control is present.
+; required-any = ignore | any          # If not set to ignore, make the path invalid if no jack controls and no elements with
+;                                      # the required-any are present.
+; state.plugged = yes | no | unknown   # Normally a plugged jack would mean the port becomes available, and an unplugged means it's
+; state.unplugged = yes | no | unknown # unavailable, but the port status can be overridden by specifying state.plugged and/or state.unplugged.
+; append-pcm-to-name = no | yes        # Add ",pcm=N" to the jack name? N is the hw PCM device index. HDMI jacks have
+;                                      # the PCM device index in their name, but different drivers use different
+;                                      # numbering schemes, so we can't hardcode the full jack name in our configuration
+;                                      # files.
+
+[Element PCM]
+switch = mute
+volume = merge
+override-map.1 = all
+override-map.2 = all-left,all-right
+
+[Element External Amplifier]
+switch = select
+
+[Option External Amplifier:on]
+name = output-amplifier-on
+priority = 10
+
+[Option External Amplifier:off]
+name = output-amplifier-off
+priority = 0
+
+[Element Bass Boost]
+switch = select
+
+[Option Bass Boost:on]
+name = output-bass-boost-on
+priority = 0
+
+[Option Bass Boost:off]
+name = output-bass-boost-off
+priority = 10
+
+[Element IEC958]
+switch = off
+
+[Element IEC958 Optical Raw]
+switch = off
+
+;;; 'Analog Output'
+
+[Element Analog Output]
+enumeration = select
+
+[Option Analog Output:Speakers]
+name = output-speaker
+priority = 10
+
+[Option Analog Output:Headphones]
+name = output-headphones
+priority = 9
+
+[Option Analog Output:FP Headphones]
+name = output-headphones
+priority = 8

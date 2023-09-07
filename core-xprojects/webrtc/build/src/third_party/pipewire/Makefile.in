@@ -1,0 +1,74 @@
+VERSION = @VERSION@
+TAG = @TAG@
+SOURCE_ROOT = @SOURCE_ROOT@
+BUILD_ROOT = @BUILD_ROOT@
+
+all:
+	ninja -C $(BUILD_ROOT)
+
+install:
+	ninja -C $(BUILD_ROOT) install
+
+uninstall:
+	ninja -C $(BUILD_ROOT) uninstall
+
+clean:
+	ninja -C $(BUILD_ROOT) clean
+
+run: all
+	SPA_PLUGIN_DIR=$(BUILD_ROOT)/spa/plugins \
+	PIPEWIRE_MODULE_DIR=$(BUILD_ROOT)/src/modules/ \
+	PATH=$(BUILD_ROOT)/src/examples:$(PATH) \
+	PIPEWIRE_CONFIG_DIR=$(BUILD_ROOT)/src/daemon/ \
+	ACP_PATHS_DIR=$(SOURCE_ROOT)/spa/plugins/alsa/mixer/paths \
+	ACP_PROFILES_DIR=$(SOURCE_ROOT)/spa/plugins/alsa/mixer/profile-sets \
+	$(DBG) $(BUILD_ROOT)/src/daemon/pipewire-uninstalled
+
+run-pulse: all
+	SPA_PLUGIN_DIR=$(BUILD_ROOT)/spa/plugins \
+	PIPEWIRE_MODULE_DIR=$(BUILD_ROOT)/src/modules/ \
+	PIPEWIRE_CONFIG_DIR=$(BUILD_ROOT)/src/daemon/ \
+	ACP_PATHS_DIR=$(SOURCE_ROOT)/spa/plugins/alsa/mixer/paths \
+	ACP_PROFILES_DIR=$(SOURCE_ROOT)/spa/plugins/alsa/mixer/profile-sets \
+	$(DBG) $(BUILD_ROOT)/src/daemon/pipewire-pulse
+
+gdb:
+	$(MAKE) run DBG=gdb
+
+valgrind:
+	$(MAKE) run DBG="DISABLE_RTKIT=1 VALGRIND=1 valgrind --trace-children=yes"
+
+test: all
+	ninja -C $(BUILD_ROOT) test
+
+benchmark: all
+	ninja -C $(BUILD_ROOT) benchmark
+
+monitor: all
+	SPA_PLUGIN_DIR=$(BUILD_ROOT)/spa/plugins \
+	PIPEWIRE_MODULE_DIR=$(BUILD_ROOT)/src/modules/ \
+	$(BUILD_ROOT)/src/tools/pw-mon
+
+cli: all
+	SPA_PLUGIN_DIR=$(BUILD_ROOT)/spa/plugins \
+	PIPEWIRE_MODULE_DIR=$(BUILD_ROOT)/src/modules/ \
+	$(BUILD_ROOT)/src/tools/pw-cli
+
+shell: all
+	ninja -C $(BUILD_ROOT) pw-uninstalled
+
+dist: all
+	git archive --prefix=pipewire-$(VERSION)/ -o pipewire-$(VERSION).tar.gz $(TAG)
+
+rpm: dist
+	rpmbuild -ta pipewire-$(VERSION).tar.gz
+
+publish: all
+	git branch -D gh-pages 2>/dev/null || true && \
+	git branch -D draft 2>/dev/null || true && \
+	git checkout -b draft && \
+	git add -f $(BUILD_ROOT)/doc/html && \
+	git commit -anm "Deploy on gh-pages" && \
+	git subtree split --prefix $(BUILD_ROOT)/doc/html -b gh-pages && \
+	git push --force origin gh-pages:gh-pages && \
+	git checkout work 2>/dev/null
