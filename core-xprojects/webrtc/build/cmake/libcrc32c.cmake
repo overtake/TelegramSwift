@@ -28,6 +28,8 @@ target_sources(libcrc32c PRIVATE ${PROJECT_BINARY_DIR}/include/crc32c/crc32c_con
 
 target_include_directories(libcrc32c
 PRIVATE
-    ${libcrc32c_loc}/include
     ${PROJECT_BINARY_DIR}/include
+PUBLIC
+    $<BUILD_INTERFACE:${libcrc32c_loc}/include>
+    $<INSTALL_INTERFACE:${webrtc_includedir}/third_party/crc32c/src/include>
 )

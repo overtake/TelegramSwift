@@ -73,841 +73,841 @@ CMakeFiles/turbojpeg-static.dir/jcapimin.c.o: CMakeFiles/turbojpeg-static.dir/fl
 CMakeFiles/turbojpeg-static.dir/jcapimin.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapimin.c
 CMakeFiles/turbojpeg-static.dir/jcapimin.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/turbojpeg-static.dir/jcapimin.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcapimin.c.o -MF CMakeFiles/turbojpeg-static.dir/jcapimin.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcapimin.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapimin.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcapimin.c.o -MF CMakeFiles/turbojpeg-static.dir/jcapimin.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcapimin.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapimin.c
 
 CMakeFiles/turbojpeg-static.dir/jcapimin.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcapimin.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapimin.c > CMakeFiles/turbojpeg-static.dir/jcapimin.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapimin.c > CMakeFiles/turbojpeg-static.dir/jcapimin.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcapimin.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcapimin.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapimin.c -o CMakeFiles/turbojpeg-static.dir/jcapimin.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapimin.c -o CMakeFiles/turbojpeg-static.dir/jcapimin.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcapistd.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcapistd.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapistd.c
 CMakeFiles/turbojpeg-static.dir/jcapistd.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/turbojpeg-static.dir/jcapistd.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcapistd.c.o -MF CMakeFiles/turbojpeg-static.dir/jcapistd.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcapistd.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapistd.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcapistd.c.o -MF CMakeFiles/turbojpeg-static.dir/jcapistd.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcapistd.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapistd.c
 
 CMakeFiles/turbojpeg-static.dir/jcapistd.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcapistd.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapistd.c > CMakeFiles/turbojpeg-static.dir/jcapistd.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapistd.c > CMakeFiles/turbojpeg-static.dir/jcapistd.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcapistd.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcapistd.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapistd.c -o CMakeFiles/turbojpeg-static.dir/jcapistd.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcapistd.c -o CMakeFiles/turbojpeg-static.dir/jcapistd.c.s
 
 CMakeFiles/turbojpeg-static.dir/jccoefct.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jccoefct.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccoefct.c
 CMakeFiles/turbojpeg-static.dir/jccoefct.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building C object CMakeFiles/turbojpeg-static.dir/jccoefct.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jccoefct.c.o -MF CMakeFiles/turbojpeg-static.dir/jccoefct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jccoefct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccoefct.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jccoefct.c.o -MF CMakeFiles/turbojpeg-static.dir/jccoefct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jccoefct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccoefct.c
 
 CMakeFiles/turbojpeg-static.dir/jccoefct.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jccoefct.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccoefct.c > CMakeFiles/turbojpeg-static.dir/jccoefct.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccoefct.c > CMakeFiles/turbojpeg-static.dir/jccoefct.c.i
 
 CMakeFiles/turbojpeg-static.dir/jccoefct.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jccoefct.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccoefct.c -o CMakeFiles/turbojpeg-static.dir/jccoefct.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccoefct.c -o CMakeFiles/turbojpeg-static.dir/jccoefct.c.s
 
 CMakeFiles/turbojpeg-static.dir/jccolor.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jccolor.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccolor.c
 CMakeFiles/turbojpeg-static.dir/jccolor.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building C object CMakeFiles/turbojpeg-static.dir/jccolor.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jccolor.c.o -MF CMakeFiles/turbojpeg-static.dir/jccolor.c.o.d -o CMakeFiles/turbojpeg-static.dir/jccolor.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccolor.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jccolor.c.o -MF CMakeFiles/turbojpeg-static.dir/jccolor.c.o.d -o CMakeFiles/turbojpeg-static.dir/jccolor.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccolor.c
 
 CMakeFiles/turbojpeg-static.dir/jccolor.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jccolor.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccolor.c > CMakeFiles/turbojpeg-static.dir/jccolor.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccolor.c > CMakeFiles/turbojpeg-static.dir/jccolor.c.i
 
 CMakeFiles/turbojpeg-static.dir/jccolor.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jccolor.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccolor.c -o CMakeFiles/turbojpeg-static.dir/jccolor.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jccolor.c -o CMakeFiles/turbojpeg-static.dir/jccolor.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcdctmgr.c
 CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o -MF CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcdctmgr.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o -MF CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcdctmgr.c
 
 CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcdctmgr.c > CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcdctmgr.c > CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcdctmgr.c -o CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcdctmgr.c -o CMakeFiles/turbojpeg-static.dir/jcdctmgr.c.s
 
 CMakeFiles/turbojpeg-static.dir/jchuff.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jchuff.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jchuff.c
 CMakeFiles/turbojpeg-static.dir/jchuff.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/turbojpeg-static.dir/jchuff.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jchuff.c.o -MF CMakeFiles/turbojpeg-static.dir/jchuff.c.o.d -o CMakeFiles/turbojpeg-static.dir/jchuff.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jchuff.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jchuff.c.o -MF CMakeFiles/turbojpeg-static.dir/jchuff.c.o.d -o CMakeFiles/turbojpeg-static.dir/jchuff.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jchuff.c
 
 CMakeFiles/turbojpeg-static.dir/jchuff.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jchuff.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jchuff.c > CMakeFiles/turbojpeg-static.dir/jchuff.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jchuff.c > CMakeFiles/turbojpeg-static.dir/jchuff.c.i
 
 CMakeFiles/turbojpeg-static.dir/jchuff.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jchuff.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jchuff.c -o CMakeFiles/turbojpeg-static.dir/jchuff.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jchuff.c -o CMakeFiles/turbojpeg-static.dir/jchuff.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcext.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcext.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcext.c
 CMakeFiles/turbojpeg-static.dir/jcext.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/turbojpeg-static.dir/jcext.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcext.c.o -MF CMakeFiles/turbojpeg-static.dir/jcext.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcext.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcext.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcext.c.o -MF CMakeFiles/turbojpeg-static.dir/jcext.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcext.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcext.c
 
 CMakeFiles/turbojpeg-static.dir/jcext.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcext.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcext.c > CMakeFiles/turbojpeg-static.dir/jcext.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcext.c > CMakeFiles/turbojpeg-static.dir/jcext.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcext.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcext.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcext.c -o CMakeFiles/turbojpeg-static.dir/jcext.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcext.c -o CMakeFiles/turbojpeg-static.dir/jcext.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcicc.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcicc.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcicc.c
 CMakeFiles/turbojpeg-static.dir/jcicc.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building C object CMakeFiles/turbojpeg-static.dir/jcicc.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcicc.c.o -MF CMakeFiles/turbojpeg-static.dir/jcicc.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcicc.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcicc.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcicc.c.o -MF CMakeFiles/turbojpeg-static.dir/jcicc.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcicc.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcicc.c
 
 CMakeFiles/turbojpeg-static.dir/jcicc.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcicc.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcicc.c > CMakeFiles/turbojpeg-static.dir/jcicc.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcicc.c > CMakeFiles/turbojpeg-static.dir/jcicc.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcicc.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcicc.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcicc.c -o CMakeFiles/turbojpeg-static.dir/jcicc.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcicc.c -o CMakeFiles/turbojpeg-static.dir/jcicc.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcinit.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcinit.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcinit.c
 CMakeFiles/turbojpeg-static.dir/jcinit.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building C object CMakeFiles/turbojpeg-static.dir/jcinit.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcinit.c.o -MF CMakeFiles/turbojpeg-static.dir/jcinit.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcinit.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcinit.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcinit.c.o -MF CMakeFiles/turbojpeg-static.dir/jcinit.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcinit.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcinit.c
 
 CMakeFiles/turbojpeg-static.dir/jcinit.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcinit.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcinit.c > CMakeFiles/turbojpeg-static.dir/jcinit.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcinit.c > CMakeFiles/turbojpeg-static.dir/jcinit.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcinit.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcinit.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcinit.c -o CMakeFiles/turbojpeg-static.dir/jcinit.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcinit.c -o CMakeFiles/turbojpeg-static.dir/jcinit.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcmainct.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcmainct.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmainct.c
 CMakeFiles/turbojpeg-static.dir/jcmainct.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building C object CMakeFiles/turbojpeg-static.dir/jcmainct.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcmainct.c.o -MF CMakeFiles/turbojpeg-static.dir/jcmainct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcmainct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmainct.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcmainct.c.o -MF CMakeFiles/turbojpeg-static.dir/jcmainct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcmainct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmainct.c
 
 CMakeFiles/turbojpeg-static.dir/jcmainct.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcmainct.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmainct.c > CMakeFiles/turbojpeg-static.dir/jcmainct.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmainct.c > CMakeFiles/turbojpeg-static.dir/jcmainct.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcmainct.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcmainct.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmainct.c -o CMakeFiles/turbojpeg-static.dir/jcmainct.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmainct.c -o CMakeFiles/turbojpeg-static.dir/jcmainct.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcmarker.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcmarker.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmarker.c
 CMakeFiles/turbojpeg-static.dir/jcmarker.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building C object CMakeFiles/turbojpeg-static.dir/jcmarker.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcmarker.c.o -MF CMakeFiles/turbojpeg-static.dir/jcmarker.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcmarker.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmarker.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcmarker.c.o -MF CMakeFiles/turbojpeg-static.dir/jcmarker.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcmarker.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmarker.c
 
 CMakeFiles/turbojpeg-static.dir/jcmarker.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcmarker.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmarker.c > CMakeFiles/turbojpeg-static.dir/jcmarker.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmarker.c > CMakeFiles/turbojpeg-static.dir/jcmarker.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcmarker.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcmarker.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmarker.c -o CMakeFiles/turbojpeg-static.dir/jcmarker.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmarker.c -o CMakeFiles/turbojpeg-static.dir/jcmarker.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcmaster.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcmaster.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmaster.c
 CMakeFiles/turbojpeg-static.dir/jcmaster.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building C object CMakeFiles/turbojpeg-static.dir/jcmaster.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcmaster.c.o -MF CMakeFiles/turbojpeg-static.dir/jcmaster.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcmaster.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmaster.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcmaster.c.o -MF CMakeFiles/turbojpeg-static.dir/jcmaster.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcmaster.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmaster.c
 
 CMakeFiles/turbojpeg-static.dir/jcmaster.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcmaster.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmaster.c > CMakeFiles/turbojpeg-static.dir/jcmaster.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmaster.c > CMakeFiles/turbojpeg-static.dir/jcmaster.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcmaster.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcmaster.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmaster.c -o CMakeFiles/turbojpeg-static.dir/jcmaster.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcmaster.c -o CMakeFiles/turbojpeg-static.dir/jcmaster.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcomapi.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcomapi.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcomapi.c
 CMakeFiles/turbojpeg-static.dir/jcomapi.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building C object CMakeFiles/turbojpeg-static.dir/jcomapi.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcomapi.c.o -MF CMakeFiles/turbojpeg-static.dir/jcomapi.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcomapi.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcomapi.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcomapi.c.o -MF CMakeFiles/turbojpeg-static.dir/jcomapi.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcomapi.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcomapi.c
 
 CMakeFiles/turbojpeg-static.dir/jcomapi.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcomapi.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcomapi.c > CMakeFiles/turbojpeg-static.dir/jcomapi.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcomapi.c > CMakeFiles/turbojpeg-static.dir/jcomapi.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcomapi.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcomapi.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcomapi.c -o CMakeFiles/turbojpeg-static.dir/jcomapi.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcomapi.c -o CMakeFiles/turbojpeg-static.dir/jcomapi.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcparam.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcparam.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcparam.c
 CMakeFiles/turbojpeg-static.dir/jcparam.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building C object CMakeFiles/turbojpeg-static.dir/jcparam.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcparam.c.o -MF CMakeFiles/turbojpeg-static.dir/jcparam.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcparam.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcparam.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcparam.c.o -MF CMakeFiles/turbojpeg-static.dir/jcparam.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcparam.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcparam.c
 
 CMakeFiles/turbojpeg-static.dir/jcparam.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcparam.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcparam.c > CMakeFiles/turbojpeg-static.dir/jcparam.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcparam.c > CMakeFiles/turbojpeg-static.dir/jcparam.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcparam.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcparam.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcparam.c -o CMakeFiles/turbojpeg-static.dir/jcparam.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcparam.c -o CMakeFiles/turbojpeg-static.dir/jcparam.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcphuff.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcphuff.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcphuff.c
 CMakeFiles/turbojpeg-static.dir/jcphuff.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building C object CMakeFiles/turbojpeg-static.dir/jcphuff.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcphuff.c.o -MF CMakeFiles/turbojpeg-static.dir/jcphuff.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcphuff.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcphuff.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcphuff.c.o -MF CMakeFiles/turbojpeg-static.dir/jcphuff.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcphuff.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcphuff.c
 
 CMakeFiles/turbojpeg-static.dir/jcphuff.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcphuff.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcphuff.c > CMakeFiles/turbojpeg-static.dir/jcphuff.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcphuff.c > CMakeFiles/turbojpeg-static.dir/jcphuff.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcphuff.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcphuff.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcphuff.c -o CMakeFiles/turbojpeg-static.dir/jcphuff.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcphuff.c -o CMakeFiles/turbojpeg-static.dir/jcphuff.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcprepct.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcprepct.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcprepct.c
 CMakeFiles/turbojpeg-static.dir/jcprepct.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building C object CMakeFiles/turbojpeg-static.dir/jcprepct.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcprepct.c.o -MF CMakeFiles/turbojpeg-static.dir/jcprepct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcprepct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcprepct.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcprepct.c.o -MF CMakeFiles/turbojpeg-static.dir/jcprepct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcprepct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcprepct.c
 
 CMakeFiles/turbojpeg-static.dir/jcprepct.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcprepct.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcprepct.c > CMakeFiles/turbojpeg-static.dir/jcprepct.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcprepct.c > CMakeFiles/turbojpeg-static.dir/jcprepct.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcprepct.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcprepct.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcprepct.c -o CMakeFiles/turbojpeg-static.dir/jcprepct.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcprepct.c -o CMakeFiles/turbojpeg-static.dir/jcprepct.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcsample.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcsample.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcsample.c
 CMakeFiles/turbojpeg-static.dir/jcsample.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building C object CMakeFiles/turbojpeg-static.dir/jcsample.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcsample.c.o -MF CMakeFiles/turbojpeg-static.dir/jcsample.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcsample.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcsample.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcsample.c.o -MF CMakeFiles/turbojpeg-static.dir/jcsample.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcsample.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcsample.c
 
 CMakeFiles/turbojpeg-static.dir/jcsample.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcsample.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcsample.c > CMakeFiles/turbojpeg-static.dir/jcsample.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcsample.c > CMakeFiles/turbojpeg-static.dir/jcsample.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcsample.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcsample.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcsample.c -o CMakeFiles/turbojpeg-static.dir/jcsample.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcsample.c -o CMakeFiles/turbojpeg-static.dir/jcsample.c.s
 
 CMakeFiles/turbojpeg-static.dir/jctrans.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jctrans.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jctrans.c
 CMakeFiles/turbojpeg-static.dir/jctrans.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Building C object CMakeFiles/turbojpeg-static.dir/jctrans.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jctrans.c.o -MF CMakeFiles/turbojpeg-static.dir/jctrans.c.o.d -o CMakeFiles/turbojpeg-static.dir/jctrans.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jctrans.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jctrans.c.o -MF CMakeFiles/turbojpeg-static.dir/jctrans.c.o.d -o CMakeFiles/turbojpeg-static.dir/jctrans.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jctrans.c
 
 CMakeFiles/turbojpeg-static.dir/jctrans.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jctrans.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jctrans.c > CMakeFiles/turbojpeg-static.dir/jctrans.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jctrans.c > CMakeFiles/turbojpeg-static.dir/jctrans.c.i
 
 CMakeFiles/turbojpeg-static.dir/jctrans.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jctrans.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jctrans.c -o CMakeFiles/turbojpeg-static.dir/jctrans.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jctrans.c -o CMakeFiles/turbojpeg-static.dir/jctrans.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdapimin.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdapimin.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapimin.c
 CMakeFiles/turbojpeg-static.dir/jdapimin.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_19) "Building C object CMakeFiles/turbojpeg-static.dir/jdapimin.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdapimin.c.o -MF CMakeFiles/turbojpeg-static.dir/jdapimin.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdapimin.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapimin.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdapimin.c.o -MF CMakeFiles/turbojpeg-static.dir/jdapimin.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdapimin.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapimin.c
 
 CMakeFiles/turbojpeg-static.dir/jdapimin.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdapimin.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapimin.c > CMakeFiles/turbojpeg-static.dir/jdapimin.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapimin.c > CMakeFiles/turbojpeg-static.dir/jdapimin.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdapimin.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdapimin.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapimin.c -o CMakeFiles/turbojpeg-static.dir/jdapimin.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapimin.c -o CMakeFiles/turbojpeg-static.dir/jdapimin.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdapistd.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdapistd.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapistd.c
 CMakeFiles/turbojpeg-static.dir/jdapistd.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_20) "Building C object CMakeFiles/turbojpeg-static.dir/jdapistd.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdapistd.c.o -MF CMakeFiles/turbojpeg-static.dir/jdapistd.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdapistd.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapistd.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdapistd.c.o -MF CMakeFiles/turbojpeg-static.dir/jdapistd.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdapistd.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapistd.c
 
 CMakeFiles/turbojpeg-static.dir/jdapistd.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdapistd.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapistd.c > CMakeFiles/turbojpeg-static.dir/jdapistd.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapistd.c > CMakeFiles/turbojpeg-static.dir/jdapistd.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdapistd.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdapistd.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapistd.c -o CMakeFiles/turbojpeg-static.dir/jdapistd.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdapistd.c -o CMakeFiles/turbojpeg-static.dir/jdapistd.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdatadst.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdatadst.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst.c
 CMakeFiles/turbojpeg-static.dir/jdatadst.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_21) "Building C object CMakeFiles/turbojpeg-static.dir/jdatadst.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdatadst.c.o -MF CMakeFiles/turbojpeg-static.dir/jdatadst.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdatadst.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdatadst.c.o -MF CMakeFiles/turbojpeg-static.dir/jdatadst.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdatadst.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst.c
 
 CMakeFiles/turbojpeg-static.dir/jdatadst.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdatadst.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst.c > CMakeFiles/turbojpeg-static.dir/jdatadst.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst.c > CMakeFiles/turbojpeg-static.dir/jdatadst.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdatadst.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdatadst.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst.c -o CMakeFiles/turbojpeg-static.dir/jdatadst.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst.c -o CMakeFiles/turbojpeg-static.dir/jdatadst.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc.c
 CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_22) "Building C object CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o -MF CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o -MF CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdatasrc.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc.c
 
 CMakeFiles/turbojpeg-static.dir/jdatasrc.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdatasrc.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc.c > CMakeFiles/turbojpeg-static.dir/jdatasrc.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc.c > CMakeFiles/turbojpeg-static.dir/jdatasrc.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdatasrc.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdatasrc.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc.c -o CMakeFiles/turbojpeg-static.dir/jdatasrc.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc.c -o CMakeFiles/turbojpeg-static.dir/jdatasrc.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcoefct.c
 CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_23) "Building C object CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o -MF CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcoefct.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o -MF CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdcoefct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcoefct.c
 
 CMakeFiles/turbojpeg-static.dir/jdcoefct.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdcoefct.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcoefct.c > CMakeFiles/turbojpeg-static.dir/jdcoefct.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcoefct.c > CMakeFiles/turbojpeg-static.dir/jdcoefct.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdcoefct.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdcoefct.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcoefct.c -o CMakeFiles/turbojpeg-static.dir/jdcoefct.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcoefct.c -o CMakeFiles/turbojpeg-static.dir/jdcoefct.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdcolor.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdcolor.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcolor.c
 CMakeFiles/turbojpeg-static.dir/jdcolor.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_24) "Building C object CMakeFiles/turbojpeg-static.dir/jdcolor.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdcolor.c.o -MF CMakeFiles/turbojpeg-static.dir/jdcolor.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdcolor.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcolor.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdcolor.c.o -MF CMakeFiles/turbojpeg-static.dir/jdcolor.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdcolor.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcolor.c
 
 CMakeFiles/turbojpeg-static.dir/jdcolor.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdcolor.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcolor.c > CMakeFiles/turbojpeg-static.dir/jdcolor.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcolor.c > CMakeFiles/turbojpeg-static.dir/jdcolor.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdcolor.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdcolor.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcolor.c -o CMakeFiles/turbojpeg-static.dir/jdcolor.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdcolor.c -o CMakeFiles/turbojpeg-static.dir/jdcolor.c.s
 
 CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jddctmgr.c
 CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_25) "Building C object CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o -MF CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o.d -o CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jddctmgr.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o -MF CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o.d -o CMakeFiles/turbojpeg-static.dir/jddctmgr.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jddctmgr.c
 
 CMakeFiles/turbojpeg-static.dir/jddctmgr.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jddctmgr.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jddctmgr.c > CMakeFiles/turbojpeg-static.dir/jddctmgr.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jddctmgr.c > CMakeFiles/turbojpeg-static.dir/jddctmgr.c.i
 
 CMakeFiles/turbojpeg-static.dir/jddctmgr.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jddctmgr.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jddctmgr.c -o CMakeFiles/turbojpeg-static.dir/jddctmgr.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jddctmgr.c -o CMakeFiles/turbojpeg-static.dir/jddctmgr.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdhuff.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdhuff.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdhuff.c
 CMakeFiles/turbojpeg-static.dir/jdhuff.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_26) "Building C object CMakeFiles/turbojpeg-static.dir/jdhuff.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdhuff.c.o -MF CMakeFiles/turbojpeg-static.dir/jdhuff.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdhuff.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdhuff.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdhuff.c.o -MF CMakeFiles/turbojpeg-static.dir/jdhuff.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdhuff.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdhuff.c
 
 CMakeFiles/turbojpeg-static.dir/jdhuff.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdhuff.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdhuff.c > CMakeFiles/turbojpeg-static.dir/jdhuff.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdhuff.c > CMakeFiles/turbojpeg-static.dir/jdhuff.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdhuff.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdhuff.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdhuff.c -o CMakeFiles/turbojpeg-static.dir/jdhuff.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdhuff.c -o CMakeFiles/turbojpeg-static.dir/jdhuff.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdicc.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdicc.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdicc.c
 CMakeFiles/turbojpeg-static.dir/jdicc.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_27) "Building C object CMakeFiles/turbojpeg-static.dir/jdicc.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdicc.c.o -MF CMakeFiles/turbojpeg-static.dir/jdicc.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdicc.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdicc.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdicc.c.o -MF CMakeFiles/turbojpeg-static.dir/jdicc.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdicc.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdicc.c
 
 CMakeFiles/turbojpeg-static.dir/jdicc.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdicc.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdicc.c > CMakeFiles/turbojpeg-static.dir/jdicc.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdicc.c > CMakeFiles/turbojpeg-static.dir/jdicc.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdicc.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdicc.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdicc.c -o CMakeFiles/turbojpeg-static.dir/jdicc.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdicc.c -o CMakeFiles/turbojpeg-static.dir/jdicc.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdinput.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdinput.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdinput.c
 CMakeFiles/turbojpeg-static.dir/jdinput.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building C object CMakeFiles/turbojpeg-static.dir/jdinput.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdinput.c.o -MF CMakeFiles/turbojpeg-static.dir/jdinput.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdinput.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdinput.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdinput.c.o -MF CMakeFiles/turbojpeg-static.dir/jdinput.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdinput.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdinput.c
 
 CMakeFiles/turbojpeg-static.dir/jdinput.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdinput.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdinput.c > CMakeFiles/turbojpeg-static.dir/jdinput.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdinput.c > CMakeFiles/turbojpeg-static.dir/jdinput.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdinput.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdinput.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdinput.c -o CMakeFiles/turbojpeg-static.dir/jdinput.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdinput.c -o CMakeFiles/turbojpeg-static.dir/jdinput.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdmainct.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdmainct.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmainct.c
 CMakeFiles/turbojpeg-static.dir/jdmainct.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building C object CMakeFiles/turbojpeg-static.dir/jdmainct.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdmainct.c.o -MF CMakeFiles/turbojpeg-static.dir/jdmainct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdmainct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmainct.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdmainct.c.o -MF CMakeFiles/turbojpeg-static.dir/jdmainct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdmainct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmainct.c
 
 CMakeFiles/turbojpeg-static.dir/jdmainct.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdmainct.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmainct.c > CMakeFiles/turbojpeg-static.dir/jdmainct.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmainct.c > CMakeFiles/turbojpeg-static.dir/jdmainct.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdmainct.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdmainct.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmainct.c -o CMakeFiles/turbojpeg-static.dir/jdmainct.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmainct.c -o CMakeFiles/turbojpeg-static.dir/jdmainct.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdmarker.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdmarker.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmarker.c
 CMakeFiles/turbojpeg-static.dir/jdmarker.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building C object CMakeFiles/turbojpeg-static.dir/jdmarker.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdmarker.c.o -MF CMakeFiles/turbojpeg-static.dir/jdmarker.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdmarker.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmarker.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdmarker.c.o -MF CMakeFiles/turbojpeg-static.dir/jdmarker.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdmarker.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmarker.c
 
 CMakeFiles/turbojpeg-static.dir/jdmarker.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdmarker.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmarker.c > CMakeFiles/turbojpeg-static.dir/jdmarker.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmarker.c > CMakeFiles/turbojpeg-static.dir/jdmarker.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdmarker.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdmarker.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmarker.c -o CMakeFiles/turbojpeg-static.dir/jdmarker.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmarker.c -o CMakeFiles/turbojpeg-static.dir/jdmarker.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdmaster.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdmaster.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmaster.c
 CMakeFiles/turbojpeg-static.dir/jdmaster.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building C object CMakeFiles/turbojpeg-static.dir/jdmaster.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdmaster.c.o -MF CMakeFiles/turbojpeg-static.dir/jdmaster.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdmaster.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmaster.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdmaster.c.o -MF CMakeFiles/turbojpeg-static.dir/jdmaster.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdmaster.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmaster.c
 
 CMakeFiles/turbojpeg-static.dir/jdmaster.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdmaster.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmaster.c > CMakeFiles/turbojpeg-static.dir/jdmaster.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmaster.c > CMakeFiles/turbojpeg-static.dir/jdmaster.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdmaster.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdmaster.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmaster.c -o CMakeFiles/turbojpeg-static.dir/jdmaster.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmaster.c -o CMakeFiles/turbojpeg-static.dir/jdmaster.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdmerge.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdmerge.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmerge.c
 CMakeFiles/turbojpeg-static.dir/jdmerge.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building C object CMakeFiles/turbojpeg-static.dir/jdmerge.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdmerge.c.o -MF CMakeFiles/turbojpeg-static.dir/jdmerge.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdmerge.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmerge.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdmerge.c.o -MF CMakeFiles/turbojpeg-static.dir/jdmerge.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdmerge.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmerge.c
 
 CMakeFiles/turbojpeg-static.dir/jdmerge.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdmerge.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmerge.c > CMakeFiles/turbojpeg-static.dir/jdmerge.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmerge.c > CMakeFiles/turbojpeg-static.dir/jdmerge.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdmerge.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdmerge.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmerge.c -o CMakeFiles/turbojpeg-static.dir/jdmerge.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdmerge.c -o CMakeFiles/turbojpeg-static.dir/jdmerge.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdphuff.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdphuff.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdphuff.c
 CMakeFiles/turbojpeg-static.dir/jdphuff.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building C object CMakeFiles/turbojpeg-static.dir/jdphuff.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdphuff.c.o -MF CMakeFiles/turbojpeg-static.dir/jdphuff.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdphuff.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdphuff.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdphuff.c.o -MF CMakeFiles/turbojpeg-static.dir/jdphuff.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdphuff.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdphuff.c
 
 CMakeFiles/turbojpeg-static.dir/jdphuff.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdphuff.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdphuff.c > CMakeFiles/turbojpeg-static.dir/jdphuff.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdphuff.c > CMakeFiles/turbojpeg-static.dir/jdphuff.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdphuff.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdphuff.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdphuff.c -o CMakeFiles/turbojpeg-static.dir/jdphuff.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdphuff.c -o CMakeFiles/turbojpeg-static.dir/jdphuff.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdpostct.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdpostct.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdpostct.c
 CMakeFiles/turbojpeg-static.dir/jdpostct.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building C object CMakeFiles/turbojpeg-static.dir/jdpostct.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdpostct.c.o -MF CMakeFiles/turbojpeg-static.dir/jdpostct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdpostct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdpostct.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdpostct.c.o -MF CMakeFiles/turbojpeg-static.dir/jdpostct.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdpostct.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdpostct.c
 
 CMakeFiles/turbojpeg-static.dir/jdpostct.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdpostct.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdpostct.c > CMakeFiles/turbojpeg-static.dir/jdpostct.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdpostct.c > CMakeFiles/turbojpeg-static.dir/jdpostct.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdpostct.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdpostct.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdpostct.c -o CMakeFiles/turbojpeg-static.dir/jdpostct.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdpostct.c -o CMakeFiles/turbojpeg-static.dir/jdpostct.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdsample.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdsample.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdsample.c
 CMakeFiles/turbojpeg-static.dir/jdsample.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building C object CMakeFiles/turbojpeg-static.dir/jdsample.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdsample.c.o -MF CMakeFiles/turbojpeg-static.dir/jdsample.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdsample.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdsample.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdsample.c.o -MF CMakeFiles/turbojpeg-static.dir/jdsample.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdsample.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdsample.c
 
 CMakeFiles/turbojpeg-static.dir/jdsample.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdsample.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdsample.c > CMakeFiles/turbojpeg-static.dir/jdsample.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdsample.c > CMakeFiles/turbojpeg-static.dir/jdsample.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdsample.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdsample.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdsample.c -o CMakeFiles/turbojpeg-static.dir/jdsample.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdsample.c -o CMakeFiles/turbojpeg-static.dir/jdsample.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdtrans.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdtrans.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdtrans.c
 CMakeFiles/turbojpeg-static.dir/jdtrans.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building C object CMakeFiles/turbojpeg-static.dir/jdtrans.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdtrans.c.o -MF CMakeFiles/turbojpeg-static.dir/jdtrans.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdtrans.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdtrans.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdtrans.c.o -MF CMakeFiles/turbojpeg-static.dir/jdtrans.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdtrans.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdtrans.c
 
 CMakeFiles/turbojpeg-static.dir/jdtrans.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdtrans.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdtrans.c > CMakeFiles/turbojpeg-static.dir/jdtrans.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdtrans.c > CMakeFiles/turbojpeg-static.dir/jdtrans.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdtrans.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdtrans.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdtrans.c -o CMakeFiles/turbojpeg-static.dir/jdtrans.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdtrans.c -o CMakeFiles/turbojpeg-static.dir/jdtrans.c.s
 
 CMakeFiles/turbojpeg-static.dir/jerror.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jerror.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jerror.c
 CMakeFiles/turbojpeg-static.dir/jerror.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Building C object CMakeFiles/turbojpeg-static.dir/jerror.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jerror.c.o -MF CMakeFiles/turbojpeg-static.dir/jerror.c.o.d -o CMakeFiles/turbojpeg-static.dir/jerror.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jerror.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jerror.c.o -MF CMakeFiles/turbojpeg-static.dir/jerror.c.o.d -o CMakeFiles/turbojpeg-static.dir/jerror.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jerror.c
 
 CMakeFiles/turbojpeg-static.dir/jerror.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jerror.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jerror.c > CMakeFiles/turbojpeg-static.dir/jerror.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jerror.c > CMakeFiles/turbojpeg-static.dir/jerror.c.i
 
 CMakeFiles/turbojpeg-static.dir/jerror.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jerror.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jerror.c -o CMakeFiles/turbojpeg-static.dir/jerror.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jerror.c -o CMakeFiles/turbojpeg-static.dir/jerror.c.s
 
 CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctflt.c
 CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_38) "Building C object CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o -MF CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o.d -o CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctflt.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o -MF CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o.d -o CMakeFiles/turbojpeg-static.dir/jfdctflt.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctflt.c
 
 CMakeFiles/turbojpeg-static.dir/jfdctflt.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jfdctflt.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctflt.c > CMakeFiles/turbojpeg-static.dir/jfdctflt.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctflt.c > CMakeFiles/turbojpeg-static.dir/jfdctflt.c.i
 
 CMakeFiles/turbojpeg-static.dir/jfdctflt.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jfdctflt.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctflt.c -o CMakeFiles/turbojpeg-static.dir/jfdctflt.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctflt.c -o CMakeFiles/turbojpeg-static.dir/jfdctflt.c.s
 
 CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctfst.c
 CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_39) "Building C object CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o -MF CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o.d -o CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctfst.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o -MF CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o.d -o CMakeFiles/turbojpeg-static.dir/jfdctfst.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctfst.c
 
 CMakeFiles/turbojpeg-static.dir/jfdctfst.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jfdctfst.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctfst.c > CMakeFiles/turbojpeg-static.dir/jfdctfst.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctfst.c > CMakeFiles/turbojpeg-static.dir/jfdctfst.c.i
 
 CMakeFiles/turbojpeg-static.dir/jfdctfst.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jfdctfst.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctfst.c -o CMakeFiles/turbojpeg-static.dir/jfdctfst.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctfst.c -o CMakeFiles/turbojpeg-static.dir/jfdctfst.c.s
 
 CMakeFiles/turbojpeg-static.dir/jfdctint.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jfdctint.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctint.c
 CMakeFiles/turbojpeg-static.dir/jfdctint.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_40) "Building C object CMakeFiles/turbojpeg-static.dir/jfdctint.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jfdctint.c.o -MF CMakeFiles/turbojpeg-static.dir/jfdctint.c.o.d -o CMakeFiles/turbojpeg-static.dir/jfdctint.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctint.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jfdctint.c.o -MF CMakeFiles/turbojpeg-static.dir/jfdctint.c.o.d -o CMakeFiles/turbojpeg-static.dir/jfdctint.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctint.c
 
 CMakeFiles/turbojpeg-static.dir/jfdctint.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jfdctint.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctint.c > CMakeFiles/turbojpeg-static.dir/jfdctint.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctint.c > CMakeFiles/turbojpeg-static.dir/jfdctint.c.i
 
 CMakeFiles/turbojpeg-static.dir/jfdctint.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jfdctint.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctint.c -o CMakeFiles/turbojpeg-static.dir/jfdctint.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jfdctint.c -o CMakeFiles/turbojpeg-static.dir/jfdctint.c.s
 
 CMakeFiles/turbojpeg-static.dir/jidctflt.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jidctflt.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctflt.c
 CMakeFiles/turbojpeg-static.dir/jidctflt.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_41) "Building C object CMakeFiles/turbojpeg-static.dir/jidctflt.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jidctflt.c.o -MF CMakeFiles/turbojpeg-static.dir/jidctflt.c.o.d -o CMakeFiles/turbojpeg-static.dir/jidctflt.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctflt.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jidctflt.c.o -MF CMakeFiles/turbojpeg-static.dir/jidctflt.c.o.d -o CMakeFiles/turbojpeg-static.dir/jidctflt.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctflt.c
 
 CMakeFiles/turbojpeg-static.dir/jidctflt.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jidctflt.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctflt.c > CMakeFiles/turbojpeg-static.dir/jidctflt.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctflt.c > CMakeFiles/turbojpeg-static.dir/jidctflt.c.i
 
 CMakeFiles/turbojpeg-static.dir/jidctflt.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jidctflt.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctflt.c -o CMakeFiles/turbojpeg-static.dir/jidctflt.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctflt.c -o CMakeFiles/turbojpeg-static.dir/jidctflt.c.s
 
 CMakeFiles/turbojpeg-static.dir/jidctfst.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jidctfst.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctfst.c
 CMakeFiles/turbojpeg-static.dir/jidctfst.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_42) "Building C object CMakeFiles/turbojpeg-static.dir/jidctfst.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jidctfst.c.o -MF CMakeFiles/turbojpeg-static.dir/jidctfst.c.o.d -o CMakeFiles/turbojpeg-static.dir/jidctfst.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctfst.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jidctfst.c.o -MF CMakeFiles/turbojpeg-static.dir/jidctfst.c.o.d -o CMakeFiles/turbojpeg-static.dir/jidctfst.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctfst.c
 
 CMakeFiles/turbojpeg-static.dir/jidctfst.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jidctfst.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctfst.c > CMakeFiles/turbojpeg-static.dir/jidctfst.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctfst.c > CMakeFiles/turbojpeg-static.dir/jidctfst.c.i
 
 CMakeFiles/turbojpeg-static.dir/jidctfst.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jidctfst.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctfst.c -o CMakeFiles/turbojpeg-static.dir/jidctfst.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctfst.c -o CMakeFiles/turbojpeg-static.dir/jidctfst.c.s
 
 CMakeFiles/turbojpeg-static.dir/jidctint.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jidctint.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctint.c
 CMakeFiles/turbojpeg-static.dir/jidctint.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_43) "Building C object CMakeFiles/turbojpeg-static.dir/jidctint.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jidctint.c.o -MF CMakeFiles/turbojpeg-static.dir/jidctint.c.o.d -o CMakeFiles/turbojpeg-static.dir/jidctint.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctint.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jidctint.c.o -MF CMakeFiles/turbojpeg-static.dir/jidctint.c.o.d -o CMakeFiles/turbojpeg-static.dir/jidctint.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctint.c
 
 CMakeFiles/turbojpeg-static.dir/jidctint.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jidctint.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctint.c > CMakeFiles/turbojpeg-static.dir/jidctint.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctint.c > CMakeFiles/turbojpeg-static.dir/jidctint.c.i
 
 CMakeFiles/turbojpeg-static.dir/jidctint.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jidctint.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctint.c -o CMakeFiles/turbojpeg-static.dir/jidctint.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctint.c -o CMakeFiles/turbojpeg-static.dir/jidctint.c.s
 
 CMakeFiles/turbojpeg-static.dir/jidctred.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jidctred.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctred.c
 CMakeFiles/turbojpeg-static.dir/jidctred.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_44) "Building C object CMakeFiles/turbojpeg-static.dir/jidctred.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jidctred.c.o -MF CMakeFiles/turbojpeg-static.dir/jidctred.c.o.d -o CMakeFiles/turbojpeg-static.dir/jidctred.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctred.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jidctred.c.o -MF CMakeFiles/turbojpeg-static.dir/jidctred.c.o.d -o CMakeFiles/turbojpeg-static.dir/jidctred.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctred.c
 
 CMakeFiles/turbojpeg-static.dir/jidctred.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jidctred.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctred.c > CMakeFiles/turbojpeg-static.dir/jidctred.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctred.c > CMakeFiles/turbojpeg-static.dir/jidctred.c.i
 
 CMakeFiles/turbojpeg-static.dir/jidctred.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jidctred.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctred.c -o CMakeFiles/turbojpeg-static.dir/jidctred.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jidctred.c -o CMakeFiles/turbojpeg-static.dir/jidctred.c.s
 
 CMakeFiles/turbojpeg-static.dir/jquant1.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jquant1.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant1.c
 CMakeFiles/turbojpeg-static.dir/jquant1.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_45) "Building C object CMakeFiles/turbojpeg-static.dir/jquant1.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jquant1.c.o -MF CMakeFiles/turbojpeg-static.dir/jquant1.c.o.d -o CMakeFiles/turbojpeg-static.dir/jquant1.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant1.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jquant1.c.o -MF CMakeFiles/turbojpeg-static.dir/jquant1.c.o.d -o CMakeFiles/turbojpeg-static.dir/jquant1.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant1.c
 
 CMakeFiles/turbojpeg-static.dir/jquant1.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jquant1.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant1.c > CMakeFiles/turbojpeg-static.dir/jquant1.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant1.c > CMakeFiles/turbojpeg-static.dir/jquant1.c.i
 
 CMakeFiles/turbojpeg-static.dir/jquant1.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jquant1.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant1.c -o CMakeFiles/turbojpeg-static.dir/jquant1.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant1.c -o CMakeFiles/turbojpeg-static.dir/jquant1.c.s
 
 CMakeFiles/turbojpeg-static.dir/jquant2.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jquant2.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant2.c
 CMakeFiles/turbojpeg-static.dir/jquant2.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_46) "Building C object CMakeFiles/turbojpeg-static.dir/jquant2.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jquant2.c.o -MF CMakeFiles/turbojpeg-static.dir/jquant2.c.o.d -o CMakeFiles/turbojpeg-static.dir/jquant2.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant2.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jquant2.c.o -MF CMakeFiles/turbojpeg-static.dir/jquant2.c.o.d -o CMakeFiles/turbojpeg-static.dir/jquant2.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant2.c
 
 CMakeFiles/turbojpeg-static.dir/jquant2.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jquant2.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant2.c > CMakeFiles/turbojpeg-static.dir/jquant2.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant2.c > CMakeFiles/turbojpeg-static.dir/jquant2.c.i
 
 CMakeFiles/turbojpeg-static.dir/jquant2.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jquant2.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant2.c -o CMakeFiles/turbojpeg-static.dir/jquant2.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jquant2.c -o CMakeFiles/turbojpeg-static.dir/jquant2.c.s
 
 CMakeFiles/turbojpeg-static.dir/jutils.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jutils.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jutils.c
 CMakeFiles/turbojpeg-static.dir/jutils.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_47) "Building C object CMakeFiles/turbojpeg-static.dir/jutils.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jutils.c.o -MF CMakeFiles/turbojpeg-static.dir/jutils.c.o.d -o CMakeFiles/turbojpeg-static.dir/jutils.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jutils.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jutils.c.o -MF CMakeFiles/turbojpeg-static.dir/jutils.c.o.d -o CMakeFiles/turbojpeg-static.dir/jutils.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jutils.c
 
 CMakeFiles/turbojpeg-static.dir/jutils.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jutils.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jutils.c > CMakeFiles/turbojpeg-static.dir/jutils.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jutils.c > CMakeFiles/turbojpeg-static.dir/jutils.c.i
 
 CMakeFiles/turbojpeg-static.dir/jutils.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jutils.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jutils.c -o CMakeFiles/turbojpeg-static.dir/jutils.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jutils.c -o CMakeFiles/turbojpeg-static.dir/jutils.c.s
 
 CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemmgr.c
 CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_48) "Building C object CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o -MF CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o.d -o CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemmgr.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o -MF CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o.d -o CMakeFiles/turbojpeg-static.dir/jmemmgr.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemmgr.c
 
 CMakeFiles/turbojpeg-static.dir/jmemmgr.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jmemmgr.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemmgr.c > CMakeFiles/turbojpeg-static.dir/jmemmgr.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemmgr.c > CMakeFiles/turbojpeg-static.dir/jmemmgr.c.i
 
 CMakeFiles/turbojpeg-static.dir/jmemmgr.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jmemmgr.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemmgr.c -o CMakeFiles/turbojpeg-static.dir/jmemmgr.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemmgr.c -o CMakeFiles/turbojpeg-static.dir/jmemmgr.c.s
 
 CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemnobs.c
 CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_49) "Building C object CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o -MF CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o.d -o CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemnobs.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o -MF CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o.d -o CMakeFiles/turbojpeg-static.dir/jmemnobs.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemnobs.c
 
 CMakeFiles/turbojpeg-static.dir/jmemnobs.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jmemnobs.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemnobs.c > CMakeFiles/turbojpeg-static.dir/jmemnobs.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemnobs.c > CMakeFiles/turbojpeg-static.dir/jmemnobs.c.i
 
 CMakeFiles/turbojpeg-static.dir/jmemnobs.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jmemnobs.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemnobs.c -o CMakeFiles/turbojpeg-static.dir/jmemnobs.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jmemnobs.c -o CMakeFiles/turbojpeg-static.dir/jmemnobs.c.s
 
 CMakeFiles/turbojpeg-static.dir/jaricom.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jaricom.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jaricom.c
 CMakeFiles/turbojpeg-static.dir/jaricom.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_50) "Building C object CMakeFiles/turbojpeg-static.dir/jaricom.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jaricom.c.o -MF CMakeFiles/turbojpeg-static.dir/jaricom.c.o.d -o CMakeFiles/turbojpeg-static.dir/jaricom.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jaricom.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jaricom.c.o -MF CMakeFiles/turbojpeg-static.dir/jaricom.c.o.d -o CMakeFiles/turbojpeg-static.dir/jaricom.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jaricom.c
 
 CMakeFiles/turbojpeg-static.dir/jaricom.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jaricom.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jaricom.c > CMakeFiles/turbojpeg-static.dir/jaricom.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jaricom.c > CMakeFiles/turbojpeg-static.dir/jaricom.c.i
 
 CMakeFiles/turbojpeg-static.dir/jaricom.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jaricom.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jaricom.c -o CMakeFiles/turbojpeg-static.dir/jaricom.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jaricom.c -o CMakeFiles/turbojpeg-static.dir/jaricom.c.s
 
 CMakeFiles/turbojpeg-static.dir/jcarith.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jcarith.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcarith.c
 CMakeFiles/turbojpeg-static.dir/jcarith.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_51) "Building C object CMakeFiles/turbojpeg-static.dir/jcarith.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcarith.c.o -MF CMakeFiles/turbojpeg-static.dir/jcarith.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcarith.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcarith.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jcarith.c.o -MF CMakeFiles/turbojpeg-static.dir/jcarith.c.o.d -o CMakeFiles/turbojpeg-static.dir/jcarith.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcarith.c
 
 CMakeFiles/turbojpeg-static.dir/jcarith.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jcarith.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcarith.c > CMakeFiles/turbojpeg-static.dir/jcarith.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcarith.c > CMakeFiles/turbojpeg-static.dir/jcarith.c.i
 
 CMakeFiles/turbojpeg-static.dir/jcarith.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jcarith.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcarith.c -o CMakeFiles/turbojpeg-static.dir/jcarith.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jcarith.c -o CMakeFiles/turbojpeg-static.dir/jcarith.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdarith.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdarith.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdarith.c
 CMakeFiles/turbojpeg-static.dir/jdarith.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_52) "Building C object CMakeFiles/turbojpeg-static.dir/jdarith.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdarith.c.o -MF CMakeFiles/turbojpeg-static.dir/jdarith.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdarith.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdarith.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdarith.c.o -MF CMakeFiles/turbojpeg-static.dir/jdarith.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdarith.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdarith.c
 
 CMakeFiles/turbojpeg-static.dir/jdarith.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdarith.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdarith.c > CMakeFiles/turbojpeg-static.dir/jdarith.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdarith.c > CMakeFiles/turbojpeg-static.dir/jdarith.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdarith.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdarith.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdarith.c -o CMakeFiles/turbojpeg-static.dir/jdarith.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdarith.c -o CMakeFiles/turbojpeg-static.dir/jdarith.c.s
 
 CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/turbojpeg.c
 CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_53) "Building C object CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o -MF CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o.d -o CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/turbojpeg.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o -MF CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o.d -o CMakeFiles/turbojpeg-static.dir/turbojpeg.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/turbojpeg.c
 
 CMakeFiles/turbojpeg-static.dir/turbojpeg.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/turbojpeg.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/turbojpeg.c > CMakeFiles/turbojpeg-static.dir/turbojpeg.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/turbojpeg.c > CMakeFiles/turbojpeg-static.dir/turbojpeg.c.i
 
 CMakeFiles/turbojpeg-static.dir/turbojpeg.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/turbojpeg.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/turbojpeg.c -o CMakeFiles/turbojpeg-static.dir/turbojpeg.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/turbojpeg.c -o CMakeFiles/turbojpeg-static.dir/turbojpeg.c.s
 
 CMakeFiles/turbojpeg-static.dir/transupp.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/transupp.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/transupp.c
 CMakeFiles/turbojpeg-static.dir/transupp.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_54) "Building C object CMakeFiles/turbojpeg-static.dir/transupp.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/transupp.c.o -MF CMakeFiles/turbojpeg-static.dir/transupp.c.o.d -o CMakeFiles/turbojpeg-static.dir/transupp.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/transupp.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/transupp.c.o -MF CMakeFiles/turbojpeg-static.dir/transupp.c.o.d -o CMakeFiles/turbojpeg-static.dir/transupp.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/transupp.c
 
 CMakeFiles/turbojpeg-static.dir/transupp.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/transupp.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/transupp.c > CMakeFiles/turbojpeg-static.dir/transupp.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/transupp.c > CMakeFiles/turbojpeg-static.dir/transupp.c.i
 
 CMakeFiles/turbojpeg-static.dir/transupp.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/transupp.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/transupp.c -o CMakeFiles/turbojpeg-static.dir/transupp.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/transupp.c -o CMakeFiles/turbojpeg-static.dir/transupp.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst-tj.c
 CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_55) "Building C object CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o -MF CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst-tj.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o -MF CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst-tj.c
 
 CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst-tj.c > CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst-tj.c > CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst-tj.c -o CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatadst-tj.c -o CMakeFiles/turbojpeg-static.dir/jdatadst-tj.c.s
 
 CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc-tj.c
 CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_56) "Building C object CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o -MF CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc-tj.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o -MF CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o.d -o CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc-tj.c
 
 CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc-tj.c > CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc-tj.c > CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.i
 
 CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc-tj.c -o CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/jdatasrc-tj.c -o CMakeFiles/turbojpeg-static.dir/jdatasrc-tj.c.s
 
 CMakeFiles/turbojpeg-static.dir/rdbmp.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/rdbmp.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdbmp.c
 CMakeFiles/turbojpeg-static.dir/rdbmp.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_57) "Building C object CMakeFiles/turbojpeg-static.dir/rdbmp.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/rdbmp.c.o -MF CMakeFiles/turbojpeg-static.dir/rdbmp.c.o.d -o CMakeFiles/turbojpeg-static.dir/rdbmp.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdbmp.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/rdbmp.c.o -MF CMakeFiles/turbojpeg-static.dir/rdbmp.c.o.d -o CMakeFiles/turbojpeg-static.dir/rdbmp.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdbmp.c
 
 CMakeFiles/turbojpeg-static.dir/rdbmp.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/rdbmp.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdbmp.c > CMakeFiles/turbojpeg-static.dir/rdbmp.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdbmp.c > CMakeFiles/turbojpeg-static.dir/rdbmp.c.i
 
 CMakeFiles/turbojpeg-static.dir/rdbmp.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/rdbmp.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdbmp.c -o CMakeFiles/turbojpeg-static.dir/rdbmp.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdbmp.c -o CMakeFiles/turbojpeg-static.dir/rdbmp.c.s
 
 CMakeFiles/turbojpeg-static.dir/rdppm.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/rdppm.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdppm.c
 CMakeFiles/turbojpeg-static.dir/rdppm.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_58) "Building C object CMakeFiles/turbojpeg-static.dir/rdppm.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/rdppm.c.o -MF CMakeFiles/turbojpeg-static.dir/rdppm.c.o.d -o CMakeFiles/turbojpeg-static.dir/rdppm.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdppm.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/rdppm.c.o -MF CMakeFiles/turbojpeg-static.dir/rdppm.c.o.d -o CMakeFiles/turbojpeg-static.dir/rdppm.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdppm.c
 
 CMakeFiles/turbojpeg-static.dir/rdppm.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/rdppm.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdppm.c > CMakeFiles/turbojpeg-static.dir/rdppm.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdppm.c > CMakeFiles/turbojpeg-static.dir/rdppm.c.i
 
 CMakeFiles/turbojpeg-static.dir/rdppm.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/rdppm.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdppm.c -o CMakeFiles/turbojpeg-static.dir/rdppm.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdppm.c -o CMakeFiles/turbojpeg-static.dir/rdppm.c.s
 
 CMakeFiles/turbojpeg-static.dir/wrbmp.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/wrbmp.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrbmp.c
 CMakeFiles/turbojpeg-static.dir/wrbmp.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_59) "Building C object CMakeFiles/turbojpeg-static.dir/wrbmp.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/wrbmp.c.o -MF CMakeFiles/turbojpeg-static.dir/wrbmp.c.o.d -o CMakeFiles/turbojpeg-static.dir/wrbmp.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrbmp.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/wrbmp.c.o -MF CMakeFiles/turbojpeg-static.dir/wrbmp.c.o.d -o CMakeFiles/turbojpeg-static.dir/wrbmp.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrbmp.c
 
 CMakeFiles/turbojpeg-static.dir/wrbmp.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/wrbmp.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrbmp.c > CMakeFiles/turbojpeg-static.dir/wrbmp.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrbmp.c > CMakeFiles/turbojpeg-static.dir/wrbmp.c.i
 
 CMakeFiles/turbojpeg-static.dir/wrbmp.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/wrbmp.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrbmp.c -o CMakeFiles/turbojpeg-static.dir/wrbmp.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrbmp.c -o CMakeFiles/turbojpeg-static.dir/wrbmp.c.s
 
 CMakeFiles/turbojpeg-static.dir/wrppm.c.o: CMakeFiles/turbojpeg-static.dir/flags.make
 CMakeFiles/turbojpeg-static.dir/wrppm.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrppm.c
 CMakeFiles/turbojpeg-static.dir/wrppm.c.o: CMakeFiles/turbojpeg-static.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_60) "Building C object CMakeFiles/turbojpeg-static.dir/wrppm.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/wrppm.c.o -MF CMakeFiles/turbojpeg-static.dir/wrppm.c.o.d -o CMakeFiles/turbojpeg-static.dir/wrppm.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrppm.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/turbojpeg-static.dir/wrppm.c.o -MF CMakeFiles/turbojpeg-static.dir/wrppm.c.o.d -o CMakeFiles/turbojpeg-static.dir/wrppm.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrppm.c
 
 CMakeFiles/turbojpeg-static.dir/wrppm.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/turbojpeg-static.dir/wrppm.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrppm.c > CMakeFiles/turbojpeg-static.dir/wrppm.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrppm.c > CMakeFiles/turbojpeg-static.dir/wrppm.c.i
 
 CMakeFiles/turbojpeg-static.dir/wrppm.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/turbojpeg-static.dir/wrppm.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrppm.c -o CMakeFiles/turbojpeg-static.dir/wrppm.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/wrppm.c -o CMakeFiles/turbojpeg-static.dir/wrppm.c.s
 
 # Object files for target turbojpeg-static
 turbojpeg__static_OBJECTS = \

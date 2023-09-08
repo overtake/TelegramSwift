@@ -23,5 +23,5 @@ VERSION_MAJOR=1
 VERSION_MINOR=11
 VERSION_PATCH=0
 
-CONFIGURE_ARGS=--target=arm64-darwin20-gcc --disable-examples --disable-unit-tests --disable-tools --disable-docs --enable-vp8 --enable-vp9 --enable-webm-io
-CONFIGURE_ARGS?=--target=arm64-darwin20-gcc --disable-examples --disable-unit-tests --disable-tools --disable-docs --enable-vp8 --enable-vp9 --enable-webm-io
+CONFIGURE_ARGS=--target=arm64-darwin20-gcc --disable-examples --disable-unit-tests --disable-tools --disable-docs --enable-vp8 --enable-vp9 --enable-webm-io --size-limit=8192x8192
+CONFIGURE_ARGS?=--target=arm64-darwin20-gcc --disable-examples --disable-unit-tests --disable-tools --disable-docs --enable-vp8 --enable-vp9 --enable-webm-io --size-limit=8192x8192

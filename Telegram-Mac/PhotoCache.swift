@@ -369,13 +369,13 @@ private class PhotoCache {
 }
 
 
-private let peerPhotoCache = PhotoCache(300)
-private let photosCache = PhotoCache(300)
-private let photoThumbsCache = PhotoCache(500)
-private let themeThums = PhotoCache(500)
+private let peerPhotoCache = PhotoCache(200)
+private let photosCache = PhotoCache(200)
+private let photoThumbsCache = PhotoCache(200)
+private let themeThums = PhotoCache(200)
 private let wallpaperCache = WallpaperCache(20)
 
-private let stickersCache = PhotoCache(1000)
+private let stickersCache = PhotoCache(200)
 
 
 func clearImageCache() -> Signal<Void, NoError> {

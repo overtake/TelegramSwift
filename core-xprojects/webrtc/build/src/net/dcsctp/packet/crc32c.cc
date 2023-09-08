@@ -10,8 +10,7 @@
 #include "net/dcsctp/packet/crc32c.h"
 
 #include <cstdint>
-
-#include "third_party/crc32c/src/include/crc32c/crc32c.h"
+#include <crc32c/crc32c.h>
 
 namespace dcsctp {
 

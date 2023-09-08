@@ -22,10 +22,10 @@ AS=yasm
 STRIP=strip
 NM=nm
 
-CFLAGS  =  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -arch x86_64 -m64 -arch x86_64 -DNDEBUG -O3 -Wall -Wdeclaration-after-statement -Wdisabled-optimization -Wfloat-conversion -Wparentheses-equality -Wpointer-arith -Wtype-limits -Wcast-qual -Wvla -Wimplicit-function-declaration -Wmissing-declarations -Wmissing-prototypes -Wuninitialized -Wunreachable-code-loop-increment -Wunused -Wextra -Wundef -Wframe-larger-than=52000 -std=gnu89 -Wshorten-64-to-32
-CXXFLAGS  =  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -arch x86_64 -m64 -arch x86_64 -DNDEBUG -O3 -Wall -Wdeclaration-after-statement -Wdisabled-optimization -Wfloat-conversion -Wparentheses-equality -Wpointer-arith -Wtype-limits -Wcast-qual -Wvla -Wimplicit-function-declaration -Wmissing-declarations -Wmissing-prototypes -Wuninitialized -Wunreachable-code-loop-increment -Wunused -Wextra -std=gnu++11 -std=gnu++11
+CFLAGS  =  -isysroot /Applications/Xcode_14_0_1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk -mmacosx-version-min=10.11 -arch x86_64 -m64 -arch x86_64 -DNDEBUG -O3 -Wall -Wdeclaration-after-statement -Wdisabled-optimization -Wfloat-conversion -Wparentheses-equality -Wpointer-arith -Wtype-limits -Wcast-qual -Wvla -Wimplicit-function-declaration -Wmissing-declarations -Wmissing-prototypes -Wuninitialized -Wunreachable-code-loop-increment -Wunused -Wextra -Wundef -Wframe-larger-than=52000 -std=gnu89 -Wshorten-64-to-32
+CXXFLAGS  =  -isysroot /Applications/Xcode_14_0_1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk -mmacosx-version-min=10.11 -arch x86_64 -m64 -arch x86_64 -DNDEBUG -O3 -Wall -Wdeclaration-after-statement -Wdisabled-optimization -Wfloat-conversion -Wparentheses-equality -Wpointer-arith -Wtype-limits -Wcast-qual -Wvla -Wimplicit-function-declaration -Wmissing-declarations -Wmissing-prototypes -Wuninitialized -Wunreachable-code-loop-increment -Wunused -Wextra -std=gnu++11 -std=gnu++11
 ARFLAGS = -crs$(if $(quiet),,v)
-LDFLAGS =  -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.1.sdk -mmacosx-version-min=10.11 -arch x86_64 -m64 -arch x86_64
+LDFLAGS =  -isysroot /Applications/Xcode_14_0_1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk -mmacosx-version-min=10.11 -arch x86_64 -m64 -arch x86_64
 ASFLAGS =  -f macho64
 extralibs =  -lpthread
 AS_SFX    = .asm
@@ -68,3 +68,4 @@ CONFIG_OS_SUPPORT=yes
 CONFIG_WEBM_IO=yes
 CONFIG_LIBYUV=yes
 CONFIG_TEMPORAL_DENOISING=yes
+CONFIG_SIZE_LIMIT=yes

@@ -73,15 +73,15 @@ CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o: CMakeFiles/rdjpgcom.dir/flags.make
 CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdjpgcom.c
 CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o: CMakeFiles/rdjpgcom.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/arm64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building C object CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o -MF CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o.d -o CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdjpgcom.c
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o -MF CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o.d -o CMakeFiles/rdjpgcom.dir/rdjpgcom.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdjpgcom.c
 
 CMakeFiles/rdjpgcom.dir/rdjpgcom.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/rdjpgcom.dir/rdjpgcom.c.i"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdjpgcom.c > CMakeFiles/rdjpgcom.dir/rdjpgcom.c.i
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdjpgcom.c > CMakeFiles/rdjpgcom.dir/rdjpgcom.c.i
 
 CMakeFiles/rdjpgcom.dir/rdjpgcom.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/rdjpgcom.dir/rdjpgcom.c.s"
-	/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdjpgcom.c -o CMakeFiles/rdjpgcom.dir/rdjpgcom.c.s
+	/Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/rdjpgcom.c -o CMakeFiles/rdjpgcom.dir/rdjpgcom.c.s
 
 # Object files for target rdjpgcom
 rdjpgcom_OBJECTS = \

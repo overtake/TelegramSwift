@@ -89,7 +89,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = arm-apple-darwin21.1.0
+build_triplet = arm-apple-darwin22.1.0
 host_triplet = x86_64-apple-darwin
 am__append_1 = $(SILK_SOURCES_FIXED)
 am__append_2 = $(SILK_SOURCES_SSE4_1) $(SILK_SOURCES_FIXED_SSE4_1)
@@ -1092,9 +1092,9 @@ AWK = awk
 CC = gcc
 CCAS = gcc
 CCASDEPMODE = depmode=gcc3
-CCASFLAGS = -arch x86_64 -pipe -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Os -DNDEBUG -mmacosx-version-min=10.11 
+CCASFLAGS = -arch x86_64 -pipe -isysroot /Applications/Xcode_14_0_1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Os -DNDEBUG -mmacosx-version-min=10.11 
 CCDEPMODE = depmode=gcc3
-CFLAGS = -arch x86_64 -pipe -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Os -DNDEBUG -mmacosx-version-min=10.11  -fvisibility=hidden -fstack-protector-strong -D_FORTIFY_SOURCE=2 -W -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes
+CFLAGS = -arch x86_64 -pipe -isysroot /Applications/Xcode_14_0_1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Os -DNDEBUG -mmacosx-version-min=10.11  -fvisibility=hidden -fstack-protector-strong -D_FORTIFY_SOURCE=2 -W -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes
 CPP = gcc -E
 CPPFLAGS = 
 CYGPATH_W = echo
@@ -1119,7 +1119,7 @@ INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
-LD = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
+LD = /Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
 LDFLAGS = 
 LIBM = 
 LIBOBJS = 
@@ -1185,10 +1185,10 @@ am__quote =
 am__tar = $${TAR-tar} chof - "$$tardir"
 am__untar = $${TAR-tar} xf -
 bindir = ${exec_prefix}/bin
-build = arm-apple-darwin21.1.0
-build_alias = arm-apple-darwin21.1.0
+build = arm-apple-darwin22.1.0
+build_alias = arm-apple-darwin22.1.0
 build_cpu = arm
-build_os = darwin21.1.0
+build_os = darwin22.1.0
 build_vendor = apple
 builddir = .
 datadir = ${datarootdir}

@@ -201,7 +201,7 @@ CMAKE_OBJDUMP:FILEPATH=/Applications/Xcode_14_0_1.app/Contents/Developer/Toolcha
 CMAKE_OSX_ARCHITECTURES:STRING=arm64
 
 //Minimum OS X deployment version
-CMAKE_OSX_DEPLOYMENT_TARGET:STRING=10.13
+CMAKE_OSX_DEPLOYMENT_TARGET:STRING=10.12
 
 //The product will be built against the headers and libraries located
 // inside the indicated SDK.

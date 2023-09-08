@@ -1,6 +1,6 @@
-set(CMAKE_HOST_SYSTEM "Darwin-21.1.0")
+set(CMAKE_HOST_SYSTEM "Darwin-22.1.0")
 set(CMAKE_HOST_SYSTEM_NAME "Darwin")
-set(CMAKE_HOST_SYSTEM_VERSION "21.1.0")
+set(CMAKE_HOST_SYSTEM_VERSION "22.1.0")
 set(CMAKE_HOST_SYSTEM_PROCESSOR "arm64")
 
 include("/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/arm64/toolchain.cmake")

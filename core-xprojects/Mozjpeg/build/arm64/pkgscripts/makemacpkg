@@ -51,7 +51,7 @@ UNIVERSAL=0
 
 PKGNAME=mozjpeg
 VERSION=4.0.0
-BUILD=20220117
+BUILD=20230908
 SRCDIR=/Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg
 BUILDDIR32=/Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/osxx86
 BUILDDIRARMV7=/Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/iosarmv7

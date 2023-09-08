@@ -7,7 +7,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(TG_OWT_SPECIAL_TARGET "" CACHE STRING "Use special platform target, like 'macstore' for Mac App Store.")
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.13 CACHE STRING "Minimum OS X deployment version" FORCE)
+set(CMAKE_OSX_DEPLOYMENT_TARGET 10.12 CACHE STRING "Minimum OS X deployment version" FORCE)
 
 if (NOT TG_OWT_SPECIAL_TARGET STREQUAL "")
     set(TG_OWT_PACKAGED_BUILD 0)
@@ -139,7 +139,6 @@ set_target_properties(tg_owt PROPERTIES SOVERSION 0 VERSION 0.0.0)
 
 target_link_libraries(tg_owt
 PRIVATE
-    tg_owt::libcrc32c
     tg_owt::libpffft
     tg_owt::librnnoise
     tg_owt::libsrtp
@@ -177,6 +176,7 @@ link_opus(tg_owt)
 link_libabsl(tg_owt)
 link_libopenh264(tg_owt)
 link_libvpx(tg_owt)
+link_crc32c(tg_owt)
 
 if (TG_OWT_BUILD_AUDIO_BACKENDS AND (UNIX AND NOT APPLE))
     link_libalsa(tg_owt)
@@ -2443,12 +2443,22 @@ if (NOT TG_OWT_USE_PIPEWIRE)
         modules/desktop_capture/linux/wayland/mouse_cursor_monitor_pipewire.cc
         modules/desktop_capture/linux/wayland/mouse_cursor_monitor_pipewire.h
         modules/desktop_capture/linux/wayland/pipewire_stub_header.fragment
+        modules/desktop_capture/linux/wayland/portal_request_response.h
+        modules/desktop_capture/linux/wayland/restore_token_manager.cc
+        modules/desktop_capture/linux/wayland/restore_token_manager.h
         modules/desktop_capture/linux/wayland/scoped_glib.cc
         modules/desktop_capture/linux/wayland/scoped_glib.h
+        modules/desktop_capture/linux/wayland/screen_capture_portal_interface.cc
+        modules/desktop_capture/linux/wayland/screen_capture_portal_interface.h
         modules/desktop_capture/linux/wayland/screencast_portal.cc
         modules/desktop_capture/linux/wayland/screencast_portal.h
+        modules/desktop_capture/linux/wayland/screencast_stream_utils.cc
+        modules/desktop_capture/linux/wayland/screencast_stream_utils.h
         modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
         modules/desktop_capture/linux/wayland/shared_screencast_stream.h
+        modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.cc
+        modules/desktop_capture/linux/wayland/xdg_desktop_portal_utils.h
+        modules/desktop_capture/linux/wayland/xdg_session_details.h
     )
 endif()
 
@@ -2627,7 +2637,6 @@ endif()
 
 set(export_targets
     ${tg_owt_export}
-    libcrc32c
     libpffft
     librnnoise
     libsrtp
@@ -2644,6 +2653,9 @@ if (NOT absl_FOUND)
 endif()
 if (NOT LIBOPENH264_FOUND)
     list(APPEND export_targets libopenh264)
+endif()
+if (NOT Crc32c_FOUND)
+    list(APPEND export_targets libcrc32c)
 endif()
 
 export(

@@ -348,7 +348,7 @@
 @set have-struct-sockaddr-storage yes
 @c @set have-struct-stat-st-mtim-tv-nsec no
 @c @set have-struct-v4l2-frmivalenum-discrete no
-@set have-makeinfo yes
+@c @set have-makeinfo no
 @c @set have-makeinfo-html no
 @c @set have-opencl-d3d11 no
 @c @set have-opencl-drm-arm no
@@ -363,7 +363,7 @@
 @c @set config-htmlpages no
 @set config-manpages yes
 @set config-podpages yes
-@set config-txtpages yes
+@c @set config-txtpages no
 @set config-avio-dir-cmd-example yes
 @set config-avio-reading-example yes
 @set config-decode-audio-example yes
