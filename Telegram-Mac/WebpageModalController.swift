@@ -112,7 +112,7 @@ private final class HeaderView : View {
         self.rightCallback = contextMenu
         
         let color: NSColor = self.backgroundColor.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
-        
+                
         titleView.update(TextViewLayout(.initialize(string: title, color: color, font: .medium(.title)), maximumNumberOfLines: 1))
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
@@ -130,12 +130,14 @@ private final class HeaderView : View {
             case .dismiss:
                 let btn = ImageButton()
                 btn.autohighlight = false
+                btn.animates = false
                 btn.set(image: NSImage(named: "Icon_ChatSearchCancel")!.precomposed(color), for: .Normal)
                 btn.sizeToFit()
                 button = btn
             case .back:
                 let btn = TitleButton()
                 btn.autohighlight = false
+                btn.animates = false
                 btn.set(image: NSImage(named: "Icon_ChatNavigationBack")!.precomposed(color), for: .Normal)
                 btn.set(text: strings().navigationBack, for: .Normal)
                 btn.set(font: .normal(.title), for: .Normal)

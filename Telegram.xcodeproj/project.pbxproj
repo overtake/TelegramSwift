@@ -172,6 +172,7 @@
 		274952872AA48A7200499498 /* menu_lighting.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274952862AA48A7200499498 /* menu_lighting.tgs */; };
 		274952892AA49E3D00499498 /* ChannelBoostStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274952882AA49E3D00499498 /* ChannelBoostStatsController.swift */; };
 		2749528B2AA4A2ED00499498 /* ChannelStatsSegmentController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2749528A2AA4A2ED00499498 /* ChannelStatsSegmentController.swift */; };
+		274952992AAA19CF00499498 /* ModalAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274952982AAA19CF00499498 /* ModalAlertController.swift */; };
 		274B831826F0C0A700E6E474 /* EmojiScreenEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */; };
 		274B9E32272C2253009993C7 /* ChatCalendarModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */; };
 		274B9E40273008EB009993C7 /* sent.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 274B9E3F273008EB009993C7 /* sent.mp3 */; };
@@ -1647,6 +1648,7 @@
 		274952862AA48A7200499498 /* menu_lighting.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_lighting.tgs; sourceTree = "<group>"; };
 		274952882AA49E3D00499498 /* ChannelBoostStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBoostStatsController.swift; sourceTree = "<group>"; };
 		2749528A2AA4A2ED00499498 /* ChannelStatsSegmentController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelStatsSegmentController.swift; sourceTree = "<group>"; };
+		274952982AAA19CF00499498 /* ModalAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalAlertController.swift; sourceTree = "<group>"; };
 		274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInvitation.swift; sourceTree = "<group>"; };
 		274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiScreenEffect.swift; sourceTree = "<group>"; };
 		274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarModalController.swift; sourceTree = "<group>"; };
@@ -4248,6 +4250,7 @@
 			children = (
 				C205DB9C1EE88762003711DF /* Views.swift */,
 				27C4089325B081B500372302 /* FireTimerControl.swift */,
+				274952982AAA19CF00499498 /* ModalAlertController.swift */,
 			);
 			name = "ui-controls";
 			sourceTree = "<group>";
@@ -7188,6 +7191,7 @@
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
 				C29340F11F506C310074991E /* EmptyGroupstickerSearchRowItem.swift in Sources */,
 				D06C6950253887F600DD9005 /* SlotMachineValue.swift in Sources */,
+				274952992AAA19CF00499498 /* ModalAlertController.swift in Sources */,
 				D0906CFC254BFE1D000E6961 /* ModalPreviews.swift in Sources */,
 				C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */,
 				C225524F1F7C03B50007944D /* VideoRecorderPipeline.swift in Sources */,

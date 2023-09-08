@@ -28,6 +28,7 @@ public class InputDataModalController : ModalViewController {
     }
     
     
+    
     var getHeaderColor: (()->NSColor)? = nil
     public override var headerBackground: NSColor {
         return getHeaderColor?() ?? super.headerBackground
