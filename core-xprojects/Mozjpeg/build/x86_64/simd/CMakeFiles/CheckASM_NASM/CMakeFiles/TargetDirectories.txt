@@ -1,2 +1,0 @@
-/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/simd/CMakeFiles/CheckASM_NASM/CMakeFiles/edit_cache.dir
-/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/simd/CMakeFiles/CheckASM_NASM/CMakeFiles/rebuild_cache.dir

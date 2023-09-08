@@ -1,8 +1,0 @@
-include_rules = [
-  "+system_wrappers",
-]
-specific_include_rules = {
-  ".*rate_control_settings.*": [
-    "+video/config",
-  ],
-}
