@@ -1,6 +1,0 @@
-subdir('common')
-subdir('decoder')
-subdir('encoder')
-subdir('processing')
-subdir('console')
-subdir('api')
