@@ -299,7 +299,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 }
             }
             |> deliverOnMainQueue).start(next: { [weak self] views, peers, globalNotificationSettings, allEntityFiles in
-                guard let self else {
+                guard let `self` = self else {
                     return
                 }
                 guard let peerView = views.views[PostboxViewKey.basicPeer(peerId)] as? BasicPeerView else {
@@ -423,7 +423,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 let currentFocusedId = self.storedFocusedId
                 
                 var focusedIndex: Int?
-                if let currentFocusedId {
+                if let currentFocusedId = currentFocusedId {
                     focusedIndex = mappedItems.firstIndex(where: { $0.id == currentFocusedId })
                     if focusedIndex == nil {
                         if let currentMappedItems = self.currentMappedItems {
@@ -465,7 +465,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 
                 self.currentMappedItems = mappedItems
                 
-                if let focusedIndex {
+                if let focusedIndex = focusedIndex {
                     self.storedFocusedId = mappedItems[focusedIndex].id
                     
                     var previousItemId: Int32?
@@ -481,7 +481,7 @@ final class StoryContentContextImpl: StoryContentContext {
                     let mappedFocusedIndex = peerStoryItemsView.items.firstIndex(where: { $0.id == mappedItems[focusedIndex].id })
                     
                     var loadKeys: [StoryKey] = []
-                    if let mappedFocusedIndex {
+                    if let mappedFocusedIndex = mappedFocusedIndex {
                         for index in (mappedFocusedIndex - 2) ... (mappedFocusedIndex + 2) {
                             if index >= 0 && index < peerStoryItemsView.items.count {
                                 if let item = peerStoryItemsView.items[index].value.get(Stories.StoredItem.self), case .placeholder = item {
@@ -576,26 +576,26 @@ final class StoryContentContextImpl: StoryContentContext {
             
             self.centralDisposable = (centralPeerContext.updated.get()
             |> deliverOnMainQueue).start(next: { [weak self] _ in
-                guard let self else {
+                guard let `self` = self else {
                     return
                 }
                 self.updated.set(.single(Void()))
             })
             
-            if let previousPeerContext {
+            if let previousPeerContext = previousPeerContext {
                 self.previousDisposable = (previousPeerContext.updated.get()
                 |> deliverOnMainQueue).start(next: { [weak self] _ in
-                    guard let self else {
+                    guard let `self` = self else {
                         return
                     }
                     self.updated.set(.single(Void()))
                 })
             }
             
-            if let nextPeerContext {
+            if let nextPeerContext = nextPeerContext {
                 self.nextDisposable = (nextPeerContext.updated.get()
                 |> deliverOnMainQueue).start(next: { [weak self] _ in
-                    guard let self else {
+                    guard let `self` = self else {
                         return
                     }
                     self.updated.set(.single(Void()))
@@ -667,13 +667,13 @@ final class StoryContentContextImpl: StoryContentContext {
     ) {
         self.context = context
         self.isHidden = isHidden
-        if let focusedPeerId {
+        if let focusedPeerId = focusedPeerId {
             self.focusedItem = (focusedPeerId, nil)
         }
         self.fixedSubscriptionOrder = fixedOrder
         
         if singlePeer {
-            guard let focusedPeerId else {
+            guard let focusedPeerId = focusedPeerId else {
                 assertionFailure()
                 return
             }
@@ -685,7 +685,7 @@ final class StoryContentContextImpl: StoryContentContext {
                 singlePeerListContext.state
             )
             |> deliverOnMainQueue).start(next: { [weak self] peer, state in
-                guard let self, let peer else {
+                guard let `self` = self, let peer = peer else {
                     return
                 }
                 
@@ -734,7 +734,7 @@ final class StoryContentContextImpl: StoryContentContext {
                             }
                         }
                         
-                        if let centralIndex {
+                        if let centralIndex = centralIndex {
                             if storySubscriptions.items[centralIndex].hasUnseen {
                                 startedWithUnseenValue = true
                             }
@@ -779,7 +779,7 @@ final class StoryContentContextImpl: StoryContentContext {
         } else {
             self.storySubscriptionsDisposable = (context.engine.messages.storySubscriptions(isHidden: isHidden, tempKeepNewlyArchived: true)
             |> deliverOnMainQueue).start(next: { [weak self] storySubscriptions in
-                guard let self else {
+                guard let `self` = self else {
                     return
                 }
                 
@@ -812,7 +812,7 @@ final class StoryContentContextImpl: StoryContentContext {
                             }
                         }
                         
-                        if let centralIndex {
+                        if let centralIndex = centralIndex {
                             if storySubscriptions.items[centralIndex].hasUnseen {
                                 startedWithUnseenValue = true
                             }
@@ -898,7 +898,7 @@ final class StoryContentContextImpl: StoryContentContext {
             
             if self.pendingState == nil {
                 let loadIds: ([StoryKey]) -> Void = { [weak self] keys in
-                    guard let self else {
+                    guard let `self` = self else {
                         return
                     }
                     let missingKeys = Set(keys).subtracting(self.requestedStoryKeys)
@@ -929,7 +929,7 @@ final class StoryContentContextImpl: StoryContentContext {
                     }
                 }
                 
-                if let centralIndex {
+                if let centralIndex = centralIndex {
                     let centralPeerContext: PeerContext
                     if let currentState = self.currentState, let existingContext = currentState.findPeerContext(id: subscriptionItems[centralIndex].peer.id) {
                         centralPeerContext = existingContext
@@ -963,7 +963,7 @@ final class StoryContentContextImpl: StoryContentContext {
                     self.pendingState = pendingState
                     self.pendingStateReadyDisposable = (pendingState.updated.get()
                     |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                        guard let self, let pendingState, self.pendingState === pendingState, pendingState.isReady else {
+                        guard let `self` = self, let pendingState = pendingState, self.pendingState === pendingState, pendingState.isReady else {
                             return
                         }
                         self.pendingState = nil
@@ -977,7 +977,7 @@ final class StoryContentContextImpl: StoryContentContext {
                         self.currentStateUpdatedDisposable?.dispose()
                         self.currentStateUpdatedDisposable = (pendingState.updated.get()
                         |> deliverOnMainQueue).start(next: { [weak self, weak pendingState] _ in
-                            guard let self, let pendingState, self.currentState === pendingState else {
+                            guard let `self` = self, let pendingState = pendingState, self.currentState === pendingState else {
                                 return
                             }
                             self.updateState()
@@ -1187,7 +1187,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 let item = (views.views[PostboxViewKey.story(id: storyId)] as? StoryView)?.item?.get(Stories.StoredItem.self)
             
                 return context.account.postbox.transaction { transaction -> (Stories.StoredItem?, [PeerId: Peer], [MediaId: TelegramMediaFile]) in
-                    guard let item else {
+                    guard let item = item else {
                         return (nil, [:], [:])
                     }
                     var peers: [PeerId: Peer] = [:]
@@ -1228,14 +1228,14 @@ final class SingleStoryContentContextImpl: StoryContentContext {
             }
         )
         |> deliverOnMainQueue).start(next: { [weak self] data, itemAndPeers in
-            guard let self else {
+            guard let `self` = self else {
                 return
             }
             
             let (peer, presence, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
             let (item, peers, allEntityFiles) = itemAndPeers
             
-            guard let peer else {
+            guard let peer = peer else {
                 return
             }
 
@@ -1256,7 +1256,7 @@ final class SingleStoryContentContextImpl: StoryContentContext {
                 }
             }
             
-            if let item, case let .item(itemValue) = item, let media = itemValue.media {
+            if let item = item, case let .item(itemValue) = item, let media = itemValue.media {
                 let mappedItem = EngineStoryItem(
                     id: itemValue.id,
                     timestamp: itemValue.timestamp,
@@ -1393,13 +1393,13 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
             self.focusedIdUpdated.get()
         )
         |> deliverOnMainQueue).start(next: { [weak self] data, state, _ in
-            guard let self else {
+            guard let `self` = self else {
                 return
             }
             
             let (peer, presence, areVoiceMessagesAvailable, notificationSettings, globalNotificationSettings) = data
             
-            guard let peer else {
+            guard let peer = peer else {
                 return
             }
             
@@ -1531,7 +1531,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 var resultResources: [EngineMedia.Id: StoryPreloadInfo] = [:]
                 var pollItems: [StoryKey] = []
                 
-                if let focusedIndex, let slice = stateValue.slice {
+                if let focusedIndex = focusedIndex, let slice = stateValue.slice {
                     var possibleItems: [(EnginePeer, EngineStoryItem)] = []
                     if peer.id == self.context.account.peerId {
                         pollItems.append(StoryKey(peerId: peer.id, id: slice.item.storyItem.id))
@@ -1639,7 +1639,7 @@ final class PeerStoryListContentContextImpl: StoryContentContext {
                 }
             }
             
-            if let indexDifference, let listState = self.listState, let focusedId = self.focusedId {
+            if let indexDifference = indexDifference, let listState = self.listState, let focusedId = self.focusedId {
                 if let index = listState.items.firstIndex(where: { $0.id == focusedId }) {
                     var nextIndex = index + indexDifference
                     if nextIndex < 0 {
@@ -1678,7 +1678,7 @@ func preloadStoryMedia(context: AccountContext, peer: PeerReference, storyId: In
         var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
         for attribute in file.attributes {
             if case let .Video(_, _, _, preloadSize) = attribute {
-                if let preloadSize {
+                if let preloadSize = preloadSize {
                     fetchRange = (0 ..< Int64(preloadSize), .default)
                 }
                 break
@@ -1825,7 +1825,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
         TelegramEngine.EngineData.Item.Peer.Peer(id: peerId)
     )
     |> mapToSignal { peerValue -> Signal<Never, NoError> in
-        guard let peerValue else {
+        guard let peerValue = peerValue else {
             return .complete()
         }
         guard let peer = PeerReference(peerValue._asPeer()) else {
@@ -1848,7 +1848,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
             break
         }
         
-        if let fetchPriorityResourceId {
+        if let fetchPriorityResourceId = fetchPriorityResourceId {
             fetchPriorityDisposable = context.engine.resources.pushPriorityDownload(resourceId: fetchPriorityResourceId, priority: 2)
         }
         
@@ -1874,7 +1874,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
             var fetchRange: (Range<Int64>, MediaBoxFetchPriority)?
             for attribute in file.attributes {
                 if case let .Video(_, _, _, preloadSize) = attribute {
-                    if let preloadSize {
+                    if let preloadSize = preloadSize {
                         fetchRange = (0 ..< Int64(preloadSize), .default)
                     }
                     break
@@ -1884,7 +1884,7 @@ func waitUntilStoryMediaPreloaded(context: AccountContext, peerId: EnginePeer.Id
             statusSignals.append(
                 context.account.postbox.mediaBox.resourceRangesStatus(file.resource)
                 |> filter { ranges in
-                    if let fetchRange {
+                    if let fetchRange = fetchRange {
                         return ranges.isSuperset(of: RangeSet(fetchRange.0))
                     } else {
                         return true
