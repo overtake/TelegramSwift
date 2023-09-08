@@ -888,12 +888,14 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                     showModal(with: WebpageModalController(context: context, url: url, title: bot.shortName, requestData: .simple(url: url, bot: bot.peer._asPeer(), buttonText: "", source: .settings), chatInteraction: nil, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
                 })
             }
-            if true {
-                let third = parseMarkdownIntoAttributedString(strings().webBotAccountDisclaimerThird, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, contents)
-                }))
+            if bot.flags.contains(.showInSettingsDisclaimer) {
+                var options: [ModalAlertData.Option] = []
+                options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
                 
-                modernConfirm(for: context.window, header: strings().webBotAccountDisclaimerTitle, information: strings().webBotAccountDisclaimerText, okTitle: strings().webBotAccountDisclaimerOK, thridTitle: third.string, thirdAttributed: third, mustChecked: true, successHandler: { result in
+                let desc: ModalAlertData.Description? = .init(string: strings().webBotAccountDesclaimerDesc(bot.shortName), onlyWhenEnabled: true)
+                
+                let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: desc, ok: strings().webBotAccountDisclaimerOK, options: options)
+                showModalAlert(for: context.window, data: data, completion: { result in
                     open()
                 })
             } else {

@@ -14191,11 +14191,15 @@ public final class L10n {
   public static var webAuthorizationsLoggedInDescrpiption: String  { return L10n.tr("Localizable", "WebAuthorizations.LoggedIn.Descrpiption") }
   /// You can log in on websites that support signing in with Telegram.
   public static var webAuthorizationsLogoutAllDescription: String  { return L10n.tr("Localizable", "WebAuthorizations.LogoutAll.Description") }
+  /// %@ shortcuts will be added in your attachment menu and Settings.
+  public static func webBotAccountDesclaimerDesc(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebBot.Account.Desclaimer.Desc", p1)
+  }
   /// Continue
   public static var webBotAccountDisclaimerOK: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.OK") }
   /// You are about to use a mini app operated by an independent party not affiliated with Telegram. You must agree to the Terms of Use of mini apps to continue.
   public static var webBotAccountDisclaimerText: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Text") }
-  /// I agree to the Terms of Use
+  /// I agree to the [Terms of Use](https://telegram.org/tos/mini-apps)
   public static var webBotAccountDisclaimerThird: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Third") }
   /// Warning
   public static var webBotAccountDisclaimerTitle: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Title") }

@@ -154,13 +154,13 @@ private final class BoostRowItemView : TableRowView {
             
             self.state = state
             
-            let normalCountLayout = TextViewLayout(.initialize(string: "Level \(state.currentLevel)", color: theme.colors.text, font: .medium(13)))
+            let normalCountLayout = TextViewLayout(.initialize(string: "Level \(state.currentLevel)", color: .white, font: .medium(13)))
             normalCountLayout.measure(width: .greatestFiniteMagnitude)
 
             currentLevel.update(normalCountLayout)
 
             
-            let premiumCountLayout = TextViewLayout(.initialize(string: "Level \(state.currentLevel + 1)", color: .white, font: .medium(13)))
+            let premiumCountLayout = TextViewLayout(.initialize(string: "Level \(state.currentLevel + 1)", color: theme.colors.listGrayText, font: .medium(13)))
             premiumCountLayout.measure(width: .greatestFiniteMagnitude)
 
             nextLevel.update(premiumCountLayout)

@@ -540,7 +540,9 @@ public class Modal: NSObject {
             
             window.set(escape: { [weak self] _ -> KeyHandlerResult in
                 if self?.controller?.escapeKeyAction() == .rejected {
-                    self?.controller?.close()
+                    if self?.controller?.closable == true {
+                        self?.controller?.close()
+                    }
                 }
                 return .invoked
             }, with: self, priority: controller.responderPriority)
