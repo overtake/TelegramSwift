@@ -14,6 +14,7 @@ import SwiftSignalKit
 import Postbox
 import WebKit
 import HackUtils
+import ColorPalette
 
 //
 //private class SelectChatRequired : SelectPeersBehavior {
@@ -116,8 +117,10 @@ private final class HeaderView : View {
         titleView.update(TextViewLayout(.initialize(string: title, color: color, font: .medium(.title)), maximumNumberOfLines: 1))
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
+        
+        let secondColor = self.backgroundColor.lightness > 0.8 ? darkPalette.grayText : dayClassicPalette.grayText
                 
-        subtitleView.update(TextViewLayout(.initialize(string: subtitle, color: color, font: .normal(.text)), maximumNumberOfLines: 1))
+        subtitleView.update(TextViewLayout(.initialize(string: subtitle, color: secondColor, font: .normal(.text)), maximumNumberOfLines: 1))
         
         rightButton.set(image: NSImage(named: "Icon_ChatActionsActive")!.precomposed(color), for: .Normal)
         rightButton.sizeToFit()
