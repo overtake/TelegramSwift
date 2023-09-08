@@ -12,7 +12,11 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#if defined(__OpenBSD__)
+#include <sys/videoio.h>
+#else
 #include <linux/videodev2.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>

@@ -351,15 +351,15 @@ simd/CMakeFiles/simd.dir/x86_64/jsimd.c.o: simd/CMakeFiles/simd.dir/flags.make
 simd/CMakeFiles/simd.dir/x86_64/jsimd.c.o: /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/simd/x86_64/jsimd.c
 simd/CMakeFiles/simd.dir/x86_64/jsimd.c.o: simd/CMakeFiles/simd.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building C object simd/CMakeFiles/simd.dir/x86_64/jsimd.c.o"
-	cd /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/simd && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT simd/CMakeFiles/simd.dir/x86_64/jsimd.c.o -MF CMakeFiles/simd.dir/x86_64/jsimd.c.o.d -o CMakeFiles/simd.dir/x86_64/jsimd.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/simd/x86_64/jsimd.c
+	cd /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/simd && /Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT simd/CMakeFiles/simd.dir/x86_64/jsimd.c.o -MF CMakeFiles/simd.dir/x86_64/jsimd.c.o.d -o CMakeFiles/simd.dir/x86_64/jsimd.c.o -c /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/simd/x86_64/jsimd.c
 
 simd/CMakeFiles/simd.dir/x86_64/jsimd.c.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/simd.dir/x86_64/jsimd.c.i"
-	cd /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/simd && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/simd/x86_64/jsimd.c > CMakeFiles/simd.dir/x86_64/jsimd.c.i
+	cd /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/simd && /Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/simd/x86_64/jsimd.c > CMakeFiles/simd.dir/x86_64/jsimd.c.i
 
 simd/CMakeFiles/simd.dir/x86_64/jsimd.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/simd.dir/x86_64/jsimd.c.s"
-	cd /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/simd && /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/simd/x86_64/jsimd.c -o CMakeFiles/simd.dir/x86_64/jsimd.c.s
+	cd /Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xprojects/Mozjpeg/build/x86_64/simd && /Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /Users/mikerenoir/projects/Telegram-macOS/Telegram/submodules/telegram-ios/third-party/mozjpeg/mozjpeg/simd/x86_64/jsimd.c -o CMakeFiles/simd.dir/x86_64/jsimd.c.s
 
 simd: simd/CMakeFiles/simd.dir/x86_64/jsimdcpu.asm.o
 simd: simd/CMakeFiles/simd.dir/x86_64/jfdctflt-sse.asm.o

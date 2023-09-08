@@ -9,4 +9,4 @@ af2a1f579bebe603eaeb403232ed9880  ./include/vpx/vp8dx.h
 a5019e022aed4d213c83c202ae59e2b7  ./include/vpx/vpx_decoder.h
 2bdab50e78ce99bd4a9e7f56f0b3936a  ./include/vpx/vpx_frame_buffer.h
 58e1e7261ee78ab8878c8ec7ee51ffc3  ./lib/pkgconfig/vpx.pc
-617ff9fd5e6cb56b05a555051b7185a5  ./lib/libvpx.a
+a27edc29d72592eabd807008a1c78649  ./lib/libvpx.a

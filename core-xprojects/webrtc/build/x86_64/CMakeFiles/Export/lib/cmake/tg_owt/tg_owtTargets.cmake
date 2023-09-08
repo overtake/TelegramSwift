@@ -16,7 +16,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_targetsDefined)
 set(_targetsNotDefined)
 set(_expectedTargets)
-foreach(_expectedTarget tg_owt::tg_owt tg_owt::tg_owt_avx2 tg_owt::tg_owt_sse2 tg_owt::libcrc32c tg_owt::libpffft tg_owt::librnnoise tg_owt::libsrtp tg_owt::libwebrtcbuild tg_owt::libyuv tg_owt::libsdkmacos tg_owt::libabsl tg_owt::libopenh264)
+foreach(_expectedTarget tg_owt::tg_owt tg_owt::tg_owt_avx2 tg_owt::tg_owt_sse2 tg_owt::libpffft tg_owt::librnnoise tg_owt::libsrtp tg_owt::libwebrtcbuild tg_owt::libyuv tg_owt::libsdkmacos tg_owt::libabsl tg_owt::libopenh264 tg_owt::libcrc32c)
   list(APPEND _expectedTargets ${_expectedTarget})
   if(NOT TARGET ${_expectedTarget})
     list(APPEND _targetsNotDefined ${_expectedTarget})
@@ -56,7 +56,7 @@ add_library(tg_owt::tg_owt STATIC IMPORTED)
 set_target_properties(tg_owt::tg_owt PROPERTIES
   INTERFACE_COMPILE_FEATURES "cxx_std_20"
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include/tg_owt"
-  INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:tg_owt::libcrc32c>;\$<LINK_ONLY:tg_owt::libpffft>;\$<LINK_ONLY:tg_owt::librnnoise>;\$<LINK_ONLY:tg_owt::libsrtp>;\$<LINK_ONLY:tg_owt::libyuv>;\$<LINK_ONLY:tg_owt::tg_owt_avx2>;\$<LINK_ONLY:tg_owt::tg_owt_sse2>;tg_owt::libsdkmacos;\$<LINK_ONLY:tg_owt::libabsl>;\$<LINK_ONLY:tg_owt::libopenh264>;tg_owt::libwebrtcbuild"
+  INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:tg_owt::libpffft>;\$<LINK_ONLY:tg_owt::librnnoise>;\$<LINK_ONLY:tg_owt::libsrtp>;\$<LINK_ONLY:tg_owt::libyuv>;\$<LINK_ONLY:tg_owt::tg_owt_avx2>;\$<LINK_ONLY:tg_owt::tg_owt_sse2>;tg_owt::libsdkmacos;\$<LINK_ONLY:tg_owt::libabsl>;\$<LINK_ONLY:tg_owt::libopenh264>;\$<LINK_ONLY:tg_owt::libcrc32c>;tg_owt::libwebrtcbuild"
 )
 
 # Create imported target tg_owt::tg_owt_avx2
@@ -75,13 +75,6 @@ set_target_properties(tg_owt::tg_owt_sse2 PROPERTIES
   INTERFACE_COMPILE_FEATURES "cxx_std_20"
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include/tg_owt"
   INTERFACE_LINK_LIBRARIES "tg_owt::libwebrtcbuild;\$<LINK_ONLY:tg_owt::libabsl>"
-)
-
-# Create imported target tg_owt::libcrc32c
-add_library(tg_owt::libcrc32c INTERFACE IMPORTED)
-
-set_target_properties(tg_owt::libcrc32c PROPERTIES
-  INTERFACE_COMPILE_FEATURES "cxx_std_20"
 )
 
 # Create imported target tg_owt::libpffft
@@ -146,6 +139,14 @@ add_library(tg_owt::libopenh264 INTERFACE IMPORTED)
 
 set_target_properties(tg_owt::libopenh264 PROPERTIES
   INTERFACE_COMPILE_FEATURES "cxx_std_20"
+)
+
+# Create imported target tg_owt::libcrc32c
+add_library(tg_owt::libcrc32c INTERFACE IMPORTED)
+
+set_target_properties(tg_owt::libcrc32c PROPERTIES
+  INTERFACE_COMPILE_FEATURES "cxx_std_20"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include/tg_owt/third_party/crc32c/src/include"
 )
 
 if(CMAKE_VERSION VERSION_LESS 3.0.0)

@@ -18,7 +18,11 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 // v4l includes
+#if defined(__OpenBSD__)
+#include <sys/videoio.h>
+#else
 #include <linux/videodev2.h>
+#endif
 
 #include <vector>
 

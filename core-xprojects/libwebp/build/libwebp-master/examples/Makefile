@@ -87,7 +87,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-build_triplet = aarch64-apple-darwin21.1.0
+build_triplet = aarch64-apple-darwin22.1.0
 host_triplet = x86_64-apple-darwin
 bin_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3) \
 	$(am__EXEEXT_4) $(am__EXEEXT_5) $(am__EXEEXT_6)
@@ -277,7 +277,7 @@ AUTOMAKE = ${SHELL} '/Users/mikerenoir/projects/Telegram-macOS/Telegram/core-xpr
 AWK = awk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -arch x86_64 -pipe -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Os -DNDEBUG -mmacosx-version-min=10.11  -D_THREAD_SAFE -pthread
+CFLAGS = -arch x86_64 -pipe -isysroot /Applications/Xcode_14_0_1.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -Os -DNDEBUG -mmacosx-version-min=10.11  -D_THREAD_SAFE -pthread
 CPPFLAGS = 
 CSCOPE = cscope
 CTAGS = ctags
@@ -306,7 +306,7 @@ INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 JPEG_INCLUDES = 
 JPEG_LIBS = 
-LD = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
+LD = /Applications/Xcode_14_0_1.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld
 LDFLAGS = 
 LIBOBJS = 
 LIBPNG_CONFIG = 
@@ -367,10 +367,10 @@ am__tar = $${TAR-tar} chof - "$$tardir"
 am__untar = $${TAR-tar} xf -
 ax_pthread_config = 
 bindir = ${exec_prefix}/bin
-build = aarch64-apple-darwin21.1.0
-build_alias = aarch64-apple-darwin21.1.0
+build = aarch64-apple-darwin22.1.0
+build_alias = aarch64-apple-darwin22.1.0
 build_cpu = aarch64
-build_os = darwin21.1.0
+build_os = darwin22.1.0
 build_vendor = apple
 builddir = .
 datadir = ${datarootdir}
