@@ -54,7 +54,16 @@ private final class RowItem : TableRowItem {
         self.state = state
         self.toggle = toggle
         self.action = action
-        self.info = .init(.initialize(string: state.data.info, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
+        
+        let info = parseMarkdownIntoAttributedString(state.data.info, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accent), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
+        })).mutableCopy() as! NSMutableAttributedString
+        
+        info.detectBoldColorInString(with: .medium(.text))
+        
+        self.info = .init(info, alignment: .center)
+        
+        self.info.interactions = globalLinkExecutor
         
         if let desc = state.data.description {
             let text = parseMarkdownIntoAttributedString(desc.string, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accent), linkAttribute: { contents in
@@ -361,13 +370,13 @@ struct ModalAlertData : Equatable {
     }
     var title: String
     var info: String
-    var description: Description?
-    var ok: String
+    var description: Description? = nil
+    var ok: String = strings().modalOK
     var options:[Option]
 }
 
 struct ModalAlertResult : Equatable {
-    var selected: [Bool] = []
+    var selected: [Int : Bool] = [:]
 }
 
 private func ModalAlertController(data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}) -> InputDataModalController {
@@ -386,7 +395,11 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
 
     let arguments = Arguments(action: {
         let state = stateValue.with { $0 }
-        completion(.init(selected: state.data.options.map { $0.isSelected }))
+        var result:[Int : Bool] = [:]
+        for (i, option) in state.data.options.enumerated() {
+            result[i] = option.isSelected
+        }
+        completion(.init(selected: result))
         close?()
     }, toggle: { index in
         updateState { current in
@@ -406,7 +419,7 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         actionsDisposable.dispose()
     }
     
-    let modalController = InputDataModalController(controller, modalInteractions: nil)
+    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(300, 300))
     
     modalController.getModalTheme = {
         return .init(text: theme.colors.text, grayText: theme.colors.grayText, background: .clear, border: .clear, accent: theme.colors.accent, grayForeground: theme.colors.grayBackground)

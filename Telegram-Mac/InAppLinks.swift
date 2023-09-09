@@ -742,11 +742,19 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                     if let url = url {
                                         openWebview(.openWebview(botPeer: .init(peer), botApp: botApp, url: url))
                                     } else {
-                                        modernConfirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), thridTitle: botApp.flags.contains(.requiresWriteAccess) ? strings().webAppFirstOpenAllowWrite : nil, successHandler: { result in
-                                            
+                                        
+                                        var options: [ModalAlertData.Option] = []
+                                        options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                                        
+                                        if botApp.flags.contains(.requiresWriteAccess) {
+                                            options.append(.init(string: strings().webAppFirstOpenAllowWrite, isSelected: false, mandatory: false))
+                                        }
+                                        
+                                        let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                        showModalAlert(for: context.window, data: data, completion: { result in
                                             FastSettings.markWebAppAsConfirmed(peer.id)
                                             
-                                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, result == .thrid), for: context.window)
+                                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, result.selected[1] == true), for: context.window)
                                             
                                             _ = signal.start(next: { botApp, url in
                                                 if let url = url {

@@ -212,7 +212,7 @@ final class Action: NSObject {
 
 private var thirdaAction: Action?
 
-func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? = nil, header: String = appName, information:String? = nil, okTitle:String = strings().alertOK, cancelTitle:String = strings().alertCancel, thridTitle:String? = nil, thirdAttributed: NSAttributedString? = nil, thridAutoOn: Bool = true, mustChecked: Bool = false, successHandler:@escaping(ConfirmResult)->Void, appearance: NSAppearance? = nil) {
+func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? = nil, header: String = appName, information:String? = nil, okTitle:String = strings().alertOK, cancelTitle:String = strings().alertCancel, thridTitle:String? = nil, thridAutoOn: Bool = true, successHandler:@escaping(ConfirmResult)->Void, appearance: NSAppearance? = nil) {
     
     delay(0.01, closure: {
         let alert:NSAlert = NSAlert()
@@ -227,25 +227,7 @@ func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? =
         
         if let thridTitle = thridTitle {
             alert.showsSuppressionButton = true
-            if let thirdAttributed = thirdAttributed {
-                alert.suppressionButton?.attributedTitle = thirdAttributed
-            } else {
-                alert.suppressionButton?.title = thridTitle
-            }
-//            let test = View(frame: NSMakeRect(0, 0, 30, 30))
-//            test.backgroundColor = .red
-//            alert.accessoryView = test
             alert.suppressionButton?.state = thridAutoOn ? .on : .off
-            
-            if mustChecked {
-                let action = Action {
-                    alert.buttons.first?.isEnabled = alert.suppressionButton?.state == .on
-                }
-                thirdaAction = action
-                alert.suppressionButton?.target = action
-                alert.suppressionButton?.action = #selector(action.action)
-                
-            }
           //  alert.addButton(withTitle: thridTitle)
         }
         

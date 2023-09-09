@@ -540,7 +540,36 @@ final class ChatInteraction : InterfaceObserver  {
                             } else {
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+                            
+                            let open:()->Void = {
+                                showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+                            }
+                            
+                            if attach.flags.contains(.showInSettingsDisclaimer) {
+                                var options: [ModalAlertData.Option] = []
+                                options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                                
+                                var description: ModalAlertData.Description? = nil
+                                let installBot = !attach.flags.contains(.notActivated) && attach.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !attach.flags.contains(.showInAttachMenu)
+                                if installBot {
+                                    description = .init(string: strings().webBotAccountDesclaimerDesc(attach.shortName), onlyWhenEnabled: false)
+                                }
+                                
+                
+                                let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                showModalAlert(for: context.window, data: data, completion: { result in
+                                    open()
+                                    if installBot {
+                                        installAttachMenuBot(context: context, peer: peer, completion: { value in
+                                            if value {
+                                                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
+                                            }
+                                        })
+                                    }
+                                })
+                            } else {
+                                open()
+                            }
                             
                         }, error: { _ in
                             showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
@@ -569,17 +598,7 @@ final class ChatInteraction : InterfaceObserver  {
                     } else {
                         _ = showModalProgress(signal: resolveUsername(username: botname, context: context), for: context.window).start(next: { peer in
                             if let peer = peer {
-                                if let botInfo = peer.botInfo {
-                                    if botInfo.flags.contains(.canBeAddedToAttachMenu) {
-                                        installAttachMenuBot(context: context, peer: peer, completion: { value in
-                                            if value {
-                                                openAttach(peer)
-                                            }
-                                        })
-                                    } else {
-                                        openAttach(peer)
-                                    }
-                                }
+                                openAttach(peer)
                             } else {
                                 alert(for: context.window, info: strings().webAppAttachDoenstExist("@\(botname)"))
                             }
