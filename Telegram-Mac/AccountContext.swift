@@ -295,7 +295,7 @@ final class AccountContext {
     private let reindexCacheDisposable = MetaDisposable()
     private let shouldReindexCacheDisposable = MetaDisposable()
     private let checkSidebarShouldEnable = MetaDisposable()
-
+    private let actionsDisposable = DisposableSet()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
     
     var limitConfiguration: LimitsConfiguration {
@@ -720,6 +720,21 @@ final class AccountContext {
             _ = self?._globalLocationId.swap(value)
         }))
         
+        #if !SHARE
+        actionsDisposable.add(engine.messages.attachMenuBots().start(next: { [weak self] value in
+            guard let `self` = self else {
+                return
+            }
+            for value in value {
+                if let file = value.icons[.macOSSettingsStatic] {
+                    _ = freeMediaFileInteractiveFetched(context: self, fileReference: FileMediaReference.standalone(media: file)).start()
+                }
+            }
+        }))
+        #endif
+       
+        
+        
     }
     
     @objc private func updateKeyWindow() {
@@ -820,6 +835,7 @@ final class AccountContext {
         reindexCacheDisposable.dispose()
         shouldReindexCacheDisposable.dispose()
         checkSidebarShouldEnable.dispose()
+        actionsDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()

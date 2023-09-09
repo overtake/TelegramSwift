@@ -3823,15 +3823,12 @@ extension SoftwareVideoSource {
 
 
 func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @escaping(Bool)->Void) {
+    let signal = context.engine.messages.addBotToAttachMenu(botId: peer.id, allowWrite: false) |> deliverOnMainQueue
     
-    
-    modernConfirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, thridTitle: strings().webAppAddToAttachmentAllowMessages(peer.displayTitle), successHandler: { result in
-        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(botId: peer.id, allowWrite: result == .thrid), for: context.window).start(next: { value in
-            if value {
-                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
-                completion(value)
-            }
-        })
+    _ = signal.start(next: { value in
+        if value {
+            completion(value)
+        }
     })
 }
 

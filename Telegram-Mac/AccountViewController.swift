@@ -331,7 +331,22 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, listContext: arguments.storyList, standalone: true), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .attach(_, bot, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: bot.shortName, icon: theme.icons.settingsWallet, activeIcon: theme.icons.settingsWalletActive, type: .next, viewType: viewType, action: {
+            var icon: CGImage?
+            
+            if let file = bot.icons[.macOSSettingsStatic] {
+                let iconPath = arguments.context.account.postbox.mediaBox.resourcePath(file.resource)
+                let linked = link(path: iconPath, ext: "png")!
+
+                if let image = NSImage(contentsOf: .init(fileURLWithPath: linked)) {
+                    icon = image.precomposed(flipVertical: true, scale: 1.0)
+                }
+            }
+            
+            if icon == nil {
+                icon = NSImage(named: "Icon_Settings_BotCap")!.precomposed(flipVertical: true, scale: 1.0)
+            }
+            
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: bot.shortName, icon: icon!, activeIcon: icon!, type: .next, viewType: viewType, action: {
                 arguments.openWebBot(bot)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .proxy(_, viewType, status):
@@ -522,16 +537,16 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     entries.append(.whiteSpace(index: index, height: 10))
     index += 1
     
-    
-    entries.append(.stories(index: index, viewType: .singleItem))
-    index += 1
-    
+        
     for bot in attachMenuBots {
         if bot.flags.contains(.showInSettings) {
             entries.append(.attach(index: index, bot, viewType: .singleItem))
             index += 1
         }
     }
+    
+    entries.append(.stories(index: index, viewType: .singleItem))
+    index += 1
     
     if !proxySettings.0.servers.isEmpty {
         entries.append(.whiteSpace(index: index, height: 10))
@@ -888,15 +903,29 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                     showModal(with: WebpageModalController(context: context, url: url, title: bot.shortName, requestData: .simple(url: url, bot: bot.peer._asPeer(), buttonText: "", source: .settings), chatInteraction: nil, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
                 })
             }
-            if bot.flags.contains(.showInSettingsDisclaimer) {
+            
+            if bot.flags.contains(.showInSettingsDisclaimer) { //
                 var options: [ModalAlertData.Option] = []
                 options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
                 
-                let desc: ModalAlertData.Description? = .init(string: strings().webBotAccountDesclaimerDesc(bot.shortName), onlyWhenEnabled: true)
+               
+                var description: ModalAlertData.Description? = nil
+                let installBot = !bot.flags.contains(.notActivated) && bot.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !bot.flags.contains(.showInAttachMenu)
                 
-                let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: desc, ok: strings().webBotAccountDisclaimerOK, options: options)
+                if installBot {
+                    description = .init(string: strings().webBotAccountDesclaimerDesc(bot.shortName), onlyWhenEnabled: false)
+                }
+                
+                let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
                 showModalAlert(for: context.window, data: data, completion: { result in
                     open()
+                    if installBot {
+                        installAttachMenuBot(context: context, peer: bot.peer._asPeer(), completion: { value in
+                            if value {
+                                showModalText(for: context.window, text: strings().webAppAttachSuccess(bot.peer._asPeer().displayTitle))
+                            }
+                        })
+                    }
                 })
             } else {
                 open()

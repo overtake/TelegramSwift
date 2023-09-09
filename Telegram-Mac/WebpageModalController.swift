@@ -1459,6 +1459,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         installAttachMenuBot(context: context, peer: bot, completion: { [weak self] value in
             if value {
                 self?.installedBots.append(bot.id)
+                showModalText(for: context.window, text: strings().webAppAttachSuccess(bot.displayTitle))
             }
         })
     }
