@@ -111,7 +111,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
     var requestMessageActionCallback:(MessageId, Bool, (requiresPassword: Bool, data: MemoryBuffer)?) -> Void = {_,_,_  in}
-    var inlineAudioPlayer:(APController) -> Void = {_ in} 
+    var inlineAudioPlayer:(APController) -> Void = {_ in}
     var movePeerToInput:(Peer) -> Void = {_ in}
     var sendInlineResult:(ChatContextResultCollection,ChatContextResult) -> Void = {_,_  in}
     var scrollToLatest:(Bool)->Void = {_ in}
@@ -518,8 +518,8 @@ final class ChatInteraction : InterfaceObserver  {
                 
                 let installed: Signal<Peer?, NoError> = context.engine.messages.attachMenuBots() |> map { items in
                     for item in items {
-                        if item.peer.username?.lowercased() == botname.lowercased() {
-                            return item.peer
+                        if item.peer.addressName?.lowercased() == botname.lowercased() {
+                            return item.peer._asPeer()
                         }
                     }
                     return nil
@@ -540,7 +540,36 @@ final class ChatInteraction : InterfaceObserver  {
                             } else {
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+                            
+                            let open:()->Void = {
+                                showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+                            }
+                            
+                            if attach.flags.contains(.showInSettingsDisclaimer) {
+                                var options: [ModalAlertData.Option] = []
+                                options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                                
+                                var description: ModalAlertData.Description? = nil
+                                let installBot = !attach.flags.contains(.notActivated) && attach.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !attach.flags.contains(.showInAttachMenu)
+                                if installBot {
+                                    description = .init(string: strings().webBotAccountDesclaimerDesc(attach.shortName), onlyWhenEnabled: false)
+                                }
+                                
+                
+                                let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                showModalAlert(for: context.window, data: data, completion: { result in
+                                    open()
+                                    if installBot {
+                                        installAttachMenuBot(context: context, peer: peer, completion: { value in
+                                            if value {
+                                                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
+                                            }
+                                        })
+                                    }
+                                })
+                            } else {
+                                open()
+                            }
                             
                         }, error: { _ in
                             showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
@@ -569,17 +598,7 @@ final class ChatInteraction : InterfaceObserver  {
                     } else {
                         _ = showModalProgress(signal: resolveUsername(username: botname, context: context), for: context.window).start(next: { peer in
                             if let peer = peer {
-                                if let botInfo = peer.botInfo {
-                                    if botInfo.flags.contains(.canBeAddedToAttachMenu) {
-                                        installAttachMenuBot(context: context, peer: peer, completion: { value in
-                                            if value {
-                                                openAttach(peer)
-                                            }
-                                        })
-                                    } else {
-                                        openAttach(peer)
-                                    }
-                                }
+                                openAttach(peer)
                             } else {
                                 alert(for: context.window, info: strings().webAppAttachDoenstExist("@\(botname)"))
                             }
@@ -710,9 +729,9 @@ final class ChatInteraction : InterfaceObserver  {
         let context = self.context
         let peerId = self.peerId
         if simple {
-            let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, inline: false, themeParams: generateWebAppThemeParams(theme))
+            let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, source: inline ? .inline : .generic, themeParams: generateWebAppThemeParams(theme))
             _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, isInline: inline), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, source: inline ? .inline : .generic), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
             })
         } else {
             _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak self] attach in
@@ -894,5 +913,6 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
 }
+
 
 

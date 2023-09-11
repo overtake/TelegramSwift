@@ -696,6 +696,10 @@
 		27F7EED22940C4ED00B6E324 /* UserInfoPhotoConfirmController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F7EED12940C4ED00B6E324 /* UserInfoPhotoConfirmController.swift */; };
 		27FE779A26F4944800E1C90B /* ChatThemeSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */; };
 		27FE779C26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779B26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift */; };
+		27FF68092AAEF281002B2655 /* ModalAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FF68082AAEF281002B2655 /* ModalAlertController.swift */; };
+		27FF680B2AAEF7C3002B2655 /* SuspiciousRevokeModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FF680A2AAEF7C3002B2655 /* SuspiciousRevokeModal.swift */; };
+		27FF680D2AAEF82D002B2655 /* SuspiciousAuthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FF680C2AAEF82D002B2655 /* SuspiciousAuthRowItem.swift */; };
+		27FF680F2AAEF876002B2655 /* hand_animation.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27FF680E2AAEF876002B2655 /* hand_animation.tgs */; };
 		27FFCEC52694BA58006CA024 /* WidgetAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */; };
 		27FFCEC72694BC95006CA024 /* WidgetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC62694BC95006CA024 /* WidgetController.swift */; };
 		9F0367F0227208E000456348 /* QRCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F0367EF227208E000456348 /* QRCode.swift */; };
@@ -2132,6 +2136,10 @@
 		27F7EED12940C4ED00B6E324 /* UserInfoPhotoConfirmController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInfoPhotoConfirmController.swift; sourceTree = "<group>"; };
 		27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThemeSelectorController.swift; sourceTree = "<group>"; };
 		27FE779B26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemePreviewRowItem.swift; sourceTree = "<group>"; };
+		27FF68082AAEF281002B2655 /* ModalAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalAlertController.swift; sourceTree = "<group>"; };
+		27FF680A2AAEF7C3002B2655 /* SuspiciousRevokeModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspiciousRevokeModal.swift; sourceTree = "<group>"; };
+		27FF680C2AAEF82D002B2655 /* SuspiciousAuthRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspiciousAuthRowItem.swift; sourceTree = "<group>"; };
+		27FF680E2AAEF876002B2655 /* hand_animation.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = hand_animation.tgs; sourceTree = "<group>"; };
 		27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetAppearance.swift; sourceTree = "<group>"; };
 		27FFCEC62694BC95006CA024 /* WidgetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetController.swift; sourceTree = "<group>"; };
 		9F0367EF227208E000456348 /* QRCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCode.swift; sourceTree = "<group>"; };
@@ -4203,6 +4211,7 @@
 			children = (
 				C205DB9C1EE88762003711DF /* Views.swift */,
 				27C4089325B081B500372302 /* FireTimerControl.swift */,
+				27FF68082AAEF281002B2655 /* ModalAlertController.swift */,
 			);
 			name = "ui-controls";
 			sourceTree = "<group>";
@@ -4607,6 +4616,8 @@
 				277E228328EAFAEE00001689 /* ForumUIMethods.swift */,
 				2751015229C9BAC1004CEFF3 /* ChatListSystemDeprecatedItem.swift */,
 				27BCE41C2A49D0F10015E5EE /* ChatListEmptyItem.swift */,
+				27FF680A2AAEF7C3002B2655 /* SuspiciousRevokeModal.swift */,
+				27FF680C2AAEF82D002B2655 /* SuspiciousAuthRowItem.swift */,
 			);
 			name = chatlist;
 			sourceTree = "<group>";
@@ -5764,6 +5775,7 @@
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
+				27FF680E2AAEF876002B2655 /* hand_animation.tgs */,
 				275C14122A61780F000DDACF /* expired_story.tgs */,
 				27994ED92A5EF7C30084D982 /* stories_archive.tgs */,
 				27F67415297680DC0014DCB9 /* duck_empty.tgs */,
@@ -6418,6 +6430,7 @@
 				9F03681322771A9700456348 /* anim_delete.json in Resources */,
 				27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */,
 				9F03681822771A9700456348 /* anim_group.json in Resources */,
+				27FF680F2AAEF876002B2655 /* hand_animation.tgs in Resources */,
 				D07450E9233D61B800769D7F /* keyboard_typing.tgs in Resources */,
 				9F03681422771A9700456348 /* anim_unread.json in Resources */,
 				27B8AFEB26380B4E0044C71B /* screenon.tgs in Resources */,
@@ -6878,6 +6891,7 @@
 				A7F2830623954E1B00742C20 /* CachedFaqInstantPage.swift in Sources */,
 				C226742F1DBE2CB3000BA9ED /* PanelUtils.swift in Sources */,
 				D0530D3E24E69133003273BC /* CallControl.swift in Sources */,
+				27FF680D2AAEF82D002B2655 /* SuspiciousAuthRowItem.swift in Sources */,
 				C2CE43E920F4F74F00656543 /* UpdateModalController.swift in Sources */,
 				C22EE6191E66ECB200334C38 /* ReportReasonModalController.swift in Sources */,
 				C2B0722E1DFEDE430082939D /* UsernameInputRowItem.swift in Sources */,
@@ -7140,6 +7154,7 @@
 				A7E83212255E8A8E0095A167 /* LinkHoverController.swift in Sources */,
 				D001E976243B385E009025F9 /* FolderIcons.swift in Sources */,
 				C2B648891EB0C48600BA574B /* PIPVideoWindow.swift in Sources */,
+				27FF680B2AAEF7C3002B2655 /* SuspiciousRevokeModal.swift in Sources */,
 				C2B6488E1EB25A5400BA574B /* FetchVideoMediaResource.swift in Sources */,
 				D06C7BB7247D6FA900E67C3C /* SampleBufferPool.swift in Sources */,
 				C2A72D901DEC66F300C3B945 /* LoginErrorStateView.swift in Sources */,
@@ -7618,6 +7633,7 @@
 				C2B1A1361DA6587100ACB1DD /* GalleryViewer.swift in Sources */,
 				9FC4DA9821DD0B86003E2A62 /* ChannelMemberCategoryListContext.swift in Sources */,
 				9F1AE5E620B70328002A9D8D /* LocationSendCurrentItem.swift in Sources */,
+				27FF68092AAEF281002B2655 /* ModalAlertController.swift in Sources */,
 				C253E2311DE34FBB0022A29F /* AudioPlayerController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7791,7 +7807,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 10.0.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7838,7 +7854,7 @@
 					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 10.0.4;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7883,7 +7899,7 @@
 					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 10.0.4;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7999,7 +8015,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 10.0.4;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
