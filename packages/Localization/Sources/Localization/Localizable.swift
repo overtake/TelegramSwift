@@ -1279,6 +1279,10 @@ public final class L10n {
   }
   /// Comment
   public static var channelCommentsShortLeaveComment: String  { return L10n.tr("Localizable", "Channel.Comments.Short.LeaveComment") }
+  /// Delete Stories of Others
+  public static var channelEditAdminDeleteStories: String  { return L10n.tr("Localizable", "Channel.EditAdmin.DeleteStories") }
+  /// Edit Stories of Others
+  public static var channelEditAdminEditStories: String  { return L10n.tr("Localizable", "Channel.EditAdmin.EditStories") }
   /// Manage Voice Chats
   public static var channelEditAdminManageCalls: String  { return L10n.tr("Localizable", "Channel.EditAdmin.ManageCalls") }
   /// Manage Topics
@@ -1291,6 +1295,8 @@ public final class L10n {
   public static var channelEditAdminPermissionInviteSubscribers: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionInviteSubscribers") }
   /// Invite Users via Link
   public static var channelEditAdminPermissionInviteViaLink: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionInviteViaLink") }
+  /// Post Stories
+  public static var channelEditAdminPostStories: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PostStories") }
   /// Add New Admins
   public static var channelEditAdminPermissionAddNewAdmins: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.AddNewAdmins") }
   /// Ban Users
@@ -1303,6 +1309,10 @@ public final class L10n {
   public static var channelEditAdminPermissionDeleteMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.DeleteMessages") }
   /// Edit Messages
   public static var channelEditAdminPermissionEditMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.EditMessages") }
+  /// Manage Messages
+  public static var channelEditAdminPermissionManageMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.ManageMessages") }
+  /// Manage Stories
+  public static var channelEditAdminPermissionManageStories: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.ManageStories") }
   /// Pin Messages
   public static var channelEditAdminPermissionPinMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.PinMessages") }
   /// Post Messages
@@ -6908,7 +6918,7 @@ public final class L10n {
   /// Please enter the code you've just received in Telegram on your other device.
   public static var loginEnterCodeFromApp: String  { return L10n.tr("Localizable", "Login.EnterCodeFromApp") }
   /// You have enabled Two-Step Verification, your account is now protected with an additional password.
-  public static var loginEnterPasswordDescription: String  { return L10n.tr("Localizable", "Login.EnterPasswordDescription") }
+  public static var loginEnterPasswoуrdDescription: String  { return L10n.tr("Localizable", "Login.EnterPasswoуrdDescription") }
   /// Too many attempts, please try again later.
   public static var loginFloodWait: String  { return L10n.tr("Localizable", "Login.FloodWait") }
   /// Invalid Country Code
@@ -7631,6 +7641,30 @@ public final class L10n {
   public static var newPollQuizMultipleError: String  { return L10n.tr("Localizable", "NewPoll.QuizMultiple.Error") }
   /// New Quiz
   public static var newPollTitleQuiz: String  { return L10n.tr("Localizable", "NewPoll.Title.Quiz") }
+  /// You can check the list of your active logins in\n[Settings > Active Sessions.]()
+  public static var newSessionReviewAcceptText: String  { return L10n.tr("Localizable", "NewSessionReview.Accept.Text") }
+  /// New Login Allowed
+  public static var newSessionReviewAcceptTitle: String  { return L10n.tr("Localizable", "NewSessionReview.Accept.Title") }
+  /// We detected a new login to your account from %1$@, %2$@. Is it you?!
+  public static func newSessionReviewItemText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "NewSessionReview.Item.Text", p1, p2)
+  }
+  /// Someone just got access to your messages!
+  public static var newSessionReviewItemTitle: String  { return L10n.tr("Localizable", "NewSessionReview.Item.Title") }
+  /// Got It
+  public static var newSessionReviewModalButton: String  { return L10n.tr("Localizable", "NewSessionReview.Modal.Button") }
+  /// Never send your login code to anyone or you can lose your Telegram account!
+  public static var newSessionReviewModalHeader: String  { return L10n.tr("Localizable", "NewSessionReview.Modal.Header") }
+  /// We have terminated the login attempt from %1$@, %2$@.
+  public static func newSessionReviewModalText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "NewSessionReview.Modal.Text", p1, p2)
+  }
+  /// New Login Prevented
+  public static var newSessionReviewModalTitle: String  { return L10n.tr("Localizable", "NewSessionReview.Modal.Title") }
+  /// Got It (%@)
+  public static func newSessionReviewModalButtonTimeout(_ p1: String) -> String {
+    return L10n.tr("Localizable", "NewSessionReview.Modal.Button.Timeout", p1)
+  }
   /// Create
   public static var newThemeCreate: String  { return L10n.tr("Localizable", "NewTheme.Create") }
   /// This theme will be based on your current theme.
@@ -8693,8 +8727,12 @@ public final class L10n {
   public static var peerMediaMembers: String  { return L10n.tr("Localizable", "PeerMedia.Members") }
   /// Music
   public static var peerMediaMusic: String  { return L10n.tr("Localizable", "PeerMedia.Music") }
+  /// Posts
+  public static var peerMediaPosts: String  { return L10n.tr("Localizable", "PeerMedia.Posts") }
   /// Shared Media
   public static var peerMediaSharedMedia: String  { return L10n.tr("Localizable", "PeerMedia.SharedMedia") }
+  /// Stories
+  public static var peerMediaStories: String  { return L10n.tr("Localizable", "PeerMedia.Stories") }
   /// Voicemessages
   public static var peerMediaVoice: String  { return L10n.tr("Localizable", "PeerMedia.Voice") }
   /// Shared Audio
@@ -10671,8 +10709,12 @@ public final class L10n {
   public static var selectAreaControlDimensionSquare: String  { return L10n.tr("Localizable", "SelectAreaControl.Dimension.Square") }
   /// Search Members
   public static var selectPeersTitleSearchMembers: String  { return L10n.tr("Localizable", "SelectPeers.Title.SearchMembers") }
+  /// Add to Channel
+  public static var selectPeersTitleSelectChannel: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectChannel") }
   /// Select Chat
   public static var selectPeersTitleSelectChat: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectChat") }
+  /// Add to Group
+  public static var selectPeersTitleSelectGroup: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectGroup") }
   /// Add to Group or Channel
   public static var selectPeersTitleSelectGroupOrChannel: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectGroupOrChannel") }
   /// clear
@@ -12065,8 +12107,14 @@ public final class L10n {
   public static var storyAlertNoViews: String  { return L10n.tr("Localizable", "Story.Alert.NoViews") }
   /// List of viewers isn't available after 24 hours of story expiration.
   public static var storyAlertViewsExpired: String  { return L10n.tr("Localizable", "Story.Alert.ViewsExpired") }
+  /// Open Channel
+  public static var storyAvatarContextOpenChannel: String  { return L10n.tr("Localizable", "Story.AvatarContext.OpenChannel") }
   /// Send Message
   public static var storyAvatarContextSendMessage: String  { return L10n.tr("Localizable", "Story.AvatarContext.SendMessage") }
+  /// Remove From Posts
+  public static var storyChannelInputRemoveFromProfile: String  { return L10n.tr("Localizable", "Story.ChannelInput.RemoveFromProfile") }
+  /// Save To Posts
+  public static var storyChannelInputSaveToProfile: String  { return L10n.tr("Localizable", "Story.ChannelInput.SaveToProfile") }
   /// Are you sure you want to delete story?
   public static var storyConfirmDelete: String  { return L10n.tr("Localizable", "Story.Confirm.Delete") }
   /// edited
@@ -12243,8 +12291,16 @@ public final class L10n {
   public static var storyTooltipVideoSent: String  { return L10n.tr("Localizable", "Story.Tooltip.VideoSent") }
   /// View in Chat
   public static var storyTooltipButtonViewInChat: String  { return L10n.tr("Localizable", "Story.Tooltip.Button.ViewInChat") }
+  /// Stories Removed
+  public static var storyTooltipRemovedTitle: String  { return L10n.tr("Localizable", "Story.Tooltip.Removed.Title") }
+  /// Story removed from the channel's profile.
+  public static var storyTooltipRemovedFromProfileChannel: String  { return L10n.tr("Localizable", "Story.Tooltip.RemovedFromProfile.Channel") }
   /// Subscribe to Telegram Premium to save other people's unprotected stories.
   public static var storyTooltipSaveToGalleryPremium: String  { return L10n.tr("Localizable", "Story.Tooltip.SaveToGallery.Premium") }
+  /// Stories Saved
+  public static var storyTooltipSavedTitle: String  { return L10n.tr("Localizable", "Story.Tooltip.Saved.Title") }
+  /// Saved stories can be viewed by others on the channel's until an admin removes them.
+  public static var storyTooltipSavedToProfileChannel: String  { return L10n.tr("Localizable", "Story.Tooltip.SavedToProfile.Channel") }
   /// The creator of stories you viewed in the last %1$@ minutes or will view in the next %2$@ minutes won't see you in the viewers' lists.
   public static func storyTooltipStealthModeActivate(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Story.Tooltip.StealthMode.Activate", p1, p2)
@@ -12415,6 +12471,10 @@ public final class L10n {
   public static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }
   /// Manage Messages
   public static var supergroupDeleteRestrictionTitle: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Title") }
+  /// Yes, it's me
+  public static var suspiciousSessionMe: String  { return L10n.tr("Localizable", "SuspiciousSession.Me") }
+  /// No, it's not me!
+  public static var suspiciousSessionNotMe: String  { return L10n.tr("Localizable", "SuspiciousSession.NotMe") }
   /// App Data Storage
   public static var systemMemoryWarningDataAndStorage: String  { return L10n.tr("Localizable", "System.MemoryWarning.DataAndStorage") }
   /// %d GB
@@ -14135,6 +14195,18 @@ public final class L10n {
   public static var webAuthorizationsLoggedInDescrpiption: String  { return L10n.tr("Localizable", "WebAuthorizations.LoggedIn.Descrpiption") }
   /// You can log in on websites that support signing in with Telegram.
   public static var webAuthorizationsLogoutAllDescription: String  { return L10n.tr("Localizable", "WebAuthorizations.LogoutAll.Description") }
+  /// **%@** shortcuts will be added in your attachment menu and Settings.
+  public static func webBotAccountDesclaimerDesc(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebBot.Account.Desclaimer.Desc", p1)
+  }
+  /// Continue
+  public static var webBotAccountDisclaimerOK: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.OK") }
+  /// You are about to use a mini app operated by an independent party **not affiliated with Telegram**. You must agree to the Terms of Use of mini apps to continue.
+  public static var webBotAccountDisclaimerText: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Text") }
+  /// I agree to the [Terms of Use](https://telegram.org/tos/mini-apps)
+  public static var webBotAccountDisclaimerThird: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Third") }
+  /// Term of Use
+  public static var webBotAccountDisclaimerTitle: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Title") }
   /// Allow
   public static var webappAllowMessagesOK: String  { return L10n.tr("Localizable", "Webapp.AllowMessages.OK") }
   /// This will allow the bot %@ to message you on Telegram?

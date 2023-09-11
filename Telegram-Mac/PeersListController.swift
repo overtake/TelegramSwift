@@ -823,7 +823,7 @@ class PeerListContainerView : Control {
         if let item = self.storiesItem {
             let current: StoryListChatListRowView
             if let view = self.storiesView {
-                current = view 
+                current = view
             } else {
                 current = StoryListChatListRowView(frame: NSMakeRect(0, 50, frame.width, item.height))
                 containerView.addSubview(current, positioned: .below, relativeTo: statusContainer)
@@ -2460,6 +2460,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             break
         case .space:
             break
+        case .suspicious:
+            break
         }
         if close {
             self.genericView.searchView.cancel(true)
@@ -3013,3 +3015,4 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
         
 }
+

@@ -90,6 +90,8 @@ enum LocalAnimatedSticker : String {
     case qrcode_matrix
     case login_airplane
     
+    case hand_animation
+    
     case device_android
     case device_chrome
     case device_edge
