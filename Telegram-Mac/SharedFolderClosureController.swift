@@ -230,8 +230,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
   
     //header
     
@@ -776,7 +774,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
     default:
         modalInteractions = ModalInteractions(acceptTitle: "", accept: { [weak controller] in
             _ = controller?.returnKeyAction()
-        }, drawBorder: true, height: 50, singleButton: true)
+        }, singleButton: true)
     }
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)

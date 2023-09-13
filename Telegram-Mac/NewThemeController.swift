@@ -37,13 +37,13 @@ private func newThemeEntries(state: NewThemeState) -> [InputDataEntry] {
     var sectionId: Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.error, identifier: _id_input_name, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: strings().newThemePlaceholder, filter: { $0 }, limit: 100))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.name), error: state.error, identifier: _id_input_name, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().newThemePlaceholder, filter: { $0 }, limit: 100))
     index += 1
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().newThemeDesc), data: InputDataGeneralTextData()))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().newThemeDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -145,13 +145,11 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
         return .none
     }, afterDisappear: {
         disposable.dispose()
-    }, getBackgroundColor: {
-        theme.colors.background
     })
     
     let modalInteractions = ModalInteractions(acceptTitle: strings().newThemeCreate, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     

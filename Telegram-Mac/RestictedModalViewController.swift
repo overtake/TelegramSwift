@@ -49,7 +49,7 @@ private enum RestrictedEntry: TableItemListNodeEntry {
     case rightItem(Int32, Int32, NSAttributedString, TelegramChatBannedRightsFlags, Bool, Bool, GeneralViewType)
     case mediaRightItem(Int32, Int32, String, TelegramChatBannedRightsFlags, Bool, Bool, GeneralViewType)
     case description(Int32, Int32, String, GeneralViewType)
-    case section(Int32)
+    case section(Int32, CGFloat)
     case timeout(Int32, Int32, String, String, GeneralViewType)
     case exceptionInfo(Int32, Int32, String, GeneralViewType)
     case delete(Int32, Int32, String, GeneralViewType)
@@ -93,8 +93,8 @@ private enum RestrictedEntry: TableItemListNodeEntry {
             } else {
                 return false
             }
-        case let .section(sectionId):
-            if case .section(sectionId) = rhs{
+        case let .section(sectionId, height):
+            if case .section(sectionId, height) = rhs{
                 return true
             } else {
                 return false
@@ -137,7 +137,7 @@ private enum RestrictedEntry: TableItemListNodeEntry {
             return .exceptionInfo
         case .delete:
             return .delete
-        case .section(let sectionId):
+        case .section(let sectionId, _):
             return .section(sectionId)
         }
     }
@@ -156,7 +156,7 @@ private enum RestrictedEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + Int32(index) + 10
         case .mediaRightItem(let sectionId, let index, _, _, _, _, _):
             return (sectionId * 1000) + Int32(index) + 10
-        case .section(let sectionId):
+        case .section(let sectionId, _):
             return (sectionId + 1) * 1000 - sectionId
         case .timeout(let sectionId, let index, _, _, _):
             return (sectionId * 1000) + index
@@ -169,8 +169,8 @@ private enum RestrictedEntry: TableItemListNodeEntry {
     
     func item(_ arguments: RestrictedControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+        case let .section(_, height):
+            return GeneralRowItem(initialSize, height: height, stableId: stableId, viewType: .separator)
         case let .info(_, peer, presence, viewType):
             var string:String = peer.isBot ? strings().presenceBot : strings().peerStatusRecently
             var color:NSColor = theme.colors.grayText
@@ -252,7 +252,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
     var sectionId:Int32 = 0
     var entries:[RestrictedEntry] = []
     
-    entries.append(.section(sectionId))
+    entries.append(.section(sectionId, 10))
     sectionId += 1
     
     
@@ -260,7 +260,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
     if let peer = channelView.peers[channelView.peerId] as? TelegramChannel, let defaultBannedRights = peer.defaultBannedRights, let member = memberView.peers[memberView.peerId] {
         entries.append(.info(sectionId, member, memberView.peerPresences[member.id] as? TelegramUserPresence, .singleItem))
         
-        entries.append(.section(sectionId))
+        entries.append(.section(sectionId, 20))
         sectionId += 1
         
         entries.append(.description(sectionId, index, strings().groupPermissionSectionTitle, .textTopItem))
@@ -315,7 +315,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
             }
         }
         
-        entries.append(.section(sectionId))
+        entries.append(.section(sectionId, 20))
         sectionId += 1
         
       
@@ -336,7 +336,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         entries.append(.info(sectionId, member, memberView.peerPresences[member.id] as? TelegramUserPresence, .singleItem))
 
         
-        entries.append(.section(sectionId))
+        entries.append(.section(sectionId, 20))
         sectionId += 1
 
         entries.append(.description(sectionId, index, strings().groupPermissionSectionTitle, .textTopItem))
@@ -391,7 +391,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
             }
         }
         
-        entries.append(.section(sectionId))
+        entries.append(.section(sectionId, 20))
         sectionId += 1
         
         if let initialParticipant = initialParticipant, case let .member(member) = initialParticipant, let banInfo = member.banInfo, let initialBannedBy = initialBannedBy {
@@ -408,7 +408,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
     }
 
 
-    entries.append(.section(sectionId))
+    entries.append(.section(sectionId, 20))
     sectionId += 1
     
     return entries
@@ -442,6 +442,11 @@ class RestrictedModalViewController: TableModalViewController {
         self.memberId = memberId
         super.init(frame: NSMakeRect(0, 0, 350, 360))
         bar = .init(height : 0)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        genericView.notifyScrollHandlers()
     }
     
     override func viewDidLoad() {
@@ -727,6 +732,23 @@ class RestrictedModalViewController: TableModalViewController {
                 
             }
         }))
+        
+        genericView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            if self.genericView.documentSize.height > self.genericView.frame.height {
+                self.genericView.verticalScrollElasticity = .automatic
+            } else {
+                self.genericView.verticalScrollElasticity = .none
+            }
+            if position.rect.minY - self.genericView.frame.height > 0 {
+                self.modal?.makeHeaderState(state: .active, animated: true)
+            } else {
+                self.modal?.makeHeaderState(state: .normal, animated: true)
+            }
+        }))
+        
     }
     
     deinit {
@@ -743,7 +765,15 @@ class RestrictedModalViewController: TableModalViewController {
         return ModalInteractions(acceptTitle: strings().modalApply, accept: { [weak self] in
             self?.close()
             self?.okClicked?()
-        }, drawBorder: true, height: 50, singleButton: true)
+        }, singleButton: true)
+    }
+    
+    override var containerBackground: NSColor {
+        return theme.colors.listBackground
+    }
+    
+    override var modalTheme: ModalViewController.Theme {
+        return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground, activeBackground: presentation.colors.background, activeBorder: presentation.colors.border)
     }
     
 }

@@ -83,7 +83,7 @@ func JoinVoiceChatAlertController(context: AccountContext, groupCall: GroupCallP
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().chatVoiceChatJoinLinkOK, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(250, 250))
     

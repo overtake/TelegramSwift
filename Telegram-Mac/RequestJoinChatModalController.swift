@@ -35,7 +35,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
   
     // entries
@@ -44,17 +44,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("about"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.flags.isChannel ? strings().requestJoinDescChannel : strings().requestJoinDescGroup, font: .normal(.text), color: theme.colors.grayText)
+        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.flags.isChannel ? strings().requestJoinDescChannel : strings().requestJoinDescGroup, font: .normal(.text), color: theme.colors.text)
     }))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -93,7 +93,7 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
 
         let modalInteractions = ModalInteractions(acceptTitle: strings().requestJoinButton, accept: { [weak controller] in
             _ = controller?.returnKeyAction()
-        }, drawBorder: true, height: 50, singleButton: true)
+        }, singleButton: true)
         
         let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
         

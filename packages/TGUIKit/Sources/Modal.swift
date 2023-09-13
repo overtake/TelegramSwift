@@ -10,6 +10,11 @@ import Cocoa
 import SwiftSignalKit
 import AppKit
 
+public enum ModalHeaderActiveState {
+    case normal
+    case active
+}
+
 private class ModalBackground : Control {
     var isOverlay: Bool = false
     var canRedirectScroll: Bool = false
@@ -65,7 +70,7 @@ public class ModalInteractions {
     
     fileprivate var customTheme: ()->ModalViewController.Theme
 
-    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 50, alignCancelLeft: Bool = false, singleButton: Bool = false, customTheme: @escaping() -> ModalViewController.Theme = { .init() })  {
+    public init(acceptTitle:String, accept:(()->Void)? = nil, cancelTitle:String? = nil, cancel:(()->Void)? = nil, drawBorder:Bool = false, height:CGFloat = 60, alignCancelLeft: Bool = false, singleButton: Bool = false, customTheme: @escaping() -> ModalViewController.Theme = { .init() })  {
         self.drawBorder = drawBorder
         self.accept = accept
         self.cancel = cancel
@@ -109,41 +114,53 @@ private class ModalInteractionsContainer : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: interactions.customTheme().accent, backgroundColor: interactions.customTheme().background)
-        cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: interactions.customTheme().accent, backgroundColor: interactions.customTheme().background)
-        borderView?.backgroundColor = interactions.customTheme().border
-        backgroundColor = interactions.customTheme().background
+        
+        let pres = interactions.customTheme()
+        
+        if let cancelView = cancelView {
+            cancelView.set(background: .clear, for: .Normal)
+            cancelView.set(font: .medium(.text), for: .Normal)
+            cancelView.set(color: pres.accent, for: .Normal)
+        }
+        
+        borderView?.backgroundColor = pres.border
+        backgroundColor = pres.background
         
         if interactions.singleButton {
-            acceptView.set(background: interactions.customTheme().background, for: .Normal)
-            acceptView.set(background: interactions.customTheme().grayForeground.withAlphaComponent(0.25), for: .Highlight)
+            acceptView.set(background: pres.accent, for: .Normal)
+            acceptView.set(background: pres.accent.withAlphaComponent(0.8), for: .Highlight)
+            let textColor = pres.accent.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+            acceptView.set(color: textColor, for: .Normal)
+            acceptView.layer?.cornerRadius = 10
         } else {
-            acceptView.set(background: interactions.customTheme().background, for: .Normal)
+            acceptView.set(background: .clear, for: .Normal)
+            acceptView.set(color: pres.accent, for: .Normal)
+            acceptView.layer?.cornerRadius = 0
         }
+        acceptView.set(font: .medium(.text), for: .Normal)
+        acceptView.set(text: interactions.acceptTitle, for: .Normal)
+        updateDone()
+        updateCancel()
     }
     
     init(interactions:ModalInteractions, modal:Modal) {
         self.interactions = interactions
         acceptView = TitleButton()
-        acceptView.style = ControlStyle(font:.medium(.text), foregroundColor: interactions.customTheme().accent, backgroundColor: interactions.customTheme().background)
-        acceptView.set(text: interactions.acceptTitle, for: .Normal)
         acceptView.disableActions()
-        _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
+        acceptView.scaleOnClick = true
+
         if let cancelTitle = interactions.cancelTitle {
-            cancelView = TitleButton()
-            cancelView?.style = ControlStyle(font:.medium(.text), foregroundColor: interactions.customTheme().accent, backgroundColor: interactions.customTheme().background)
-            cancelView?.set(text: cancelTitle, for: .Normal)
-            _ = cancelView?.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
-            
+            let cancelView = TitleButton()
+            self.cancelView = cancelView
+            cancelView.set(font: .medium(.text), for: .Normal)
+            cancelView.set(text: cancelTitle, for: .Normal)
+            _ = cancelView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
+            cancelView.scaleOnClick = true
         } else {
             cancelView = nil
         }
-        if interactions.singleButton {
-            acceptView.set(background: interactions.customTheme().background, for: .Normal)
-            acceptView.set(background: interactions.customTheme().grayForeground.withAlphaComponent(0.25), for: .Highlight)
-        } else {
-            acceptView.set(background: interactions.customTheme().background, for: .Normal)
-        }
+        
+
         
         if interactions.drawBorder {
             borderView = View()
@@ -202,12 +219,23 @@ private class ModalInteractionsContainer : View {
             }
             self?.updateCancel()
         }
-
-
+        updateLocalizationAndTheme(theme: presentation)
+    }
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
     }
     
     public func updateDone() {
-        _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
+        if interactions.singleButton {
+            _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 60, 40), thatFit: true)
+        } else {
+            if cancelView == nil {
+                _ = acceptView.sizeToFit(NSZeroSize, frame.size, thatFit: true)
+            } else {
+                _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
+            }
+        }
         needsLayout = true
     }
     
@@ -215,13 +243,7 @@ private class ModalInteractionsContainer : View {
         _ = cancelView?.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
         needsLayout = true
     }
-    public func updateThrid(_ text:String) {
-        acceptView.set(text: text, for: .Normal)
-        _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(0, interactions.height - 10), thatFit: true)
-        
-        needsLayout = true
-    }
-    
+
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -234,9 +256,13 @@ private class ModalInteractionsContainer : View {
         super.layout()
         
         if self.interactions.singleButton {
-            acceptView.frame = bounds
+            acceptView.frame = CGRect(origin: NSMakePoint(30, 0), size: NSMakeSize(frame.width - 60, 40))
         } else {
-            acceptView.centerY(x:frame.width - acceptView.frame.width - 30)
+            if cancelView == nil {
+                acceptView.frame = bounds
+            } else {
+                acceptView.centerY(x:frame.width - acceptView.frame.width - 30)
+            }
             if let cancelView = cancelView {
                 if interactions.alignCancelLeft {
                     cancelView.centerY(x: 30)
@@ -250,8 +276,7 @@ private class ModalInteractionsContainer : View {
         borderView?.frame = NSMakeRect(0, 0, frame.width, .borderSize)
     }
     
-    
-    
+ 
 }
 
 
@@ -378,6 +403,20 @@ private final class ModalHeaderView: View {
         
     }
     
+    private func updateBackground(animated: Bool) {
+        switch self.state {
+        case .active:
+            background = customTheme().activeBackground
+            borderColor = customTheme().activeBorder
+        case .normal:
+            background = customTheme().background
+            borderColor = customTheme().border
+        }
+        if animated {
+            self.layer?.animateBackground()
+        }
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
@@ -385,8 +424,7 @@ private final class ModalHeaderView: View {
             return
         }
         
-        background = customTheme().background
-        borderColor = customTheme().border
+        self.updateBackground(animated: false)
 
         let header = controller.modalHeader
         if let header = header {
@@ -410,6 +448,14 @@ private final class ModalHeaderView: View {
     required public init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
+    
+    private var state: ModalHeaderActiveState = .normal
+    
+    func makeHeaderState(state: ModalHeaderActiveState,  animated: Bool) {
+        self.state = state
+        self.updateBackground(animated: animated)
+    }
+    
 }
 
 private class ModalContainerView: View {
@@ -457,6 +503,7 @@ public class Modal: NSObject {
     private let isOverlay: Bool
     private let animationType: ModalAnimationType
     private let parentView: NSView?
+    
     public init(controller:ModalViewController, for window:Window, animated: Bool = true, isOverlay: Bool, animationType: ModalAnimationType, parentView: NSView? = nil) {
         self.parentView = parentView
         self.animationType = animationType
@@ -483,7 +530,7 @@ public class Modal: NSObject {
         controller.modal = self
         if let interactions = interactions {
             interactionsView = ModalInteractionsContainer(interactions: interactions, modal:self)
-            interactionsView?.frame = NSMakeRect(0, controller.bounds.height, controller.bounds.width, interactions.height)
+            interactionsView?.frame = NSMakeRect(0, controller.bounds.height + controller.bar.height, controller.bounds.width, interactions.height)
         }
         if let header = controller.modalHeader {
             headerView = ModalHeaderView(frame: NSMakeRect(0, 0, controller.bounds.width, 50), data: header, customTheme: { [weak controller] in
@@ -605,6 +652,7 @@ public class Modal: NSObject {
         activeModals.append(WeakReference(value: self))
     }
     
+
     private var topView: NSView {
         if let parentView = self.parentView {
             return parentView
@@ -801,6 +849,10 @@ public class Modal: NSObject {
             view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
         }
         self.subview = view
+    }
+    
+    public func makeHeaderState(state: ModalHeaderActiveState,  animated: Bool) {
+        self.headerView?.makeHeaderState(state: state, animated: animated)
     }
     
     deinit {

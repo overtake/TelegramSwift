@@ -38,7 +38,7 @@ final class RequestJoinChatRowItem : GeneralRowItem {
             countText = strings().peerStatusMemberCountable(participantsCount).replacingOccurrences(of: "\(participantsCount)", with: participantsCount.formattedWithSeparator)
         }
         
-        self.statusLayout = TextViewLayout(.initialize(string: countText, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        self.statusLayout = TextViewLayout(.initialize(string: countText, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
 
         if let about = about {
             self.aboutLayout = TextViewLayout(.initialize(string: about, color: theme.colors.text, font: .normal(.text)), alignment: .center)
@@ -53,7 +53,7 @@ final class RequestJoinChatRowItem : GeneralRowItem {
     override var height: CGFloat {
         let top = self.viewType.innerInset.top
         
-        var height = top + 80 + top + self.titleLayout.layoutSize.height + self.statusLayout.layoutSize.height + top
+        var height = 80 + self.titleLayout.layoutSize.height + self.statusLayout.layoutSize.height
         if let about = aboutLayout {
             height += top + about.layoutSize.height
         }
@@ -101,6 +101,10 @@ private final class RequestJoinChatRowView : GeneralContainableRowView {
         aboutView.isSelectable = false
     }
     
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
     override func layout() {
         super.layout()
         
@@ -108,7 +112,7 @@ private final class RequestJoinChatRowView : GeneralContainableRowView {
             return
         }
         let top = item.viewType.innerInset.top
-        avatar.centerX(y: top)
+        avatar.centerX(y: 0)
         titleView.centerX(y: avatar.frame.maxY + top, addition: statusImage != nil ? -(statusImage!.frame.width / 2 + 5) : 0)
         statusView.centerX(y: titleView.frame.maxY)
         aboutView.centerX(y: statusView.frame.maxY + top)

@@ -32,7 +32,7 @@ final class DateSelectorModalView : View {
         self.addSubview(sendOn)
         self.atView.userInteractionEnabled = false
         self.atView.isSelectable = false
-        self.sendOn.layer?.cornerRadius = .cornerRadius
+        self.sendOn.layer?.cornerRadius = 10
         self.sendOn.disableActions()
         self.addSubview(self.sendWhenOnline)
         self.updateLocalizationAndTheme(theme: theme)
@@ -40,6 +40,8 @@ final class DateSelectorModalView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        
+        self.backgroundColor = theme.colors.listBackground
         
         self.sendOn.set(font: .medium(.text), for: .Normal)
         self.sendOn.set(color: .white, for: .Normal)
@@ -83,24 +85,24 @@ final class DateSelectorModalView : View {
         if let mode = mode {
             switch mode {
             case .date:
-                self.dayPicker.setFrameSize(NSMakeSize(130, 30))
-                self.timePicker.setFrameSize(NSMakeSize(130, 30))
+                self.dayPicker.setFrameSize(NSMakeSize(135, 30))
+                self.timePicker.setFrameSize(NSMakeSize(135, 30))
 
                 let fullWidth = dayPicker.frame.width + 15 + timePicker.frame.width
                 self.containerView.setFrameSize(NSMakeSize(fullWidth, max(dayPicker.frame.height, timePicker.frame.height)))
                 self.dayPicker.centerY(x: 0)
                 self.timePicker.centerY(x: dayPicker.frame.maxX + 15)
-                self.containerView.centerX(y: 30)
+                self.containerView.centerX(y: 10)
             case .schedule:
-                self.dayPicker.setFrameSize(NSMakeSize(115, 30))
-                self.timePicker.setFrameSize(NSMakeSize(115, 30))
+                self.dayPicker.setFrameSize(NSMakeSize(120, 30))
+                self.timePicker.setFrameSize(NSMakeSize(120, 30))
                 let fullWidth = dayPicker.frame.width + 15 + atView.frame.width + 15 + timePicker.frame.width
                 self.containerView.setFrameSize(NSMakeSize(fullWidth, max(dayPicker.frame.height, timePicker.frame.height)))
                 self.dayPicker.centerY(x: 0)
                 self.atView.centerY(x: self.dayPicker.frame.maxX + 15)
                 self.timePicker.centerY(x: self.atView.frame.maxX + 15)
-                self.containerView.centerX(y: 30)
-                _ = self.sendOn.sizeToFit(NSZeroSize, NSMakeSize(fullWidth, 30), thatFit: true)
+                self.containerView.centerX(y: 10)
+                _ = self.sendOn.sizeToFit(NSZeroSize, NSMakeSize(fullWidth, 40), thatFit: true)
                 self.sendOn.centerX(y: containerView.frame.maxY + 30)
                 self.sendWhenOnline.centerX(y: self.sendOn.frame.maxY + 15)
             }
@@ -144,15 +146,23 @@ class DateSelectorModalController: ModalViewController {
         self.mode = mode
         switch mode {
         case .schedule:
-            super.init(frame: NSMakeRect(0, 0, 350, 200))
+            super.init(frame: NSMakeRect(0, 0, 350, 180))
         case .date:
-            super.init(frame: NSMakeRect(0, 0, 350, 90))
+            super.init(frame: NSMakeRect(0, 0, 350, 70))
         }
         self.bar = .init(height: 0)
     }
     
     override func viewClass() -> AnyClass {
         return DateSelectorModalView.self
+    }
+    
+    override var modalTheme: ModalViewController.Theme {
+        return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground, activeBackground: presentation.colors.background, activeBorder: presentation.colors.border)
+    }
+    
+    override var containerBackground: NSColor {
+        return presentation.colors.listBackground
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
@@ -176,9 +186,9 @@ class DateSelectorModalController: ModalViewController {
         var height: CGFloat = 0
         switch mode {
         case .date:
-            height = 90
+            height = 70
         case .schedule:
-            height = sendWhenOnline ? 170 : 150
+            height = sendWhenOnline ? 150 : 130
         }
         
         self.modal?.resize(with:NSMakeSize(frame.width, height), animated: false)
@@ -283,6 +293,7 @@ class DateSelectorModalController: ModalViewController {
         window?.removeAllHandlers(for: self)
     }
     
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -319,7 +330,7 @@ class DateSelectorModalController: ModalViewController {
         case let .date(_, doneTitle):
             return ModalInteractions(acceptTitle: doneTitle, accept: { [weak self] in
                 self?.select()
-            }, drawBorder: true, height: 50, singleButton: true)
+            }, singleButton: true)
         }
     }
     

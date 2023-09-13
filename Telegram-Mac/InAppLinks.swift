@@ -784,7 +784,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         invokeCallback(peer, messageId, action)
                     }
                 } else {
-                    showModalText(for: context.window, text: strings().alertUserDoesntExists)
+                    alert(for: context.window, info: strings().alertUserDoesntExists)
+                    //showModalText(for: context.window, text: strings().alertUserDoesntExists)
                 }
                     
             })
@@ -1145,18 +1146,33 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             case .default:
                 execute(inapp: .external(link: link, true))
             case let .request(requestURL, peer, writeAllowed):
-                showModal(with: InlineLoginController(context: context, url: requestURL, originalURL: link, writeAllowed: writeAllowed, botPeer: peer, authorize: { allowWriteAccess in
-                    _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .url(link), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
-                        switch result {
-                        case .default:
-                            execute(inapp: .external(link: link, true))
-                        case let .accepted(url):
-                            execute(inapp: .external(link: url, false))
-                        default:
-                            break
-                        }
-                    })
-                }), for: context.window)
+                
+                var options: [ModalAlertData.Option] = []
+                options.append(.init(string: strings().botInlineAuthOptionLogin(requestURL, context.myPeer?.displayTitle ?? ""), isSelected: true, mandatory: false, uncheckEverything: true))
+                if writeAllowed {
+                    options.append(.init(string: strings().botInlineAuthOptionAllowSendMessages(peer.displayTitle), isSelected: true, mandatory: false))
+                }
+                
+                let data = ModalAlertData(title: strings().botInlineAuthHeader, info: strings().botInlineAuthTitle(requestURL), ok: strings().botInlineAuthOpen, options: options)
+                                
+                showModalAlert(for: context.window, data: data, completion: { result in
+                    if result.selected.isEmpty {
+                        execute(inapp: .external(link: link, false))
+                    } else {
+                        let allowWriteAccess = result.selected[1] == true
+                        
+                        _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .url(link), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
+                            switch result {
+                            case .default:
+                                execute(inapp: .external(link: link, true))
+                            case let .accepted(url):
+                                execute(inapp: .external(link: url, false))
+                            default:
+                                break
+                            }
+                        })
+                    }
+                })
             }
         })
         

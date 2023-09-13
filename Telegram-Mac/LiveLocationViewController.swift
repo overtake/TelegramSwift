@@ -21,11 +21,6 @@ private final class LocationPreviewArguments {
     }
 }
 
-extension TelegramMediaMap : Equatable {
-    public static func == (lhs: TelegramMediaMap, rhs: TelegramMediaMap) -> Bool {
-        return lhs.heading == rhs.heading && lhs.longitude == rhs.longitude && lhs.latitude == rhs.latitude
-    }
-}
 
 private struct LocationPreviewState : Equatable {
     static func == (lhs: LocationPreviewState, rhs: LocationPreviewState) -> Bool {
@@ -66,6 +61,9 @@ private func entries(_ state:LocationPreviewState, arguments: LocationPreviewArg
         return LocationPreviewMapRowItem(initialSize, height: 330, stableId: stableId, context: arguments.context, latitude: state.map.latitude, longitude: state.map.longitude, peer: state.peer, viewType: .legacy, presentation: theme)
     }))
     index += 1
+    
+    entries.append(.sectionId(index, type: .customModern(20)))
+    sectionId += 1
     
     return entries
 }
@@ -111,7 +109,7 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
     let modalInteractions = ModalInteractions(acceptTitle: strings().locationPreviewOpenInMaps, accept: {
         close?()
         execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", stateValue.with { $0.map.latitude })),\(String(format:"%f", stateValue.with { $0.map.longitude }))", false))
-    }, height: 50, singleButton: true)
+    }, singleButton: true)
     
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
@@ -124,6 +122,8 @@ func LocationModalPreview(_ context: AccountContext, map mapValue: TelegramMedia
     }
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in f() }, size: NSMakeSize(380, 330))
+    
+    
     
     close = { [weak modalController] in
         modalController?.close()

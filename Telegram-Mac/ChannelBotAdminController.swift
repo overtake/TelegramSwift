@@ -203,7 +203,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state.admin), comparable: nil, item: { initialSize, stableId in
@@ -212,14 +212,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         return ShortPeerRowItem(initialSize, peer: state.admin.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, inset: NSEdgeInsets(left: 30, right: 30), viewType: .singleItem, action: {})
     }))
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_rights, data: .init(name: strings().channelAddBotAdminRights, color: theme.colors.text, type: .switchable(state.isAdmin), viewType: .singleItem, action: arguments.toggleIsAdmin)))
     
     if state.isAdmin {
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
                 
@@ -349,7 +349,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
         }
         
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
         entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().channelAddBotCustomTitle, filter: { text in
@@ -362,7 +362,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
         
    
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -442,7 +442,7 @@ func ChannelBotAdminController(context: AccountContext, peer: Peer, admin: Peer,
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().channelAddBotButtonAdmin, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)

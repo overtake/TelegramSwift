@@ -94,7 +94,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
     case description(Int32, Int32, String, GeneralViewType)
     case changeOwnership(Int32, Int32, String, GeneralViewType)
     case dismiss(Int32, Int32, String, GeneralViewType)
-    case section(Int32)
+    case section(Int32, CGFloat)
     
     
     var stableId: ChannelAdminEntryStableId {
@@ -117,7 +117,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
             return .roleDesc
         case .role:
             return .role
-        case .section(let sectionId):
+        case .section(let sectionId, _):
             return .section(sectionId)
         }
     }
@@ -142,7 +142,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
             return (sectionId * 1000) + 1
         case let .roleDesc(sectionId, _):
             return (sectionId * 1000) + 2
-        case let .section(sectionId):
+        case let .section(sectionId, _):
             return (sectionId + 1) * 1000 - sectionId
         }
     }
@@ -153,8 +153,8 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
     
     func item(_ arguments: ChannelAdminControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+        case let .section(_, height):
+            return GeneralRowItem(initialSize, height: height, stableId: stableId, viewType: .separator)
         case let .info(_, peer, presence, viewType):
             let peer = peer.peer
             var string:String = peer.isBot ? strings().presenceBot : strings().peerStatusRecently
@@ -350,7 +350,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
     
     var sectionId:Int32 = 1
     
-    entries.append(.section(sectionId))
+    entries.append(.section(sectionId, 10))
     sectionId += 1
     
     var descId: Int32 = 0
@@ -411,7 +411,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             }
             
             if channel.isSupergroup {
-                entries.append(.section(sectionId))
+                entries.append(.section(sectionId, 20))
                 sectionId += 1
                 let placeholder = isCreator ? strings().channelAdminRolePlaceholderOwner : strings().channelAdminRolePlaceholderAdmin
                 entries.append(.roleHeader(sectionId, .textTopItem))
@@ -419,7 +419,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 entries.append(.description(sectionId, descId, isCreator ? strings().channelAdminRoleOwnerDesc : strings().channelAdminRoleAdminDesc, .textBottomItem))
                 descId += 1
             }
-            entries.append(.section(sectionId))
+            entries.append(.section(sectionId, 20))
             sectionId += 1
             
            
@@ -516,7 +516,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                         }
 
                         if channel.isChannel && canTransfer {
-                            entries.append(.section(sectionId))
+                            entries.append(.section(sectionId, 20))
                             sectionId += 1
                             entries.append(.changeOwnership(sectionId, descId, channel.isChannel ? strings().channelAdminTransferOwnershipChannel : strings().channelAdminTransferOwnershipGroup, .singleItem))
                         }
@@ -527,16 +527,16 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             
         } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminInfo, _, _) = initialParticipant, let adminInfo = maybeAdminInfo {
             
-            entries.append(.section(sectionId))
+            entries.append(.section(sectionId, 20))
             sectionId += 1
             
             if let rank = state.rank {
-                entries.append(.section(sectionId))
+                entries.append(.section(sectionId, 20))
                 sectionId += 1
                 entries.append(.roleHeader(sectionId, .textTopItem))
                 entries.append(.description(sectionId, descId, rank, .textTopItem))
                 descId += 1
-                entries.append(.section(sectionId))
+                entries.append(.section(sectionId, 20))
                 sectionId += 1
             }
             
@@ -571,16 +571,16 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             descId += 1
         } else if let initialParticipant = initialParticipant, case .creator = initialParticipant {
             
-            entries.append(.section(sectionId))
+            entries.append(.section(sectionId, 20))
             sectionId += 1
             
             if let rank = state.rank {
-                entries.append(.section(sectionId))
+                entries.append(.section(sectionId, 20))
                 sectionId += 1
                 entries.append(.roleHeader(sectionId, .textTopItem))
                 entries.append(.description(sectionId, descId, rank, .textBottomItem))
                 descId += 1
-                entries.append(.section(sectionId))
+                entries.append(.section(sectionId, 20))
                 sectionId += 1
             }
             
@@ -628,7 +628,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
         let placeholder = isCreator ? strings().channelAdminRolePlaceholderOwner : strings().channelAdminRolePlaceholderAdmin
         
         
-        entries.append(.section(sectionId))
+        entries.append(.section(sectionId, 20))
         sectionId += 1
         
         entries.append(.roleHeader(sectionId, .textTopItem))
@@ -636,7 +636,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
         entries.append(.description(sectionId, descId, isCreator ? strings().channelAdminRoleOwnerDesc : strings().channelAdminRoleAdminDesc, .textBottomItem))
         descId += 1
         
-        entries.append(.section(sectionId))
+        entries.append(.section(sectionId, 20))
         sectionId += 1
         
         if !isCreator {
@@ -704,7 +704,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             if case .creator = group.role, !admin.isBot {
                 if currentRightsFlags.contains(maskRightsFlags) {
                     if admin.id != accountPeerId {
-                        entries.append(.section(sectionId))
+                        entries.append(.section(sectionId, 20))
                         sectionId += 1
                         entries.append(.changeOwnership(sectionId, descId, strings().channelAdminTransferOwnershipGroup, .singleItem))
                     }
@@ -737,14 +737,14 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
     }
     
     if canDismiss {
-        entries.append(.section(sectionId))
+        entries.append(.section(sectionId, 20))
         sectionId += 1
         
         entries.append(.dismiss(sectionId, descId, strings().channelAdminDismiss, .singleItem))
         descId += 1
     }
     
-    entries.append(.section(sectionId))
+    entries.append(.section(sectionId, 20))
     sectionId += 1
     
     return entries
@@ -813,6 +813,10 @@ class ChannelAdminController: TableModalViewController {
         bar = .init(height : 0)
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        genericView.notifyScrollHandlers()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -1282,6 +1286,21 @@ class ChannelAdminController: TableModalViewController {
             }
         }))
         
+        genericView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            if self.genericView.documentSize.height > self.genericView.frame.height {
+                self.genericView.verticalScrollElasticity = .automatic
+            } else {
+                self.genericView.verticalScrollElasticity = .none
+            }
+            if position.rect.minY - self.genericView.frame.height > 0 {
+                self.modal?.makeHeaderState(state: .active, animated: true)
+            } else {
+                self.modal?.makeHeaderState(state: .normal, animated: true)
+            }
+        }))
         
     }
     
@@ -1308,14 +1327,26 @@ class ChannelAdminController: TableModalViewController {
         return .invoked
     }
     
-    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData(title: strings().adminsAdmin), right: nil)
-    }
+    
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak self] in
-             self?.okClick?()
-        }, drawBorder: true, height: 50, singleButton: true)
+        return ModalInteractions(acceptTitle: strings().modalSave, accept: { [weak self] in
+            self?.okClick?()
+        }, singleButton: true)
     }
+    
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: strings().adminsAdmin), right: nil)
+    }
+    override var containerBackground: NSColor {
+        return theme.colors.listBackground
+    }
+    
+    override var modalTheme: ModalViewController.Theme {
+        return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground, activeBackground: presentation.colors.background, activeBorder: presentation.colors.border)
+    }
+    
 }
 

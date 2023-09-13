@@ -134,11 +134,11 @@ private func cancelResetAccountEntries(state: CancelResetAccountState, data: Can
     var index:Int32 = 0
     
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
 //
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: state.limit))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: state.limit))
     index += 1
     
     var nextOptionText = ""
@@ -154,9 +154,9 @@ private func cancelResetAccountEntries(state: CancelResetAccountState, data: Can
     if !nextOptionText.isEmpty {
         result += "\n\n" + nextOptionText
     }
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(result), data: InputDataGeneralTextData()))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(result), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -308,13 +308,10 @@ func cancelResetAccountController(context: AccountContext, phone: String, data: 
         }
     }, hasDone: true)
     
-    controller.getBackgroundColor = {
-        theme.colors.background
-    }
-    
+   
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalSend, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     

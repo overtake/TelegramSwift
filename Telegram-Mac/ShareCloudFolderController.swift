@@ -72,8 +72,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
     
     let name: String = state.filter.title
     
@@ -92,7 +90,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
 
     if let link = state.link {
@@ -125,7 +123,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         index += 1
         
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     }
 
@@ -215,7 +213,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
    
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     
@@ -378,7 +376,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: link != nil ? modalInteractions : nil, closeHandler: { f in
         if let link = link {
@@ -432,7 +430,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
     
     controller.afterTransaction = { [weak modalInteractions, weak modalController] controller in
         modalInteractions?.updateDone { title in
-            title.set(color: stateValue.with { $0.selected.isEmpty } ? theme.colors.redUI : theme.colors.accent, for: .Normal)
+            title.set(background: stateValue.with { $0.selected.isEmpty } ? theme.colors.redUI : theme.colors.accent, for: .Normal)
             title.set(text: stateValue.with { $0.selected.isEmpty } ? strings().shareFolderDoneDelete : strings().shareFolderDoneDone, for: .Normal)
         }
         if let title = stateValue.with({ $0.link?.title }), !title.isEmpty {

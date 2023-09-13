@@ -123,24 +123,31 @@ func savePanel(file:String, named:String, for window:Window) {
 
 
 
-func alert(for window:Window, header:String = appName, info:String?, runModal: Bool = false, completion: (()->Void)? = nil, appearance: NSAppearance? = nil) {
+func alert(for window:Window, header:String? = nil, info:String?, runModal: Bool = false, completion: (()->Void)? = nil, presentation: TelegramPresentationTheme? = nil) {
     
-    delay(0.01, closure: {
-        let alert:NSAlert = NSAlert()
-        alert.window.appearance = appearance ?? theme.appearance
-        alert.alertStyle = .informational
-        alert.messageText = header
-        alert.informativeText = info ?? ""
-        alert.addButton(withTitle: strings().alertOK)
-        
-        if runModal {
-            alert.runModal()
-        } else {
-            alert.beginSheetModal(for: window, completionHandler: { (_) in
-                completion?()
-            })
-        }
-    })
+    
+    let data = ModalAlertData(title: header, info: info ?? "", options: [])
+    
+    showModalAlert(for: window, data: data, completion: { _ in
+        completion?()
+    }, presentation: presentation)
+    
+//    delay(0.01, closure: {
+//        let alert:NSAlert = NSAlert()
+//        alert.window.appearance = appearance ?? theme.appearance
+//        alert.alertStyle = .informational
+//        alert.messageText = header
+//        alert.informativeText = info ?? ""
+//        alert.addButton(withTitle: strings().alertOK)
+//
+//        if runModal {
+//            alert.runModal()
+//        } else {
+//            alert.beginSheetModal(for: window, completionHandler: { (_) in
+//                completion?()
+//            })
+//        }
+//    })
 
 }
 
