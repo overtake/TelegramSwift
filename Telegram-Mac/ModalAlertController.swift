@@ -55,7 +55,7 @@ private final class RowItem : TableRowItem {
         self.toggle = toggle
         self.action = action
         
-        let info = parseMarkdownIntoAttributedString(state.data.info, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.listGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.listGrayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accent), linkAttribute: { contents in
+        let info = parseMarkdownIntoAttributedString(state.data.info, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.darkGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.darkGrayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accent), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
         })).mutableCopy() as! NSMutableAttributedString
         
