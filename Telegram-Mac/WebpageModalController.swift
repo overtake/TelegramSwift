@@ -480,12 +480,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     enum RequestData {
-        case simple(url: String, bot: Peer, buttonText: String, source: RequestSimpleWebViewSource)
+        case simple(url: String, bot: Peer, buttonText: String, source: RequestSimpleWebViewSource, hasSettings: Bool)
         case normal(url: String?, peerId: PeerId, threadId: Int64?, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, hasSettings: Bool, complete:(()->Void)?)
         
         var bot: Peer {
             switch self {
-            case let .simple(_, bot, _, _):
+            case let .simple(_, bot, _, _, _):
                 return bot
             case let .normal(_, _, _, bot, _, _, _, _, _, _):
                 return bot
@@ -493,7 +493,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         var buttonText: String {
             switch self {
-            case let .simple(_, _, buttonText, _):
+            case let .simple(_, _, buttonText, _, _):
                 return buttonText
             case let .normal(_, _, _, _, _, buttonText, _, _, _, _):
                 return buttonText
@@ -501,7 +501,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         var isInline: Bool {
             switch self {
-            case let .simple(_, _, _, source):
+            case let .simple(_, _, _, source, _):
                 return source == .inline
             case .normal:
                 return false
@@ -509,8 +509,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         var hasSettings: Bool {
             switch self {
-            case .simple:
-                return false
+            case let .simple(_, _, _, _, hasSettings):
+                return hasSettings
             case let .normal(_, _, _, _, _, _, _, _, hasSettings, _):
                 return hasSettings
             }
@@ -696,7 +696,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             
             switch requestData {
-            case let .simple( url, bot, _, source):
+            case let .simple(url, bot, _, source, _):
                 let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, source: source, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
                                 
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
@@ -842,12 +842,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         
         if let requestData = self.requestData {
-            switch requestData {
-            case .simple(_, let bot, _, _):
-                request(bot)
-            case .normal(_, _, _, let bot, _, _, _, _, _, _):
-                request(bot)
-            }
+            request(requestData.bot)
         } else {
             return decisionHandler(.deny)
         }
@@ -1485,4 +1480,5 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
 
 }
+
 

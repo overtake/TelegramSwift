@@ -727,7 +727,9 @@ final class AccountContext {
             }
             for value in value {
                 if let file = value.icons[.macOSSettingsStatic] {
-                    _ = freeMediaFileInteractiveFetched(context: self, fileReference: FileMediaReference.standalone(media: file)).start()
+                    if let peerReference = PeerReference(value.peer._asPeer()) {
+                        _ = freeMediaFileInteractiveFetched(context: self, fileReference: FileMediaReference.attachBot(peer: peerReference, media: file)).start()
+                    }
                 }
             }
         }))
@@ -1099,7 +1101,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
 
             let dataDisposable = resourceData.start(next: { data in
                 
-                if let palette = importPalette(data.path) {                    
+                if let palette = importPalette(data.path) {
                     var wallpaper: Signal<TelegramWallpaper?, GetWallpaperError>? = nil
                     var newSettings: WallpaperSettings = WallpaperSettings()
                     #if !SHARE

@@ -111,7 +111,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
     var requestMessageActionCallback:(MessageId, Bool, (requiresPassword: Bool, data: MemoryBuffer)?) -> Void = {_,_,_  in}
-    var inlineAudioPlayer:(APController) -> Void = {_ in} 
+    var inlineAudioPlayer:(APController) -> Void = {_ in}
     var movePeerToInput:(Peer) -> Void = {_ in}
     var sendInlineResult:(ChatContextResultCollection,ChatContextResult) -> Void = {_,_  in}
     var scrollToLatest:(Bool)->Void = {_ in}
@@ -731,7 +731,7 @@ final class ChatInteraction : InterfaceObserver  {
         if simple {
             let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, source: inline ? .inline : .generic, themeParams: generateWebAppThemeParams(theme))
             _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, source: inline ? .inline : .generic), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, source: inline ? .inline : .generic, hasSettings: false), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
             })
         } else {
             _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak self] attach in
@@ -812,7 +812,6 @@ final class ChatInteraction : InterfaceObserver  {
                             case .default:
                                 execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
                             case let .request(requestURL, peer, writeAllowed):
-                                
                                 var options: [ModalAlertData.Option] = []
                                 options.append(.init(string: strings().botInlineAuthOptionLogin(requestURL, context.myPeer?.displayTitle ?? ""), isSelected: true, mandatory: false, uncheckEverything: true))
                                 if writeAllowed {
@@ -928,5 +927,6 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
 }
+
 
 
