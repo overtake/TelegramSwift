@@ -76,7 +76,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
@@ -86,7 +86,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
         }))
         index += 1
         
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     }
 
@@ -97,7 +97,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
         }))
         index += 1
         
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     }
     
@@ -122,7 +122,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
             index += 1
         }
         if !channels.isEmpty {
-            entries.append(.sectionId(sectionId, type: .normal))
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
         }
         
@@ -132,7 +132,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_loading"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return LoadingTableItem(initialSize, height: 42, stableId: stableId, viewType: .singleItem)
         }))
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     }
 
@@ -180,7 +180,7 @@ func InactiveChannelsController(context: AccountContext, source: InactiveSource)
             _ = showModalProgress(signal: signal, for: context.window).start()
         }
         
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     
     arguments.select.singleUpdater = { [weak modalInteractions] presentation in

@@ -44,8 +44,8 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
     var sectionId:Int32 = 0
     var index: Int32 = 0
 
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
 
     if state.peer.peer.canClearHistory, !onlyDelete {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_clear, data: .init(name: strings().chatContextClearHistory, color: theme.colors.redUI, icon: theme.icons.destruct_clear_history, type: .none, viewType: .singleItem, enabled: true, action: arguments.clearHistory)))
@@ -62,7 +62,7 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
 
     if state.peer.peer.canManageDestructTimer && state.peer.peer.id != arguments.context.peerId {
         
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
 
         
@@ -100,7 +100,7 @@ private func entries(_ state: State, arguments: Arguments, onlyDelete: Bool) -> 
         }
 
     }
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
 
 
@@ -218,7 +218,7 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer, onlyDelet
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
 
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
 

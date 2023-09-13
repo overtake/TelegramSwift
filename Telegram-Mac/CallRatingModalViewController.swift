@@ -107,7 +107,7 @@ class CallRatingModalViewController: ModalViewController {
         self.callId = callId
         self.isVideo = isVideo
         self.userInitiated = userInitiated
-        super.init(frame: NSMakeRect(0, 0, 260, 100))
+        super.init(frame: NSMakeRect(0, 0, 300, 100))
         bar = .init(height: 0)
     }
     
@@ -121,7 +121,7 @@ class CallRatingModalViewController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: strings().callRatingModalNotNow, drawBorder: true, height: 50, singleButton: true)
+        return ModalInteractions(acceptTitle: strings().callRatingModalNotNow, singleButton: true)
     }
     
 

@@ -29,7 +29,7 @@ final class UserInfoSuggestPhotoItem : GeneralRowItem {
         case .suggest:
             text = strings().userInfoSuggestConfirm(user.compactDisplayTitle)
         }
-        self.textLayout = .init(.initialize(string: text, color: theme.colors.text, font: .normal(.text)), alignment: .center)
+        self.textLayout = .init(.initialize(string: text, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
         
@@ -45,7 +45,7 @@ final class UserInfoSuggestPhotoItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return viewType.innerInset.top + 50 + viewType.innerInset.top + textLayout.layoutSize.height + viewType.innerInset.bottom
+        return 50 + viewType.innerInset.top + textLayout.layoutSize.height
     }
     
     override func viewClass() -> AnyClass {
@@ -99,7 +99,7 @@ private final class UserInfoSuggestPhotoView: GeneralContainableRowView {
             return
         }
         
-        imageContainer.centerX(y: item.viewType.innerInset.top)
+        imageContainer.centerX(y: 0)
         imageView.center()
         
         currentPhoto.centerY(x: 0)
@@ -107,7 +107,11 @@ private final class UserInfoSuggestPhotoView: GeneralContainableRowView {
         
         photoVideoView?.frame = newPhoto.frame
 
-        textView.centerX(y: containerView.frame.height - textView.frame.height - item.viewType.innerInset.top)
+        textView.centerX(y: containerView.frame.height - textView.frame.height)
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {

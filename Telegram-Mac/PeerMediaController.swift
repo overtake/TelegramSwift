@@ -845,7 +845,7 @@
         
         if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
             storiesTab = storyListContext.state |> map { state -> (exist: Bool, loaded: Bool) in
-                return (exist: state.totalCount > 0, loaded: state.peerReference != nil)
+                return (exist: state.totalCount > 0, loaded: true)
             } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 return (tag: .stories, exists: data.exist, hasLoaded: data.loaded)
             }

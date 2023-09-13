@@ -812,18 +812,33 @@ final class ChatInteraction : InterfaceObserver  {
                             case .default:
                                 execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
                             case let .request(requestURL, peer, writeAllowed):
-                                showModal(with: InlineLoginController(context: context, url: requestURL, originalURL: url, writeAllowed: writeAllowed, botPeer: peer, authorize: { allowWriteAccess in
-                                    _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .message(id: keyboardMessage.id, buttonId: buttonId), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
-                                        switch result {
-                                        case .default:
-                                            execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
-                                        case let .accepted(url):
-                                            execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
-                                        default:
-                                            break
-                                        }
-                                    })
-                                }), for: context.window)
+                                
+                                var options: [ModalAlertData.Option] = []
+                                options.append(.init(string: strings().botInlineAuthOptionLogin(requestURL, context.myPeer?.displayTitle ?? ""), isSelected: true, mandatory: false, uncheckEverything: true))
+                                if writeAllowed {
+                                    options.append(.init(string: strings().botInlineAuthOptionAllowSendMessages(peer.displayTitle), isSelected: true, mandatory: false))
+                                }
+                                
+                                let data = ModalAlertData(title: strings().botInlineAuthHeader, info: strings().botInlineAuthTitle(requestURL), ok: strings().botInlineAuthOpen, options: options)
+                                                
+                                showModalAlert(for: context.window, data: data, completion: { result in
+                                    if result.selected.isEmpty {
+                                        execute(inapp: .external(link: url, false))
+                                    } else {
+                                        let allowWriteAccess = result.selected[1] == true
+                                        
+                                        _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .url(url), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
+                                            switch result {
+                                            case .default:
+                                                execute(inapp: .external(link: url, true))
+                                            case let .accepted(url):
+                                                execute(inapp: .external(link: url, false))
+                                            default:
+                                                break
+                                            }
+                                        })
+                                    }
+                                })
                             }
                         })
                     case let .setupPoll(isQuiz):

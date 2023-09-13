@@ -49,7 +49,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
@@ -74,7 +74,7 @@ private func logoutEntries(state: LogoutControllerState, activeAccounts: [Accoun
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_contact_support, data: InputDataGeneralData(name: strings().logoutOptionsContactSupportTitle, color: theme.colors.text, icon: theme.icons.logoutOptionContactSupport, type: .next, viewType: .lastItem, description: strings().logoutOptionsContactSupportText, action: arguments.contactSupport)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     
@@ -139,11 +139,11 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
     
     let modalController = InputDataModalController(controller, modalInteractions: ModalInteractions(acceptTitle: strings().logoutOptionsLogOut, accept: {
         arguments.logout()
-    }, drawBorder: true, height: 50, singleButton: true))
+    }, singleButton: true))
     
     controller.afterTransaction = { [weak modalController] controller in
         modalController?.modalInteractions?.updateDone { button in
-            button.set(color: theme.colors.redUI, for: .Normal)
+            button.set(background: theme.colors.redUI, for: .Normal)
         }
     }
     

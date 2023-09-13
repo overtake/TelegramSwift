@@ -561,7 +561,9 @@ func exportPalette(palette: ColorPalette, completion:((String?)->Void)? = nil) -
     let string = palette.toString
     let temp = NSTemporaryDirectory() + "tmac.palette"
     try? string.write(to: URL(fileURLWithPath: temp), atomically: true, encoding: .utf8)
+    #if !SHARE
     savePanel(file: temp, ext: "palette", for: mainWindow, defaultName: "\(palette.name).palette", completion: completion)
+    #endif
 }
 
 

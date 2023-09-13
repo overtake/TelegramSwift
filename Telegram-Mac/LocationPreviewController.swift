@@ -491,6 +491,9 @@ private func entries(_ state:State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
+    sectionId += 1
+    
     return entries
 }
 @available(macOS 10.13, *)
@@ -530,7 +533,7 @@ func LocationModalPreview(_ context: AccountContext, venue: MediaArea.Venue, pee
     let modalInteractions = ModalInteractions(acceptTitle: strings().locationPreviewOpenInMaps, accept: {
         close?()
         execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", stateValue.with { $0.map.latitude })),\(String(format:"%f", stateValue.with { $0.map.longitude }))", false))
-    }, height: 50, singleButton: true, customTheme: {
+    }, singleButton: true, customTheme: {
         .init(presentation: presentation)
     })
     
@@ -542,6 +545,10 @@ func LocationModalPreview(_ context: AccountContext, venue: MediaArea.Venue, pee
     controller.rightModalHeader = ModalHeaderData(image: presentation.icons.locationMapLocated, handler: {
         focusSelf?()
     })
+    
+    controller.getBackgroundColor = {
+        presentation.colors.background
+    }
     
     controller.updateDatas = { data in
         

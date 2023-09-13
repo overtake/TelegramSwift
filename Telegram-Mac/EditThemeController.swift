@@ -417,7 +417,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
     
     let modalInteractions = ModalInteractions(acceptTitle: strings().editThemeEdit, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, drawBorder: true, height: 50)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     

@@ -80,7 +80,7 @@ private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arg
         index += 1
     } 
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
 
     
@@ -96,7 +96,7 @@ private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arg
         index += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -151,7 +151,7 @@ func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet]
     
     let modalInteractions: ModalInteractions = ModalInteractions(acceptTitle: actionText.0, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     
     
@@ -163,11 +163,7 @@ func ModalOptionSetController(context: AccountContext, options: [ModalOptionSet]
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: dismiss)
     
-    Queue.mainQueue().justDispatch {
-        modalInteractions.updateDone { title in
-            title.set(color: actionText.1, for: .Normal)
-        }
-    }
+    
     
     
     return modalController

@@ -1457,6 +1457,8 @@ public final class L10n {
   public static func channelEventLogServiceUpdateLeft(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.UpdateLeft", p1)
   }
+  /// Chat Admins
+  public static var channelEventLogsFilterTitle: String  { return L10n.tr("Localizable", "Channel.EventLogs.Filter.Title") }
   /// This option is disabled in channel Permissions for all members.
   public static var channelExceptionDisabledOptionChannel: String  { return L10n.tr("Localizable", "Channel.Exception.DisabledOption.Channel") }
   /// This option is disabled in group's Permissions for all members.
@@ -7445,6 +7447,8 @@ public final class L10n {
   public static var modalCancel: String  { return L10n.tr("Localizable", "Modal.Cancel") }
   /// Copy Link
   public static var modalCopyLink: String  { return L10n.tr("Localizable", "Modal.CopyLink") }
+  /// Create
+  public static var modalCreate: String  { return L10n.tr("Localizable", "Modal.Create") }
   /// Done
   public static var modalDone: String  { return L10n.tr("Localizable", "Modal.Done") }
   /// Not Now
@@ -14191,17 +14195,17 @@ public final class L10n {
   public static var webAuthorizationsLoggedInDescrpiption: String  { return L10n.tr("Localizable", "WebAuthorizations.LoggedIn.Descrpiption") }
   /// You can log in on websites that support signing in with Telegram.
   public static var webAuthorizationsLogoutAllDescription: String  { return L10n.tr("Localizable", "WebAuthorizations.LogoutAll.Description") }
-  /// %@ shortcuts will be added in your attachment menu and Settings.
+  /// **%@** shortcuts will be added in your attachment menu and Settings.
   public static func webBotAccountDesclaimerDesc(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebBot.Account.Desclaimer.Desc", p1)
   }
   /// Continue
   public static var webBotAccountDisclaimerOK: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.OK") }
-  /// You are about to use a mini app operated by an independent party not affiliated with Telegram. You must agree to the Terms of Use of mini apps to continue.
+  /// You are about to use a mini app operated by an independent party **not affiliated with Telegram**. You must agree to the Terms of Use of mini apps to continue.
   public static var webBotAccountDisclaimerText: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Text") }
   /// I agree to the [Terms of Use](https://telegram.org/tos/mini-apps)
   public static var webBotAccountDisclaimerThird: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Third") }
-  /// Warning
+  /// Term of Use
   public static var webBotAccountDisclaimerTitle: String  { return L10n.tr("Localizable", "WebBot.Account.Disclaimer.Title") }
   /// Allow
   public static var webappAllowMessagesOK: String  { return L10n.tr("Localizable", "Webapp.AllowMessages.OK") }

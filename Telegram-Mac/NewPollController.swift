@@ -241,8 +241,6 @@ private func newPollEntries(_ state: NewPollState, context: AccountContext, canB
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
     
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.title.length > maxTextLength / 3 * 2 ? strings().newPollQuestionHeaderLimit(Int(maxTextLength) - state.title.length) : strings().newPollQuestionHeader), data: InputDataGeneralTextData(detectBold: false, viewType: .textTopItem)))
@@ -496,7 +494,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
     
     let interactions = ModalInteractions(acceptTitle: strings().modalSend, accept: {
        checkAndSend()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     
     let canBePublic: Bool
