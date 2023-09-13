@@ -16,6 +16,7 @@ final class ChatInputMenuView : View {
     private let animationView: LottiePlayerView = LottiePlayerView(frame: NSMakeRect(0, 0, 30, 30))
     weak var chatInteraction: ChatInteraction?
     private var botMenu: ChatPresentationInterfaceState.BotMenu?
+    private var text: TextView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
@@ -24,6 +25,7 @@ final class ChatInputMenuView : View {
         button.addSubview(animationView)
         button.scaleOnClick = true
         button.layer?.cornerRadius = 15
+        
         
         updateLocalizationAndTheme(theme: theme)
         
@@ -73,6 +75,37 @@ final class ChatInputMenuView : View {
         if let data = sticker.data {
             animationView.set(.init(compressed: data, key: .init(key: .bundle(sticker.rawValue + theme.colors.name), size: NSMakeSize(30, 30)), cachePurpose: .none, playPolicy: playPolicy, runOnQueue: .mainQueue()))
         }
+        
+        switch botMenu.menuButton {
+        case let .webView(text, _):
+            let current: TextView
+            if let view = self.text {
+                current = view
+            } else {
+                current = TextView()
+                current.isSelectable = false
+                current.userInteractionEnabled = false
+                self.text = current
+                button.addSubview(current)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            let layout = TextViewLayout(.initialize(string: text, color: theme.colors.underSelectedColor, font: .medium(.text)))
+            layout.measure(width: .greatestFiniteMagnitude)
+            
+            current.update(layout)
+            self.change(size: NSMakeSize(layout.layoutSize.width + 67, frame.height), animated: animated)
+        default:
+            if let view = self.text {
+                performSubviewRemoval(view, animated: animated)
+                self.text = nil
+            }
+            self.change(size: NSMakeSize(60, frame.height), animated: animated)
+        }
+        
+        
+        needsLayout = true
     }
     
     deinit {
@@ -90,9 +123,16 @@ final class ChatInputMenuView : View {
     override func layout() {
         super.layout()
                 
-        button.setFrameSize(NSMakeSize(40, 30))
-        button.centerY(x: frame.width - button.frame.width)
-        animationView.center()
+        if let text = self.text {
+            button.setFrameSize(NSMakeSize(50 + text.frame.width, 30))
+            button.centerY(x: frame.width - button.frame.width)
+            animationView.centerY(x: 5)
+            text.centerY(x: animationView.frame.maxX + 3)
+        } else {
+            button.setFrameSize(NSMakeSize(40, 30))
+            button.centerY(x: frame.width - button.frame.width)
+            animationView.center()
+        }
     }
     
     required init?(coder: NSCoder) {
