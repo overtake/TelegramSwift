@@ -394,12 +394,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
         
-        if let info = state.form?.invoice.recurrentInfo, let accept = state.recurrentAccepted {
+        if let info = state.form?.invoice.termsInfo, let accept = state.recurrentAccepted {
             entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recurrent_info, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return PaymentsCheckoutRecurrentRowItem(initialSize, stableId: stableId, termsUrl: info.termsUrl, botName: state.botPeer?.peer.displayTitle ?? "", accept: accept, toggle: arguments.toggleRecurrentAccept)
+                return PaymentsCheckoutRecurrentRowItem(initialSize, stableId: stableId, termsUrl: info.termsUrl, botName: state.botPeer?.peer.displayTitle ?? "", accept: accept, isReccurent: info.isRecurrent, toggle: arguments.toggleRecurrentAccept)
             }))
             index += 1
         }
@@ -705,7 +705,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
         updateState { current in
             var current = current
             current.form = form.0
-            if current.recurrentAccepted == nil, current.form?.invoice.recurrentInfo != nil {
+            if current.recurrentAccepted == nil, current.form?.invoice.termsInfo != nil {
                 current.recurrentAccepted = false
             }
             current.botPeer = botPeer != nil ? PeerEquatable(botPeer!) : nil

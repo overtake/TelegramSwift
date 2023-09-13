@@ -8013,9 +8013,13 @@ public final class L10n {
   public static var paymentsWarninTitle: String  { return L10n.tr("Localizable", "Payments.WarninTitle") }
   /// Invoice doesn't exist
   public static var paymentsInvoiceNotExists: String  { return L10n.tr("Localizable", "Payments.Invoice.NotExists") }
+  /// I accept the [Terms of Service]() of **%1$@**.
+  public static func paymentsNonRecurrentAccept(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Payments.NonRecurrent.Accept", p1)
+  }
   /// Tip
   public static var paymentsReceiptTip: String  { return L10n.tr("Localizable", "Payments.Receipt.Tip") }
-  /// I accept [Terms of Service]() of **%@**.
+  /// I accept [Terms of Service]() of **%1$@**.
   public static func paymentsRecurrentAccept(_ p1: String) -> String {
     return L10n.tr("Localizable", "Payments.Recurrent.Accept", p1)
   }
