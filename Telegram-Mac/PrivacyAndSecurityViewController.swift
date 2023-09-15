@@ -413,7 +413,7 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
         case let .togglePeerSuggestions(_, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().suggestFrequentContacts, type: .switchable(enabled), viewType: viewType, action: {
                 if enabled {
-                    confirm(for: arguments.context.window, information: strings().suggestFrequentContactsAlert, successHandler: { _ in
+                    verifyModal(for: arguments.context.window, information: strings().suggestFrequentContactsAlert, successHandler: { _ in
                         arguments.togglePeerSuggestions(!enabled)
                     })
                 } else {
@@ -1069,7 +1069,7 @@ class PrivacyAndSecurityViewController: TableViewController {
         }, togglePeerSuggestions: { enabled in
             _ = (context.engine.peers.updateRecentPeersEnabled(enabled: enabled) |> then(enabled ? context.engine.peers.managedUpdatedRecentPeers() : Signal<Void, NoError>.complete())).start()
         }, clearCloudDrafts: {
-            confirm(for: context.window, information: strings().privacyAndSecurityConfirmClearCloudDrafts, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().privacyAndSecurityConfirmClearCloudDrafts, successHandler: { _ in
                 _ = showModalProgress(signal: context.engine.messages.clearCloudDraftsInteractively(), for: context.window).start()
             })
         }, toggleSensitiveContent: { value in

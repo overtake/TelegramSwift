@@ -321,7 +321,7 @@ func networkUsageStatsController(context: AccountContext) -> ViewController {
             return current
         }
     }, reset: {
-        confirm(for: context.window, information: strings().networkUsageResetConfirmInfo, okTitle: strings().networkUsageResetConfirmOk, successHandler: { _ in
+        verifyModal(for: context.window, information: strings().networkUsageResetConfirmInfo, ok: strings().networkUsageResetConfirmOk, successHandler: { _ in
             let reset: ResetNetworkUsageStats = [.wifi, .cellular]
             promise.set(accountNetworkUsageStats(account: context.account, reset: reset))
         })

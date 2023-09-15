@@ -83,7 +83,7 @@ func GigagroupLandingController(context: AccountContext, peerId: PeerId) -> Inpu
     }
 
     controller.validateData = { _ in
-        confirm(for: context.window, header: strings().broadcastGroupsConfirmationAlertTitle, information: strings().broadcastGroupsConfirmationAlertText, okTitle: strings().broadcastGroupsConfirmationAlertConvert, successHandler: { _ in
+        verifyModal(for: context.window, header: strings().broadcastGroupsConfirmationAlertTitle, information: strings().broadcastGroupsConfirmationAlertText, ok: strings().broadcastGroupsConfirmationAlertConvert, successHandler: { _ in
             _ = showModalProgress(signal: convertGroupToGigagroup(account: context.account, peerId: peerId), for: context.window).start(error: { error in
                 switch error {
                 case .generic:

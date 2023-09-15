@@ -475,8 +475,8 @@ class CreateGroupViewController: ComposeViewController<CreateGroupStateResult, [
                 }
             }))
         }, revokePeerId: { peerId in
-            revokeAddressNameDisposable.set((confirmSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
-                if !result {
+            revokeAddressNameDisposable.set((verifyAlertSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
+                if result == nil {
                     return .fail(.generic)
                 } else {
                     return .single(true)

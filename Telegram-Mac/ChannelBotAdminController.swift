@@ -483,7 +483,7 @@ func ChannelBotAdminController(context: AccountContext, peer: Peer, admin: Peer,
             let ok: String = isAdmin ? strings().channelAddBotConfirmOkAdmin : strings().channelAddBotConfirmOkMember
             let cancel: String = strings().modalCancel
             
-            confirm(for: context.window, header: title, information: info, okTitle: ok, cancelTitle: cancel, successHandler: { _ in
+            verifyModal(for: context.window, header: title, information: info, ok: ok, cancel: cancel, successHandler: { _ in
                 
                 var signal: Signal<PeerId, (AddGroupMemberError?, AddChannelMemberError?, ConvertGroupToSupergroupError?)>
                 

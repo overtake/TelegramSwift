@@ -202,9 +202,9 @@ open class Control: View {
         if self.scaleOnClick {
             if state != previousState, isEnabled {
                 if state == .Highlight {
-                    self.layer?.animateScaleSpring(from: 1, to: 0.96, duration: 0.3, removeOnCompletion: false)
+                    self.layer?.animateScaleSpring(from: 1, to: 0.97, duration: 0.3, removeOnCompletion: false)
                 } else if self.layer?.animation(forKey: "transform") != nil, previousState == ControlState.Highlight {
-                    self.layer?.animateScaleSpring(from: 0.96, to: 1.0, duration: 0.3)
+                    self.layer?.animateScaleSpring(from: 0.97, to: 1.0, duration: 0.3)
                 }
             }
         }

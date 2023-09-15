@@ -1361,7 +1361,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             
             
             
-            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: cleared ? strings().storageUsageClearConfirmOKAll : strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: cleared ? strings().storageUsageClearConfirmOKAll : strings().storageUsageClearConfirmOKPart, successHandler: { _ in
                 _ = context.engine.resources.clearStorage(peerId: stateValue.with { $0.peerId }, categories: categories, includeMessages: [], excludeMessages: []).start(completed: updateStats)
                 
                 _ = updateState { current in
@@ -1470,7 +1470,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             
             let clearSize = stateValue.with { $0.selectedData.size }
             
-            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
                                 
                 let includeMessages = messages
                 var excludeMessages:[Message] = []
@@ -1506,7 +1506,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             })
             
         }, clearPeer: { peerId in
-            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: strings().storageUsageClearConfirmOKAll, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKAll, successHandler: { _ in
                 
                _ = context.engine.resources.clearStorage(peerIds: [peerId], includeMessages: [], excludeMessages: []).start(completed: updateStats)
                 
@@ -1525,7 +1525,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             })
 
         }, clearMessage: { message in
-            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
                 
                 let msgs = context.engine.resources.clearStorage(messages: [message])
                 

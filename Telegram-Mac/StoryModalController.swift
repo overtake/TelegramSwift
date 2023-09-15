@@ -2420,7 +2420,7 @@ final class StoryModalController : ModalViewController, Notifable {
         }
         
         let deleteStory:(StoryContentItem)->Void = { [weak self] story in
-            confirm(for: context.window, information: strings().storyConfirmDelete, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().storyConfirmDelete, ok: strings().modalDelete, successHandler: { _ in
                 if let stateValue = self?.stories.stateValue, let slice = stateValue.slice {
                     if slice.nextItemId != nil {
                         self?.stories.navigate(navigation: .item(.next))
@@ -2431,7 +2431,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     }
                     _ = context.engine.messages.deleteStories(peerId: slice.peer.id, ids: [slice.item.storyItem.id]).start()
                 }
-            }, appearance: storyTheme.appearance)
+            }, presentation: storyTheme)
         }
         
         self.chatInteraction.add(observer: self)

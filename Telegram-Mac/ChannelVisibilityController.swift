@@ -956,8 +956,8 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                 current.revokingPeerId = peerId
                 return current
             }
-            self?.revokeAddressNameDisposable.set((confirmSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
-                if !result {
+            self?.revokeAddressNameDisposable.set((verifyAlertSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
+                if result == nil {
                     return .fail(.generic)
                 } else {
                     return .single(true)
@@ -982,7 +982,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             copyToClipboard(link)
         }, revokeLink: {
-            confirm(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, okTitle: strings().channelRevokeLinkConfirmOK, cancelTitle: strings().modalCancel, successHandler: { _ in
+            verifyModal(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
                 _ = showModalProgress(signal: context.engine.peers.revokePersistentPeerExportedInvitation(peerId: peerId), for: context.window).start()
             })
         }, share: { link in
@@ -1043,7 +1043,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             let ok: String = value ? activate_ok : deactivate_ok
             
             
-            confirm(for: context.window, header: title, information: info, okTitle: ok, successHandler: { _ in
+            verifyModal(for: context.window, header: title, information: info, ok: ok, successHandler: { _ in
                 _ = context.engine.peers.toggleAddressNameActive(domain: .peer(peerId), name: username.username, active: value).start()
                 
                 updateState { current in
@@ -1224,7 +1224,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                 } else {
                                     text = strings().channelVisibilityConfirmMakePrivateGroup(address)
                                 }
-                                csignal = confirmSignal(for: context.window, information: text) |> filter { $0 } |> take(1) |> map { _ in
+                                csignal = verifyAlertSignal(for: context.window, information: text) |> filter { $0 == .basic } |> take(1) |> map { _ in
                                     
                                     updateState { current in
                                         var current = current

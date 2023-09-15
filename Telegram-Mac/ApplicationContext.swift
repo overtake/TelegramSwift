@@ -521,7 +521,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
             
            // showInactiveChannels(context: context, source: .create)
-            showModalAlert(for: context.window, data: .init(title: "Are you sure?", info: "No, i'm not sure but let's do it", options: [], mode: .confirm(text: "Open FAQ", isThird: true)), completion: { _ in
+            showModalAlert(for: context.window, data: .init(title: "Are you sure?", info: "No, i'm not sure but let's do it", options: [.init(string: "lqwjkeflkwqejflkwqje flkqwj elfkq jwelfkj qwelkfj qwlefj lwqekfj wqlekfjйдлц уалйцу аоцур алойцр алойцр алйоцар лйцоар лйцуоар лйцуоар лйцуоа рцйлоуар л wqlkefj wlkfj qlk", isSelected: true)], mode: .alert), completion: { _ in
                 
             })
 //            showModal(with: RequestJoinChatModalController(context: context, joinhash: "hash", invite: .invite(.Flags), interaction: { _ in

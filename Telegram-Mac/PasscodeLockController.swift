@@ -460,7 +460,7 @@ class PasscodeLockController: ModalViewController {
         genericView.logoutImpl = { [weak self] in
             guard let window = self?.window else { return }
             
-            confirm(for: window, information: strings().accountConfirmLogoutText, successHandler: { [weak self] _ in
+            verifyModal(for: window, information: strings().accountConfirmLogoutText, successHandler: { [weak self] _ in
                 guard let `self` = self else { return }
                 _ = showModalProgress(signal: self.logoutImpl(), for: window).start(completed: { [weak self] in
                     delay(0.2, closure: { [weak self] in

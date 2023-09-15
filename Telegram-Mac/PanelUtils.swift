@@ -123,7 +123,7 @@ func savePanel(file:String, named:String, for window:Window) {
 
 
 
-func alert(for window:Window, header:String? = nil, info:String?, runModal: Bool = false, completion: (()->Void)? = nil, presentation: TelegramPresentationTheme? = nil) {
+func alert(for window:Window, header:String? = nil, info:String?, runModal: Bool = false, completion: (()->Void)? = nil, presentation: TelegramPresentationTheme = theme) {
     
     
     let data = ModalAlertData(title: header, info: info ?? "", options: [])
@@ -151,157 +151,77 @@ func alert(for window:Window, header:String? = nil, info:String?, runModal: Bool
 
 }
 
-func notSupported() {
-    alert(for: mainWindow, header: "Not Supported", info: "This feature is not available in this app yet. Sorry! Keep calm and use the stable version.")
-}
-
 enum ConfirmResult {
     case thrid
     case basic
 }
 
-func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = strings().alertCancel, thridTitle:String? = nil, fourTitle: String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: (()->Void)? = nil, appearance: NSAppearance? = nil) {
+func verifyModal(for window:Window, header: String = appName, information:String?, ok:String = strings().alertOK, cancel:String = strings().alertCancel, option:String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: @escaping()->Void = { }, presentation: TelegramPresentationTheme = theme) {
 
-    delay(0.01, closure: {
-        
-        let alert:NSAlert = NSAlert()
-        alert.window.appearance = appearance ?? theme.appearance
-        alert.alertStyle = .informational
-        alert.messageText = header ?? appName
-        alert.informativeText = information ?? ""
-        alert.addButton(withTitle: okTitle ?? strings().alertOK)
-        if !cancelTitle.isEmpty {
-            alert.addButton(withTitle: cancelTitle)
-            alert.buttons.last?.keyEquivalent = "\u{1b}"
-        }
-
-
-        
-        if let thridTitle = thridTitle {
-            alert.addButton(withTitle: thridTitle)
-        }
-        if let fourTitle = fourTitle {
-            alert.addButton(withTitle: fourTitle)
-        }
-        
-        
-        
-        alert.beginSheetModal(for: window, completionHandler: { response in
-            Queue.mainQueue().justDispatch {
-                if response.rawValue == 1000 {
-                    successHandler(.basic)
-                } else if response.rawValue == 1002 {
-                    successHandler(.thrid)
-                } else if response.rawValue == 1001, cancelTitle == "" {
-                    successHandler(.thrid)
-                } else if response.rawValue == 1001 {
-                    cancelHandler?()
-                }
-            }
-        })
-    })
+    verifyAlert(for: window, header: header, information: information, ok: ok, cancel: cancel, option: option, optionIsSelected: nil, successHandler: successHandler, cancelHandler: cancelHandler, presentation: presentation)
 }
 
-final class Action: NSObject {
-
-    private let _action: () -> ()
-
-    init(action: @escaping () -> ()) {
-        _action = action
-        super.init()
+func verifyAlert(for window:Window, header: String = appName, information:String? = nil, ok:String = strings().alertOK, cancel:String = strings().alertCancel, option:String? = nil, optionIsSelected: Bool? = true, successHandler:@escaping(ConfirmResult)->Void, cancelHandler:@escaping()->Void = { }, presentation: TelegramPresentationTheme = theme) {
+    
+    
+    var options: [ModalAlertData.Option] = []
+    
+    if let string = option, optionIsSelected != nil {
+        options.append(.init(string: string, isSelected: optionIsSelected == true))
     }
-
-    @objc func action() {
-        _action()
+    let mode: ModalAlertData.Mode
+    if let option = option, optionIsSelected == nil {
+        mode = .confirm(text: option, isThird: true)
+    } else {
+        mode = .confirm(text: cancel, isThird: false)
     }
-
-}
-
-private var thirdaAction: Action?
-
-func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? = nil, header: String = appName, information:String? = nil, okTitle:String = strings().alertOK, cancelTitle:String = strings().alertCancel, thridTitle:String? = nil, thridAutoOn: Bool = true, successHandler:@escaping(ConfirmResult)->Void, appearance: NSAppearance? = nil) {
     
-    delay(0.01, closure: {
-        let alert:NSAlert = NSAlert()
-        alert.window.appearance = appearance ?? theme.appearance
-        alert.alertStyle = .informational
-        alert.messageText = header
-        alert.informativeText = information ?? ""
-        alert.addButton(withTitle: okTitle)
-        alert.addButton(withTitle: cancelTitle)
-        
-        
-        
-        if let thridTitle = thridTitle {
-            alert.showsSuppressionButton = true
-            alert.suppressionButton?.state = thridAutoOn ? .on : .off
-          //  alert.addButton(withTitle: thridTitle)
-        }
-        
-        var shown: Bool = false
-        
-        let readyToShow:() -> Void = {
-            if !shown {
-                shown = true
-                alert.beginSheetModal(for: window, completionHandler: { [weak alert] response in
-                    thirdaAction = nil
-                    if let alert = alert {
-                        if alert.showsSuppressionButton, let button = alert.suppressionButton, response.rawValue != 1001 {
-                            switch button.state {
-                            case .off:
-                                successHandler(.basic)
-                            case .on:
-                                successHandler(.thrid)
-                            default:
-                                break
-                            }
-                        } else {
-                            if response.rawValue == 1000 {
-                                successHandler(.basic)
-                            } else if response.rawValue == 1002 {
-                                successHandler(.thrid)
-                            }
-                        }
-                    }
-                })
+    let data: ModalAlertData = .init(title: header, info: information ?? "", description: nil, ok: ok, options: options, mode: mode)
+    
+    
+    showModalAlert(for: window, data: data, completion: { result in
+        if result.selected.isEmpty {
+            successHandler(.basic)
+        } else {
+            if result.selected[0] == true {
+                successHandler(.thrid)
+            } else {
+                successHandler(.basic)
             }
-            
         }
-        
-        readyToShow()
-
-    })
+    }, cancel: cancelHandler, presentation: presentation)
     
 }
 
-func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, header: String = appName, information:String? = nil, okTitle:String = strings().alertOK, cancelTitle:String = strings().alertCancel, thridTitle: String? = nil, thridAutoOn: Bool = true) -> Signal<ConfirmResult, NoError> {
-    let value:ValuePromise<ConfirmResult> = ValuePromise(ignoreRepeated: true)
+func verifyAlertSignal(for window:Window, header: String = appName, information:String? = nil, ok:String = strings().alertOK, cancel:String = strings().alertCancel, option: String? = nil, optionIsSelected: Bool = true, presentation: TelegramPresentationTheme = theme) -> Signal<ConfirmResult?, NoError> {
+    let value:ValuePromise<ConfirmResult?> = ValuePromise(ignoreRepeated: true)
     
-    delay(0.01, closure: {
-        modernConfirm(for: window, account: account, peerId: peerId, header: header, information: information, okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, thridAutoOn: thridAutoOn, successHandler: { response in
-             value.set(response)
-        })
-    })
+    verifyAlert(for: window, header: header, information: information, ok: ok, cancel: cancel, option: option, optionIsSelected: optionIsSelected, successHandler: { response in
+         value.set(response)
+    }, cancelHandler: {
+        value.set(nil)
+    }, presentation: presentation)
+    
     return value.get() |> take(1)
     
 }
 
-func confirmSignal(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String? = nil, appearance: NSAppearance? = nil) -> Signal<Bool, NoError> {
-
-    let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
-    
-    delay(0.01, closure: {
-        let alert:NSAlert = NSAlert()
-        alert.alertStyle = .informational
-        alert.messageText = header ?? appName
-        alert.window.appearance = appearance ?? theme.appearance
-        alert.informativeText = information ?? ""
-        alert.addButton(withTitle: okTitle ?? strings().alertOK)
-        alert.addButton(withTitle: cancelTitle ?? strings().alertCancel)
-        
-        alert.beginSheetModal(for: window, completionHandler: { response in
-            value.set(response.rawValue == 1000)
-        })
-    })
-    return value.get() |> take(1)
-}
+//func verifyAlertSignal(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String? = nil, appearance: NSAppearance? = nil) -> Signal<Bool, NoError> {
+//
+//    let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
+//
+//    delay(0.01, closure: {
+//        let alert:NSAlert = NSAlert()
+//        alert.alertStyle = .informational
+//        alert.messageText = header ?? appName
+//        alert.window.appearance = appearance ?? theme.appearance
+//        alert.informativeText = information ?? ""
+//        alert.addButton(withTitle: okTitle ?? strings().alertOK)
+//        alert.addButton(withTitle: cancelTitle ?? strings().alertCancel)
+//
+//        alert.beginSheetModal(for: window, completionHandler: { response in
+//            value.set(response.rawValue == 1000)
+//        })
+//    })
+//    return value.get() |> take(1)
+//}

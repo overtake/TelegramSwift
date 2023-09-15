@@ -361,7 +361,7 @@ class AuthController : GenericViewController<AuthView> {
             guard let window = self?.window, let account = self?.account else {
                 return
             }
-            confirm(for: window, header: appName, information: strings().loginNewCancelConfirm, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { _ in
+            verifyModal(for: window, header: appName, information: strings().loginNewCancelConfirm, ok: strings().alertYes, cancel: strings().alertNO, successHandler: { _ in
                 
                 updateState { current in
                     var current = current
@@ -639,7 +639,7 @@ class AuthController : GenericViewController<AuthView> {
                     }
                 }, takeNext: { [weak self] value in
                     if let window = self?.window {
-                        confirm(for: window, information: strings().authLoginConfirmPhone(formatPhoneNumber(value)), okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
+                        verifyModal(for: window, information: strings().authLoginConfirmPhone(formatPhoneNumber(value)), ok: strings().alertYes, cancel: strings().alertNO, successHandler: { [weak self] _ in
                             self?.sendCode(value, updateState: updateState)
                         })
                     }
@@ -713,7 +713,7 @@ class AuthController : GenericViewController<AuthView> {
                     guard let window = self?.window else {
                         return
                     }
-                    confirm(for: window, information: L10n.loginSmsAppErr, cancelTitle: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
+                    verifyModal(for: window, information: L10n.loginSmsAppErr, cancel: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
                                        
                     }, cancelHandler:{
                         execute(inapp: .external(link: "https://telegram.org", false))
@@ -777,7 +777,7 @@ class AuthController : GenericViewController<AuthView> {
                     if reset {
                         let info = L10n.loginResetAccountDescription
                         let ok = L10n.loginResetAccount
-                        confirm(for: window, information: info, okTitle: ok, successHandler: { [weak self] _ in
+                        verifyModal(for: window, information: info, ok: ok, successHandler: { [weak self] _ in
                             guard let account = self?.account else {
                                 return
                             }
@@ -819,7 +819,7 @@ class AuthController : GenericViewController<AuthView> {
                     guard let window = self?.window, let account = self?.account else {
                         return
                     }
-                    confirm(for: window, information: L10n.loginResetAccountDescription, okTitle: L10n.loginResetAccount, successHandler: { _ in
+                    verifyModal(for: window, information: L10n.loginResetAccountDescription, ok: L10n.loginResetAccount, successHandler: { _ in
                         _ = showModalProgress(signal: performAccountReset(account: account) |> deliverOnMainQueue, for: window).start(error: { error in
                             alert(for: window, info: L10n.unknownError)
                         })
@@ -870,7 +870,7 @@ class AuthController : GenericViewController<AuthView> {
                     
                     let signal = performAccountReset(account: engine.account) |> deliverOnMainQueue
 
-                    confirm(for: window, header: appName, information: strings().loginNewEmailAlert, okTitle: strings().loginNewEmailAlertReset, cancelTitle: strings().alertCancel, successHandler: { _ in
+                    verifyModal(for: window, header: appName, information: strings().loginNewEmailAlert, ok: strings().loginNewEmailAlertReset, cancel: strings().alertCancel, successHandler: { _ in
                         
                         updateState { current in
                             var current = current
@@ -955,7 +955,7 @@ class AuthController : GenericViewController<AuthView> {
         let logInNumber = formatPhoneNumber(phoneNumber)
         for (number, accountId, isTestingEnvironment) in self.otherAccountPhoneNumbers.1 {
             if isTestingEnvironment == self.account.testingEnvironment && formatPhoneNumber(number) == logInNumber {
-                confirm(for: window, information: strings().loginPhoneNumberAlreadyAuthorized, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().loginPhoneNumberAlreadyAuthorizedSwitch, successHandler: { result in
+                verifyModal(for: window, information: strings().loginPhoneNumberAlreadyAuthorized, ok: strings().modalOK, cancel: "", option: strings().loginPhoneNumberAlreadyAuthorizedSwitch, successHandler: { result in
                     switch result {
                     case .thrid:
                         _ = (sharedContext.accountManager.transaction({ transaction in
@@ -1007,7 +1007,7 @@ class AuthController : GenericViewController<AuthView> {
                     return current
                 }
             } else {
-                confirm(for: window, header: strings().loginConnectionErrorHeader, information: strings().loginConnectionErrorInfo, okTitle: strings().loginConnectionErrorTryAgain, thridTitle: strings().loginConnectionErrorUseProxy, successHandler: { [weak self] result in
+                verifyModal(for: window, header: strings().loginConnectionErrorHeader, information: strings().loginConnectionErrorInfo, ok: strings().loginConnectionErrorTryAgain, option: strings().loginConnectionErrorUseProxy, successHandler: { [weak self] result in
                     switch result {
                     case .basic:
                         self?.sendCode(phoneNumber, updateState: updateState)

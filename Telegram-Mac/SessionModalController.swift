@@ -136,7 +136,7 @@ func SessionModalController(context: AccountContext, session: RecentAccountSessi
         }, drawBorder: true, height: 50, singleButton: true)
     } else {
         modalInteractions = ModalInteractions(acceptTitle: strings().sessionPreviewTerminateSession, accept: {
-            confirm(for: context.window, information: strings().recentSessionsConfirmRevoke, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().recentSessionsConfirmRevoke, successHandler: { _ in
                 _ = context.activeSessionsContext.remove(hash: session.hash).start()
                 close?()
             })

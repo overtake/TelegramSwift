@@ -369,7 +369,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
         _ = updatePeer.start(next: { result in
             switch result {
             case .limitExceeded:
-                confirm(for: arguments.context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                verifyModal(for: arguments.context.window, information: strings().chatListContextPinErrorNew2, ok: strings().alertOK, cancel: "", option: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
                     switch result {
                     case .thrid:
                         arguments.context.bindings.rootNavigation().push(ChatListFiltersListController(context: arguments.context))
@@ -1339,7 +1339,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         self.arguments = SearchControllerArguments(context: context, target: target, removeRecentPeerId: { peerId in
             _ = context.engine.peers.removeRecentlySearchedPeer(peerId: peerId).start()
         }, clearRecent: {
-            confirm(for: context.window, information: strings().searchConfirmClearHistory, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().searchConfirmClearHistory, successHandler: { _ in
                 _ = (context.engine.peers.recentlySearchedPeers() |> take(1) |> mapToSignal {
                     return combineLatest($0.map {context.engine.peers.removeRecentlySearchedPeer(peerId: $0.peer.peerId)})
                 }).start()

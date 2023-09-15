@@ -635,7 +635,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         getController?()?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
         copyToClipboard(link)
     }, revokeLink: { [weak manager] link in
-        confirm(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, okTitle: strings().channelRevokeLinkConfirmOK, cancelTitle: strings().modalCancel, successHandler: { _ in
+        verifyModal(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
             if let manager = manager {
                 _ = showModalProgress(signal: manager.revokePeerExportedInvitation(link: link), for: context.window).start(completed:{
                     _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
@@ -670,7 +670,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             })
         }
     }, deleteAll: { [weak manager] in
-        confirm(for: context.window, header: strings().manageLinksDeleteAll, information: strings().manageLinksDeleteAllConfirm, okTitle: strings().manageLinksDeleteAll, cancelTitle: strings().modalCancel, successHandler: { [weak manager] _ in
+        verifyModal(for: context.window, header: strings().manageLinksDeleteAll, information: strings().manageLinksDeleteAllConfirm, ok: strings().manageLinksDeleteAll, cancel: strings().modalCancel, successHandler: { [weak manager] _ in
             if let manager = manager {
                 _ = showModalProgress(signal: manager.deleteAllRevokedPeerExportedInvitations(), for: context.window).start(completed:{
                     _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()

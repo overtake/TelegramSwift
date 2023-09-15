@@ -473,7 +473,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
             }
             switch kind {
             case .proxy:
-                confirm(for: chatInteraction.context.window, header: strings().chatProxySponsoredAlertHeader, information: strings().chatProxySponsoredAlertText, cancelTitle: "", thridTitle: strings().chatProxySponsoredAlertSettings, successHandler: { [weak chatInteraction] result in
+                verifyModal(for: chatInteraction.context.window, header: strings().chatProxySponsoredAlertHeader, information: strings().chatProxySponsoredAlertText, cancel: "", option: strings().chatProxySponsoredAlertSettings, successHandler: { [weak chatInteraction] result in
                     switch result {
                     case .thrid:
                         chatInteraction?.openProxySettings()
@@ -483,7 +483,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
                 })
             case .psa:
                 if let learnMore = kind.learnMore {
-                    confirm(for: chatInteraction.context.window, header: kind.title, information: kind.text, cancelTitle: "", thridTitle: learnMore, successHandler: { result in
+                    verifyModal(for: chatInteraction.context.window, header: kind.title, information: kind.text, cancel: "", option: learnMore, successHandler: { result in
                         switch result {
                         case .thrid:
                             execute(inapp: .external(link: learnMore, false))

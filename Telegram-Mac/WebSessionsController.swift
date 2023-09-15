@@ -263,7 +263,7 @@ class WebSessionsController: TableViewController {
         }
                 
         let arguments = WebSessionArguments(context: context, logoutSession: { session in
-            confirm(for: context.window, information: strings().webAuthorizationsConfirmRevoke, successHandler: { result in
+            verifyModal(for: context.window, information: strings().webAuthorizationsConfirmRevoke, successHandler: { result in
                 updateState { state in
                     return state.withUpdatedRemovingSessionId(session.hash)
                 }
@@ -276,7 +276,7 @@ class WebSessionsController: TableViewController {
             })
             
         }, logoutAll: { [weak self] in
-            confirm(for: context.window, information: strings().webAuthorizationsConfirmRevokeAll, successHandler: { result in
+            verifyModal(for: context.window, information: strings().webAuthorizationsConfirmRevokeAll, successHandler: { result in
                 self?.navigationController?.back()
                 _ = showModalProgress(signal: context.webSessions.removeAll(), for: context.window).start()
             })

@@ -1313,7 +1313,7 @@ class ChatListRowItem: TableRowItem {
                 switch result {
                 case .limitExceeded:
                     if context.isPremium {
-                        confirm(for: context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                        verifyModal(for: context.window, information: strings().chatListContextPinErrorNew2, ok: strings().alertOK, cancel: "", option: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
                             switch result {
                             case .thrid:
                                 context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))

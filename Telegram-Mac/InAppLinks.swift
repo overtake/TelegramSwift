@@ -394,7 +394,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     NSWorkspace.shared.open(url)
                 }
                 if needConfirm {
-                    confirm(for: mainWindow, header: strings().inAppLinksConfirmOpenExternalHeader, information: strings().inAppLinksConfirmOpenExternalNew(removePecentEncoding ? (url.absoluteString.removingPercentEncoding ?? url.absoluteString) : escaped), okTitle: strings().inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()}, cancelHandler: { afterComplete(false) })
+                    verifyModal(for: mainWindow, header: strings().inAppLinksConfirmOpenExternalHeader, information: strings().inAppLinksConfirmOpenExternalNew(removePecentEncoding ? (url.absoluteString.removingPercentEncoding ?? url.absoluteString) : escaped), ok: strings().inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()}, cancelHandler: { afterComplete(false) })
                 } else {
                     success()
                 }
@@ -859,7 +859,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     }), for: context.window)
                 }
                 let addSimple:()->Void = {
-                    confirm(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { _ in
+                    verifyModal(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { _ in
                         add(values.dest.id)
                     })
                 }
@@ -1013,7 +1013,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             if appAppearance.language.primaryLanguage.languageCode == info.languageCode {
                 alert(for: context.window, info: strings().applyLanguageChangeLanguageAlreadyActive(info.title))
             } else if info.totalStringCount == 0 {
-                confirm(for: context.window, header: strings().applyLanguageUnsufficientDataTitle, information: strings().applyLanguageUnsufficientDataText(info.title), cancelTitle: "", thridTitle: strings().applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
+                verifyModal(for: context.window, header: strings().applyLanguageUnsufficientDataTitle, information: strings().applyLanguageUnsufficientDataText(info.title), cancel: "", option: strings().applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
                     switch result {
                     case .basic:
                         break
@@ -1182,11 +1182,32 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .loginCode(_, code):
         appDelegate?.applyExternalLoginCode(code)
     case let .boost(_, username, context):
-        let signal = context.engine.peers.resolvePeerByName(name: username)
-
-        _ = showModalProgress(signal: signal, for: context.window).start(next: { peer in
-            if let peer = peer {
-                showModal(with: BoostChannelModalController(context: context, peer: peer._asPeer()), for: context.window)
+        
+        
+        
+        let signal: Signal<(Peer, ChannelBoostStatus?, CanApplyBoostStatus)?, NoError> = resolveUsername(username: username, context: context) |> mapToSignal { value in
+            if let value = value {
+                return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.canApplyChannelBoost(peerId: value.id)) |> map {
+                    (value, $0.0, $0.1)
+                }
+            } else {
+                return .single(nil)
+            }
+        }
+        _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
+            if let value = value, let boosts = value.1 {
+                showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, canApplyStatus: value.2), for: context.window)
+            } else {
+                if value == nil {
+                    if username.contains(_private_) {
+                        alert(for: context.window, info: strings().channelBoostPrivateError)
+                    } else {
+                        alert(for: context.window, info: strings().alertUserDoesntExists)
+                    }
+                } else {
+                    alert(for: context.window, info: strings().unknownError)
+                }
+                
             }
         })
     }
@@ -1195,7 +1216,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
 
 private func updateAppAsYouWish(text: String, updateApp: Bool) {
     //
-    confirm(for: mainWindow, header: appName, information: text, okTitle: updateApp ? strings().alertButtonOKUpdateApp : strings().modalOK, cancelTitle: updateApp ? strings().modalCancel : "", thridTitle: nil, successHandler: { _ in
+    verifyModal(for: mainWindow, header: appName, information: text, ok: updateApp ? strings().alertButtonOKUpdateApp : strings().modalOK, cancel: updateApp ? strings().modalCancel : "", option: nil, successHandler: { _ in
         if updateApp {
             #if APP_STORE
             execute(inapp: inAppLink.external(link: "https://apps.apple.com/us/app/telegram/id747648890", false))
@@ -1404,7 +1425,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost"]
 
 let ton_scheme:String = "ton://"
 
@@ -1438,6 +1459,9 @@ private let keyURLTimecode = "t";
 private let keyURLBgColor = "bg_color";
 private let keyURLHash = "hash";
 private let keyURLCode = "code";
+
+private let keyURLChannel = "channel";
+
 
 private let keyURLAppname = "appname";
 private let keyURLStartapp = "startapp";
@@ -1757,11 +1781,18 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if let context = context {
                             let postIndex = userAndPost.count - 1
                             var post = userAndPost[postIndex].isEmpty ? nil : Int32(userAndPost[postIndex])
-                            let username = userAndPost[1]
-                            if let range = userAndPost[postIndex].range(of: "?") {
-                                post = Int32(userAndPost[postIndex][..<range.lowerBound])
+                            var username = userAndPost[1]
+                            if postIndex == 1 {
+                                post = nil
                             }
-                            let (params, _) = urlVars(with: url as String)
+                            if let range = userAndPost[postIndex].range(of: "?") {
+                                if postIndex == 1 {
+                                    username = String(userAndPost[1][..<range.lowerBound])
+                                } else {
+                                    post = Int32(userAndPost[postIndex][..<range.lowerBound])
+                                }
+                            }
+                            let (params, action) = urlVars(with: url as String)
                             if let thread = params[keyURLThreadId]?.nsstring.intValue, let post = post {
                                 return .comments(link: urlString, username: "\(_private_)\(username)", context: context, threadId: thread, commentId: post)
                             } else if let topic = params[keyURLTopicId]?.nsstring.intValue {
@@ -1769,7 +1800,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             } else if userAndPost.count == 4, let threadId = Int32(userAndPost[2]) {
                                 return .topic(link: urlString, username: "\(_private_)\(username)", context: context, threadId: threadId, commentId: post)
                             } else {
-                                return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, context: context, action:nil, callback: openInfo)
+                                if action.first == "boost" {
+                                    return .boost(link: urlString, username: "\(_private_)\(username)", context: context)
+                                } else {
+                                    return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, context: context, action:nil, callback: openInfo)
+                                }
                             }
                         }
                     } else if name == "s" {
@@ -2090,6 +2125,12 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[18]:
                     if let slug = vars[keyURLSlug], let context = context {
                         return .folder(link: urlString, slug: slug, context: context)
+                    }
+                case known_scheme[19]:
+                    if let channelId = vars[keyURLChannel], let context = context {
+                        return .boost(link: urlString, username: "\(_private_)\(channelId)", context: context)
+                    } else if let username = vars[keyURLUsername], let context = context {
+                        return .boost(link: urlString, username: username, context: context)
                     }
                 default:
                     break

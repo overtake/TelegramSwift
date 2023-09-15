@@ -780,13 +780,13 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             guard let window = self?.window else {
                 return
             }
-            confirm(for: window, header: strings().voiceChatSettingsEndConfirmTitle, information: strings().voiceChatSettingsEndConfirm, okTitle: strings().voiceChatSettingsEndConfirmOK, successHandler: { [weak self] _ in
+            verifyModal(for: window, header: strings().voiceChatSettingsEndConfirmTitle, information: strings().voiceChatSettingsEndConfirm, ok: strings().voiceChatSettingsEndConfirmOK, successHandler: { [weak self] _ in
 
                 guard let call = self?.call, let window = self?.window else {
                     return
                 }
                 _ = showModalProgress(signal: call.sharedContext.endGroupCall(terminate: true), for: window).start()
-            }, appearance: darkPalette.appearance)
+            }, presentation: storyTheme)
 
         }, updateDefaultParticipantsAreMuted: { [weak self] value in
             self?.call.updateDefaultParticipantsAreMuted(isMuted: value)
@@ -806,13 +806,13 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             self?.call.reconnect(as: peerId)
         }, startRecording: { [weak self] in
             if let window = self?.window {
-                confirm(for: window, header: strings().voiceChatRecordingStartTitle, information: strings().voiceChatRecordingStartText1, okTitle: strings().voiceChatRecordingStartOK, successHandler: { _ in
+                verifyModal(for: window, header: strings().voiceChatRecordingStartTitle, information: strings().voiceChatRecordingStartText1, ok: strings().voiceChatRecordingStartOK, successHandler: { _ in
                     self?.call.setShouldBeRecording(true, title: stateValue.with { $0.recordName }, videoOrientation: stateValue.with { $0.recordVideo ? $0.videoOrientation.rawValue : nil})
                 })
             }
         }, stopRecording: { [weak self] in
             if let window = self?.window {
-                confirm(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, okTitle: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
+                verifyModal(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, ok: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
                     self?.call.setShouldBeRecording(false, title: nil, videoOrientation: nil)
                     if let window = window {
                         showModalText(for: window, text: strings().voiceChatToastStop)
@@ -857,7 +857,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             }
         }, revokeStreamKey: { [weak self] in
             if let window = self?.window {
-                confirm(for: window, header: strings().voiceChatRTMPRevoke, information: strings().voiceChatRTMPRevokeInfo, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
+                verifyModal(for: window, header: strings().voiceChatRTMPRevoke, information: strings().voiceChatRTMPRevokeInfo, ok: strings().alertYes, cancel: strings().alertNO, successHandler: { [weak self] _ in
                     
                     let signal = self?.call.engine.calls.getGroupCallStreamCredentials(peerId: .init(peerId.toInt64()), revokePreviousCredentials: true)
                     if let signal = signal {
@@ -870,7 +870,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                         })
                     }
                     
-                }, appearance: GroupCallTheme.customTheme.appearance)
+                }, presentation: storyTheme)
             }
         })
         
