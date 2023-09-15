@@ -139,7 +139,7 @@ private final class BoostRowItem : TableRowItem {
         
         if state.status.nextLevelBoosts != nil {
             if state.isAdmin {
-                if let remaining {
+                if let remaining = remaining {
                     let valueString: String
                     if remaining == 1 {
                         valueString = "**\(remaining)** more boost"
@@ -155,7 +155,7 @@ private final class BoostRowItem : TableRowItem {
                     string = "Your channel needs **0** more boosts to post **2** stories per day.\n\nAsk your **Premium** subscribers to boost your channel with this link:"
                 }
             } else {
-                if let remaining {
+                if let remaining = remaining {
                     let valueString: String
                     if remaining == 1 {
                         valueString = "**\(remaining)** more boost"
@@ -173,7 +173,7 @@ private final class BoostRowItem : TableRowItem {
             }
             
             if state.boosted {
-                if let remaining {
+                if let remaining = remaining {
                     let valueString: String
                     if remaining == 1 {
                         valueString = "**\(remaining)** more boost"
