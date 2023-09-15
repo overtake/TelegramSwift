@@ -35,7 +35,7 @@ private final class CenterView : TitledBarView {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
-        segment.theme = CatalinaSegmentTheme(backgroundColor: storyTheme.colors.listBackground, foregroundColor: storyTheme.colors.background, activeTextColor: storyTheme.colors.text, inactiveTextColor: storyTheme.colors.listGrayText)
+        segment.theme = CatalinaSegmentTheme(backgroundColor: theme.colors.listBackground, foregroundColor: theme.colors.background, activeTextColor: theme.colors.text, inactiveTextColor: theme.colors.listGrayText)
 
     }
     
@@ -58,7 +58,7 @@ final class ChannelStatsSegmentController : SectionViewController {
     private let boosts: ViewController
     private let context: AccountContext
     private let peerId: PeerId
-    init(_ context: AccountContext, datacenterId: Int32, peerId: PeerId) {
+    init(_ context: AccountContext, datacenterId: Int32, peerId: PeerId, isChannel: Bool) {
         self.context = context
         self.peerId = peerId
         self.stats = ChannelStatsViewController(context, peerId: peerId, datacenterId: datacenterId)
@@ -66,7 +66,9 @@ final class ChannelStatsSegmentController : SectionViewController {
 
         var items:[SectionControllerItem] = []
         items.append(SectionControllerItem(title: { "" }, controller: stats))
-        items.append(SectionControllerItem(title: { "" }, controller: boosts))
+        if isChannel {
+            items.append(SectionControllerItem(title: { "" }, controller: boosts))
+        }
         super.init(sections: items, selected: 0, hasHeaderView: false, hasBar: true)
 
     }

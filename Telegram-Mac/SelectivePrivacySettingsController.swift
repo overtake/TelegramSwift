@@ -857,7 +857,7 @@ class SelectivePrivacySettingsController: TableViewController {
             return makeUpdatePhotoItems()
             
         }, removePublicPhoto: {
-            confirm(for: context.window, information: strings().privacyResetPhotoConfirm, okTitle: strings().modalRemove, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().privacyResetPhotoConfirm, ok: strings().modalRemove, successHandler: { _ in
                 
                 let signal = context.engine.accountData.removeFallbackPhoto(reference: nil)
                 |> castError(UploadPeerPhotoError.self)

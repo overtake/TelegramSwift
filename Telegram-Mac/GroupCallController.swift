@@ -816,10 +816,10 @@ final class GroupCallUIController : ViewController {
                 return
             }
             if self.canManageCall {
-                modernConfirm(for: window, account: account, peerId: nil, header: strings().voiceChatEndTitle, information: strings().voiceChatEndText, okTitle: strings().voiceChatEndOK, thridTitle: strings().voiceChatEndThird, thridAutoOn: false, successHandler: {
+                verifyAlert(for: window, header: strings().voiceChatEndTitle, information: strings().voiceChatEndText, ok: strings().voiceChatEndOK, option: strings().voiceChatEndThird, optionIsSelected: false, successHandler: {
                     [weak self] result in
                     _ = self?.data.call.sharedContext.endGroupCall(terminate: result == .thrid).start()
-                }, appearance: darkPalette.appearance)
+                }, presentation: storyTheme)
             } else {
                 _ = self.data.call.sharedContext.endGroupCall(terminate: false).start()
             }
@@ -847,13 +847,13 @@ final class GroupCallUIController : ViewController {
                 return
             }
             let isChannel = self?.data.call.peer?.isChannel == true
-            modernConfirm(for: window, account: account, peerId: peer.id, information: isChannel ? strings().voiceChatRemovePeerConfirmChannel(peer.displayTitle) : strings().voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: strings().voiceChatRemovePeerConfirmOK, cancelTitle: strings().voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
+            verifyAlert(for: window, information: isChannel ? strings().voiceChatRemovePeerConfirmChannel(peer.displayTitle) : strings().voiceChatRemovePeerConfirm(peer.displayTitle), ok: strings().voiceChatRemovePeerConfirmOK, cancel: strings().voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
                 if peerId.namespace == Namespaces.Peer.CloudChannel {
                     _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
                 } else if let window = window {
                     _ = showModalProgress(signal: accountContext.engine.peers.removePeerMember(peerId: peerId, memberId: peer.id), for: window).start()
                 }
-            }, appearance: darkPalette.appearance)
+            }, presentation: storyTheme)
         }, openInfo: { [weak self] peer in
             guard let strongSelf = self else {
                 return
@@ -911,11 +911,11 @@ final class GroupCallUIController : ViewController {
                     case .screencast:
                         let presentingPeer = state.videoActive(.main).first(where: { $0.presentationEndpoint != nil })
                         if let peer = presentingPeer {
-                            confirm(for: window, header: strings().voiceChatScreencastConfirmHeader, information: strings().voiceChatScreencastConfirmText(peer.peer.compactDisplayTitle), okTitle: strings().voiceChatScreencastConfirmOK, successHandler: { _ in
+                            verifyModal(for: window, header: strings().voiceChatScreencastConfirmHeader, information: strings().voiceChatScreencastConfirmText(peer.peer.compactDisplayTitle), ok: strings().voiceChatScreencastConfirmOK, successHandler: { _ in
                                 f(true)
                             }, cancelHandler: {
                                 f(false)
-                            }, appearance: darkPalette.appearance)
+                            }, presentation: storyTheme)
                         } else {
                             f(true)
                         }
@@ -1101,12 +1101,12 @@ final class GroupCallUIController : ViewController {
         }, recordClick: { [weak self] state in
             if let window = self?.window {
                 if state.canManageCall {
-                    confirm(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, okTitle: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
+                    verifyModal(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, ok: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
                         self?.data.call.setShouldBeRecording(false, title: nil, videoOrientation: nil)
                         if let window = window {
                             showModalText(for: window, text: strings().voiceChatToastStop)
                         }
-                    }, appearance: darkPalette.appearance)
+                    }, presentation: storyTheme)
                 } else {
                     showModalText(for: window, text: strings().voiceChatAlertRecording)
                 }
@@ -1906,14 +1906,14 @@ final class GroupCallUIController : ViewController {
             guard let window = self?.window else {
                 return
             }
-            confirm(for: window, information: strings().voiceChatRequestAccess, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+            verifyModal(for: window, information: strings().voiceChatRequestAccess, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)
                 default:
                     break
                 }
-            }, appearance: darkPalette.appearance)
+            }, presentation: storyTheme)
         }
         
         data.call.permissions = { action, f in

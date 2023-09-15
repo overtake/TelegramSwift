@@ -624,10 +624,10 @@ final class GroupInfoArguments : PeerInfoArguments {
         let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return context.account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return confirmSignal(for: context.window, information: strings().peerInfoConfirmAddMember(peer.displayTitle), okTitle: strings().peerInfoConfirmAdd)
+                    return verifyAlertSignal(for: context.window, information: strings().peerInfoConfirmAddMember(peer.displayTitle), ok: strings().peerInfoConfirmAdd) |> map { $0 == .basic }
                 }
             }
-            return confirmSignal(for: context.window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count), okTitle: strings().peerInfoConfirmAdd)
+            return verifyAlertSignal(for: context.window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count), ok: strings().peerInfoConfirmAdd) |> map { $0 == .basic }
         }
         
         struct Result {
@@ -745,7 +745,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                 return
                             }
                             if peer.hasPermission(.addAdmins) {
-                                confirm(for: context.window, information: strings().channelAddBotErrorHaveRights, okTitle: strings().channelAddBotAsAdmin, successHandler: { _ in
+                                verifyModal(for: context.window, information: strings().channelAddBotErrorHaveRights, ok: strings().channelAddBotAsAdmin, successHandler: { _ in
                                     showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
                                 })
                             } else {

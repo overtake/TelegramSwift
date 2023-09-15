@@ -950,7 +950,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let currentText = self.genericView.textView.string()
         let basicText = self.temporaryInputState?.inputText ?? ""
         if (self.temporaryInputState == nil && !currentText.isEmpty) || (basicText != currentText) {
-            confirm(for: context.window, header: strings().mediaSenderDiscardChangesHeader, information: strings().mediaSenderDiscardChangesText, okTitle: strings().mediaSenderDiscardChangesOK, successHandler: { [weak self] _ in
+            verifyModal(for: context.window, header: strings().mediaSenderDiscardChangesHeader, information: strings().mediaSenderDiscardChangesText, ok: strings().mediaSenderDiscardChangesOK, successHandler: { [weak self] _ in
                 self?.closeModal()
             })
         } else {
@@ -973,7 +973,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             }
         } else {
             if text.length > context.premiumLimits.caption_length_limit_default {
-                confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_default)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
+                verifyModal(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_default)), ok: strings().alertOK, cancel: "", option: strings().premiumGetPremiumDouble, successHandler: { result in
                     switch result {
                     case .thrid:
                         showPremiumLimit(context: context, type: .caption(text.length))

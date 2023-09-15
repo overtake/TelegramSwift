@@ -464,7 +464,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                                 return
                             }
                             if peer.hasPermission(.addAdmins) {
-                                confirm(for: context.window, information: strings().channelAddBotErrorHaveRights, okTitle: strings().channelAddBotAsAdmin, successHandler: { _ in
+                                verifyModal(for: context.window, information: strings().channelAddBotErrorHaveRights, ok: strings().channelAddBotAsAdmin, successHandler: { _ in
                                     showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: { _, f in f() }), for: context.window)
                                 })
                             } else {

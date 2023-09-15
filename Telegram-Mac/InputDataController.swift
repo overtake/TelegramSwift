@@ -21,7 +21,7 @@ public class InputDataModalController : ModalViewController {
     init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(340, 300), presentation: TelegramPresentationTheme = theme) {
         self.controller = controller
         self._modalInteractions = modalInteractions
-        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 300), size.height)
+        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 280), size.height)
         self.controller.prepareAllItems = true
         self.closeHandler = closeHandler
         super.init(frame: controller._frameRect)
@@ -67,6 +67,10 @@ public class InputDataModalController : ModalViewController {
     }
     public override var shouldCloseAllTheSameModals: Bool {
         return false
+    }
+    
+    public override var isVisualEffectContainer: Bool {
+        return true
     }
     
     public override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -158,13 +162,13 @@ public class InputDataModalController : ModalViewController {
     
     override open func measure(size: NSSize) {
         let topHeight = controller.genericView.topView?.frame.height ?? 0
-        self.modal?.resize(with:NSMakeSize(max(300, min(self.controller._frameRect.width, max(size.width, 350))), min(min(size.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(size.width, 350))), min(min(size.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         let topHeight = controller.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(300, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: animated)
         }
     }
     

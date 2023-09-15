@@ -257,7 +257,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                     
                     if timestamp.isFuture {
                         entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().twoStepAuthEnterPasswordHelp + "\n\n" + strings().twoStepAuthResetPending(autoremoveLocalized(Int(timestamp - Int32(Date().timeIntervalSince1970)))) + "\n[" + strings().twoStepAuthCancelReset + "](reset)", linkHandler: { link in
-                            confirm(for: context.window, header: strings().twoStepAuthCancelResetConfirm, information: strings().twoStepAuthCancelResetText, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { _ in
+                            verifyModal(for: context.window, header: strings().twoStepAuthCancelResetConfirm, information: strings().twoStepAuthCancelResetText, ok: strings().alertYes, cancel: strings().alertNO, successHandler: { _ in
                                 cancelReset()
                             })
                         }), data: InputDataGeneralTextData(viewType: .textBottomItem)))
@@ -272,7 +272,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                     
                     let forgot:()->Void = {
                         if !hasRecoveryEmail {
-                            confirm(for: context.window, header: strings().twoStepAuthErrorHaventEmailResetHeader, information: strings().twoStepAuthErrorHaventEmailNew, okTitle: strings().twoStepAuthErrorHaventEmailReset, successHandler: { _ in
+                            verifyModal(for: context.window, header: strings().twoStepAuthErrorHaventEmailResetHeader, information: strings().twoStepAuthErrorHaventEmailNew, ok: strings().twoStepAuthErrorHaventEmailReset, successHandler: { _ in
                                 forgotPassword()
                             })
                         } else {
@@ -390,7 +390,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                     text += strings().secureIdWarningDataLost
                 }
                 
-                confirm(for: context.window, information: text, successHandler: { result in
+                verifyModal(for: context.window, information: text, successHandler: { result in
                     var disablePassword = false
                     updateState { state in
                         if state.checking {
@@ -707,7 +707,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                                     updateState {
                                         $0.withUpdatedControllerData(.access(configuration: .notSet(pendingEmail: nil)))
                                     }
-                                    confirm(for: context.window, header: strings().twoStepAuthResetSuccessHeader, information: strings().twoStepAuthResetSuccess, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { _ in
+                                    verifyModal(for: context.window, header: strings().twoStepAuthResetSuccessHeader, information: strings().twoStepAuthResetSuccess, ok: strings().alertYes, cancel: strings().alertNO, successHandler: { _ in
                                         let controller = twoStepVerificationPasswordEntryController(context: context, mode: .setup, initialStage: nil, result: proccessEntryResult, presentController: presentController)
                                         presentController((controller: controller, root: true, animated: true))
                                     })
@@ -1345,7 +1345,7 @@ func twoStepVerificationPasswordEntryController(context: AccountContext, mode: T
                         presentController((controller: twoStepVerificationPasswordEntryController(context: context, mode: mode, initialStage: stage, result: result, presentController: presentController), root: false, animated: true))
                     } else {
                         if skipEmail {
-                            confirm(for: context.window, information: strings().twoStepAuthEmailSkipAlert, okTitle: strings().twoStepAuthEmailSkip, successHandler: { _ in
+                            verifyModal(for: context.window, information: strings().twoStepAuthEmailSkipAlert, ok: strings().twoStepAuthEmailSkip, successHandler: { _ in
                                 f(checkAndSaveState(context: context))
                             })
                         } else {

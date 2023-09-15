@@ -170,7 +170,7 @@ func UsernameController(_ context: AccountContext) -> InputDataController {
         let info: String = value ? strings().usernameActivateInfo : strings().usernameDeactivateInfo
         let ok: String = value ? strings().usernameActivateOk : strings().usernameDeactivateOk
         
-        confirm(for: context.window, header: title, information: info, okTitle: ok, successHandler: { _ in
+        verifyModal(for: context.window, header: title, information: info, ok: ok, successHandler: { _ in
             _ = context.engine.peers.toggleAddressNameActive(domain: .account, name: username.username, active: value).start()
             
             updateState { current in

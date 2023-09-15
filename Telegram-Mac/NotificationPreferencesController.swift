@@ -411,7 +411,7 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     }
     
     let arguments = NotificationArguments(resetAllNotifications: {
-        confirm(for: context.window, header: strings().notificationSettingsConfirmReset, information: strings().chatConfirmActionUndonable, successHandler: { _ in
+        verifyModal(for: context.window, header: strings().notificationSettingsConfirmReset, information: strings().chatConfirmActionUndonable, successHandler: { _ in
             _ = resetPeerNotificationSettings(network: context.account.network).start()
         })
     }, toggleMessagesPreview: {

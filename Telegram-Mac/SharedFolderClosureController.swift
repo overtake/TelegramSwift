@@ -728,7 +728,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
         copyToClipboard(link)
     }, deleteLink: { link in
         if let filterId = content.localFilterId {
-            confirm(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, okTitle: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, ok: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
                 
                 var index: Int? = nil
                 updateState { current in
@@ -842,7 +842,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
                 }
                 
                 if filter.data?.hasSharedLinks == true {
-                    confirm(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
+                    verifyModal(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
                         invoke()
                     })
                 } else {
@@ -961,11 +961,11 @@ func deleteSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void
         }
         if defaultPeers.isEmpty {
             if filter.data?.hasSharedLinks == true {
-                confirm(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
+                verifyModal(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
                     invoke()
                 })
             } else {
-                confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
+                verifyModal(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, ok: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
                     invoke()
                 })
             }

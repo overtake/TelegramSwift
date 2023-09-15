@@ -1351,7 +1351,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         }, navigate: { [weak self] index in
             self?.position.set(.navigate(index: .sticker(index)))
         }, clearRecent: {
-            confirm(for: context.window, header: strings().stickersConfirmClearRecentHeader, information: strings().stickersConfirmClearRecentText, okTitle: strings().stickersConfirmClearRecentOK, successHandler: { _ in
+            verifyModal(for: context.window, header: strings().stickersConfirmClearRecentHeader, information: strings().stickersConfirmClearRecentText, ok: strings().stickersConfirmClearRecentOK, successHandler: { _ in
                 _ = context.engine.stickers.clearRecentlyUsedStickers().start()
             })
         }, removePack: { collectionId in

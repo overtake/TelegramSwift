@@ -1219,6 +1219,8 @@ public final class L10n {
   public static var channelBlockUserCanSendMessages: String  { return L10n.tr("Localizable", "Channel.BlockUser.CanSendMessages") }
   /// Can Send Stickers & GIFs
   public static var channelBlockUserCanSendStickers: String  { return L10n.tr("Localizable", "Channel.BlockUser.CanSendStickers") }
+  /// This channel is private.
+  public static var channelBoostPrivateError: String  { return L10n.tr("Localizable", "Channel.Boost.PrivateError") }
   /// %d
   public static func channelCommentsCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Count_countable", p1)
@@ -7449,6 +7451,8 @@ public final class L10n {
   public static var modalCopyLink: String  { return L10n.tr("Localizable", "Modal.CopyLink") }
   /// Create
   public static var modalCreate: String  { return L10n.tr("Localizable", "Modal.Create") }
+  /// Delete
+  public static var modalDelete: String  { return L10n.tr("Localizable", "Modal.Delete") }
   /// Done
   public static var modalDone: String  { return L10n.tr("Localizable", "Modal.Done") }
   /// Not Now

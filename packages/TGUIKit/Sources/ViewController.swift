@@ -1227,6 +1227,9 @@ open class ModalViewController : ViewController, ModalControllerHelper {
     open var isVisualEffectBackground: Bool {
         return false
     }
+    open var isVisualEffectContainer: Bool {
+        return false
+    }
     
     open var isFullScreen:Bool {
         return false

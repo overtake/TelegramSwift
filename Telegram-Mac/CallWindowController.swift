@@ -1077,7 +1077,7 @@ class PhoneCallWindowController {
                             self.session.disableVideo()
                         }
                     } else {
-                        confirm(for: self.window, information: strings().callCameraError, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+                        verifyModal(for: self.window, information: strings().callCameraError, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                             switch result {
                             case .thrid:
                                 openSystemSettings(.camera)
@@ -1101,7 +1101,7 @@ class PhoneCallWindowController {
             if let result = result {
                 switch result {
                 case .permission:
-                    confirm(for: window, information: strings().callScreenError, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+                    verifyModal(for: window, information: strings().callScreenError, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                         switch result {
                         case .thrid:
                             openSystemSettings(.sharing)

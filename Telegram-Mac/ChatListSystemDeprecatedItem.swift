@@ -68,7 +68,7 @@ private final class ChatListSystemDeprecatedItemView : TableRowView {
         
         control.set(handler: { [weak self] control in
             if let window = control.kitWindow {
-                confirm(for: window, header: strings().deprecatedAlertTitle, information: strings().deprecatedAlertText, cancelTitle: "", thridTitle: strings().deprecatedAlertThird, successHandler: { result in
+                verifyModal(for: window, header: strings().deprecatedAlertTitle, information: strings().deprecatedAlertText, cancel: "", option: strings().deprecatedAlertThird, successHandler: { result in
                     if result == .thrid {
                         if let item = self?.item as? ChatListSystemDeprecatedItem {
                             item.hideAction()

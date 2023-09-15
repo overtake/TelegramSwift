@@ -769,7 +769,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
-        confirm(for: context.window, header: requestData?.bot.displayTitle ?? appName, information: message, successHandler: { _ in
+        verifyModal(for: context.window, header: requestData?.bot.displayTitle ?? appName, information: message, successHandler: { _ in
             completionHandler(true)
         }, cancelHandler: {
             completionHandler(false)
@@ -803,7 +803,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     @unknown default:
                         info = "unknown"
                     }
-                    confirm(for: context.window, information: info, okTitle: strings().webAppAccessAllow, successHandler: { _ in
+                    verifyModal(for: context.window, information: info, ok: strings().webAppAccessAllow, successHandler: { _ in
                         decisionHandler(.grant)
                         FastSettings.allowBotAccessTo(type, peerId: peer.id)
                     }, cancelHandler: {
@@ -895,12 +895,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     override func measure(size: NSSize) {
         if let embedSize = effectiveSize {
-            let size = embedSize.aspectFitted(NSMakeSize(min(size.width - 100, 800), min(size.height - 100, 800)))
+            let size = embedSize.aspectFitted(NSMakeSize(min(size.width - 100, 550), min(size.height - 100, 550)))
             
             self.modal?.resize(with:size, animated: false)
             self.genericView.updateLayout(size, transition: .immediate)
         } else {
-            let size = NSMakeSize(380, size.height - 80)
+            let size = NSMakeSize(380, min(550, size.height - 80))
             self.modal?.resize(with:size, animated: false)
             self.genericView.updateLayout(size, transition: .immediate)
         }
@@ -1184,7 +1184,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             if result {
                 sendEvent(true)
             } else {
-                confirm(for: context.window, header: strings().webappAllowMessagesTitle, information: strings().webappAllowMessagesText(data.bot.displayTitle), okTitle: strings().webappAllowMessagesOK, successHandler: { _ in
+                verifyModal(for: context.window, header: strings().webappAllowMessagesTitle, information: strings().webappAllowMessagesText(data.bot.displayTitle), ok: strings().webappAllowMessagesOK, successHandler: { _ in
                     let _ = showModalProgress(signal: context.engine.messages.allowBotSendMessages(botId: data.bot.id), for: context.window).start(completed: {
                         sendEvent(true)
                     })
@@ -1225,7 +1225,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             } else {
                 text = strings().conversationShareBotContactConfirmation(data.bot.displayTitle)
             }
-            confirm(for: context.window, header: strings().conversationShareBotContactConfirmationTitle, information: text, okTitle: strings().conversationShareBotContactConfirmationOK, successHandler: { _ in
+            verifyModal(for: context.window, header: strings().conversationShareBotContactConfirmationTitle, information: text, ok: strings().conversationShareBotContactConfirmationOK, successHandler: { _ in
                 
                 
                 let _ = (context.account.postbox.loadedPeerWithId(context.peerId) |> deliverOnMainQueue).start(next: { peer in
@@ -1396,7 +1396,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         if needCloseConfirmation {
-            confirm(for: context.window, information: strings().webpageConfirmClose, okTitle: strings().webpageConfirmOk, successHandler: { [weak self] _ in
+            verifyModal(for: context.window, information: strings().webpageConfirmClose, ok: strings().webpageConfirmOk, successHandler: { [weak self] _ in
                 self?.closeAnyway()
             })
         } else {

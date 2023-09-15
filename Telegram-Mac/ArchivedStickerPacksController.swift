@@ -251,7 +251,7 @@ class ArchivedStickerPacksController: TableViewController {
         let arguments = ArchivedStickerPacksControllerArguments(context: context, openStickerPack: { info in
             showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.stickers(.name(info.shortName))]), for: context.window)
         }, removePack: { info in
-            confirm(for: context.window, information: strings().chatConfirmActionUndonable, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().chatConfirmActionUndonable, successHandler: { _ in
                 var remove = false
                 updateState { state in
                     var removingPackIds = state.removingPackIds

@@ -2618,8 +2618,9 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
             }
             
 
+            let verify = verifyAlertSignal(for: context.window, information: text, ok: okTitle ?? strings().alertOK, option: thridTitle, optionIsSelected: false) |> filter { $0 == .basic }
             
-            return combineLatest(modernConfirmSignal(for: context.window, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? strings().alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get() |> take(1)) |> map { result, location -> Bool in
+            return combineLatest(verify, context.globalPeerHandler.get() |> take(1)) |> map { result, location -> Bool in
                 
                 if let threadId = threadId {
                     _ = context.engine.peers.removeForumChannelThread(id: peerId, threadId: threadId).start()
@@ -2675,7 +2676,7 @@ func applyExternalProxy(_ server:ProxyServerSettings, accountManager: AccountMan
         textInfo += "\n\n" + strings().proxyForceEnableMTPDesc
     }
     
-    modernConfirm(for: mainWindow, account: nil, peerId: nil, header: strings().proxyForceEnableHeader1, information: textInfo, okTitle: strings().proxyForceEnableOK, thridTitle: strings().proxyForceEnableEnable, successHandler: { result in
+    verifyAlert(for: mainWindow, header: strings().proxyForceEnableHeader1, information: textInfo, ok: strings().proxyForceEnableOK, option: strings().proxyForceEnableEnable, successHandler: { result in
         _ = updateProxySettingsInteractively(accountManager: accountManager, { current -> ProxySettings in
             
             var current = current.withAddedServer(server)
@@ -3703,7 +3704,7 @@ func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer, canDelete
     
     let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup
     
-    modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+    verifyAlert(for: context.window, information:information , ok: strings().peerInfoConfirmClear, option: thridTitle, optionIsSelected: false, successHandler: { result in
         _ = context.engine.messages.clearHistoryInteractively(peerId: peer.id, threadId: nil, type: result == .thrid ? .forEveryone : .forLocalPeer).start()
     })
 }

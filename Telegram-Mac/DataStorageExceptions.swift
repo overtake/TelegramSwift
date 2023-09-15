@@ -322,7 +322,7 @@ func DataStorageExceptions(context: AccountContext, category: CacheStorageSettin
         })
         actionsDisposable.add(signal.start())
     }, removeAll: {
-        confirm(for: context.window, information: strings().storageExceptionsRemoveAllConfirm, okTitle: strings().alertYes, successHandler: { _ in
+        verifyModal(for: context.window, information: strings().storageExceptionsRemoveAllConfirm, ok: strings().alertYes, successHandler: { _ in
             let exceptions = stateValue.with { $0.exceptions.map { $0.peer.peer.id }}
             let signal = updateAccountSpecificCacheStorageSettingsInteractively(postbox: context.account.postbox, { settings in
                 var settings = settings

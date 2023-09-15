@@ -458,7 +458,7 @@ class RecentSessionsController : TableViewController {
                 }
             }))
         }, terminateOthers: {
-            confirm(for: context.window, information: strings().recentSessionsConfirmTerminateOthers, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().recentSessionsConfirmTerminateOthers, successHandler: { _ in
                 _ = showModalProgress(signal: context.activeSessionsContext.removeOther(), for: context.window).start(error: { error in
                     
                 })

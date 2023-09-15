@@ -585,6 +585,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             notification.identifier = "msg_\(message.id.string)"
                             
+                            
                             if #available(macOS 10.14, *) {
                                 switch inAppSettings.tone {
                                 case .none:
@@ -607,8 +608,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     notification.soundName = nil
                                     title += " 🔕"
                                 }
-                            default:
-                                break
+                            case .reaction:
+                                notification.soundName = nil
+                                title += " 🔕"
                             }
                            
                             if screenIsLocked {

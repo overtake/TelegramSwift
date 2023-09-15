@@ -320,7 +320,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
     }, delete: {
         if let link = stateValue.with ({ $0.link }) {
-            confirm(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, okTitle: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
+            verifyModal(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, ok: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
                 let signal = context.engine.peers.deleteChatFolderLink(filterId: filter.id, link: link)
                 _ = showModalProgress(signal: signal, for: context.window).start()
                 updated(link, nil)
@@ -382,7 +382,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         if let link = link {
             let state = stateValue.with { $0 }
             if (link != state.link) || (initialSelected != state.selected) {
-                confirm(for: context.window, information: strings().shareFolderDiscardText, okTitle: strings().shareFolderDiscardOk, successHandler: { _ in
+                verifyModal(for: context.window, information: strings().shareFolderDiscardText, ok: strings().shareFolderDiscardOk, successHandler: { _ in
                     f()
                 })
             } else {

@@ -549,7 +549,7 @@ class PCallSession {
             if access {
                 self?.acceptAfterAccess()
             } else {
-                confirm(for: accountContext.window, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { [weak self] result in
+                verifyModal(for: accountContext.window, information: strings().requestAccesErrorHaveNotAccessCall, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { [weak self] result in
                     switch result {
                     case .thrid:
                         openSystemSettings(.microphone)
@@ -1200,7 +1200,7 @@ func phoneCall(context: AccountContext, peerId:PeerId, ignoreSame:Bool = false, 
                 return .success(PCallSession(accountContext: context, account: context.account, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible, data: data))
             }
         } else {
-            confirm(for: context.window, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+            verifyModal(for: context.window, information: strings().requestAccesErrorHaveNotAccessCall, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)
@@ -1270,7 +1270,7 @@ func makeNewCallConfirmation(accountContext: AccountContext, newPeerId: PeerId, 
                     text = strings().callConfirmDiscardVoiceToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 }
             }
-            return confirmSignal(for: accountContext.window, header: header, information: text, okTitle: strings().modalYes, cancelTitle: strings().modalCancel) |> filter { $0 }
+            return verifyAlertSignal(for: accountContext.window, header: header, information: text, ok: strings().modalYes, cancel: strings().modalCancel) |> map { $0 == .basic }
         }
     } else {
         return .single(true)

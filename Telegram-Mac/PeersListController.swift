@@ -686,6 +686,7 @@ class PeerListContainerView : Control {
 
     
     var openProxy:((Control)->Void)? = nil
+    var openCurrentProfile:((PeerId)->Void)? = nil
     var openStatus:((Control)->Void)? = nil {
         didSet {
             titleView.openStatus = { [weak self] control in
@@ -773,6 +774,10 @@ class PeerListContainerView : Control {
                 current = TitleForumView(frame: NSMakeRect(0, 0, frame.width, 50))
                 self.forumTitle = current
                 statusContainer.addSubview(current)
+                
+                current.set(handler: { [weak self] _ in
+                    self?.openCurrentProfile?(forumData.peer.id)
+                }, for: .Click)
             }
             current.update(state, forumData: forumData, arguments: arguments)
         } else if let view = self.forumTitle {
@@ -1875,6 +1880,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         genericView.openProxy = { _ in
             openProxySettings()
+        }
+        
+        genericView.openCurrentProfile = { peerId in
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+
         }
         
         genericView.openStatus = { control in

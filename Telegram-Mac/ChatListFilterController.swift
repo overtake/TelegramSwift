@@ -1255,7 +1255,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         getController?()?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
         copyToClipboard(link)
     }, deleteLink: { link in
-        confirm(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, okTitle: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
+        verifyModal(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, ok: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
             
             var index: Int? = nil
             updateState { current in
@@ -1354,7 +1354,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     controller.backInvocation = { data, f in
         if stateValue.with({ $0.filter != $0.initialFilter }) {
-            confirm(for: context.window, header: strings().chatListFilterDiscardHeader, information: strings().chatListFilterDiscardText, okTitle: strings().chatListFilterDiscardOK, cancelTitle: strings().chatListFilterDiscardCancel, successHandler: { _ in
+            verifyModal(for: context.window, header: strings().chatListFilterDiscardHeader, information: strings().chatListFilterDiscardText, ok: strings().chatListFilterDiscardOK, cancel: strings().chatListFilterDiscardCancel, successHandler: { _ in
                 f(true)
             })
         } else {

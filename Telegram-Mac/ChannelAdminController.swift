@@ -956,7 +956,7 @@ class ChannelAdminController: TableModalViewController {
                         }
                         
                         if let errorText = errorText {
-                            confirm(for: context.window, header: strings().channelTransferOwnerErrorTitle, information: errorText, okTitle: strings().modalOK, cancelTitle: strings().modalCancel, thridTitle: install2Fa ? strings().channelTransferOwnerErrorEnable2FA : nil, successHandler: { result in
+                            verifyModal(for: context.window, header: strings().channelTransferOwnerErrorTitle, information: errorText, ok: strings().modalOK, cancel: strings().modalCancel, option: install2Fa ? strings().channelTransferOwnerErrorEnable2FA : nil, successHandler: { result in
                                 switch result {
                                 case .basic:
                                     break
@@ -999,7 +999,7 @@ class ChannelAdminController: TableModalViewController {
                     }))
                 }
                 
-                confirm(for: context.window, header: header, information: text, okTitle: strings().channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
+                verifyModal(for: context.window, header: header, information: text, ok: strings().channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
                     transfer(peerId, isGroup, peer.isGroup)
                 })
             })
