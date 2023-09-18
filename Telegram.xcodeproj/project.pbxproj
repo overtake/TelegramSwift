@@ -367,6 +367,7 @@
 		27949113260A41EB0003BFA0 /* FFMpegMediaFrameSourceContextHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910D260A41EA0003BFA0 /* FFMpegMediaFrameSourceContextHelpers.swift */; };
 		27949114260A41EB0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910E260A41EA0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift */; };
 		27949115260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2794910F260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift */; };
+		2795578E2AB86A65007EC996 /* libsharpyuv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2795578D2AB86A5C007EC996 /* libsharpyuv.a */; };
 		2796FEEF273E503200DA653C /* ChatInputSendAsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2796FEEE273E503100DA653C /* ChatInputSendAsView.swift */; };
 		2796FEF227423A8600DA653C /* EmojiSuggestions in Frameworks */ = {isa = PBXBuildFile; productRef = 2796FEF127423A8600DA653C /* EmojiSuggestions */; };
 		2796FEF527423D2100DA653C /* EDSunriseSet in Frameworks */ = {isa = PBXBuildFile; productRef = 2796FEF427423D2100DA653C /* EDSunriseSet */; };
@@ -574,7 +575,6 @@
 		27D43DA627917717006968A6 /* libwebp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DA527917714006968A6 /* libwebp.a */; };
 		27D43DA82791771D006968A6 /* libwebpdecoder.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DA72791771A006968A6 /* libwebpdecoder.a */; };
 		27D43DAA27917721006968A6 /* libwebpdemux.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DA92791771F006968A6 /* libwebpdemux.a */; };
-		27D43DAC27917726006968A6 /* libwebpmux.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAB27917724006968A6 /* libwebpmux.a */; };
 		27D43DAE27917738006968A6 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAD27917735006968A6 /* libjpeg.a */; };
 		27D43DB027917748006968A6 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DAF27917747006968A6 /* libssl.a */; };
 		27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43DB12791774A006968A6 /* libcrypto.a */; };
@@ -1852,6 +1852,7 @@
 		2794910D260A41EA0003BFA0 /* FFMpegMediaFrameSourceContextHelpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaFrameSourceContextHelpers.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaFrameSourceContextHelpers.swift"; sourceTree = SOURCE_ROOT; };
 		2794910E260A41EA0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaPassthroughVideoFrameDecoder.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaPassthroughVideoFrameDecoder.swift"; sourceTree = SOURCE_ROOT; };
 		2794910F260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = FFMpegMediaVideoFrameDecoder.swift; path = "submodules/telegram-ios/submodules/MediaPlayer/Sources/FFMpegMediaVideoFrameDecoder.swift"; sourceTree = SOURCE_ROOT; };
+		2795578D2AB86A5C007EC996 /* libsharpyuv.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsharpyuv.a; path = "core-xprojects/libwebp/build/libwebp/lib/libsharpyuv.a"; sourceTree = "<group>"; };
 		2796FEEE273E503100DA653C /* ChatInputSendAsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputSendAsView.swift; sourceTree = "<group>"; };
 		2796FEF02742390000DA653C /* EmojiSuggestions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = EmojiSuggestions; path = packages/EmojiSuggestions; sourceTree = "<group>"; };
 		2796FEF327423C8500DA653C /* EDSunriseSet */ = {isa = PBXFileReference; lastKnownFileType = folder; name = EDSunriseSet; path = packages/EDSunriseSet; sourceTree = "<group>"; };
@@ -3010,6 +3011,7 @@
 				C2EBBEA11FB5CA94009AD8ED /* CoreServices.framework in Frameworks */,
 				C2A8E14B1F7D2690000FD5E3 /* CoreVideo.framework in Frameworks */,
 				C2A8E1491F7D268B000FD5E3 /* CoreMedia.framework in Frameworks */,
+				2795578E2AB86A65007EC996 /* libsharpyuv.a in Frameworks */,
 				2796FF082742484A00DA653C /* CalendarUtils in Frameworks */,
 				27D43D9F279176DC006968A6 /* libavcodec.a in Frameworks */,
 				27D43D9A27917641006968A6 /* libvpx.a in Frameworks */,
@@ -3034,7 +3036,6 @@
 				27D43DB42791779C006968A6 /* libmac_framework_objc_static.a in Frameworks */,
 				27D9131128353E58007CF40F /* StoreKit.framework in Frameworks */,
 				2796FEF827423F5300DA653C /* TGPassportMRZ in Frameworks */,
-				27D43DAC27917726006968A6 /* libwebpmux.a in Frameworks */,
 				278B89A62791939700ECF71C /* libwebp in Frameworks */,
 				C253A9671D92E3AF00CDC850 /* AVFoundation.framework in Frameworks */,
 				27D696F4274F8451008A723E /* Colors in Frameworks */,
@@ -5954,6 +5955,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2795578D2AB86A5C007EC996 /* libsharpyuv.a */,
 				279BD40B29B71FA200A8B640 /* Network.framework */,
 				27D913092833A1C9007CF40F /* StoreKit.framework */,
 				27034075282CF79E00D0156C /* SceneKit.framework */,

@@ -1661,6 +1661,86 @@ public final class L10n {
   public static var channelBlacklistEmptyDescrpition: String  { return L10n.tr("Localizable", "ChannelBlacklist.EmptyDescrpition") }
   /// RESTRICTED
   public static var channelBlacklistRestricted: String  { return L10n.tr("Localizable", "ChannelBlacklist.Restricted") }
+  /// Boost Channel
+  public static var channelBoostBoostChannel: String  { return L10n.tr("Localizable", "ChannelBoost.BoostChannel") }
+  /// %1$@ needed to be able to post %2$@.
+  public static func channelBoostBoostedChannelMoreRequired(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.BoostedChannelMoreRequired", p1, p2)
+  }
+  /// This channel reached **Level %1$@** and can now post %2$@.
+  public static func channelBoostBoostedChannelReachedLevel(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.BoostedChannelReachedLevel", p1, p2)
+  }
+  /// Copy Link
+  public static var channelBoostCopyLink: String  { return L10n.tr("Localizable", "ChannelBoost.CopyLink") }
+  /// This channel reached **Level 1** and can now post stories.
+  public static var channelBoostEnabledStoriesForChannelText: String  { return L10n.tr("Localizable", "ChannelBoost.EnabledStoriesForChannelText") }
+  /// Enable Stories
+  public static var channelBoostEnableStories: String  { return L10n.tr("Localizable", "ChannelBoost.EnableStories") }
+  /// Enable Stories for This Channel
+  public static var channelBoostEnableStoriesForChannel: String  { return L10n.tr("Localizable", "ChannelBoost.EnableStoriesForChannel") }
+  /// **%1$@** needs %2$@ to enable posting stories. Help make it possible!
+  public static func channelBoostEnableStoriesForChannelText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableStoriesForChannelText", p1, p2)
+  }
+  /// Enable Stories for The Channel
+  public static var channelBoostEnableStoriesForOtherChannel: String  { return L10n.tr("Localizable", "ChannelBoost.EnableStoriesForOtherChannel") }
+  /// This channel needs **%1$@** to enable stories.
+  public static func channelBoostEnableStoriesMoreRequired(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableStoriesMoreRequired", p1)
+  }
+  /// Your channel needs %1$@ to enable posting stories.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostEnableStoriesText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableStoriesText", p1)
+  }
+  /// Help Upgrade This Channel
+  public static var channelBoostHelpUpgradeChannel: String  { return L10n.tr("Localizable", "ChannelBoost.HelpUpgradeChannel") }
+  /// **%1$@** needs %2$@ to be able to post %3$@.
+  public static func channelBoostHelpUpgradeChannelText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.HelpUpgradeChannelText", p1, p2, p3)
+  }
+  /// Increase Story Limit
+  public static var channelBoostIncreaseLimit: String  { return L10n.tr("Localizable", "ChannelBoost.IncreaseLimit") }
+  /// Your channel needs %1$@ to post %2$@.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostIncreaseLimitText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.IncreaseLimitText", p1, p2)
+  }
+  /// Level %@
+  public static func channelBoostLevel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Level", p1)
+  }
+  /// Maximum Level Reached
+  public static var channelBoostMaxLevelReached: String  { return L10n.tr("Localizable", "ChannelBoost.MaxLevelReached") }
+  /// This channel reached **Level %1$@** and can now post %2$@.
+  public static func channelBoostMaxLevelReachedText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MaxLevelReachedText", p1, p2)
+  }
+  /// This channel reached **Level %1$@** and can now post %2$@.
+  public static func channelBoostMaxLevelReachedTextAuthor(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MaxLevelReachedTextAuthor", p1, p2)
+  }
+  /// **%@** more boost
+  public static func channelBoostMoreBoosts1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_1", p1)
+  }
+  /// **%@** more boosts
+  public static func channelBoostMoreBoostsAny(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_any", p1)
+  }
+  /// **%@** story per day
+  public static func channelBoostStoriesPerDay1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.StoriesPerDay_1", p1)
+  }
+  /// **%@** stories per day
+  public static func channelBoostStoriesPerDayAny(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.StoriesPerDay_any", p1)
+  }
+  /// You Boosted %1$@!
+  public static func channelBoostYouBoostedChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.YouBoostedChannel", p1)
+  }
+  /// You Boosted The Channel
+  public static var channelBoostYouBoostedOtherChannel: String  { return L10n.tr("Localizable", "ChannelBoost.YouBoostedOtherChannel") }
   /// Channel Info
   public static var channelEventFilterChannelInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.ChannelInfo") }
   /// Deleted Messages
@@ -11465,6 +11545,8 @@ public final class L10n {
   public static var slowModePreviewSenderMediaTooltip: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.MediaTooltip") }
   /// Slow mode is enabled. This text is too long to send as one message.
   public static var slowModeTooLongError: String  { return L10n.tr("Localizable", "SlowMode.TooLong.Error") }
+  /// Boosts
+  public static var statsBoosts: String  { return L10n.tr("Localizable", "Stats.Boosts") }
   /// ACTIONS
   public static var statsGroupActionsTitle: String  { return L10n.tr("Localizable", "Stats.GroupActionsTitle") }
   /// GROWTH
@@ -11703,6 +11785,32 @@ public final class L10n {
   public static func statsShowMoreZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stats.ShowMore_zero", p1)
   }
+  /// Statistics
+  public static var statsStatistics: String  { return L10n.tr("Localizable", "Stats.Statistics") }
+  /// %@ BOOSTER
+  public static func statsBoostsBoosters1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.Boosters_1", p1)
+  }
+  /// %@ BOOSTERS
+  public static func statsBoostsBoostersAny(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.Boosters_any", p1)
+  }
+  /// Your channel is currently boosted by these users.
+  public static var statsBoostsBoostersInfo: String  { return L10n.tr("Localizable", "Stats.Boosts.BoostersInfo") }
+  /// BOOSTERS
+  public static var statsBoostsBoostersNone: String  { return L10n.tr("Localizable", "Stats.Boosts.BoostersNone") }
+  /// Boost expires on %@
+  public static func statsBoostsExpiresOn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.ExpiresOn", p1)
+  }
+  /// LINK FOR BOOSTING
+  public static var statsBoostsLinkHeader: String  { return L10n.tr("Localizable", "Stats.Boosts.LinkHeader") }
+  /// Share this link with your subscribers to get more boosts.
+  public static var statsBoostsLinkInfo: String  { return L10n.tr("Localizable", "Stats.Boosts.LinkInfo") }
+  /// No users currently boost your channel
+  public static var statsBoostsNoBoostersYet: String  { return L10n.tr("Localizable", "Stats.Boosts.NoBoostersYet") }
+  /// OVERVIEW
+  public static var statsBoostsOverviewHeader: String  { return L10n.tr("Localizable", "Stats.Boosts.OverviewHeader") }
   /// Actions
   public static var statsGroupTopAdminActions: String  { return L10n.tr("Localizable", "Stats.GroupTopAdmin.Actions") }
   /// Promote

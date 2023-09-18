@@ -14,6 +14,130 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+
+private func generateBadgePath(rectSize: CGSize, tailPosition: CGFloat = 0.5) -> CGPath {
+    let cornerRadius: CGFloat = rectSize.height / 2.0
+    let tailWidth: CGFloat = 20.0
+    let tailHeight: CGFloat = 9.0
+    let tailRadius: CGFloat = 4.0
+
+    let rect = CGRect(origin: CGPoint(x: 0.0, y: tailHeight), size: rectSize)
+
+    let path = CGMutablePath()
+
+    path.move(to: CGPoint(x: rect.minX, y: rect.minY + cornerRadius))
+
+    var leftArcEndAngle: CGFloat = .pi / 2.0
+    var leftConnectionArcRadius = tailRadius
+    var tailLeftHalfWidth: CGFloat = tailWidth / 2.0
+    var tailLeftArcStartAngle: CGFloat = -.pi / 4.0
+    var tailLeftHalfRadius = tailRadius
+    
+    var rightArcStartAngle: CGFloat = -.pi / 2.0
+    var rightConnectionArcRadius = tailRadius
+    var tailRightHalfWidth: CGFloat = tailWidth / 2.0
+    var tailRightArcStartAngle: CGFloat = .pi / 4.0
+    var tailRightHalfRadius = tailRadius
+    
+    if tailPosition < 0.5 {
+        let fraction = max(0.0, tailPosition - 0.15) / 0.35
+        leftArcEndAngle *= fraction
+        
+        let connectionFraction = max(0.0, tailPosition - 0.35) / 0.15
+        leftConnectionArcRadius *= connectionFraction
+        
+        if tailPosition < 0.27 {
+            let fraction = tailPosition / 0.27
+            tailLeftHalfWidth *= fraction
+            tailLeftArcStartAngle *= fraction
+            tailLeftHalfRadius *= fraction
+        }
+    } else if tailPosition > 0.5 {
+        let tailPosition = 1.0 - tailPosition
+        let fraction = max(0.0, tailPosition - 0.15) / 0.35
+        rightArcStartAngle *= fraction
+        
+        let connectionFraction = max(0.0, tailPosition - 0.35) / 0.15
+        rightConnectionArcRadius *= connectionFraction
+        
+        if tailPosition < 0.27 {
+            let fraction = tailPosition / 0.27
+            tailRightHalfWidth *= fraction
+            tailRightArcStartAngle *= fraction
+            tailRightHalfRadius *= fraction
+        }
+    }
+        
+    path.addArc(
+        center: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + cornerRadius),
+        radius: cornerRadius,
+        startAngle: .pi,
+        endAngle: .pi + leftArcEndAngle,
+        clockwise: true
+    )
+
+    let leftArrowStart = max(rect.minX, rect.minX + rectSize.width * tailPosition - tailLeftHalfWidth - leftConnectionArcRadius)
+    path.addArc(
+        center: CGPoint(x: leftArrowStart, y: rect.minY - leftConnectionArcRadius),
+        radius: leftConnectionArcRadius,
+        startAngle: .pi / 2.0,
+        endAngle: .pi / 4.0,
+        clockwise: false
+    )
+
+    path.addLine(to: CGPoint(x: max(rect.minX, rect.minX + rectSize.width * tailPosition - tailLeftHalfRadius), y: rect.minY - tailHeight))
+
+    path.addArc(
+        center: CGPoint(x: rect.minX + rectSize.width * tailPosition, y: rect.minY - tailHeight + tailRadius / 2.0),
+        radius: tailRadius,
+        startAngle: -.pi / 2.0 + tailLeftArcStartAngle,
+        endAngle: -.pi / 2.0 + tailRightArcStartAngle,
+        clockwise: true
+    )
+    
+    path.addLine(to: CGPoint(x: min(rect.maxX, rect.minX + rectSize.width * tailPosition + tailRightHalfRadius), y: rect.minY - tailHeight))
+
+    let rightArrowStart = min(rect.maxX, rect.minX + rectSize.width * tailPosition + tailRightHalfWidth + rightConnectionArcRadius)
+    path.addArc(
+        center: CGPoint(x: rightArrowStart, y: rect.minY - rightConnectionArcRadius),
+        radius: rightConnectionArcRadius,
+        startAngle: .pi - .pi / 4.0,
+        endAngle: .pi / 2.0,
+        clockwise: false
+    )
+
+    path.addArc(
+        center: CGPoint(x: rect.minX + rectSize.width - cornerRadius, y: rect.minY + cornerRadius),
+        radius: cornerRadius,
+        startAngle: rightArcStartAngle,
+        endAngle: 0.0,
+        clockwise: true
+    )
+
+    path.addLine(to: CGPoint(x: rect.minX + rectSize.width, y: rect.minY + rectSize.height - cornerRadius))
+
+    path.addArc(
+        center: CGPoint(x: rect.minX + rectSize.width - cornerRadius, y: rect.minY + rectSize.height - cornerRadius),
+        radius: cornerRadius,
+        startAngle: 0.0,
+        endAngle: .pi / 2.0,
+        clockwise: true
+    )
+
+    path.addLine(to: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + rectSize.height))
+
+    path.addArc(
+        center: CGPoint(x: rect.minX + cornerRadius, y: rect.minY + rectSize.height - cornerRadius),
+        radius: cornerRadius,
+        startAngle: .pi / 2.0,
+        endAngle: .pi,
+        clockwise: true
+    )
+    
+    return path
+}
+
+
 private final class Arguments {
     let context: AccountContext
     let boost:()->Void
@@ -274,7 +398,7 @@ private final class BoostRowItemView : TableRowView {
             let layout = TextViewLayout.init(.initialize(string: peer.displayTitle, color: theme.colors.text, font: .medium(.text)))
             layout.measure(width: maxWidth - 40)
             textView.update(layout)
-            self.backgroundColor = theme.colors.grayForeground
+            self.backgroundColor = theme.colors.background
             
             self.setFrameSize(NSMakeSize(layout.layoutSize.width + 10 + avatar.frame.width + 10, 30))
             
@@ -337,7 +461,7 @@ private final class BoostRowItemView : TableRowView {
 
             nextLevel.update(premiumCountLayout)
             
-            nextLevel_background.backgroundColor = theme.colors.grayForeground
+            nextLevel_background.backgroundColor = theme.colors.background
             
             self.updateLayout(size: self.frame.size, transition: transition)
         }
@@ -410,12 +534,10 @@ private final class BoostRowItemView : TableRowView {
             imageView.sizeToFit()
             
             container.setFrameSize(NSMakeSize(dynamicValue.size.width + imageView.frame.width, 40))
+                        
+            let size = NSMakeSize(container.frame.width + 20, 50)
             
-            let canPremium = !context.premiumIsBlocked
-            
-            let size = NSMakeSize(container.frame.width + 20, canPremium ? 50 : 40)
-            
-            let image = generateImage(NSMakeSize(size.width, canPremium ? size.height - 10 : size.height), contextGenerator: { size, ctx in
+            let image = generateImage(NSMakeSize(size.width, size.height - 10), contextGenerator: { size, ctx in
                 ctx.clear(size.bounds)
                
                 let path = CGMutablePath()
@@ -445,26 +567,20 @@ private final class BoostRowItemView : TableRowView {
             let fullImage = generateImage(size, contextGenerator: { size, ctx in
                 ctx.clear(size.bounds)
 
-                if !canPremium {
-                    ctx.clip(to: size.bounds, mask: image)
-                    ctx.setFillColor(theme.colors.accent.cgColor)
-                    ctx.fill(size.bounds)
-                } else {
-                    ctx.clip(to: size.bounds, mask: clipImage)
-                    
-                    let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
-                    
-                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                    
-                    var locations: [CGFloat] = []
-                    for i in 0 ..< colors.count {
-                        locations.append(delta * CGFloat(i))
-                    }
-                    let colorSpace = deviceColorSpace
-                    let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
-                    
-                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size.height), end: CGPoint(x: size.width, y: size.height), options: CGGradientDrawingOptions())
+                ctx.clip(to: size.bounds, mask: clipImage)
+                
+                let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+                
+                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                
+                var locations: [CGFloat] = []
+                for i in 0 ..< colors.count {
+                    locations.append(delta * CGFloat(i))
                 }
+                let colorSpace = deviceColorSpace
+                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+                
+                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size.height), end: CGPoint(x: size.width, y: size.height), options: CGGradientDrawingOptions())
             })!
             
             self.backgrounView.image = fullImage
@@ -747,18 +863,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
-        
+                
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
-            return ExportedInvitationRowItem(initialSize, stableId: stableId, context: arguments.context, exportedLink: _ExportedInvitation.initialize(.link(link: state.link, title: nil, isPermanent: true, requestApproval: false, isRevoked: false, adminId: arguments.context.peerId, date: 0, startDate: 0, expireDate: nil, usageLimit: nil, count: nil, requestedCount: nil)), lastPeers: [], viewType: .singleItem, mode: .normal(hasUsage: false), menuItems: {
-                
-                var items:[ContextMenuItem] = []
-                
-                items.append(ContextMenuItem(strings().contextCopy, handler: {
-                    arguments.copyLink(state.link)
-                }, itemImage: MenuAnimation.menu_copy.value))
-                
-                return .single(items)
-            }, share: arguments.shareLink, copyLink: arguments.copyLink)
+            return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: theme.icons.fast_copy_link, action: {
+                arguments.copyLink(state.link)
+            }))
         }))
         index += 1
         
