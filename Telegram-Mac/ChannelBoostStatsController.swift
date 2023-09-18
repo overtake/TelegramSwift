@@ -95,7 +95,7 @@ private final class BoostRowItemView : TableRowView {
 
             nextLevel.update(premiumCountLayout)
             
-            nextLevel_background.backgroundColor = theme.colors.grayForeground
+            nextLevel_background.backgroundColor = theme.colors.background
             
             self.updateLayout(size: self.frame.size, transition: transition)
         }
