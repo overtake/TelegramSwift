@@ -21,7 +21,6 @@ import ColorPalette
 import ThemeSettings
 import Accelerate
 import TGModernGrowingTextView
-import ScreenCaptureKit
 
 extension RenderedChannelParticipant {
     func withUpdatedBannedRights(_ info: ChannelParticipantBannedInfo) -> RenderedChannelParticipant {
