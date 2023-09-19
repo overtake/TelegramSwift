@@ -298,6 +298,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
                     arguments.stats(cachedData.statsDatacenterId)
                 }))
+            } else if peer.isChannel, peer.isAdmin {
+                items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
+                    arguments.stats(0)
+                }))
             }
         }
         if access.canReport {

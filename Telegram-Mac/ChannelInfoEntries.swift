@@ -545,7 +545,11 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func stats(_ datacenterId: Int32) {
-        self.pushViewController(ChannelStatsSegmentController(context, datacenterId: datacenterId, peerId: peerId, isChannel: true))
+        if datacenterId == 0 {
+            self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId))
+        } else {
+            self.pushViewController(ChannelStatsSegmentController(context, datacenterId: datacenterId, peerId: peerId, isChannel: true))
+        }
     }
     func share() {
         let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> deliverOnMainQueue
