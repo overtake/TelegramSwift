@@ -236,6 +236,49 @@ private struct State : Equatable {
     var currentLevelBoosts: Int {
         return status.boosts - status.currentLevelBoosts
     }
+    
+    var title: String {
+        var title: String = ""
+        var remaining: Int?
+        if let nextLevelBoosts = self.status.nextLevelBoosts {
+            remaining = nextLevelBoosts - self.status.boosts
+        }
+        
+        let level = self.status.level
+        
+        if isAdmin {
+            if let _ = remaining {
+                if level == 0 {
+                    title = strings().channelBoostEnableStories
+                } else {
+                    title = strings().channelBoostIncreaseLimit
+                }
+            } else {
+                title = strings().channelBoostMaxLevelReached
+            }
+        } else {
+            if let _ = remaining {
+                if level == 0 {
+                    title = samePeer ? strings().channelBoostEnableStoriesForChannel : strings().channelBoostEnableStoriesForOtherChannel
+                } else {
+                    title = strings().channelBoostHelpUpgradeChannel
+                }
+            } else {
+                title = strings().channelBoostMaxLevelReached
+            }
+        }
+       
+        if self.boosted {
+            if let _ = remaining {
+                title = samePeer ? strings().channelBoostYouBoostedChannel(peer.peer.compactDisplayTitle) : strings().channelBoostYouBoostedOtherChannel
+            } else {
+                title = strings().channelBoostMaxLevelReached
+            }
+        }
+                       
+
+        return title
+    }
 }
 
 
@@ -255,7 +298,7 @@ private final class BoostRowItem : TableRowItem {
         
         var remaining: Int?
         if let nextLevelBoosts = state.status.nextLevelBoosts {
-            remaining = nextLevelBoosts - state.status.currentLevelBoosts
+            remaining = nextLevelBoosts - state.status.boosts
         }
 
         let level = state.status.level
@@ -264,67 +307,54 @@ private final class BoostRowItem : TableRowItem {
         if state.status.nextLevelBoosts != nil {
             if state.isAdmin {
                 if let remaining = remaining {
-                    let valueString: String
-                    if remaining == 1 {
-                        valueString = "**\(remaining)** more boost"
-                    } else {
-                        valueString = "**\(remaining)** more boosts"
-                    }
+                    let valueString: String = strings().channelBoostMoreBoostsCountable(remaining)
                     if level == 0 {
-                        string = "Your channel needs \(valueString) to enable posting stories.\n\nAsk your **Premium** subscribers to boost your channel with this link:"
+                        string = strings().channelBoostEnableStoriesText(valueString)
                     } else {
-                        string = "Your channel needs \(valueString) to post **\(level + 1)** stories per day.\n\nAsk your **Premium** subscribers to boost your channel with this link:"
+                        string = strings().channelBoostIncreaseLimitText(valueString, "\(level + 1)")
                     }
                 } else {
-                    string = "Your channel needs **0** more boosts to post **2** stories per day.\n\nAsk your **Premium** subscribers to boost your channel with this link:"
+                    string = ""
                 }
             } else {
+                let storiesString = strings().channelBoostStoriesPerDayCountable(level + 1)
                 if let remaining = remaining {
-                    let valueString: String
-                    if remaining == 1 {
-                        valueString = "**\(remaining)** more boost"
+                    let valueString: String = strings().channelBoostMoreBoostsCountable(remaining)
+                    if remaining == 0 {
+                        string = strings().channelBoostBoostedChannelReachedLevel("\(level + 1)", storiesString)
                     } else {
-                        valueString = "**\(remaining)** more boosts"
+                        string = strings().channelBoostBoostedChannelMoreRequired(valueString, storiesString)
                     }
-                    if level == 0 {
-                        string = "**\(state.peer.peer.compactDisplayTitle)** needs \(valueString) to enable posting stories. Help make it possible!"
-                    } else {
-                        string = "**\(state.peer.peer.compactDisplayTitle)** needs \(valueString) to be able to post **\(level + 1)** stories per day."
-                    }
+
                 } else {
-                    string = "**\(state.peer.peer.compactDisplayTitle)** needs **0** more boosts to be able to post **\(level + 1)** stories per day."
+                    string = ""
                 }
             }
             
             if state.boosted {
+                let storiesString = strings().channelBoostStoriesPerDayCountable(level + 1)
                 if let remaining = remaining {
-                    let valueString: String
-                    if remaining == 1 {
-                        valueString = "**\(remaining)** more boost"
-                    } else {
-                        valueString = "**\(remaining)** more boosts"
-                    }
+                    let valueString: String = strings().channelBoostMoreBoostsCountable(remaining)
                     if level == 0 {
                         if remaining == 0 {
-                            string = "**You boosted this channel**.\nThis allowed it to post stories."
+                            string = strings().channelBoostEnabledStoriesForChannelText
                         } else {
-                            string = "**You boosted this channel**.\n\(valueString) needed to enable stories."
+                            string = strings().channelBoostEnableStoriesMoreRequired(valueString)
                         }
                     } else {
                         if remaining == 0 {
-                            string = "**You boosted this channel**.\nThis allowed it to post \(level + 1) stories per day."
+                            string = strings().channelBoostBoostedChannelReachedLevel("\(level + 1)", storiesString)
                         } else {
-                            string = "**You boosted this channel**.\n\(valueString) needed to be able to post **\(level + 1)** stories per day."
+                            string = strings().channelBoostBoostedChannelMoreRequired(valueString, storiesString)
                         }
                     }
+                } else {
+                    string = strings().channelBoostBoostedChannelReachedLevel("\(level + 1)", storiesString)
                 }
             }
         } else {
-            if state.isAdmin {
-                string = "**Congratulations!**\nYour channel has reached maximum level."
-            } else {
-                string = "This channel has reached maximum level."
-            }
+            let storiesString = strings().channelBoostStoriesPerDayCountable(level)
+            string = strings().channelBoostMaxLevelReachedText("\(level)", storiesString)
         }
        
 
@@ -441,7 +471,7 @@ private final class BoostRowItemView : TableRowView {
             let width = frame.width * state.percentToNext
 
             
-            var normalCountLayout = TextViewLayout(.initialize(string: "Level \(state.status.level)", color: theme.colors.text, font: .medium(13)))
+            var normalCountLayout = TextViewLayout(.initialize(string: strings().channelBoostLevel("\(state.status.level)"), color: theme.colors.text, font: .medium(13)))
             normalCountLayout.measure(width: .greatestFiniteMagnitude)
             
             if width >= 10 + normalCountLayout.layoutSize.width {
@@ -451,7 +481,9 @@ private final class BoostRowItemView : TableRowView {
 
             currentLevel.update(normalCountLayout)
 
-            var premiumCountLayout = TextViewLayout(.initialize(string: "Level \(state.status.level + 1)", color: theme.colors.text, font: .medium(13)))
+            
+            
+            var premiumCountLayout = TextViewLayout(.initialize(string: strings().channelBoostLevel("\(state.status.level + 1)"), color: theme.colors.text, font: .medium(13)))
             premiumCountLayout.measure(width: .greatestFiniteMagnitude)
             
             if width >= frame.width - 10 {
@@ -460,6 +492,7 @@ private final class BoostRowItemView : TableRowView {
             }
 
             nextLevel.update(premiumCountLayout)
+            nextLevel.isHidden = state.status.nextLevelBoosts == nil
             
             nextLevel_background.backgroundColor = theme.colors.background
             
@@ -471,7 +504,7 @@ private final class BoostRowItemView : TableRowView {
                 return
             }
             
-            var width = frame.width * state.percentToNext
+            let width = frame.width * state.percentToNext
 
             transition.updateFrame(view: currentLevel, frame: currentLevel.centerFrameY(x: 10))
             transition.updateFrame(view: nextLevel, frame: nextLevel.centerFrameY(x: bounds.width - 10 - nextLevel.frame.width))
@@ -773,7 +806,7 @@ private final class AcceptRowView : TableRowView {
                     if state.canApplyStatus == .error(.peerBoostAlreadyActive) {
                         title = strings().modalOK
                     } else {
-                        title = "Boost Channel"
+                        title = strings().channelBoostBoostChannel
                         gradient = true
                     }
                 }
@@ -786,11 +819,11 @@ private final class AcceptRowView : TableRowView {
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
             
-//            if let data = lottie.data, !state.boosted {
-//                let colors:[LottieColor] = [.init(keyPath: "", color: NSColor(0xffffff))]
-//                imageView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("bundle_\(lottie.rawValue)"), size: NSMakeSize(24, 24), colors: colors), cachePurpose: .temporaryLZ4(.thumb), playPolicy: .onceEnd, maximumFps: 60, colors: colors, runOnQueue: .mainQueue()))
-//            }
-            imageView.isHidden = true
+            if let data = lottie.data, gradient {
+                let colors:[LottieColor] = [.init(keyPath: "", color: NSColor(0xffffff))]
+                imageView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("bundle_\(lottie.rawValue)"), size: NSMakeSize(24, 24), colors: colors), cachePurpose: .temporaryLZ4(.thumb), playPolicy: .onceEnd, maximumFps: 60, colors: colors, runOnQueue: .mainQueue()))
+            }
+            imageView.isHidden = !gradient
                   
             if imageView.isHidden {
                 container.setFrameSize(NSMakeSize(layout.layoutSize.width, max(layout.layoutSize.height, imageView.frame.height)))
@@ -917,9 +950,9 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
         case .ok:
             commit()
         case let .replace(previousPeer):
-            let text = "You currently boost **\(previousPeer._asPeer().compactDisplayTitle)**. Do you want to boost **\(peer.compactDisplayTitle)** instead?"
+            let text = strings().channelBoostReplaceBoost(previousPeer._asPeer().compactDisplayTitle, peer.compactDisplayTitle)
             
-            verifyAlert(for: context.window, information: text, ok: "Replace", cancel: strings().modalCancel, successHandler: { result in
+            verifyAlert(for: context.window, information: text, ok: strings().channelBoostReplace, cancel: strings().modalCancel, successHandler: { result in
                 commit()
             })
             
@@ -933,21 +966,21 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
                 title = appName
                 text = strings().unknownError
             case let .floodWait(timeout):
-                title = "Can't Boost Too Often"
+                title = strings().channelBoostErrorBoostTooOftenTitle
                 let valueText = timeIntervalString(Int(timeout))
-                text = "You can change the channel you boost only once a day. Next time you can boost is in **\(valueText)**."
+                text = strings().channelBoostErrorBoostTooOftenText(valueText) 
                 dismiss = true
             case .peerBoostAlreadyActive:
                 title = nil
                 text = nil
                 dismiss = true
             case .premiumRequired:
-                title = "Premium Needed"
-                text = "Only **Telegram Premium** subscribers can boost channels. Do you want to subscribe to **Telegram Premium**?"
+                title = strings().channelBoostErrorPremiumNeededTitle
+                text = strings().channelBoostErrorPremiumNeededText
                 needPremium = true
             case .giftedPremiumNotAllowed:
-                title = "Can't Boost with Gifted Premium"
-                text = "Because your **Telegram Premium** subscription was gifted to you, you can't use it to boost channels."
+                title = strings().channelBoostErrorGiftedPremiumNotAllowedTitle
+                text = strings().channelBoostErrorGiftedPremiumNotAllowedText
                 dismiss = true
             }
             
@@ -956,7 +989,7 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
             }
             if let title = title, let text = text {
                 if needPremium {
-                    verifyModal(for: context.window, header: title, information: text, option: "Subscribe", successHandler: { result in
+                    verifyAlert_button(for: context.window, header: title, information: text, option: strings().channelBoostErrorPremiumNeededTextOK, successHandler: { result in
                         if result == .thrid {
                             showModal(with: PremiumBoardingController(context: context, source: .channel_boost(peer.id)), for: context.window)
                         }
@@ -980,31 +1013,15 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    
-    let title: String
-    if initialState.status.nextLevelBoosts == nil {
-        title = "Maximum Level Reached"
-    } else {
-        if initialState.isAdmin {
-            if initialState.status.level == 0 {
-                title = "Enable Stories"
-            } else {
-                title = "Increase Story Limit"
-            }
-        } else {
-            if initialState.status.level == 0 {
-                title = "Enable Stories for The Channel"
-            } else {
-                title = "Help Upgrade Channel"
-            }
-        }
-    }
-    
-    
-    let controller = InputDataController(dataSignal: signal, title: title)
+        
+    let controller = InputDataController(dataSignal: signal, title: initialState.title)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
+    }
+    
+    controller.afterTransaction = { controller in
+        controller.setCenterTitle(stateValue.with { $0.title })
     }
     
     let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(380, 300))

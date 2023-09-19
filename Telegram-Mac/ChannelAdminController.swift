@@ -163,7 +163,7 @@ private enum ChannelAdminEntry: TableItemListNodeEntry {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
             }
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {})
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, inset: NSEdgeInsets(left: 20, right: 20), viewType: viewType, action: {})
         case let .rightItem(_, _, name, right, flags, value, enabled, viewType):
             
             let string: NSMutableAttributedString = NSMutableAttributedString()
@@ -956,7 +956,7 @@ class ChannelAdminController: TableModalViewController {
                         }
                         
                         if let errorText = errorText {
-                            verifyModal(for: context.window, header: strings().channelTransferOwnerErrorTitle, information: errorText, ok: strings().modalOK, cancel: strings().modalCancel, option: install2Fa ? strings().channelTransferOwnerErrorEnable2FA : nil, successHandler: { result in
+                            verifyAlert_button(for: context.window, header: strings().channelTransferOwnerErrorTitle, information: errorText, ok: strings().modalOK, cancel: strings().modalCancel, option: install2Fa ? strings().channelTransferOwnerErrorEnable2FA : nil, successHandler: { result in
                                 switch result {
                                 case .basic:
                                     break
@@ -999,7 +999,7 @@ class ChannelAdminController: TableModalViewController {
                     }))
                 }
                 
-                verifyModal(for: context.window, header: header, information: text, ok: strings().channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: header, information: text, ok: strings().channelAdminTransferOwnershipConfirmOK, successHandler: { _ in
                     transfer(peerId, isGroup, peer.isGroup)
                 })
             })

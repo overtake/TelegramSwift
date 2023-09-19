@@ -415,7 +415,7 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
         
         
         genericView.dataView?.clearAll = {
-            verifyModal(for: context.window, information: strings().storageClearAllConfirmDescription, ok: strings().storageClearAll, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storageClearAllConfirmDescription, ok: strings().storageClearAll, successHandler: { _ in
                 context.cacheCleaner.run()
             })
         }

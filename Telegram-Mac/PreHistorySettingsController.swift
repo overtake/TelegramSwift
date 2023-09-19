@@ -71,7 +71,7 @@ private enum PreHistoryEntry : TableItemListNodeEntry {
     func item(_ arguments: PreHistoryArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         case let .type(_, _, text, enabled, selected, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.preHistory(selected)
@@ -235,7 +235,7 @@ class PreHistorySettingsController: EmptyComposeController<Void, PeerId?, TableV
                         let signal: Signal<PeerId?, NoError> = context.engine.peers.updateChannelHistoryAvailabilitySettingsInteractively(peerId: peerId, historyAvailableForNewMembers: value) |> deliverOnMainQueue |> `catch` { _ in return .complete() } |> map { _ in return nil }
                         
                         if let cachedData = cachedData, let linkedDiscussionPeerId = cachedData.linkedDiscussionPeerId.peerId, let peer = peer as? TelegramChannel {
-                            verifyModal(for: context.window, information: strings().preHistoryConfirmUnlink(peer.displayTitle), successHandler: { [weak self] _ in
+                            verifyAlert_button(for: context.window, information: strings().preHistoryConfirmUnlink(peer.displayTitle), successHandler: { [weak self] _ in
                                 if peer.adminRights == nil || !peer.hasPermission(.pinMessages) {
                                     alert(for: context.window, info: strings().channelErrorDontHavePermissions)
                                 } else {

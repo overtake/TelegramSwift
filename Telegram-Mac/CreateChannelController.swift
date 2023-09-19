@@ -103,7 +103,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
                 for item in items {
                     entries.append(.custom(sectionId: sectionId, index: item.index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                        return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: item.enabled, height: 42, photoSize: NSMakeSize(32, 32), status: "t.me/\(item.peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
+                        return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: item.enabled, height: 42, photoSize: NSMakeSize(32, 32), status: "t.me/\(item.peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 20, right: 20), interactionType:.deletable(onRemove: { peerId in
                             arguments.revokePeerId(peerId)
                         }, deletable: true), viewType: item.viewType)
                     }))

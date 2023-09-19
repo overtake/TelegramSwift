@@ -132,7 +132,7 @@ func EditBotUsernameController(context: AccountContext, peerId: PeerId) -> Input
         let info: String = value ? strings().botUsernameActivateInfo : strings().botUsernameDeactivateInfo
         let ok: String = value ? strings().botUsernameActivateOk : strings().botUsernameDeactivateOk
         
-        verifyModal(for: context.window, header: title, information: info, ok: ok, successHandler: { _ in
+        verifyAlert_button(for: context.window, header: title, information: info, ok: ok, successHandler: { _ in
             _ = context.engine.peers.toggleAddressNameActive(domain: .bot(peerId), name: username.username, active: value).start()
             
             updateState { current in

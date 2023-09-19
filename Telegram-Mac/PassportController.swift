@@ -316,7 +316,7 @@ private enum PassportEntry : TableItemListNodeEntry {
                 default:
                     break
                 }
-            }), detectBold: detectBold, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 10, bottom:2))
+            }), detectBold: detectBold, inset: NSEdgeInsets(left: 20, right: 20, top: 10, bottom:2))
         case .deletePassport:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().secureIdDeletePassport, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.redUI), type: .none, action: {
                 arguments.deletePassport()
@@ -2808,7 +2808,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                     }, error: { error in
                         switch error {
                         case .secretPasswordMismatch:
-                            verifyModal(for: context.window, header: strings().telegramPassportController, information: "Something going wrong", option: "Delete All Values", successHandler: { result in
+                            verifyAlert_button(for: context.window, header: strings().telegramPassportController, information: "Something going wrong", option: "Delete All Values", successHandler: { result in
                                 switch result {
                                 case .basic:
                                     break
@@ -2867,7 +2867,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 }, error: { error in
                     switch error {
                     case .secretPasswordMismatch:
-                        verifyModal(for: context.window, header: strings().telegramPassportController, information: "Something going wrong", option: "Delete All Values", successHandler: { result in
+                        verifyAlert_button(for: context.window, header: strings().telegramPassportController, information: "Something going wrong", option: "Delete All Values", successHandler: { result in
                             switch result {
                             case .basic:
                                 break
@@ -3128,7 +3128,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         loadedData = AddressIntermediateState(data)
                     }, identifier: "passport", backInvocation: { data, f in
                         if AddressIntermediateState(data) != loadedData {
-                            verifyModal(for: context.window, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, ok: strings().alertConfirmDiscard, successHandler: { _ in
+                            verifyAlert_button(for: context.window, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, ok: strings().alertConfirmDiscard, successHandler: { _ in
                                  f(true)
                             })
                         } else {
@@ -3461,7 +3461,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         loadedData = DetailsIntermediateState(data)
                     }, identifier: "passport", backInvocation: { data, f in
                         if DetailsIntermediateState(data) != loadedData {
-                            verifyModal(for: context.window, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, ok: strings().alertConfirmDiscard, successHandler: { _ in
+                            verifyAlert_button(for: context.window, header: strings().secureIdDiscardChangesHeader, information: strings().secureIdDiscardChangesText, ok: strings().alertConfirmDiscard, successHandler: { _ in
                                 f(true)
                             })
                         } else {
@@ -3512,7 +3512,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
             case .email:
                 if let valueKey = valueKey {
-                    verifyModal(for: context.window, information: strings().secureIdRemoveEmail, successHandler: { _ in
+                    verifyAlert_button(for: context.window, information: strings().secureIdRemoveEmail, successHandler: { _ in
                         _ = removeValue(valueKey)
                     })
                 } else {
@@ -3576,7 +3576,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             case .phone:
 
                 if let valueKey = valueKey {
-                    verifyModal(for: context.window, information: strings().secureIdRemovePhoneNumber, successHandler: { _ in
+                    verifyAlert_button(for: context.window, information: strings().secureIdRemovePhoneNumber, successHandler: { _ in
                         _ = removeValue(valueKey)
                     })
                 } else {
@@ -3736,7 +3736,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
 
                         if email.isEmpty {
                             return .fail(.doSomething(next: { f in
-                                verifyModal(for: context.window, information: strings().twoStepAuthEmailSkipAlert, ok: strings().twoStepAuthEmailSkip, successHandler: { result in
+                                verifyAlert_button(for: context.window, information: strings().twoStepAuthEmailSkipAlert, ok: strings().twoStepAuthEmailSkip, successHandler: { result in
                                     updatePassword(password, nil)
                                     f(.success(.navigationBackWithPushAnimation))
                                 })
@@ -3857,7 +3857,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                 execute(inapp: .external(link: url, false))
             }
         }, forgotPassword: {
-            verifyModal(for: context.window, header: strings().passportResetPasswordConfirmHeader, information: strings().passportResetPasswordConfirmText, ok: strings().passportResetPasswordConfirmOK, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().passportResetPasswordConfirmHeader, information: strings().passportResetPasswordConfirmText, ok: strings().passportResetPasswordConfirmOK, successHandler: { _ in
                 recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue, for: context.window).start(next: { emailPattern in
                     let promise:Promise<[InputDataEntry]> = Promise()
                     promise.set(combineLatest(Signal<[InputDataEntry], NoError>.single(recoverEmailEntries(emailPattern: emailPattern, unavailable: {
@@ -3871,7 +3871,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
                         }
                         
                         return .fail(.doSomething { f in
-                            verifyModal(for: context.window, information: strings().secureIdWarningDataLost, successHandler: { _ in
+                            verifyAlert_button(for: context.window, information: strings().secureIdWarningDataLost, successHandler: { _ in
                                 recoverPasswordDisposable.set(showModalProgress(signal: context.engine.auth.checkPasswordRecoveryCode(code: code) |> deliverOnMainQueue, for: context.window).start(error: { error in
                                     f(.fail(.fields([_id_email_code : .shake])))
                                 }, completed: {
@@ -3891,7 +3891,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             
        //
         }, deletePassport: {
-            verifyModal(for: context.window, header: strings().secureIdInfoTitle, information: strings().secureIdInfoDeletePassport, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().secureIdInfoTitle, information: strings().secureIdInfoDeletePassport, successHandler: { _ in
                 updateState { current in
                     let signal = deleteSecureIdValues(network: context.account.network, keys: Set(current.values.map{$0.value.key}))
                     
@@ -4002,7 +4002,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             }, for: .Click)
         } else {
             rightView?.set(handler: { _ in
-                verifyModal(for: context.window, header: strings().secureIdInfoTitle, information: strings().secureIdInfo, cancel: "", option: strings().secureIdInfoMore, successHandler: { result in
+                verifyAlert_button(for: context.window, header: strings().secureIdInfoTitle, information: strings().secureIdInfo, cancel: "", option: strings().secureIdInfoMore, successHandler: { result in
                     if result == .thrid {
                         openFaq(context: context)
                     }
@@ -4033,7 +4033,7 @@ class PassportController: TelegramGenericViewController<PassportControllerView> 
             return true
         }
         if !dismissed {
-            verifyModal(for: context.window, information: strings().secureIdConfirmCancel, ok: strings().alertConfirmStop, successHandler: { [weak self] _ in
+            verifyAlert_button(for: context.window, information: strings().secureIdConfirmCancel, ok: strings().alertConfirmStop, successHandler: { [weak self] _ in
                 guard let `self` = self else {return}
                 self.dismissed = true
                 self.executeCallback(false)

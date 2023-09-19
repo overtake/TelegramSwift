@@ -911,7 +911,7 @@ final class GroupCallUIController : ViewController {
                     case .screencast:
                         let presentingPeer = state.videoActive(.main).first(where: { $0.presentationEndpoint != nil })
                         if let peer = presentingPeer {
-                            verifyModal(for: window, header: strings().voiceChatScreencastConfirmHeader, information: strings().voiceChatScreencastConfirmText(peer.peer.compactDisplayTitle), ok: strings().voiceChatScreencastConfirmOK, successHandler: { _ in
+                            verifyAlert_button(for: window, header: strings().voiceChatScreencastConfirmHeader, information: strings().voiceChatScreencastConfirmText(peer.peer.compactDisplayTitle), ok: strings().voiceChatScreencastConfirmOK, successHandler: { _ in
                                 f(true)
                             }, cancelHandler: {
                                 f(false)
@@ -1101,7 +1101,7 @@ final class GroupCallUIController : ViewController {
         }, recordClick: { [weak self] state in
             if let window = self?.window {
                 if state.canManageCall {
-                    verifyModal(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, ok: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
+                    verifyAlert_button(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, ok: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
                         self?.data.call.setShouldBeRecording(false, title: nil, videoOrientation: nil)
                         if let window = window {
                             showModalText(for: window, text: strings().voiceChatToastStop)
@@ -1906,7 +1906,7 @@ final class GroupCallUIController : ViewController {
             guard let window = self?.window else {
                 return
             }
-            verifyModal(for: window, information: strings().voiceChatRequestAccess, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
+            verifyAlert_button(for: window, information: strings().voiceChatRequestAccess, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)

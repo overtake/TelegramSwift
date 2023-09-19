@@ -87,7 +87,7 @@
     case leftToRight
     case rightToLeft
  }
- private let sectionOffset: CGFloat = 30
+ private let sectionOffset: CGFloat = 20
  
  final class PeerMediaContainerView : View {
     

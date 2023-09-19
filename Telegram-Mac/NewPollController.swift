@@ -729,7 +729,7 @@ func NewPollController(chatInteraction: ChatInteraction, isQuiz: Bool? = nil) ->
         let state = stateValue.with { $0 }
         
         if !state.title.isEmpty || !state.options.filter({!$0.text.isEmpty}).isEmpty {
-            verifyModal(for: context.window, header: strings().newPollDisacardConfirmHeader, information: strings().newPollDisacardConfirm, ok: strings().newPollDisacardConfirmYes, cancel: strings().newPollDisacardConfirmNo, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().newPollDisacardConfirmHeader, information: strings().newPollDisacardConfirm, ok: strings().newPollDisacardConfirmYes, cancel: strings().newPollDisacardConfirmNo, successHandler: { _ in
                 f()
             })
         } else {

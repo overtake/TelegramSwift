@@ -281,7 +281,48 @@ class PeerPhotosMonthItem: GeneralRowItem {
     }
 }
 
+private final class StoryViewsView: View {
+    private static let icon = NSImage(named: "Icon_ChannelViews")!.precomposed(.white)
+    
+    private let imageView = ImageView()
+    private let textView = TextView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        addSubview(textView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        self.isEventLess = true
+        self.imageView.isEventLess = true
+        self.textView.isEventLess = true
+        
+    }
+    
+    func update(_ seenCount: Int, animated: Bool) {
+        let layout = TextViewLayout.init(.initialize(string: seenCount.prettyNumber, color: .white, font: .normal(.small)))
+        layout.measure(width: .greatestFiniteMagnitude)
+        self.textView.update(layout)
+        
+        self.imageView.image = StoryViewsView.icon
+        self.imageView.sizeToFit()
+        
+        self.change(size: NSMakeSize(layout.layoutSize.width + 30, 20), animated: animated)
+    }
+    
+    override func layout() {
+        super.layout()
+        self.imageView.centerY(x: 10)
+        self.textView.centerY(x: frame.width - textView.frame.width)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 class MediaCell : Control {
+    
     private var selectionView:SelectingControl?
     
     var selecting: Bool? {
@@ -302,6 +343,7 @@ class MediaCell : Control {
         addSubview(imageView)
         userInteractionEnabled = false
     }
+    private var storyViews: StoryViewsView?
     
     override func mouseMoved(with event: NSEvent) {
         superview?.superview?.mouseMoved(with: event)
@@ -411,6 +453,20 @@ class MediaCell : Control {
             }
         }
         
+        if let layout = layout as? StoryCellLayoutItem, layout.peerId.namespace == Namespaces.Peer.CloudChannel, let seenCount = layout.item.views?.seenCount {
+            let current: StoryViewsView
+            if let view = self.storyViews {
+                current = view
+            } else {
+                current = StoryViewsView(frame: NSMakeRect(0, 0, 30, 20))
+                addSubview(current)
+                self.storyViews = current
+            }
+            current.update(seenCount, animated: animated)
+        } else if let view = self.storyViews {
+            performSubviewRemoval(view, animated: animated)
+            self.storyViews = nil
+        }
         
         updateSelectionState(animated: animated, selected: selected)
     }
@@ -473,6 +529,10 @@ class MediaCell : Control {
         inkView?.frame = imageView.frame
         self.unsupported?.resize(frame.width - 10)
         self.unsupported?.center()
+        
+        if let storyViews = storyViews {
+            storyViews.setFrameOrigin(NSMakePoint(0, frame.height - storyViews.frame.height))
+        }
     }
 }
 

@@ -224,7 +224,7 @@ func GlobalAutoremoveMessagesController(context: AccountContext, privacy: Accoun
             }
         }
         if time > 0, value == 0 {
-            verifyModal(for: context.window, header: strings().globalTimerConfirmTitle, information: strings().globalTimerConfirmText(timeIntervalString(Int(time))), ok: strings().globalTimerConfirmOk, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().globalTimerConfirmTitle, information: strings().globalTimerConfirmText(timeIntervalString(Int(time))), ok: strings().globalTimerConfirmOk, successHandler: { _ in
                 update()
             })
         } else {

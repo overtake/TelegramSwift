@@ -19,11 +19,11 @@ private final class CenterView : TitledBarView {
         self.segment = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
         super.init(controller: controller)
         
-        segment.add(segment: .init(title: "Stats", handler: { [weak self] in
+        segment.add(segment: .init(title: strings().statsStatistics, handler: { [weak self] in
             self?.select?(0)
         }))
         
-        segment.add(segment: .init(title: "Boosts", handler: { [weak self] in
+        segment.add(segment: .init(title: strings().statsBoosts, handler: { [weak self] in
             self?.select?(1)
         }))
         

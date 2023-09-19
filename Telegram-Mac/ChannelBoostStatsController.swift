@@ -128,7 +128,7 @@ private final class BoostRowItemView : TableRowView {
     private class TypeView : View {
         private let backgrounView = ImageView()
         
-        private let textView = TextView()
+        private let textView = DynamicCounterTextView(frame: .zero)
         private let imageView = ImageView()
         private let container = View()
         
@@ -141,7 +141,6 @@ private final class BoostRowItemView : TableRowView {
             addSubview(container)
             
             textView.userInteractionEnabled = false
-            textView.isSelectable = false
         }
         
         override func layout() {
@@ -157,22 +156,21 @@ private final class BoostRowItemView : TableRowView {
         }
         
         
-        func update(state: State, context: AccountContext) -> NSSize {
-            let layout = TextViewLayout(.initialize(string: "\(state.currentBoosts)", color: NSColor.white, font: .avatar(20)))
-            layout.measure(width: .greatestFiniteMagnitude)
-            textView.update(layout)
+        func update(state: State, context: AccountContext, transition: ContainedViewLayoutTransition) -> NSSize {
+            
+            let dynamicValue = DynamicCounterTextView.make(for: "\(state.currentBoosts)", count: "\(state.currentBoosts)", font: .avatar(20), textColor: .white, width: .greatestFiniteMagnitude)
+            
+            textView.update(dynamicValue, animated: transition.isAnimated)
+            transition.updateFrame(view: textView, frame: CGRect(origin: textView.frame.origin, size: dynamicValue.size))
             
             imageView.image = NSImage(named: "Icon_Boost_Lighting")?.precomposed()
             imageView.sizeToFit()
             
-
-            container.setFrameSize(NSMakeSize(layout.layoutSize.width + imageView.frame.width, 40))
+            container.setFrameSize(NSMakeSize(dynamicValue.size.width + imageView.frame.width, 40))
+                        
+            let size = NSMakeSize(container.frame.width + 20, 50)
             
-            let canPremium = !context.premiumIsBlocked
-            
-            let size = NSMakeSize(container.frame.width + 20, canPremium ? 50 : 40)
-            
-            let image = generateImage(NSMakeSize(size.width, canPremium ? size.height - 10 : size.height), contextGenerator: { size, ctx in
+            let image = generateImage(NSMakeSize(size.width, size.height - 10), contextGenerator: { size, ctx in
                 ctx.clear(size.bounds)
                
                 let path = CGMutablePath()
@@ -202,26 +200,20 @@ private final class BoostRowItemView : TableRowView {
             let fullImage = generateImage(size, contextGenerator: { size, ctx in
                 ctx.clear(size.bounds)
 
-                if !canPremium {
-                    ctx.clip(to: size.bounds, mask: image)
-                    ctx.setFillColor(theme.colors.accent.cgColor)
-                    ctx.fill(size.bounds)
-                } else {
-                    ctx.clip(to: size.bounds, mask: clipImage)
-                    
-                    let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
-                    
-                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                    
-                    var locations: [CGFloat] = []
-                    for i in 0 ..< colors.count {
-                        locations.append(delta * CGFloat(i))
-                    }
-                    let colorSpace = deviceColorSpace
-                    let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
-                    
-                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size.height), end: CGPoint(x: size.width, y: size.height), options: CGGradientDrawingOptions())
+                ctx.clip(to: size.bounds, mask: clipImage)
+                
+                let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+                
+                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                
+                var locations: [CGFloat] = []
+                for i in 0 ..< colors.count {
+                    locations.append(delta * CGFloat(i))
                 }
+                let colorSpace = deviceColorSpace
+                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+                
+                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size.height), end: CGPoint(x: size.width, y: size.height), options: CGGradientDrawingOptions())
             })!
             
             self.backgrounView.image = fullImage
@@ -233,7 +225,7 @@ private final class BoostRowItemView : TableRowView {
         }
 
     }
-    
+
 
 
     
@@ -262,7 +254,7 @@ private final class BoostRowItemView : TableRowView {
         lineView.layer?.cornerRadius = 10
         lineView.update(item.state, context: item.context, transition: .immediate)
         
-        let size = top.update(state: item.state, context: item.context)
+        let size = top.update(state: item.state, context: item.context, transition: .immediate)
         top.setFrameSize(size)
 
         needsLayout = true
@@ -290,11 +282,13 @@ private final class Arguments {
     let openPeerInfo:(PeerId)->Void
     let shareLink:(String)->Void
     let copyLink:(String)->Void
-    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void) {
+    let showMore:()->Void
+    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void) {
         self.context = context
         self.shareLink = shareLink
         self.copyLink = copyLink
         self.openPeerInfo = openPeerInfo
+        self.showMore = showMore
     }
 }
 
@@ -350,6 +344,7 @@ private func _id_peer(_ id: PeerId) -> InputDataIdentifier {
 }
 private let _id_loading = InputDataIdentifier("_id_loading")
 private let _id_empty_boosters = InputDataIdentifier("_id_empty_boosters")
+private let _id_load_more = InputDataIdentifier("_id_load_more")
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -370,12 +365,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("OVERVIEW"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelStatsOverview), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         var overviewItems:[ChannelOverviewItem] = []
         
-        overviewItems.append(ChannelOverviewItem(title: "Level", value: .initialize(string: "\(boostStatus.level)", color: theme.colors.text, font: .medium(.text))))
+        overviewItems.append(ChannelOverviewItem(title: strings().statsBoostsLevel, value: .initialize(string: "\(boostStatus.level)", color: theme.colors.text, font: .medium(.text))))
         
         var premiumSubscribers: Double = 0.0
         if let premiumAudience = boostStatus.premiumAudience, premiumAudience.total > 0 {
@@ -388,12 +383,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         audience.append(string: String(format: "%.02f%%", premiumSubscribers * 100.0), color: theme.colors.grayText, font: .normal(.short))
 
 
-        overviewItems.append(ChannelOverviewItem(title: "Premium Subscribers", value: audience))
+        overviewItems.append(ChannelOverviewItem(title: strings().statsBoostsPremiumSubscribers, value: audience))
         
-        overviewItems.append(ChannelOverviewItem(title: "Existing boosts", value: .initialize(string: boostStatus.boosts.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
+        overviewItems.append(ChannelOverviewItem(title: strings().statsBoostsExistingBoosts, value: .initialize(string: boostStatus.boosts.formattedWithSeparator, color: theme.colors.text, font: .medium(.text))))
 
         if let nextLevelBoosts = boostStatus.nextLevelBoosts {
-            overviewItems.append(ChannelOverviewItem(title: "Boosts to level up", value: .initialize(string: ("\(nextLevelBoosts - boostStatus.currentLevelBoosts)"), color: theme.colors.text, font: .medium(.text))))
+            overviewItems.append(ChannelOverviewItem(title: strings().statsBoostsBoostsToLevelUp, value: .initialize(string: ("\(nextLevelBoosts - boostStatus.currentLevelBoosts)"), color: theme.colors.text, font: .medium(.text))))
         }
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
@@ -407,7 +402,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             sectionId += 1
             
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("\(boosters.count) BOOSTERS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsBoostersCountable(Int(boosters.count))), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
 
             
@@ -420,22 +415,40 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 var items: [Tuple] = []
                 for (i, booster) in boosters.boosters.enumerated() {
-                    items.append(.init(booster: booster, viewType: bestGeneralViewType(boosters.boosters, for: i)))
+                    var viewType: GeneralViewType = bestGeneralViewType(boosters.boosters, for: i)
+                    if i == boosters.boosters.count - 1, boosters.canLoadMore || boosters.isLoadingMore {
+                        viewType = .innerItem
+                    }
+                    items.append(.init(booster: booster, viewType: viewType))
                 }
+                
+                
+                
                 for item in items {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.booster.peer._asPeer().id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
-                        return ShortPeerRowItem(initialSize, peer: item.booster.peer._asPeer(), account: arguments.context.account, context: arguments.context, status: "boost expires on \(stringForFullDate(timestamp: item.booster.expires))", inset: NSEdgeInsets(left: 30, right: 30), viewType: item.viewType, action: {
+                        return ShortPeerRowItem(initialSize, peer: item.booster.peer._asPeer(), account: arguments.context.account, context: arguments.context, status: strings().statsBoostsExpiresOn(stringForFullDate(timestamp: item.booster.expires)), inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, action: {
                             arguments.openPeerInfo(item.booster.peer.id)
                         })
                     }))
                     index += 1
                 }
                 
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Your channel is currently boosted by these users."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+                
+                if boosters.canLoadMore {
+                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().statsBoostsShowMore, color: theme.colors.accent, viewType: .lastItem, action: arguments.showMore)))
+                    index += 1
+                } else if boosters.isLoadingMore {
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(boosters), comparable: nil, item: { initialSize, stableId in
+                        return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
+                    }))
+                    index += 1
+                }
+                
+                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsBoostersInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
                 index += 1
             } else {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_empty_boosters, equatable: nil, comparable: nil, item: { initialSize, stableId in
-                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: "No users currently boost your channel", font: .normal(.text), color: theme.colors.grayText)
+                    return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().statsBoostsNoBoostersYet, font: .normal(.text), color: theme.colors.grayText)
                 }))
             }
 
@@ -444,7 +457,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("LINK FOR BOOSTERS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsLinkHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
@@ -461,6 +474,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         index += 1
         
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsLinkInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+                
         // entries
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -510,6 +526,8 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
     }, copyLink: { link in
         getController?()?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
         copyToClipboard(link)
+    }, showMore: { [weak boostersContext] in
+        boostersContext?.loadMore()
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -520,9 +538,6 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
     
     controller.contextObject = boostersContext
     
-    let loadMore:()->Void = { [weak boostersContext] in
-        boostersContext?.loadMore()
-    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -530,17 +545,6 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
     
     getController = { [weak controller] in
         return controller
-    }
-    
-    controller.didLoaded = { controller, _ in
-        controller.tableView.setScrollHandler { position in
-            switch position.direction {
-            case .bottom:
-                loadMore()
-            default:
-                break
-            }
-        }
     }
 
     return controller

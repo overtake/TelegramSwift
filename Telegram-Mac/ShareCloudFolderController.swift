@@ -201,7 +201,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: text, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType, disabledAction: {
+            return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: text, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, viewType: item.viewType, disabledAction: {
                 arguments.cantSelect(item.peer.peer)
             })
         }))
@@ -320,7 +320,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
     }, delete: {
         if let link = stateValue.with ({ $0.link }) {
-            verifyModal(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, ok: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, ok: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
                 let signal = context.engine.peers.deleteChatFolderLink(filterId: filter.id, link: link)
                 _ = showModalProgress(signal: signal, for: context.window).start()
                 updated(link, nil)
@@ -382,7 +382,7 @@ func ShareCloudFolderController(context: AccountContext, filter: ChatListFilter,
         if let link = link {
             let state = stateValue.with { $0 }
             if (link != state.link) || (initialSelected != state.selected) {
-                verifyModal(for: context.window, information: strings().shareFolderDiscardText, ok: strings().shareFolderDiscardOk, successHandler: { _ in
+                verifyAlert_button(for: context.window, information: strings().shareFolderDiscardText, ok: strings().shareFolderDiscardOk, successHandler: { _ in
                     f()
                 })
             } else {

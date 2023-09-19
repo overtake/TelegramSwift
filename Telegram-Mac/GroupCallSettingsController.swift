@@ -241,7 +241,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
             
             let tuple = Tuple(peer: FoundPeer(peer: accountPeer, subscribers: nil), viewType: uiState.displayAsList == nil || uiState.displayAsList?.isEmpty == false ? .firstItem : .singleItem, selected: accountPeer.id == joinAsPeerId, status: strings().voiceChatSettingsDisplayAsPersonalAccount)
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: context.account, context: context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
+                return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: context.account, context: context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                     arguments.switchAccount(tuple.peer.peer.id)
                 }, customTheme: theme)
             }))
@@ -272,7 +272,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
                 
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.peer.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: context.account, context: context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: context.account, context: context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                         arguments.switchAccount(tuple.peer.peer.id)
                     }, customTheme: theme)
 
@@ -780,7 +780,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             guard let window = self?.window else {
                 return
             }
-            verifyModal(for: window, header: strings().voiceChatSettingsEndConfirmTitle, information: strings().voiceChatSettingsEndConfirm, ok: strings().voiceChatSettingsEndConfirmOK, successHandler: { [weak self] _ in
+            verifyAlert_button(for: window, header: strings().voiceChatSettingsEndConfirmTitle, information: strings().voiceChatSettingsEndConfirm, ok: strings().voiceChatSettingsEndConfirmOK, successHandler: { [weak self] _ in
 
                 guard let call = self?.call, let window = self?.window else {
                     return
@@ -806,13 +806,13 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             self?.call.reconnect(as: peerId)
         }, startRecording: { [weak self] in
             if let window = self?.window {
-                verifyModal(for: window, header: strings().voiceChatRecordingStartTitle, information: strings().voiceChatRecordingStartText1, ok: strings().voiceChatRecordingStartOK, successHandler: { _ in
+                verifyAlert_button(for: window, header: strings().voiceChatRecordingStartTitle, information: strings().voiceChatRecordingStartText1, ok: strings().voiceChatRecordingStartOK, successHandler: { _ in
                     self?.call.setShouldBeRecording(true, title: stateValue.with { $0.recordName }, videoOrientation: stateValue.with { $0.recordVideo ? $0.videoOrientation.rawValue : nil})
                 })
             }
         }, stopRecording: { [weak self] in
             if let window = self?.window {
-                verifyModal(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, ok: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
+                verifyAlert_button(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, ok: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
                     self?.call.setShouldBeRecording(false, title: nil, videoOrientation: nil)
                     if let window = window {
                         showModalText(for: window, text: strings().voiceChatToastStop)
@@ -857,7 +857,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             }
         }, revokeStreamKey: { [weak self] in
             if let window = self?.window {
-                verifyModal(for: window, header: strings().voiceChatRTMPRevoke, information: strings().voiceChatRTMPRevokeInfo, ok: strings().alertYes, cancel: strings().alertNO, successHandler: { [weak self] _ in
+                verifyAlert_button(for: window, header: strings().voiceChatRTMPRevoke, information: strings().voiceChatRTMPRevokeInfo, ok: strings().alertYes, cancel: strings().alertNO, successHandler: { [weak self] _ in
                     
                     let signal = self?.call.engine.calls.getGroupCallStreamCredentials(peerId: .init(peerId.toInt64()), revokePreviousCredentials: true)
                     if let signal = signal {

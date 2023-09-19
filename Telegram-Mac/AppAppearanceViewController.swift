@@ -474,7 +474,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         
         _ = nightSettings.start(next: { settings in
             if settings.systemBased || settings.schedule != nil {
-                verifyModal(for: context.window, header: strings().darkModeConfirmNightModeHeader, information: strings().darkModeConfirmNightModeText, ok: strings().darkModeConfirmNightModeOK, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().darkModeConfirmNightModeHeader, information: strings().darkModeConfirmNightModeText, ok: strings().darkModeConfirmNightModeOK, successHandler: { _ in
                     let disableNightMode = context.sharedContext.accountManager.transaction { transaction -> Void in
                         transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in
                             let settings: AutoNightThemePreferences = entry?.get(AutoNightThemePreferences.self) ?? AutoNightThemePreferences.defaultSettings
@@ -536,7 +536,7 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
     }, openAutoNightSettings: {
         context.bindings.rootNavigation().push(AutoNightSettingsController(context: context))
     }, removeTheme: { cloudTheme in
-        verifyModal(for: context.window, header: strings().appearanceConfirmRemoveTitle, information: strings().appearanceConfirmRemoveText, ok: strings().appearanceConfirmRemoveOK, successHandler: { _ in
+        verifyAlert_button(for: context.window, header: strings().appearanceConfirmRemoveTitle, information: strings().appearanceConfirmRemoveText, ok: strings().appearanceConfirmRemoveOK, successHandler: { _ in
             var signals:[Signal<Void, NoError>] = []
             if theme.cloudTheme?.id == cloudTheme.id {
                 signals.append(updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
@@ -676,7 +676,7 @@ func toggleDarkMode(context: AccountContext) {
     
     _ = nightSettings.start(next: { settings in
         if settings.systemBased || settings.schedule != nil {
-            verifyModal(for: context.window, header: strings().darkModeConfirmNightModeHeader, information: strings().darkModeConfirmNightModeText, ok: strings().darkModeConfirmNightModeOK, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().darkModeConfirmNightModeHeader, information: strings().darkModeConfirmNightModeText, ok: strings().darkModeConfirmNightModeOK, successHandler: { _ in
                 
                 _ = context.sharedContext.accountManager.transaction { transaction -> Void in
                     transaction.updateSharedData(ApplicationSharedPreferencesKeys.autoNight, { entry in

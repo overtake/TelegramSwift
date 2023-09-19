@@ -71,7 +71,7 @@ private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arg
     
     if let desc = desc {
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_title, equatable: InputDataEquatable(desc), comparable: nil, item: { initialSize, stableId in
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain(desc), textColor: theme.colors.grayText, alignment: .center, drawCustomSeparator: false, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 10, bottom: 10))
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain(desc), textColor: theme.colors.grayText, alignment: .center, drawCustomSeparator: false, inset: NSEdgeInsets(left: 20, right: 20, top: 10, bottom: 10))
         }))
         index += 1
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_border, equatable: nil, comparable: nil, item: { initialSize, stableId in

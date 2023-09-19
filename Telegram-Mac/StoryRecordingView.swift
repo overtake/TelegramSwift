@@ -196,7 +196,7 @@ class StoryRecorderOverlayWindowController : NSObject {
             self.arguments.interaction.resetRecording()
         }
         if state == .fixed {
-            verifyModal(for: parent, information: strings().chatRecordingCancel, ok: strings().alertDiscard, cancel: strings().alertNO, successHandler: { _ in
+            verifyAlert_button(for: parent, information: strings().chatRecordingCancel, ok: strings().alertDiscard, cancel: strings().alertNO, successHandler: { _ in
                 proccess()
             })
         } else {
