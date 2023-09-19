@@ -303,7 +303,7 @@ final class InputDataGeneralTextData : Equatable {
     let inset: NSEdgeInsets
     let centerViewAlignment: Bool
     let alignment: NSTextAlignment
-    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu:(()->[ContextMenuItem])? = nil, clickable: Bool = false, inset: NSEdgeInsets = .init(left: 30.0, right: 30.0, top:4, bottom:2), centerViewAlignment: Bool = false, alignment: NSTextAlignment = .left) {
+    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu:(()->[ContextMenuItem])? = nil, clickable: Bool = false, inset: NSEdgeInsets = .init(left: 20, right: 20, top:4, bottom:2), centerViewAlignment: Bool = false, alignment: NSTextAlignment = .left) {
         self.color = color
         self.detectBold = detectBold
         self.viewType = viewType
@@ -350,7 +350,7 @@ enum InputDataSectionType : Equatable {
     var height: CGFloat {
         switch self {
         case .normal:
-            return 30
+            return 20
         case .legacy:
             return 20
         case let .custom(height):

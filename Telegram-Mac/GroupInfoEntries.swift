@@ -745,7 +745,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                 return
                             }
                             if peer.hasPermission(.addAdmins) {
-                                verifyModal(for: context.window, information: strings().channelAddBotErrorHaveRights, ok: strings().channelAddBotAsAdmin, successHandler: { _ in
+                                verifyAlert_button(for: context.window, information: strings().channelAddBotErrorHaveRights, ok: strings().channelAddBotAsAdmin, successHandler: { _ in
                                     showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: upgradeToSupergroup), for: context.window)
                                 })
                             } else {
@@ -1868,7 +1868,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, context: arguments.context, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action: { [weak arguments] in
+            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, context: arguments.context, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, generalType: .context(label), viewType: viewType, action: { [weak arguments] in
                 arguments?.peerInfo(peer!.id)
             }, contextMenuItems: {
                 return .single(menuItems)
@@ -1882,7 +1882,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId.hashValue, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId.hashValue, viewType: .separator)
         default:
             preconditionFailure()
         }

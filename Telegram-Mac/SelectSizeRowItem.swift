@@ -28,7 +28,7 @@ class SelectSizeRowItem: GeneralRowItem {
         self.hasMarkers = hasMarkers
         self.current = current
         self.selectAction = selectAction
-        super.init(initialSize, height: titles != nil ? 70 : 40, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 30, right: 30))
+        super.init(initialSize, height: titles != nil ? 70 : 40, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 20, right: 20))
     }
     
     override func viewClass() -> AnyClass {

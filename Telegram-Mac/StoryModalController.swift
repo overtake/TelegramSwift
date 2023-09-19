@@ -2420,7 +2420,7 @@ final class StoryModalController : ModalViewController, Notifable {
         }
         
         let deleteStory:(StoryContentItem)->Void = { [weak self] story in
-            verifyModal(for: context.window, information: strings().storyConfirmDelete, ok: strings().modalDelete, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storyConfirmDelete, ok: strings().modalDelete, successHandler: { _ in
                 if let stateValue = self?.stories.stateValue, let slice = stateValue.slice {
                     if slice.nextItemId != nil {
                         self?.stories.navigate(navigation: .item(.next))

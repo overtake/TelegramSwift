@@ -74,7 +74,7 @@ func filterContextMenuItems(_ filter: ChatListFilter, unreadCount: Int?, include
             if filter.data?.isShared == true {
                 deleteSharedFolder(context: context, filter: filter)
             } else {
-                verifyModal(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, ok: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, ok: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
                     _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                         var filters = filters
                         filters.removeAll(where: { $0.id == filter.id })

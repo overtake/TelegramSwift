@@ -186,7 +186,7 @@ class UserInfoArguments : PeerInfoArguments {
         
         _ = peer.start(next: { [weak self] peer in
             if let peer = peer {
-                verifyModal(for: context.window, information: strings().peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
+                verifyAlert_button(for: context.window, information: strings().peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
                     let signal: Signal<Void, NoError> = context.account.postbox.loadedPeerWithId(context.peerId) |> map { $0 as! TelegramUser } |> mapToSignal { peer in
                         let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
                         return signal  |> map { _ in}
@@ -353,7 +353,7 @@ class UserInfoArguments : PeerInfoArguments {
                 }), for: context.window)
             }
             let addSimple:()->Void = {
-                verifyModal(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { [weak self] _ in
+                verifyAlert_button(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { [weak self] _ in
                     addBotAsMember(context: context, peer: values.source, to: values.dest, completion: { [weak self] peerId in
                         self?.peerChat(peerId, postId: nil)
                     }, error: { error in 
@@ -452,7 +452,7 @@ class UserInfoArguments : PeerInfoArguments {
             peerId = peer.regularPeerId
         }
         if blocked {
-            verifyModal(for: context.window, header: strings().peerInfoBlockHeader, information: strings().peerInfoBlockText(peer.displayTitle), ok: strings().peerInfoBlockOK, successHandler: { [weak self] _ in
+            verifyAlert_button(for: context.window, header: strings().peerInfoBlockHeader, information: strings().peerInfoBlockText(peer.displayTitle), ok: strings().peerInfoBlockOK, successHandler: { [weak self] _ in
                 let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peerId) |> deliverOnMainQueue, for: context.window)
                 self?.blockDisposable.set(signal.start(error: { error in
                     switch error {
@@ -879,7 +879,7 @@ class UserInfoArguments : PeerInfoArguments {
     func resetPhoto() {
         let context = self.context
         let peerId = self.peerId
-        verifyModal(for: context.window, information: strings().userInfoResetPhotoConfirm(peer?.compactDisplayTitle ?? ""), ok: strings().userInfoResetPhotoConfirmOK, successHandler: { _ in
+        verifyAlert_button(for: context.window, information: strings().userInfoResetPhotoConfirm(peer?.compactDisplayTitle ?? ""), ok: strings().userInfoResetPhotoConfirmOK, successHandler: { _ in
             let signal = context.engine.contacts.updateContactPhoto(peerId: peerId, resource: nil, videoResource: nil, videoStartTimestamp: nil, markup: nil, mode: .custom, mapResourceToAvatarSizes: { _,_  in
                 return .complete()
             })
@@ -1657,7 +1657,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section(_):
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId.hashValue, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId.hashValue, viewType: .separator)
         }
         
     }

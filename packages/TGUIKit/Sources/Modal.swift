@@ -228,7 +228,7 @@ private class ModalInteractionsContainer : View {
     
     public func updateDone() {
         if interactions.singleButton {
-            _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 60, 40), thatFit: true)
+            _ = acceptView.sizeToFit(NSZeroSize, NSMakeSize(frame.width - 40, 40), thatFit: true)
         } else {
             if cancelView == nil {
                 _ = acceptView.sizeToFit(NSZeroSize, frame.size, thatFit: true)
@@ -256,7 +256,7 @@ private class ModalInteractionsContainer : View {
         super.layout()
         
         if self.interactions.singleButton {
-            acceptView.frame = CGRect(origin: NSMakePoint(30, 0), size: NSMakeSize(frame.width - 60, 40))
+            acceptView.frame = CGRect(origin: NSMakePoint(20, 0), size: NSMakeSize(frame.width - 40, 40))
         } else {
             if cancelView == nil {
                 acceptView.frame = bounds
@@ -265,7 +265,7 @@ private class ModalInteractionsContainer : View {
             }
             if let cancelView = cancelView {
                 if interactions.alignCancelLeft {
-                    cancelView.centerY(x: 30)
+                    cancelView.centerY(x: 20)
                 } else {
                     cancelView.centerY(x:acceptView.frame.minX - cancelView.frame.width - 30)
                 }

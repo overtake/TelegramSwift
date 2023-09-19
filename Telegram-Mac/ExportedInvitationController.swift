@@ -224,7 +224,7 @@ func ExportedInvitationController(invitation: _ExportedInvitation, peerId: PeerI
         getModalController?()?.close()
         accountContext.bindings.rootNavigation().push(PeerInfoController(context: accountContext, peerId: peerId))
     }, revokeLink: { [weak manager] link in
-        verifyModal(for: accountContext.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
+        verifyAlert_button(for: accountContext.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
             if let manager = manager {
                 _ = showModalProgress(signal: manager.revokePeerExportedInvitation(link: link), for: accountContext.window).start()
                 getModalController?()?.close()

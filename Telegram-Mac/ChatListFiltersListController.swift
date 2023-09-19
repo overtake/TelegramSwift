@@ -180,7 +180,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
     let arguments = ChatListPresetArguments(context: context, openPreset: { filter, isNew in
         context.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter, isNew: isNew))
     }, removePreset: { filter in
-        verifyModal(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, ok: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
+        verifyAlert_button(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, ok: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
             _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                 var filters = filters
                 filters.removeAll(where: { $0.id == filter.id })

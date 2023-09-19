@@ -378,7 +378,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 interactionType = .plain
             }
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, viewType: item.viewType)
             }))
             index += 1
         }
@@ -406,7 +406,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 interactionType = .plain
             }
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType, disabledAction: {
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, viewType: item.viewType, disabledAction: {
                     arguments.alreadyError(item.peer.peer)
                 })
             }))
@@ -728,7 +728,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
         copyToClipboard(link)
     }, deleteLink: { link in
         if let filterId = content.localFilterId {
-            verifyModal(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, ok: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, ok: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
                 
                 var index: Int? = nil
                 updateState { current in
@@ -842,7 +842,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
                 }
                 
                 if filter.data?.hasSharedLinks == true {
-                    verifyModal(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
+                    verifyAlert_button(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
                         invoke()
                     })
                 } else {
@@ -961,11 +961,11 @@ func deleteSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void
         }
         if defaultPeers.isEmpty {
             if filter.data?.hasSharedLinks == true {
-                verifyModal(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
                     invoke()
                 })
             } else {
-                verifyModal(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, ok: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, ok: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
                     invoke()
                 })
             }

@@ -426,7 +426,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         var height: CGFloat = 0
         
         if !editing {
-            height = photoDimension + insets.top + insets.bottom + nameLayout.layoutSize.height + statusLayout.layoutSize.height + insets.bottom
+            height = photoDimension + insets.bottom + nameLayout.layoutSize.height + statusLayout.layoutSize.height + insets.bottom
             
             if !items.isEmpty {
                 let maxActionSize: NSSize = items.max(by: { $0.size.height < $1.size.height })!.size
@@ -436,7 +436,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 height += 40
             }
         } else {
-            height = photoDimension + insets.top + insets.bottom
+            height = photoDimension + insets.bottom
         }
         return height
     }
@@ -1083,7 +1083,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             return
         }
         
-        photoContainer.centerX(y: item.viewType.innerInset.top)
+        photoContainer.centerX(y: 0)
         
         photoView.center()
         photoEditableView?.center()

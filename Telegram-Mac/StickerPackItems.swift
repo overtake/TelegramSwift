@@ -73,6 +73,22 @@ class StickerPackRowItem: TableRowItem {
             _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: option).start()
         }, itemImage: animation.value))
         
+        if let file = self.topItem?.file {
+            if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+                if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
+                    items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                    _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                            if let path = path {
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.writeObjects([NSURL(fileURLWithPath: path)])
+                            }
+                        })
+                    }, itemImage: MenuAnimation.menu_copy_media.value))
+                }
+            }
+        }
+        
         return .single(items)
     }
     

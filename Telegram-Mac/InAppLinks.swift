@@ -394,7 +394,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     NSWorkspace.shared.open(url)
                 }
                 if needConfirm {
-                    verifyModal(for: mainWindow, header: strings().inAppLinksConfirmOpenExternalHeader, information: strings().inAppLinksConfirmOpenExternalNew(removePecentEncoding ? (url.absoluteString.removingPercentEncoding ?? url.absoluteString) : escaped), ok: strings().inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()}, cancelHandler: { afterComplete(false) })
+                    verifyAlert_button(for: mainWindow, header: strings().inAppLinksConfirmOpenExternalHeader, information: strings().inAppLinksConfirmOpenExternalNew(removePecentEncoding ? (url.absoluteString.removingPercentEncoding ?? url.absoluteString) : escaped), ok: strings().inAppLinksConfirmOpenExternalOK, successHandler: {_ in success()}, cancelHandler: { afterComplete(false) })
                 } else {
                     success()
                 }
@@ -859,7 +859,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     }), for: context.window)
                 }
                 let addSimple:()->Void = {
-                    verifyModal(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { _ in
+                    verifyAlert_button(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { _ in
                         add(values.dest.id)
                     })
                 }
@@ -1013,7 +1013,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             if appAppearance.language.primaryLanguage.languageCode == info.languageCode {
                 alert(for: context.window, info: strings().applyLanguageChangeLanguageAlreadyActive(info.title))
             } else if info.totalStringCount == 0 {
-                verifyModal(for: context.window, header: strings().applyLanguageUnsufficientDataTitle, information: strings().applyLanguageUnsufficientDataText(info.title), cancel: "", option: strings().applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
+                verifyAlert_button(for: context.window, header: strings().applyLanguageUnsufficientDataTitle, information: strings().applyLanguageUnsufficientDataText(info.title), cancel: "", option: strings().applyLanguageUnsufficientDataOpenPlatform, successHandler: { result in
                     switch result {
                     case .basic:
                         break
@@ -1216,7 +1216,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
 
 private func updateAppAsYouWish(text: String, updateApp: Bool) {
     //
-    verifyModal(for: mainWindow, header: appName, information: text, ok: updateApp ? strings().alertButtonOKUpdateApp : strings().modalOK, cancel: updateApp ? strings().modalCancel : "", option: nil, successHandler: { _ in
+    verifyAlert_button(for: mainWindow, header: appName, information: text, ok: updateApp ? strings().alertButtonOKUpdateApp : strings().modalOK, cancel: updateApp ? strings().modalCancel : "", option: nil, successHandler: { _ in
         if updateApp {
             #if APP_STORE
             execute(inapp: inAppLink.external(link: "https://apps.apple.com/us/app/telegram/id747648890", false))

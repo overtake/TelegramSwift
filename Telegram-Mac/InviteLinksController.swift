@@ -603,7 +603,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
             let viewType = bestGeneralViewType(creators, for: i)
 
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_creator(creator.peer.peerId), equatable: InputDataEquatable(creator), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: strings().manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: strings().manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 20, right: 20), viewType: viewType, action: {
                     arguments.openAdminLinks(creator)
                 })
             }))
@@ -635,7 +635,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         getController?()?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
         copyToClipboard(link)
     }, revokeLink: { [weak manager] link in
-        verifyModal(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
+        verifyAlert_button(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
             if let manager = manager {
                 _ = showModalProgress(signal: manager.revokePeerExportedInvitation(link: link), for: context.window).start(completed:{
                     _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
@@ -670,7 +670,7 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
             })
         }
     }, deleteAll: { [weak manager] in
-        verifyModal(for: context.window, header: strings().manageLinksDeleteAll, information: strings().manageLinksDeleteAllConfirm, ok: strings().manageLinksDeleteAll, cancel: strings().modalCancel, successHandler: { [weak manager] _ in
+        verifyAlert_button(for: context.window, header: strings().manageLinksDeleteAll, information: strings().manageLinksDeleteAllConfirm, ok: strings().manageLinksDeleteAll, cancel: strings().modalCancel, successHandler: { [weak manager] _ in
             if let manager = manager {
                 _ = showModalProgress(signal: manager.deleteAllRevokedPeerExportedInvitations(), for: context.window).start(completed:{
                     _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()

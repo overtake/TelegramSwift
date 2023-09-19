@@ -156,7 +156,7 @@ enum ConfirmResult {
     case basic
 }
 
-func verifyModal(for window:Window, header: String = appName, information:String?, ok:String = strings().alertOK, cancel:String = strings().alertCancel, option:String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: @escaping()->Void = { }, presentation: TelegramPresentationTheme = theme) {
+func verifyAlert_button(for window:Window, header: String = appName, information:String?, ok:String = strings().alertOK, cancel:String = strings().alertCancel, option:String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: @escaping()->Void = { }, presentation: TelegramPresentationTheme = theme) {
 
     verifyAlert(for: window, header: header, information: information, ok: ok, cancel: cancel, option: option, optionIsSelected: nil, successHandler: successHandler, cancelHandler: cancelHandler, presentation: presentation)
 }

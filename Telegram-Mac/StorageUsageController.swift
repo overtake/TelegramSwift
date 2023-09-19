@@ -1050,7 +1050,7 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
         
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 42, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(item.count), viewType: item.viewType, action: {
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 42, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 20, right: 20), generalType: .context(item.count), viewType: item.viewType, action: {
                     arguments.openPeerMedia(item.peer.peer.id)
                 })
             }))
@@ -1361,7 +1361,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             
             
             
-            verifyModal(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: cleared ? strings().storageUsageClearConfirmOKAll : strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: cleared ? strings().storageUsageClearConfirmOKAll : strings().storageUsageClearConfirmOKPart, successHandler: { _ in
                 _ = context.engine.resources.clearStorage(peerId: stateValue.with { $0.peerId }, categories: categories, includeMessages: [], excludeMessages: []).start(completed: updateStats)
                 
                 _ = updateState { current in
@@ -1470,7 +1470,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             
             let clearSize = stateValue.with { $0.selectedData.size }
             
-            verifyModal(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
                                 
                 let includeMessages = messages
                 var excludeMessages:[Message] = []
@@ -1506,7 +1506,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             })
             
         }, clearPeer: { peerId in
-            verifyModal(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKAll, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKAll, successHandler: { _ in
                 
                _ = context.engine.resources.clearStorage(peerIds: [peerId], includeMessages: [], excludeMessages: []).start(completed: updateStats)
                 
@@ -1525,7 +1525,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             })
 
         }, clearMessage: { message in
-            verifyModal(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
                 
                 let msgs = context.engine.resources.clearStorage(messages: [message])
                 

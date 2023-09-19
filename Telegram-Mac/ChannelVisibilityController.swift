@@ -345,7 +345,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
         case let .existingLinksInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .existingLinkPeerItem(_, _, peer, _, _, viewType):
-            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, status: "t.me/\(peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
+            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, status: "t.me/\(peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 20, right: 20), interactionType:.deletable(onRemove: { peerId in
                 arguments.revokePeerId(peerId)
             }, deletable: true), viewType: viewType)
         case let .manageLinks(_, viewType):
@@ -387,7 +387,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 arguments.toggleUsername(username)
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
  
     }
@@ -982,7 +982,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             copyToClipboard(link)
         }, revokeLink: {
-            verifyModal(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
                 _ = showModalProgress(signal: context.engine.peers.revokePersistentPeerExportedInvitation(peerId: peerId), for: context.window).start()
             })
         }, share: { link in
@@ -1043,7 +1043,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             let ok: String = value ? activate_ok : deactivate_ok
             
             
-            verifyModal(for: context.window, header: title, information: info, ok: ok, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: title, information: info, ok: ok, successHandler: { _ in
                 _ = context.engine.peers.toggleAddressNameActive(domain: .peer(peerId), name: username.username, active: value).start()
                 
                 updateState { current in

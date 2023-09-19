@@ -109,7 +109,7 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
         navigation.readyOnce()
         showModal(with: navigation, for: context.window)
     }, contactSupport: {
-        verifyModal(for: context.window, information: strings().accountConfirmAskQuestion, option: strings().accountConfirmGoToFaq, successHandler: {  result in
+        verifyAlert_button(for: context.window, information: strings().accountConfirmAskQuestion, option: strings().accountConfirmGoToFaq, successHandler: {  result in
             closeAllModals()
             switch result {
             case .basic:
@@ -124,7 +124,7 @@ func LogoutViewController(context: AccountContext, f: @escaping((ViewController)
             }
         })
     }, logout: {
-        verifyModal(for: context.window, header: strings().accountConfirmLogout, information: strings().accountConfirmLogoutText, successHandler: { _ in
+        verifyAlert_button(for: context.window, header: strings().accountConfirmLogout, information: strings().accountConfirmLogoutText, successHandler: { _ in
             closeAllModals()
             _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
         })

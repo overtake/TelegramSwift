@@ -27,7 +27,7 @@ class GeneralBlockTextRowItem: GeneralRowItem {
     fileprivate let header: GeneralBlockTextHeader?
     fileprivate let headerLayout: TextViewLayout?
     fileprivate let rightAction: RightAction?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), rightAction: RightAction? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), rightAction: RightAction? = nil) {
         
         let attr = NSMutableAttributedString()
         _ = attr.append(string: text, color: color, font: font)

@@ -297,7 +297,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             items.append(ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
                 let link = "https://promote.telegram.org"
-                verifyModal(for: context.window, information: strings().chatMessageAdText(link), cancel: "", option: strings().chatMessageAdReadMore, successHandler: { result in
+                verifyAlert_button(for: context.window, information: strings().chatMessageAdText(link), cancel: "", option: strings().chatMessageAdReadMore, successHandler: { result in
                     switch result {
                     case .thrid:
                      let link = inAppLink.external(link: link, false)
@@ -373,7 +373,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     let canClose: Bool = canEditMessage(data.message, chatInteraction: data.chatInteraction, context: context, ignorePoll: true)
                     if canClose {
                         add_secondBlock.append(ContextMenuItem(poll.kind == .quiz ? strings().chatQuizStop : strings().chatPollStop, handler: { [weak chatInteraction] in
-                            verifyModal(for: context.window, header: poll.kind == .quiz ? strings().chatQuizStopConfirmHeader : strings().chatPollStopConfirmHeader, information: poll.kind == .quiz ? strings().chatQuizStopConfirmText : strings().chatPollStopConfirmText, ok: strings().alertConfirmStop, successHandler: { [weak chatInteraction] _ in
+                            verifyAlert_button(for: context.window, header: poll.kind == .quiz ? strings().chatQuizStopConfirmHeader : strings().chatPollStopConfirmHeader, information: poll.kind == .quiz ? strings().chatQuizStopConfirmText : strings().chatPollStopConfirmText, ok: strings().alertConfirmStop, successHandler: { [weak chatInteraction] _ in
                                 chatInteraction?.closePoll(messageId)
                             })
                         }, itemImage: MenuAnimation.menu_stop_poll.value))

@@ -426,7 +426,7 @@ final class ChatInteraction : InterfaceObserver  {
                     return
                 default:
                     if oldState.inputState.inputText != editState.inputState.inputText, !editState.inputState.inputText.isEmpty {
-                        verifyModal(for: context.window, information: strings().chatEditCancelText, ok: strings().alertDiscard, cancel: strings().alertNO, successHandler: { [weak self] _ in
+                        verifyAlert_button(for: context.window, information: strings().chatEditCancelText, ok: strings().alertDiscard, cancel: strings().alertNO, successHandler: { [weak self] _ in
                             self?.update({$0.withoutEditMessage().updatedUrlPreview(nil)})
                         })
                     } else {
@@ -582,7 +582,7 @@ final class ChatInteraction : InterfaceObserver  {
                             invoke()
                         } else {
                             if FastSettings.shouldConfirmWebApp(peer.id) {
-                                verifyModal(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { _ in
+                                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { _ in
                                     invoke()
                                     FastSettings.markWebAppAsConfirmed(peer.id)
                                 })
@@ -690,7 +690,7 @@ final class ChatInteraction : InterfaceObserver  {
                 
             }
             if FastSettings.shouldConfirmWebApp(bot.id) {
-                verifyModal(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(bot.displayTitle), successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(bot.displayTitle), successHandler: { _ in
                     invoke()
                     FastSettings.markWebAppAsConfirmed(bot.id)
                 })
@@ -710,7 +710,7 @@ final class ChatInteraction : InterfaceObserver  {
                 self?.openWebview(bot: peer, title: nil, buttonText: "", url: url, simple: true, inline: true)
             }
             if FastSettings.shouldConfirmWebApp(botId) {
-                verifyModal(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { result in
+                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { result in
                     
                     FastSettings.markWebAppAsConfirmed(botId)
                     invoke()

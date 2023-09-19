@@ -31,28 +31,16 @@ private enum Entry : TableItemListNodeEntry {
             return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
                 var items: [ContextMenuItem] = []
                 if selected == nil, arguments.isMy {
-                    items.append(ContextMenuItem("Select", handler: { [weak arguments] in
+                    items.append(ContextMenuItem(strings().messageContextSelect, handler: { [weak arguments] in
                         arguments?.toggleSelected(.init(peerId: peerId, id: story.id))
                     }, itemImage: MenuAnimation.menu_check_selected.value))
-                    
-                    items.append(ContextSeparatorItem())
-                    
-                    if story.isPinned {
-                        items.append(ContextMenuItem("Remove from Profile", handler: { [weak arguments] in
-                            arguments?.toggleStory(story)
-                        }, itemImage: MenuAnimation.menu_unpin.value))
-                    } else {
-                        items.append(ContextMenuItem("Save to Profile", handler: { [weak arguments] in
-                            arguments?.toggleStory(story)
-                        }, itemImage: MenuAnimation.menu_unpin.value))
-                    }
                 }
                 return items
             })
         case let .emptySelf(index, viewType):
             return StoryMyEmptyRowItem(initialSize, stableId: index, context: arguments.context, viewType: viewType, isArchive: arguments.isArchive, showArchive: arguments.showArchive)
         case .date:
-            return PeerMediaDateItem(initialSize, index: index, stableId: stableId, inset: !arguments.standalone ? .init() : NSEdgeInsets(left: 30, right: 30))
+            return PeerMediaDateItem(initialSize, index: index, stableId: stableId, inset: !arguments.standalone ? .init() : NSEdgeInsets(left: 20, right: 20))
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }

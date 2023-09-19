@@ -450,7 +450,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
            
             let canSave = paymentForm.canSaveCredentials && !paymentForm.passwordMissing
             if canSave {
-                verifyModal(for: context.window, information: strings().checkoutInfoSaveInfoHelp, ok: strings().modalYes, cancel: strings().modalNotNow, successHandler: { _ in
+                verifyAlert_button(for: context.window, information: strings().checkoutInfoSaveInfoHelp, ok: strings().modalYes, cancel: strings().modalNotNow, successHandler: { _ in
                     updateState { current in
                         var current = current
                         current.paymentMethod = .webToken(.init(title: token.title, data: token.data, saveOnServer: true))
@@ -587,7 +587,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                     if value {
                         pay()
                     } else {
-                        verifyModal(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
+                        verifyAlert_button(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
                             pay()
                             _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: botPeer.id).start()
                         })

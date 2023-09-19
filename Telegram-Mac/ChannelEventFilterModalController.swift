@@ -133,7 +133,7 @@ private enum ChannelEventFilterEntry : TableItemListNodeEntry {
             case .member:
                 status = strings().adminsAdmin
             }
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(enabled), viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: .plain, generalType: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleAdmin(participant.peer.id)
             })
         }

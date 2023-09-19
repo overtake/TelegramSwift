@@ -112,7 +112,7 @@ private enum GroupStickersetEntry : TableItemListNodeEntry {
     func item(_ arguments: GroupStickersArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         case let .input(_, value, viewType):
             return InputDataRowItem(initialSize, stableId: stableId, mode: .plain, error: nil, viewType: viewType, currentText: value, placeholder: nil, inputPlaceholder: "https://t.me/addstickers/", defaultText: "https://t.me/addstickers/", rightItem: .action(theme.icons.recentDismiss, .clearText), filter: { text in
                 var filter = NSCharacterSet.alphanumerics
