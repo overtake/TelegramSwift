@@ -256,6 +256,8 @@ class ChatMessageItem: ChatRowItem {
                 return strings().chatMessageViewChatList
             case .story:
                 return strings().chatMessageOpenStory
+            case .boost:
+                return strings().chatMessageBoostChannel
             default:
                 break
             }

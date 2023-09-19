@@ -1362,7 +1362,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 self.emoji.popover?.hide()
                 self.closeModal()
                 
-                
+                self.chatInteraction.sendMessage(silent, atDate)
                 self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)
             }
             
