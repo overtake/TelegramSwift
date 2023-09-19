@@ -4751,6 +4751,8 @@ public final class L10n {
   public static var chatListSwipingUnpin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unpin") }
   /// Unread
   public static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
+  /// BOOST CHANNEL
+  public static var chatMessageBoostChannel: String  { return L10n.tr("Localizable", "ChatMessage.BoostChannel") }
   /// Open App
   public static var chatMessageOpenApp: String  { return L10n.tr("Localizable", "ChatMessage.OpenApp") }
   /// VIEW CHAT LIST
