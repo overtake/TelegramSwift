@@ -596,7 +596,7 @@ public class Modal: NSObject {
         container.layer?.masksToBounds = false
         container.container.layer?.masksToBounds = true
         container.container.layer?.cornerRadius = controller.cornerRadius
-        container.borderView.layer?.borderColor = controller.modalTheme.grayText.withAlphaComponent(0.15).cgColor
+        container.borderView.layer?.borderColor = controller.modalTheme.grayText.withAlphaComponent(0.1).cgColor
         container.borderView.layer?.cornerRadius = controller.cornerRadius
 
         if !controller.contentBelowBackground {
