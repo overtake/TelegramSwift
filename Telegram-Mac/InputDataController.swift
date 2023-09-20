@@ -162,13 +162,13 @@ public class InputDataModalController : ModalViewController {
     
     override open func measure(size: NSSize) {
         let topHeight = controller.genericView.topView?.frame.height ?? 0
-        self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(size.width, 350))), min(min(size.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(size.width, 350))), min(min(size.height - 200, 500), controller.tableView.listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         let topHeight = controller.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 200, 500), controller.tableView.listHeight + topHeight)), animated: animated)
         }
     }
     
@@ -223,6 +223,12 @@ public class InputDataModalController : ModalViewController {
             }
         }))
         
+    }
+    
+    public override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
+        controller.genericView.change(size: frame.size, animated: transition.isAnimated)
+        controller.genericView.change(pos: frame.origin, animated: transition.isAnimated)
+        self.controller.genericView.updateLayout(size: frame.size, transition: transition)
     }
     
     deinit {
@@ -340,22 +346,37 @@ struct InputDataSignalValue {
 }
 
 final class InputDataView : BackgroundView {
-    let tableView = TableView()
+    let tableView: TableView
     
     fileprivate var topView: NSView?
     
     required init(frame frameRect: NSRect) {
+        tableView = TableView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         addSubview(tableView)
-        tableView.frame = bounds
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         tableView.updateLocalizationAndTheme(theme: theme)
     }
     
+    override var frame: NSRect {
+        didSet {
+            var bp = 0
+            bp == 1
+        }
+    }
+    
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
+    }
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+        if newOrigin.y == 0 {
+            var bp = 0
+            bp += 1
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -363,13 +384,9 @@ final class InputDataView : BackgroundView {
     }
     override func layout() {
         super.layout()
-        if let topView = topView {
-            topView.frame = NSMakeRect(0, 0, frame.width, topView.frame.height)
-            tableView.frame = NSMakeRect(0, topView.frame.height, frame.width, frame.height - topView.frame.height)
-        } else {
-            tableView.frame = bounds
-        }
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
+    
     
     func set(_ topView: NSView?) {
         if let topView = self.topView {
@@ -380,6 +397,22 @@ final class InputDataView : BackgroundView {
             addSubview(topView)
         }
         self.needsLayout = true
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        let tableRect: NSRect
+        if let view = self.topView {
+            transition.updateFrame(view: view, frame: NSMakeRect(0, 0, size.width, view.frame.height))
+            tableRect = NSMakeRect(0, view.frame.height, size.width, size.height - view.frame.height)
+        } else {
+            tableRect = size.bounds
+        }
+        
+//        transition.updateFrame(view: tableView.contentView, frame: tableRect.size.bounds)
+        transition.updateFrame(view: tableView, frame: tableRect)
+//        transition.updateFrame(view: tableView.documentView!, frame: tableView.documentSize.bounds)
+        
     }
 }
 

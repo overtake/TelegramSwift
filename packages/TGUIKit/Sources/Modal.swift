@@ -460,6 +460,25 @@ private final class ModalHeaderView: View {
 
 private class ModalContainerView: View {
     
+    let container: View
+    let borderView = View()
+    required init(frame frameRect: NSRect) {
+        container = View(frame: frameRect.size.bounds)
+        super.init(frame: frameRect)
+        super.addSubview(borderView)
+        super.addSubview(container)
+        borderView.layer?.borderWidth = System.pixel
+        borderView.layer?.borderColor = NSColor.red.cgColor
+        container.layer?.masksToBounds = true
+    }
+    
+    override func addSubview(_ view: NSView) {
+        container.addSubview(view)
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func mouseMoved(with event: NSEvent) {
         
@@ -481,6 +500,16 @@ private class ModalContainerView: View {
     override func cursorUpdate(with event: NSEvent) {
         super.cursorUpdate(with: event)
         NSCursor.arrow.set()
+    }
+    
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: container, frame: size.bounds.insetBy(dx: 1, dy: 1))
+        transition.updateFrame(view: borderView, frame: size.bounds)
     }
 }
 
@@ -516,6 +545,10 @@ public class Modal: NSObject {
         background.canRedirectScroll = controller.redirectMouseAfterClosing
         background.backgroundColor = controller.background
         background.layer?.disableActions()
+        
+        
+        
+        
         self.interactions = controller.modalInteractions
         if controller.isVisualEffectBackground {
             self.visualEffectView = NSVisualEffectView(frame: NSZeroRect)
@@ -543,14 +576,29 @@ public class Modal: NSObject {
             controller._frameRect = topView.bounds
         }
         
-        container = ModalContainerView(frame: containerRect)
-        container.autoresizingMask = []
-        container.autoresizesSubviews = true
+        container = ModalContainerView(frame: containerRect.insetBy(dx: -1, dy: -1))
         container.layer?.cornerRadius = controller.cornerRadius
-        container.layer?.shouldRasterize = true
-        container.layer?.rasterizationScale = CGFloat(System.backingScale)
-        container.backgroundColor = controller.containerBackground
+        container.background = controller.containerBackground
+                
         
+        self.container.layer?.shouldRasterize = true
+        self.container.layer?.rasterizationScale = CGFloat(System.backingScale)
+        self.container.layer?.isOpaque = false
+
+        
+        let shadow = NSShadow()
+        shadow.shadowBlurRadius = 20
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.3)
+        shadow.shadowOffset = NSMakeSize(0, 0)
+        
+        self.container.shadow = shadow
+        
+        container.layer?.masksToBounds = false
+        container.container.layer?.masksToBounds = true
+        container.container.layer?.cornerRadius = controller.cornerRadius
+        container.borderView.layer?.borderColor = controller.modalTheme.grayText.withAlphaComponent(0.15).cgColor
+        container.borderView.layer?.cornerRadius = controller.cornerRadius
+
         if !controller.contentBelowBackground {
             container.addSubview(controller.view)
         } else {
@@ -621,7 +669,7 @@ public class Modal: NSObject {
         background.set(handler: { [weak self] control in
             guard let controller = self?.controller, let `self` = self else { return }
             
-            if control.mouseInside() && !controller.view._mouseInside() && !self.container.mouseInside() {
+            if control.mouseInside() && !controller.view._mouseInside() && !self.container._mouseInside() {
                 isDown = true
             }
             
@@ -632,7 +680,7 @@ public class Modal: NSObject {
         
         background.set(handler: { [weak self] control in
             guard let controller = self?.controller, let `self` = self else { return }
-            if controller.closable, !controller.view._mouseInside() && !self.container.mouseInside(), isDown {
+            if controller.closable, !controller.view._mouseInside() && !self.container._mouseInside(), isDown {
                 controller.close()
             }
             if controller.redirectMouseAfterClosing, let event = NSApp.currentEvent {
@@ -681,7 +729,7 @@ public class Modal: NSObject {
     }
     
     public func resize(with size:NSSize, animated:Bool = true) {
-        let focus:NSRect
+        var focus:NSRect
         
         var headerOffset: CGFloat = 0
         if let headerView = headerView {
@@ -697,15 +745,19 @@ public class Modal: NSObject {
             focus = background.focus(NSMakeSize(size.width, size.height + headerOffset))
         }
         
+        focus = focus.insetBy(dx: -1, dy: -1)
         
         if focus != container.frame {
-            CATransaction.begin()
-            container.change(size: focus.size, animated: animated)
-            container.change(pos: focus.origin, animated: animated)
+           // CATransaction.begin()
             
-            controller?.view._change(size: size, animated: animated)
-            controller?.view._change(pos: NSMakePoint(0, headerOffset), animated: animated)
-            CATransaction.commit()
+            let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+
+            transition.updateFrame(view: container, frame: focus)
+            container.updateLayout(size: focus.size, transition: transition)
+            
+            let frame = CGRect(origin: NSMakePoint(0, headerOffset), size: size)
+            controller?.updateFrame(frame, transition: transition)
+           // CATransaction.commit()
         }
         controller?.didResizeView(size, animated: animated)
        

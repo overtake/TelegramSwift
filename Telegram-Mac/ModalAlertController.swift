@@ -218,7 +218,9 @@ private final class RowView : TableRowView {
         func update(option: RowItem.Option, presentation: TelegramPresentationTheme, toggle:@escaping()->Void, animated: Bool) {
             self.toggle = toggle
             
-            self.imageView.update(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.generalCheck, selected: option.selected, animated: animated)
+            let selected = generateCheckSelected(foregroundColor: presentation.colors.accentIcon, backgroundColor: presentation.colors.underSelectedColor)
+            
+            self.imageView.update(unselectedImage: presentation.icons.chatToggleUnselected, selectedImage: selected, selected: option.selected, animated: animated)
             self.textView.update(option.text)
         }
         

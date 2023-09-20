@@ -905,16 +905,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             
             self.modal?.resize(with: NSMakeSize(width, min(contentSize.height - 70, height)), animated: animated)
             
-            // idk fucking why, but it fixes resize bug
-            delay(0.2, closure: { [weak self] in
-                guard let `self` = self else {
-                    return
-                }
-                self.genericView.tableView.beginTableUpdates()
-                _ = self.genericView.tableView.addItem(item: GeneralRowItem(.zero, height: 1))
-                self.genericView.tableView.remove(at: self.genericView.tableView.count - 1)
-                self.genericView.tableView.endTableUpdates()
-            })
         }
     }
   

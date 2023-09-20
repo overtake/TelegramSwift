@@ -960,8 +960,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     
+    
+    
     open override func layout() {
         super.layout()
+        
+        self.beginTableUpdates()
+        let item = TableRowItem(.zero, stableId: arc4random64())
+        let _ = self.addItem(item: item)
+        self.remove(at: self.count - 1)
+        self.endTableUpdates()
         
         if let emptyView = emptyView, let superview = superview {
             emptyView.frame = findBackgroundControllerView?.bounds ?? bounds
