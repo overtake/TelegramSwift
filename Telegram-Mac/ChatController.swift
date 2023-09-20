@@ -3051,9 +3051,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             strongSelf.genericView.inputView.textView.shake()
                         }
                        
-                    } else {
-                        strongSelf.genericView.inputView.textView.shake()
-                    }
+                    } 
                 }
             }
         }

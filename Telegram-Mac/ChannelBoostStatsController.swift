@@ -26,6 +26,10 @@ private final class BoostRowItem : TableRowItem {
         super.init(initialSize)
     }
     
+    var blockWidth: CGFloat {
+        return min(600, self.width - 40)
+    }
+    
     override var stableId: AnyHashable {
         return _stableId
     }
@@ -250,7 +254,7 @@ private final class BoostRowItemView : TableRowView {
             return
         }
         
-        lineView.setFrameSize(NSMakeSize(frame.width - 60, 30))
+        lineView.setFrameSize(NSMakeSize(item.blockWidth - 40, 30))
         lineView.layer?.cornerRadius = 10
         lineView.update(item.state, context: item.context, transition: .immediate)
         
