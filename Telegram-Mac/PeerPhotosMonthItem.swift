@@ -281,7 +281,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
     }
 }
 
-private final class StoryViewsView: View {
+private final class StoryViewsView: ShadowView {
     private static let icon = NSImage(named: "Icon_ChannelViews")!.precomposed(.white)
     
     private let imageView = ImageView()
@@ -297,6 +297,8 @@ private final class StoryViewsView: View {
         self.imageView.isEventLess = true
         self.textView.isEventLess = true
         
+        self.direction = .vertical(true)
+        self.shadowBackground = NSColor.black.withAlphaComponent(0.8)
     }
     
     func update(_ seenCount: Int, animated: Bool) {
@@ -313,7 +315,7 @@ private final class StoryViewsView: View {
     override func layout() {
         super.layout()
         self.imageView.centerY(x: 10)
-        self.textView.centerY(x: frame.width - textView.frame.width)
+        self.textView.centerY(x: self.imageView.frame.maxX + 5)
     }
     
     required init?(coder: NSCoder) {
@@ -458,7 +460,7 @@ class MediaCell : Control {
             if let view = self.storyViews {
                 current = view
             } else {
-                current = StoryViewsView(frame: NSMakeRect(0, 0, 30, 20))
+                current = StoryViewsView(frame: NSMakeRect(0, 0, frame.width, 20))
                 addSubview(current)
                 self.storyViews = current
             }
@@ -531,7 +533,7 @@ class MediaCell : Control {
         self.unsupported?.center()
         
         if let storyViews = storyViews {
-            storyViews.setFrameOrigin(NSMakePoint(0, frame.height - storyViews.frame.height))
+            storyViews.frame = NSMakeRect(0, frame.height - storyViews.frame.height, frame.width, storyViews.frame.height)
         }
     }
 }

@@ -538,10 +538,10 @@ class ChatMessageItem: ChatRowItem {
                 }
                 
             }
-            
             if let range = selectManager.find(entry.stableId) {
                 textLayout.selectedRange.range = range
             }
+             
             
             
             var media = message.anyMedia

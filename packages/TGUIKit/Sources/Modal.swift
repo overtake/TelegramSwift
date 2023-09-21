@@ -598,7 +598,7 @@ public class Modal: NSObject {
         container.borderView.layer?.borderColor = controller.modalTheme.grayText.withAlphaComponent(0.1).cgColor
         container.borderView.layer?.cornerRadius = controller.cornerRadius
         
-        container.borderView.isHidden = controller.contentBelowBackground
+        container.borderView.isHidden = controller.contentBelowBackground || controller.containerBackground == .clear
 
         if !controller.contentBelowBackground {
             container.addSubview(controller.view)
