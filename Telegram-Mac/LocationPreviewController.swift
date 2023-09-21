@@ -118,7 +118,7 @@ private final class AnnotationView : MKAnnotationView {
         
         
         
-        locationPin.image = storyTheme.icons.locationMapPin
+        locationPin.image = darkAppearance.icons.locationMapPin
         locationPin.sizeToFit()
 
         

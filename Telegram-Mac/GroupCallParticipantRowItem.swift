@@ -14,10 +14,18 @@ import Postbox
 import TelegramCore
 import AppKit
 
-private let fakeIcon = generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
-private let scamIcon = generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
-private let verifyIcon = NSImage(named: "Icon_VerifyDialog")!.precomposed(GroupCallTheme.customTheme.accentColor)
-private let premiumIcon = NSImage(named: "Icon_Peer_Premium")!.precomposed(GroupCallTheme.customTheme.accentColor)
+private var fakeIcon: CGImage {
+    generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
+}
+private var scamIcon: CGImage {
+    generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
+}
+private var verifyIcon: CGImage {
+    NSImage(named: "Icon_VerifyDialog")!.precomposed(GroupCallTheme.customTheme.accentColor)
+}
+private var premiumIcon: CGImage {
+    NSImage(named: "Icon_Peer_Premium")!.precomposed(GroupCallTheme.customTheme.accentColor)
+}
 
 final class GroupCallParticipantRowItem : GeneralRowItem {
     let data: PeerGroupCallData
@@ -115,7 +123,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     }
     
     override var menuPresentation: AppMenu.Presentation {
-        return .current(darkPalette)
+        return .current(darkAppearance.colors)
     }
     
     override var isLegacyMenu: Bool {
@@ -534,36 +542,6 @@ final class VerticalContainerView : GeneralContainableRowView, GroupCallParticip
         speakingView.change(opacity: showSpeakingView ? 1 : 0, animated: animated)
 
         speakingView.layer?.borderColor = item.data.state?.muteState?.mutedByYou == true ? GroupCallTheme.customTheme.redColor.cgColor : GroupCallTheme.speakActiveColor.cgColor
-
-        
-//        if item.data.pinnedMode != nil {
-//            let current: View
-//            if let pinnedView = self.pinnedFrameView {
-//                current = pinnedView
-//            } else {
-//                current = View()
-//                self.pinnedFrameView = current
-//                addSubview(current)
-//                current.layer?.cornerRadius = 10
-//                current.layer?.borderWidth = 2
-//                if animated {
-//                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-//                }
-//            }
-//            current.layer?.borderColor = item.activityColor.withAlphaComponent(0.7).cgColor
-//        } else {
-//            if let pinnedView = self.pinnedFrameView {
-//                self.pinnedFrameView = nil
-//                if animated {
-//                    pinnedView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak pinnedView] _ in
-//                        pinnedView?.removeFromSuperview()
-//                    })
-//                } else {
-//                    pinnedView.removeFromSuperview()
-//                }
-//            }
-//        }
-        
         
         let videoBoxImages = item.videoBoxImage
         
@@ -1068,6 +1046,10 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         return color
     }
     
+    
+    override var borderColor: NSColor {
+        return GroupCallTheme.memberSeparatorColor
+    }
     
     func getPhotoView() -> NSView {
         return self.container?.getPhotoView() ?? self

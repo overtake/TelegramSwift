@@ -358,9 +358,9 @@ class StoryUnsupportedView : StoryLayoutView {
     override func update(context: AccountContext, peerId: PeerId, story: EngineStoryItem, peer: Peer?) {
         super.update(context: context, peerId: peerId, story: story, peer: peer)
         
-        bgView.backgroundColor = storyTheme.colors.listBackground
+        bgView.backgroundColor = darkAppearance.colors.listBackground
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: strings().storyMediaUnsupported, color: storyTheme.colors.text, font: .italic(.text))
+        _ = attr.append(string: strings().storyMediaUnsupported, color: darkAppearance.colors.text, font: .italic(.text))
         attr.detectLinks(type: [.Links], context: context)
         let layout = TextViewLayout(attr)
         layout.measure(width: frame.width - 40)

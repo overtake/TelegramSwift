@@ -307,7 +307,7 @@ final class GroupCallMainVideoContainerView: Control {
         self.set(handler: { [weak self] control in
             if let data = self?.participant {
                 if let menuItems = self?.arguments?.contextMenuItems(data), let event = NSApp.currentEvent {
-                    ContextMenu.show(items: menuItems, view: control, event: event, presentation: .current(darkPalette), isLegacy: false)
+                    ContextMenu.show(items: menuItems, view: control, event: event, presentation: .current(darkAppearance.colors), isLegacy: false)
                 }
             }
         }, for: .RightDown)

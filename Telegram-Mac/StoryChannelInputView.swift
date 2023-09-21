@@ -142,7 +142,7 @@ final class StoryChannelInputView : Control, StoryInput {
             
             let string = strings().storyMyInputViewsCountable(seenCount)
             
-            let text: NSAttributedString = .initialize(string: seenCount.prettyNumber, color: storyTheme.colors.text, font: .normal(.header))
+            let text: NSAttributedString = .initialize(string: seenCount.prettyNumber, color: darkAppearance.colors.text, font: .normal(.header))
             let layout = TextViewLayout(text)
             layout.measure(width: .greatestFiniteMagnitude)
             self.viewsText.update(layout)

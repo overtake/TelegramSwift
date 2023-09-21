@@ -45,10 +45,10 @@ protocol StoryInput {
     var input: NSTextView? { get }
 }
 private var send_image: CGImage {
-    NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent)
+    NSImage(named: "Icon_SendMessage")!.precomposed(darkAppearance.colors.accent)
 }
 private var send_image_active: CGImage {
-    NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent.darker())
+    NSImage(named: "Icon_SendMessage")!.precomposed(darkAppearance.colors.accent.darker())
 }
 
 private let like_image: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 1))
@@ -207,7 +207,7 @@ final class StoryLikeActionButton: Control {
         case .builtin:
             if reaction == .defaultStoryLike {
                 size = NSMakeSize(30, 30)
-                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: storyTheme.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: darkAppearance.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
             } else {
                 
@@ -390,7 +390,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             let current = textView.attributedString().copy() as! NSAttributedString
             let currentRange = textView.selectedRange()
             
-            let item = SimpleUndoItem(attributedString: current, be: state.attributedString(storyTheme), wasRange: currentRange, be: range)
+            let item = SimpleUndoItem(attributedString: current, be: state.attributedString(darkAppearance), wasRange: currentRange, be: range)
             self.textView.addSimpleItem(item)
         }
 
@@ -559,7 +559,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] text, url in
             self?.textView.addLink(url, text: text, range: effectiveRange)
-        }, presentation: storyTheme), for: window)
+        }, presentation: darkAppearance), for: window)
         
     }
     
@@ -574,7 +574,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 if let data = pasteboard.data(forType: .kInApp) {
                     let decoder = AdaptedPostboxDecoder()
                     if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
-                        let attributed = decoded.unique(isPremium: context.isPremium).attributedString(storyTheme)
+                        let attributed = decoded.unique(isPremium: context.isPremium).attributedString(darkAppearance)
                         let current = textView.attributedString().copy() as! NSAttributedString
                         let currentRange = textView.selectedRange()
                         let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
@@ -760,7 +760,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         textView.textFont = .normal(.text)
         textView.textColor = .white
         textView.delegate = self
-        textView.inputView.appearance = storyTheme.appearance
+        textView.inputView.appearance = darkAppearance.appearance
                 
        // self.background = .random
         
@@ -784,7 +784,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         attach.contextMenu = { [weak self] in
             
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors), betterInside: true)
+            let menu = ContextMenu(presentation: AppMenu.Presentation.current(darkAppearance.colors), betterInside: true)
             var items: [ContextMenuItem] = []
             
             
@@ -863,7 +863,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         self.updateInputState()
         
-        let attributedString = arguments?.interaction.presentation.findInput(groupId).attributedString(storyTheme)
+        let attributedString = arguments?.interaction.presentation.findInput(groupId).attributedString(darkAppearance)
         if let attributedString = attributedString, !attributedString.string.isEmpty {
             self.textView.setAttributedString(attributedString, animated: false)
         }
@@ -883,7 +883,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             return 150
         }
         context.getPresentation = {
-            storyTheme
+            darkAppearance
         }
         context.getBackground = {
             .clear

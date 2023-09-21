@@ -468,7 +468,6 @@ private class ModalContainerView: View {
         super.addSubview(borderView)
         super.addSubview(container)
         borderView.layer?.borderWidth = System.pixel
-        borderView.layer?.borderColor = NSColor.red.cgColor
         container.layer?.masksToBounds = true
     }
     
@@ -598,6 +597,8 @@ public class Modal: NSObject {
         container.container.layer?.cornerRadius = controller.cornerRadius
         container.borderView.layer?.borderColor = controller.modalTheme.grayText.withAlphaComponent(0.1).cgColor
         container.borderView.layer?.cornerRadius = controller.cornerRadius
+        
+        container.borderView.isHidden = controller.contentBelowBackground
 
         if !controller.contentBelowBackground {
             container.addSubview(controller.view)

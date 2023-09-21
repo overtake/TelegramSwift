@@ -476,7 +476,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                     return (user: $0.getPeer(peerId), chat: $0.getPeer(callPeerId))
                 } |> mapToSignal { [weak window] values in
                     if let window = window {
-                        return verifyAlertSignal(for: window, information: strings().voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), ok: strings().voiceChatInviteMemberToGroupFirstAdd, presentation: storyTheme) |> filter { $0 == .basic }
+                        return verifyAlertSignal(for: window, information: strings().voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), ok: strings().voiceChatInviteMemberToGroupFirstAdd, presentation: darkAppearance) |> filter { $0 == .basic }
                             |> take(1)
                         |> mapToSignal { _ in
                             if peerId.namespace == Namespaces.Peer.CloudChannel {
@@ -545,7 +545,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                                 subscriber.putNext(true)
                                 subscriber.putCompletion()
                                 
-                            }, presentation: storyTheme)
+                            }, presentation: darkAppearance)
                         } else {
                             for peerId in peerIds {
                                 _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()

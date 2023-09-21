@@ -3051,7 +3051,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             strongSelf.genericView.inputView.textView.shake()
                         }
                        
-                    } 
+                    }
                 }
             }
         }
@@ -6976,19 +6976,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .invoked
         }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
         
-//        #if DEBUG
-//        var shown: Bool = true
-//        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-//            if shown {
-//                self?.liveTranslate?.hideTranslation()
-//            } else {
-//                self?.liveTranslate?.showTranslation()
-//            }
-//            shown = !shown
-//            return .invoked
-//        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
-//
-//        #endif
+        #if DEBUG
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.chatInteraction.blockContact()
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+
+        #endif
         
        
     

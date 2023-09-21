@@ -50,7 +50,7 @@ final class Story_AvatarContentView: View {
         } else {
             let image = generateImage(NSMakeSize(size.width, size.height), scale: System.backingScale, rotatedContext: { size, ctx in
                 ctx.clear(size.bounds)
-                ctx.setFillColor(storyTheme.colors.grayText.withAlphaComponent(0.5).cgColor)
+                ctx.setFillColor(darkAppearance.colors.grayText.withAlphaComponent(0.5).cgColor)
                 ctx.fillEllipse(in: size.bounds)
             })!
             self.images = [image, image, image]
@@ -129,7 +129,7 @@ final class Story_LikesCountView : View {
     func update(_ count: Int) {
         let string = strings().storyMyInputLikesCountable(count)
         
-        let text: NSAttributedString = .initialize(string: string, color: storyTheme.colors.text, font: .normal(.short))
+        let text: NSAttributedString = .initialize(string: string, color: darkAppearance.colors.text, font: .normal(.short))
         let layout = TextViewLayout(text)
         layout.measure(width: .greatestFiniteMagnitude)
         textView.update(layout)
@@ -212,7 +212,7 @@ final class StoryMyInputView : Control, StoryInput {
         delete.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
         
         more.contextMenu = { [weak self] in
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
+            let menu = ContextMenu(presentation: AppMenu.Presentation.current(darkAppearance.colors))
             if let story = self?.story, let menu = self?.arguments?.storyContextMenu(story) {
                 return menu
             }
@@ -252,7 +252,7 @@ final class StoryMyInputView : Control, StoryInput {
         
         let string = strings().storyMyInputViewsCountable(storyViews?.seenCount ?? 0)
         
-        let text: NSAttributedString = .initialize(string: string, color: storyTheme.colors.text, font: .normal(.short))
+        let text: NSAttributedString = .initialize(string: string, color: darkAppearance.colors.text, font: .normal(.short))
         let layout = TextViewLayout(text)
         layout.measure(width: .greatestFiniteMagnitude)
         self.viewsText.update(layout)
@@ -311,7 +311,7 @@ final class StoryMyInputView : Control, StoryInput {
         }
         
         self.views.contextMenu = { [weak self] in
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
+            let menu = ContextMenu(presentation: AppMenu.Presentation.current(darkAppearance.colors))
             if let story = self?.story, let arguments = self?.arguments {
                 if let views = story.storyItem.views {
                     for peer in views.seenPeers {
