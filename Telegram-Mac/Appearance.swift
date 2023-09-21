@@ -1117,9 +1117,8 @@ func generateCheckSelected(foregroundColor: NSColor, backgroundColor: NSColor) -
     return generateImage(NSMakeSize(icon.backingSize.width, icon.backingSize.height), contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
         ctx.setFillColor(backgroundColor.cgColor)
-        ctx.fillEllipse(in: NSMakeRect(0, 0, size.width, size.height))
-        let imageRect = NSMakeRect((size.width - icon.backingSize.width) / 2, (size.height - icon.backingSize.height) / 2, icon.backingSize.width, icon.backingSize.height)
-        ctx.draw(icon, in: imageRect)
+        ctx.fillEllipse(in: NSMakeRect(2, 2, size.width - 4, size.height - 4))
+        ctx.draw(icon, in: size.bounds)
     }, scale: 2)!
 }
 

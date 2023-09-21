@@ -37,7 +37,7 @@ final class StoryNoReplyInput : Control, StoryInput {
     
     func update(_ story: StoryContentItem, animated: Bool) {
         let text = strings().storyNoReplyInputNoReply
-        let layout = TextViewLayout.init(.initialize(string: text, color: storyTheme.colors.grayText, font: .normal(.text)))
+        let layout = TextViewLayout.init(.initialize(string: text, color: darkAppearance.colors.grayText, font: .normal(.text)))
         layout.measure(width: frame.width)
         self.textView.update(layout)
         

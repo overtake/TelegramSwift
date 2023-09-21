@@ -228,7 +228,7 @@ private final class StoryViewerRowItem : GeneralRowItem {
     }
     
     override var menuPresentation: AppMenu.Presentation {
-        return .init(colors: storyTheme.colors)
+        return .init(colors: darkAppearance.colors)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
@@ -372,7 +372,7 @@ private final class StoryViewerRowView: GeneralRowView {
         case .builtin:
             if reaction == .defaultStoryLike {
                 size = NSMakeSize(30, 30)
-                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: storyTheme.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: darkAppearance.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
             } else {
                 if let animation = context.reactions.available?.reactions.first(where: { $0.value == reaction }) {
@@ -542,7 +542,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let miss = totalHeight - (CGFloat(items.count) * 52.0 + additionHeight)
             if miss > 0 {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_miss(0), equatable: .init(miss), comparable: nil, item: { initialSize, stableId in
-                    return GeneralRowItem(initialSize, height: miss, stableId: stableId, backgroundColor: storyTheme.colors.background)
+                    return GeneralRowItem(initialSize, height: miss, stableId: stableId, backgroundColor: darkAppearance.colors.background)
                 }))
                 index += 1
             }
@@ -569,7 +569,7 @@ private final class StoryViewersTopView : View {
     private let bottom: View
     required init(frame frameRect: NSRect) {
         self.search = .init(frame: NSMakeRect(0, 10, frameRect.width, 30))
-        search.searchTheme = storyTheme.search
+        search.searchTheme = darkAppearance.search
         self.top = View(frame: NSMakeRect(0, 0, frameRect.width, 50))
         self.bottom = View(frame: NSMakeRect(0, 50, frameRect.width, 40))
         self.segmentControl = CatalinaStyledSegmentController(frame: NSMakeRect(0, 0, 240, 30))
@@ -583,22 +583,22 @@ private final class StoryViewersTopView : View {
             self?.arguments?.toggleListMode(.contacts)
         }))
         
-        close.set(image: NSImage(named: "Icon_ChatAction_Close")!.precomposed(storyTheme.colors.text), for: .Normal)
+        close.set(image: NSImage(named: "Icon_ChatAction_Close")!.precomposed(darkAppearance.colors.text), for: .Normal)
         close.autohighlight = false
         close.scaleOnClick = true
         close.sizeToFit()
         
-        filter.set(image: NSImage(named: "Icon_StoryViewers_Filter")!.precomposed(storyTheme.colors.text), for: .Normal)
+        filter.set(image: NSImage(named: "Icon_StoryViewers_Filter")!.precomposed(darkAppearance.colors.text), for: .Normal)
         filter.autohighlight = false
         filter.scaleOnClick = true
         filter.sizeToFit()
         
-        self.backgroundColor = storyTheme.colors.background
-        self.borderColor = storyTheme.colors.border
+        self.backgroundColor = darkAppearance.colors.background
+        self.borderColor = darkAppearance.colors.border
         self.border = [.Bottom]
         
         
-        segmentControl.theme = CatalinaSegmentTheme(backgroundColor: storyTheme.colors.listBackground, foregroundColor: storyTheme.colors.background, activeTextColor: storyTheme.colors.text, inactiveTextColor: storyTheme.colors.listGrayText)
+        segmentControl.theme = CatalinaSegmentTheme(backgroundColor: darkAppearance.colors.listBackground, foregroundColor: darkAppearance.colors.background, activeTextColor: darkAppearance.colors.text, inactiveTextColor: darkAppearance.colors.listGrayText)
 
         
         titleView.userInteractionEnabled = false
@@ -618,7 +618,7 @@ private final class StoryViewersTopView : View {
     func update(_ state: State, arguments: Arguments) {
         self.arguments = arguments
         let string = strings().storyViewsTitleCountable(state.item.views?.seenCount ?? 0)
-        let layout = TextViewLayout(.initialize(string: string, color: storyTheme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+        let layout = TextViewLayout(.initialize(string: string, color: darkAppearance.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         layout.measure(width: .greatestFiniteMagnitude)
         self.titleView.update(layout)
         
@@ -734,7 +734,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
             return current
         }
     }, openPremium: {
-        showModal(with: PremiumBoardingController(context: context, source: .story_viewers, openFeatures: true, presentation: storyTheme), for: context.window)
+        showModal(with: PremiumBoardingController(context: context, source: .story_viewers, openFeatures: true, presentation: darkAppearance), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -792,7 +792,7 @@ func StoryViewersModalController(context: AccountContext, list: EngineStoryViewL
     
     
     view.filter.contextMenu = {
-        let menu = ContextMenu(presentation: .current(storyTheme.colors))
+        let menu = ContextMenu(presentation: .current(darkAppearance.colors))
         menu.addItem(ContextMenuItem(strings().storyViewersReactionsFirst, handler: {
             updateState { current in
                 var current = current

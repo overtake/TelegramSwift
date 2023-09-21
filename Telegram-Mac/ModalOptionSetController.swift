@@ -69,19 +69,21 @@ private func modalOptionsSetEntries(state: ModalOptionsState, desc: String?, arg
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    if let desc = desc {
-        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_title, equatable: InputDataEquatable(desc), comparable: nil, item: { initialSize, stableId in
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: .plain(desc), textColor: theme.colors.grayText, alignment: .center, drawCustomSeparator: false, inset: NSEdgeInsets(left: 20, right: 20, top: 10, bottom: 10))
-        }))
-        index += 1
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_border, equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return GeneralLineSeparatorRowItem(initialSize: initialSize, stableId: stableId)
-        }))
-        index += 1
-    } 
-    
     entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
+
+    
+    if let desc = desc {
+        entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_title, equatable: InputDataEquatable(desc), comparable: nil, item: { initialSize, stableId in
+            return GeneralBlockTextRowItem.init(initialSize, stableId: stableId, viewType: .singleItem, text: desc, font: .normal(.text))
+        }))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+
+    } 
+    
 
     
     

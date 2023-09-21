@@ -819,7 +819,7 @@ final class GroupCallUIController : ViewController {
                 verifyAlert(for: window, header: strings().voiceChatEndTitle, information: strings().voiceChatEndText, ok: strings().voiceChatEndOK, option: strings().voiceChatEndThird, optionIsSelected: false, successHandler: {
                     [weak self] result in
                     _ = self?.data.call.sharedContext.endGroupCall(terminate: result == .thrid).start()
-                }, presentation: storyTheme)
+                }, presentation: darkAppearance)
             } else {
                 _ = self.data.call.sharedContext.endGroupCall(terminate: false).start()
             }
@@ -853,7 +853,7 @@ final class GroupCallUIController : ViewController {
                 } else if let window = window {
                     _ = showModalProgress(signal: accountContext.engine.peers.removePeerMember(peerId: peerId, memberId: peer.id), for: window).start()
                 }
-            }, presentation: storyTheme)
+            }, presentation: darkAppearance)
         }, openInfo: { [weak self] peer in
             guard let strongSelf = self else {
                 return
@@ -915,7 +915,7 @@ final class GroupCallUIController : ViewController {
                                 f(true)
                             }, cancelHandler: {
                                 f(false)
-                            }, presentation: storyTheme)
+                            }, presentation: darkAppearance)
                         } else {
                             f(true)
                         }
@@ -1106,7 +1106,7 @@ final class GroupCallUIController : ViewController {
                         if let window = window {
                             showModalText(for: window, text: strings().voiceChatToastStop)
                         }
-                    }, presentation: storyTheme)
+                    }, presentation: darkAppearance)
                 } else {
                     showModalText(for: window, text: strings().voiceChatAlertRecording)
                 }
@@ -1913,7 +1913,7 @@ final class GroupCallUIController : ViewController {
                 default:
                     break
                 }
-            }, presentation: storyTheme)
+            }, presentation: darkAppearance)
         }
         
         data.call.permissions = { action, f in

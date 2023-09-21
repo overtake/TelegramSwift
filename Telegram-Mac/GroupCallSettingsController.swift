@@ -786,7 +786,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                     return
                 }
                 _ = showModalProgress(signal: call.sharedContext.endGroupCall(terminate: true), for: window).start()
-            }, presentation: storyTheme)
+            }, presentation: darkAppearance)
 
         }, updateDefaultParticipantsAreMuted: { [weak self] value in
             self?.call.updateDefaultParticipantsAreMuted(isMuted: value)
@@ -870,7 +870,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                         })
                     }
                     
-                }, presentation: storyTheme)
+                }, presentation: darkAppearance)
             }
         })
         

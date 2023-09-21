@@ -495,13 +495,13 @@ final class StoryListView : Control, Notifable {
             self.state = state
             self.arguments = arguments
             
-            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: storyTheme.fontSize, openInfo: { [weak arguments, weak self] peerId, toChat, messageId, initialAction in
+            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: darkAppearance.fontSize, openInfo: { [weak arguments, weak self] peerId, toChat, messageId, initialAction in
                 if toChat {
                     arguments?.openChat(peerId, messageId, initialAction)
                 } else if let view = self {
                     arguments?.openPeerInfo(peerId, view)
                 }
-            }, hashtag: arguments?.hashtag ?? { _ in }, textColor: storyTheme.colors.text, linkColor: storyTheme.colors.text, monospacedPre: storyTheme.colors.text, monospacedCode: storyTheme.colors.text, underlineLinks: true).mutableCopy() as! NSMutableAttributedString
+            }, hashtag: arguments?.hashtag ?? { _ in }, textColor: darkAppearance.colors.text, linkColor: darkAppearance.colors.text, monospacedPre: darkAppearance.colors.text, monospacedCode: darkAppearance.colors.text, underlineLinks: true).mutableCopy() as! NSMutableAttributedString
             
             
 
@@ -510,7 +510,7 @@ final class StoryListView : Control, Notifable {
             for entity in entities {
                 switch entity.type {
                 case .Spoiler:
-                    let color: NSColor = storyTheme.colors.text
+                    let color: NSColor = darkAppearance.colors.text
                     let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
                     if let range = attributed.range.intersection(range) {
                         attributed.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
@@ -530,7 +530,7 @@ final class StoryListView : Control, Notifable {
                 }
             })
             
-            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: storyTheme.colors.grayText, spoilers: spoilers)
+            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: darkAppearance.colors.grayText, spoilers: spoilers)
             layout.measure(width: frame.width - 20)
             layout.interactions = globalLinkExecutor
             
@@ -562,7 +562,7 @@ final class StoryListView : Control, Notifable {
                    
                     isNew = true
                 }
-                let moreLayout = TextViewLayout.init(.initialize(string: strings().storyItemTextShowMore, color: storyTheme.colors.text, font: .bold(.text)))
+                let moreLayout = TextViewLayout.init(.initialize(string: strings().storyItemTextShowMore, color: darkAppearance.colors.text, font: .bold(.text)))
                 moreLayout.measure(width: .greatestFiniteMagnitude)
                 current.update(moreLayout)
                 
@@ -667,7 +667,7 @@ final class StoryListView : Control, Notifable {
         func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
             
 
-            let textColor = storyTheme.colors.text
+            let textColor = darkAppearance.colors.text
             
             var validIds: [InlineStickerItemLayer.Key] = []
             var index: Int = textView.hashValue
@@ -962,7 +962,7 @@ final class StoryListView : Control, Notifable {
 
         ContextMenu.show(items: items, view: view, event: event, onClose: { [weak self] in
             self?.arguments?.deactivateMediaArea(mediaArea)
-        }, presentation: .current(storyTheme.colors))
+        }, presentation: .current(darkAppearance.colors))
     }
     
     func hideMediaAreaViewer() {

@@ -100,7 +100,7 @@ struct StoryReactionAction {
 
 private let storedTheme = generateTheme(palette: nightAccentPalette, cloudTheme: nil, bubbled: false, fontSize: 13, wallpaper: .init())
 
-var storyTheme: TelegramPresentationTheme {
+var darkAppearance: TelegramPresentationTheme {
     if theme.colors.isDark {
         return theme
     } else {
@@ -282,7 +282,7 @@ final class StoryInteraction : InterfaceObserver {
     func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
 
         var selectedRange = selectedRange ?? presentation.input.selectionRange
-        let inputText = presentation.input.attributedString(storyTheme).mutableCopy() as! NSMutableAttributedString
+        let inputText = presentation.input.attributedString(darkAppearance).mutableCopy() as! NSMutableAttributedString
         
         
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
@@ -596,14 +596,14 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
                 }
                 react(.init(item: value, fromRect: fromRect))
                 onClose()
-            }, onClose: onClose, presentation: storyTheme, name: name)
+            }, onClose: onClose, presentation: darkAppearance, name: name)
             window.show(view)
         }
         
         let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
             onClose()
             react(.init(item: value.toUpdate(), fromRect: fromRect))
-        }, radiusLayer: nil, revealReactions: reveal, presentation: storyTheme, hasBubble: false)
+        }, radiusLayer: nil, revealReactions: reveal, presentation: darkAppearance, hasBubble: false)
         
         return (panel, view)
     } |> deliverOnMainQueue
@@ -911,14 +911,14 @@ private final class StoryViewController: Control, Notifable {
             self.media.layer?.addSublayer(mediaLayer)
             
             let attr = NSMutableAttributedString()
-            _ = attr.append(string: title, color: storyTheme.colors.text, font: .normal(.text))
+            _ = attr.append(string: title, color: darkAppearance.colors.text, font: .normal(.text))
             attr.detectBoldColorInString(with: .medium(.text))
             let layout = TextViewLayout(attr)
             
             self.button.isHidden = !hasButton
             
             self.button.set(font: .medium(.text), for: .Normal)
-            self.button.set(color: storyTheme.colors.accent, for: .Normal)
+            self.button.set(color: darkAppearance.colors.accent, for: .Normal)
             self.button.set(text: strings().storyTooltipButtonViewInChat, for: .Normal)
             self.button.sizeToFit(NSMakeSize(10, 10), .zero, thatFit: false)
             
@@ -932,7 +932,7 @@ private final class StoryViewController: Control, Notifable {
             layout.interactions = .init(processURL: { url in
                 if let url = url as? String {
                     if url == "premium" {
-                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery, presentation: storyTheme), for: context.window)
+                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery, presentation: darkAppearance), for: context.window)
                     }
                 }
             })
@@ -1004,7 +1004,7 @@ private final class StoryViewController: Control, Notifable {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: storyTheme)
+                current = InputSwapSuggestionsPanel(textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: darkAppearance)
                 self.textInputSuggestionsView = current
                 isNew = true
             }
@@ -2026,7 +2026,7 @@ final class StoryModalController : ModalViewController, Notifable {
     private var arguments: StoryArguments?
 
     init(context: AccountContext, stories: StoryContentContext, initialId: StoryInitialIndex?) {
-        self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .stories, presentation: storyTheme)
+        self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .stories, presentation: darkAppearance)
         self.interactions = StoryInteraction()
         self.context = context
         self.initialId = initialId
@@ -2275,7 +2275,7 @@ final class StoryModalController : ModalViewController, Notifable {
                             items.append(contentsOf: block)
                         }
                         
-                        let menu = ContextMenu(presentation: AppMenu.Presentation(colors: storyTheme.colors))
+                        let menu = ContextMenu(presentation: AppMenu.Presentation(colors: darkAppearance.colors))
                         
                         for item in items {
                             menu.addItem(item)
@@ -2307,7 +2307,7 @@ final class StoryModalController : ModalViewController, Notifable {
         let share:(StoryContentItem)->Void = { [weak self] story in
             if let peerId = story.peerId, story.sharable {
                 let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id), isMention: false)
-                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id)), presentation: storyTheme), for: context.window)
+                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id)), presentation: darkAppearance), for: context.window)
             } else {
                 self?.genericView.showShareError()
             }
@@ -2389,7 +2389,7 @@ final class StoryModalController : ModalViewController, Notifable {
             case let .custom(_, file):
                 if let file = file, file.isPremiumEmoji, !context.isPremium {
                     showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: storyTheme), for: context.window)
+                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
                     })
                 } else {
                     self?.genericView.like(reaction)
@@ -2408,7 +2408,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     if let file = file, let text = file.customEmojiText {
                         if file.isPremiumEmoji, !context.isPremium {
                             showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: storyTheme), for: context.window)
+                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
                             })
                         } else {
                             sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil, nil)]), entryId, id, .reaction(reaction))
@@ -2431,7 +2431,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     }
                     _ = context.engine.messages.deleteStories(peerId: slice.peer.id, ids: [slice.item.storyItem.id]).start()
                 }
-            }, presentation: storyTheme)
+            }, presentation: darkAppearance)
         }
         
         self.chatInteraction.add(observer: self)
@@ -2485,7 +2485,7 @@ final class StoryModalController : ModalViewController, Notifable {
             } else {
                 if let peerId = story.peer?.id {
                     if let list = self?.genericView.storyViewList {
-                        showModal(with: StoryViewersModalController(context: context, list: list, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
+                        showModal(with: StoryViewersModalController(context: context, list: list, peerId: peerId, story: story.storyItem, presentation: darkAppearance, callback: { peerId in
                             openPeerInfo(peerId, nil)
                         }), for: context.window)
                     }
@@ -2538,7 +2538,7 @@ final class StoryModalController : ModalViewController, Notifable {
             guard let peer = story.peer else {
                 return nil
             }
-            let menu = ContextMenu(presentation: .current(storyTheme.colors))
+            let menu = ContextMenu(presentation: .current(darkAppearance.colors))
 
             if peer.id != context.peerId {
                 let stealthModeState = self?.arguments?.interaction.presentation.stealthMode
@@ -2601,7 +2601,7 @@ final class StoryModalController : ModalViewController, Notifable {
                         if stealthModeState?.activeUntilTimestamp != nil {
                             activeStealthMode()
                         } else {
-                            showModal(with: StoryStealthModeController(context, enableStealth: enableStealth, presentation: storyTheme), for: context.window)
+                            showModal(with: StoryStealthModeController(context, enableStealth: enableStealth, presentation: darkAppearance), for: context.window)
                         }
                     }, itemImage: MenuAnimation.menu_eye_slash.value))
                     
@@ -2690,7 +2690,7 @@ final class StoryModalController : ModalViewController, Notifable {
             switch area {
             case let .venue(_, venue):
                 if #available(macOS 10.13, *) {
-                    showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: storyTheme), for: context.window)
+                    showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: darkAppearance), for: context.window)
                 } else {
                     execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", venue.latitude)),\(String(format:"%f", venue.longitude))", false))
                 }
@@ -2771,7 +2771,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 }
             }
             if !updated.isEmpty {
-                showModal(with: PreviewSenderController(urls: updated, chatInteraction: chatInteraction, asMedia: asMedia, attributedString: attributedString, presentation: storyTheme), for: context.window)
+                showModal(with: PreviewSenderController(urls: updated, chatInteraction: chatInteraction, asMedia: asMedia, attributedString: attributedString, presentation: darkAppearance), for: context.window)
             }
         }
         
@@ -2799,7 +2799,7 @@ final class StoryModalController : ModalViewController, Notifable {
         }
         
         chatInteraction.attachFile = { value in
-            filePanel(canChooseDirectories: true, for: context.window, appearance: storyTheme.appearance, completion:{ result in
+            filePanel(canChooseDirectories: true, for: context.window, appearance: darkAppearance.appearance, completion:{ result in
                 if let result = result {
                     
                     let previous = result.count
@@ -2837,7 +2837,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     exts = videoExts
                 }
             }
-            filePanel(with: exts, canChooseDirectories: true, for: context.window, appearance: storyTheme.appearance, completion:{ result in
+            filePanel(with: exts, canChooseDirectories: true, for: context.window, appearance: darkAppearance.appearance, completion:{ result in
                 if let result = result {
                     let previous = result.count
                     var exceedSize: Int64?
