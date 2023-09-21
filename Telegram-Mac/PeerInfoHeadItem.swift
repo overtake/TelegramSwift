@@ -1115,7 +1115,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         let width = (item.blockWidth - (actionItemInsetWidth * CGFloat(items.count - 1)))
         
-        return max(actionItemWidth, width / CGFloat(items.count))
+        return max(actionItemWidth, min(170, width / CGFloat(items.count)))
     }
     
     private func layoutActionItems(_ items: [ActionItem], animated: Bool) {
