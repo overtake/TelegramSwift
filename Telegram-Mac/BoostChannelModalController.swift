@@ -219,7 +219,7 @@ private struct State : Equatable {
         }
     }
     var isAdmin: Bool {
-        return peer.peer.groupAccess.isCreator
+        return peer.peer.groupAccess.isCreator && self.boosted
     }
     var boosted: Bool {
         return canApplyStatus == .error(.peerBoostAlreadyActive)
