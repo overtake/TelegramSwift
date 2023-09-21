@@ -800,7 +800,7 @@ private final class AcceptRowView : TableRowView {
             if state.status.nextLevelBoosts == nil {
                 title = strings().modalOK
             } else {
-                if state.peer.peer.groupAccess.isCreator {
+                if state.isAdmin {
                     title = strings().modalCopyLink
                 } else {
                     if state.canApplyStatus == .error(.peerBoostAlreadyActive) {
@@ -892,7 +892,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     
-    if state.peer.peer.groupAccess.isCreator, state.status.nextLevelBoosts != nil {
+    if state.isAdmin, state.status.nextLevelBoosts != nil {
         
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
