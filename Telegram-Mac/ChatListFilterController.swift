@@ -570,7 +570,7 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
                 
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_include(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 20, right: 20), viewType: viewType, action: {
                         arguments.openInfo(peer.id)
                     }, contextMenuItems: {
                         return .single([ContextMenuItem(strings().chatListFilterIncludeRemoveChat, handler: {
@@ -644,7 +644,7 @@ private func chatListFilterEntries(state: State, includePeers: [Peer], excludePe
                     }
                     
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_exclude(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), comparable: nil, item: { initialSize, stableId in
-                        return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                        return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 20, right: 20), viewType: viewType, action: {
                             arguments.openInfo(peer.id)
                         }, contextMenuItems: {
                             return .single([ContextMenuItem.init(strings().chatListFilterExcludeRemoveChat, handler: {
@@ -1255,7 +1255,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         getController?()?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
         copyToClipboard(link)
     }, deleteLink: { link in
-        confirm(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, okTitle: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
+        verifyAlert_button(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, ok: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
             
             var index: Int? = nil
             updateState { current in
@@ -1354,7 +1354,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
     
     controller.backInvocation = { data, f in
         if stateValue.with({ $0.filter != $0.initialFilter }) {
-            confirm(for: context.window, header: strings().chatListFilterDiscardHeader, information: strings().chatListFilterDiscardText, okTitle: strings().chatListFilterDiscardOK, cancelTitle: strings().chatListFilterDiscardCancel, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().chatListFilterDiscardHeader, information: strings().chatListFilterDiscardText, ok: strings().chatListFilterDiscardOK, cancel: strings().chatListFilterDiscardCancel, successHandler: { _ in
                 f(true)
             })
         } else {

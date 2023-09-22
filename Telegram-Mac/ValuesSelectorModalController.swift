@@ -45,7 +45,7 @@ private enum ValuesSelectorEntry<T> : TableItemListNodeEntry where T : Equatable
                 arguments.selectItem(value)
             })
         case .sectionId:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }

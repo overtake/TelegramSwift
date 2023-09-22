@@ -2738,7 +2738,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     chatInteraction?.update({$0.withRecordingState(state)})
                                 })
                             } else {
-                                confirm(for: context.window, information: strings().requestAccesErrorHaveNotAccessVoiceMessages, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+                                verifyAlert_button(for: context.window, information: strings().requestAccesErrorHaveNotAccessVoiceMessages, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                                    switch result {
                                    case .thrid:
                                        openSystemSettings(.none)
@@ -2764,7 +2764,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 
                                 chatInteraction.update({$0.withRecordingState(state)})
                             } else {
-                                confirm(for: context.window, information: strings().requestAccesErrorHaveNotAccessVideoMessages, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
+                                verifyAlert_button(for: context.window, information: strings().requestAccesErrorHaveNotAccessVideoMessages, ok: strings().modalOK, cancel: "", option: strings().requestAccesErrorConirmSettings, successHandler: { result in
                                     switch result {
                                     case .thrid:
                                         openSystemSettings(.none)
@@ -2875,7 +2875,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if context.isPremium || context.premiumIsBlocked {
                     alert(for: context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)))
                 } else if !context.premiumIsBlocked {
-                    confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
+                    verifyAlert_button(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), ok: strings().alertOK, cancel: "", option: strings().premiumGetPremiumDouble, successHandler: { result in
                         switch result {
                         case .thrid:
                             showPremiumLimit(context: context, type: .caption(text.length))
@@ -3051,8 +3051,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             strongSelf.genericView.inputView.textView.shake()
                         }
                        
-                    } else {
-                        strongSelf.genericView.inputView.textView.shake()
                     }
                 }
             }
@@ -3324,7 +3322,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else if let `self` = self {
                                 let thrid:String? = self.mode == .scheduled ? nil : (canDeleteForEveryone ? peer.isUser ? strings().chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : strings().chatConfirmDeleteMessagesForEveryone : nil)
                                 
-                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, okTitle: strings().confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
+                                verifyAlert(for: context.window, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, ok: strings().confirmDelete, option: thrid, successHandler: { [weak strongSelf] result in
                                     
                                     guard let strongSelf = strongSelf else {return}
                                     
@@ -3559,7 +3557,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             if let editState = self?.chatInteraction.presentation.interfaceState.editState, let window = self?.window, let _ = message  {
                 if editState.inputState.inputText != editState.message.text {
-                    confirm(for: window, information: strings().chatEditCancelText, okTitle: strings().alertDiscard, successHandler: { _ in
+                    verifyAlert_button(for: window, information: strings().chatEditCancelText, ok: strings().alertDiscard, successHandler: { _ in
                         process()
                     })
                 } else {
@@ -3697,7 +3695,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 break
                             }
                             if let errorText = errorText {
-                                confirm(for: context.window, header: strings().botTransferOwnerErrorTitle, information: errorText, okTitle: strings().modalOK, cancelTitle: strings().modalCancel, thridTitle: install2Fa ? strings().botTransferOwnerErrorEnable2FA : nil, successHandler: { result in
+                                verifyAlert_button(for: context.window, header: strings().botTransferOwnerErrorTitle, information: errorText, ok: strings().modalOK, cancel: strings().modalCancel, option: install2Fa ? strings().botTransferOwnerErrorEnable2FA : nil, successHandler: { result in
                                     switch result {
                                     case .basic:
                                         break
@@ -3890,9 +3888,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let requestCount = strongSelf.requestCount
                                 let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated)
                                 let id = strongSelf.takeNextHistoryLocationId()
-                                delay(0.1, closure: { [weak strongSelf] in
-                                    strongSelf?.setLocation(.init(content: content, id: id))
-                                })
+                                strongSelf.setLocation(.init(content: content, id: id))
                             }
                         }))
                         //  }
@@ -4484,7 +4480,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             } else if let peer = self?.chatInteraction.peer {
                 if peer.groupAccess.canMakeVoiceChat {
-                    confirm(for: context.window, information: strings().voiceChatChatStartNew, okTitle: strings().voiceChatChatStartNewOK, successHandler: { _ in
+                    verifyAlert_button(for: context.window, information: strings().voiceChatChatStartNew, ok: strings().voiceChatChatStartNewOK, successHandler: { _ in
                         createVoiceChat(context: context, peerId: peerId)
                     })
                 }
@@ -4598,15 +4594,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let peer = self.chatInteraction.peer as? TelegramChannel {
                     if peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
                         
-                        self.updatePinnedDisposable.set(((dismiss ? confirmSignal(for: context.window, header: strings().chatConfirmUnpinHeader, information: strings().chatConfirmUnpin, okTitle: strings().chatConfirmUnpinOK) : Signal<Bool, NoError>.single(true)) |> filter {$0} |> mapToSignal { _ in return
-                                                            showModalProgress(signal: context.engine.messages.requestUpdatePinnedMessage(peerId: peerId, update: pinnedUpdate) |> `catch` {_ in .complete()
-                        }, for: context.window)}).start())
+                        let verify = verifyAlertSignal(for: context.window, header: strings().chatConfirmUnpinHeader, information: strings().chatConfirmUnpin, ok: strings().chatConfirmUnpinOK) |> map { $0 == .basic } |> filter { $0 }
+                        
+                        self.updatePinnedDisposable.set(((dismiss ? verify : Signal<Bool, NoError>.single(true)) |> mapToSignal { _ in return
+                            showModalProgress(signal: context.engine.messages.requestUpdatePinnedMessage(peerId: peerId, update: pinnedUpdate) |> `catch` { _ in .complete() }, for: context.window)}).start())
                     } else {
                         self.chatInteraction.update({$0.updatedInterfaceState({$0.withAddedDismissedPinnedIds([pinnedId])})})
                     }
                 } else if self.chatInteraction.peerId.namespace == Namespaces.Peer.CloudUser {
                     if dismiss {
-                        confirm(for: context.window, header: strings().chatConfirmUnpinHeader, information: strings().chatConfirmUnpin, okTitle: strings().chatConfirmUnpinOK, successHandler: { [weak self] _ in
+                        verifyAlert_button(for: context.window, header: strings().chatConfirmUnpinHeader, information: strings().chatConfirmUnpin, ok: strings().chatConfirmUnpinOK, successHandler: { [weak self] _ in
                             self?.updatePinnedDisposable.set(showModalProgress(signal: context.engine.messages.requestUpdatePinnedMessage(peerId: peerId, update: pinnedUpdate), for: context.window).start())
                         })
                     } else {
@@ -4614,7 +4611,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 } else if let peer = self.chatInteraction.peer as? TelegramGroup, peer.canPinMessage {
                     if dismiss {
-                        confirm(for: context.window, header: strings().chatConfirmUnpinHeader, information: strings().chatConfirmUnpin, okTitle: strings().chatConfirmUnpinOK, successHandler: {  [weak self]_ in
+                        verifyAlert_button(for: context.window, header: strings().chatConfirmUnpinHeader, information: strings().chatConfirmUnpin, ok: strings().chatConfirmUnpinOK, successHandler: {  [weak self]_ in
                             self?.updatePinnedDisposable.set(showModalProgress(signal: context.engine.messages.requestUpdatePinnedMessage(peerId: peerId, update: pinnedUpdate), for: context.window).start())
                         })
                     } else {
@@ -4661,7 +4658,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if canManagePin {
                 let count = self.chatInteraction.presentation.pinnedMessageId?.totalCount ?? 1
                 
-                confirm(for: context.window, information: strings().chatUnpinAllMessagesConfirmationCountable(count), okTitle: strings().chatConfirmUnpinOK, cancelTitle: strings().modalCancel, successHandler: { [weak self] _ in
+                verifyAlert_button(for: context.window, information: strings().chatUnpinAllMessagesConfirmationCountable(count), ok: strings().chatConfirmUnpinOK, cancel: strings().modalCancel, successHandler: { [weak self] _ in
                     let _ = (context.engine.messages.requestUnpinAllMessages(peerId: peerId, threadId: chatLocation.threadId)
                         |> deliverOnMainQueue).start(error: { _ in
                             
@@ -4697,7 +4694,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 title = strings().chatConfirmReportSpam
             }
             
-            self?.reportPeerDisposable.set((confirmSignal(for: context.window, header: strings().chatConfirmReportSpamHeader, information: title, okTitle: strings().messageContextReport, cancelTitle: strings().modalCancel) |> filter {$0} |> mapToSignal { [weak self] _ in
+            self?.reportPeerDisposable.set((verifyAlertSignal(for: context.window, header: strings().chatConfirmReportSpamHeader, information: title, ok: strings().messageContextReport, cancel: strings().modalCancel) |> filter { $0 == .basic } |> mapToSignal { [weak self] _ in
                 return context.engine.peers.reportPeer(peerId: peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] _ -> Signal<Void, NoError> in
                     if let peer = self?.chatInteraction.peer {
                         if peer.id.namespace == Namespaces.Peer.CloudUser {
@@ -4861,7 +4858,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.closeAfterPeek = { [weak self] peek in
             
             let showConfirm:()->Void = {
-                confirm(for: context.window, header: strings().privateChannelPeekHeader, information: strings().privateChannelPeekText, okTitle: strings().privateChannelPeekOK, cancelTitle: strings().privateChannelPeekCancel, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().privateChannelPeekHeader, information: strings().privateChannelPeekText, ok: strings().privateChannelPeekOK, cancel: strings().privateChannelPeekCancel, successHandler: { _ in
                     self?.chatInteraction.joinChannel()
                 }, cancelHandler: {
                     self?.navigationController?.back()
@@ -6304,7 +6301,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             switch self.mode {
             case .scheduled:
                 items.append(ContextMenuItem(strings().chatContextClearScheduled, handler: {
-                    confirm(for: context.window, header: strings().chatContextClearScheduledConfirmHeader, information: strings().chatContextClearScheduledConfirmInfo, okTitle: strings().chatContextClearScheduledConfirmOK, successHandler: { _ in
+                    verifyAlert_button(for: context.window, header: strings().chatContextClearScheduledConfirmHeader, information: strings().chatContextClearScheduledConfirmInfo, ok: strings().chatContextClearScheduledConfirmOK, successHandler: { _ in
                         _ = context.engine.messages.clearHistoryInteractively(peerId: peerId, threadId: nil, type: .scheduledMessages).start()
                     })
                 }, itemImage: MenuAnimation.menu_schedule_message.value))
@@ -6520,8 +6517,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         } |> deliverOnMainQueue  |> mapToSignal { peer -> Signal<PeerId, NoError> in
             if let peer = peer {
-                let confirm = confirmSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), okTitle: strings().peerInfoConfirmSecretChatOK)
-                return confirm |> filter {$0} |> mapToSignal { (_) -> Signal<PeerId, NoError> in
+                let confirm = verifyAlertSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), ok: strings().peerInfoConfirmSecretChatOK)
+                return confirm |> filter { $0 == .basic } |> mapToSignal { (_) -> Signal<PeerId, NoError> in
                     return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: context.window)
                 }
             } else {
@@ -6819,7 +6816,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .sendingTooFast:
                     text = strings().chatSendMessageErrorTooFast
                 }
-                confirm(for: context.window, information: text, cancelTitle: "", thridTitle: strings().genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
+                verifyAlert_button(for: context.window, information: text, cancel: "", option: strings().genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
                     guard let strongSelf = strongSelf else {return}
                     
                     switch confirm {
@@ -6977,19 +6974,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .invoked
         }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
         
-//        #if DEBUG
-//        var shown: Bool = true
-//        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-//            if shown {
-//                self?.liveTranslate?.hideTranslation()
-//            } else {
-//                self?.liveTranslate?.showTranslation()
-//            }
-//            shown = !shown
-//            return .invoked
-//        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
-//
-//        #endif
+        #if DEBUG
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.chatInteraction.blockContact()
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+
+        #endif
         
        
     
@@ -7159,7 +7150,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             for suggestion in suggestions {
                 switch suggestion {
                 case .convertToGigagroup:
-                    confirm(for: context.window, header: strings().broadcastGroupsLimitAlertTitle, information: strings().broadcastGroupsLimitAlertText(Formatter.withSeparator.string(from: NSNumber(value: context.limitConfiguration.maxSupergroupMemberCount))!), okTitle: strings().broadcastGroupsLimitAlertLearnMore, successHandler: { _ in
+                    verifyAlert_button(for: context.window, header: strings().broadcastGroupsLimitAlertTitle, information: strings().broadcastGroupsLimitAlertText(Formatter.withSeparator.string(from: NSNumber(value: context.limitConfiguration.maxSupergroupMemberCount))!), ok: strings().broadcastGroupsLimitAlertLearnMore, successHandler: { _ in
                         showModal(with: GigagroupLandingController(context: context, peerId: peerId), for: context.window)
                     }, cancelHandler: {
                         showModalText(for: context.window, text: strings().broadcastGroupsLimitAlertSettingsTip)

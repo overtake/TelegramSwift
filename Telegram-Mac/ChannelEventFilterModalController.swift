@@ -59,72 +59,72 @@ private enum ChannelEventFilterEntryId : Hashable {
 }
 
 private enum ChannelEventFilterEntry : TableItemListNodeEntry {
-    case section(Int32)
+    case section(Int32, height: CGFloat)
     case header(Int32, Int32, text: String)
-    case allEvents(Int32, Int32, enabled: Bool)
-    case filter(Int32, Int32, flag:FilterEvents, name:String, enabled: Bool)
-    case allAdmins(Int32, Int32, enabled: Bool)
-    case admin(Int32, Int32, peer: RenderedChannelParticipant, enabled: Bool)
-    case adminsLoading(Int32, Int32)
+    case allEvents(Int32, Int32, enabled: Bool, viewType: GeneralViewType)
+    case filter(Int32, Int32, flag:FilterEvents, name:String, enabled: Bool, viewType: GeneralViewType)
+    case allAdmins(Int32, Int32, enabled: Bool, viewType: GeneralViewType)
+    case admin(Int32, Int32, peer: RenderedChannelParticipant, enabled: Bool, viewType: GeneralViewType)
+    case adminsLoading(Int32, Int32, viewType: GeneralViewType)
     var stableId:ChannelEventFilterEntryId {
         switch self {
-        case .section(let value):
+        case .section(let value, _):
             return .section(value)
         case .header(_, let value, _):
             return .header(value)
         case .allEvents:
             return .allEvents
-        case .filter(_, _, let value, _, _):
+        case .filter(_, _, let value, _, _, _):
             return .filter(value)
         case .adminsLoading:
             return .adminsLoading
         case .allAdmins:
             return .allAdmins
-        case .admin(_, _, let value, _):
+        case .admin(_, _, let value, _, _):
             return .admin(value.peer.id)
         }
     }
     
     var index:Int32 {
         switch self {
-        case let .section(section):
+        case let .section(section, _):
             return (section * 1000) - section
         case let .header(section, index, _):
             return (section * 1000) + index
-        case .allEvents(let section, let index, _):
+        case .allEvents(let section, let index, _, _):
             return (section * 1000) + index
-        case let .filter(section, index, _, _, _):
+        case let .filter(section, index, _, _, _, _):
             return (section * 1000) + index
-        case .allAdmins(let section, let index, _):
+        case .allAdmins(let section, let index, _, _):
             return (section * 1000) + index
-        case let .admin(section, index, _, _):
+        case let .admin(section, index, _, _, _):
             return (section * 1000) + index
-        case let .adminsLoading(section, index):
+        case let .adminsLoading(section, index, _):
             return (section * 1000) + index
         }
     }
     
     func item(_ arguments: ChannelFilterArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case .section:
-            return GeneralRowItem(initialSize, height: 20, stableId: stableId)
+        case let .section(_, height):
+            return GeneralRowItem(initialSize, height: height, stableId: stableId, backgroundColor: .clear)
         case .header(_, _, let text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text)
-        case .allAdmins(_, _, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chanelEventFilterAllAdmins, type: .switchable (enabled), action: {
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: .textTopItem)
+        case .allAdmins(_, _, let enabled, let viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chanelEventFilterAllAdmins, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleAllAdmins()
             })
-        case .allEvents(_, _, let enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chanelEventFilterAllEvents, type: .switchable (enabled), action: {
+        case .allEvents(_, _, let enabled, let viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().chanelEventFilterAllEvents, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleAllEvents()
             })
-        case let .filter(_, _, flag, name, enabled):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, type: .selectable(enabled), action: {
+        case let .filter(_, _, flag, name, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleFlags(flag)
             })
-        case .adminsLoading:
-            return LoadingTableItem(initialSize, height: 30, stableId: stableId)
-        case let .admin( _, _, participant, enabled):
+        case .adminsLoading(_, _, let viewType):
+            return LoadingTableItem(initialSize, height: 30, stableId: stableId, viewType: viewType)
+        case let .admin( _, _, participant, enabled, viewType):
             
             let status:String
             switch participant.participant {
@@ -133,7 +133,7 @@ private enum ChannelEventFilterEntry : TableItemListNodeEntry {
             case .member:
                 status = strings().adminsAdmin
             }
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(enabled), action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 40, photoSize: NSMakeSize(30, 30), status: status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: .plain, generalType: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleAdmin(participant.peer.id)
             })
         }
@@ -303,36 +303,59 @@ private func channelEventFilterEntries(state: ChannelEventFilterState, peer:Peer
     var section:Int32 = 1
     var index:Int32 = 1
     
-    entries.append(.section(section))
+    entries.append(.section(section, height: 10))
     section += 1
     
     entries.append(.header(section, index, text: strings().channelEventFilterEventsHeader))
     index += 1
-    entries.append(.allEvents(section, index, enabled: state.eventsException.isEmpty))
+    entries.append(.allEvents(section, index, enabled: state.eventsException.isEmpty, viewType: .firstItem))
     index += 1
     
     
-    for flag in eventFilters(peer.isChannel) {
-        entries.append(.filter(section, index, flag: flag, name: flag.localizedString(peer.isChannel), enabled: !state.eventsException.contains(flag)))
+    let filters = eventFilters(peer.isChannel)
+    for (i, flag) in filters.enumerated() {
+        var viewType: GeneralViewType = bestGeneralViewType(filters, for: i)
+        if i == 0 {
+            if i == filters.count - 1 {
+                viewType = .lastItem
+            } else {
+                viewType = .innerItem
+            }
+        }
+        entries.append(.filter(section, index, flag: flag, name: flag.localizedString(peer.isChannel), enabled: !state.eventsException.contains(flag), viewType: viewType))
     }
     
-    entries.append(.section(section))
+    entries.append(.section(section, height: 20))
     section += 1
     
     entries.append(.header(section, index, text: strings().channelEventFilterAdminsHeader))
     index += 1
     
-    entries.append(.allAdmins(section, index, enabled: state.adminsException.isEmpty))
+    let hasAdmins = admins == nil || admins!.count > 0
+    
+    entries.append(.allAdmins(section, index, enabled: state.adminsException.isEmpty, viewType: hasAdmins ? .firstItem : .singleItem))
     index += 1
     
     if let admins = admins {
-        for admin in admins {
-            entries.append(.admin(section, index, peer: admin, enabled: !state.adminsException.contains(admin.peer.id)))
+        for (i, admin) in admins.enumerated() {
+            var viewType: GeneralViewType = bestGeneralViewType(admins, for: i)
+            if i == 0 {
+                if i == admins.count - 1 {
+                    viewType = .lastItem
+                } else {
+                    viewType = .innerItem
+                }
+            }
+            entries.append(.admin(section, index, peer: admin, enabled: !state.adminsException.contains(admin.peer.id), viewType: viewType))
         }
     } else {
-        entries.append(.adminsLoading(section, index))
+        entries.append(.adminsLoading(section, index, viewType: .lastItem))
         index += 1
     }
+    
+    entries.append(.section(section, height: 20))
+    section += 1
+
     
     return entries
 }
@@ -360,7 +383,7 @@ class ChannelEventFilterModalController: ModalViewController {
         self.admins = admins
         self.updated = updated
         _ = self.stateValue.swap(state)
-        super.init(frame: NSMakeRect(0, 0, 300, 300))
+        super.init(frame: NSMakeRect(0, 0, 340, 300))
     }
     
     override var dynamicSize: Bool {
@@ -368,7 +391,7 @@ class ChannelEventFilterModalController: ModalViewController {
     }
     
     override func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, genericView.listHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 120, genericView.listHeight)), animated: false)
     }
     
     override func viewClass() -> AnyClass {
@@ -381,7 +404,7 @@ class ChannelEventFilterModalController: ModalViewController {
     
     private func updateSize(_ animated: Bool) {
         if let contentSize = self.window?.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 70, genericView.listHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 120, genericView.listHeight)), animated: animated)
         }
     }
     
@@ -453,10 +476,36 @@ class ChannelEventFilterModalController: ModalViewController {
         
         genericView.merge(with: signal |> afterNext { [weak self] result -> TableUpdateTransition in
             self?.updateSize(false)
+            self?.readyOnce()
             return result
         })
+                
         
-        readyOnce()
+        genericView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            if self.genericView.documentSize.height > self.genericView.frame.height {
+                self.genericView.verticalScrollElasticity = .automatic
+            } else {
+                self.genericView.verticalScrollElasticity = .none
+            }
+            if position.rect.minY - self.genericView.frame.height > 0 {
+                self.modal?.makeHeaderState(state: .active, animated: true)
+            } else {
+                self.modal?.makeHeaderState(state: .normal, animated: true)
+            }
+        }))
+        
+        genericView.getBackgroundColor = {
+            theme.colors.listBackground
+        }
+        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        genericView.notifyScrollHandlers()
     }
     
     private func noticeUpdated() {
@@ -465,9 +514,21 @@ class ChannelEventFilterModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak self] in
             self?.noticeUpdated()
-        }, cancelTitle: strings().modalCancel, drawBorder: true, height: 40)
+        }, singleButton: true)
+    }
+    
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: strings().channelEventLogsFilterTitle), right: nil)
+    }
+    override var containerBackground: NSColor {
+        return theme.colors.listBackground
+    }
+    override var modalTheme: ModalViewController.Theme {
+        return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground, activeBackground: presentation.colors.background, activeBorder: presentation.colors.border)
     }
     
     deinit {

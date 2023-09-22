@@ -34,9 +34,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
-  
+//
     let icon = iconForSession(state.session)
     if let sticker = icon.1 {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: nil, comparable: nil, item: { initialSize, stableId in
@@ -58,18 +58,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("application"), data: InputDataGeneralData(name: strings().sessionPreviewApp, color: theme.colors.text, type: .context(state.session.appName + ", " + state.session.appVersion), viewType: .firstItem, enabled: true)))
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("application"), data: InputDataGeneralData(name: strings().sessionPreviewApp, color: theme.colors.text, type: .context(state.session.appName + ", " + state.session.appVersion), viewType: state.session.ip.isEmpty ? .singleItem : .firstItem, enabled: true)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("ip"), data: InputDataGeneralData(name: strings().sessionPreviewIp, color: theme.colors.text, type: .context(state.session.ip), viewType: .innerItem, enabled: true)))
-    index += 1
+    if !state.session.ip.isEmpty {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("ip"), data: InputDataGeneralData(name: strings().sessionPreviewIp, color: theme.colors.text, type: .context(state.session.ip), viewType: .innerItem, enabled: true)))
+        index += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("location"), data: InputDataGeneralData(name: strings().sessionPreviewLocation, color: theme.colors.text, type: .context(state.session.country), viewType: .lastItem, enabled: true)))
+        index += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().sessionPreviewIpDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("location"), data: InputDataGeneralData(name: strings().sessionPreviewLocation, color: theme.colors.text, type: .context(state.session.country), viewType: .lastItem, enabled: true)))
-    index += 1
-
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().sessionPreviewIpDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
+    }
 
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -93,7 +96,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -136,19 +139,19 @@ func SessionModalController(context: AccountContext, session: RecentAccountSessi
         }, drawBorder: true, height: 50, singleButton: true)
     } else {
         modalInteractions = ModalInteractions(acceptTitle: strings().sessionPreviewTerminateSession, accept: {
-            confirm(for: context.window, information: strings().recentSessionsConfirmRevoke, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().recentSessionsConfirmRevoke, successHandler: { _ in
                 _ = context.activeSessionsContext.remove(hash: session.hash).start()
                 close?()
             })
-        }, drawBorder: true, height: 50, singleButton: true)
+        }, singleButton: true)
     }
     
     DispatchQueue.main.async {
         modalInteractions.updateDone { button in
             if session.isCurrent {
-                button.set(color: theme.colors.accent, for: .Normal)
+                button.set(background: theme.colors.accent, for: .Normal)
             } else {
-                button.set(color: theme.colors.redUI, for: .Normal)
+                button.set(background: theme.colors.redUI, for: .Normal)
             }
         }
     }

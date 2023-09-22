@@ -210,7 +210,7 @@ class ChatRecorderOverlayWindowController : NSObject {
             self.chatInteraction.update({$0.withoutRecordingState()})
         }
         if state == .fixed {
-            confirm(for: parent, information: strings().chatRecordingCancel, okTitle: strings().alertDiscard, cancelTitle: strings().alertNO, successHandler: { _ in
+            verifyAlert_button(for: parent, information: strings().chatRecordingCancel, ok: strings().alertDiscard, cancel: strings().alertNO, successHandler: { _ in
                 proccess()
             })
         } else {

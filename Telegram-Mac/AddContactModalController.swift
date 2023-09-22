@@ -58,7 +58,7 @@ private func addContactEntries(state: AddContactState) -> [InputDataEntry] {
     var sectionId: Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
 
     entries.append(InputDataEntry.input(sectionId: sectionId, index: index, value: .string(state.firstName), error: state.errors[_id_input_first_name], identifier: _id_input_first_name, mode: .plain, data: InputDataRowData(viewType: .firstItem), placeholder: nil, inputPlaceholder: strings().contactsFirstNamePlaceholder, filter: { $0 }, limit: 255))
@@ -73,7 +73,7 @@ private func addContactEntries(state: AddContactState) -> [InputDataEntry] {
     index += 1
     
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -163,9 +163,9 @@ func AddContactModalController(_ context: AccountContext) -> InputDataModalContr
     })
     
     
-    let modalInteractions = ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalCreate, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, drawBorder: true, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(300, 300))
     

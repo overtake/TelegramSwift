@@ -525,7 +525,8 @@ func initialize() -> [String] {
     array.append("profile_stats")
     array.append("profile_unblock")
     array.append("profile_translate")
-    
+    array.append("profile_join_channel")
+
     array.append("chat_quiz_explanation")
     array.append("chat_quiz_explanation_bubble_incoming")
     array.append("chat_quiz_explanation_bubble_outgoing")

@@ -56,6 +56,7 @@ enum PremiumLogEventsSource : Equatable {
     case translations
     case stories__stealth_mode
     case stories__save_to_gallery
+    case channel_boost(PeerId)
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -90,6 +91,8 @@ enum PremiumLogEventsSource : Equatable {
             return "stories__viewers"
         case .stories__save_to_gallery:
             return "stories__save_to_gallery"
+        case let .channel_boost(peerId):
+            return "channel_boost__\(peerId.id._internalGetInt64Value())"
         }
     }
     
@@ -123,6 +126,8 @@ enum PremiumLogEventsSource : Equatable {
             return .stories
         case .stories__save_to_gallery:
             return .stories
+        case .channel_boost:
+            return nil
         }
     }
     
@@ -821,7 +826,7 @@ final class PremiumBoardingController : ModalViewController {
         self.source = source
         self.openFeatures = openFeatures
         self.presentation = presentation
-        super.init(frame: NSMakeRect(0, 0, 380, 300))
+        super.init(frame: NSMakeRect(0, 0, 380, 530))
     }
     
     override func measure(size: NSSize) {
@@ -1064,7 +1069,7 @@ final class PremiumBoardingController : ModalViewController {
         }))
 
         
-        let stateSignal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
+        let stateSignal = statePromise.get() |> filter { $0.period != nil } |> deliverOnPrepareQueue |> map { state in
             return (InputDataSignalValue(entries: entries(state, arguments: arguments)), state)
         }
         
@@ -1090,7 +1095,7 @@ final class PremiumBoardingController : ModalViewController {
         actionsDisposable.add(signal.start(next: { [weak self] transition in
             self?.genericView.tableView.merge(with: transition.0)
             self?.genericView.update(animated: transition.0.animated, arguments: arguments, state: transition.1)
-            self?.updateSize(transition.0.animated)
+            self?.updateSize(true)
             self?.readyOnce()
         }))
         

@@ -1219,6 +1219,8 @@ public final class L10n {
   public static var channelBlockUserCanSendMessages: String  { return L10n.tr("Localizable", "Channel.BlockUser.CanSendMessages") }
   /// Can Send Stickers & GIFs
   public static var channelBlockUserCanSendStickers: String  { return L10n.tr("Localizable", "Channel.BlockUser.CanSendStickers") }
+  /// This channel is private.
+  public static var channelBoostPrivateError: String  { return L10n.tr("Localizable", "Channel.Boost.PrivateError") }
   /// %d
   public static func channelCommentsCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Count_countable", p1)
@@ -1457,6 +1459,8 @@ public final class L10n {
   public static func channelEventLogServiceUpdateLeft(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.UpdateLeft", p1)
   }
+  /// Chat Admins
+  public static var channelEventLogsFilterTitle: String  { return L10n.tr("Localizable", "Channel.EventLogs.Filter.Title") }
   /// This option is disabled in channel Permissions for all members.
   public static var channelExceptionDisabledOptionChannel: String  { return L10n.tr("Localizable", "Channel.Exception.DisabledOption.Channel") }
   /// This option is disabled in group's Permissions for all members.
@@ -1657,6 +1661,146 @@ public final class L10n {
   public static var channelBlacklistEmptyDescrpition: String  { return L10n.tr("Localizable", "ChannelBlacklist.EmptyDescrpition") }
   /// RESTRICTED
   public static var channelBlacklistRestricted: String  { return L10n.tr("Localizable", "ChannelBlacklist.Restricted") }
+  /// Boost Channel
+  public static var channelBoostBoostChannel: String  { return L10n.tr("Localizable", "ChannelBoost.BoostChannel") }
+  /// %1$@ needed to be able to post %2$@.
+  public static func channelBoostBoostedChannelMoreRequired(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.BoostedChannelMoreRequired", p1, p2)
+  }
+  /// This channel reached **Level %1$@** and can now post %2$@.
+  public static func channelBoostBoostedChannelReachedLevel(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.BoostedChannelReachedLevel", p1, p2)
+  }
+  /// This channel reached **Level 1** and can now post stories.
+  public static var channelBoostEnabledStoriesForChannelText: String  { return L10n.tr("Localizable", "ChannelBoost.EnabledStoriesForChannelText") }
+  /// Enable Stories
+  public static var channelBoostEnableStories: String  { return L10n.tr("Localizable", "ChannelBoost.EnableStories") }
+  /// Enable Stories for This Channel
+  public static var channelBoostEnableStoriesForChannel: String  { return L10n.tr("Localizable", "ChannelBoost.EnableStoriesForChannel") }
+  /// **%1$@** needs %2$@ to enable posting stories. Help make it possible!
+  public static func channelBoostEnableStoriesForChannelText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableStoriesForChannelText", p1, p2)
+  }
+  /// Enable Stories for The Channel
+  public static var channelBoostEnableStoriesForOtherChannel: String  { return L10n.tr("Localizable", "ChannelBoost.EnableStoriesForOtherChannel") }
+  /// This channel needs **%1$@** to enable stories.
+  public static func channelBoostEnableStoriesMoreRequired(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableStoriesMoreRequired", p1)
+  }
+  /// Your channel needs %1$@ to enable posting stories.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostEnableStoriesText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.EnableStoriesText", p1)
+  }
+  /// Help Upgrade This Channel
+  public static var channelBoostHelpUpgradeChannel: String  { return L10n.tr("Localizable", "ChannelBoost.HelpUpgradeChannel") }
+  /// **%1$@** needs %2$@ to be able to post %3$@.
+  public static func channelBoostHelpUpgradeChannelText(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.HelpUpgradeChannelText", p1, p2, p3)
+  }
+  /// Increase Story Limit
+  public static var channelBoostIncreaseLimit: String  { return L10n.tr("Localizable", "ChannelBoost.IncreaseLimit") }
+  /// Your channel needs %1$@ to post %2$@.\n\nAsk your **Premium** subscribers to boost your channel with this link:
+  public static func channelBoostIncreaseLimitText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.IncreaseLimitText", p1, p2)
+  }
+  /// Level %@
+  public static func channelBoostLevel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Level", p1)
+  }
+  /// Maximum Level Reached
+  public static var channelBoostMaxLevelReached: String  { return L10n.tr("Localizable", "ChannelBoost.MaxLevelReached") }
+  /// This channel reached **Level %1$@** and can now post %2$@.
+  public static func channelBoostMaxLevelReachedText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MaxLevelReachedText", p1, p2)
+  }
+  /// %1$@ reached **Level %2$@** and can now post %3$@.
+  public static func channelBoostMaxLevelReachedTextAuthor(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MaxLevelReachedTextAuthor", p1, p2, p3)
+  }
+  /// %d
+  public static func channelBoostMoreBoostsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_countable", p1)
+  }
+  /// **%d** more boosts
+  public static func channelBoostMoreBoostsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_few", p1)
+  }
+  /// **%d** more boosts
+  public static func channelBoostMoreBoostsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_many", p1)
+  }
+  /// **%d** more boost
+  public static func channelBoostMoreBoostsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_one", p1)
+  }
+  /// **%d** more boosts
+  public static func channelBoostMoreBoostsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_other", p1)
+  }
+  /// **%d** more boosts
+  public static func channelBoostMoreBoostsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_two", p1)
+  }
+  /// **%d** more boost
+  public static func channelBoostMoreBoostsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.MoreBoosts_zero", p1)
+  }
+  /// Replace
+  public static var channelBoostReplace: String  { return L10n.tr("Localizable", "ChannelBoost.Replace") }
+  /// You currently boost **%1$@**. Do you want to boost **%2$@** instead?
+  public static func channelBoostReplaceBoost(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.ReplaceBoost", p1, p2)
+  }
+  /// %d
+  public static func channelBoostStoriesPerDayCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.StoriesPerDay_countable", p1)
+  }
+  /// **%d** stories per day
+  public static func channelBoostStoriesPerDayFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.StoriesPerDay_few", p1)
+  }
+  /// **%d** stories per day
+  public static func channelBoostStoriesPerDayMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.StoriesPerDay_many", p1)
+  }
+  /// **%d** story per day
+  public static func channelBoostStoriesPerDayOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.StoriesPerDay_one", p1)
+  }
+  /// **%d** stories per day
+  public static func channelBoostStoriesPerDayOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.StoriesPerDay_other", p1)
+  }
+  /// **%d** stories per day
+  public static func channelBoostStoriesPerDayTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.StoriesPerDay_two", p1)
+  }
+  /// **%d** stories per day
+  public static func channelBoostStoriesPerDayZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.StoriesPerDay_zero", p1)
+  }
+  /// You Boosted %1$@!
+  public static func channelBoostYouBoostedChannel(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.YouBoostedChannel", p1)
+  }
+  /// You Boosted The Channel
+  public static var channelBoostYouBoostedOtherChannel: String  { return L10n.tr("Localizable", "ChannelBoost.YouBoostedOtherChannel") }
+  /// You can change the channel you boost only once a day. Next time you can boost is in **%@**.
+  public static func channelBoostErrorBoostTooOftenText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Error.BoostTooOftenText", p1)
+  }
+  /// Can't Boost Too Often
+  public static var channelBoostErrorBoostTooOftenTitle: String  { return L10n.tr("Localizable", "ChannelBoost.Error.BoostTooOftenTitle") }
+  /// Because your **Telegram Premium** subscription was gifted to you, you can't use it to boost channels.
+  public static var channelBoostErrorGiftedPremiumNotAllowedText: String  { return L10n.tr("Localizable", "ChannelBoost.Error.GiftedPremiumNotAllowedText") }
+  /// Can't Boost with Gifted Premium
+  public static var channelBoostErrorGiftedPremiumNotAllowedTitle: String  { return L10n.tr("Localizable", "ChannelBoost.Error.GiftedPremiumNotAllowedTitle") }
+  /// Only **Telegram Premium** subscribers can boost channels. Do you want to subscribe to **Telegram Premium**?
+  public static var channelBoostErrorPremiumNeededText: String  { return L10n.tr("Localizable", "ChannelBoost.Error.PremiumNeededText") }
+  /// Premium Needed
+  public static var channelBoostErrorPremiumNeededTitle: String  { return L10n.tr("Localizable", "ChannelBoost.Error.PremiumNeededTitle") }
+  /// Read More
+  public static var channelBoostErrorPremiumNeededTextOK: String  { return L10n.tr("Localizable", "ChannelBoost.Error.PremiumNeededText.OK") }
   /// Channel Info
   public static var channelEventFilterChannelInfo: String  { return L10n.tr("Localizable", "ChannelEventFilter.ChannelInfo") }
   /// Deleted Messages
@@ -4607,6 +4751,8 @@ public final class L10n {
   public static var chatListSwipingUnpin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unpin") }
   /// Unread
   public static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
+  /// BOOST
+  public static var chatMessageBoostChannel: String  { return L10n.tr("Localizable", "ChatMessage.BoostChannel") }
   /// Open App
   public static var chatMessageOpenApp: String  { return L10n.tr("Localizable", "ChatMessage.OpenApp") }
   /// VIEW CHAT LIST
@@ -7445,6 +7591,10 @@ public final class L10n {
   public static var modalCancel: String  { return L10n.tr("Localizable", "Modal.Cancel") }
   /// Copy Link
   public static var modalCopyLink: String  { return L10n.tr("Localizable", "Modal.CopyLink") }
+  /// Create
+  public static var modalCreate: String  { return L10n.tr("Localizable", "Modal.Create") }
+  /// Delete
+  public static var modalDelete: String  { return L10n.tr("Localizable", "Modal.Delete") }
   /// Done
   public static var modalDone: String  { return L10n.tr("Localizable", "Modal.Done") }
   /// Not Now
@@ -8009,9 +8159,13 @@ public final class L10n {
   public static var paymentsWarninTitle: String  { return L10n.tr("Localizable", "Payments.WarninTitle") }
   /// Invoice doesn't exist
   public static var paymentsInvoiceNotExists: String  { return L10n.tr("Localizable", "Payments.Invoice.NotExists") }
+  /// I accept the [Terms of Service]() of **%1$@**.
+  public static func paymentsNonRecurrentAccept(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Payments.NonRecurrent.Accept", p1)
+  }
   /// Tip
   public static var paymentsReceiptTip: String  { return L10n.tr("Localizable", "Payments.Receipt.Tip") }
-  /// I accept [Terms of Service]() of **%@**.
+  /// I accept [Terms of Service]() of **%1$@**.
   public static func paymentsRecurrentAccept(_ p1: String) -> String {
     return L10n.tr("Localizable", "Payments.Recurrent.Accept", p1)
   }
@@ -8507,6 +8661,8 @@ public final class L10n {
   public static var peerInfoActionDiscussion: String  { return L10n.tr("Localizable", "PeerInfo.Action.Discussion") }
   /// Gift Premium
   public static var peerInfoActionGiftPremium: String  { return L10n.tr("Localizable", "PeerInfo.Action.GiftPremium") }
+  /// Join
+  public static var peerInfoActionJoinChannel: String  { return L10n.tr("Localizable", "PeerInfo.Action.JoinChannel") }
   /// Leave
   public static var peerInfoActionLeave: String  { return L10n.tr("Localizable", "PeerInfo.Action.Leave") }
   /// Live Stream
@@ -11453,6 +11609,8 @@ public final class L10n {
   public static var slowModePreviewSenderMediaTooltip: String  { return L10n.tr("Localizable", "SlowMode.PreviewSender.MediaTooltip") }
   /// Slow mode is enabled. This text is too long to send as one message.
   public static var slowModeTooLongError: String  { return L10n.tr("Localizable", "SlowMode.TooLong.Error") }
+  /// Boosts
+  public static var statsBoosts: String  { return L10n.tr("Localizable", "Stats.Boosts") }
   /// ACTIONS
   public static var statsGroupActionsTitle: String  { return L10n.tr("Localizable", "Stats.GroupActionsTitle") }
   /// GROWTH
@@ -11691,6 +11849,64 @@ public final class L10n {
   public static func statsShowMoreZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stats.ShowMore_zero", p1)
   }
+  /// Statistics
+  public static var statsStatistics: String  { return L10n.tr("Localizable", "Stats.Statistics") }
+  /// %d
+  public static func statsBoostsBoostersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.Boosters_countable", p1)
+  }
+  /// %d BOOSTERS
+  public static func statsBoostsBoostersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.Boosters_few", p1)
+  }
+  /// %d BOOSTERS
+  public static func statsBoostsBoostersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.Boosters_many", p1)
+  }
+  /// %d BOOSTER
+  public static func statsBoostsBoostersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.Boosters_one", p1)
+  }
+  /// %d BOOSTERS
+  public static func statsBoostsBoostersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.Boosters_other", p1)
+  }
+  /// %d BOOSTERS
+  public static func statsBoostsBoostersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.Boosters_two", p1)
+  }
+  /// %d BOOSTERS
+  public static func statsBoostsBoostersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.Boosters_zero", p1)
+  }
+  /// NO BOOSTERS
+  public static var statsBoostsBoostersZeroValueHolder: String  { return L10n.tr("Localizable", "Stats.Boosts.Boosters_ZeroValueHolder") }
+  /// Your channel is currently boosted by these users.
+  public static var statsBoostsBoostersInfo: String  { return L10n.tr("Localizable", "Stats.Boosts.BoostersInfo") }
+  /// BOOSTERS
+  public static var statsBoostsBoostersNone: String  { return L10n.tr("Localizable", "Stats.Boosts.BoostersNone") }
+  /// Boosts to Level Up
+  public static var statsBoostsBoostsToLevelUp: String  { return L10n.tr("Localizable", "Stats.Boosts.BoostsToLevelUp") }
+  /// Existing Boosts
+  public static var statsBoostsExistingBoosts: String  { return L10n.tr("Localizable", "Stats.Boosts.ExistingBoosts") }
+  /// Boost expires on %@
+  public static func statsBoostsExpiresOn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Stats.Boosts.ExpiresOn", p1)
+  }
+  /// Level
+  public static var statsBoostsLevel: String  { return L10n.tr("Localizable", "Stats.Boosts.Level") }
+  /// LINK FOR BOOSTING
+  public static var statsBoostsLinkHeader: String  { return L10n.tr("Localizable", "Stats.Boosts.LinkHeader") }
+  /// Share this link with your subscribers to get more boosts.
+  public static var statsBoostsLinkInfo: String  { return L10n.tr("Localizable", "Stats.Boosts.LinkInfo") }
+  /// No users currently boost your channel
+  public static var statsBoostsNoBoostersYet: String  { return L10n.tr("Localizable", "Stats.Boosts.NoBoostersYet") }
+  /// OVERVIEW
+  public static var statsBoostsOverviewHeader: String  { return L10n.tr("Localizable", "Stats.Boosts.OverviewHeader") }
+  /// Premium Subscribers
+  public static var statsBoostsPremiumSubscribers: String  { return L10n.tr("Localizable", "Stats.Boosts.PremiumSubscribers") }
+  /// Show More
+  public static var statsBoostsShowMore: String  { return L10n.tr("Localizable", "Stats.Boosts.ShowMore") }
   /// Actions
   public static var statsGroupTopAdminActions: String  { return L10n.tr("Localizable", "Stats.GroupTopAdmin.Actions") }
   /// Promote
@@ -12333,6 +12549,8 @@ public final class L10n {
   public static var storyListContextArchive: String  { return L10n.tr("Localizable", "StoryList.Context.Archive") }
   /// Archived Stories
   public static var storyListContextArchivedStories: String  { return L10n.tr("Localizable", "StoryList.Context.ArchivedStories") }
+  /// Open Channel
+  public static var storyListContextOpenChannel: String  { return L10n.tr("Localizable", "StoryList.Context.OpenChannel") }
   /// Saved Stories
   public static var storyListContextSavedStories: String  { return L10n.tr("Localizable", "StoryList.Context.SavedStories") }
   /// Send Message
@@ -12471,10 +12689,6 @@ public final class L10n {
   public static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }
   /// Manage Messages
   public static var supergroupDeleteRestrictionTitle: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Title") }
-  /// Yes, it's me
-  public static var suspiciousSessionMe: String  { return L10n.tr("Localizable", "SuspiciousSession.Me") }
-  /// No, it's not me!
-  public static var suspiciousSessionNotMe: String  { return L10n.tr("Localizable", "SuspiciousSession.NotMe") }
   /// App Data Storage
   public static var systemMemoryWarningDataAndStorage: String  { return L10n.tr("Localizable", "System.MemoryWarning.DataAndStorage") }
   /// %d GB

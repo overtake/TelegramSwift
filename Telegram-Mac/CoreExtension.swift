@@ -793,6 +793,15 @@ public extension Message {
         return nil
     }
     
+    var authInfoAttribute: AuthSessionInfoAttribute? {
+        for attr in attributes {
+            if let attr = attr as? AuthSessionInfoAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var storyAttribute: ReplyStoryAttribute? {
         for attr in attributes {
             if let attr = attr as? ReplyStoryAttribute {
@@ -1040,6 +1049,8 @@ public struct ChatAvailableMessageActionOptions: OptionSet {
 
 func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> Bool {
     if message.peers[message.id.peerId] is TelegramChannel || message.peers[message.id.peerId] is TelegramSecretChat {
+        return false
+    } else if let user = message.peers[message.id.peerId] as? TelegramUser, user.isBot {
         return false
     } else if message.peers[message.id.peerId] is TelegramUser || message.peers[message.id.peerId] is TelegramGroup {
         if message.id.peerId == repliesPeerId {
@@ -1449,6 +1460,9 @@ extension Peer {
     
     var storyArchived: Bool {
         if let user = self as? TelegramUser {
+            return user.storiesHidden ?? false
+        }
+        if let user = self as? TelegramChannel {
             return user.storiesHidden ?? false
         }
         return false
@@ -2604,8 +2618,9 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
             }
             
 
+            let verify = verifyAlertSignal(for: context.window, information: text, ok: okTitle ?? strings().alertOK, option: thridTitle, optionIsSelected: false) |> filter { $0 != nil }
             
-            return combineLatest(modernConfirmSignal(for: context.window, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? strings().alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get() |> take(1)) |> map { result, location -> Bool in
+            return combineLatest(verify, context.globalPeerHandler.get() |> take(1)) |> map { result, location -> Bool in
                 
                 if let threadId = threadId {
                     _ = context.engine.peers.removeForumChannelThread(id: peerId, threadId: threadId).start()
@@ -2661,7 +2676,7 @@ func applyExternalProxy(_ server:ProxyServerSettings, accountManager: AccountMan
         textInfo += "\n\n" + strings().proxyForceEnableMTPDesc
     }
     
-    modernConfirm(for: mainWindow, account: nil, peerId: nil, header: strings().proxyForceEnableHeader1, information: textInfo, okTitle: strings().proxyForceEnableOK, thridTitle: strings().proxyForceEnableEnable, successHandler: { result in
+    verifyAlert(for: mainWindow, header: strings().proxyForceEnableHeader1, information: textInfo, ok: strings().proxyForceEnableOK, option: strings().proxyForceEnableEnable, successHandler: { result in
         _ = updateProxySettingsInteractively(accountManager: accountManager, { current -> ProxySettings in
             
             var current = current.withAddedServer(server)
@@ -3175,10 +3190,14 @@ func requestScreenCapturPermission() -> Signal<Bool, NoError> {
 }
 
 func screenCaptureAvailable() -> Bool {
-    let stream = CGDisplayStream(dispatchQueueDisplay: CGMainDisplayID(), outputWidth: 1, outputHeight: 1, pixelFormat: Int32(kCVPixelFormatType_32BGRA), properties: nil, queue: DispatchQueue.main, handler: { _, _, _, _ in
-    })
-    let result = stream != nil
-    return result
+    if #available(macOS 13.0, *) {
+        let stream = CGDisplayStream(dispatchQueueDisplay: CGMainDisplayID(), outputWidth: 1, outputHeight: 1, pixelFormat: Int32(kCVPixelFormatType_32BGRA), properties: nil, queue: DispatchQueue.main, handler: { _, _, _, _ in
+        })
+        let result = stream != nil
+        return true
+    } else {
+        return false
+    }
 }
 
 func requestScreenCaptureAccess() -> Bool {
@@ -3689,7 +3708,7 @@ func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer, canDelete
     
     let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup
     
-    modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+    verifyAlert(for: context.window, information:information , ok: strings().peerInfoConfirmClear, option: thridTitle, optionIsSelected: false, successHandler: { result in
         _ = context.engine.messages.clearHistoryInteractively(peerId: peer.id, threadId: nil, type: result == .thrid ? .forEveryone : .forLocalPeer).start()
     })
 }
@@ -3809,15 +3828,12 @@ extension SoftwareVideoSource {
 
 
 func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @escaping(Bool)->Void) {
+    let signal = context.engine.messages.addBotToAttachMenu(botId: peer.id, allowWrite: false) |> deliverOnMainQueue
     
-    
-    modernConfirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, thridTitle: strings().webAppAddToAttachmentAllowMessages(peer.displayTitle), successHandler: { result in
-        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(botId: peer.id, allowWrite: result == .thrid), for: context.window).start(next: { value in
-            if value {
-                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
-                completion(value)
-            }
-        })
+    _ = signal.start(next: { value in
+        if value {
+            completion(value)
+        }
     })
 }
 

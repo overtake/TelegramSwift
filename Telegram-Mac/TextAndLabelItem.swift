@@ -170,6 +170,10 @@ class TextAndLabelItem: GeneralRowItem {
                         _copyToClipboard()
                     } else {
                         copyToClipboard(strongSelf.textLayout.attributedString.string)
+                        if let window = strongSelf.table?.window as? Window {
+                            showModalText(for: window, text: strings().shareLinkCopied)
+
+                        }
                     }
                 }
             }, itemImage: MenuAnimation.menu_copy.value))

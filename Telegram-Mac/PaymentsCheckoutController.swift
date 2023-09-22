@@ -230,7 +230,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
   
     
@@ -239,7 +239,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
   
     
@@ -319,7 +319,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
             index += 1
             
-            entries.append(.sectionId(sectionId, type: .normal))
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
 
         }
@@ -394,12 +394,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
         }
         
-        if let info = state.form?.invoice.recurrentInfo, let accept = state.recurrentAccepted {
-            entries.append(.sectionId(sectionId, type: .normal))
+        if let info = state.form?.invoice.termsInfo, let accept = state.recurrentAccepted {
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recurrent_info, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-                return PaymentsCheckoutRecurrentRowItem(initialSize, stableId: stableId, termsUrl: info.termsUrl, botName: state.botPeer?.peer.displayTitle ?? "", accept: accept, toggle: arguments.toggleRecurrentAccept)
+                return PaymentsCheckoutRecurrentRowItem(initialSize, stableId: stableId, termsUrl: info.termsUrl, botName: state.botPeer?.peer.displayTitle ?? "", accept: accept, isReccurent: info.isRecurrent, toggle: arguments.toggleRecurrentAccept)
             }))
             index += 1
         }
@@ -413,7 +413,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     // entries
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -450,7 +450,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
            
             let canSave = paymentForm.canSaveCredentials && !paymentForm.passwordMissing
             if canSave {
-                confirm(for: context.window, information: strings().checkoutInfoSaveInfoHelp, okTitle: strings().modalYes, cancelTitle: strings().modalNotNow, successHandler: { _ in
+                verifyAlert_button(for: context.window, information: strings().checkoutInfoSaveInfoHelp, ok: strings().modalYes, cancel: strings().modalNotNow, successHandler: { _ in
                     updateState { current in
                         var current = current
                         current.paymentMethod = .webToken(.init(title: token.title, data: token.data, saveOnServer: true))
@@ -587,7 +587,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                     if value {
                         pay()
                     } else {
-                        confirm(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
+                        verifyAlert_button(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
                             pay()
                             _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: botPeer.id).start()
                         })
@@ -705,7 +705,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
         updateState { current in
             var current = current
             current.form = form.0
-            if current.recurrentAccepted == nil, current.form?.invoice.recurrentInfo != nil {
+            if current.recurrentAccepted == nil, current.form?.invoice.termsInfo != nil {
                 current.recurrentAccepted = false
             }
             current.botPeer = botPeer != nil ? PeerEquatable(botPeer!) : nil
@@ -767,7 +767,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().checkoutPayNone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in
         f()

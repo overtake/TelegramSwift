@@ -426,7 +426,7 @@ final class ChatInteraction : InterfaceObserver  {
                     return
                 default:
                     if oldState.inputState.inputText != editState.inputState.inputText, !editState.inputState.inputText.isEmpty {
-                        confirm(for: context.window, information: strings().chatEditCancelText, okTitle: strings().alertDiscard, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
+                        verifyAlert_button(for: context.window, information: strings().chatEditCancelText, ok: strings().alertDiscard, cancel: strings().alertNO, successHandler: { [weak self] _ in
                             self?.update({$0.withoutEditMessage().updatedUrlPreview(nil)})
                         })
                     } else {
@@ -582,7 +582,7 @@ final class ChatInteraction : InterfaceObserver  {
                             invoke()
                         } else {
                             if FastSettings.shouldConfirmWebApp(peer.id) {
-                                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { _ in
+                                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { _ in
                                     invoke()
                                     FastSettings.markWebAppAsConfirmed(peer.id)
                                 })
@@ -690,7 +690,7 @@ final class ChatInteraction : InterfaceObserver  {
                 
             }
             if FastSettings.shouldConfirmWebApp(bot.id) {
-                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(bot.displayTitle), successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(bot.displayTitle), successHandler: { _ in
                     invoke()
                     FastSettings.markWebAppAsConfirmed(bot.id)
                 })
@@ -710,7 +710,7 @@ final class ChatInteraction : InterfaceObserver  {
                 self?.openWebview(bot: peer, title: nil, buttonText: "", url: url, simple: true, inline: true)
             }
             if FastSettings.shouldConfirmWebApp(botId) {
-                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { result in
+                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { result in
                     
                     FastSettings.markWebAppAsConfirmed(botId)
                     invoke()
@@ -812,18 +812,32 @@ final class ChatInteraction : InterfaceObserver  {
                             case .default:
                                 execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
                             case let .request(requestURL, peer, writeAllowed):
-                                showModal(with: InlineLoginController(context: context, url: requestURL, originalURL: url, writeAllowed: writeAllowed, botPeer: peer, authorize: { allowWriteAccess in
-                                    _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .message(id: keyboardMessage.id, buttonId: buttonId), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
-                                        switch result {
-                                        case .default:
-                                            execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
-                                        case let .accepted(url):
-                                            execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
-                                        default:
-                                            break
-                                        }
-                                    })
-                                }), for: context.window)
+                                var options: [ModalAlertData.Option] = []
+                                options.append(.init(string: strings().botInlineAuthOptionLogin(requestURL, context.myPeer?.displayTitle ?? ""), isSelected: true, mandatory: false, uncheckEverything: true))
+                                if writeAllowed {
+                                    options.append(.init(string: strings().botInlineAuthOptionAllowSendMessages(peer.displayTitle), isSelected: true, mandatory: false))
+                                }
+                                
+                                let data = ModalAlertData(title: strings().botInlineAuthHeader, info: strings().botInlineAuthTitle(requestURL), ok: strings().botInlineAuthOpen, options: options)
+                                                
+                                showModalAlert(for: context.window, data: data, completion: { result in
+                                    if result.selected.isEmpty {
+                                        execute(inapp: .external(link: url, false))
+                                    } else {
+                                        let allowWriteAccess = result.selected[1] == true
+                                        
+                                        _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .url(url), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
+                                            switch result {
+                                            case .default:
+                                                execute(inapp: .external(link: url, true))
+                                            case let .accepted(url):
+                                                execute(inapp: .external(link: url, false))
+                                            default:
+                                                break
+                                            }
+                                        })
+                                    }
+                                })
                             }
                         })
                     case let .setupPoll(isQuiz):

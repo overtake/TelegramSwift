@@ -13,20 +13,369 @@ import TelegramCore
 import Postbox
 import TGModernGrowingTextView
 
+private extension NSImage {
+    func tint(color: NSColor) -> NSImage {
+        return NSImage(size: size, flipped: false) { (rect) -> Bool in
+            color.set()
+            rect.insetBy(dx: 2, dy: 2).fill()
+            self.draw(in: rect, from: NSRect(origin: .zero, size: self.size), operation: .destinationIn, fraction: 1.0)
+            return true
+        }
+    }
+}
 
 extension MediaArea {
     var title: String {
         switch self {
         case .venue:
             return strings().storyViewMediaAreaViewLocation
+        case .reaction:
+            return ""
         }
     }
     var menu: MenuAnimation {
         switch self {
         case .venue:
             return MenuAnimation.menu_location
+        case .reaction:
+            return MenuAnimation.menu_reactions
         }
     }
+    var canDraw: Bool {
+        switch self {
+        case .venue:
+            return false
+        case .reaction:
+            return true
+        }
+    }
+    var reaction: MessageReaction.Reaction? {
+        switch self {
+        case .venue:
+            return nil
+        case let .reaction(_, reaction, _):
+            return reaction
+        }
+    }
+    var isDark: Bool {
+        switch self {
+        case .venue:
+            return false
+        case let .reaction(_, _, flags):
+            return flags.contains(.isDark)
+        }
+    }
+}
+
+private protocol InteractiveMedia {
+    var mediaArea: MediaArea { get }
+    func apply(area: MediaArea, count: Int32?, arguments: StoryArguments, animated: Bool)
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition)
+}
+
+
+private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
+    
+    var _mediaArea: MediaArea
+    
+    var mediaArea: MediaArea {
+        return _mediaArea
+    }
+    
+    private final class Container : NSImageView {
+        override var isFlipped: Bool {
+            return true
+        }
+    }
+    
+    private static let shadowImage: NSImage = {
+        return NSImage(named: "Icon_Story_InlineReaction_Shadow")!
+    }()
+    
+    private static let coverImage: NSImage = {
+        return NSImage(named: "Icon_Story_InlineReaction")!
+    }()
+
+    
+    private let bg_view: NSImageView = NSImageView()
+    private let shadow_view: NSImageView = NSImageView()
+
+    private var reactionLayer: InlineStickerItemLayer?
+    private var arguments: StoryArguments?
+    
+    private var counterText: DynamicCounterTextView?
+
+    
+    private let control = View()
+    private let counter = Container()
+    
+    
+    private var reaction: MessageReaction.Reaction?
+    
+    required init(frame frameRect: NSRect, mediaArea: MediaArea) {
+        _mediaArea = mediaArea
+        super.init(frame: frameRect)
+        addSubview(shadow_view)
+        addSubview(bg_view)
+        self.layer?.cornerRadius = frameRect.height / 2
+        self.scaleOnClick = true
+        
+        bg_view.imageScaling = .scaleAxesIndependently
+        shadow_view.imageScaling = .scaleAxesIndependently
+
+        self.addSubview(control)
+        self.addSubview(counter)
+        
+        counter.wantsLayer = true
+        
+        bg_view.wantsLayer = true
+        shadow_view.wantsLayer = true
+        
+        control.layer?.masksToBounds = false
+        counter.layer?.masksToBounds = false
+
+        
+        bg_view.image = Reaction_InteractiveMedia.coverImage
+        shadow_view.image = Reaction_InteractiveMedia.shadowImage
+        
+
+        self.set(handler: { [weak self] _ in
+            self?.action()
+        }, for: .Click)
+        
+        self.layer?.masksToBounds = false
+        
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    private func action() {
+        guard let layer = self.reactionLayer, let arguments = self.arguments else {
+            return
+        }
+        layer.isPlayable = true
+        layer.playAgain()
+        
+        
+        let update: UpdateMessageReaction?
+        switch self.mediaArea {
+        case let .reaction(_, reaction, _):
+            switch reaction {
+            case let .builtin(string):
+                update = .builtin(string)
+            case let .custom(fileId):
+                update = .custom(fileId: fileId, file: layer.file)
+            }
+            arguments.like(reaction, arguments.interaction.presentation)
+        default:
+            update = nil
+        }
+        guard let item = update else {
+            return
+        }
+        
+        let action = StoryReactionAction(item: item, fromRect: nil)
+        
+        self.playReaction(action, context: arguments.context)
+    }
+    
+    
+    func apply(area: MediaArea, count: Int32?, arguments: StoryArguments, animated: Bool) {
+        self.arguments = arguments
+        self._mediaArea = mediaArea
+        
+        let isDark: Bool = area.isDark
+
+        if self.reaction != area.reaction, let reaction = area.reaction {
+            self.reactionLayer?.removeFromSuperlayer()
+            self.reactionLayer = nil
+            
+            self.reactionLayer = makeView(reaction, state: arguments.interaction.presentation, context: arguments.context)
+            
+            self.bg_view.image = Reaction_InteractiveMedia.coverImage.tint(color: isDark ? NSColor(rgb: 0x000000, alpha: 0.5) : NSColor.white)
+            
+        }
+        self.reaction = area.reaction
+
+        
+        if let count = count, count > 0 {
+            let current: DynamicCounterTextView
+            var isNew = false
+            if let view = self.counterText {
+                current = view
+            } else {
+                current = DynamicCounterTextView(frame: .zero)
+                self.counterText = current
+                counter.addSubview(current)
+                isNew = true
+            }
+            
+            let counterScale = max(0.01, min(1.8, frame.width / 140.0))
+
+
+            let text = DynamicCounterTextView.make(for: Int(count).prettyNumber, count: "\(count)", font: .digitalRound(17 * counterScale), textColor: isDark ? .white : .black, width: .greatestFiniteMagnitude)
+            current.update(text, animated: animated && !isNew)
+            current.change(size: text.size, animated: animated && !isNew)
+            
+            if isNew, animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+            }
+            
+        } else if let view = self.counterText {
+            performSubviewRemoval(view, animated: animated)
+            self.counterText = nil
+        }
+        
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    private func makeView(_ reaction: MessageReaction.Reaction, state: StoryInteraction.State, context: AccountContext) -> InlineStickerItemLayer? {
+        let layer: InlineStickerItemLayer?
+        let minSide = floor(min(frame.width, frame.height) * 0.6)
+        let size = CGSize(width: minSide, height: minSide)
+        
+        switch reaction {
+        case let .custom(fileId):
+            layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .once)
+        case .builtin:
+            if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
+                let file = animation.selectAnimation
+                layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .once)
+            } else {
+                layer = nil
+            }
+        }
+        if let layer = layer {
+            layer.frame = focus(size)
+            control.layer?.addSublayer(layer)
+            layer.isPlayable = false
+        }
+        return layer
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        let isFlipped: Bool
+        switch self.mediaArea {
+        case let .reaction(_, _, flags):
+            isFlipped = flags.contains(.isFlipped)
+        default:
+            isFlipped = false
+        }
+        
+        let insets = NSEdgeInsets(top: -0.08, left: -0.05, bottom: -0.01, right: -0.02)
+        let bg_rect = CGRect(origin: CGPoint(x: size.width * insets.left, y: size.height * insets.top), size: CGSize(width: size.width - size.width * insets.left - size.width * insets.right, height: size.height - size.height * insets.top - size.height * insets.bottom))
+                
+        
+
+        transition.updateFrame(view: shadow_view, frame: bg_rect)
+        transition.updateFrame(view: bg_view, frame: bg_rect)
+        
+        transition.updateFrame(view: control, frame: size.bounds)
+        transition.updateFrame(view: counter, frame: size.bounds)
+        
+        
+        if let counterText = self.counterText {
+            let point = CGPoint(x: size.width * 0.5 - counterText.frame.width * 0.5, y: floorToScreenPixels(backingScaleFactor, size.height * 0.765 - 0.5))
+            transition.updateFrame(view: counterText, frame: CGRect(origin: point, size: counterText.frame.size))
+        }
+        
+        counter.layer?.position = CGPoint(x: counter.frame.midX, y: counter.frame.midY)
+        counter.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
+        counter.layer?.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0, 0.0, 1.0)
+        
+        if let layer = self.reactionLayer {
+            let rect = size.centered(around: CGPoint(x: size.width * 0.5, y: size.height * 0.47))
+            transition.updateFrame(layer: layer, frame: rect)
+            layer.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
+        }
+        
+        var transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0, 0.0, 1.0)
+        
+        if isFlipped {
+            transform = CATransform3DScale(transform, -1, 1, 1)
+        }
+        
+        bg_view.layer?.position = CGPoint(x: bg_view.frame.midX, y: bg_view.frame.midY)
+        bg_view.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
+        bg_view.layer?.transform = transform
+        
+        shadow_view.layer?.position = CGPoint(x: shadow_view.frame.midX, y: shadow_view.frame.midY)
+        shadow_view.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
+        shadow_view.layer?.transform = transform
+        
+
+
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func playReaction(_ reaction: StoryReactionAction, context: AccountContext) -> Void {
+         
+        let size = NSMakeSize(self.frame.width * 3.0, self.frame.height * 3.0)
+        
+         var effectFileId: Int64?
+         var effectFile: TelegramMediaFile?
+         switch reaction.item {
+         case let .custom(fileId, file):
+             effectFileId = fileId
+             effectFile = file
+         case let .builtin(string):
+             let reaction = context.reactions.available?.reactions.first(where: { $0.value.string.withoutColorizer == string.withoutColorizer })
+             effectFile = reaction?.aroundAnimation
+         }
+         
+                
+         let play:(NSView)->Void = { [weak self] container in
+             guard let `self` = self else {
+                 return
+             }
+             if let effectFileId = effectFileId {
+                 let player = CustomReactionEffectView(frame: NSMakeSize(size.width * 2, size.height * 2).bounds, context: context, fileId: effectFileId, file: effectFile)
+                 player.isEventLess = true
+                 player.triggerOnFinish = { [weak player] in
+                     player?.removeFromSuperview()
+                 }
+                 let rect = player.frame.size.centered(around: NSMakePoint(self.frame.midX, self.frame.midY))
+                 player.frame = rect
+                 container.addSubview(player)
+                 
+             } else if let effectFile = effectFile {
+                 let player = InlineStickerView(account: context.account, file: effectFile, size: size, playPolicy: .playCount(1), controlContent: false)
+                 player.isEventLess = true
+                 player.animateLayer.isPlayable = true
+                 let rect = player.frame.size.centered(around: NSMakePoint(self.frame.midX, self.frame.midY))
+
+                 player.frame = rect
+                 
+                 container.addSubview(player)
+                 player.animateLayer.triggerOnState = (.finished, { [weak player] state in
+                     player?.removeFromSuperview()
+                 })
+             }
+         }
+         
+         let completed: (Bool)->Void = { [weak self]  _ in
+             DispatchQueue.main.async {
+                 if let container = self?.superview {
+                     play(container)
+                 }
+             }
+         }
+        completed(true)
+     }
+    
 }
 
 
@@ -146,13 +495,13 @@ final class StoryListView : Control, Notifable {
             self.state = state
             self.arguments = arguments
             
-            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: storyTheme.fontSize, openInfo: { [weak arguments, weak self] peerId, toChat, messageId, initialAction in
+            let attributed = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: nil, context: context, fontSize: darkAppearance.fontSize, openInfo: { [weak arguments, weak self] peerId, toChat, messageId, initialAction in
                 if toChat {
                     arguments?.openChat(peerId, messageId, initialAction)
                 } else if let view = self {
                     arguments?.openPeerInfo(peerId, view)
                 }
-            }, hashtag: arguments?.hashtag ?? { _ in }, textColor: storyTheme.colors.text, linkColor: storyTheme.colors.text, monospacedPre: storyTheme.colors.text, monospacedCode: storyTheme.colors.text, underlineLinks: true).mutableCopy() as! NSMutableAttributedString
+            }, hashtag: arguments?.hashtag ?? { _ in }, textColor: darkAppearance.colors.text, linkColor: darkAppearance.colors.text, monospacedPre: darkAppearance.colors.text, monospacedCode: darkAppearance.colors.text, underlineLinks: true).mutableCopy() as! NSMutableAttributedString
             
             
 
@@ -161,7 +510,7 @@ final class StoryListView : Control, Notifable {
             for entity in entities {
                 switch entity.type {
                 case .Spoiler:
-                    let color: NSColor = storyTheme.colors.text
+                    let color: NSColor = darkAppearance.colors.text
                     let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
                     if let range = attributed.range.intersection(range) {
                         attributed.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
@@ -181,7 +530,7 @@ final class StoryListView : Control, Notifable {
                 }
             })
             
-            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: storyTheme.colors.grayText, spoilers: spoilers)
+            let layout: TextViewLayout = .init(attributed, maximumNumberOfLines: state == .revealed ? 0 : 2, selectText: darkAppearance.colors.grayText, spoilers: spoilers)
             layout.measure(width: frame.width - 20)
             layout.interactions = globalLinkExecutor
             
@@ -213,7 +562,7 @@ final class StoryListView : Control, Notifable {
                    
                     isNew = true
                 }
-                let moreLayout = TextViewLayout.init(.initialize(string: strings().storyItemTextShowMore, color: storyTheme.colors.text, font: .bold(.text)))
+                let moreLayout = TextViewLayout.init(.initialize(string: strings().storyItemTextShowMore, color: darkAppearance.colors.text, font: .bold(.text)))
                 moreLayout.measure(width: .greatestFiniteMagnitude)
                 current.update(moreLayout)
                 
@@ -318,7 +667,7 @@ final class StoryListView : Control, Notifable {
         func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
             
 
-            let textColor = storyTheme.colors.text
+            let textColor = darkAppearance.colors.text
             
             var validIds: [InlineStickerItemLayer.Key] = []
             var index: Int = textView.hashValue
@@ -430,7 +779,7 @@ final class StoryListView : Control, Notifable {
     
     private var entry: StoryContentContextState.FocusedSlice? = nil
     private let magnifyDispsosable = MetaDisposable()
-    private var current: StoryView? {
+    private var current: StoryLayoutView? {
         didSet {
             if let magnify = current?.magnify {
                 controls.redirectView = magnify
@@ -453,6 +802,9 @@ final class StoryListView : Control, Notifable {
     private var prevStoryView: ShadowView?
     private var nextStoryView: ShadowView?
     
+    private var interactiveMedias:View = View(frame: .zero)
+    private var interactiveMedias_values:[InteractiveMedia & NSView] = []
+
     private var pauseOverlay: Control? = nil
     
     private var mediaAreaViewer: StoryViewMediaAreaViewer?
@@ -485,10 +837,15 @@ final class StoryListView : Control, Notifable {
         
         container.layer?.masksToBounds = true
         content.addSubview(self.controls)
+        content.addSubview(self.interactiveMedias)
         content.addSubview(self.navigator)
         container.layer?.masksToBounds = false
+        content.layer?.masksToBounds = false
+        interactiveMedias.layer?.masksToBounds = false
         
         container.addSubview(content)
+        
+        interactiveMedias.isEventLess = true
         
         controls.controlOpacityEventIgnored = true
         
@@ -605,7 +962,7 @@ final class StoryListView : Control, Notifable {
 
         ContextMenu.show(items: items, view: view, event: event, onClose: { [weak self] in
             self?.arguments?.deactivateMediaArea(mediaArea)
-        }, presentation: .current(storyTheme.colors))
+        }, presentation: .current(darkAppearance.colors))
     }
     
     func hideMediaAreaViewer() {
@@ -615,6 +972,16 @@ final class StoryListView : Control, Notifable {
         }
     }
     
+    
+    private func mediaRect(_ area: MediaArea) -> NSRect {
+        let referenceSize = self.controls.frame.size
+        let coordinates = area.coordinates
+        
+        let areaSize = CGSize(width: coordinates.width / 100.0 * referenceSize.width, height: coordinates.height / 100.0 * referenceSize.height)
+        let targetFrame = CGRect(x: coordinates.x / 100.0 * referenceSize.width - areaSize.width * 0.5, y: coordinates.y / 100.0 * referenceSize.height - areaSize.height * 0.5, width: areaSize.width, height: areaSize.height)
+        
+        return targetFrame
+    }
     
     private func findMediaArea(_ point: NSPoint) -> MediaArea? {
         guard let story = self.story else {
@@ -642,7 +1009,7 @@ final class StoryListView : Control, Notifable {
 
         
         for area in story.storyItem.mediaAreas {
-             if isPoint(point, in: area) {
+            if isPoint(point, in: area), !area.canDraw {
                 selectedMediaArea = area
                 break
             }
@@ -795,7 +1162,7 @@ final class StoryListView : Control, Notifable {
         
         
         let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(maxSize)
+        let aspect = StoryLayoutView.size.aspectFitted(maxSize)
         let containerSize: NSSize
         if let arguments = self.arguments, arguments.interaction.presentation.wideInput || arguments.interaction.presentation.inputRecording != nil {
             containerSize = NSMakeSize(min(aspect.width + 60, size.width - 20), aspect.height)
@@ -811,6 +1178,8 @@ final class StoryListView : Control, Notifable {
             let rect = CGRect(origin: CGPoint(x: (containerSize.width - aspect.width) / 2, y: 0), size: aspect)
             transition.updateFrame(view: self.content, frame: rect)
 
+            transition.updateFrame(view: self.interactiveMedias, frame: rect.size.bounds)
+            
             transition.updateFrame(view: current, frame: rect.size.bounds)
             
             transition.updateFrame(view: controls, frame: rect.size.bounds)
@@ -829,6 +1198,8 @@ final class StoryListView : Control, Notifable {
             if let view = self.nextStoryView {
                 transition.updateFrame(view: view, frame: NSMakeRect(rect.width - 40, 0, 40, rect.height))
             }
+            
+            layoutInteractiveMedia(transition: transition)
         }
         inputView?.updateInputState(animated: transition.isAnimated)
         
@@ -918,15 +1289,21 @@ final class StoryListView : Control, Notifable {
         self.context = context
         self.entry = entry
         self.controls.isHidden = entry == nil
+        
+        guard let arguments = self.arguments else {
+            return
+        }
 
         if let entry = entry {
             self.navigator.initialize(count: entry.item.dayCounters?.totalCount ?? entry.totalCount)
             
             if self.inputView == nil {
                 let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
-                let aspect = StoryView.size.aspectFitted(maxSize)
+                let aspect = StoryLayoutView.size.aspectFitted(maxSize)
                 
-                if entry.peer.isService {
+                if entry.peer._asPeer() is TelegramChannel {
+                    self.inputView = StoryChannelInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
+                } else if entry.peer.isService {
                     self.inputView = StoryNoReplyInput(frame: NSMakeRect(0, 0, aspect.width, 50))
                 } else if entry.peer.id == context.peerId {
                     self.inputView = StoryMyInputView(frame: NSMakeRect(0, 0, aspect.width, 50))
@@ -953,17 +1330,22 @@ final class StoryListView : Control, Notifable {
             
             if let current = self.current, !current.isEqual(to: entry.item.storyItem.id) {
                 self.redraw()
-            } else if let current = self.current, let arguments = arguments {
+                self.initInteractiveMedia(current, arguments: arguments, animated: false)
+            } else if let current = self.current {
                 self.updateStoryState(current.state)
                 self.controls.update(context: context, arguments: arguments, groupId: entry.peer.id, peer: entry.peer._asPeer(), slice: entry, story: entry.item, animated: true)
                 self.inputView.update(entry.item, animated: true)
+                self.updateInteractiveMedia(current, arguments: arguments, animated: true)
             } else {
                 self.redraw()
+                if let current = self.current {
+                    self.initInteractiveMedia(current, arguments: arguments, animated: false)
+                }
             }
         } else {
             let size = NSMakeSize(frame.width - 100, frame.height - 110)
-            let aspect = StoryView.size.aspectFitted(size)
-            let current = StoryView(frame: aspect.bounds)
+            let aspect = StoryLayoutView.size.aspectFitted(size)
+            let current = StoryLayoutView(frame: aspect.bounds)
             self.current = current
             content.addSubview(current, positioned: .below, relativeTo: self.controls)
             self.updateLayout(size: frame.size, transition: .immediate)
@@ -980,8 +1362,8 @@ final class StoryListView : Control, Notifable {
         let previous = self.current
         
         let size = NSMakeSize(frame.width - 100, frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(size)
-        let current = StoryView.makeView(for: entry.item.storyItem, peerId: entry.peer.id, peer: entry.peer._asPeer(), context: context, frame: aspect.bounds)
+        let aspect = StoryLayoutView.size.aspectFitted(size)
+        let current = StoryLayoutView.makeView(for: entry.item.storyItem, peerId: entry.peer.id, peer: entry.peer._asPeer(), context: context, frame: aspect.bounds)
         
         self.current = current
         self.firstPlayingState = true
@@ -1060,7 +1442,7 @@ final class StoryListView : Control, Notifable {
         
         
         self.updateText(story.storyItem, state: .concealed, animated: false, context: context)
-        
+
         self.ready.set(true)
         
         
@@ -1071,6 +1453,63 @@ final class StoryListView : Control, Notifable {
             current?.backgroundColor = NSColor.black
         })
         
+    }
+    
+    private func updateInteractiveMedia(_ storyView: StoryLayoutView, arguments: StoryArguments, animated: Bool) {
+        guard let medias = self.entry?.item.storyItem.mediaAreas.filter({ $0.canDraw }) else {
+            return
+        }
+        
+        var index: Int = 0
+      
+        for media in medias {
+            switch media {
+            case let .reaction(_, reaction, _):
+                let rect = mediaRect(media)
+                let entryViews = self.entry?.item.storyItem.views
+                var count = entryViews?.reactions.first(where: { $0.value == reaction })?.count
+                if self.entry?.item.storyItem.myReaction != nil, count == nil {
+                    count = 1
+                }
+                interactiveMedias_values[index].apply(area: media, count: count, arguments: arguments, animated: animated)
+                
+                index += 1
+            case .venue:
+                break
+            }
+        }
+        self.layoutInteractiveMedia(transition: .immediate)
+    }
+    private func initInteractiveMedia(_ storyView: StoryLayoutView, arguments: StoryArguments, animated: Bool) {
+        guard let medias = self.entry?.item.storyItem.mediaAreas.filter({ $0.canDraw }) else {
+            return
+        }
+        
+        self.interactiveMedias.removeAllSubviews()
+        self.interactiveMedias_values.removeAll()
+        
+        
+        for media in medias {
+            switch media {
+            case let .reaction(_, reaction, _):
+                let rect = mediaRect(media)
+                let view = Reaction_InteractiveMedia(frame: rect, mediaArea: media)
+                interactiveMedias.addSubview(view)
+                interactiveMedias_values.append(view)
+            case .venue:
+                break
+            }
+        }
+        self.updateInteractiveMedia(storyView, arguments: arguments, animated: animated)
+    }
+    
+    func layoutInteractiveMedia(transition: ContainedViewLayoutTransition) {
+        let views = interactiveMedias.subviews.compactMap({ $0 as? (InteractiveMedia & NSView) })
+        for view in views {
+            let rect = mediaRect(view.mediaArea)
+            transition.updateFrame(view: view, frame: rect)
+            view.updateLayout(size: rect.size, transition: .immediate)
+        }
     }
     
     private func updateText(_ story: EngineStoryItem, state: Text.State, animated: Bool, context: AccountContext) {
@@ -1115,7 +1554,7 @@ final class StoryListView : Control, Notifable {
     
     private var firstPlayingState = true
     
-    private func updateStoryState(_ state: StoryView.State) {
+    private func updateStoryState(_ state: StoryLayoutView.State) {
         guard let view = self.current, let entry = self.entry else {
             return
         }
@@ -1139,7 +1578,7 @@ final class StoryListView : Control, Notifable {
     }
     var contentRect: CGRect {
         let maxSize = NSMakeSize(frame.width - 100, frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(maxSize)
+        let aspect = StoryLayoutView.size.aspectFitted(maxSize)
         return CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor, (frame.width - aspect.width) / 2), y: 20), size: NSMakeSize(aspect.width, frame.height))
     }
     var storyRect: CGRect {

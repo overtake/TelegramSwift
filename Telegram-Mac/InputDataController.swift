@@ -18,14 +18,20 @@ public class InputDataModalController : ModalViewController {
     private let _modalInteractions: ModalInteractions?
     private let closeHandler: (@escaping()-> Void) -> Void
     private let themeDisposable = MetaDisposable()
-    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(380, 300)) {
+    init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(340, 300), presentation: TelegramPresentationTheme = theme) {
         self.controller = controller
         self._modalInteractions = modalInteractions
-        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 340), size.height)
+        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 280), size.height)
         self.controller.prepareAllItems = true
         self.closeHandler = closeHandler
         super.init(frame: controller._frameRect)
+        
+        self.getModalTheme = {
+            return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground, activeBackground: presentation.colors.background, activeBorder: presentation.colors.border)
+        }
     }
+    
+    
     
     
     var getHeaderColor: (()->NSColor)? = nil
@@ -41,6 +47,7 @@ public class InputDataModalController : ModalViewController {
         return getModalTheme?() ?? super.modalTheme
     }
 
+    
     
     var isFullScreenImpl: (()->Bool)? = nil
     
@@ -60,6 +67,10 @@ public class InputDataModalController : ModalViewController {
     }
     public override var shouldCloseAllTheSameModals: Bool {
         return false
+    }
+    
+    public override var isVisualEffectContainer: Bool {
+        return true
     }
     
     public override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -119,6 +130,7 @@ public class InputDataModalController : ModalViewController {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         controller.viewDidAppear(animated)
+        controller.tableView.notifyScrollHandlers()
     }
     public override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -150,13 +162,13 @@ public class InputDataModalController : ModalViewController {
     
     override open func measure(size: NSSize) {
         let topHeight = controller.genericView.topView?.frame.height ?? 0
-        self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(size.width, 350))), min(min(size.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(size.width, 350))), min(min(size.height - 200, 500), controller.tableView.listHeight + topHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         let topHeight = controller.genericView.topView?.frame.height ?? 0
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(max(340, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 150, 500), controller.tableView.listHeight + topHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(max(280, min(self.controller._frameRect.width, max(contentSize.width, 350))), min(min(contentSize.height - 200, 500), controller.tableView.listHeight + topHeight)), animated: animated)
         }
     }
     
@@ -192,7 +204,33 @@ public class InputDataModalController : ModalViewController {
                 first = false
             }
         }
+        
+
+        
+        controller.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            guard let `self` = self else {
+                return
+            }
+            if self.controller.tableView.documentSize.height > self.controller.tableView.frame.height {
+                self.controller.tableView.verticalScrollElasticity = .automatic
+            } else {
+                self.controller.tableView.verticalScrollElasticity = .none
+            }
+            if position.rect.minY - self.controller.tableView.frame.height > 0 {
+                self.modal?.makeHeaderState(state: .active, animated: true)
+            } else {
+                self.modal?.makeHeaderState(state: .normal, animated: true)
+            }
+        }))
+        
     }
+    
+    public override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
+        controller.genericView.change(size: frame.size, animated: transition.isAnimated)
+        controller.genericView.change(pos: frame.origin, animated: transition.isAnimated)
+        self.controller.genericView.updateLayout(size: frame.size, transition: transition)
+    }
+    
     deinit {
         themeDisposable.dispose()
     }
@@ -308,22 +346,37 @@ struct InputDataSignalValue {
 }
 
 final class InputDataView : BackgroundView {
-    let tableView = TableView()
+    let tableView: TableView
     
     fileprivate var topView: NSView?
     
     required init(frame frameRect: NSRect) {
+        tableView = TableView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         addSubview(tableView)
-        tableView.frame = bounds
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         tableView.updateLocalizationAndTheme(theme: theme)
     }
     
+    override var frame: NSRect {
+        didSet {
+            var bp = 0
+            bp == 1
+        }
+    }
+    
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
+    }
+    
+    override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+        if newOrigin.y == 0 {
+            var bp = 0
+            bp += 1
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -331,13 +384,9 @@ final class InputDataView : BackgroundView {
     }
     override func layout() {
         super.layout()
-        if let topView = topView {
-            topView.frame = NSMakeRect(0, 0, frame.width, topView.frame.height)
-            tableView.frame = NSMakeRect(0, topView.frame.height, frame.width, frame.height - topView.frame.height)
-        } else {
-            tableView.frame = bounds
-        }
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
+    
     
     func set(_ topView: NSView?) {
         if let topView = self.topView {
@@ -348,6 +397,22 @@ final class InputDataView : BackgroundView {
             addSubview(topView)
         }
         self.needsLayout = true
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        let tableRect: NSRect
+        if let view = self.topView {
+            transition.updateFrame(view: view, frame: NSMakeRect(0, 0, size.width, view.frame.height))
+            tableRect = NSMakeRect(0, view.frame.height, size.width, size.height - view.frame.height)
+        } else {
+            tableRect = size.bounds
+        }
+        
+//        transition.updateFrame(view: tableView.contentView, frame: tableRect.size.bounds)
+        transition.updateFrame(view: tableView, frame: tableRect)
+//        transition.updateFrame(view: tableView.documentView!, frame: tableView.documentSize.bounds)
+        
     }
 }
 
@@ -396,7 +461,6 @@ class InputDataController: GenericViewController<InputDataView> {
 
     var getTitle:(()->String)? = nil
     var getStatus:(()->String?)? = nil
-    
     var doneString: ()->String
     
     var autoInputAction: Bool = false
@@ -456,7 +520,7 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override var responderPriority: HandlerPriority {
-        return .modal
+        return .medium
     }
     var tableView: TableView {
         return self.genericView.tableView

@@ -12,11 +12,15 @@ import TGUIKit
 import SwiftSignalKit
 
 private final class Arguments {
+    let presentation: TelegramPresentationTheme
     let action: ()->Void
     let toggle: (Int)->Void
-    init(action: @escaping()->Void, toggle: @escaping(Int)->Void) {
+    let secondAction:()->Void
+    init(presentation: TelegramPresentationTheme, action: @escaping()->Void, toggle: @escaping(Int)->Void, secondAction:@escaping()->Void) {
+        self.presentation = presentation
         self.action = action
         self.toggle = toggle
+        self.secondAction = secondAction
     }
 }
 
@@ -33,7 +37,7 @@ private final class RowItem : TableRowItem {
         let text: TextViewLayout
         
         var size: NSSize {
-            return NSMakeSize(text.layoutSize.width + 25 + 10, 20)
+            return NSMakeSize(text.layoutSize.width + 25 + 10, text.layoutSize.height + 4)
         }
     }
     struct Description {
@@ -45,28 +49,36 @@ private final class RowItem : TableRowItem {
         }
     }
     fileprivate let state: State
-    fileprivate let info: TextViewLayout
+    fileprivate var info: TextViewLayout?
     fileprivate var desc: Description?
     fileprivate let options: [Option]
     fileprivate let toggle: (Int)->Void
     fileprivate let action:()->Void
-    init(_ initialSize: NSSize, state: State, toggle:@escaping(Int)->Void, action: @escaping()->Void) {
+    fileprivate let secondAction:()->Void
+    fileprivate let presentation: TelegramPresentationTheme
+    init(_ initialSize: NSSize, presentation: TelegramPresentationTheme, state: State, toggle:@escaping(Int)->Void, action: @escaping()->Void, secondAction:@escaping()->Void) {
         self.state = state
+        self.presentation = presentation
         self.toggle = toggle
         self.action = action
+        self.secondAction = secondAction
+        if !state.data.info.isEmpty {
+            let info = parseMarkdownIntoAttributedString(state.data.info, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.darkGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.darkGrayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.accent), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
+            })).mutableCopy() as! NSMutableAttributedString
+            
+            info.detectBoldColorInString(with: .medium(.text))
+            self.info = .init(info, alignment: .center)
+            self.info?.interactions = globalLinkExecutor
+
+        } else {
+            self.info = nil
+        }
         
-        let info = parseMarkdownIntoAttributedString(state.data.info, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.darkGrayText), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.darkGrayText), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accent), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
-        })).mutableCopy() as! NSMutableAttributedString
         
-        info.detectBoldColorInString(with: .medium(.text))
-        
-        self.info = .init(info, alignment: .center)
-        
-        self.info.interactions = globalLinkExecutor
         
         if let desc = state.data.description {
-            let text = parseMarkdownIntoAttributedString(desc.string, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accent), linkAttribute: { contents in
+            let text = parseMarkdownIntoAttributedString(desc.string, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.accent), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
             })).mutableCopy() as! NSMutableAttributedString
             
@@ -80,7 +92,7 @@ private final class RowItem : TableRowItem {
 
         var opts: [Option] = []
         for option in state.data.options {
-            let text = parseMarkdownIntoAttributedString(option.string, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accent), linkAttribute: { contents in
+            let text = parseMarkdownIntoAttributedString(option.string, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: presentation.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: presentation.colors.accent), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
             }))
             
@@ -103,7 +115,8 @@ private final class RowItem : TableRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        info.measure(width: width - 40)
+        info?.measure(width: width - 40)
+        
         for option in options {
             option.text.measure(width: width - 40 - 40)
         }
@@ -114,8 +127,14 @@ private final class RowItem : TableRowItem {
     override var height: CGFloat {
         var height: CGFloat = 0
                         
-        height += info.layoutSize.height
-        height += 20
+        if let info = info {
+            height += info.layoutSize.height
+            height += 20
+        }
+        
+        if state.data.title == nil {
+            height += 20
+        }
         
         if !options.isEmpty {
             height += 20
@@ -188,16 +207,21 @@ private final class RowView : TableRowView {
             self.set(handler: { [weak self] _ in
                 self?.toggle?()
             }, for: .Click)
+            
+            self.layer?.masksToBounds = false
         }
         
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func update(option: RowItem.Option, toggle:@escaping()->Void, animated: Bool) {
+        func update(option: RowItem.Option, presentation: TelegramPresentationTheme, toggle:@escaping()->Void, animated: Bool) {
             self.toggle = toggle
+            
+            let selected = generateCheckSelected(foregroundColor: presentation.colors.accentIcon, backgroundColor: presentation.colors.underSelectedColor)
+            
+            self.imageView.update(unselectedImage: presentation.icons.chatToggleUnselected, selectedImage: selected, selected: option.selected, animated: animated)
             self.textView.update(option.text)
-            self.imageView.set(selected: option.selected, animated: animated)
         }
         
         override func layout() {
@@ -212,6 +236,9 @@ private final class RowView : TableRowView {
     
     private let infoView = TextView()
     private let button = TitleButton(frame: .zero)
+    
+    private var secondButton: TitleButton? = nil
+    
     private let optionsView = View()
     
     private var descriptionView:TextView?
@@ -231,6 +258,8 @@ private final class RowView : TableRowView {
         }, for: .Click)
         
         button.scaleOnClick = true
+        button._thatFit = true
+        optionsView.layer?.masksToBounds = false
     }
     
     override var backdorColor: NSColor {
@@ -262,6 +291,36 @@ private final class RowView : TableRowView {
         self.button.isEnabled = item.actionEnabled
         self.button.alphaValue = item.actionEnabled ? 1 : 0.8
         
+        if case let .confirm(string, _) = item.state.data.mode {
+            let current: TitleButton
+            if let view = self.secondButton {
+                current = view
+            } else {
+                current = TitleButton()
+                current.scaleOnClick = true
+                current.set(font: .medium(.text), for: .Normal)
+                self.secondButton = current
+                addSubview(current)
+                
+                current.set(handler: { [weak self] _ in
+                    if let item = self?.item as? RowItem {
+                        item.secondAction()
+                    }
+                }, for: .Click)
+            }
+            
+            current.set(background: item.presentation.colors.background, for: .Normal)
+            current.set(text: string, for: .Normal)
+            current._thatFit = true
+            current.set(color: item.presentation.colors.darkGrayText, for: .Normal)
+            current.layer?.cornerRadius = 10
+            current.layer?.borderWidth = 1
+            current.layer?.borderColor = item.presentation.colors.border.cgColor
+        } else if let view = self.secondButton {
+            performSubviewRemoval(view, animated: animated)
+            self.secondButton = nil
+        }
+        
         
         optionsView.setFrameSize(item.optionsSize)
         
@@ -272,7 +331,7 @@ private final class RowView : TableRowView {
             optionsView.addSubview(OptionView(frame: NSMakeRect(0, 0, optionsView.frame.width, 20)))
         }
         for (i, option) in item.options.enumerated() {
-            (optionsView.subviews[i] as! OptionView).update(option: option, toggle: { [weak item] in
+            (optionsView.subviews[i] as! OptionView).update(option: option, presentation: item.presentation, toggle: { [weak item] in
                 item?.toggle(i)
             }, animated: animated)
         }
@@ -304,12 +363,11 @@ private final class RowView : TableRowView {
             self.descriptionView = nil
         }
         
-        button.set(background: theme.colors.accent, for: .Normal)
-        button.set(text: item.state.data.ok, for: .Normal)
+        button.set(background: item.presentation.colors.accent, for: .Normal)
         button.set(font: .medium(.text), for: .Normal)
-        button.set(color: theme.colors.underSelectedColor, for: .Normal)
+        button.set(text: item.state.data.ok, for: .Normal)
+        button.set(color: item.presentation.colors.underSelectedColor, for: .Normal)
 
-        button.sizeToFit(.zero, NSMakeSize(frame.width - 40, 40), thatFit: true)
         button.layer?.cornerRadius = 10
                 
       
@@ -324,11 +382,23 @@ private final class RowView : TableRowView {
             return
         }
         
-        transition.updateFrame(view: infoView, frame: infoView.centerFrameX(y: 0))
-
-        transition.updateFrame(view: optionsView, frame: optionsView.centerFrameX(y: infoView.frame.maxY + 20))
         
-        transition.updateFrame(view: button, frame: button.centerFrameX(y: size.height - 20 - button.frame.height))
+        transition.updateFrame(view: infoView, frame: infoView.centerFrameX(y: item.state.data.title == nil ? 20 : 0))
+
+        if infoView.textLayout != nil {
+            transition.updateFrame(view: optionsView, frame: optionsView.centerFrameX(y: infoView.frame.maxY + 20))
+        } else {
+            transition.updateFrame(view: optionsView, frame: optionsView.centerFrameX(y: infoView.frame.minY))
+        }
+        
+        
+        if let second = self.secondButton {
+            let btnwidth = floor((size.width - 40 - 10) / 2)
+            transition.updateFrame(view: second, frame: CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40)))
+            transition.updateFrame(view: button, frame: CGRect(origin: CGPoint(x: second.frame.maxX + 10, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40)))
+        } else {
+            transition.updateFrame(view: button, frame: CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: size.width - 40, height: 40)))
+        }
         
         var y: CGFloat = 0
         for (i, view) in optionsView.subviews.enumerated() {
@@ -351,7 +421,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     entries.append(.custom(sectionId: 0, index: 0, value: .none, identifier: .init("whole"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return RowItem(initialSize, state: state, toggle: arguments.toggle, action: arguments.action)
+        return RowItem(initialSize, presentation: arguments.presentation, state: state, toggle: arguments.toggle, action: arguments.action, secondAction: arguments.secondAction)
     }))
     
     return entries
@@ -359,6 +429,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 
 struct ModalAlertData : Equatable {
+    enum Mode : Equatable {
+        case alert
+        case confirm(text: String, isThird: Bool)
+    }
     struct Description : Equatable {
         var string: String
         var onlyWhenEnabled: Bool
@@ -366,20 +440,55 @@ struct ModalAlertData : Equatable {
     struct Option : Equatable {
         var string: String
         var isSelected: Bool
-        var mandatory: Bool
+        var mandatory: Bool = false
+        var uncheckEverything: Bool = false
     }
-    var title: String
+    var title: String?
     var info: String
     var description: Description? = nil
     var ok: String = strings().modalOK
-    var options:[Option]
+    var options:[Option] = []
+    var mode: Mode = .alert
+    
+    var hasClose: Bool {
+        switch mode {
+        case .alert:
+            return false
+        case let .confirm(_, isThird):
+            return isThird
+        }
+    }
 }
 
 struct ModalAlertResult : Equatable {
     var selected: [Int : Bool] = [:]
 }
 
-private func ModalAlertController(data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}) -> InputDataModalController {
+private func minimumSize(_ data: ModalAlertData) -> NSSize {
+    let ok = NSAttributedString.initialize(string: data.ok, font: .medium(.text)).sizeFittingWidth(.greatestFiniteMagnitude).width + 40
+    
+    var cancel: CGFloat = 0
+    if case let .confirm(text, _) = data.mode {
+        cancel = NSAttributedString.initialize(string: text, font: .medium(.text)).sizeFittingWidth(.greatestFiniteMagnitude).width + 40
+    }
+    var option_w: CGFloat = 0
+    
+    for option in data.options {
+        let text = parseMarkdownIntoAttributedString(option.string, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .medium(.text), textColor: .white), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, inAppLink.external(link: contents, false))
+        }))
+        option_w = max(text.sizeFittingWidth(.greatestFiniteMagnitude).width, option_w)
+    }
+    
+    var size: NSSize = NSMakeSize(260, 300)
+    
+    size.width = max(cancel + ok + 10 + 40, size.width)
+    size.width = round(min(350, max(option_w + 40 + 40, size.width)))
+    
+    return size
+}
+
+private func ModalAlertController(data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, presentation: TelegramPresentationTheme = theme) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -393,7 +502,7 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         statePromise.set(stateValue.modify (f))
     }
 
-    let arguments = Arguments(action: {
+    let arguments = Arguments(presentation: presentation, action: {
         let state = stateValue.with { $0 }
         var result:[Int : Bool] = [:]
         for (i, option) in state.data.options.enumerated() {
@@ -405,7 +514,20 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         updateState { current in
             var current = current
             current.data.options[index].isSelected = !current.data.options[index].isSelected
+            let option = current.data.options[index]
+            if option.uncheckEverything, !option.isSelected {
+                for i in 0 ..< current.data.options.count {
+                    current.data.options[i].isSelected = false
+                }
+            }
             return current
+        }
+    }, secondAction: {
+        close?()
+        if case .confirm(_, true) = data.mode {
+            completion(.init(selected: [0 : true]))
+        } else {
+            cancel()
         }
     })
     
@@ -413,22 +535,40 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: data.title)
+    let controller = InputDataController(dataSignal: signal, title: data.title ?? "")
     
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
     
-    let modalController = InputDataModalController(controller, modalInteractions: nil, size: NSMakeSize(300, 300))
+    //!TODO CALC WIDTH SIZE
+
+    
+    
+    
+    let modalController = InputDataModalController(controller, modalInteractions: nil, size:  minimumSize(data), presentation: presentation)
+    
     
     modalController.getModalTheme = {
-        return .init(text: theme.colors.text, grayText: theme.colors.grayText, background: .clear, border: .clear, accent: theme.colors.accent, grayForeground: theme.colors.grayBackground)
+        return .init(text: presentation.colors.text, grayText: presentation.colors.grayText, background: .clear, border: .clear, accent: presentation.colors.accent, grayForeground: presentation.colors.grayBackground)
     }
     
-    controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
-        close?()
-        cancel()
-    })
+    controller.validateData = { _ in
+        arguments.action()
+        return .none
+    }
+    
+    controller.getBackgroundColor = {
+        presentation.colors.listBackground
+    }
+    
+    if data.hasClose {
+        controller.leftModalHeader = ModalHeaderData(image: presentation.icons.modalClose, handler: {
+            close?()
+            cancel()
+        })
+    }
+    
     
     modalController.closableImpl = {
         cancel()
@@ -449,7 +589,7 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
 
 
 
-func showModalAlert(for window: Window, data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}) {
-    showModal(with: ModalAlertController(data: data, completion: completion, cancel: cancel), for: window)
+func showModalAlert(for window: Window, data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, presentation: TelegramPresentationTheme = theme) {
+    showModal(with: ModalAlertController(data: data, completion: completion, cancel: cancel, presentation: presentation), for: window, animationType: .scaleCenter)
 }
 

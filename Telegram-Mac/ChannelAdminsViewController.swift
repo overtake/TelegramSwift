@@ -331,7 +331,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, status: peerText, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, status: peerText, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 if editing == nil {
                     arguments.openAdmin(participant)
                 }
@@ -348,7 +348,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
         case let .antispamInfo(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: strings().channelAdminsAggressiveAntiSpamInfo, viewType: viewType)
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: entry.stableId, viewType: .separator)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: entry.stableId, isLoading: true)
         case let .adminsHeader(_, text, viewType):

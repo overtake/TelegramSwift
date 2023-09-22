@@ -202,9 +202,9 @@ open class Control: View {
         if self.scaleOnClick {
             if state != previousState, isEnabled {
                 if state == .Highlight {
-                    self.layer?.animateScaleSpring(from: 1, to: 0.96, duration: 0.3, removeOnCompletion: false)
+                    self.layer?.animateScaleSpring(from: 1, to: 0.97, duration: 0.3, removeOnCompletion: false)
                 } else if self.layer?.animation(forKey: "transform") != nil, previousState == ControlState.Highlight {
-                    self.layer?.animateScaleSpring(from: 0.96, to: 1.0, duration: 0.3)
+                    self.layer?.animateScaleSpring(from: 0.97, to: 1.0, duration: 0.3)
                 }
             }
         }
@@ -381,9 +381,7 @@ open class Control: View {
     override open func mouseDown(with event: NSEvent) {
         longInvoked = false
         longOverHandleDisposable.set(nil)
-        
-        mouseDownWindowFrame = window?.frame
-        
+                
         if event.modifierFlags.contains(.control) {
             
             if let menu = self.contextMenu?(), event.clickCount == 1 {
@@ -440,7 +438,6 @@ open class Control: View {
     }
     
     public var moveNextEventDeep: Bool = false
-    private var mouseDownWindowFrame: NSRect? = nil
     
     override open func mouseUp(with event: NSEvent) {
         longHandleDisposable.set(nil)
@@ -459,27 +456,23 @@ open class Control: View {
                 if longInvoked {
                     send(event: .LongMouseUp)
                 }
-                if window?.frame == self.mouseDownWindowFrame || self.mouseDownWindowFrame == nil {
-                    if mouseInside() && !longInvoked {
-                        if event.clickCount == 1  {
-                            send(event: .SingleClick)
-                        }
-                        if event.clickCount == 2 {
-                            send(event: .DoubleClick)
-                        }
-                        send(event: .Click)
+                if mouseInside() && !longInvoked {
+                    if event.clickCount == 1  {
+                        send(event: .SingleClick)
                     }
+                    if event.clickCount == 2 {
+                        send(event: .DoubleClick)
+                    }
+                    send(event: .Click)
                 }
             } else {
                 if mouseInside() && !longInvoked {
                     //NSSound.beep()
                 }
             }
-            self.mouseDownWindowFrame = nil
             updateState()
             
         } else {
-            self.mouseDownWindowFrame = nil
             if userInteractionEnabled && event.modifierFlags.contains(.control) {
                 send(event: .RightUp)
                 return

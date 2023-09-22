@@ -102,7 +102,7 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
             }
 
 
-            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(30, 30), status: status, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height:44, photoSize: NSMakeSize(30, 30), status: status, drawLastSeparator: true, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 arguments.openInfo(peer.peer)
             }, contextMenuItems: {
                 return .single([ContextMenuItem(strings().confirmDelete, handler: {
@@ -115,7 +115,7 @@ private enum SelectivePrivacyPeersEntry: TableItemListNodeEntry {
                 arguments.addPeer()
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -261,7 +261,7 @@ class SelectivePrivacySettingsPeersController: EditableViewController<TableView>
 
         }, addPeer: {
 
-            addPeerDisposable.set(selectModalPeers(window: context.window, context: context, title: title, excludePeerIds: currentPeerIds, limit: 0, behavior: SelectChatsBehavior(settings: [.groups, .contacts, .remote]), confirmation: {_ in return .single(true) }).start(next: { peerIds in
+            addPeerDisposable.set(selectModalPeers(window: context.window, context: context, title: title, excludePeerIds: currentPeerIds, limit: 0, behavior: SelectChatsBehavior(settings: [.groups, .contacts, .remote, .bots]), confirmation: {_ in return .single(true) }).start(next: { peerIds in
                 let applyPeers: Signal<Void, NoError> = peersPromise.get()
                     |> take(1)
                     |> mapToSignal { peers -> Signal<[SelectivePrivacyPeer], NoError> in

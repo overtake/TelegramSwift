@@ -566,7 +566,7 @@ class FastSettings {
                 
         let localizedHeader = _NSLocalizedString("Confirm.Header.\(permission.rawValue)")
         let localizedDesc = _NSLocalizedString("Confirm.Desc.\(permission.rawValue)")
-        confirm(for: mainWindow, header: localizedHeader, information: localizedDesc, successHandler: { _ in
+        verifyAlert_button(for: mainWindow, header: localizedHeader, information: localizedDesc, successHandler: { _ in
             success()
         })
     }

@@ -369,7 +369,7 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
         _ = updatePeer.start(next: { result in
             switch result {
             case .limitExceeded:
-                confirm(for: arguments.context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                verifyAlert_button(for: arguments.context.window, information: strings().chatListContextPinErrorNew2, ok: strings().alertOK, cancel: "", option: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
                     switch result {
                     case .thrid:
                         arguments.context.bindings.rootNavigation().push(ChatListFiltersListController(context: arguments.context))
@@ -775,9 +775,6 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     
                     if groupId != .root {
                         location = .group(groupId: groupId, tags: nil, minDate: nil, maxDate: nil)
-                        foundRemotePeers = .single(([], [], false))
-                    } else if query.hasPrefix("#") || !options.contains(.chats) {
-                        location = globalTags.location
                         foundRemotePeers = .single(([], [], false))
                     } else {
                         location = globalTags.location
@@ -1342,7 +1339,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         self.arguments = SearchControllerArguments(context: context, target: target, removeRecentPeerId: { peerId in
             _ = context.engine.peers.removeRecentlySearchedPeer(peerId: peerId).start()
         }, clearRecent: {
-            confirm(for: context.window, information: strings().searchConfirmClearHistory, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().searchConfirmClearHistory, successHandler: { _ in
                 _ = (context.engine.peers.recentlySearchedPeers() |> take(1) |> mapToSignal {
                     return combineLatest($0.map {context.engine.peers.removeRecentlySearchedPeer(peerId: $0.peer.peerId)})
                 }).start()
@@ -1411,6 +1408,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             messageId = item.message?.id
             peerId = item.peerId
             id = item.entryId
+            
+            if let message = item.message {
+                context.engine.messages.ensureMessagesAreLocallyAvailable(messages: [.init(message)])
+            }
         } else if let item = item as? ShortPeerRowItem {
             if let stableId = item.stableId.base as? ChatListSearchEntryStableId {
                 switch stableId {
@@ -1468,16 +1469,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         
         var storedPeer: Signal<PeerId, NoError>
         if let peer = peer {
-             storedPeer = context.account.postbox.transaction { transaction -> Void in
-                if transaction.getPeer(peer.id) == nil {
-                    updatePeersCustom(transaction: transaction, peers: [peer], update: { (previous, updated) -> Peer? in
-                        return updated
-                    })
-                }
-                
-            } |> mapToSignal {
-                return storedMessageFromSearchPeer(account: context.account, peer: peer)
-            }
+             storedPeer = storedMessageFromSearchPeer(account: context.account, peer: peer)
         } else if let peerId = peerId {
             storedPeer = .single(peerId)
         } else {
@@ -1496,6 +1488,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             }
         }
 
+        
+        
         
         let recently: Signal<Void, NoError>
         if let peerId = peerId {

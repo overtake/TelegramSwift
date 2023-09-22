@@ -12,7 +12,7 @@ public enum ShadowDirection {
     case horizontal(Bool)
     case vertical(Bool)
 }
-public class ShadowView: View {
+open class ShadowView: View {
     
     
     public override init() {

@@ -150,6 +150,8 @@ private final class PremiumBoardingHeaderView : TableRowView {
         
         infoView.isSelectable = false
         
+        self.layer?.masksToBounds = false
+        
     }
     
     override var backdorColor: NSColor {
@@ -226,7 +228,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
             if let view = self.premiumView {
                 current = view
             } else {
-                current = PremiumStarSceneView(frame: NSMakeRect(0, 0, 150, 150))
+                current = PremiumStarSceneView(frame: NSMakeRect(0, 0, frame.width, 150))
                 addSubview(current)
                 self.premiumView = current
             }

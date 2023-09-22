@@ -246,7 +246,7 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         case let .phoneDiscoveryInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -857,7 +857,7 @@ class SelectivePrivacySettingsController: TableViewController {
             return makeUpdatePhotoItems()
             
         }, removePublicPhoto: {
-            confirm(for: context.window, information: strings().privacyResetPhotoConfirm, okTitle: strings().modalRemove, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().privacyResetPhotoConfirm, ok: strings().modalRemove, successHandler: { _ in
                 
                 let signal = context.engine.accountData.removeFallbackPhoto(reference: nil)
                 |> castError(UploadPeerPhotoError.self)

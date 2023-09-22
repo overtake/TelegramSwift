@@ -154,7 +154,7 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     var sectionId:Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
@@ -166,14 +166,9 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
         index += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
 
-//    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value.comment), error: nil, identifier: _id_custom_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().reportReasonOtherPlaceholder, filter: { $0 }, limit: 128))
-//    index += 1
-//
-//    entries.append(.sectionId(sectionId, type: .normal))
-//    sectionId += 1
     
     return entries
 }
@@ -218,7 +213,7 @@ func ReportReasonController(callback: @escaping(ReportReasonValue)->Void, button
     
     let modalInteractions = ModalInteractions(acceptTitle: buttonText, accept: { [weak controller] in
           controller?.validateInputValues()
-    }, drawBorder: true, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in
         f()

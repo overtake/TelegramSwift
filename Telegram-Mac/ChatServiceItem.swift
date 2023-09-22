@@ -1573,14 +1573,14 @@ class ChatServiceRowView: TableRowView {
                     if let media = media as? TelegramMediaImage {
                         let reference = ImageMediaReference.story(peer: data.peer, id: storyItem.id, media: media)
                         updateImageSignal = chatMessagePhoto(account: context.account, imageReference: reference, scale: backingScaleFactor, synchronousLoad: false)
-                        imageSize = media.representations.last?.dimensions.size ?? StoryView.size
+                        imageSize = media.representations.last?.dimensions.size ?? StoryLayoutView.size
                     } else if let media = media as? TelegramMediaFile {
                         let reference = FileMediaReference.story(peer: data.peer, id: storyItem.id, media: media)
                         updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference:reference, scale: backingScaleFactor)
-                        imageSize = media.dimensions?.size ?? StoryView.size
+                        imageSize = media.dimensions?.size ?? StoryLayoutView.size
                     } else {
                         updateImageSignal = .complete()
-                        imageSize = StoryView.size
+                        imageSize = StoryLayoutView.size
                     }
                     
                     let arguments = TransformImageArguments.init(corners: .init(radius: 0), imageSize: imageSize, boundingSize: mediaView.frame.size, intrinsicInsets: .init())

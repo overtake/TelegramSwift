@@ -87,7 +87,7 @@
     case leftToRight
     case rightToLeft
  }
- private let sectionOffset: CGFloat = 30
+ private let sectionOffset: CGFloat = 20
  
  final class PeerMediaContainerView : View {
     
@@ -368,7 +368,7 @@
  }
  
  private extension PeerMediaCollectionMode {
-    var title: String {
+     func title(_ peer: Peer?) -> String {
         if self == .members {
             return strings().peerMediaMembers
         }
@@ -394,7 +394,11 @@
             return strings().peerMediaGifs
         }
         if self == .stories {
-            return "Stories"
+            if peer is TelegramChannel {
+                return strings().peerMediaPosts
+            } else {
+                return strings().peerMediaStories
+            }
         }
         return ""
     }
@@ -839,9 +843,9 @@
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
         }
         
-        if peerId.namespace == Namespaces.Peer.CloudUser {
+        if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
             storiesTab = storyListContext.state |> map { state -> (exist: Bool, loaded: Bool) in
-                return (exist: state.totalCount > 0, loaded: state.peerReference != nil)
+                return (exist: state.totalCount > 0, loaded: true)
             } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 return (tag: .stories, exists: data.exist, hasLoaded: data.loaded)
             }
@@ -1111,7 +1115,7 @@
                             } else {
                                 let thrid:String? = (canDeleteForEveryone ? peer.isUser ? strings().chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : strings().chatConfirmDeleteMessagesForEveryone : nil)
                                 
-                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, okTitle: strings().confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
+                                verifyAlert(for: context.window, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, ok: strings().confirmDelete, option: thrid, successHandler: { [weak strongSelf] result in
                                     
                                     guard let `strongSelf` = strongSelf else {
                                         return
@@ -1155,7 +1159,7 @@
                 let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
                 let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
                 for (i, tab)  in tabs.enumerated() {
-                    items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+                    items.append(ScrollableSegmentItem(title: tab.title(self.peer), index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
                 }
                 self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
                 if let selected = selected {

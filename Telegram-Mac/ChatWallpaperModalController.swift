@@ -154,7 +154,7 @@ class ChatWallpaperModalController: ModalViewController {
                     }
                 }
             })
-        }, drawBorder: true, height: 50, singleButton: true)
+        }, drawBorder: true, height: 50)
        
         return interactions
     }

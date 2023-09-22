@@ -57,7 +57,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
     var index: Int32 = 0
     
     
-    entries.append(.sectionId(sectionId, type: .customModern(20)))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
@@ -349,7 +349,7 @@ func ClosureInviteLinkController(context: AccountContext, peerId: PeerId, mode: 
     
     let modalInteractions = ModalInteractions(acceptTitle: mode.done, accept: { [weak controller] in
           controller?.validateInputValues()
-    }, drawBorder: true, singleButton: true)
+    }, singleButton: true)
     
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in

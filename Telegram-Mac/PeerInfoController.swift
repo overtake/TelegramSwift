@@ -302,7 +302,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         self.source = source
         self.threadInfo = threadInfo
         
-        if peerId.namespace == Namespaces.Peer.CloudUser {
+        if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
             self.stories = stories ?? .init(account: context.account, peerId: peerId)
         } else {
             self.stories = nil
