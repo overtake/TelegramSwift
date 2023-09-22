@@ -129,12 +129,12 @@ private final class SuspiciousAuthRowView : GeneralRowView {
         infoView.update(item.info)
         
         accept.set(font: .medium(.text), for: .Normal)
-        accept.set(text: strings().suspiciousSessionMe, for: .Normal)
+        accept.set(text: "Yes, it's me", for: .Normal)
         accept.set(color: theme.colors.accent, for: .Normal)
         accept.sizeToFit()
         
         revoke.set(font: .medium(.text), for: .Normal)
-        revoke.set(text: strings().suspiciousSessionNotMe, for: .Normal)
+        revoke.set(text: "No, it's not me!", for: .Normal)
         revoke.set(color: theme.colors.redUI, for: .Normal)
         revoke.sizeToFit()
         
@@ -153,4 +153,3 @@ private final class SuspiciousAuthRowView : GeneralRowView {
 
     }
 }
-

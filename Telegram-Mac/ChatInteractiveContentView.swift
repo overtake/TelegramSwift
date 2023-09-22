@@ -506,6 +506,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func executeInteraction(_ isControl: Bool) {
         
+        
         if let progressView = progressView {
             switch progressView.state {
             case .Fetching:
@@ -812,9 +813,9 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     }
                 }
                 current.removeAllHandlers()
-                current.set(handler: { current in
-                    if let parent = parent {
-                        parameters?.revealMedia(parent)
+                current.set(handler: { [weak self] current in
+                    if let parent = self?.parent {
+                        self?.parameters?.revealMedia(parent)
                     }
                 }, for: .Click)
                 

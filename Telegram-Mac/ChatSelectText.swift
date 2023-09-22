@@ -61,7 +61,7 @@ class SelectManager : NSResponder {
     
     var selectedText: NSAttributedString {
         let string:NSMutableAttributedString = NSMutableAttributedString()
-        _ = ranges.with { ranges in
+        ranges.with { ranges in
             for i in stride(from: ranges.count - 1, to: -1, by: -1) {
                 let container = ranges[i].2
                 if let header = container.header, ranges.count > 1 {
@@ -399,19 +399,8 @@ class ChatSelectText : NSObject {
             
             guard let `self` = self else {return .rejected}
             
-//            if let locationInWindow = self.locationInWindow {
-//                let old = (ceil(locationInWindow.x), ceil(locationInWindow.y))
-//                let new = (ceil(event.locationInWindow.x), round(event.locationInWindow.y))
-//                if abs(old.0 - new.0) <= 1 && abs(old.1 - new.1) <= 1 {
-//                    return .rejected
-//                }
-//            }
-            
             self.endInnerLocation = self.table.documentView?.convert(window.mouseLocationOutsideOfEventStream, from: nil) ?? NSZeroPoint
             
-//            if let overView = window.contentView?.hitTest(window.mouseLocationOutsideOfEventStream) as? Control {
-//                 self?.started = overView.userInteractionEnabled == true
-//            }
             if self.started {
                 self.started = !hasPopover(window) && self.beginInnerLocation != NSZeroPoint
             }

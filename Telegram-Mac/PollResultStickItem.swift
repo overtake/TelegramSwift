@@ -21,7 +21,7 @@ class PollResultStickItem: TableStickItem {
     init(_ initialSize:NSSize, stableId: AnyHashable, left: String, additionText: String, right: String, collapse: (()->Void)?, viewType: GeneralViewType) {
         self.viewType = viewType
         self._stableId = stableId
-        self.inset = NSEdgeInsets(left: 30, right: 30)
+        self.inset = NSEdgeInsets(left: 20, right: 20)
         self.collapse = collapse
         self.leftLayout = TextViewLayout(.initialize(string: left, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .end)
         self.leftAdditionLayout = TextViewLayout(.initialize(string: additionText, color: theme.colors.listGrayText, font: .normal(11.5)), maximumNumberOfLines: 1, truncationType: .end)
@@ -56,7 +56,7 @@ class PollResultStickItem: TableStickItem {
         self.leftLayout = TextViewLayout(NSAttributedString())
         self.rightLayout = TextViewLayout(NSAttributedString())
         self.leftAdditionLayout = TextViewLayout(NSAttributedString())
-        self.inset = NSEdgeInsets(left: 30, right: 30)
+        self.inset = NSEdgeInsets(left: 20, right: 20)
         self.collapse = nil
         self._stableId = arc4random()
         super.init(initialSize)

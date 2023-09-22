@@ -36,7 +36,7 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_contact_info, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
@@ -44,7 +44,7 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
     }))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_phone_number, equatable: InputDataEquatable(state.phone), comparable: nil, item: { initialSize, stableId in
@@ -62,7 +62,7 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
     
     if let peerStatusSettings = state.peerStatusSettings, peerStatusSettings.contains(.addExceptionWhenAddingContact) {
         
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
 
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_exception, data: InputDataGeneralData(name: strings().newContactExceptionShareMyPhoneNumber, color: theme.colors.text, type: .switchable(state.addToException), viewType: .singleItem, action: {
@@ -75,7 +75,7 @@ private func newContactEntries(state: EditInfoState, arguments: NewContactArgume
 
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
 
     
@@ -145,7 +145,7 @@ func NewContactController(context: AccountContext, peerId: PeerId) -> InputDataM
     
     let modalInteractions: ModalInteractions = ModalInteractions(acceptTitle: strings().navigationDone, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(300, 300))
     

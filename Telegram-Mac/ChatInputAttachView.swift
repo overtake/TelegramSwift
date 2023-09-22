@@ -141,7 +141,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 value = MenuAnimation.menu_folder_bot.value
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            let canAddAttach: Bool
+                            var canAddAttach: Bool
                             if peer.isUser {
                                 canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.user)
                             } else if peer.isBot {
@@ -153,6 +153,8 @@ class ChatInputAttachView: ImageButton, Notifable {
                             } else {
                                 canAddAttach = false
                             }
+                            
+                            canAddAttach = canAddAttach && attach.flags.contains(.showInAttachMenu)
                             
                             if canAddAttach {
                                 items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in

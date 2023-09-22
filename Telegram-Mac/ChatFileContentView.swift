@@ -82,7 +82,7 @@ class ChatFileContentView: ChatMediaContentView {
                 parameters?.showMedia(parent)
             } else {
                 if media.mimeType.contains("svg") || (media.fileName ?? "").hasSuffix(".svg") {
-                    confirm(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in
+                    verifyAlert_button(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in
                         QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
                     })
                 } else {

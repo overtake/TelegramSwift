@@ -104,15 +104,15 @@ class TermsModalController: ModalViewController {
         }
         return ModalInteractions(acceptTitle: strings().termsOfServiceAccept, accept: {
             if let age = terms.ageConfirmation {
-                confirm(for: mainWindow, header: strings().termsOfServiceTitle, information: strings().termsOfServiceConfirmAge("\(age)"), okTitle: strings().termsOfServiceAcceptConfirmAge, successHandler: { _ in
+                verifyAlert_button(for: mainWindow, header: strings().termsOfServiceTitle, information: strings().termsOfServiceConfirmAge("\(age)"), ok: strings().termsOfServiceAcceptConfirmAge, successHandler: { _ in
                    accept()
                 })
             } else {
                 accept()
             }
         }, cancelTitle: strings().termsOfServiceDisagree, cancel: {
-            confirm(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeText, okTitle: strings().termsOfServiceDisagreeOK, successHandler: { _ in
-                confirm(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeTextLast, okTitle: strings().termsOfServiceDisagreeTextLastOK, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeText, ok: strings().termsOfServiceDisagreeOK, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeTextLast, ok: strings().termsOfServiceDisagreeTextLastOK, successHandler: { _ in
                     _ = showModalProgress(signal: context.engine.auth.deleteAccount(reason: "GDPR", password: nil), for: context.window).start(error: { _ in
                         showModalText(for: context.window, text: strings().unknownError)
                     }, completed: {

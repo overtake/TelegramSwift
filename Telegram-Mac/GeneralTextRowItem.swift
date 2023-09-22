@@ -59,7 +59,7 @@ class GeneralTextRowItem: GeneralRowItem {
     fileprivate let rightItem: InputDataGeneralTextRightData
     fileprivate let contextMenu: (()->[ContextMenuItem])?
     fileprivate let clickable: Bool 
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, additionRightText: String? = nil, linkExecutor: TextViewInteractions = globalLinkExecutor, isTextSelectable: Bool = false, detectLinks: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), contextMenu: (()->[ContextMenuItem])? = nil, clickable: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:NSAttributedString, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, additionRightText: String? = nil, linkExecutor: TextViewInteractions = globalLinkExecutor, isTextSelectable: Bool = false, detectLinks: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), contextMenu: (()->[ContextMenuItem])? = nil, clickable: Bool = false) {
         self.textColor = theme.colors.listGrayText
         self.isTextSelectable = isTextSelectable
         self.contextMenu = contextMenu
@@ -86,7 +86,7 @@ class GeneralTextRowItem: GeneralRowItem {
         }
     }
     
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu: (()->[ContextMenuItem])? = nil, clickable: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text: GeneralRowTextType, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20, top:4, bottom:2), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu: (()->[ContextMenuItem])? = nil, clickable: Bool = false) {
        
         let attributedText: NSMutableAttributedString
         self.textColor = textColor
@@ -120,7 +120,7 @@ class GeneralTextRowItem: GeneralRowItem {
         super.init(initialSize, height: height, stableId: stableId, type: .none, viewType: viewType, action: action, drawCustomSeparator: drawCustomSeparator, border: border, inset: inset)
     }
     
-    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:String, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, fontSize: CGFloat = 11.5, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), contextMenu: (()->[ContextMenuItem])? = nil, clickable: Bool = false) {
+    init(_ initialSize: NSSize, stableId: AnyHashable = arc4random(), height: CGFloat = 0, text:String, detectBold: Bool = true, textColor: NSColor = theme.colors.listGrayText, alignment:NSTextAlignment = .left, drawCustomSeparator:Bool = false, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), action: @escaping ()->Void = {}, centerViewAlignment: Bool = false, additionLoading: Bool = false, fontSize: CGFloat = 11.5, isTextSelectable: Bool = false, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), contextMenu: (()->[ContextMenuItem])? = nil, clickable: Bool = false) {
         let attr = NSAttributedString.initialize(string: text, color: textColor, font: .normal(fontSize)).mutableCopy() as! NSMutableAttributedString
         if detectBold {
             attr.detectBoldColorInString(with: .medium(fontSize))

@@ -373,6 +373,7 @@ public final class TextViewLayout : Equatable {
     private let onSpoilerReveal: ()->Void
     public private(set) var embeddedItems: [EmbeddedItem] = []
     public var truncatingColor: NSColor? = nil
+    
     public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true, mayItems: Bool = true, spoilers:[Spoiler] = [], onSpoilerReveal: @escaping()->Void = {}, truncatingColor: NSColor? = nil) {
         self.spoilers = spoilers
         self.truncationType = truncationType
@@ -1510,12 +1511,8 @@ public enum CursorSelectAlignment {
 public struct TextSelectedRange: Equatable {
     
     
-    public var range:NSRange = NSMakeRange(NSNotFound, 0) {
-        didSet {
-            var bp:Int = 0
-            bp += 1
-        }
-    }
+    public var range:NSRange = NSMakeRange(NSNotFound, 0)
+        
     public var color:NSColor = presentation.colors.selectText
     public var def:Bool = true
     
@@ -2069,6 +2066,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     }
     
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil, transition: ContainedViewLayoutTransition = .immediate) -> Void {
+        
+        if let current = self.textLayout, current.attributedString.string == layout?.attributedString.string {
+            if layout?.selectedRange.range == NSMakeRange(NSNotFound, 0) {
+                layout?.selectedRange = current.selectedRange
+            }
+        }
+        
         self.textLayout = layout
                 
         self.updateInks(layout)
@@ -2148,7 +2152,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         if let layout = textLayout, userInteractionEnabled {
             let point = self.convert(event.locationInWindow, from: nil)
             let index = layout.findIndex(location: point)
-            if point.x > layout.lines[index].frame.maxX {
+            if point.x > layout.lines[index].frame.maxX, isSelectable {
                 superview?.mouseDown(with: event)
             } else {
                 _mouseDown(with: event)

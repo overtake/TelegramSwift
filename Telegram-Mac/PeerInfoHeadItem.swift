@@ -116,7 +116,7 @@ extension TelegramPeerPhoto : Equatable {
 }
 
 fileprivate let actionItemWidth: CGFloat = 135
-fileprivate let actionItemInsetWidth: CGFloat = 19
+fileprivate let actionItemInsetWidth: CGFloat = 20
 
 private struct SubActionItem {
     let text: String
@@ -298,6 +298,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
                     arguments.stats(cachedData.statsDatacenterId)
                 }))
+            } else if peer.isChannel, peer.isAdmin {
+                items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
+                    arguments.stats(0)
+                }))
             }
         }
         if access.canReport {
@@ -426,7 +430,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         var height: CGFloat = 0
         
         if !editing {
-            height = photoDimension + insets.top + insets.bottom + nameLayout.layoutSize.height + statusLayout.layoutSize.height + insets.bottom
+            height = photoDimension + insets.bottom + nameLayout.layoutSize.height + statusLayout.layoutSize.height + insets.bottom
             
             if !items.isEmpty {
                 let maxActionSize: NSSize = items.max(by: { $0.size.height < $1.size.height })!.size
@@ -436,7 +440,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 height += 40
             }
         } else {
-            height = photoDimension + insets.top + insets.bottom
+            height = photoDimension + insets.bottom
         }
         return height
     }
@@ -1083,7 +1087,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             return
         }
         
-        photoContainer.centerX(y: item.viewType.innerInset.top)
+        photoContainer.centerX(y: 0)
         
         photoView.center()
         photoEditableView?.center()
@@ -1104,6 +1108,16 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    private func _actionItemWidth(_ items: [ActionItem]) -> CGFloat {
+        guard let item = self.item as? PeerInfoHeadItem else {
+            return 0
+        }
+        
+        let width = (item.blockWidth - (actionItemInsetWidth * CGFloat(items.count - 1)))
+        
+        return max(actionItemWidth, min(170, width / CGFloat(items.count)))
+    }
+    
     private func layoutActionItems(_ items: [ActionItem], animated: Bool) {
         
         if !items.isEmpty {
@@ -1119,6 +1133,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             
             let inset: CGFloat = 0
             
+            let actionItemWidth = _actionItemWidth(items)
+            
             actionsView.change(size: NSMakeSize(actionItemWidth * CGFloat(items.count) + CGFloat(items.count - 1) * actionItemInsetWidth, maxActionSize.height), animated: animated)
             
             var x: CGFloat = inset
@@ -1126,9 +1142,9 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             for (i, item) in items.enumerated() {
                 let view = actionsView.subviews[i] as! ActionButton
                 view.updateAndLayout(item: item, theme: theme)
-                view.setFrameSize(NSMakeSize(item.size.width, maxActionSize.height))
+                view.setFrameSize(NSMakeSize(actionItemWidth, maxActionSize.height))
                 view.change(pos: NSMakePoint(x, 0), animated: false)
-                x += maxActionSize.width + actionItemInsetWidth
+                x += actionItemWidth + actionItemInsetWidth
             }
             
         } else {

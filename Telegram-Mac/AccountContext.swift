@@ -993,10 +993,10 @@ final class AccountContext {
         let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return confirmSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle))
+                    return verifyAlertSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle)) |> map { $0 == .basic }
                 }
             }
-            return confirmSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count))
+            return verifyAlertSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count)) |> map { $0 == .basic }
         }
         let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
         

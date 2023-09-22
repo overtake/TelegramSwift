@@ -102,40 +102,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
     public override func draw(_ dirtyRect: NSRect) {
        
     }
-//
-////    override public func setNeedsDisplay(_ invalidRect: NSRect) {
-////
-////    }
-//
-//    public func draw(_ layer: CALayer, in ctx: CGContext) {
-//       // ctx.clear(bounds)
-//
-//
-//           // ctx.setFillColor(NSColor.clear.cgColor)
-//           // ctx.fill(bounds)
-//
-//
-//        if let border = border {
-//
-//            ctx.setFillColor(presentation.colors.border.cgColor)
-//
-//            if border.contains(.Top) {
-//                ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
-//            }
-//            if border.contains(.Bottom) {
-//                ctx.fill(NSMakeRect(0, 0, NSWidth(self.frame), .borderSize))
-//            }
-//            if border.contains(.Left) {
-//                ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
-//            }
-//            if border.contains(.Right) {
-//                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
-//            }
-//
-//        }
-//    }
-//
-
     
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -168,7 +134,14 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     public func updateBounds(to point: NSPoint) {
         if self.bounds.origin != point {
-            super.scroll(to: point)
+            CATransaction.begin()
+            NSAnimationContext.beginGrouping()
+            NSAnimationContext.current.duration = 0
+            self.animator().setBoundsOrigin(point)
+            self.animator().scroll(to: point)
+            NSAnimationContext.endGrouping()
+            CATransaction.commit()
+            self.destinationOrigin = nil
         }
     }
         
@@ -181,8 +154,18 @@ public class TGClipView: NSClipView,CALayerDelegate {
         }
         self.scrollCompletion = completion
         self.destinationOrigin = point
+        
         if animated {
-            
+            if abs(bounds.minY - point.y) > frame.height {
+                let y:CGFloat
+                if bounds.minY < point.y {
+                    y = point.y - frame.height
+                } else {
+                    y = point.y + frame.height
+                }
+                self.scroll(to: NSMakePoint(bounds.minX, y))
+            }
+
             self.point = point
             NSAnimationContext.runAnimationGroup({ ctx in
                 ctx.duration = 0.35
@@ -190,9 +173,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 ctx.timingFunction = timingFunction
                 self.animator().setBoundsOrigin(point)
             }, completionHandler: {
-//                if point != self.bounds.origin, self.point == point {
-//                    self.setBoundsOrigin(point)
-//                }
                 self.destinationOrigin = nil
                 self.point = nil
                 self.scrollCompletion?(point == self.bounds.origin)
@@ -206,6 +186,20 @@ public class TGClipView: NSClipView,CALayerDelegate {
         
     }
     
+    func cancelScrolling() {
+        if let point = self.destinationOrigin {
+            updateBounds(to: point)
+        }
+    }
+    
+    public override func scroll(_ point: NSPoint) {
+        super.scroll(point)
+    }
+    
+    public override func setBoundsOrigin(_ newOrigin: NSPoint) {
+        super.setBoundsOrigin(newOrigin)
+    }
+    
     
     public override var bounds: NSRect {
         set {
@@ -216,9 +210,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         }
     }
     
-//    public override func scroll(to newOrigin: NSPoint) {
-//        bounds.origin = newOrigin
-//    }
+    public override func scroll(to newOrigin: NSPoint) {
+        super.scroll(to: newOrigin)
+    }
     
     func handleCompletionIfNeeded(withSuccess success: Bool) {
         self.destinationOrigin = nil

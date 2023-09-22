@@ -388,7 +388,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
             } else if let error = discussError {
                 switch error {
                 case .groupHistoryIsCurrentlyPrivate:
-                    confirm(for: context.window, information: strings().discussionControllerErrorPreHistory, okTitle: strings().discussionControllerErrorOK, successHandler: { _ in
+                    verifyAlert_button(for: context.window, information: strings().discussionControllerErrorPreHistory, ok: strings().discussionControllerErrorOK, successHandler: { _ in
                         setup(channelId, groupId, updatePreHistory: true)
                     })
                 case .hasNotPermissions:
@@ -422,11 +422,11 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
     }, unlinkGroup: { associated in
         if associated.isChannel {
-            confirm(for: context.window, information: strings().discussionControllerConfrimUnlinkChannel, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().discussionControllerConfrimUnlinkChannel, successHandler: { _ in
                 setup(associated.id, nil)
             })
         } else {
-            confirm(for: context.window, information: strings().discussionControllerConfrimUnlinkGroup, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().discussionControllerConfrimUnlinkGroup, successHandler: { _ in
                 setup(peer.id, nil)
             })
         }

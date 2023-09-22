@@ -297,7 +297,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             items.append(ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
                 let link = "https://promote.telegram.org"
-                confirm(for: context.window, information: strings().chatMessageAdText(link), cancelTitle: "", thridTitle: strings().chatMessageAdReadMore, successHandler: { result in
+                verifyAlert_button(for: context.window, information: strings().chatMessageAdText(link), cancel: "", option: strings().chatMessageAdReadMore, successHandler: { result in
                     switch result {
                     case .thrid:
                      let link = inAppLink.external(link: link, false)
@@ -328,7 +328,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 let ok = author.isUser ? strings().chatContextBlockUserOK : strings().chatContextBlockGroupOK
                 let cancel = author.isUser ? strings().chatContextBlockUserCancel : strings().chatContextBlockGroupCancel
 
-                modernConfirm(for: context.window, account: account, peerId: author.id, header: header, information: info, okTitle: ok, cancelTitle: cancel, thridTitle: third, thridAutoOn: true, successHandler: { result in
+                verifyAlert(for: context.window, header: header, information: info, ok: ok, cancel: cancel, option: third, optionIsSelected: true, successHandler: { result in
                     switch result {
                     case .thrid:
                         let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: author.id) |> `catch` { _ in return .complete() }
@@ -373,7 +373,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     let canClose: Bool = canEditMessage(data.message, chatInteraction: data.chatInteraction, context: context, ignorePoll: true)
                     if canClose {
                         add_secondBlock.append(ContextMenuItem(poll.kind == .quiz ? strings().chatQuizStop : strings().chatPollStop, handler: { [weak chatInteraction] in
-                            confirm(for: context.window, header: poll.kind == .quiz ? strings().chatQuizStopConfirmHeader : strings().chatPollStopConfirmHeader, information: poll.kind == .quiz ? strings().chatQuizStopConfirmText : strings().chatPollStopConfirmText, okTitle: strings().alertConfirmStop, successHandler: { [weak chatInteraction] _ in
+                            verifyAlert_button(for: context.window, header: poll.kind == .quiz ? strings().chatQuizStopConfirmHeader : strings().chatPollStopConfirmHeader, information: poll.kind == .quiz ? strings().chatQuizStopConfirmText : strings().chatPollStopConfirmText, ok: strings().alertConfirmStop, successHandler: { [weak chatInteraction] _ in
                                 chatInteraction?.closePoll(messageId)
                             })
                         }, itemImage: MenuAnimation.menu_stop_poll.value))
@@ -591,7 +591,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             if peer.isSupergroup, !needUnpin {
                                 let info = pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1
                                 
-                                modernConfirm(for: context.window, information: info, okTitle:  strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { result in
+                                verifyAlert(for: context.window, information: info, ok:  strings().messageContextPin, option: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { result in
                                     data.chatInteraction.updatePinned(data.message.id, needUnpin, result != .thrid, false)
                                 })
                             } else {
@@ -607,7 +607,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             } else if let peer = peer as? TelegramGroup, peer.canPinMessage, (needUnpin || data.chatMode != .pinned) {
                 secondBlock.append(ContextMenuItem(pinText, handler: {
                     if !needUnpin {
-                        modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { result in
+                        verifyAlert(for: context.window, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, ok: strings().messageContextPin, option: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { result in
                             data.chatInteraction.updatePinned(data.message.id, needUnpin, result == .thrid, false)
                         })
                     } else {
@@ -617,7 +617,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             } else if data.canPinMessage, let peer = data.peer, (needUnpin || data.chatMode != .pinned) {
                 secondBlock.append(ContextMenuItem(pinText, handler: {
                     if !needUnpin {
-                        modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: strings().chatConfirmPinFor(peer.displayTitle), thridAutoOn: false, successHandler: { result in
+                        verifyAlert(for: context.window, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, ok: strings().messageContextPin, option: strings().chatConfirmPinFor(peer.displayTitle), optionIsSelected: false, successHandler: { result in
                             data.chatInteraction.updatePinned(data.message.id, needUnpin, false, result != .thrid)
                         })
                     } else {
@@ -923,6 +923,14 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     })
                 }, itemImage: animation[i].value))
             }
+            
+            submenu.addItem(ContextMenuItem(strings().reportReasonOther, handler: {
+                showModal(with: ReportDetailsController(context: context, reason: .init(reason: .custom, comment: ""), updated: { value in
+                    _ = showModalProgress(signal: context.engine.peers.reportPeerMessages(messageIds: [messageId], reason: .custom, message: value.comment), for: context.window).start(completed: {
+                        showModalText(for: context.window, text: strings().messageContextReportAlertOK)
+                    })
+                }), for: context.window)
+            }, itemImage: MenuAnimation.menu_read.value))
             report.submenu = submenu
             
             fifthBlock.append(report)

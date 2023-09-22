@@ -213,7 +213,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_exception(item.peer.peer.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 42, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .nextContext(stringForKeepMediaTimeout(item.value)), viewType: tuple.viewType, contextMenuItems: {
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 42, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, generalType: .nextContext(stringForKeepMediaTimeout(item.value)), viewType: tuple.viewType, contextMenuItems: {
                     return .single(menuItems)
                 })
             }))
@@ -322,7 +322,7 @@ func DataStorageExceptions(context: AccountContext, category: CacheStorageSettin
         })
         actionsDisposable.add(signal.start())
     }, removeAll: {
-        confirm(for: context.window, information: strings().storageExceptionsRemoveAllConfirm, okTitle: strings().alertYes, successHandler: { _ in
+        verifyAlert_button(for: context.window, information: strings().storageExceptionsRemoveAllConfirm, ok: strings().alertYes, successHandler: { _ in
             let exceptions = stateValue.with { $0.exceptions.map { $0.peer.peer.id }}
             let signal = updateAccountSpecificCacheStorageSettingsInteractively(postbox: context.account.postbox, { settings in
                 var settings = settings

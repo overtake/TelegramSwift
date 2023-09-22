@@ -123,14 +123,19 @@ class ChatInputAccessory: View {
             let setHideAction:(Bool)->Void = { [weak self] hide in
                 self?.chatInteraction.update {
                     $0.updatedInterfaceState {
-                        $0.withUpdatedHideSendersName(hide)
+                        $0.withUpdatedHideSendersName(hide, saveTempValue: true)
                     }
                 }
             }
             let setHideCaption:(Bool)->Void = { [weak self] hide in
                 self?.chatInteraction.update {
-                    $0.updatedInterfaceState {
-                        $0.withUpdatedHideCaption(hide)
+                    $0.updatedInterfaceState { current in
+                        var current = current
+                        current = current.withUpdatedHideCaption(hide)
+                        if current.tempSenderName == nil {
+                            current = current.withUpdatedHideSendersName(hide, saveTempValue: false)
+                        }
+                        return current
                     }
                 }
             }
