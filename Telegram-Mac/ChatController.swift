@@ -3877,7 +3877,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                             } |> take(until: { index in
                                 return SignalTakeAction(passthrough: index.0 != nil, complete: !index.1)
-                            }) |> map { $0.0 } |> delay(0.2, queue: .mainQueue())
+                            }) |> map { $0.0 }
                         
                         strongSelf.chatInteraction.loadingMessage.set(.single(true) |> delay(0.2, queue: Queue.mainQueue()))
                         strongSelf.messageIndexDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { [weak strongSelf] message in
@@ -3888,9 +3888,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let requestCount = strongSelf.requestCount
                                 let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated)
                                 let id = strongSelf.takeNextHistoryLocationId()
-                                delay(0.1, closure: { [weak strongSelf] in
-                                    strongSelf?.setLocation(.init(content: content, id: id))
-                                })
+                                strongSelf.setLocation(.init(content: content, id: id))
                             }
                         }))
                         //  }
