@@ -2618,7 +2618,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
             }
             
 
-            let verify = verifyAlertSignal(for: context.window, information: text, ok: okTitle ?? strings().alertOK, option: thridTitle, optionIsSelected: false) |> filter { $0 == .basic }
+            let verify = verifyAlertSignal(for: context.window, information: text, ok: okTitle ?? strings().alertOK, option: thridTitle, optionIsSelected: false) |> filter { $0 != nil }
             
             return combineLatest(verify, context.globalPeerHandler.get() |> take(1)) |> map { result, location -> Bool in
                 
