@@ -2595,6 +2595,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
+        clipView.cancelScrolling()
+        
         let oldEmpty = self.isEmpty
         
         self.beginUpdates()
