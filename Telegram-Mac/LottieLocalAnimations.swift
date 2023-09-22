@@ -299,7 +299,6 @@ enum LocalAnimatedSticker : String {
     case forum_topic
     
     case custom_reaction
-    case hand_animation
     
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")

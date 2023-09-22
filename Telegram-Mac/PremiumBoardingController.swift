@@ -826,7 +826,7 @@ final class PremiumBoardingController : ModalViewController {
         self.source = source
         self.openFeatures = openFeatures
         self.presentation = presentation
-        super.init(frame: NSMakeRect(0, 0, 380, 300))
+        super.init(frame: NSMakeRect(0, 0, 380, 530))
     }
     
     override func measure(size: NSSize) {
