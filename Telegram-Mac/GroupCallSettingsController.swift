@@ -221,7 +221,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
         
     if let list = uiState.displayAsList {
         
-        if !list.isEmpty {
+        if !list.isEmpty, !state.isStream {
             
             if case .sectionId = entries.last {
                 

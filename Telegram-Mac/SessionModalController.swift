@@ -68,13 +68,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("location"), data: InputDataGeneralData(name: strings().sessionPreviewLocation, color: theme.colors.text, type: .context(state.session.country), viewType: .lastItem, enabled: true)))
         index += 1
-    }
-    
-    
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().sessionPreviewIpDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
 
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().sessionPreviewIpDesc), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
+    }
 
     
     entries.append(.sectionId(sectionId, type: .normal))

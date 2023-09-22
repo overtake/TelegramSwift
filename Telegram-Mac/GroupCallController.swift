@@ -1196,6 +1196,8 @@ final class GroupCallUIController : ViewController {
                 return []
             }
             
+            let isStream = self?.data.call.isStream ?? false
+            
             var firstBlock:[ContextMenuItem] = []
             var secondBlock:[ContextMenuItem] = []
             var thirdBlock: [ContextMenuItem] = []
@@ -1228,7 +1230,7 @@ final class GroupCallUIController : ViewController {
                     secondBlock.append(ContextMenuItem(strings().voiceChatDownHand, handler: arguments.toggleRaiseHand, itemImage: MenuAnimation.menu_unblock.value))
                 }
                 
-                if let endpointId = data.videoEndpoint {
+                if let endpointId = data.videoEndpoint, !isStream {
                     if !arguments.isPinnedVideo(data.peer.id, .video) {
                         secondBlock.append(ContextMenuItem(strings().voiceChatPinVideo, handler: {
                             arguments.pinVideo(.init(data.peer.id, endpointId, .video, .permanent))
@@ -1239,7 +1241,7 @@ final class GroupCallUIController : ViewController {
                         }, itemImage: MenuAnimation.menu_unpin.value))
                     }
                 }
-                if let endpointId = data.presentationEndpoint {
+                if let endpointId = data.presentationEndpoint, !isStream {
                     if !arguments.isPinnedVideo(data.peer.id, .screencast) {
                         secondBlock.append(ContextMenuItem(strings().voiceChatPinScreencast, handler: {
                             arguments.pinVideo(.init(data.peer.id, endpointId, .screencast, .permanent))
@@ -1253,7 +1255,7 @@ final class GroupCallUIController : ViewController {
                 
                 
                 
-                if !data.canManageCall, data.peer.id != data.accountPeerId {
+                if !data.canManageCall, data.peer.id != data.accountPeerId, !isStream {
                     if let muteState = state.muteState {
                         if muteState.mutedByYou {
                             secondBlock.append(.init(strings().voiceChatUnmuteForMe, handler: {
@@ -1271,7 +1273,7 @@ final class GroupCallUIController : ViewController {
                     }
                 }
                 
-                if data.canManageCall, data.peer.id != data.accountPeerId {
+                if data.canManageCall, data.peer.id != data.accountPeerId, !isStream {
                     if data.adminIds.contains(data.peer.id) {
                         if state.muteState == nil {
                             secondBlock.append(.init(strings().voiceChatMutePeer, handler: {

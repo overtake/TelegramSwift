@@ -1069,7 +1069,7 @@ final class PremiumBoardingController : ModalViewController {
         }))
 
         
-        let stateSignal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
+        let stateSignal = statePromise.get() |> filter { $0.period != nil } |> deliverOnPrepareQueue |> map { state in
             return (InputDataSignalValue(entries: entries(state, arguments: arguments)), state)
         }
         
@@ -1095,7 +1095,7 @@ final class PremiumBoardingController : ModalViewController {
         actionsDisposable.add(signal.start(next: { [weak self] transition in
             self?.genericView.tableView.merge(with: transition.0)
             self?.genericView.update(animated: transition.0.animated, arguments: arguments, state: transition.1)
-            self?.updateSize(transition.0.animated)
+            self?.updateSize(true)
             self?.readyOnce()
         }))
         

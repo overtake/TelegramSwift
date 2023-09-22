@@ -2491,6 +2491,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         if found && sync {
             self.participantsContext?.updateMuteState(peerId: peerId, muteState: nil, volume: volume, raiseHand: nil)
         }
+        
     }
 
     public func setRequestedVideoList(items: [PresentationGroupCallRequestedVideo]) {

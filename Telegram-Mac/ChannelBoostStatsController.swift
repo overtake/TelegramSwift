@@ -254,7 +254,7 @@ private final class BoostRowItemView : TableRowView {
             return
         }
         
-        lineView.setFrameSize(NSMakeSize(item.blockWidth - 40, 30))
+        lineView.setFrameSize(NSMakeSize(item.blockWidth, 30))
         lineView.layer?.cornerRadius = 10
         lineView.update(item.state, context: item.context, transition: .immediate)
         
@@ -273,8 +273,9 @@ private final class BoostRowItemView : TableRowView {
         }
     
         transition.updateFrame(view: lineView, frame: lineView.centerFrameX(y: frame.height - lineView.frame.height))
+        
 
-        let topPoint = NSMakePoint(max(min(30 + lineView.frame.width * item.state.percentToNext - top.frame.width / 2, size.width - 30 - top.frame.width), 30), lineView.frame.minY - top.frame.height - 10)
+        let topPoint = NSMakePoint(max(min(lineView.frame.minX + lineView.frame.width * item.state.percentToNext - top.frame.width / 2, size.width - 20 - top.frame.width), lineView.frame.minX), lineView.frame.minY - top.frame.height - 10)
         transition.updateFrame(view: top, frame: CGRect(origin: topPoint, size: top.frame.size))
 
     }
