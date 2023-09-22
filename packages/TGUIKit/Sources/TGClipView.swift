@@ -150,7 +150,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         }
         self.scrollCompletion = completion
         self.destinationOrigin = point
-        if animated {
+        if animated, point != bounds.origin {
             let y: CGFloat
             if bounds.minY < point.y {
                 y = point.y - frame.height
