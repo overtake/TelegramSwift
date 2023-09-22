@@ -169,11 +169,6 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
 
-//    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.value.comment), error: nil, identifier: _id_custom_input, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().reportReasonOtherPlaceholder, filter: { $0 }, limit: 128))
-//    index += 1
-//
-//    entries.append(.sectionId(sectionId, type: .normal))
-//    sectionId += 1
     
     return entries
 }

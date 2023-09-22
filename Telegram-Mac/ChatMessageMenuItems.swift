@@ -923,6 +923,14 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     })
                 }, itemImage: animation[i].value))
             }
+            
+            submenu.addItem(ContextMenuItem(strings().reportReasonOther, handler: {
+                showModal(with: ReportDetailsController(context: context, reason: .init(reason: .custom, comment: ""), updated: { value in
+                    _ = showModalProgress(signal: context.engine.peers.reportPeerMessages(messageIds: [messageId], reason: .custom, message: value.comment), for: context.window).start(completed: {
+                        showModalText(for: context.window, text: strings().messageContextReportAlertOK)
+                    })
+                }), for: context.window)
+            }, itemImage: MenuAnimation.menu_read.value))
             report.submenu = submenu
             
             fifthBlock.append(report)

@@ -590,6 +590,6 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
 
 
 func showModalAlert(for window: Window, data: ModalAlertData, completion: @escaping(ModalAlertResult)->Void, cancel:@escaping()->Void = {}, presentation: TelegramPresentationTheme = theme) {
-    showModal(with: ModalAlertController(data: data, completion: completion, cancel: cancel, presentation: presentation), for: window)
+    showModal(with: ModalAlertController(data: data, completion: completion, cancel: cancel, presentation: presentation), for: window, animationType: .scaleCenter)
 }
 
