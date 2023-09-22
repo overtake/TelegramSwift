@@ -1182,18 +1182,6 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .loginCode(_, code):
         appDelegate?.applyExternalLoginCode(code)
     case let .boost(_, username, context):
-<<<<<<< HEAD
-        let signal = context.engine.peers.resolvePeerByName(name: username)
-
-//        _ = showModalProgress(signal: signal, for: context.window).start(next: { peer in
-//            if let peer = peer {
-//                showModal(with: BoostChannelModalController(context: context, peer: peer._asPeer()), for: context.window)
-//            }
-//        })
-=======
-        
-        
-        
         let signal: Signal<(Peer, ChannelBoostStatus?, CanApplyBoostStatus)?, NoError> = resolveUsername(username: username, context: context) |> mapToSignal { value in
             if let value = value {
                 return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.canApplyChannelBoost(peerId: value.id)) |> map {
@@ -1219,7 +1207,6 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 
             }
         })
->>>>>>> beta
     }
     
 }
