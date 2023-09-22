@@ -102,40 +102,6 @@ public class TGClipView: NSClipView,CALayerDelegate {
     public override func draw(_ dirtyRect: NSRect) {
        
     }
-//
-////    override public func setNeedsDisplay(_ invalidRect: NSRect) {
-////
-////    }
-//
-//    public func draw(_ layer: CALayer, in ctx: CGContext) {
-//       // ctx.clear(bounds)
-//
-//
-//           // ctx.setFillColor(NSColor.clear.cgColor)
-//           // ctx.fill(bounds)
-//
-//
-//        if let border = border {
-//
-//            ctx.setFillColor(presentation.colors.border.cgColor)
-//
-//            if border.contains(.Top) {
-//                ctx.fill(NSMakeRect(0, NSHeight(self.frame) - .borderSize, NSWidth(self.frame), .borderSize))
-//            }
-//            if border.contains(.Bottom) {
-//                ctx.fill(NSMakeRect(0, 0, NSWidth(self.frame), .borderSize))
-//            }
-//            if border.contains(.Left) {
-//                ctx.fill(NSMakeRect(0, 0, .borderSize, NSHeight(self.frame)))
-//            }
-//            if border.contains(.Right) {
-//                ctx.fill(NSMakeRect(NSWidth(self.frame) - .borderSize, 0, .borderSize, NSHeight(self.frame)))
-//            }
-//
-//        }
-//    }
-//
-
     
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -168,7 +134,10 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     public func updateBounds(to point: NSPoint) {
         if self.bounds.origin != point {
+            self.layer?.removeAllAnimations()
+            CATransaction.begin()
             super.scroll(to: point)
+            CATransaction.commit()
         }
     }
         
@@ -182,21 +151,31 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.scrollCompletion = completion
         self.destinationOrigin = point
         if animated {
-            
+            let y: CGFloat
+            if bounds.minY < point.y {
+                y = point.y - frame.height
+            } else {
+                y = point.y + frame.height
+            }
             self.point = point
-            NSAnimationContext.runAnimationGroup({ ctx in
-                ctx.duration = 0.35
-                let timingFunction = CAMediaTimingFunction(controlPoints: 0.5, 1.0 + 0.4 / 3.0, 1.0, 1.0)
-                ctx.timingFunction = timingFunction
-                self.animator().setBoundsOrigin(point)
-            }, completionHandler: {
-//                if point != self.bounds.origin, self.point == point {
-//                    self.setBoundsOrigin(point)
-//                }
+            self.scroll(to: point)
+
+            let point = NSMakePoint(point.x, y)
+            let current = self.bounds
+            let bounds = CGRect(origin: point, size: self.bounds.size)
+            
+            self._changeBounds(from: bounds, to: current, animated: true, duration: 0.3, completion: { [weak self] _ in
+                guard let `self` = self else {
+                    return
+                }
+                if self.point == point {
+                    self.scroll(to: point)
+                }
                 self.destinationOrigin = nil
                 self.point = nil
                 self.scrollCompletion?(point == self.bounds.origin)
             })
+            
         } else {
             self.updateBounds(to: point)
             self.point = nil
@@ -204,6 +183,21 @@ public class TGClipView: NSClipView,CALayerDelegate {
             self.scrollCompletion?(false)
         }
         
+    }
+    
+    func cancelScrolling() {
+        if let origin = destinationOrigin {
+            self.scroll(to: origin)
+            self.destinationOrigin = nil
+        }
+    }
+    
+    public override func scroll(_ point: NSPoint) {
+        super.scroll(point)
+    }
+    
+    public override func setBoundsOrigin(_ newOrigin: NSPoint) {
+        super.setBoundsOrigin(newOrigin)
     }
     
     
@@ -216,9 +210,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         }
     }
     
-//    public override func scroll(to newOrigin: NSPoint) {
-//        bounds.origin = newOrigin
-//    }
+    public override func scroll(to newOrigin: NSPoint) {
+        super.scroll(to: newOrigin)
+    }
     
     func handleCompletionIfNeeded(withSuccess success: Bool) {
         self.destinationOrigin = nil
