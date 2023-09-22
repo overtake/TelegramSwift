@@ -2403,7 +2403,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         
-        if chatLocation.peerId.namespace == Namespaces.Peer.CloudUser, chatLocation.peerId != context.peerId, mode == .history {
+        if chatLocation.peerId.namespace == Namespaces.Peer.CloudUser || chatLocation.peerId.namespace == Namespaces.Peer.CloudChannel, chatLocation.peerId != context.peerId, mode == .history {
             self.stories = PeerExpiringStoryListContext(account: context.account, peerId: peerId)
         } else {
             self.stories = nil
