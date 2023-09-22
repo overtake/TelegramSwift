@@ -105,7 +105,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
   
     
@@ -149,7 +149,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     if state.email != nil  || state.name != nil  || state.phone != nil {
         if state.address != nil {
-            entries.append(.sectionId(sectionId, type: .normal))
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
         }
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutInfoReceiverInfoTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
@@ -182,7 +182,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_info_save_info, data: .init(name: strings().checkoutInfoSaveInfo, color: theme.colors.text, type: .switchable(state.saveInfo), viewType: .singleItem, action: arguments.toggleSaveInfo)))
@@ -190,7 +190,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutInfoSaveInfoHelp), data: InputDataGeneralTextData.init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -335,7 +335,7 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     
 

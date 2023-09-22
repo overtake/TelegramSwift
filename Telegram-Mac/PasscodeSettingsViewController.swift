@@ -114,7 +114,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PasscodeEntry>],
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         switch entry.entry {
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: entry.stableId, viewType: .separator)
         case let .turnOn(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().passcodeTurnOn, nameStyle: actionStyle, type: .none, viewType: viewType, action: {
                 arguments.turnOn()

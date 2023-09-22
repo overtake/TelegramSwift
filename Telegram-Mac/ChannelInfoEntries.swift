@@ -545,7 +545,11 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func stats(_ datacenterId: Int32) {
-        self.pushViewController(ChannelStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
+        if datacenterId == 0 {
+            self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId))
+        } else {
+            self.pushViewController(ChannelStatsSegmentController(context, datacenterId: datacenterId, peerId: peerId, isChannel: true))
+        }
     }
     func share() {
         let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> deliverOnMainQueue
@@ -1101,7 +1105,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section(_):
-            return GeneralRowItem(initialSize, height:30, stableId: stableId.hashValue, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId.hashValue, viewType: .separator)
         }
     }
 }

@@ -20,6 +20,9 @@ enum MessageTextMediaViewType {
     case none
 }
 
+let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
+
+
 func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1, notifications: Bool = false) -> (string: NSString, justSpoiled: String) {
     var messageText: String = message.text
     
@@ -40,7 +43,6 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
         }
     }
     
-    let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
     
     if message.id.peerId == supportId, message.flags.contains(.Incoming), !notifications, message.id.namespace == Namespaces.Message.Cloud {
         let regexPattern = #"[\d\-]{5,7}"#

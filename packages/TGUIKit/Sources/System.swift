@@ -56,6 +56,10 @@ public struct System {
     public static var backingScale:CGFloat {
         return safeScaleFactor
     }
+    
+    public static var pixel:CGFloat {
+        return 1 / safeScaleFactor
+    }
     public static var aspectRatio: CGFloat {
         let frame = NSScreen.main?.frame ?? .zero
         let preferredAspectRatio = CGFloat(frame.width / frame.height)

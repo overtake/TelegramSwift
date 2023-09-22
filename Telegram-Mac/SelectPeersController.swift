@@ -517,7 +517,7 @@ class SelectPeersBehavior {
         }
         if peer.isChannel {
             if settings.contains(.channels) {
-                return true
+                return !settings.contains(.checkInvite) || peer.canInviteUsers
             }
         }
         if peer.isBot {
@@ -1544,7 +1544,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
                 if let interactions = self?.interactions {
                    self?.confirmSelected(Array(interactions.presentation.selected), Array(interactions.presentation.peers.values))
                 }
-            }, drawBorder: true, height: 50, singleButton: true, customTheme: { [weak self] in
+            }, drawBorder: true, height: 50, singleButton: false, customTheme: { [weak self] in
                 return self?.modalTheme ?? .init()
             })
             

@@ -133,8 +133,8 @@ private func callFeedbackControllerEntries(state: CallFeedbackState, isVideo: Bo
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callFeedbackWhatWentWrong), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
@@ -211,14 +211,14 @@ func CallFeedbackController(context: AccountContext, callId: CallId, starsCount:
         return InputDataSignalValue(entries: callFeedbackControllerEntries(state: state, isVideo: isVideo, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Call Feedback")
+    let controller = InputDataController(dataSignal: signal, title: strings().callFeedbackTitle)
     
     var close: (()->Void)? = nil
     
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalSend, accept: { [weak controller] in
         controller?.validateInputValues()
         close?()
-    }, height: 50, singleButton: true)
+    }, singleButton: true)
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: {
         close?()

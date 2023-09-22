@@ -326,7 +326,7 @@ open class BackgroundView: View {
         }
     }
     
-    public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+    open func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(layer: imageView, frame: size.bounds)
         transition.updateFrame(view: container, frame: size.bounds)
         tileControl.update(frame: size.bounds, transition: transition)
@@ -1155,13 +1155,17 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         let border: NSColor
         let accent: NSColor
         let grayForeground: NSColor
-        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = presentation.colors.background, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground) {
+        let activeBackground: NSColor
+        let activeBorder: NSColor
+        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = .clear, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground, activeBackground: NSColor = presentation.colors.background, activeBorder: NSColor = presentation.colors.border) {
             self.text = text
             self.grayText = grayText
             self.background = background
             self.border = border
             self.accent = accent
             self.grayForeground = grayForeground
+            self.activeBackground = activeBackground
+            self.activeBorder = activeBorder
         }
         public init(presentation: PresentationTheme) {
             self.text = presentation.colors.text
@@ -1170,6 +1174,8 @@ open class ModalViewController : ViewController, ModalControllerHelper {
             self.border = presentation.colors.border
             self.accent = presentation.colors.accent
             self.grayForeground = presentation.colors.grayForeground
+            self.activeBackground = presentation.colors.background
+            self.activeBorder = presentation.colors.border
         }
     }
     
@@ -1219,6 +1225,9 @@ open class ModalViewController : ViewController, ModalControllerHelper {
     }
     
     open var isVisualEffectBackground: Bool {
+        return false
+    }
+    open var isVisualEffectContainer: Bool {
         return false
     }
     
@@ -1376,12 +1385,12 @@ open class TableModalViewController : ModalViewController {
     }
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 120, genericView.listHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 200, genericView.listHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 120, genericView.listHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 200, genericView.listHeight)), animated: animated)
         }
     }
     

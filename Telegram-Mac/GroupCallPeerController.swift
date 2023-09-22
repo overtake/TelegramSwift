@@ -247,7 +247,7 @@ func GroupCallPeerController(context: AccountContext, peer: Peer) -> InputDataMo
                     text = strings().unknownError
                 }
                 if let window = window {
-                    alert(for: window, info: text, appearance: GroupCallTheme.customTheme.appearance)
+                    showModalText(for: window, text: text)
                 }
             })
         }

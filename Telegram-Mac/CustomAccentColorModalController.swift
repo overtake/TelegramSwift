@@ -254,7 +254,7 @@ class CustomAccentColorModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: strings().modalSet, accept: { [weak self] in
             self?.saveAccent()
-        }, drawBorder: true, singleButton: true, customTheme: { [weak self] in
+        }, height: 50, customTheme: { [weak self] in
             return self?.modalTheme ?? .init()
         })
     }

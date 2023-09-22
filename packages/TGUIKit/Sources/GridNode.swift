@@ -280,6 +280,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
         self.hasVerticalScroller = true
         
         self.documentView = document
+        layer?.backgroundColor = .clear//presentation.colors.background.cgColor
     }
     
     required public init?(coder aDecoder: NSCoder) {
@@ -288,7 +289,7 @@ open class GridNode: ScrollView, InteractionContentViewProtocol, AppearanceViewP
     
     public func updateLocalizationAndTheme(theme: PresentationTheme) {
         guard let documentView = documentView else {return}
-        layer?.backgroundColor = presentation.colors.background.cgColor
+        layer?.backgroundColor = .clear//presentation.colors.background.cgColor
         for view in documentView.subviews {
             if let view = view as? AppearanceViewProtocol {
                 view.updateLocalizationAndTheme(theme: theme)

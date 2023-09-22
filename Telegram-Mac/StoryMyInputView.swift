@@ -14,6 +14,140 @@ import TelegramCore
 import SwiftSignalKit
 
 
+
+final class Story_AvatarContentView: View {
+    private var disposable: Disposable?
+    private var images:[CGImage] = []
+    init(context: AccountContext, peers:[Peer]?, size: NSSize) {
+        
+        
+        let count: CGFloat = peers != nil ? CGFloat(peers!.count) : 3
+        var sz = size.width + CGFloat(count) * (size.width / 2)
+        if count == 1 {
+            sz-=size.width/2
+        }
+        let viewSize = NSMakeSize(sz - (count - 1) * 1, size.height)
+        
+        super.init(frame: CGRect(origin: .zero, size: viewSize))
+        
+        layer?.masksToBounds = false
+        
+        if let peers = peers {
+            let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
+                return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(14), genCap: true, synchronousLoad: false)
+            })
+            
+            
+            let disposable = (signal
+                |> deliverOnMainQueue).start(next: { [weak self] values in
+                    guard let strongSelf = self else {
+                        return
+                    }
+                    let images = values.compactMap { $0.0 }
+                    strongSelf.updateImages(images)
+                })
+            self.disposable = disposable
+        } else {
+            let image = generateImage(NSMakeSize(size.width, size.height), scale: System.backingScale, rotatedContext: { size, ctx in
+                ctx.clear(size.bounds)
+                ctx.setFillColor(darkAppearance.colors.grayText.withAlphaComponent(0.5).cgColor)
+                ctx.fillEllipse(in: size.bounds)
+            })!
+            self.images = [image, image, image]
+        }
+       
+    }
+    
+    override func draw(_ layer: CALayer, in context: CGContext) {
+        super.draw(layer, in: context)
+        
+        
+        let mergedImageSize: CGFloat = frame.height
+        let mergedImageSpacing: CGFloat = frame.height - 10
+        
+        context.setBlendMode(.copy)
+        context.setFillColor(NSColor.clear.cgColor)
+        context.fill(bounds)
+        
+        
+        
+        var currentX = mergedImageSize + mergedImageSpacing * CGFloat(images.count - 1) - mergedImageSize
+        for i in 0 ..< self.images.count {
+            
+            let image = self.images[i]
+                            
+            context.saveGState()
+            
+            context.translateBy(x: frame.width / 2.0, y: frame.height / 2.0)
+            context.scaleBy(x: 1.0, y: -1.0)
+            context.translateBy(x: -frame.width / 2.0, y: -frame.height / 2.0)
+            
+            let imageRect = CGRect(origin: CGPoint(x: currentX, y: 0.0), size: CGSize(width: mergedImageSize, height: mergedImageSize))
+            
+            context.setBlendMode(.clear)
+            context.setFillColor(NSColor.red.cgColor)
+            context.fillEllipse(in: imageRect.insetBy(dx: -1.0, dy: -1.0))
+            context.setBlendMode(.normal)
+            context.draw(image, in: imageRect)
+            
+            currentX -= mergedImageSpacing
+            context.restoreGState()
+        }
+    }
+    
+    private func updateImages(_ images: [CGImage]) {
+        self.images = images
+        needsDisplay = true
+    }
+    
+    deinit {
+        disposable?.dispose()
+    }
+    
+    required init?(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+final class Story_LikesCountView : View {
+    private let textView: TextView = TextView()
+    private let imageView = ImageView()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(imageView)
+        addSubview(textView)
+        imageView.image = like_image
+        imageView.sizeToFit()
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+    }
+    
+    func update(_ count: Int) {
+        let string = strings().storyMyInputLikesCountable(count)
+        
+        let text: NSAttributedString = .initialize(string: string, color: darkAppearance.colors.text, font: .normal(.short))
+        let layout = TextViewLayout(text)
+        layout.measure(width: .greatestFiniteMagnitude)
+        textView.update(layout)
+        setFrameSize(NSMakeSize(layout.layoutSize.width + imageView.frame.width + 5, frame.height))
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        imageView.centerY(x: 0)
+        textView.centerY(x: imageView.frame.maxX + 5)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 private let more_image = NSImage(named: "Icon_StoryMore")!.precomposed(NSColor.white)
 private let delete_image = NSImage(named: "Icon_StoryDelete")!.precomposed(NSColor.white)
 private let like_image = NSImage(named: "Icon_StoryLike_Count")!.precomposed()
@@ -37,149 +171,17 @@ final class StoryMyInputView : Control, StoryInput {
     }
     
     
-    private final class AvatarContentView: View {
-        private var disposable: Disposable?
-        private var images:[CGImage] = []
-        init(context: AccountContext, peers:[Peer]?, size: NSSize) {
-            
-            
-            let count: CGFloat = peers != nil ? CGFloat(peers!.count) : 3
-            var sz = size.width + CGFloat(count) * (size.width / 2)
-            if count == 1 {
-                sz-=size.width/2
-            }
-            let viewSize = NSMakeSize(sz - (count - 1) * 1, size.height)
-            
-            super.init(frame: CGRect(origin: .zero, size: viewSize))
-            
-            layer?.masksToBounds = false
-            
-            if let peers = peers {
-                let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
-                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(14), genCap: true, synchronousLoad: false)
-                })
-                
-                
-                let disposable = (signal
-                    |> deliverOnMainQueue).start(next: { [weak self] values in
-                        guard let strongSelf = self else {
-                            return
-                        }
-                        let images = values.compactMap { $0.0 }
-                        strongSelf.updateImages(images)
-                    })
-                self.disposable = disposable
-            } else {
-                let image = generateImage(NSMakeSize(size.width, size.height), scale: System.backingScale, rotatedContext: { size, ctx in
-                    ctx.clear(size.bounds)
-                    ctx.setFillColor(storyTheme.colors.grayText.withAlphaComponent(0.5).cgColor)
-                    ctx.fillEllipse(in: size.bounds)
-                })!
-                self.images = [image, image, image]
-            }
-           
-        }
-        
-        override func draw(_ layer: CALayer, in context: CGContext) {
-            super.draw(layer, in: context)
-            
-            
-            let mergedImageSize: CGFloat = frame.height
-            let mergedImageSpacing: CGFloat = frame.height - 10
-            
-            context.setBlendMode(.copy)
-            context.setFillColor(NSColor.clear.cgColor)
-            context.fill(bounds)
-            
-            
-            
-            var currentX = mergedImageSize + mergedImageSpacing * CGFloat(images.count - 1) - mergedImageSize
-            for i in 0 ..< self.images.count {
-                
-                let image = self.images[i]
-                                
-                context.saveGState()
-                
-                context.translateBy(x: frame.width / 2.0, y: frame.height / 2.0)
-                context.scaleBy(x: 1.0, y: -1.0)
-                context.translateBy(x: -frame.width / 2.0, y: -frame.height / 2.0)
-                
-                let imageRect = CGRect(origin: CGPoint(x: currentX, y: 0.0), size: CGSize(width: mergedImageSize, height: mergedImageSize))
-                
-                context.setBlendMode(.clear)
-                context.setFillColor(NSColor.red.cgColor)
-                context.fillEllipse(in: imageRect.insetBy(dx: -1.0, dy: -1.0))
-                context.setBlendMode(.normal)
-                context.draw(image, in: imageRect)
-                
-                currentX -= mergedImageSpacing
-                context.restoreGState()
-            }
-        }
-        
-        private func updateImages(_ images: [CGImage]) {
-            self.images = images
-            needsDisplay = true
-        }
-        
-        deinit {
-            disposable?.dispose()
-        }
-        
-        required init?(coder decoder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        required init(frame frameRect: NSRect) {
-            fatalError("init(frame:) has not been implemented")
-        }
-    }
-    
-    private final class LikesCountView : View {
-        private let textView: TextView = TextView()
-        private let imageView = ImageView()
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            addSubview(imageView)
-            addSubview(textView)
-            imageView.image = like_image
-            imageView.sizeToFit()
-            textView.userInteractionEnabled = false
-            textView.isSelectable = false
-        }
-        
-        func update(_ count: Int) {
-            let string = strings().storyMyInputLikesCountable(count)
-            
-            let text: NSAttributedString = .initialize(string: string, color: storyTheme.colors.text, font: .normal(.short))
-            let layout = TextViewLayout(text)
-            layout.measure(width: .greatestFiniteMagnitude)
-            textView.update(layout)
-            setFrameSize(NSMakeSize(layout.layoutSize.width + imageView.frame.width + 5, frame.height))
-            
-        }
-        
-        override func layout() {
-            super.layout()
-            imageView.centerY(x: 0)
-            textView.centerY(x: imageView.frame.maxX + 5)
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-    }
 
     private var photos:[PeerId]? = nil
 
-    private var avatars: AvatarContentView?
+    private var avatars: Story_AvatarContentView?
     
     private let delete = ImageButton()
     private let more = ImageButton()
     private let views = Control()
     private let viewsText = TextView()
     
-    private var like: LikesCountView?
+    private var like: Story_LikesCountView?
     
     private var arguments: StoryArguments?
     private var story: StoryContentItem?
@@ -210,7 +212,7 @@ final class StoryMyInputView : Control, StoryInput {
         delete.sizeToFit(.zero, NSMakeSize(24, 24), thatFit: true)
         
         more.contextMenu = { [weak self] in
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
+            let menu = ContextMenu(presentation: AppMenu.Presentation.current(darkAppearance.colors))
             if let story = self?.story, let menu = self?.arguments?.storyContextMenu(story) {
                 return menu
             }
@@ -250,13 +252,13 @@ final class StoryMyInputView : Control, StoryInput {
         
         let string = strings().storyMyInputViewsCountable(storyViews?.seenCount ?? 0)
         
-        let text: NSAttributedString = .initialize(string: string, color: storyTheme.colors.text, font: .normal(.short))
+        let text: NSAttributedString = .initialize(string: string, color: darkAppearance.colors.text, font: .normal(.short))
         let layout = TextViewLayout(text)
         layout.measure(width: .greatestFiniteMagnitude)
         self.viewsText.update(layout)
         
         
-        let avatars: AvatarContentView?
+        let avatars: Story_AvatarContentView?
         
         let photos = storyViews?.seenPeers.reversed().map { $0.id } ?? []
         let peers = storyViews?.seenPeers.reversed().map { $0._asPeer() } ?? []
@@ -294,11 +296,11 @@ final class StoryMyInputView : Control, StoryInput {
         }
         
         if let views = story.storyItem.views, views.reactedCount != 0 {
-            let current: LikesCountView
+            let current: Story_LikesCountView
             if let view = self.like {
                 current = view
             } else {
-                current = LikesCountView(frame: NSMakeRect(0, 0, 30, 30))
+                current = Story_LikesCountView(frame: NSMakeRect(0, 0, 30, 30))
                 self.views.addSubview(current)
                 self.like = current
             }
@@ -309,7 +311,7 @@ final class StoryMyInputView : Control, StoryInput {
         }
         
         self.views.contextMenu = { [weak self] in
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors))
+            let menu = ContextMenu(presentation: AppMenu.Presentation.current(darkAppearance.colors))
             if let story = self?.story, let arguments = self?.arguments {
                 if let views = story.storyItem.views {
                     for peer in views.seenPeers {
@@ -389,7 +391,7 @@ final class StoryMyInputView : Control, StoryInput {
         }
         
         let wSize = NSMakeSize(window.frame.width - 100, superview.frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(wSize)
+        let aspect = StoryLayoutView.size.aspectFitted(wSize)
 
         transition.updateFrame(view: self, frame: CGRect(origin: CGPoint(x: floorToScreenPixels(backingScaleFactor,  (superview.frame.width - size.width) / 2), y: aspect.height + 10 - size.height + 30), size: size))
         self.updateLayout(size: size, transition: transition)

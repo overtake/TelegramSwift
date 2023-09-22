@@ -1112,6 +1112,17 @@ func generateChatGroupToggleSelected(foregroundColor: NSColor, backgroundColor: 
     }, scale: 2)!
 }
 
+func generateCheckSelected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+    let icon = #imageLiteral(resourceName: "Icon_Check").precomposed(foregroundColor)
+    return generateImage(NSMakeSize(icon.backingSize.width, icon.backingSize.height), contextGenerator: { size, ctx in
+        ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(2, 2, size.width - 4, size.height - 4))
+        ctx.draw(icon, in: size.bounds)
+    }, scale: 2)!
+}
+
+
 private func generateChatGroupToggleSelectionForeground(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(foregroundColor)
     return generateImage(NSMakeSize(icon.backingSize.width + 4, icon.backingSize.height + 4), contextGenerator: { size, ctx in

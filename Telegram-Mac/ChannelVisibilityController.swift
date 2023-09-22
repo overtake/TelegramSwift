@@ -345,7 +345,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
         case let .existingLinksInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .existingLinkPeerItem(_, _, peer, _, _, viewType):
-            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, status: "t.me/\(peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
+            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, status: "t.me/\(peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 20, right: 20), interactionType:.deletable(onRemove: { peerId in
                 arguments.revokePeerId(peerId)
             }, deletable: true), viewType: viewType)
         case let .manageLinks(_, viewType):
@@ -387,7 +387,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 arguments.toggleUsername(username)
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
  
     }
@@ -956,8 +956,8 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                 current.revokingPeerId = peerId
                 return current
             }
-            self?.revokeAddressNameDisposable.set((confirmSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
-                if !result {
+            self?.revokeAddressNameDisposable.set((verifyAlertSignal(for: context.window, information: strings().channelVisibilityConfirmRevoke) |> mapToSignalPromotingError { result -> Signal<Bool, UpdateAddressNameError> in
+                if result == nil {
                     return .fail(.generic)
                 } else {
                     return .single(true)
@@ -982,7 +982,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             copyToClipboard(link)
         }, revokeLink: {
-            confirm(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, okTitle: strings().channelRevokeLinkConfirmOK, cancelTitle: strings().modalCancel, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().channelRevokeLinkConfirmHeader, information: strings().channelRevokeLinkConfirmText, ok: strings().channelRevokeLinkConfirmOK, cancel: strings().modalCancel, successHandler: { _ in
                 _ = showModalProgress(signal: context.engine.peers.revokePersistentPeerExportedInvitation(peerId: peerId), for: context.window).start()
             })
         }, share: { link in
@@ -1043,7 +1043,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             let ok: String = value ? activate_ok : deactivate_ok
             
             
-            confirm(for: context.window, header: title, information: info, okTitle: ok, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: title, information: info, ok: ok, successHandler: { _ in
                 _ = context.engine.peers.toggleAddressNameActive(domain: .peer(peerId), name: username.username, active: value).start()
                 
                 updateState { current in
@@ -1224,7 +1224,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                 } else {
                                     text = strings().channelVisibilityConfirmMakePrivateGroup(address)
                                 }
-                                csignal = confirmSignal(for: context.window, information: text) |> filter { $0 } |> take(1) |> map { _ in
+                                csignal = verifyAlertSignal(for: context.window, information: text) |> filter { $0 == .basic } |> take(1) |> map { _ in
                                     
                                     updateState { current in
                                         var current = current

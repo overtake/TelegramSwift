@@ -23,7 +23,7 @@ private func entries(_ state: NumberValueState, placeholder: String) -> [InputDa
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     //4 294 967 295
@@ -42,7 +42,7 @@ private func entries(_ state: NumberValueState, placeholder: String) -> [InputDa
     
     
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -102,9 +102,9 @@ func NumberSelectorController(base: Int?, title: String, placeholder: String, ok
     
     let modalInteractions = ModalInteractions(acceptTitle: okTitle, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(300, 300))
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()

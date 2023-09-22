@@ -501,7 +501,7 @@ class ChatListController : PeersListController {
                            if let mediaId = info.media.id {
                                validIds.append(mediaId)
                                if self.preloadStoryResourceDisposables[mediaId] == nil {
-                                   self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: self.context, peer: info.peer, storyId: info.storyId, media: info.media).start()
+                                   self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: self.context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).start()
                                }
                            }
                        }
@@ -710,14 +710,14 @@ class ChatListController : PeersListController {
                     mapped.append(.loading(filterData.filter))
                 }
             }
-            if let suspiciousSession = suspiciousSession.first {
+            if let suspiciousSession = suspiciousSession.first, mode == .plain, state.splitState == .single {
                 mapped.append(.suspicious(suspiciousSession))
             }
             
 //            if !filterData.isEmpty && !filterData.sidebar, state.appear == .normal {
 //                mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
 //            }
-            if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain {
+            if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain, state.splitState == .single {
                 mapped.append(.systemDeprecated(filterData.filter))
             }
             if let updates = folderUpdates {
@@ -1230,7 +1230,7 @@ class ChatListController : PeersListController {
             
                 _ = dismissServerProvidedSuggestion(account: strongSelf.context.account, suggestion: .autoarchivePopular).start()
                 
-                confirm(for: context.window, header: strings().alertHideNewChatsHeader, information: strings().alertHideNewChatsText, okTitle: strings().alertHideNewChatsOK, cancelTitle: strings().alertHideNewChatsCancel, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().alertHideNewChatsHeader, information: strings().alertHideNewChatsText, ok: strings().alertHideNewChatsOK, cancel: strings().alertHideNewChatsCancel, successHandler: { _ in
                     execute(inapp: .settings(link: "tg://settings/privacy", context: context, section: .privacy))
                 })
                 
@@ -1666,5 +1666,4 @@ class ChatListController : PeersListController {
     }
   
 }
-
 

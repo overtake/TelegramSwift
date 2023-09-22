@@ -311,7 +311,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 items.append(ContextSeparatorItem())
                 
                 items.append(ContextMenuItem(strings().accountSettingsDeleteAccount, handler: {
-                    confirm(for: arguments.context.window, information: strings().accountConfirmLogoutText, successHandler: { _ in
+                    verifyAlert_button(for: arguments.context.window, information: strings().accountConfirmLogoutText, successHandler: { _ in
                         _ = logoutFromAccount(id: info.account.id, accountManager: arguments.context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
                     })
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
@@ -338,7 +338,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 let linked = link(path: iconPath, ext: "png")!
 
                 if let image = NSImage(contentsOf: .init(fileURLWithPath: linked)) {
-                    icon = image.precomposed(flipVertical: true, scale: 1.0)
+                    icon = generateSettingsIcon(image.precomposed(flipVertical: true, scale: 1.0))
                 }
             }
             
@@ -407,7 +407,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: arguments.openFaq, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .ask(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAskQuestion, icon: theme.icons.settingsAskQuestion, activeIcon: theme.icons.settingsAskQuestionActive, type: .next, viewType: viewType, action: {
-                confirm(for: arguments.context.window, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
+                verifyAlert_button(for: arguments.context.window, information: strings().accountConfirmAskQuestion, option: strings().accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
                         _ = showModalProgress(signal: arguments.context.engine.peers.supportPeerId(), for: arguments.context.window).start(next: {  peerId in
