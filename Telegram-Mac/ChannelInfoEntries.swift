@@ -596,6 +596,11 @@ class ChannelInfoArguments : PeerInfoArguments {
         }))
     }
     
+    func join_channel() {
+        joinChannel(context: context, peerId: peerId)
+        pushViewController(ChatController(context: context, chatLocation: .peer(peerId)))
+    }
+    
     func updateEditingDescriptionText(_ text:String) -> Void {
         updateState { state in
             if let editingState = state.editingState {

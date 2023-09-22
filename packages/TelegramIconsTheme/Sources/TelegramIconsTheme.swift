@@ -6518,6 +6518,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var profile_join_channel: CGImage {
+      if let image = cached.with({ $0["profile_join_channel"] }) {
+          return image
+      } else {
+          let image = _profile_join_channel()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_join_channel"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_quiz_explanation: CGImage {
       if let image = cached.with({ $0["chat_quiz_explanation"] }) {
           return image
@@ -10283,6 +10296,7 @@ public final class TelegramIconsTheme {
   private let _profile_stats: ()->CGImage
   private let _profile_unblock: ()->CGImage
   private let _profile_translate: ()->CGImage
+  private let _profile_join_channel: ()->CGImage
   private let _chat_quiz_explanation: ()->CGImage
   private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
   private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
@@ -11037,6 +11051,7 @@ public final class TelegramIconsTheme {
       profile_stats: @escaping()->CGImage,
       profile_unblock: @escaping()->CGImage,
       profile_translate: @escaping()->CGImage,
+      profile_join_channel: @escaping()->CGImage,
       chat_quiz_explanation: @escaping()->CGImage,
       chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
       chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
@@ -11790,6 +11805,7 @@ public final class TelegramIconsTheme {
       self._profile_stats = profile_stats
       self._profile_unblock = profile_unblock
       self._profile_translate = profile_translate
+      self._profile_join_channel = profile_join_channel
       self._chat_quiz_explanation = chat_quiz_explanation
       self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
       self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing

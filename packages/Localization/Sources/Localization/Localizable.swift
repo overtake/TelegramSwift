@@ -4751,7 +4751,7 @@ public final class L10n {
   public static var chatListSwipingUnpin: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unpin") }
   /// Unread
   public static var chatListSwipingUnread: String  { return L10n.tr("Localizable", "ChatList.Swiping.Unread") }
-  /// BOOST CHANNEL
+  /// BOOST
   public static var chatMessageBoostChannel: String  { return L10n.tr("Localizable", "ChatMessage.BoostChannel") }
   /// Open App
   public static var chatMessageOpenApp: String  { return L10n.tr("Localizable", "ChatMessage.OpenApp") }
@@ -8661,6 +8661,8 @@ public final class L10n {
   public static var peerInfoActionDiscussion: String  { return L10n.tr("Localizable", "PeerInfo.Action.Discussion") }
   /// Gift Premium
   public static var peerInfoActionGiftPremium: String  { return L10n.tr("Localizable", "PeerInfo.Action.GiftPremium") }
+  /// Join
+  public static var peerInfoActionJoinChannel: String  { return L10n.tr("Localizable", "PeerInfo.Action.JoinChannel") }
   /// Leave
   public static var peerInfoActionLeave: String  { return L10n.tr("Localizable", "PeerInfo.Action.Leave") }
   /// Live Stream
@@ -12685,10 +12687,6 @@ public final class L10n {
   public static var supergroupDeleteRestrictionReportSpam: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.ReportSpam") }
   /// Manage Messages
   public static var supergroupDeleteRestrictionTitle: String  { return L10n.tr("Localizable", "Supergroup.DeleteRestriction.Title") }
-  /// Yes, it's me
-  public static var suspiciousSessionMe: String  { return L10n.tr("Localizable", "SuspiciousSession.Me") }
-  /// No, it's not me!
-  public static var suspiciousSessionNotMe: String  { return L10n.tr("Localizable", "SuspiciousSession.NotMe") }
   /// App Data Storage
   public static var systemMemoryWarningDataAndStorage: String  { return L10n.tr("Localizable", "System.MemoryWarning.DataAndStorage") }
   /// %d GB
