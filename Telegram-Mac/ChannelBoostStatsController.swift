@@ -439,7 +439,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
                 
                 
-                if boosters.canLoadMore {
+                if boosters.canLoadMore && boosters.count > boosters.boosters.count {
                     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().statsBoostsShowMore, color: theme.colors.accent, viewType: .lastItem, action: arguments.showMore)))
                     index += 1
                 } else if boosters.isLoadingMore {
