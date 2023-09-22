@@ -51,7 +51,7 @@ class PeerMediaDateItem: TableStickItem {
         self.messageIndex = MessageIndex.absoluteLowerBound()
         self.textLayout = TextViewLayout(.initialize(string: ""))
         self.viewType = .separator
-        self.inset = NSEdgeInsets(left: 30, right: 30)
+        self.inset = NSEdgeInsets(left: 20, right: 20)
         super.init(initialSize)
     }
 

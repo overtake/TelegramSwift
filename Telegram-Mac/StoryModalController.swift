@@ -100,7 +100,7 @@ struct StoryReactionAction {
 
 private let storedTheme = generateTheme(palette: nightAccentPalette, cloudTheme: nil, bubbled: false, fontSize: 13, wallpaper: .init())
 
-var storyTheme: TelegramPresentationTheme {
+var darkAppearance: TelegramPresentationTheme {
     if theme.colors.isDark {
         return theme
     } else {
@@ -156,7 +156,7 @@ final class StoryInteraction : InterfaceObserver {
         var closed: Bool = false
         
         var wideInput: Bool {
-            return inputInFocus || hasPopover
+            return (inputInFocus || hasPopover) && self.entryId?.namespace == Namespaces.Peer.CloudUser
         }
         
         var isAreaActivated: Bool = false
@@ -282,7 +282,7 @@ final class StoryInteraction : InterfaceObserver {
     func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
 
         var selectedRange = selectedRange ?? presentation.input.selectionRange
-        let inputText = presentation.input.attributedString(storyTheme).mutableCopy() as! NSMutableAttributedString
+        let inputText = presentation.input.attributedString(darkAppearance).mutableCopy() as! NSMutableAttributedString
         
         
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
@@ -596,14 +596,14 @@ private func storyReactionsValues(context: AccountContext, peerId: PeerId, react
                 }
                 react(.init(item: value, fromRect: fromRect))
                 onClose()
-            }, onClose: onClose, presentation: storyTheme, name: name)
+            }, onClose: onClose, presentation: darkAppearance, name: name)
             window.show(view)
         }
         
         let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
             onClose()
             react(.init(item: value.toUpdate(), fromRect: fromRect))
-        }, radiusLayer: nil, revealReactions: reveal, presentation: storyTheme, hasBubble: false)
+        }, radiusLayer: nil, revealReactions: reveal, presentation: darkAppearance, hasBubble: false)
         
         return (panel, view)
     } |> deliverOnMainQueue
@@ -719,7 +719,7 @@ private final class StoryViewController: Control, Notifable {
                     }
                     
                     if self.preview == nil {
-                        let preview = Preview(frame: focus(StoryView.size.aspectFitted(NSMakeSize(150, 150))))
+                        let preview = Preview(frame: focus(StoryLayoutView.size.aspectFitted(NSMakeSize(150, 150))))
                         addSubview(preview)
                         self.preview = preview
                         
@@ -772,7 +772,7 @@ private final class StoryViewController: Control, Notifable {
             if let preview = self.preview, preview.isHidden {
                 button.center()
             } else {
-                let rect = focus(StoryView.size.aspectFitted(NSMakeSize(150, 150)))
+                let rect = focus(StoryLayoutView.size.aspectFitted(NSMakeSize(150, 150)))
                 if isNext {
                     button.centerY(x: rect.minX - button.frame.width)
                 } else {
@@ -788,8 +788,8 @@ private final class StoryViewController: Control, Notifable {
             case reaction(StoryReactionAction)
             case media([Media])
             case text
-            case addedToProfile
-            case removedFromProfile
+            case addedToProfile(Peer)
+            case removedFromProfile(Peer)
             case linkCopied
             case justText(String)
             case tooltip(String, MenuAnimation)
@@ -874,12 +874,12 @@ private final class StoryViewController: Control, Notifable {
                 title = strings().storyTooltipMessageSent
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = true
-            case .addedToProfile:
-                title = strings().storyTooltipSavedToProfile
+            case let .addedToProfile(peer):
+                title = peer.isChannel ? strings().storyTooltipSavedToProfileChannel : strings().storyTooltipSavedToProfile
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = false
-            case .removedFromProfile:
-                title = strings().storyTooltipRemovedFromProfile
+            case let .removedFromProfile(peer):
+                title = peer.isChannel ? strings().storyTooltipRemovedFromProfileChannel : strings().storyTooltipRemovedFromProfile
                 mediaFile = MenuAnimation.menu_success.file
                 hasButton = false
             case .linkCopied:
@@ -911,14 +911,14 @@ private final class StoryViewController: Control, Notifable {
             self.media.layer?.addSublayer(mediaLayer)
             
             let attr = NSMutableAttributedString()
-            _ = attr.append(string: title, color: storyTheme.colors.text, font: .normal(.text))
+            _ = attr.append(string: title, color: darkAppearance.colors.text, font: .normal(.text))
             attr.detectBoldColorInString(with: .medium(.text))
             let layout = TextViewLayout(attr)
             
             self.button.isHidden = !hasButton
             
             self.button.set(font: .medium(.text), for: .Normal)
-            self.button.set(color: storyTheme.colors.accent, for: .Normal)
+            self.button.set(color: darkAppearance.colors.accent, for: .Normal)
             self.button.set(text: strings().storyTooltipButtonViewInChat, for: .Normal)
             self.button.sizeToFit(NSMakeSize(10, 10), .zero, thatFit: false)
             
@@ -932,7 +932,7 @@ private final class StoryViewController: Control, Notifable {
             layout.interactions = .init(processURL: { url in
                 if let url = url as? String {
                     if url == "premium" {
-                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery, presentation: storyTheme), for: context.window)
+                        showModal(with: PremiumBoardingController(context: context, source: .stories__save_to_gallery, presentation: darkAppearance), for: context.window)
                     }
                 }
             })
@@ -1004,7 +1004,7 @@ private final class StoryViewController: Control, Notifable {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: storyTheme)
+                current = InputSwapSuggestionsPanel(textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: darkAppearance)
                 self.textInputSuggestionsView = current
                 isNew = true
             }
@@ -1287,8 +1287,8 @@ private final class StoryViewController: Control, Notifable {
         
         if updated {
             self.closeTooltip()
-            if state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
-                self.storyViewList = context.engine.messages.storyViewList(id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, seenPeers: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
+            if let peerId = state.slice?.peer.id, state.slice?.peer.id == context.peerId, let story = state.slice?.item.storyItem {
+                self.storyViewList = context.engine.messages.storyViewList(peerId: peerId, id: story.id, views: story.views ?? .init(seenCount: 0, reactedCount: 0, forwardCount: 0, seenPeers: [], reactions: [], hasList: false), listMode: .everyone, sortMode: .reactionsFirst)
                 self.storyViewList?.loadMore()
             } else {
                 self.storyViewList = nil
@@ -2026,7 +2026,7 @@ final class StoryModalController : ModalViewController, Notifable {
     private var arguments: StoryArguments?
 
     init(context: AccountContext, stories: StoryContentContext, initialId: StoryInitialIndex?) {
-        self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .stories, presentation: storyTheme)
+        self.entertainment = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .stories, presentation: darkAppearance)
         self.interactions = StoryInteraction()
         self.context = context
         self.initialId = initialId
@@ -2257,7 +2257,9 @@ final class StoryModalController : ModalViewController, Notifable {
                             break
                         }
                         
-                        secondBlock.append(ContextMenuItem(strings().storyAvatarContextSendMessage, handler: {
+                        let chatText = peer._asPeer().isChannel ? strings().storyAvatarContextOpenChannel : strings().storyAvatarContextSendMessage
+                        
+                        secondBlock.append(ContextMenuItem(chatText, handler: {
                             openChat(peerId, nil, nil)
                         }, itemImage: MenuAnimation.menu_read.value))
                         
@@ -2273,7 +2275,7 @@ final class StoryModalController : ModalViewController, Notifable {
                             items.append(contentsOf: block)
                         }
                         
-                        let menu = ContextMenu(presentation: AppMenu.Presentation(colors: storyTheme.colors))
+                        let menu = ContextMenu(presentation: AppMenu.Presentation(colors: darkAppearance.colors))
                         
                         for item in items {
                             menu.addItem(item)
@@ -2305,7 +2307,7 @@ final class StoryModalController : ModalViewController, Notifable {
         let share:(StoryContentItem)->Void = { [weak self] story in
             if let peerId = story.peerId, story.sharable {
                 let media = TelegramMediaStory(storyId: .init(peerId: peerId, id: story.storyItem.id), isMention: false)
-                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id)), presentation: storyTheme), for: context.window)
+                showModal(with: ShareModalController(ShareStoryObject(context, media: media, hasLink: story.canCopyLink, storyId: .init(peerId: peerId, id: story.storyItem.id)), presentation: darkAppearance), for: context.window)
             } else {
                 self?.genericView.showShareError()
             }
@@ -2387,7 +2389,7 @@ final class StoryModalController : ModalViewController, Notifable {
             case let .custom(_, file):
                 if let file = file, file.isPremiumEmoji, !context.isPremium {
                     showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: storyTheme), for: context.window)
+                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
                     })
                 } else {
                     self?.genericView.like(reaction)
@@ -2406,7 +2408,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     if let file = file, let text = file.customEmojiText {
                         if file.isPremiumEmoji, !context.isPremium {
                             showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: storyTheme), for: context.window)
+                                showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
                             })
                         } else {
                             sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil, nil)]), entryId, id, .reaction(reaction))
@@ -2415,6 +2417,21 @@ final class StoryModalController : ModalViewController, Notifable {
                     }
                 }
             }
+        }
+        
+        let deleteStory:(StoryContentItem)->Void = { [weak self] story in
+            verifyAlert_button(for: context.window, information: strings().storyConfirmDelete, ok: strings().modalDelete, successHandler: { _ in
+                if let stateValue = self?.stories.stateValue, let slice = stateValue.slice {
+                    if slice.nextItemId != nil {
+                        self?.stories.navigate(navigation: .item(.next))
+                    } else if slice.previousItemId != nil {
+                        self?.stories.navigate(navigation: .item(.previous))
+                    } else {
+                        self?.close()
+                    }
+                    _ = context.engine.messages.deleteStories(peerId: slice.peer.id, ids: [slice.item.storyItem.id]).start()
+                }
+            }, presentation: darkAppearance)
         }
         
         self.chatInteraction.add(observer: self)
@@ -2460,22 +2477,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 current.recordType = FastSettings.recordingState
                 return current
             }
-        }, deleteStory: { [weak self] story in
-            confirm(for: context.window, information: strings().storyConfirmDelete, successHandler: { _ in
-                if let stateValue = self?.stories.stateValue, let slice = stateValue.slice {
-                    if slice.nextItemId != nil {
-                        self?.stories.navigate(navigation: .item(.next))
-                    } else if slice.previousItemId != nil {
-                        self?.stories.navigate(navigation: .item(.previous))
-                    } else {
-                        self?.close()
-                    }
-                    _ = context.engine.messages.deleteStories(ids: [slice.item.storyItem.id]).start()
-                }
-
-                
-            }, appearance: storyTheme.appearance)
-        }, markAsRead: { [weak self] peerId, storyId in
+        }, deleteStory: deleteStory, markAsRead: { [weak self] peerId, storyId in
             self?.stories.markAsSeen(id: .init(peerId: peerId, id: storyId))
         }, showViewers: { [weak self] story in
             if story.storyItem.views?.seenCount == 0 {
@@ -2483,7 +2485,7 @@ final class StoryModalController : ModalViewController, Notifable {
             } else {
                 if let peerId = story.peer?.id {
                     if let list = self?.genericView.storyViewList {
-                        showModal(with: StoryViewersModalController(context: context, list: list, peerId: peerId, story: story.storyItem, presentation: storyTheme, callback: { peerId in
+                        showModal(with: StoryViewersModalController(context: context, list: list, peerId: peerId, story: story.storyItem, presentation: darkAppearance, callback: { peerId in
                             openPeerInfo(peerId, nil)
                         }), for: context.window)
                     }
@@ -2503,8 +2505,11 @@ final class StoryModalController : ModalViewController, Notifable {
                 self.interactions.startRecording(context: context, autohold: autohold, sendMedia: self.chatInteraction.sendMedia)
             }
         }, togglePinned: { [weak self] story in
-            _ = context.engine.messages.updateStoriesArePinned(ids: [story.storyItem.id : story.storyItem], isPinned: !story.storyItem.isPinned).start()
-            self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile : .addedToProfile)
+            if let peerId = story.peerId, let peer = story.peer {
+                _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: [story.storyItem.id : story.storyItem], isPinned: !story.storyItem.isPinned).start()
+                
+                self?.genericView.showTooltip(story.storyItem.isPinned ? .removedFromProfile(peer._asPeer()) : .addedToProfile(peer._asPeer()))
+            }
         }, hashtag: { [weak self] string in
             self?.close()
             self?.context.bindings.globalSearch(string)
@@ -2533,7 +2538,7 @@ final class StoryModalController : ModalViewController, Notifable {
             guard let peer = story.peer else {
                 return nil
             }
-            let menu = ContextMenu(presentation: .current(storyTheme.colors))
+            let menu = ContextMenu(presentation: .current(darkAppearance.colors))
 
             if peer.id != context.peerId {
                 let stealthModeState = self?.arguments?.interaction.presentation.stealthMode
@@ -2580,11 +2585,23 @@ final class StoryModalController : ModalViewController, Notifable {
                 }
                 if !peer.isService {
                     
+                    if let peer = peer._asPeer() as? TelegramChannel, peer.hasPermission(.postStories) {
+                        if !story.storyItem.isPinned {
+                            menu.addItem(ContextMenuItem(strings().storyChannelInputSaveToProfile, handler: {
+                                self?.arguments?.togglePinned(story)
+                            }, itemImage: MenuAnimation.menu_save_to_profile.value))
+                        } else {
+                            menu.addItem(ContextMenuItem(strings().storyChannelInputRemoveFromProfile, handler: {
+                                self?.arguments?.togglePinned(story)
+                            }, itemImage: MenuAnimation.menu_clear_history.value))
+                        }
+                    }
+                    
                     menu.addItem(ContextMenuItem(strings().storyControlsMenuStealtMode, handler: {
                         if stealthModeState?.activeUntilTimestamp != nil {
                             activeStealthMode()
                         } else {
-                            showModal(with: StoryStealthModeController(context, enableStealth: enableStealth, presentation: storyTheme), for: context.window)
+                            showModal(with: StoryStealthModeController(context, enableStealth: enableStealth, presentation: darkAppearance), for: context.window)
                         }
                     }, itemImage: MenuAnimation.menu_eye_slash.value))
                     
@@ -2597,21 +2614,27 @@ final class StoryModalController : ModalViewController, Notifable {
                             toggleHide(peer._asPeer(), true)
                         }, itemImage: MenuAnimation.menu_archive.value))
                     }
-                    let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
-                    
-                    let submenu = ContextMenu()
-                                
-                    let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
-                    let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
-                    
-                    for i in 0 ..< options.count {
-                        submenu.addItem(ContextMenuItem(options[i].title, handler: {
-                            report(peerId, story.storyItem.id, options[i])
-                        }, itemImage: animation[i].value))
+                    if let peer = peer._asPeer() as? TelegramChannel, peer.hasPermission(.deleteStories) || story.storyItem.isMy {
+                        menu.addItem(ContextSeparatorItem())
+                        menu.addItem(ContextMenuItem(strings().messageContextDelete, handler: {
+                            deleteStory(story)
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                    } else {
+                        let reportItem = ContextMenuItem(strings().storyControlsMenuReport, itemImage: MenuAnimation.menu_report.value)
+                        
+                        let submenu = ContextMenu()
+                                    
+                        let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+                        let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
+                        
+                        for i in 0 ..< options.count {
+                            submenu.addItem(ContextMenuItem(options[i].title, handler: {
+                                report(peerId, story.storyItem.id, options[i])
+                            }, itemImage: animation[i].value))
+                        }
+                        reportItem.submenu = submenu
+                        menu.addItem(reportItem)
                     }
-                    reportItem.submenu = submenu
-                    menu.addItem(reportItem)
-
                 }
             } else {
                 if !story.storyItem.isPinned {
@@ -2621,7 +2644,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 } else {
                     menu.addItem(ContextMenuItem(strings().storyMyInputRemoveFromProfile, handler: {
                         self?.arguments?.togglePinned(story)
-                    }, itemImage: MenuAnimation.menu_delete.value))
+                    }, itemImage: MenuAnimation.menu_clear_history.value))
                 }
                 let resource: TelegramMediaFile?
                 if let media = story.storyItem.media._asMedia() as? TelegramMediaImage {
@@ -2667,10 +2690,12 @@ final class StoryModalController : ModalViewController, Notifable {
             switch area {
             case let .venue(_, venue):
                 if #available(macOS 10.13, *) {
-                    showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: storyTheme), for: context.window)
+                    showModal(with: LocationModalPreview(context, venue: venue, peer: self?.genericView.current?.story?.peer?._asPeer(), presentation: darkAppearance), for: context.window)
                 } else {
                     execute(inapp: .external(link: "https://maps.google.com/maps?q=\(String(format:"%f", venue.latitude)),\(String(format:"%f", venue.longitude))", false))
                 }
+            default:
+                break
             }
         }, like: { current, state in
             guard let peerId = state.entryId, let story = state.storyId else {
@@ -2746,7 +2771,7 @@ final class StoryModalController : ModalViewController, Notifable {
                 }
             }
             if !updated.isEmpty {
-                showModal(with: PreviewSenderController(urls: updated, chatInteraction: chatInteraction, asMedia: asMedia, attributedString: attributedString, presentation: storyTheme), for: context.window)
+                showModal(with: PreviewSenderController(urls: updated, chatInteraction: chatInteraction, asMedia: asMedia, attributedString: attributedString, presentation: darkAppearance), for: context.window)
             }
         }
         
@@ -2774,7 +2799,7 @@ final class StoryModalController : ModalViewController, Notifable {
         }
         
         chatInteraction.attachFile = { value in
-            filePanel(canChooseDirectories: true, for: context.window, appearance: storyTheme.appearance, completion:{ result in
+            filePanel(canChooseDirectories: true, for: context.window, appearance: darkAppearance.appearance, completion:{ result in
                 if let result = result {
                     
                     let previous = result.count
@@ -2812,7 +2837,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     exts = videoExts
                 }
             }
-            filePanel(with: exts, canChooseDirectories: true, for: context.window, appearance: storyTheme.appearance, completion:{ result in
+            filePanel(with: exts, canChooseDirectories: true, for: context.window, appearance: darkAppearance.appearance, completion:{ result in
                 if let result = result {
                     let previous = result.count
                     var exceedSize: Int64?

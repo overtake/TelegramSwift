@@ -765,7 +765,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 
                 let context = chatInteraction.context
                 
-                if chatInteraction.context.peerId != chatInteraction.peerId {
+                if chatInteraction.context.peerId != chatInteraction.peerId, presentation.reportMode == nil {
                     statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: false)
                 }
                 

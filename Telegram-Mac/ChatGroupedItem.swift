@@ -158,6 +158,10 @@ class ChatGroupedItem: ChatRowItem {
                 layout.layout.interactions = globalLinkExecutor
                 
                 captionLayouts.append(layout)
+                
+                if let range = selectManager.find(stableId) {
+                    layout.layout.selectedRange.range = range
+                }
             }
             
         } else {
@@ -702,6 +706,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 let node = item.contentNode(for: i)
                 let view = node.init(frame:NSZeroRect)
                 contents.append(view)
+                addSubview(view)
             }
         }
         
@@ -709,15 +714,17 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             if contents[i].className != item.contentNode(for: i).className()  {
                 let node = item.contentNode(for: i)
                 let view = node.init(frame:NSZeroRect)
+                contents[i].removeFromSuperview()
                 contents[i] = view
+                addSubview(view)
             }
         }
         
-        self.contentView.removeAllSubviews()
+        //self.contentView.removeAllSubviews()
         
-        for content in contents {
-            addSubview(content)
-        }
+//        for content in contents {
+//            addSubview(content)
+//        }
         
         super.set(item: item, animated: animated)
 

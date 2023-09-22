@@ -196,6 +196,10 @@ private final class MultiTargetAnimationContext {
         self.handlers.removeValue(forKey: token)
         return self.handlers.isEmpty
     }
+    
+    func playAgain() {
+        self.context.playAgain()
+    }
 }
 
 
@@ -247,19 +251,22 @@ private final class MultiTargetContextCache {
 
 final class InlineStickerView: View {
     private let isPlayable: Bool
+    let controlContent: Bool
     let animateLayer: InlineStickerItemLayer
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true) {
-        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, getColors: getColors, shimmerColor: shimmerColor)
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true) {
+        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor)
         self.isPlayable = isPlayable
         self.animateLayer = layer
+        self.controlContent = controlContent
         super.init(frame: size.bounds)
         self.layer?.addSublayer(layer)
         layer.superview = self
     }
-    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true) {
-        let layer = InlineStickerItemLayer(account: account, file: file, size: size, getColors: getColors, shimmerColor: shimmerColor)
+    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false), isPlayable: Bool = true, playPolicy: LottiePlayPolicy = .loop, controlContent: Bool = true) {
+        let layer = InlineStickerItemLayer(account: account, file: file, size: size, playPolicy: playPolicy, getColors: getColors, shimmerColor: shimmerColor)
         self.isPlayable = isPlayable
         self.animateLayer = layer
+        self.controlContent = controlContent
         super.init(frame: size.bounds)
         self.layer?.addSublayer(layer)
         layer.superview = self
@@ -267,15 +274,17 @@ final class InlineStickerView: View {
     
     
     @objc func updateAnimatableContent() -> Void {
-        var isKeyWindow: Bool = false
-        if let window = window {
-            if !window.canBecomeKey {
-                isKeyWindow = true
-            } else {
-                isKeyWindow = window.isKeyWindow
+        if controlContent {
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
             }
+            animateLayer.isPlayable = isKeyWindow && isPlayable
         }
-        animateLayer.isPlayable = isKeyWindow && isPlayable
     }
     
     
@@ -529,6 +538,15 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
         }
     }
+    
+    func playAgain() {
+        if let key = self.contextToken {
+            if let context = MultiTargetContextCache.find(key.1) {
+                context.playAgain()
+            }
+        }
+    }
+    
     private var isPreviousPreview: Bool = false
     
     private var contextToken: (Int, MultiTargetContextCache.Key)?

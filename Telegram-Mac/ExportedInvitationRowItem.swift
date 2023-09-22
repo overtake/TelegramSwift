@@ -291,8 +291,8 @@ private final class ExportedInvitationRowView : GeneralContainableRowView {
         linkContainer.frame = NSMakeRect(item.viewType.innerInset.left, item.viewType.innerInset.top, innerBlockSize, 40)
         linkView.centerY(x: item.viewType.innerInset.left)
         
-        copy.frame = NSMakeRect(item.viewType.innerInset.left, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize / 2 - 10, 40)
-        share.frame = NSMakeRect(copy.frame.maxX + 20, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize / 2 - 10, 40)
+        copy.frame = NSMakeRect(item.viewType.innerInset.left, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize / 2 - 5, 40)
+        share.frame = NSMakeRect(copy.frame.maxX + 10, linkContainer.frame.maxY + item.viewType.innerInset.top, innerBlockSize / 2 - 5, 40)
 
         actions.centerY(x: linkContainer.frame.width - actions.frame.width - item.viewType.innerInset.right)
         

@@ -28,7 +28,7 @@ private final class LockControl : View {
         addSubview(head)
         addSubview(arrow)
         addSubview(body)
-        updateLocalizationAndTheme(theme: storyTheme)
+        updateLocalizationAndTheme(theme: darkAppearance)
     }
     
     
@@ -105,11 +105,11 @@ private class StoryRecorderOverlayView : Control {
     fileprivate func updateState(_ overlayState: StoryRecordingOverlayState) {
         switch overlayState {
         case .voice:
-            stateView.image = storyTheme.icons.chatOverlayVoiceRecording
+            stateView.image = darkAppearance.icons.chatOverlayVoiceRecording
         case .video:
-            stateView.image = storyTheme.icons.chatOverlayVideoRecording
+            stateView.image = darkAppearance.icons.chatOverlayVideoRecording
         case .fixed:
-            stateView.image = storyTheme.icons.chatOverlaySendRecording
+            stateView.image = darkAppearance.icons.chatOverlaySendRecording
         }
         stateView.sizeToFit()
         stateView.center()
@@ -129,12 +129,12 @@ private class StoryRecorderOverlayView : Control {
     }
     
     func updateInside() {
-        innerContainer.backgroundColor = mouseInside() ? storyTheme.colors.accent : storyTheme.colors.redUI
+        innerContainer.backgroundColor = mouseInside() ? darkAppearance.colors.accent : darkAppearance.colors.redUI
         let animation = CABasicAnimation(keyPath: "backgroundColor")
         animation.duration = 0.1
         innerContainer.layer?.add(animation, forKey: "backgroundColor")
         
-        self.playbackAudioLevelView.setColor(mouseInside() ? storyTheme.colors.accent : storyTheme.colors.redUI)
+        self.playbackAudioLevelView.setColor(mouseInside() ? darkAppearance.colors.accent : darkAppearance.colors.redUI)
 
     }
     
@@ -196,7 +196,7 @@ class StoryRecorderOverlayWindowController : NSObject {
             self.arguments.interaction.resetRecording()
         }
         if state == .fixed {
-            confirm(for: parent, information: strings().chatRecordingCancel, okTitle: strings().alertDiscard, cancelTitle: strings().alertNO, successHandler: { _ in
+            verifyAlert_button(for: parent, information: strings().chatRecordingCancel, ok: strings().alertDiscard, cancel: strings().alertNO, successHandler: { _ in
                 proccess()
             })
         } else {
@@ -379,7 +379,7 @@ class StoryRecordingView: View {
         super.init(frame: frameRect)
         
         
-        statusImage.image = state.recordType == .voice ? storyTheme.icons.chatVoiceRecording : storyTheme.icons.chatVideoRecording
+        statusImage.image = state.recordType == .voice ? darkAppearance.icons.chatVoiceRecording : darkAppearance.icons.chatVideoRecording
         statusImage.animates = true
         statusImage.sizeToFit()
         
@@ -404,13 +404,13 @@ class StoryRecordingView: View {
                 self?.update(duration, true, hold)
             }
         }))
-        updateLocalizationAndTheme(theme: storyTheme)
+        updateLocalizationAndTheme(theme: darkAppearance)
         updateLayout(size: frameRect.size, transition: .immediate)
     }
     
     func updateState(_ state: StoryInteraction.State) {
         self.storyState = state
-        updateLocalizationAndTheme(theme: storyTheme)
+        updateLocalizationAndTheme(theme: darkAppearance)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -453,11 +453,11 @@ class StoryRecordingView: View {
         let intDuration:Int = Int(duration)
         let ms = duration - TimeInterval(intDuration);
         let transformed:String = String.durationTransformed(elapsed: intDuration)
-        let timerLayout = TextViewLayout(.initialize(string:transformed  + ",\(Int(ms * 100))", color: storyTheme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1, alignment: .left)
+        let timerLayout = TextViewLayout(.initialize(string:transformed  + ",\(Int(ms * 100))", color: darkAppearance.colors.text, font: .normal(.text)), maximumNumberOfLines: 1, alignment: .left)
         timerLayout.measure(width: .greatestFiniteMagnitude)
         timerView.update(timerLayout)
         
-        let descLayout = TextViewLayout(.initialize(string: hold ? strings().audioRecordHelpFixed : strings().audioRecordHelpPlain, color: storyTheme.colors.text, font: .normal(.text)), maximumNumberOfLines: 2, truncationType: .middle, alignment: .center)
+        let descLayout = TextViewLayout(.initialize(string: hold ? strings().audioRecordHelpFixed : strings().audioRecordHelpPlain, color: darkAppearance.colors.text, font: .normal(.text)), maximumNumberOfLines: 2, truncationType: .middle, alignment: .center)
         descLayout.measure(width: frame.width - 50 - 100 - 60)
         descView.update(descLayout)
         

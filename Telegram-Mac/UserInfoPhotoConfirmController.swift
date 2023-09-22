@@ -47,7 +47,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     if let user = state.user, let thumb = state.thumb {
@@ -58,7 +58,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     // entries
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -128,9 +128,9 @@ func UserInfoPhotoConfirmController(context: AccountContext, peerId: PeerId, thu
 
     let modalInteractions = ModalInteractions(acceptTitle: okText, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(300, 300))
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()

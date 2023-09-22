@@ -88,7 +88,7 @@ func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, argu
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
         switch channel.info {
         case .broadcast:
-            return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions)
+            return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, stories: stories)
         case .group:
             return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions)
         }

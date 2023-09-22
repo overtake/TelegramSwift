@@ -642,7 +642,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                             }
                             
                             if canLoad {
-                               confirm(for: context.window, header: strings().chatSecretChatPreviewHeader, information: strings().chatSecretChatPreviewText, okTitle: strings().chatSecretChatPreviewOK, cancelTitle: strings().chatSecretChatPreviewNO, successHandler: { result in
+                               verifyAlert_button(for: context.window, header: strings().chatSecretChatPreviewHeader, information: strings().chatSecretChatPreviewText, ok: strings().chatSecretChatPreviewOK, cancel: strings().chatSecretChatPreviewNO, successHandler: { result in
                                     FastSettings.setSecretChatWebPreviewAvailable(for: context.account.id.int64, value: true)
                                     invoke(link)
                                }, cancelHandler: {

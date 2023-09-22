@@ -1207,7 +1207,7 @@
 			baseConfigurationReference = 049BC8261ECE370100FB6719 /* macOS.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = YES;
 				WARNING_CFLAGS = (
 					"-Weverything",
@@ -1224,6 +1224,7 @@
 					"-Wno-global-constructors",
 					"-Wno-cast-align",
 					"-Wno-completion-handler",
+					"-Wno-declaration-after-statement",
 				);
 			};
 			name = Debug;
@@ -1233,7 +1234,7 @@
 			baseConfigurationReference = 049BC8261ECE370100FB6719 /* macOS.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
 				WARNING_CFLAGS = (
 					"-Weverything",
@@ -1250,6 +1251,7 @@
 					"-Wno-global-constructors",
 					"-Wno-cast-align",
 					"-Wno-completion-handler",
+					"-Wno-declaration-after-statement",
 				);
 			};
 			name = Release;

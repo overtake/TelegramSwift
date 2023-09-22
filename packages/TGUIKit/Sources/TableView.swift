@@ -960,8 +960,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     
+    
+    
     open override func layout() {
         super.layout()
+        
+        self.beginTableUpdates()
+        let item = TableRowItem(.zero, stableId: arc4random64())
+        let _ = self.addItem(item: item)
+        self.remove(at: self.count - 1)
+        self.endTableUpdates()
         
         if let emptyView = emptyView, let superview = superview {
             emptyView.frame = findBackgroundControllerView?.bounds ?? bounds
@@ -2587,6 +2595,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
+        clipView.cancelScrolling()
+        
         let oldEmpty = self.isEmpty
         
         self.beginUpdates()
@@ -2605,7 +2615,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[(Int, TableRowItem)] = []
         
-        CATransaction.begin()
                 
         if transition.grouping && !transition.isEmpty, !transition.state.isNone {
             self.tableView.beginUpdates()
@@ -2659,8 +2668,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.tableView.endUpdates()
         }
         
-
-        CATransaction.commit()
         
         for inserted in inserted {
             var accept: Bool = true
@@ -2698,6 +2705,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         func saveVisible(_ side: TableSavingSide) {
 
+            self.clipView.cancelScrolling()
             var nrect:NSRect = NSZeroRect
             
             let strideTo:StrideTo<Int>
@@ -3251,7 +3259,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             addScroll(listener: scrollListener)
             
             let bounds = NSMakeRect(0, rowRect.minY + addition, clipView.bounds.width, clipView.bounds.height)
-            
+                        
             if animate {
                 clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
                     if let `self` = self {

@@ -31,28 +31,16 @@ private enum Entry : TableItemListNodeEntry {
             return StoryMonthRowItem(initialSize, stableId: stableId, context: arguments.context, standalone: arguments.standalone, peerId: peerId, peerReference: peerReference, items: items, selected: selected, viewType: viewType, openStory: arguments.openStory, toggleSelected: arguments.toggleSelected, menuItems: { story in
                 var items: [ContextMenuItem] = []
                 if selected == nil, arguments.isMy {
-                    items.append(ContextMenuItem("Select", handler: { [weak arguments] in
+                    items.append(ContextMenuItem(strings().messageContextSelect, handler: { [weak arguments] in
                         arguments?.toggleSelected(.init(peerId: peerId, id: story.id))
                     }, itemImage: MenuAnimation.menu_check_selected.value))
-                    
-                    items.append(ContextSeparatorItem())
-                    
-                    if story.isPinned {
-                        items.append(ContextMenuItem("Remove from Profile", handler: { [weak arguments] in
-                            arguments?.toggleStory(story)
-                        }, itemImage: MenuAnimation.menu_unpin.value))
-                    } else {
-                        items.append(ContextMenuItem("Save to Profile", handler: { [weak arguments] in
-                            arguments?.toggleStory(story)
-                        }, itemImage: MenuAnimation.menu_unpin.value))
-                    }
                 }
                 return items
             })
         case let .emptySelf(index, viewType):
             return StoryMyEmptyRowItem(initialSize, stableId: index, context: arguments.context, viewType: viewType, isArchive: arguments.isArchive, showArchive: arguments.showArchive)
         case .date:
-            return PeerMediaDateItem(initialSize, index: index, stableId: stableId, inset: !arguments.standalone ? .init() : NSEdgeInsets(left: 30, right: 30))
+            return PeerMediaDateItem(initialSize, index: index, stableId: stableId, inset: !arguments.standalone ? .init() : NSEdgeInsets(left: 20, right: 20))
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
@@ -544,11 +532,13 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                     stories[story.id] = story
                 }
             }
-            _ = context.engine.messages.updateStoriesArePinned(ids: stories, isPinned: isArchived).start()
+            _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: stories, isPinned: isArchived).start()
             if isArchived {
-                showModalText(for: context.window, text: "Saved stories can be viewed by others on your profile until you remove them.", title: "Stories Saved")
+                let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipSavedToProfileChannel : strings().storyTooltipSavedToProfile
+                showModalText(for: context.window, text: text, title: strings().storyTooltipSavedTitle)
             } else {
-                showModalText(for: context.window, text: "Story removed from your profile.", title: "Stories Removed")
+                let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipRemovedFromProfileChannel : strings().storyTooltipRemovedFromProfile
+                showModalText(for: context.window, text: text, title: strings().storyTooltipRemovedTitle)
             }
             self?.updateState({ current in
                 var current = current
@@ -556,12 +546,14 @@ final class StoryMediaController : TelegramGenericViewController<StoryMediaView>
                 return current
             })
         }, toggleStory: { story in
-            _ = context.engine.messages.updateStoriesArePinned(ids: [story.id : story], isPinned: isArchived).start()
+            _ = context.engine.messages.updateStoriesArePinned(peerId: peerId, ids: [story.id : story], isPinned: isArchived).start()
             
             if isArchived {
-                showModalText(for: context.window, text: "Saved stories can be viewed by others on your profile until you remove them.", title: "Story Saved")
+                let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipSavedToProfileChannel : strings().storyTooltipSavedToProfile
+                showModalText(for: context.window, text: text, title: strings().storyTooltipSavedTitle)
             } else {
-                showModalText(for: context.window, text: "Story removed from your profile.", title: "Story Removed")
+                let text: String = peerId.namespace == Namespaces.Peer.CloudChannel ? strings().storyTooltipRemovedFromProfileChannel : strings().storyTooltipRemovedFromProfile
+                showModalText(for: context.window, text: text, title: strings().storyTooltipRemovedTitle)
             }
         })
 

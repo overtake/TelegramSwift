@@ -39,9 +39,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
+//
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatRTMPInfo), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
@@ -76,7 +76,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
     }
 
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -130,7 +130,7 @@ func RTMPStartController(context: AccountContext, peerId: PeerId, scheduleDate: 
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().voiceChatRTMPOK, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     

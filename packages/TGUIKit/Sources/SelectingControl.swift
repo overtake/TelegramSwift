@@ -26,6 +26,9 @@ public class SelectingControl: Control {
         userInteractionEnabled = false
         addSubview(unselectedView)
         self.set(selected: selected, animated: false)
+        
+        unselectedView.layer?.masksToBounds = false
+        self.layer?.masksToBounds = false
     }
     
     public func update(unselectedImage:CGImage, selectedImage:CGImage, selected: Bool, animated: Bool) {
@@ -51,6 +54,7 @@ public class SelectingControl: Control {
                     selectedView!.image = selectedImage
                     selectedView!.sizeToFit()
                     selectedView!.center()
+                    selectedView!.layer?.masksToBounds = false
                     if animated {
                         selectedView!.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                         selectedView!.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: 0.3)

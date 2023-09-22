@@ -43,9 +43,10 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
 //        self.sceneView.isUserInteractionEnabled = false
         
         super.init(frame: frame)
-        
+        sceneView.wantsLayer = true
         self.addSubview(self.sceneView)
-        
+        self.layer?.masksToBounds = false
+        sceneView.layer?.masksToBounds = false
         self.setup()
         
         let panGestureRecoginzer = NSPanGestureRecognizer(target: self, action: #selector(self.handlePan(_:)))

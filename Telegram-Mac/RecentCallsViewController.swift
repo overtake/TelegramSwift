@@ -417,7 +417,7 @@ class LayoutRecentCallsViewController: EditableViewController<TableView> {
                 applyUIPCallResult(context, result)
             }))
         }, removeCalls: { [weak self] messageIds, peer in
-            modernConfirm(for: context.window, account: context.account, peerId: nil, header: strings().recentCallsDeleteHeader, information: strings().recentCallsDeleteCalls, okTitle: strings().recentCallsDelete, cancelTitle: strings().modalCancel, thridTitle: strings().recentCallsDeleteForMeAnd(peer.compactDisplayTitle), thridAutoOn: true, successHandler: { [weak self] result in
+            verifyAlert(for: context.window, header: strings().recentCallsDeleteHeader, information: strings().recentCallsDeleteCalls, ok: strings().recentCallsDelete, cancel: strings().modalCancel, option: strings().recentCallsDeleteForMeAnd(peer.compactDisplayTitle), optionIsSelected: true, successHandler: { [weak self] result in
                 
                 let type: InteractiveMessagesDeletionType
                 switch result {

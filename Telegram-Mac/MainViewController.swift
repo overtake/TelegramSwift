@@ -394,7 +394,7 @@ class MainViewController: TelegramViewController {
         
         if unreadCount > 0 {
             items.append(ContextMenuItem(strings().chatListPopoverReadAll, handler: {
-                confirm(for: context.window, information: strings().chatListPopoverConfirm, successHandler: { _ in
+                verifyAlert_button(for: context.window, information: strings().chatListPopoverConfirm, successHandler: { _ in
                     _ = context.engine.messages.markAllChatsAsReadInteractively(items: [(.root, nil), (.archive, nil)]).start()
                 })
             }, itemImage: MenuAnimation.menu_folder_read.value))

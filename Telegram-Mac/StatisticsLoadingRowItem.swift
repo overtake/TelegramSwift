@@ -91,11 +91,7 @@ class StatisticsLoadingRowView : TableRowView {
     
     
     override var backdorColor: NSColor {
-        if let item = item as? StatisticsLoadingRowItem {
-            return item.viewType.rowBackground
-        } else {
-            return super.backdorColor
-        }
+        return .clear
     }
     
     override func updateColors() {

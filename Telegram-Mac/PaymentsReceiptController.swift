@@ -48,14 +48,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state.botPeer), comparable: nil, item: { initialSize, stableId in
         return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, invoice: state.invoice, botPeer: state.botPeer?.peer, viewType: .singleItem)
     }))
 
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     if let receipt = state.receipt {
@@ -112,7 +112,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
             index += 1
             
-            entries.append(.sectionId(sectionId, type: .normal))
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
             sectionId += 1
 
         }
@@ -181,7 +181,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     // entries
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -219,7 +219,7 @@ func PaymentsReceiptController(context: AccountContext, messageId: MessageId, in
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     

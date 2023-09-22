@@ -1112,6 +1112,17 @@ func generateChatGroupToggleSelected(foregroundColor: NSColor, backgroundColor: 
     }, scale: 2)!
 }
 
+func generateCheckSelected(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
+    let icon = #imageLiteral(resourceName: "Icon_Check").precomposed(foregroundColor)
+    return generateImage(NSMakeSize(icon.backingSize.width, icon.backingSize.height), contextGenerator: { size, ctx in
+        ctx.clear(NSMakeRect(0, 0, size.width, size.height))
+        ctx.setFillColor(backgroundColor.cgColor)
+        ctx.fillEllipse(in: NSMakeRect(2, 2, size.width - 4, size.height - 4))
+        ctx.draw(icon, in: size.bounds)
+    }, scale: 2)!
+}
+
+
 private func generateChatGroupToggleSelectionForeground(foregroundColor: NSColor, backgroundColor: NSColor) -> CGImage {
     let icon = #imageLiteral(resourceName: "Icon_SelectionUncheck").precomposed(foregroundColor)
     return generateImage(NSMakeSize(icon.backingSize.width + 4, icon.backingSize.height + 4), contextGenerator: { size, ctx in
@@ -2439,6 +2450,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_stats: { generateProfileIcon(NSImage(named: "Icon_Profile_Stats")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_unblock: { generateProfileIcon(NSImage(named: "Icon_Profile_Unblock")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_translate: { generateProfileIcon(NSImage(named: "Icon_Profile_Translate")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               profile_join_channel: { generateProfileIcon(NSImage(named: "Icon_Profile_JoinChannel")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                chat_quiz_explanation: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIcon) },
                                                chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
                                                chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) },

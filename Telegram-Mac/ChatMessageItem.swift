@@ -256,6 +256,8 @@ class ChatMessageItem: ChatRowItem {
                 return strings().chatMessageViewChatList
             case .story:
                 return strings().chatMessageOpenStory
+            case .boost:
+                return strings().chatMessageBoostChannel
             default:
                 break
             }
@@ -536,10 +538,10 @@ class ChatMessageItem: ChatRowItem {
                 }
                 
             }
-            
             if let range = selectManager.find(entry.stableId) {
                 textLayout.selectedRange.range = range
             }
+             
             
             
             var media = message.anyMedia

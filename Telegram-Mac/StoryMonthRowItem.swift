@@ -103,7 +103,7 @@ final class StoryMonthRowItem : GeneralRowItem {
         self.openStory = openStory
         self.toggleSelected = toggleSelected
         self.menuItems = menuItems
-        super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 30, right: 30) : NSEdgeInsets())
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: standalone ? NSEdgeInsets(left: 20, right: 20) : NSEdgeInsets())
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {

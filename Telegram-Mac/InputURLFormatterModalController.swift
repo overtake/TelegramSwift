@@ -27,9 +27,10 @@ private func entries(state: State, presentation: TelegramPresentationTheme) -> [
     
     var sectionId: Int32 = 0
     var index: Int32 = 0
-    
-    entries.append(.sectionId(sectionId, type: .normal))
+
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
+
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterTextHeader), data: InputDataGeneralTextData(color: presentation.colors.listGrayText, viewType: .textTopItem)))
     index += 1
@@ -40,7 +41,7 @@ private func entries(state: State, presentation: TelegramPresentationTheme) -> [
     index += 1
     
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     
@@ -51,7 +52,7 @@ private func entries(state: State, presentation: TelegramPresentationTheme) -> [
     index += 1
 
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -125,24 +126,12 @@ func InputURLFormatterModalController(string: String, defaultUrl: String? = nil,
         return .none
     })
     
-    let modalTheme: ModalController.Theme?
-    
-    if let presentation = presentation {
-        modalTheme = ModalController.Theme(text: presentation.colors.text, grayText: presentation.colors.grayText, background: presentation.colors.background, border: presentation.colors.border, accent: presentation.colors.accent, grayForeground: presentation.colors.grayForeground)
-    } else {
-        modalTheme = nil
-    }
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak controller] in
         controller?.validateInputValues()
-    }, drawBorder: true, singleButton: true, customTheme: {
-        return modalTheme ?? .init()
-    })
+    }, singleButton: true)
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(320, 300), presentation: presentation ?? theme)
     
-    modalController.getModalTheme = {
-        return modalTheme ?? .init()
-    }
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()

@@ -132,7 +132,7 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                 }
             }
 
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: enabled, height:50, photoSize: NSMakeSize(36, 36), status: string, drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: enabled, height:50, photoSize: NSMakeSize(36, 36), status: string, drawLastSeparator: true, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 if case .plain = interactionType {
                     arguments.openInfo(participant.peer.id)
                 }
@@ -161,7 +161,7 @@ private enum ChannelBlacklistEntry: Identifiable, Comparable {
                 arguments.addMember()
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }

@@ -235,8 +235,8 @@ class LinkInvationController: TableViewController {
         }, revoke: { [weak self] in
             if let peer = peer.modify({$0}), let context = self?.context {
                 let info = peer.isChannel ? strings().linkInvationChannelConfirmRevoke : strings().linkInvationGroupConfirmRevoke
-                let signal = confirmSignal(for: context.window, information: info, okTitle: strings().linkInvationConfirmOk)
-                    |> filter {$0}
+                let signal = verifyAlertSignal(for: context.window, information: info, ok: strings().linkInvationConfirmOk)
+                |> filter { $0 == .basic }
                     |> mapToSignal { _ -> Signal<Void, NoError> in
                         
                         return context.engine.peers.revokePersistentPeerExportedInvitation(peerId: peer.id) |> map { _ in return }

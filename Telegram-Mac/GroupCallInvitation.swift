@@ -476,7 +476,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                     return (user: $0.getPeer(peerId), chat: $0.getPeer(callPeerId))
                 } |> mapToSignal { [weak window] values in
                     if let window = window {
-                        return confirmSignal(for: window, information: strings().voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), okTitle: strings().voiceChatInviteMemberToGroupFirstAdd, appearance: darkPalette.appearance) |> filter { $0 }
+                        return verifyAlertSignal(for: window, information: strings().voiceChatInviteMemberToGroupFirstText(values.user?.displayTitle ?? "", values.chat?.displayTitle ?? ""), ok: strings().voiceChatInviteMemberToGroupFirstAdd, presentation: darkAppearance) |> filter { $0 == .basic }
                             |> take(1)
                         |> mapToSignal { _ in
                             if peerId.namespace == Namespaces.Peer.CloudChannel {
@@ -529,7 +529,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                         }
                         
                         if let third = third {
-                            modernConfirm(for: window, header: strings().voiceChatInviteConfirmHeader, information: strings().voiceChatInviteConfirmText, okTitle: strings().voiceChatInviteConfirmOK, cancelTitle: strings().modalCancel, thridTitle: third, successHandler: { result in
+                            verifyAlert(for: window, header: strings().voiceChatInviteConfirmHeader, information: strings().voiceChatInviteConfirmText, ok: strings().voiceChatInviteConfirmOK, cancel: strings().modalCancel, option: third, successHandler: { result in
                                 
                                 let link: String
                                 switch result {
@@ -545,7 +545,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                                 subscriber.putNext(true)
                                 subscriber.putCompletion()
                                 
-                            }, appearance: GroupCallTheme.customTheme.appearance)
+                            }, presentation: darkAppearance)
                         } else {
                             for peerId in peerIds {
                                 _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()

@@ -107,8 +107,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
     
     let isGroup = state.peer?.peer.isGroup == true || state.peer?.peer.isSupergroup == true
     
@@ -123,7 +123,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         return DisplayMeAsHeaderItem(initialSize, stableId: stableId, isAlone: isEmpty, isGroup: isGroup)
     }))
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     struct Tuple : Equatable {
@@ -138,7 +138,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
         let tuple = Tuple(peer: FoundPeer(peer: peer.peer, subscribers: nil), viewType: state.list == nil || !isEmpty ? .firstItem : .singleItem, selected: peer.peer.id == state.selected, status: strings().displayMeAsPersonalAccount)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                 arguments.select(tuple.peer.peer.id)
             })
         }))
@@ -188,7 +188,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 let tuple = Tuple(peer: peer, viewType: viewType, selected: peer.peer.id == state.selected, status: status)
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.peer.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: tuple.status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                         arguments.select(tuple.peer.peer.id)
                     })
 
@@ -212,10 +212,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     // entries
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+   
     
     if arguments.canBeScheduled {
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_schedule, data: .init(name: strings().displayMeAsScheduled, color: theme.colors.text, type: .switchable(state.schedule), viewType: state.schedule ? .firstItem : .singleItem, action: arguments.toggleSchedule)))
         index += 1
         if state.schedule, let scheduleDate = state.scheduleDate {
@@ -226,9 +229,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().displayMeAsScheduledDesc(timerText(Int(scheduleDate.timeIntervalSince1970) - Int(Date().timeIntervalSince1970)))), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         }
         
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-
     }
     
     return entries
@@ -338,7 +338,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
     }, cancelTitle: isCreator ? strings().displayMeAsStartWith : nil, cancel: {
         showModal(with: RTMPStartController(context: context, peerId: peerId, scheduleDate: stateValue.with { $0.schedule ? $0.scheduleDate : nil }, completion: completion), for: context.window)
         close?()
-    }, drawBorder: true, height: 50, singleButton: !isCreator)
+    }, singleButton: !isCreator)
     
     
     controller.afterTransaction = { [weak modalInteractions] _ in

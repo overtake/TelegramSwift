@@ -45,42 +45,42 @@ protocol StoryInput {
     var input: NSTextView? { get }
 }
 private var send_image: CGImage {
-    NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent)
+    NSImage(named: "Icon_SendMessage")!.precomposed(darkAppearance.colors.accent)
 }
 private var send_image_active: CGImage {
-    NSImage(named: "Icon_SendMessage")!.precomposed(storyTheme.colors.accent.darker())
+    NSImage(named: "Icon_SendMessage")!.precomposed(darkAppearance.colors.accent.darker())
 }
 
-private let like_image: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 0.33))
-private var like_image_active: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 0.53))
+private let like_image: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 1))
+private var like_image_active: CGImage  = NSImage(named: "Icon_StoryLike")!.precomposed(NSColor(0xffffff, 0.8))
 
 
-private let attach_image: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.33))
-private let attach_image_active: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.53))
+private let attach_image: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 1))
+private let attach_image_active: CGImage  = NSImage(named: "Icon_ChatAttach")!.precomposed(NSColor(0xffffff, 0.8))
 
-private let voice_image: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.33))
-private let voice_image_active: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.53))
+private let voice_image: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 1))
+private let voice_image_active: CGImage  = NSImage(named: "Icon_RecordVoice")!.precomposed(NSColor(0xffffff, 0.8))
 
-private let video_message_image: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.33))
-private let video_message_image_active: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.53))
-
-
-private let stickers_image: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.33))
-private var stickers_image_active: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.53))
-
-private let emoji_image: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 0.33))
-private var emoji_image_active: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 0.53))
+private let video_message_image: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 1))
+private let video_message_image_active: CGImage  = NSImage(named: "Icon_RecordVideoMessage")!.precomposed(NSColor(0xffffff, 0.8))
 
 
+private let stickers_image: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 1))
+private var stickers_image_active: CGImage  = NSImage(named: "Icon_ChatEntertainmentSticker")!.precomposed(NSColor(0xffffff, 0.8))
 
-private let story_like: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.33))
-private let story_like_active: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.53))
-
-private let share_image: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 0.33))
-private let share_image_active: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 0.53))
+private let emoji_image: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 1))
+private var emoji_image_active: CGImage  = NSImage(named: "Icon_Entertainments")!.precomposed(NSColor(0xffffff, 0.8))
 
 
-private final class StoryLikeActionButton: Control {
+
+private let story_like: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 1))
+private let story_like_active: CGImage  = NSImage(named: "Icon_StoryInputLike")!.precomposed(NSColor(0xffffff, 0.8))
+
+private let share_image: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 1))
+private let share_image_active: CGImage  = NSImage(named: "Icon_StoryShare")!.precomposed(NSColor(0xffffff, 0.8))
+
+
+final class StoryLikeActionButton: Control {
     private let control: ImageButton = ImageButton(frame: NSMakeRect(0, 0, 50, 50))
     private var myReaction: MessageReaction.Reaction?
     private var story: StoryContentItem?
@@ -207,7 +207,7 @@ private final class StoryLikeActionButton: Control {
         case .builtin:
             if reaction == .defaultStoryLike {
                 size = NSMakeSize(30, 30)
-                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: storyTheme.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+                let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_StoryLike_Holder", ext: "", color: darkAppearance.colors.redUI), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .onceEnd)
             } else {
                 
@@ -245,6 +245,7 @@ private final class StoryLikeActionButton: Control {
                 if let layer = layer {
                     if animated {
                         layer.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        layer.animateScale(from: 0.1, to: 1, duration: 0.35, timingFunction: .spring)
                     }
                 }
                 self.reaction = layer
@@ -389,7 +390,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             let current = textView.attributedString().copy() as! NSAttributedString
             let currentRange = textView.selectedRange()
             
-            let item = SimpleUndoItem(attributedString: current, be: state.attributedString(storyTheme), wasRange: currentRange, be: range)
+            let item = SimpleUndoItem(attributedString: current, be: state.attributedString(darkAppearance), wasRange: currentRange, be: range)
             self.textView.addSimpleItem(item)
         }
 
@@ -484,7 +485,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         }
                 
         let wSize = NSMakeSize(window.contentView!.frame.width - 100, window.contentView!.frame.height - 110)
-        let aspect = StoryView.size.aspectFitted(wSize)
+        let aspect = StoryLayoutView.size.aspectFitted(wSize)
         
         var size = size
         if self.inputState == .focus, let inputContextSize = self.inputContextSize {
@@ -558,7 +559,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         showModal(with: InputURLFormatterModalController(string: self.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] text, url in
             self?.textView.addLink(url, text: text, range: effectiveRange)
-        }, presentation: storyTheme), for: window)
+        }, presentation: darkAppearance), for: window)
         
     }
     
@@ -573,7 +574,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
                 if let data = pasteboard.data(forType: .kInApp) {
                     let decoder = AdaptedPostboxDecoder()
                     if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
-                        let attributed = decoded.unique(isPremium: context.isPremium).attributedString(storyTheme)
+                        let attributed = decoded.unique(isPremium: context.isPremium).attributedString(darkAppearance)
                         let current = textView.attributedString().copy() as! NSAttributedString
                         let currentRange = textView.selectedRange()
                         let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
@@ -652,7 +653,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         let wWdith = window.contentView!.frame.width
         
         let maxSize = NSMakeSize(wWdith - 100, window.contentView!.frame.height - 110)
-        let supersize = StoryView.size.aspectFitted(maxSize)
+        let supersize = StoryLayoutView.size.aspectFitted(maxSize)
         let size: NSSize
         if arguments.interaction.presentation.inputRecording != nil {
             size = NSMakeSize(min(supersize.width + 60, wWdith - 20), self.textViewSize(self.textView).height + 16)
@@ -759,7 +760,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         textView.textFont = .normal(.text)
         textView.textColor = .white
         textView.delegate = self
-        textView.inputView.appearance = storyTheme.appearance
+        textView.inputView.appearance = darkAppearance.appearance
                 
        // self.background = .random
         
@@ -783,7 +784,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         attach.contextMenu = { [weak self] in
             
-            let menu = ContextMenu(presentation: AppMenu.Presentation.current(storyTheme.colors), betterInside: true)
+            let menu = ContextMenu(presentation: AppMenu.Presentation.current(darkAppearance.colors), betterInside: true)
             var items: [ContextMenuItem] = []
             
             
@@ -827,7 +828,6 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         }, for: .RightDown)
         
         self.layer?.cornerRadius = 10
-      //  self.action.update(state: .empty(isVoice: FastSettings.recordingState == .voice), animated: false)
     }
     
     required init?(coder: NSCoder) {
@@ -863,7 +863,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         
         self.updateInputState()
         
-        let attributedString = arguments?.interaction.presentation.findInput(groupId).attributedString(storyTheme)
+        let attributedString = arguments?.interaction.presentation.findInput(groupId).attributedString(darkAppearance)
         if let attributedString = attributedString, !attributedString.string.isEmpty {
             self.textView.setAttributedString(attributedString, animated: false)
         }
@@ -883,7 +883,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
             return 150
         }
         context.getPresentation = {
-            storyTheme
+            darkAppearance
         }
         context.getBackground = {
             .clear

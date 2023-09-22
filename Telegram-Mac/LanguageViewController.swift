@@ -383,7 +383,7 @@ class LanguageViewController: TableViewController {
                 self?.applyDisposable.set(showModalProgress(signal: context.engine.localization.downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, languageCode: value.languageCode), for: context.window).start())
             }
         }, delete: { info in
-            confirm(for: context.window, information: strings().languageRemovePack, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().languageRemovePack, successHandler: { _ in
                 _ = context.engine.localization.removeSavedLocalization(languageCode: info.languageCode).start()
             })
         })

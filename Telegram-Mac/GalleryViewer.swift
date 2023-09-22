@@ -1063,7 +1063,7 @@ class GalleryViewer: NSResponder {
                     
                     
                     if let thrid = thrid {
-                        modernConfirm(for: self.window, account: self.context.account, peerId: nil, header: strings().chatConfirmDeleteMessages1Countable(messages.count), information: nil, okTitle: strings().confirmDelete, thridTitle: thrid, successHandler: { [weak self] result in
+                        verifyAlert(for: self.window, header: strings().chatConfirmDeleteMessages1Countable(messages.count), information: nil, ok: strings().confirmDelete, option: thrid, successHandler: { [weak self] result in
                             guard let `self` = self else {return}
                             
                             let type:InteractiveMessagesDeletionType

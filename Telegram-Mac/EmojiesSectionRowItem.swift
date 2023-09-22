@@ -286,6 +286,22 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             }
         }
         
+        if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
+            if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+                if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
+                    items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                    _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                            if let path = path {
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.writeObjects([NSURL(fileURLWithPath: path)])
+                            }
+                        })
+                    }, itemImage: MenuAnimation.menu_copy_media.value))
+                }
+            }
+        }
+        
         switch mode {
         case .reactions:
             if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
@@ -346,6 +362,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         }
         
         
+        
         if let setStatus = setStatus {
             items.append(setStatus)
         }
@@ -365,6 +382,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             }
         }
        
+      
         
         
 //        items.append(ContextMenuItem(strings().emojiContextRemove, handler: {
