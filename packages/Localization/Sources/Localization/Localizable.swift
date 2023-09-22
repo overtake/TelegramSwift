@@ -12549,6 +12549,8 @@ public final class L10n {
   public static var storyListContextArchive: String  { return L10n.tr("Localizable", "StoryList.Context.Archive") }
   /// Archived Stories
   public static var storyListContextArchivedStories: String  { return L10n.tr("Localizable", "StoryList.Context.ArchivedStories") }
+  /// Open Channel
+  public static var storyListContextOpenChannel: String  { return L10n.tr("Localizable", "StoryList.Context.OpenChannel") }
   /// Saved Stories
   public static var storyListContextSavedStories: String  { return L10n.tr("Localizable", "StoryList.Context.SavedStories") }
   /// Send Message
