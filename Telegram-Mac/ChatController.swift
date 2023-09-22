@@ -3877,7 +3877,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                             } |> take(until: { index in
                                 return SignalTakeAction(passthrough: index.0 != nil, complete: !index.1)
-                            }) |> map { $0.0 }
+                            }) |> map { $0.0 } |> delay(0.2, queue: .mainQueue())
                         
                         strongSelf.chatInteraction.loadingMessage.set(.single(true) |> delay(0.2, queue: Queue.mainQueue()))
                         strongSelf.messageIndexDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { [weak strongSelf] message in

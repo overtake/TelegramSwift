@@ -2613,7 +2613,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[(Int, TableRowItem)] = []
         
-        CATransaction.begin()
                 
         if transition.grouping && !transition.isEmpty, !transition.state.isNone {
             self.tableView.beginUpdates()
@@ -2667,8 +2666,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.tableView.endUpdates()
         }
         
-
-        CATransaction.commit()
         
         for inserted in inserted {
             var accept: Bool = true
@@ -2706,6 +2703,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         func saveVisible(_ side: TableSavingSide) {
 
+            self.clipView.cancelScrolling()
             var nrect:NSRect = NSZeroRect
             
             let strideTo:StrideTo<Int>
@@ -3259,7 +3257,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             addScroll(listener: scrollListener)
             
             let bounds = NSMakeRect(0, rowRect.minY + addition, clipView.bounds.width, clipView.bounds.height)
-            
+                        
             if animate {
                 clipView.scroll(to: bounds.origin, animated: animate, completion: { [weak self] completed in
                     if let `self` = self {

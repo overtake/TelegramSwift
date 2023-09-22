@@ -104,7 +104,6 @@ final class PremiumStatusControl : Control {
             }
             if let image = image {
                 current.contents = image
-                current.contentsGravity = .center
                 var rect = focus(self.frame.size)
                 rect.origin.x = 0
                 current.frame = rect
