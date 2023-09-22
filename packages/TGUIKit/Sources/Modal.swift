@@ -965,7 +965,7 @@ public class Modal: NSObject {
                                 let origin = strongSelf.container.frame.origin
                                 strongSelf.container.layer?.animatePosition(from: NSMakePoint(origin.x, origin.y + 100), to: origin, timingFunction: .spring)
                             case .scaleCenter:
-                                strongSelf.container.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2, bounce: true)
+                                strongSelf.container.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.35, bounce: true)
                             case let .scaleFrom(oldRect):
                                 let view = strongSelf.container!
                                 let newRect = view.frame

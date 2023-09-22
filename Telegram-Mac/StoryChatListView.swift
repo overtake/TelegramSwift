@@ -804,14 +804,18 @@ private final class StoryListEntryRowItem : TableRowItem {
         
         if context.peerId != peerId {
             if !self.entry.item.peer.isService {
+                let isChannel = self.entry.item.peer._asPeer().isChannel
+                let title = isChannel ? strings().storyListContextOpenChannel : strings().storyListContextSendMessage
                 
-                items.append(.init(strings().storyListContextSendMessage, handler: {
+                items.append(.init(title, handler: {
                     context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
-                }, itemImage: MenuAnimation.menu_read.value))
+                }, itemImage: isChannel ? MenuAnimation.menu_channel.value : MenuAnimation.menu_read.value))
                 
-                items.append(.init(strings().storyListContextViewProfile, handler: {
-                    PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
-                }, itemImage: MenuAnimation.menu_open_profile.value))
+                if !isChannel {
+                    items.append(.init(strings().storyListContextViewProfile, handler: {
+                        PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
+                    }, itemImage: MenuAnimation.menu_open_profile.value))
+                }
                 
                 
                 addStealthMode()
