@@ -68,7 +68,7 @@ private final class RowItem : TableRowItem {
             })).mutableCopy() as! NSMutableAttributedString
             
             info.detectBoldColorInString(with: .medium(.text))
-            self.info = .init(info, alignment: .center)
+            self.info = .init(info, alignment: .center, alwaysStaticItems: true)
             self.info?.interactions = globalLinkExecutor
 
         } else {
