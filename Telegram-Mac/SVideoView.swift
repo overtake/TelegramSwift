@@ -654,18 +654,6 @@ private final class SVideoControlsView : Control {
     func updateBaseRate() {
         
         menuItems.set(image: optionsRateImage(rate: String(format: "%.1fx", FastSettings.playingVideoRate), color: .white, isLarge: true), for: .Normal)
-        
-//        if FastSettings.playingVideoRate == 1.0 {
-//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_1X")!.precomposed(), for: .Normal)
-//        } else if FastSettings.playingVideoRate <= 1.25 {
-//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_125X")!.precomposed(), for: .Normal)
-//        } else if FastSettings.playingVideoRate <= 1.5 {
-//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_15X")!.precomposed(), for: .Normal)
-//        } else if FastSettings.playingVideoRate <= 1.75 {
-//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_175X")!.precomposed(), for: .Normal)
-//        } else {
-//            menuItems.set(image: NSImage(named: "Icon_PlaybackSpeed_2X")!.precomposed(), for: .Normal)
-//        }
         self.menuItems.sizeToFit()
     }
     
@@ -842,16 +830,9 @@ class SVideoView: NSView {
         controls.setFrameSize(self.controlsStyle.isCompact ? 220 : min(frame.width - 10, 510), 94)
         let bufferingStatus = self.bufferingStatus
         self.bufferingStatus = bufferingStatus
-        if controls.frame.origin == .zero || previousIsCompact != self.controlsStyle.isCompact {
+        if controls.frame.origin == .zero || previousIsCompact != self.controlsStyle.isCompact || oldSize != frame.size {
             controls.centerX(y: frame.height - controls.frame.height - 24)
-        } else if oldSize != frame.size {
-            let dif = oldSize - frame.size
-            var point = NSMakePoint(controls.frame.minX - dif.width / 2, controls.frame.minY - dif.height / 2)
-            point.x = min(max(2, point.x), frame.width - controls.frame.width - 4)
-            point.y = min(max(2, point.y), frame.height - controls.frame.height - 4)
-
-            controls.setFrameOrigin(point)
-        }
+        } 
         bufferingIndicator.center()
         bufferingIndicator.progressColor = .white
         backgroundView.frame = bounds

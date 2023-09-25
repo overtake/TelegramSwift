@@ -99,7 +99,6 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         _window.setFrame(NSMakeRect(3000, 3000, saver.rect.width, saver.rect.height), display: true)
         super.init(contentRect: newRect, styleMask: [.resizable, .nonactivatingPanel], backing: .buffered, defer: true)
 
-        //self.isOpaque = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary];
 
         
@@ -109,16 +108,13 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         
         view.forceMouseDownCanMoveWindow = true
         
-      //  self.contentView?.wantsLayer = true;
         self.contentView?.layer?.cornerRadius = 4;
 
         self.backgroundColor = .clear;
         control.view.frame = NSMakeRect(0, 0, newRect.width, newRect.height)
-       // control.view.autoresizingMask = [.width, .height];
         
 
         control.view.setFrameOrigin(0, 0)
-      //  contentView?.autoresizingMask = [.width, .height]
         contentView?.addSubview(control.view)
         
         
