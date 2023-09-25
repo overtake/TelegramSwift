@@ -239,7 +239,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
     
     private func makeView(_ reaction: MessageReaction.Reaction, state: StoryInteraction.State, context: AccountContext) -> InlineStickerItemLayer? {
         let layer: InlineStickerItemLayer?
-        let minSide = floor(min(frame.width, frame.height) * 0.6)
+        let minSide = floor(min(frame.width, frame.height) * 0.65)
         let size = CGSize(width: minSide, height: minSide)
         
         switch reaction {
@@ -284,7 +284,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         
         
         if let counterText = self.counterText {
-            let point = CGPoint(x: size.width * 0.5 - counterText.frame.width * 0.5, y: floorToScreenPixels(backingScaleFactor, size.height * 0.765 - 0.5))
+            let point = CGPoint(x: size.width * 0.5 - counterText.frame.width * 0.5, y: floorToScreenPixels(backingScaleFactor, size.height * 0.765 - 3))
             transition.updateFrame(view: counterText, frame: CGRect(origin: point, size: counterText.frame.size))
         }
         
@@ -292,10 +292,21 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         counter.layer?.anchorPoint = NSMakePoint(0.5, 0.5)
         counter.layer?.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0, 0.0, 1.0)
         
+        let counterFractionOffset: CGFloat
+        let stickerScale: CGFloat
+        if counterText != nil {
+            counterFractionOffset = -0.05
+            stickerScale = 0.8
+        } else {
+            counterFractionOffset = 0.0
+            stickerScale = 1.0
+        }
+        
         if let layer = self.reactionLayer {
-            let rect = size.centered(around: CGPoint(x: size.width * 0.5, y: size.height * 0.47))
+            let rect = size.centered(around: CGPoint(x: size.width * 0.49, y: size.height * (0.47 + counterFractionOffset)))
             transition.updateFrame(layer: layer, frame: rect)
             layer.transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0.0, 0.0, 1.0)
+            layer.transform = CATransform3DScale(layer.transform, stickerScale, stickerScale, 1)
         }
         
         var transform = CATransform3DMakeRotation(mediaArea.coordinates.rotation * Double.pi / 180.0, 0, 0.0, 1.0)
