@@ -519,14 +519,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            
-           // showInactiveChannels(context: context, source: .create)
             showModalText(for: context.window, text: "lqkwe jflkqwje flqkwej flqwke jflqwkejf l")
-//            showModal(with: RequestJoinChatModalController(context: context, joinhash: "hash", invite: .invite(.Flags), interaction: { _ in
-//
-//            }), for: context.window)
-//
-          //  showModal(with: InlineLoginController(context: context, url: "https://t.me", originalURL: "https://t.me", writeAllowed: true, botPeer: TelegramUser.init(id: .init(0), accessHash: nil, firstName: "bot", lastName: "", username: "bot", phone: "", photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [], storiesHidden: nil), authorize: { _ in }), for: context.window)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

@@ -1035,7 +1035,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public private(set) var liveScrolling: Bool = false
 
     open func scrollWillStartLiveScrolling() {
-        self.clipView.layer?.removeAllAnimations()
+        self.clipView.cancelScrolling()
         liveScrollStartPosition = documentOffset
         _scrollWillStartLiveScrolling?()
         liveScrolling = true
@@ -1068,10 +1068,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     private func updateScroll() {
         
 
-        Queue.mainQueue().justDispatch { [weak self] in
-            self?.scrollDidChangedBounds()
-        }
-       
+        self.scrollDidChangedBounds()
+
         if self.updating == true {
             return
         }
@@ -2587,14 +2585,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.merge(with: transition, forceApply: false, appearAnimated: appearAnimated)
     }
     
-    private var awaitingTransitions: [TableUpdateTransition] = []
+//    private var awaitingTransitions: [TableUpdateTransition] = []
     
     private var processedIds: Set<Int64> = Set()
     
     private func enqueueAwaitingIfNeeded() {
-        while !awaitingTransitions.isEmpty && !self.clipView.isAnimateScrolling {
-            self.merge(with: awaitingTransitions.remove(at: 0), forceApply: true, appearAnimated: false)
-        }
+//        while !awaitingTransitions.isEmpty && !self.clipView.isAnimateScrolling {
+//            self.merge(with: awaitingTransitions.remove(at: 0), forceApply: true, appearAnimated: false)
+//        }
     }
     
     private func merge(with transition:TableUpdateTransition, forceApply: Bool, appearAnimated: Bool) -> Void {
@@ -2608,11 +2606,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
-        if clipView.isAnimateScrolling || (!self.awaitingTransitions.isEmpty && !forceApply) {
-            self.awaitingTransitions.append(transition)
-            return
-        }
-        
+
         clipView.cancelScrolling()
         
         

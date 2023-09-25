@@ -249,7 +249,7 @@ private final class RowView : TableRowView {
         addSubview(button)
         addSubview(optionsView)
                 
-        infoView.isSelectable = false
+        infoView.isSelectable = true
         
         button.set(handler: { [weak self] _ in
             if let item = self?.item as? RowItem {

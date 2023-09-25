@@ -58,7 +58,7 @@ final class RequestJoinChatRowItem : GeneralRowItem {
             height += top + about.layoutSize.height
         }
         
-        return height
+        return height + self.viewType.innerInset.top
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
