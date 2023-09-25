@@ -262,7 +262,7 @@ class ChatRecorderOverlayWindowController : NSObject {
         
         let proccessMouseUp:(NSEvent)->KeyHandlerResult = { [weak self] _ in
             guard let `self` = self else {return .rejected}
-            if hasModals() {
+            if findModal(InputDataModalController.self) != nil {
                 return .rejected
             }
             return self.proccessMouseUp()

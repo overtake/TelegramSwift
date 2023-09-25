@@ -203,6 +203,17 @@ class ChatMessageItem: ChatRowItem {
         return self.contentSize.width
     }
     
+    var hasExternalLink: Bool {
+        if let adAtribute = message?.adAttribute {
+            if case .webPage = adAtribute.target {
+                return true
+            } else {
+                return false
+            }
+        }
+        return false
+    }
+    
     var actionButtonText: String? {
         if let adAtribute = message?.adAttribute, let author = message?.author {
             if case .webPage = adAtribute.target {

@@ -253,6 +253,9 @@ class StoryRecorderOverlayWindowController : NSObject {
         
         let proccessMouseUp:(NSEvent)->KeyHandlerResult = { [weak self] _ in
             guard let `self` = self else {return .rejected}
+            if findModal(InputDataModalController.self) != nil {
+                return .rejected
+            }
             return self.proccessMouseUp()
         }
         parent.set(mouseHandler: proccessMouseUp, with: self, for: .leftMouseDown, priority: .modal)

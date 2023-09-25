@@ -896,6 +896,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.rowSizeStyle = .custom
 
         
+        self.clipView.scrollDidComplete = { [weak self] _ in
+            self?.enqueueAwaitingIfNeeded()
+        }
+        
        // self.scrollsDynamically = true
        // self.verticalLineScroll = 0
         //self.verticalScrollElasticity = .none
@@ -2582,9 +2586,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func merge(with transition:TableUpdateTransition, appearAnimated: Bool = false) -> Void {
         self.merge(with: transition, forceApply: false, appearAnimated: appearAnimated)
     }
+    
+    private var awaitingTransitions: [TableUpdateTransition] = []
+    
     private var processedIds: Set<Int64> = Set()
+    
+    private func enqueueAwaitingIfNeeded() {
+        while !awaitingTransitions.isEmpty && !self.clipView.isAnimateScrolling {
+            self.merge(with: awaitingTransitions.remove(at: 0), forceApply: true, appearAnimated: false)
+        }
+    }
+    
     private func merge(with transition:TableUpdateTransition, forceApply: Bool, appearAnimated: Bool) -> Void {
-        
         
         
         if processedIds.contains(transition.uniqueId)  {
@@ -2595,7 +2608,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
+        if clipView.isAnimateScrolling || (!self.awaitingTransitions.isEmpty && !forceApply) {
+            self.awaitingTransitions.append(transition)
+            return
+        }
+        
         clipView.cancelScrolling()
+        
         
         let oldEmpty = self.isEmpty
         
