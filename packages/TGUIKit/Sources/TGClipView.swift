@@ -67,7 +67,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     var scrollCompletion:((_ success:Bool) ->Void)?
     
-    
+    var scrollDidComplete:((_ success:Bool) ->Void)?
+
     public var destination: NSPoint? {
         return self.destinationOrigin
     }
@@ -108,7 +109,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     public var isAnimateScrolling:Bool {
-        return self.point != nil
+        return self.destinationOrigin != nil
     }
     
     override public func viewWillMove(toWindow newWindow: NSWindow?) {
@@ -142,10 +143,12 @@ public class TGClipView: NSClipView,CALayerDelegate {
             NSAnimationContext.endGrouping()
             CATransaction.commit()
             self.destinationOrigin = nil
+            self.scrollDidComplete?(true)
         }
     }
         
     private(set) var point: NSPoint?
+    
     
     public func scroll(to point: NSPoint, animated:Bool, completion: @escaping (Bool) -> Void = {_ in})  {
         
@@ -176,12 +179,14 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 self.destinationOrigin = nil
                 self.point = nil
                 self.scrollCompletion?(point == self.bounds.origin)
+                self.scrollDidComplete?(point == self.bounds.origin)
             })
         } else {
             self.updateBounds(to: point)
             self.point = nil
             self.destinationOrigin = nil
-            self.scrollCompletion?(false)
+            self.scrollCompletion?(true)
+            self.scrollDidComplete?(true)
         }
         
     }

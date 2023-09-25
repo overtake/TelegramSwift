@@ -1852,12 +1852,16 @@ class ChatServiceRowView: TableRowView {
                 }
                 
             } else {
-                imageView?.removeFromSuperview()
-                imageView = nil
+                self.imageView?.removeFromSuperview()
+                self.imageView = nil
+                self.photoVideoView?.removeFromSuperview()
+                self.photoVideoView = nil
             }
         } else {
-            imageView?.removeFromSuperview()
-            imageView = nil
+            self.imageView?.removeFromSuperview()
+            self.imageView = nil
+            self.photoVideoView?.removeFromSuperview()
+            self.photoVideoView = nil
         }
         
         

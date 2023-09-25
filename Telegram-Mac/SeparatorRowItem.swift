@@ -58,7 +58,7 @@ class SeparatorRowView: TableRowView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-       // layerContentsRedrawPolicy = .onSetNeedsDisplay
+        layerContentsRedrawPolicy = .onSetNeedsDisplay
     }
     
     override var backdorColor: NSColor {

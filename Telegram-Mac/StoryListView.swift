@@ -244,11 +244,11 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         
         switch reaction {
         case let .custom(fileId):
-            layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .once)
+            layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .loop)
         case .builtin:
             if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
                 let file = animation.selectAnimation
-                layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .once)
+                layer = InlineStickerItemLayer(account: context.account, file: file, size: size, playPolicy: .loop)
             } else {
                 layer = nil
             }
@@ -256,7 +256,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         if let layer = layer {
             layer.frame = focus(size)
             control.layer?.addSublayer(layer)
-            layer.isPlayable = false
+            layer.isPlayable = true
         }
         return layer
     }

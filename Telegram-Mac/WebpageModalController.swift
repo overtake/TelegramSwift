@@ -155,7 +155,7 @@ private final class HeaderView : View {
             self.leftButton = button
             addSubview(button)
             if let previousBtn = previousBtn {
-                performSubviewRemoval(previousBtn, animated: animated && prevLeft != nil, scale: true)
+                performSubviewRemoval(previousBtn, animated: false, scale: false)
             }
             if animated && prevLeft != nil {
                 button.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

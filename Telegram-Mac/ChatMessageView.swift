@@ -15,6 +15,45 @@ import Postbox
 
 class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
+    class ActionButton: TitleButton {
+        
+        var urlView: ImageView?
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(isExternalUrl: Bool) {
+            if isExternalUrl {
+                let current: ImageView
+                if let view = self.urlView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    addSubview(current)
+                    self.urlView = current
+                }
+                current.image = theme.icons.chatActionUrl
+                current.sizeToFit()
+            } else if let view = self.urlView {
+                view.removeFromSuperview()
+                self.urlView = nil
+            }
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            if let view = urlView {
+                view.setFrameOrigin(NSMakePoint(frame.width - view.frame.width - 5, 5))
+            }
+        }
+    }
+    
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let webpageContent = webpageContent {
@@ -39,7 +78,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     private var text:TextView?
 
     private(set) var webpageContent:WPContentView?
-    private var actionButton: TitleButton?
+    private var actionButton: ActionButton?
     
     private var shimmerEffect: ShimmerView?
     private var shimmerMask: SimpleLayer?
@@ -170,7 +209,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
             if let text = item.actionButtonText {
                 var isNew = false
                 if actionButton == nil {
-                    actionButton = TitleButton()
+                    actionButton = ActionButton(frame: .zero)
                     actionButton?.layer?.cornerRadius = .cornerRadius
                     actionButton?.layer?.borderWidth = 1
                     actionButton?.disableActions()
@@ -178,6 +217,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     self.rowView.addSubview(actionButton!)
                     isNew = true
                 }
+                actionButton?.set(isExternalUrl: item.hasExternalLink)
                 actionButton?.scaleOnClick = true
                 actionButton?.removeAllHandlers()
                 actionButton?.set(handler: { [weak item] _ in

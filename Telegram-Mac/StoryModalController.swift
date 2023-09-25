@@ -2248,7 +2248,7 @@ final class StoryModalController : ModalViewController, Notifable {
                         
                         switch data.1 {
                         case let .known(about):
-                            if let about = about {
+                            if let about = about, !about.isEmpty {
                                 firstBlock.append(ContextMenuItem(about, handler: {
                                     openforce()
                                 }, itemImage: MenuAnimation.menu_bio.value, removeTail: false, overrideWidth: 200))
