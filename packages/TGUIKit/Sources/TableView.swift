@@ -2606,8 +2606,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         assertOnMainThread()
         assert(!updating)
         
+        if case .saveVisible = transition.state {
+            clipView.cancelScrolling()
+        }
 
-        clipView.cancelScrolling()
         
         
         let oldEmpty = self.isEmpty
