@@ -919,13 +919,11 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
                 showModalAlert(for: context.window, data: data, completion: { result in
                     open()
-                    if installBot {
-                        installAttachMenuBot(context: context, peer: bot.peer._asPeer(), completion: { value in
-                            if value {
-                                showModalText(for: context.window, text: strings().webAppAttachSuccess(bot.peer._asPeer().displayTitle))
-                            }
-                        })
-                    }
+                    installAttachMenuBot(context: context, peer: bot.peer._asPeer(), completion: { value in
+                        if value, installBot {
+                            showModalText(for: context.window, text: strings().webAppAttachSuccess(bot.peer._asPeer().displayTitle))
+                        }
+                    })
                 })
             } else {
                 open()

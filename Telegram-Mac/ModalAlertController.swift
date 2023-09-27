@@ -26,6 +26,17 @@ private final class Arguments {
 
 private struct State : Equatable {
     var data: ModalAlertData
+    
+    var actionEnabled: Bool {
+        var enabled: Bool = true
+        for option in data.options {
+            if option.mandatory && !option.isSelected {
+                enabled = false
+                break
+            }
+        }
+        return enabled
+    }
 }
 
 
@@ -168,14 +179,7 @@ private final class RowItem : TableRowItem {
     }
     
     var actionEnabled: Bool {
-        var enabled: Bool = true
-        for option in options {
-            if option.mandatory && !option.selected {
-                enabled = false
-                break
-            }
-        }
-        return enabled
+        return state.actionEnabled
     }
     
     override func viewClass() -> AnyClass {
@@ -525,12 +529,17 @@ private func ModalAlertController(data: ModalAlertData, completion: @escaping(Mo
 
     let arguments = Arguments(presentation: presentation, action: {
         let state = stateValue.with { $0 }
-        var result:[Int : Bool] = [:]
-        for (i, option) in state.data.options.enumerated() {
-            result[i] = option.isSelected
+        if state.actionEnabled {
+            var result:[Int : Bool] = [:]
+            for (i, option) in state.data.options.enumerated() {
+                result[i] = option.isSelected
+            }
+            completion(.init(selected: result))
+            close?()
+        } else {
+            NSSound.beep()
         }
-        completion(.init(selected: result))
-        close?()
+        
     }, toggle: { index in
         updateState { current in
             var current = current
