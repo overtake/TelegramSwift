@@ -79,11 +79,13 @@ open class ImageView: NSView {
         super.init(frame: frameRect)
         self.wantsLayer = true
         layerContentsRedrawPolicy = .never
+        layer?.masksToBounds = true
     }
     init() {
         super.init(frame: .zero)
         self.wantsLayer = true
         layerContentsRedrawPolicy = .never
+        layer?.masksToBounds = true
     }
     
     required public init?(coder: NSCoder) {

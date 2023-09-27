@@ -350,8 +350,10 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
         
         //fill date
         ctx.setFillColor(chatServiceItemColor.cgColor)
-        let path = NSBezierPath(roundedRect: NSMakeRect(rect.width / 2 - 30, rect.height - 50 - 10 - 60 - 5 - 20 - 5, 60, 20), xRadius: 10, yRadius: 10)
-        ctx.addPath(path.cgPath)
+        let path = CGMutablePath()
+        path.addRoundedRect(in: NSMakeRect(rect.width / 2 - 30, rect.height - 50 - 10 - 60 - 5 - 20 - 5, 60, 20), cornerWidth: 10, cornerHeight: 10)
+        
+        ctx.addPath(path)
         ctx.closePath()
         ctx.fillPath()
         
@@ -655,10 +657,12 @@ func generateScamIcon(foregroundColor: NSColor, backgroundColor: NSColor, text: 
         ctx.interpolationQuality = .high
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         
-        let borderPath = NSBezierPath(roundedRect: NSMakeRect(1, 1, size.width - 2, size.height - 2), xRadius: 2, yRadius: 2)
+        
+        let borderPath = CGMutablePath()
+        borderPath.addRoundedRect(in: NSMakeRect(1, 1, size.width - 2, size.height - 2), cornerWidth: 2, cornerHeight: 2)
         
         ctx.setStrokeColor(foregroundColor.cgColor)
-        ctx.addPath(borderPath.cgPath)
+        ctx.addPath(borderPath)
         ctx.closePath()
         ctx.strokePath()
         
@@ -2804,6 +2808,7 @@ func telegramUpdateTheme(_ theme: TelegramPresentationTheme, window: Window? = n
         
        // NSAppearance.current = theme.appearance
        // window.titl
+        
         window.backgroundColor = theme.colors.grayBackground
         window.titlebarAppearsTransparent = true//theme.dark
         

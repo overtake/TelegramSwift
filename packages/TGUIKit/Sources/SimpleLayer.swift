@@ -34,10 +34,12 @@ open class SimpleShapeLayer : CAShapeLayer {
     
     override public init() {
         super.init()
+        contentsScale = System.backingScale
     }
-    
-    override public init(layer: Any) {
-        super.init(layer: layer)
+    public init(frame frameRect: NSRect) {
+        super.init()
+        contentsScale = System.backingScale
+        self.frame = frameRect
     }
     
     required public init?(coder: NSCoder) {

@@ -1656,7 +1656,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             textView.displayDelegate = self
         }
         
-        
+        embeddedContainer.masksToBounds = false
         self.layer?.addSublayer(embeddedContainer)
         self.layer?.masksToBounds = false
 

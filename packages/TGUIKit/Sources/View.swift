@@ -377,6 +377,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         if #available(macOS 10.15, *) {
             self.layer?.cornerCurve = .continuous
         }
+        self.layer?.masksToBounds = true
        // self.translatesAutoresizingMaskIntoConstraints = false
     }
     
@@ -385,6 +386,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         assertOnMainThread()
         acceptsTouchEvents = true
         self.wantsLayer = true
+        self.layer?.masksToBounds = true
         self.autoresizesSubviews = false
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor

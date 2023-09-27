@@ -350,6 +350,10 @@ private final class StoryListContainer : Control {
             }
         }
         frame.origin.y = (self.frame.height - frame.height) / 2
+        
+        frame.size.width = floorToScreenPixels(backingScaleFactor, frame.size.width)
+        frame.size.height = floorToScreenPixels(backingScaleFactor, frame.size.height)
+
         return frame
     }
     
