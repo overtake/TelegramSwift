@@ -328,11 +328,17 @@ class GeneralInteractedRowView: GeneralRowView {
                 let t = item.isSelected ? item.activeThumb : item.thumb
                 if let thumb = t {
                     var f = focus(thumb.thumb.backingSize)
-                    if item.descLayout != nil {
-                        f.origin.y = insets.top
+                    
+                    let icon = thumb.thumb
+                    var x: CGFloat = insets.left + (thumb.thumbInset ?? 0)
+                    if case .selectableLeft = item.type {
+                        x += 35
+                    } else {
+                        if item.descLayout != nil {
+                            f.origin.y = insets.top
+                        }
                     }
-                    let icon = thumb.thumb 
-                    ctx.draw(icon, in: NSMakeRect(insets.left + (thumb.thumbInset ?? 0), f.minY, f.width, f.height))
+                    ctx.draw(icon, in: NSMakeRect(x, f.minY, f.width, f.height))
                 }
                 
                 if position.border, !isSelect && !self.isResorting  {

@@ -152,7 +152,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if let list = state.list {
         
         if !list.isEmpty {
-            //TODOLANG
             
             let conceal = !state.isRevealed && list.count > 1
 

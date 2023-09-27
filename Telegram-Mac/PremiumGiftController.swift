@@ -126,7 +126,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
    
     if let peer = state.peer {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(peer), comparable: nil, item: { initialSize, stableId in
-            return PremiumGiftHeaderItem(initialSize, stableId: stableId, context: arguments.context, peer: peer.peer)
+            return PremiumGiftHeaderItem(initialSize, stableId: stableId, context: arguments.context, source: .gift(peer.peer))
         }))
         index += 1
     }

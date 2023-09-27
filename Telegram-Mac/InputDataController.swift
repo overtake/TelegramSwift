@@ -601,7 +601,6 @@ class InputDataController: GenericViewController<InputDataView> {
                     self?.proccessValidation(validation)
                 }
             default:
-                //TODO IF NEEDED
                 break
             }
         case let .success(behaviour):

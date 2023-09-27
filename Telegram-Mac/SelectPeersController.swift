@@ -503,6 +503,10 @@ class SelectPeersBehavior {
     
     
     func filterPeer(_ peer: Peer) -> Bool {
+        
+        if excludePeerIds.contains(peer.id) {
+            return false
+        }
         if peer.isGroup || peer.isSupergroup || peer.isGigagroup {
             if settings.contains(.groups) {
                 return !settings.contains(.checkInvite) || peer.canInviteUsers

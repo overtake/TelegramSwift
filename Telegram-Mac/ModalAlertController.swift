@@ -394,8 +394,28 @@ private final class RowView : TableRowView {
         
         if let second = self.secondButton {
             let btnwidth = floor((size.width - 40 - 10) / 2)
-            transition.updateFrame(view: second, frame: CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40)))
-            transition.updateFrame(view: button, frame: CGRect(origin: CGPoint(x: second.frame.maxX + 10, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40)))
+            
+            button.sizeToFit(NSMakeSize(20, 0))
+            second.sizeToFit(NSMakeSize(20, 0))
+            
+            let effectiveOk = button.frame.width
+            let effectiveSecond = second.frame.width
+
+            var btnRect: NSRect
+            var secondRect: NSRect
+            if effectiveOk > btnwidth {
+                btnRect = CGRect(origin: CGPoint(x: frame.width - effectiveOk - 20, y: size.height - 20 - 40), size: CGSize(width: effectiveOk, height: 40))
+                secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: frame.width - 40 - effectiveOk - 10, height: 40))
+            } else if effectiveSecond > btnwidth {
+                secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: effectiveSecond, height: 40))
+                btnRect = CGRect(origin: CGPoint(x: secondRect.maxX, y: size.height - 20 - 40), size: CGSize(width: frame.width - 40 - effectiveSecond - 10, height: 40))
+            } else {
+                secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40))
+                btnRect = CGRect(origin: CGPoint(x: secondRect.maxX + 10, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40))
+            }
+            transition.updateFrame(view: button, frame: btnRect)
+            transition.updateFrame(view: second, frame: secondRect)
+
         } else {
             transition.updateFrame(view: button, frame: CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: size.width - 40, height: 40)))
         }
@@ -465,12 +485,13 @@ struct ModalAlertResult : Equatable {
 }
 
 private func minimumSize(_ data: ModalAlertData) -> NSSize {
-    let ok = NSAttributedString.initialize(string: data.ok, font: .medium(.text)).sizeFittingWidth(.greatestFiniteMagnitude).width + 40
+    var ok = NSAttributedString.initialize(string: data.ok, font: .medium(.text)).sizeFittingWidth(.greatestFiniteMagnitude).width + 40
     
     var cancel: CGFloat = 0
     if case let .confirm(text, _) = data.mode {
-        cancel = NSAttributedString.initialize(string: text, font: .medium(.text)).sizeFittingWidth(.greatestFiniteMagnitude).width + 40
+        cancel = max(NSAttributedString.initialize(string: text, font: .medium(.text)).sizeFittingWidth(.greatestFiniteMagnitude).width + 40, ok - 80)
     }
+    
     var option_w: CGFloat = 0
     
     for option in data.options {
@@ -483,7 +504,7 @@ private func minimumSize(_ data: ModalAlertData) -> NSSize {
     var size: NSSize = NSMakeSize(260, 300)
     
     size.width = max(cancel + ok + 10 + 40, size.width)
-    size.width = round(min(350, max(option_w + 40 + 40, size.width)))
+    size.width = round(min(max(size.width, 350), max(option_w + 40 + 40, size.width)))
     
     return size
 }

@@ -27,7 +27,9 @@ class GeneralBlockTextRowItem: GeneralRowItem {
     fileprivate let header: GeneralBlockTextHeader?
     fileprivate let headerLayout: TextViewLayout?
     fileprivate let rightAction: RightAction?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), rightAction: RightAction? = nil) {
+    fileprivate let centerViewAlignment: Bool
+    fileprivate let _hasBorder: Bool?
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil) {
         
         let attr = NSMutableAttributedString()
         _ = attr.append(string: text, color: color, font: font)
@@ -35,6 +37,8 @@ class GeneralBlockTextRowItem: GeneralRowItem {
         
         self.textLayout = TextViewLayout(attr, alwaysStaticItems: false)
         self.header = header
+        self._hasBorder = hasBorder
+        self.centerViewAlignment = centerViewAlignment
         self.rightAction = rightAction
         if let header = header {
             self.headerLayout = TextViewLayout(.initialize(string: header.text, color: color, font: .medium(.title)), maximumNumberOfLines: 3)
@@ -42,6 +46,14 @@ class GeneralBlockTextRowItem: GeneralRowItem {
             self.headerLayout = nil
         }
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets)
+    }
+    
+    override var hasBorder: Bool {
+        if let _hasBorder = _hasBorder {
+            return _hasBorder
+        } else {
+            return super.hasBorder
+        }
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
@@ -118,7 +130,11 @@ private final class GeneralBlockTextRowView : TableRowView {
             headerView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left + inset, item.viewType.innerInset.top))
             textView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, headerView.frame.maxY + 4))
         } else {
-            textView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top))
+            if !item.centerViewAlignment {
+                textView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top))
+            } else {
+                textView.center()
+            }
         }
         
         
@@ -180,7 +196,7 @@ private final class GeneralBlockTextRowView : TableRowView {
         }
         
         textView.update(item.textLayout)
-        self.separator.isHidden = !item.viewType.hasBorder
+        self.separator.isHidden = !item.hasBorder
         needsLayout = true
     }
     

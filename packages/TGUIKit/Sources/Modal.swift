@@ -696,6 +696,10 @@ public class Modal: NSObject {
             background.customHandler.size = { [weak self] (size) in
                 self?.controller?.measure(size: size)
             }
+        } else if controller.isFullScreen {
+            background.customHandler.size = { [weak self] (size) in
+                self?.resize(with: size)
+            }
         }
         
         activeModals.append(WeakReference(value: self))
@@ -990,7 +994,7 @@ public class Modal: NSObject {
                     
                     if controller.isFullScreen {
                         strongSelf.background.customHandler.size = { [weak strongSelf] size in
-                            strongSelf?.container.setFrameSize(size)
+                            strongSelf?.resize(with: size, animated: false)
                         }
                     }
                     

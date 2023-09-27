@@ -10285,6 +10285,10 @@ public final class L10n {
   public static var requestJoinListEmpty2Group: String  { return L10n.tr("Localizable", "RequestJoin.List.Empty2.Group") }
   /// No Results Found
   public static var requestJoinListSearchEmptyHeader: String  { return L10n.tr("Localizable", "RequestJoin.List.SearchEmpty.Header") }
+  /// Approved
+  public static var requestJoinListStatusApproved: String  { return L10n.tr("Localizable", "RequestJoin.List.Status.Approved") }
+  /// Dismissed
+  public static var requestJoinListStatusDismissed: String  { return L10n.tr("Localizable", "RequestJoin.List.Status.Dismissed") }
   /// **%@** has been added to the channel.
   public static func requestJoinListTooltipApprovedChannel(_ p1: String) -> String {
     return L10n.tr("Localizable", "RequestJoin.List.Tooltip.Approved.Channel", p1)

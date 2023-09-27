@@ -88,6 +88,8 @@
 		272C7DF32AA090F900F89190 /* StoryChannelInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DF22AA090F900F89190 /* StoryChannelInputView.swift */; };
 		272C7DF62AA1C10C00F89190 /* SuspiciousAuthRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 272C7DF52AA1C10C00F89190 /* SuspiciousAuthRowItem.swift */; };
 		27303AC12AC1D13600433CED /* GiveawayModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303AC02AC1D13600433CED /* GiveawayModalController.swift */; };
+		27303ACB2AC2B20C00433CED /* GiftLinkModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */; };
+		27303ACD2AC2BD5000433CED /* InputDataTableBasedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */; };
 		273274E626A818AE00E04289 /* WallpaperColorPickerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */; };
 		273274E826A8190F00E04289 /* WallpaperAdditionColorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */; };
 		2733670D2760F3010027441E /* ChatMessageMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2733670C2760F3010027441E /* ChatMessageMenuItems.swift */; };
@@ -1569,6 +1571,8 @@
 		272C7DF22AA090F900F89190 /* StoryChannelInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryChannelInputView.swift; sourceTree = "<group>"; };
 		272C7DF52AA1C10C00F89190 /* SuspiciousAuthRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuspiciousAuthRowItem.swift; sourceTree = "<group>"; };
 		27303AC02AC1D13600433CED /* GiveawayModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiveawayModalController.swift; sourceTree = "<group>"; };
+		27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftLinkModalController.swift; sourceTree = "<group>"; };
+		27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataTableBasedItem.swift; sourceTree = "<group>"; };
 		273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperColorPickerContainerView.swift; sourceTree = "<group>"; };
 		273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperAdditionColorView.swift; sourceTree = "<group>"; };
 		27335F0225C8295100FD040C /* GroupVideoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
@@ -3241,6 +3245,7 @@
 			children = (
 				274952842AA472F600499498 /* BoostChannelModalController.swift */,
 				27303AC02AC1D13600433CED /* GiveawayModalController.swift */,
+				27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */,
 			);
 			name = boost;
 			sourceTree = "<group>";
@@ -4486,6 +4491,7 @@
 				D05F392222FB45450040F341 /* DateSelectorModalController.swift */,
 				2763A158261C91B000C12762 /* DatePickerRowItem.swift */,
 				2751017C29D2BA02004CEFF3 /* TextInputController.swift */,
+				27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */,
 			);
 			name = general;
 			sourceTree = "<group>";
@@ -6905,6 +6911,7 @@
 				C232EABE1E1D13A800C4D38C /* TextUtils.swift in Sources */,
 				271F78CC280985770040EE8F /* Avatar_BgListView.swift in Sources */,
 				C253A9741D94182500CDC850 /* ChatRightView.swift in Sources */,
+				27303ACB2AC2B20C00433CED /* GiftLinkModalController.swift in Sources */,
 				27C4089125B068C300372302 /* InviteLinkRowItem.swift in Sources */,
 				9FDA713F20EE2D49001ED8ED /* PopularPeersRowItem.swift in Sources */,
 				27EFF4BB27BAF19600006834 /* Auth_CodeEntry.swift in Sources */,
@@ -7607,6 +7614,7 @@
 				C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */,
 				D0ABA3F325499C5A00031678 /* MessageStatsController.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
+				27303ACD2AC2BD5000433CED /* InputDataTableBasedItem.swift in Sources */,
 				C281498A1EA7F44300BB933E /* ListViewIntermediateState.swift in Sources */,
 				27D604312953164300588C21 /* StorageUsageHeaderItem.swift in Sources */,
 				D00B191E24E54F20006CCB87 /* CallStatusView.swift in Sources */,
