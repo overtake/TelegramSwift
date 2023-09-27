@@ -2513,7 +2513,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         if !share.hasCaptionView, share.hasInteraction {
             return ModalInteractions(acceptTitle: share.interactionOk, accept: { [weak self] in
                 _ = self?.invoke()
-            }, drawBorder: true)
+            }, drawBorder: true, height: 50)
         } else {
             return nil
         }

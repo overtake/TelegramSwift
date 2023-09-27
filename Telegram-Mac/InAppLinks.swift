@@ -1419,7 +1419,7 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost"]
 
 let telegram_scheme:String = "tg://"
 let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost"]
@@ -1663,6 +1663,27 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .folder(link: urlString, slug: value, context: context)
                         }
                         return .external(link: urlString, false)
+                    case actions_me[11]:
+                        let data = string.components(separatedBy: "/")
+                        if let context = context {
+                            if data.count == 2 {
+                                return .boost(link: urlString, username: data[1], context: context)
+                            } else {
+                                let (vars, _) = urlVars(with: string)
+                                if let priv = vars["c"] {
+                                    return .boost(link: urlString, username: "\(_private_)\(priv)", context: context)
+                                }
+                            }
+                        }
+                        
+                        
+//                        if username == "boost" {
+//                            if let priv = vars["c"] {
+//                                return .boost(link: urlString, username: "\(_private_)\(priv)", context: context)
+//                            } else if components.count == 1 {
+//                                return .boost(link: urlString, username: components[0], context: context)
+//                            }
+//                        }
                     default:
                         break
                     }
@@ -1733,6 +1754,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
                         }
                         
+                        let components = string.components(separatedBy: "?")
+                        let (vars, empty) = urlVars(with: string)
+                        
                         let joinKeys:[String] = ["+", "%20"]
                         let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
                         if "+\(phone)" == username {
@@ -1744,8 +1768,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 }
                             }
                         }
-                        let components = string.components(separatedBy: "?")
-                        let (vars, empty) = urlVars(with: string)
+                       
 
                         if vars[keyURLStartattach] != nil || empty.contains(keyURLStartattach) {
                             let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }

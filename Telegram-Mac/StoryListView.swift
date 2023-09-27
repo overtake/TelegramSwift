@@ -1536,7 +1536,7 @@ final class StoryListView : Control, Notifable {
             } else {
                 current = Text(frame: NSMakeRect(0, container.frame.maxY - 100, container.frame.width, controls.frame.height))
                 self.text = current
-                content.addSubview(current, positioned: .above, relativeTo: controls)
+                content.addSubview(current, positioned: .above, relativeTo: interactiveMedias)
             }
             let transition: ContainedViewLayoutTransition
             if animated {

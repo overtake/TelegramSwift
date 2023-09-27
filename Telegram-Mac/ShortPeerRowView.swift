@@ -750,7 +750,9 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             break
         default:
             if clickCount <= 1 {
-                if case .nextContext = item.type, let event = NSApp.currentEvent {
+                if item.menuOnAction, let event = NSApp.currentEvent {
+                    showContextMenu(event)
+                } else if case .nextContext = item.type, let event = NSApp.currentEvent {
                     showContextMenu(event)
                 } else {
                     item.action()

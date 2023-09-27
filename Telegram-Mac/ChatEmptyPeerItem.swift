@@ -111,7 +111,6 @@ class ChatEmptyPeerItem: TableRowItem {
             case .replies:
                 _ = attr.append(string: strings().chatEmptyReplies, color: textColor, font: .medium(.text))
             case .topic:
-                //TODOLANG
                 _ = attr.append(string: strings().chatEmptyTopic, color: textColor, font: .medium(.text))
             }
         case .pinned:
