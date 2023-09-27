@@ -2742,6 +2742,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 additionalDelta = 0
             }
             
+            if item.isCollapsed {
+                var bp = 0
+                bp += 1
+            }
+            
             containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -item.height : 0, frame.width - .borderSize, item.height)
             
             contentView.frame = CGRect(origin: contentPoint(item), size: frame.size)

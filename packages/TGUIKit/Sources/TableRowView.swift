@@ -65,6 +65,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         self.wantsLayer = true
         backgroundColor = .clear
         self.layerContentsRedrawPolicy = .never
+        layer?.masksToBounds = true
         autoresizingMask = []
       //  self.layer?.delegate = self
         autoresizesSubviews = false
