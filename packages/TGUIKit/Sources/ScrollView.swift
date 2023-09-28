@@ -259,14 +259,14 @@ open class ScrollView: NSScrollView{
     
   
 //    
-    open override var hasVerticalScroller: Bool {
-        get {
-            return true
-        }
-        set {
-            super.hasVerticalScroller = newValue
-        }
-    }
+//    open override var hasVerticalScroller: Bool {
+//        get {
+//            return true
+//        }
+//        set {
+//            super.hasVerticalScroller = newValue
+//        }
+//    }
     
     required public init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
