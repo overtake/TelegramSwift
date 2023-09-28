@@ -512,6 +512,10 @@ public final class AvatarStoryIndicatorComponent : Equatable {
             _ = self.indicatorView.update(component: component, progress: progress, availableSize: availableSize)
         }
     }
+    deinit {
+        var bp = 0
+        bp += 1
+    }
     
 }
 

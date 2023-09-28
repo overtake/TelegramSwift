@@ -398,6 +398,8 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     override func viewDidLoad() -> Void {
         super.viewDidLoad()
         
+        self.genericView.tableView.hasVerticalScroller = false
+        
         self.genericView.tableView.getBackgroundColor = {
             theme.colors.listBackground
         }

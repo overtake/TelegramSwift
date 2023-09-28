@@ -263,6 +263,7 @@ private final class RowView : TableRowView {
         
         button.scaleOnClick = true
         button._thatFit = true
+        button.disableActions()
         optionsView.layer?.masksToBounds = false
     }
     
@@ -302,6 +303,7 @@ private final class RowView : TableRowView {
             } else {
                 current = TitleButton()
                 current.scaleOnClick = true
+                current.disableActions()
                 current.set(font: .medium(.text), for: .Normal)
                 self.secondButton = current
                 addSubview(current)
@@ -417,11 +419,11 @@ private final class RowView : TableRowView {
                 secondRect = CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40))
                 btnRect = CGRect(origin: CGPoint(x: secondRect.maxX + 10, y: size.height - 20 - 40), size: CGSize(width: btnwidth, height: 40))
             }
-            transition.updateFrame(view: button, frame: btnRect)
-            transition.updateFrame(view: second, frame: secondRect)
+            ContainedViewLayoutTransition.immediate.updateFrame(view: button, frame: btnRect)
+            ContainedViewLayoutTransition.immediate.updateFrame(view: second, frame: secondRect)
 
         } else {
-            transition.updateFrame(view: button, frame: CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: size.width - 40, height: 40)))
+            ContainedViewLayoutTransition.immediate.updateFrame(view: button, frame: CGRect(origin: CGPoint(x: 20, y: size.height - 20 - 40), size: CGSize(width: size.width - 40, height: 40)))
         }
         
         var y: CGFloat = 0

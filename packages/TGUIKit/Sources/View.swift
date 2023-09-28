@@ -490,7 +490,6 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         _customHandler?.size?(newSize)
-
         guard #available(OSX 10.12, *) else {
             self.needsLayout = true
             return

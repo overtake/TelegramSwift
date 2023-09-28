@@ -64,7 +64,7 @@ final class ChatAvatarView : Control {
         }
         
         self.removeAllHandlers()
-        self.set(handler: { [weak item] control in
+        self.set(handler: { [weak item, weak self] control in
             if storyStats != nil, let id = message?.id {
                 item?.chatInteraction.openChatPeerStories(id, peer.id, { [weak self] signal in
                     self?.setOpenProgress(signal)

@@ -859,7 +859,7 @@ private final class NameContainer : View {
         }
         
         if let stateText = item.stateText, let control = statusControl, let peerId = item.peer?.id {
-            control.userInteractionEnabled = true
+            control.userInteractionEnabled = item.peer?.isScam == false && item.peer?.isFake == false
             control.scaleOnClick = true
             control.set(handler: { control in
                 if item.peer?.emojiStatus != nil {
