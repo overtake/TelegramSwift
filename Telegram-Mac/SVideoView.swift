@@ -831,8 +831,8 @@ class SVideoView: NSView {
         let bufferingStatus = self.bufferingStatus
         self.bufferingStatus = bufferingStatus
         if controls.frame.origin == .zero || previousIsCompact != self.controlsStyle.isCompact || oldSize != frame.size {
-            controls.centerX(y: frame.height - controls.frame.height - 24)
-        } 
+            controls.centerX(self, y: frame.height - controls.frame.height - 24)
+        }
         bufferingIndicator.center()
         bufferingIndicator.progressColor = .white
         backgroundView.frame = bounds
