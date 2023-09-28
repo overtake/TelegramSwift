@@ -115,7 +115,7 @@ extension TelegramPeerPhoto : Equatable {
     }
 }
 
-fileprivate let actionItemWidth: CGFloat = 135
+fileprivate let actionItemWidth: CGFloat = 145
 fileprivate let actionItemInsetWidth: CGFloat = 20
 
 private struct SubActionItem {

@@ -49,7 +49,7 @@ private final class CenterView : TitledBarView {
     
     override func layout() {
         super.layout()
-        segment.view.frame = focus(NSMakeSize(frame.width - 40, 30))
+        segment.view.frame = focus(NSMakeSize(min(frame.width - 40, 600), 30))
     }
 }
 
