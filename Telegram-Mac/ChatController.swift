@@ -6103,7 +6103,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
        
         
-        genericView.tableView.notifyScrollHandlers()
+       // genericView.tableView.notifyScrollHandlers()
         
         if !transition.isEmpty, let afterNextTransaction = self.afterNextTransaction {
             delay(0.1, closure: afterNextTransaction)

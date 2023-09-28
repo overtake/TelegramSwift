@@ -128,14 +128,12 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, viewAndS
                         return .single(menuItems)
                     }, inputActivity: inputActivity, highlightVerified: true, story: stories?.subscriptionItem(peer), openStory: arguments.openStory)
                 }))
-                index += 1
             case let .showMore(_, _, viewType):
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_show_more"), equatable: nil, comparable: nil, item: { initialSize, stableId in
                     return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().peerInfoShowMore, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                         arguments.showMore()
                     }, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4), inset: NSEdgeInsetsZero)
                 }))
-                index += 1
             default:
                 break
             }

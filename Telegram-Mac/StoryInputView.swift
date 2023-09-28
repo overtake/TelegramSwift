@@ -178,10 +178,8 @@ final class StoryLikeActionButton: Control {
 
          let completed: (Bool)->Void = { [weak self]  _ in
              DispatchQueue.main.async {
-                 DispatchQueue.main.async {
-                     if let container = self {
-                         play(container, icon)
-                     }
+                 if let container = self {
+                     play(container, icon)
                  }
              }
          }
@@ -870,6 +868,7 @@ final class StoryInputView : Control, TGModernGrowingDelegate, StoryInput {
         if let arguments = arguments {
             self.updateState(arguments.interaction.presentation, animated: false)
         }
+        self.layer?.masksToBounds = false
     }
     
     private var inputContextSize: NSSize? = nil

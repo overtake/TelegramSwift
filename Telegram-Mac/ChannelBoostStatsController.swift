@@ -365,7 +365,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("level"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
             return BoostRowItem(initialSize, stableId: stableId, state: state, context: arguments.context)
         }))
-        index += 1
       
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
@@ -399,7 +398,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
         }))
-        index += 1
 
         if let boosters = state.booster {
            
@@ -435,18 +433,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                             arguments.openPeerInfo(item.booster.peer.id)
                         })
                     }))
-                    index += 1
                 }
                 
                 
                 if boosters.canLoadMore && boosters.count > boosters.boosters.count {
                     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().statsBoostsShowMore, color: theme.colors.accent, viewType: .lastItem, action: arguments.showMore)))
-                    index += 1
                 } else if boosters.isLoadingMore {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(boosters), comparable: nil, item: { initialSize, stableId in
                         return GeneralLoadingRowItem(initialSize, stableId: stableId, viewType: .lastItem)
                     }))
-                    index += 1
                 }
                 
                 entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsBoostersInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
@@ -477,7 +472,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 return .single(items)
             }, share: arguments.shareLink, copyLink: arguments.copyLink)
         }))
-        index += 1
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsLinkInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1

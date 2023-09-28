@@ -2652,14 +2652,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
-        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
-            self.tableView.endUpdates()
-        }
-                
-
-        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
-            self.tableView.beginUpdates()
-        }
+//        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
+//            self.tableView.endUpdates()
+//        }
+//                
+//
+//        if transition.grouping && !transition.isEmpty, !transition.state.isNone {
+//            self.tableView.beginUpdates()
+//        }
         
         for (idx, item) in transition.inserted {
             let effect:NSTableView.AnimationOptions
