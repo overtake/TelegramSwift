@@ -353,7 +353,7 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
                 arguments.resetDownloadSettings()
             }, enabled: enabled)
         case let .downloadFolder(_, path, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageDownloadFolder, type: .context(path), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().dataAndStorageDownloadFolder, type: .nextContext(path), viewType: viewType, action: {
                 arguments.selectDownloadFolder()
             })
         case let .autoplayHeader(_, viewType):

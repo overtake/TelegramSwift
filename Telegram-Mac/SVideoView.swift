@@ -697,7 +697,7 @@ private final class SVideoControlsView : Control {
         case .regular:
             progress.setFrameOrigin(volumeContainer.frame.minX + volumeSlider.frame.minX, frame.height - 20 - progress.frame.height + (progress.frame.height - progress.progressHeight) / 2)
         }
-        progress.setFrameSize(NSMakeSize(frame.width - progress.frame.origin.x - 16 - 16 - durationView.frame.width, 12))
+        progress.setFrameSize(NSMakeSize(max(frame.width - progress.frame.origin.x - 16 - 16 - durationView.frame.width, 0), 12))
         
         currentTimeView.setFrameOrigin(16, progress.frame.minY)
         durationView.setFrameOrigin(frame.width - durationView.frame.width - 16, progress.frame.minY)
