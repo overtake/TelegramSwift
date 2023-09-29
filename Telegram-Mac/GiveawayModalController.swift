@@ -394,7 +394,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     })))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway_specific, data: .init(name: "Award Specific Users", color: theme.colors.text, icon: specific_icon, type: .selectableLeft(state.type == .specific), viewType: .lastItem, enabled: true, description: "select recipients", action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway_specific, data: .init(name: "Award Specific Users", color: theme.colors.text, icon: specific_icon, type: .selectableLeft(state.type == .specific), viewType: .lastItem, enabled: true, description: "select recipients", descTextColor: theme.colors.accent, action: {
         arguments.updateType(.specific)
     })))
   

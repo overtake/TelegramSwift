@@ -2234,6 +2234,9 @@ class ChatRowItem: TableRowItem {
                 if message.id.peerId.namespace != Namespaces.Peer.SecretChat, message.autoclearTimeout != nil {
                     return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
                 }
+                if message.media.first is TelegramMediaGiveaway {
+                    return ChatGiveawayRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                }
                 if let action = message.media[0] as? TelegramMediaAction {
                    switch action.action {
                    case .phoneCall:

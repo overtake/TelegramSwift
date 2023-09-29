@@ -115,6 +115,7 @@ class DiceCache {
     private let _emojies_reactions = Promise<ItemCollectionsView>()
     private let _emojies_status = Promise<ItemCollectionsView>()
     private let _emojies = Promise<ItemCollectionsView>()
+    
 
     var emojies_reactions: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentReactions, Namespaces.OrderedItemList.CloudTopReactions], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
@@ -124,6 +125,10 @@ class DiceCache {
     }
     var emojies: Signal<ItemCollectionsView, NoError> {
         return postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 8000)
+    }
+    
+    var premium_gifts: Signal<LoadedStickerPack, NoError> {
+        return engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)
     }
     
     init(postbox: Postbox, engine: TelegramEngine) {

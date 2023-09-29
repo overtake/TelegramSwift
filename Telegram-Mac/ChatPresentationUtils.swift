@@ -394,10 +394,10 @@ final class TelegramChatColors {
     }
     
     func monospacedPreColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? palette.monospacedPreBubble_incoming : palette.monospacedPreBubble_outgoing : palette.monospacedPre
+        return bubbled ? incoming ? palette.textBubble_incoming : palette.textBubble_outgoing : palette.monospacedPre
     }
     func monospacedCodeColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? palette.monospacedCodeBubble_incoming : palette.monospacedCodeBubble_outgoing : palette.monospacedCode
+        return bubbled ? incoming ? palette.textBubble_incoming : palette.textBubble_outgoing : palette.monospacedCode
     }
     
     func selectText(_ incoming: Bool, _ bubbled: Bool) -> NSColor {

@@ -284,7 +284,7 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         
         
         if let counterText = self.counterText {
-            let point = CGPoint(x: size.width * 0.5 - counterText.frame.width * 0.5, y: floorToScreenPixels(backingScaleFactor, size.height * 0.765 - 3))
+            let point = CGPoint(x: size.width * 0.5 - counterText.frame.width * 0.5, y: floorToScreenPixels(backingScaleFactor, size.height * 0.765 - 5))
             transition.updateFrame(view: counterText, frame: CGRect(origin: point, size: counterText.frame.size))
         }
         

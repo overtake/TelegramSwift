@@ -120,6 +120,10 @@ enum LocalAnimatedSticker : String {
     case premium_double
     case premium_unlock
     
+    case premium_gift_12
+    case premium_gift_6
+    case premium_gift_3
+    
     case menu_add_to_folder
     case menu_archive
     case menu_clear_history
@@ -401,6 +405,12 @@ enum LocalAnimatedSticker : String {
         case .police:
             playPolicy = .loop
             hidePlayer = false
+        case .premium_gift_3:
+            playPolicy = .onceEnd
+        case .premium_gift_6:
+            playPolicy = .onceEnd
+        case .premium_gift_12:
+            playPolicy = .onceEnd
         default:
             playPolicy = .loop
             hidePlayer = false
