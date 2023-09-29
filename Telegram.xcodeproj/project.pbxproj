@@ -503,6 +503,7 @@
 		27C50ADD2AC6F87000FED2E4 /* premium_gift_3.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */; };
 		27C50ADE2AC6F87000FED2E4 /* premium_gift_6.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27C50ADB2AC6F86E00FED2E4 /* premium_gift_6.tgs */; };
 		27C50ADF2AC6F87000FED2E4 /* premium_gift_12.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27C50ADC2AC6F87000FED2E4 /* premium_gift_12.tgs */; };
+		27C50AE92AC7492A00FED2E4 /* InputDataCloseItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C50AE82AC7492A00FED2E4 /* InputDataCloseItem.swift */; };
 		27C6B65D29DC123500F7E7AC /* share_folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27C6B65C29DC123500F7E7AC /* share_folder.tgs */; };
 		27CB174C2763257900DD25E0 /* menu_secret_chat.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB174B2763257900DD25E0 /* menu_secret_chat.tgs */; };
 		27CB174E276325C600DD25E0 /* menu_call.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB174D276325C600DD25E0 /* menu_call.tgs */; };
@@ -1957,6 +1958,7 @@
 		27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = premium_gift_3.tgs; sourceTree = "<group>"; };
 		27C50ADB2AC6F86E00FED2E4 /* premium_gift_6.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = premium_gift_6.tgs; sourceTree = "<group>"; };
 		27C50ADC2AC6F87000FED2E4 /* premium_gift_12.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = premium_gift_12.tgs; sourceTree = "<group>"; };
+		27C50AE82AC7492A00FED2E4 /* InputDataCloseItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataCloseItem.swift; sourceTree = "<group>"; };
 		27C6B65C29DC123500F7E7AC /* share_folder.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = share_folder.tgs; sourceTree = "<group>"; };
 		27CB174B2763257900DD25E0 /* menu_secret_chat.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_secret_chat.tgs; sourceTree = "<group>"; };
 		27CB174D276325C600DD25E0 /* menu_call.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_call.tgs; sourceTree = "<group>"; };
@@ -4501,6 +4503,7 @@
 				2763A158261C91B000C12762 /* DatePickerRowItem.swift */,
 				2751017C29D2BA02004CEFF3 /* TextInputController.swift */,
 				27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */,
+				27C50AE82AC7492A00FED2E4 /* InputDataCloseItem.swift */,
 			);
 			name = general;
 			sourceTree = "<group>";
@@ -7494,6 +7497,7 @@
 				27C4089425B081B500372302 /* FireTimerControl.swift in Sources */,
 				C2A315AF1E2E64BE00D89000 /* CalendarController.swift in Sources */,
 				C296AF8A1D8E9F94001DBB59 /* ChatInteractiveContentView.swift in Sources */,
+				27C50AE92AC7492A00FED2E4 /* InputDataCloseItem.swift in Sources */,
 				C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */,
 				C224675B1FA8546200F03E27 /* GroupedLayout.swift in Sources */,
 				C230BEBA1EE9AEB80029586C /* ChannelEventLogItem.swift in Sources */,

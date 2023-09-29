@@ -26,7 +26,7 @@ private final class GiftLinkStarRowItem : GeneralRowItem {
 }
 
 private final class GiftLinkStarRowView : TableRowView {
-    private let scene: PremiumStarSceneView = PremiumStarSceneView(frame: NSMakeRect(0, 0, 300, 150))
+    private let scene: PremiumStarSceneView = PremiumStarSceneView(frame: NSMakeRect(0, 0, 340, 180))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(scene)
@@ -293,6 +293,13 @@ func GiftLinkModalController(context: AccountContext, info: PremiumGiftCodeInfo)
             close?()
         }
         return .none
+    }
+    
+    controller.didLoaded = { controller, _ in
+        controller.genericView.layer?.masksToBounds = false
+        controller.tableView.layer?.masksToBounds = false
+        controller.tableView.documentView?.layer?.masksToBounds = false
+        controller.tableView.clipView.layer?.masksToBounds = false
     }
    
     
