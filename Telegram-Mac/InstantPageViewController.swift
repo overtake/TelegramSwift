@@ -600,7 +600,7 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             }
         }))
         
-        actualizeDisposable.set((actualizedWebpage(postbox: context.account.postbox, network: context.account.network, webpage: webPage) |> deliverOnMainQueue).start(next: { [weak self] webpage in
+        actualizeDisposable.set((actualizedWebpage(account: context.account, webpage: webPage) |> deliverOnMainQueue).start(next: { [weak self] webpage in
             self?.updateWebPage(webpage, anchor: self?.pendingAnchor)
         }))
 

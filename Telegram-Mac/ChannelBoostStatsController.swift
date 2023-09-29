@@ -288,12 +288,14 @@ private final class Arguments {
     let shareLink:(String)->Void
     let copyLink:(String)->Void
     let showMore:()->Void
-    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void) {
+    let giveaway:()->Void
+    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void, giveaway:@escaping()->Void) {
         self.context = context
         self.shareLink = shareLink
         self.copyLink = copyLink
         self.openPeerInfo = openPeerInfo
         self.showMore = showMore
+        self.giveaway = giveaway
     }
 }
 
@@ -338,18 +340,20 @@ private struct State : Equatable {
     }
     var currentBoosts: Int {
         if let stats = self.boostStatus {
-            return stats.boosts - stats.currentLevelBoosts
+            return stats.boosts
         }
         return 0
     }
 }
 
-private func _id_peer(_ id: PeerId) -> InputDataIdentifier {
-    return .init("_id_peer_\(id.toInt64())")
+private func _id_peer(_ id: PeerId, _ index: Int) -> InputDataIdentifier {
+    return .init("_id_peer_\(id.toInt64())_\(index)")
 }
 private let _id_loading = InputDataIdentifier("_id_loading")
 private let _id_empty_boosters = InputDataIdentifier("_id_empty_boosters")
 private let _id_load_more = InputDataIdentifier("_id_load_more")
+
+private let _id_giveaway = InputDataIdentifier("_id_load_more")
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -426,13 +430,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
                 
                 
+                var indexes: [PeerId : Int] = [:]
                 
                 for item in items {
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.booster.peer._asPeer().id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
+                    let peerId = item.booster.peer._asPeer().id
+                    let peerIndex = indexes[peerId] ?? 0
+                    let stableId = _id_peer(peerId, peerIndex)
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: stableId, equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
                         return ShortPeerRowItem(initialSize, peer: item.booster.peer._asPeer(), account: arguments.context.account, context: arguments.context, status: strings().statsBoostsExpiresOn(stringForFullDate(timestamp: item.booster.expires)), inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, action: {
                             arguments.openPeerInfo(item.booster.peer.id)
                         })
                     }))
+                    indexes[peerId] = peerIndex + 1
                 }
                 
                 
@@ -480,6 +489,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
+        
+        //TODOLANG
+
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: "Get Boosts Via Gifts", color: theme.colors.accent, icon: NSImage(named: "Icon_Boost_Giveaway")?.precomposed(theme.colors.accent, flipVertical: true), viewType: .singleItem, action: arguments.giveaway)))
+
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Get more boosts for your channel by gifting  Premium to your subscribers."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
@@ -527,6 +547,8 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
         copyToClipboard(link)
     }, showMore: { [weak boostersContext] in
         boostersContext?.loadMore()
+    }, giveaway: {
+        showModal(with: GiveawayModalController(context: context, peerId: peerId), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

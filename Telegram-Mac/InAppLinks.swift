@@ -1207,6 +1207,14 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 
             }
         })
+    case let .gift(_, slug, context):
+        _ = showModalProgress(signal: context.engine.payments.checkPremiumGiftCode(slug: slug), for: context.window).start(next: { info in
+            if let info = info {
+                showModal(with: GiftLinkModalController(context: context, info: info), for: context.window)
+            } else {
+                alert(for: context.window, info: strings().unknownError)
+            }
+        })
     }
     
 }
@@ -1347,6 +1355,7 @@ enum inAppLink {
     case folder(link: String, slug: String, context: AccountContext)
     case story(link: String, username: String, storyId: Int32, messageId: MessageId?, context: AccountContext)
     case boost(link: String, username: String, context: AccountContext)
+    case gift(link: String, slug: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1410,6 +1419,8 @@ enum inAppLink {
             return link
         case let .boost(link, _, _):
             return link
+        case let .gift(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1419,7 +1430,7 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/"]
 
 let telegram_scheme:String = "tg://"
 let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost"]
@@ -1675,15 +1686,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 }
                             }
                         }
-                        
-                        
-//                        if username == "boost" {
-//                            if let priv = vars["c"] {
-//                                return .boost(link: urlString, username: "\(_private_)\(priv)", context: context)
-//                            } else if components.count == 1 {
-//                                return .boost(link: urlString, username: components[0], context: context)
-//                            }
-//                        }
+                    case actions_me[12]:
+                        let data = string.components(separatedBy: "/")
+                        if let context = context, data.count == 2 {
+                            return .gift(link: urlString, slug: data[1], context: context)
+                        }
                     default:
                         break
                     }

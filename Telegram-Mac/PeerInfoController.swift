@@ -99,8 +99,10 @@ class PeerInfoArguments {
             return removeChatInteractively(context: context, peerId: peerId, userId: peerViewMainPeer(view)?.id, deleteGroup: isEditing && peerViewMainPeer(view)?.groupAccess.isCreator == true, forceRemoveGlobally: peerViewMainPeer(view)?.groupAccess.isCreator == true)
         } |> deliverOnMainQueue
         
-        deleteDisposable.set(signal.start(completed: { [weak self] in
-            self?.pullNavigation()?.close()
+        deleteDisposable.set(signal.start(next: { [weak self] result in
+            if result {
+                self?.pullNavigation()?.close()
+            }
         }))
     }
     

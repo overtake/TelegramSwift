@@ -730,6 +730,9 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServicePremiumGiftSent(authorName, formatted)
             }
+        case let .giftCode(slug, fromGiveaway, boostPeerId, months):
+            //TODOLANG
+            text = "GIFTCODE"
         case let .topicEdited(components):
             var fileId: Int64?
             if let component = components.first {

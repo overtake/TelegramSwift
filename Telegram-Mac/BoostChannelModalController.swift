@@ -155,7 +155,7 @@ private final class Arguments {
 
 extension ChannelBoostStatus {
     func increment() -> ChannelBoostStatus {
-        return .init(level: self.level, boosts: self.boosts + 1, currentLevelBoosts: self.currentLevelBoosts, nextLevelBoosts: self.nextLevelBoosts, premiumAudience: self.premiumAudience)
+        return .init(level: self.level, boosts: self.boosts + 1, currentLevelBoosts: self.currentLevelBoosts, nextLevelBoosts: self.nextLevelBoosts, premiumAudience: self.premiumAudience, url: self.url)
     }
 }
 
@@ -558,7 +558,7 @@ private final class BoostRowItemView : TableRowView {
         
         func update(state: State, context: AccountContext, transition: ContainedViewLayoutTransition) -> NSSize {
             
-            let dynamicValue = DynamicCounterTextView.make(for: "\(state.currentLevelBoosts)", count: "\(state.status.boosts)", font: .avatar(20), textColor: .white, width: .greatestFiniteMagnitude)
+            let dynamicValue = DynamicCounterTextView.make(for: "\(state.status.boosts)", count: "\(state.status.boosts)", font: .avatar(20), textColor: .white, width: .greatestFiniteMagnitude)
             
             textView.update(dynamicValue, animated: transition.isAnimated)
             transition.updateFrame(view: textView, frame: CGRect(origin: textView.frame.origin, size: dynamicValue.size))

@@ -29,13 +29,13 @@ class GeneralBlockTextRowItem: GeneralRowItem {
     fileprivate let rightAction: RightAction?
     fileprivate let centerViewAlignment: Bool
     fileprivate let _hasBorder: Bool?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil, singleLine: Bool = false) {
         
         let attr = NSMutableAttributedString()
         _ = attr.append(string: text, color: color, font: font)
         attr.detectBoldColorInString(with: .medium(font.pointSize))
         
-        self.textLayout = TextViewLayout(attr, alwaysStaticItems: false)
+        self.textLayout = TextViewLayout(attr, maximumNumberOfLines: singleLine ? 1 : 0, alwaysStaticItems: false)
         self.header = header
         self._hasBorder = hasBorder
         self.centerViewAlignment = centerViewAlignment

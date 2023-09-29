@@ -499,6 +499,10 @@
 		27C4089725B0A1F400372302 /* ClosureInviteLinkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */; };
 		27C4089A25B0BD4F00372302 /* NumberSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4089925B0BD4E00372302 /* NumberSelectorController.swift */; };
 		27C4F5DE26B3F62E008123EC /* VideoMessageConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C4F5DD26B3F62E008123EC /* VideoMessageConfig.swift */; };
+		27C50AD92AC6EEB200FED2E4 /* ChatGiveawayRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27C50AD82AC6EEB200FED2E4 /* ChatGiveawayRowItem.swift */; };
+		27C50ADD2AC6F87000FED2E4 /* premium_gift_3.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */; };
+		27C50ADE2AC6F87000FED2E4 /* premium_gift_6.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27C50ADB2AC6F86E00FED2E4 /* premium_gift_6.tgs */; };
+		27C50ADF2AC6F87000FED2E4 /* premium_gift_12.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27C50ADC2AC6F87000FED2E4 /* premium_gift_12.tgs */; };
 		27C6B65D29DC123500F7E7AC /* share_folder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27C6B65C29DC123500F7E7AC /* share_folder.tgs */; };
 		27CB174C2763257900DD25E0 /* menu_secret_chat.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB174B2763257900DD25E0 /* menu_secret_chat.tgs */; };
 		27CB174E276325C600DD25E0 /* menu_call.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CB174D276325C600DD25E0 /* menu_call.tgs */; };
@@ -1949,6 +1953,10 @@
 		27C4089625B0A1F300372302 /* ClosureInviteLinkController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosureInviteLinkController.swift; sourceTree = "<group>"; };
 		27C4089925B0BD4E00372302 /* NumberSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberSelectorController.swift; sourceTree = "<group>"; };
 		27C4F5DD26B3F62E008123EC /* VideoMessageConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoMessageConfig.swift; sourceTree = "<group>"; };
+		27C50AD82AC6EEB200FED2E4 /* ChatGiveawayRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGiveawayRowItem.swift; sourceTree = "<group>"; };
+		27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = premium_gift_3.tgs; sourceTree = "<group>"; };
+		27C50ADB2AC6F86E00FED2E4 /* premium_gift_6.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = premium_gift_6.tgs; sourceTree = "<group>"; };
+		27C50ADC2AC6F87000FED2E4 /* premium_gift_12.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = premium_gift_12.tgs; sourceTree = "<group>"; };
 		27C6B65C29DC123500F7E7AC /* share_folder.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = share_folder.tgs; sourceTree = "<group>"; };
 		27CB174B2763257900DD25E0 /* menu_secret_chat.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_secret_chat.tgs; sourceTree = "<group>"; };
 		27CB174D276325C600DD25E0 /* menu_call.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_call.tgs; sourceTree = "<group>"; };
@@ -4365,6 +4373,7 @@
 				2764A5B025E0173900F9A20D /* AutoDeleteContextMenuView.swift */,
 				2733670C2760F3010027441E /* ChatMessageMenuItems.swift */,
 				271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */,
+				27C50AD82AC6EEB200FED2E4 /* ChatGiveawayRowItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -5812,6 +5821,9 @@
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
 				274952812AA1E79E00499498 /* hand_animation.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
+				27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */,
+				27C50ADB2AC6F86E00FED2E4 /* premium_gift_6.tgs */,
+				27C50ADC2AC6F87000FED2E4 /* premium_gift_12.tgs */,
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
 				275C14122A61780F000DDACF /* expired_story.tgs */,
 				27994ED92A5EF7C30084D982 /* stories_archive.tgs */,
@@ -6489,6 +6501,7 @@
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
 				27CE155B297966D8001F8CE8 /* emoji_category_away.tgs in Resources */,
 				27ABFD252858C221006C3301 /* chars.png in Resources */,
+				27C50ADE2AC6F87000FED2E4 /* premium_gift_6.tgs in Resources */,
 				2773A55125FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs in Resources */,
 				27D29AA227F1DE8E00D4BC64 /* menu_reload.tgs in Resources */,
 				275549142747C24F0098A3CD /* device_edge.tgs in Resources */,
@@ -6509,6 +6522,7 @@
 				27F37A262850F8F200AC8B90 /* voice_dots.tgs in Resources */,
 				27803C0727A3E944007B0FA9 /* menu_folder_personal.tgs in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
+				27C50ADD2AC6F87000FED2E4 /* premium_gift_3.tgs in Resources */,
 				27D48B4A2A7273A200721995 /* menu_eye_locked.tgs in Resources */,
 				2733674927625BD80027441E /* menu_promote.tgs in Resources */,
 				D0E7BE71256D30130068644D /* group_call_speaker_mute.json in Resources */,
@@ -6584,6 +6598,7 @@
 				C232EA3D1E1C06EF00C4D38C /* dsa_pub.pem in Resources */,
 				2733671227620B600027441E /* menu_copy_media.tgs in Resources */,
 				275549132747C24F0098A3CD /* device_windows.tgs in Resources */,
+				27C50ADF2AC6F87000FED2E4 /* premium_gift_12.tgs in Resources */,
 				27803BFA27A3E944007B0FA9 /* menu_folder_animal.tgs in Resources */,
 				D098C71B1D7E175A007784E4 /* Assets.xcassets in Resources */,
 				27803BF127A3E944007B0FA9 /* menu_folder_all_chats.tgs in Resources */,
@@ -7562,6 +7577,7 @@
 				2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */,
 				C2DE5D281F3CA5FE0081EC1E /* InstantPageItem.swift in Sources */,
 				27ABFD272858C65B006C3301 /* FasterStarsView.swift in Sources */,
+				27C50AD92AC6EEB200FED2E4 /* ChatGiveawayRowItem.swift in Sources */,
 				C2DF47961DE71160003AA6C0 /* GIFContainerView.swift in Sources */,
 				C27BAC7A20CFCE68007A7508 /* PassportSettingsHeaderItem.swift in Sources */,
 				C253E2261DE335C10022A29F /* ChatVoiceContentView.swift in Sources */,

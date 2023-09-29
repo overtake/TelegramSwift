@@ -63,9 +63,21 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-
+    var info: PremiumGiftCodeInfo
+    var fromPeer: PeerEquatable?
+    var toPeer: PeerEquatable?
+    
+    
+    func canUse(_ accountPeerId: PeerId) -> Bool {
+        if info.usedDate == nil {
+            if info.toPeerId == nil || accountPeerId == info.toPeerId {
+                return true
+            }
+        }
+        return false
+    }
     var link: String {
-        return "telegram.gift/qwef1k1234"
+        return "t.me/giftcode/\(info.slug)"
     }
     
     func rows(_ arguments: Arguments) -> [InputDataTableBasedItem.Row] {
@@ -73,56 +85,75 @@ private struct State : Equatable {
         
         
         
-        let from: TextViewLayout = .init(parseMarkdownIntoAttributedString("[Durov's Channel](https://t.me/durov)", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, contents)
-        })), alwaysStaticItems: true)
+       
         
-        from.interactions.processURL = { inapplink in
-            if let inapplink = inapplink as? String {
-                arguments.execute(inapplink)
+       
+        
+        if let fromPeer = fromPeer?.peer {
+            
+            let from: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(fromPeer.displayTitle)](\(fromPeer.id.toInt64()))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            })), alwaysStaticItems: true)
+            
+            from.interactions.processURL = { inapplink in
+                if let inapplink = inapplink as? String {
+                    arguments.execute(inapplink)
+                }
             }
+            
+            rows.append(.init(left: .init(.initialize(string: "From", color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
+                let control: AvatarControl
+                if let previous = previous as? AvatarControl {
+                    control = previous
+                } else {
+                    control = AvatarControl(font: .avatar(6))
+                }
+                control.setFrameSize(NSMakeSize(20, 20))
+                control.setPeer(account: arguments.context.account, peer: fromPeer)
+                return control
+            })))
         }
         
-        let to: TextViewLayout = .init(parseMarkdownIntoAttributedString("[Alicia](https://t.me/vihor)", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
-            return (NSAttributedString.Key.link.rawValue, contents)
-        })), alwaysStaticItems: true)
         
-        
-        to.interactions.processURL = { inapplink in
-            if let inapplink = inapplink as? String {
-                arguments.execute(inapplink)
+        if let toPeer = self.toPeer?.peer {
+            let to: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(toPeer.displayTitle)](\(toPeer.id.toInt64()))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            })), alwaysStaticItems: true)
+            
+            
+            to.interactions.processURL = { inapplink in
+                if let inapplink = inapplink as? String {
+                    arguments.execute(inapplink)
+                }
             }
+            
+            rows.append(.init(left: .init(.initialize(string: "To", color: theme.colors.text, font: .normal(.text))), right: .init(name: to, leftView: { previous in
+                let control: AvatarControl
+                if let previous = previous as? AvatarControl {
+                    control = previous
+                } else {
+                    control = AvatarControl(font: .avatar(6))
+                }
+                control.setFrameSize(NSMakeSize(20, 20))
+                control.setPeer(account: arguments.context.account, peer: toPeer)
+                return control
+            })))
         }
         
-        rows.append(.init(left: .init(.initialize(string: "From", color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
-            let control: AvatarControl
-            if let previous = previous as? AvatarControl {
-                control = previous
-            } else {
-                control = AvatarControl(font: .avatar(3))
-            }
-            control.setFrameSize(NSMakeSize(20, 20))
-            control.setPeer(account: arguments.context.account, peer: arguments.context.myPeer)
-            return control
-        })))
+        let duration: String = info.months == 12 ? "Telegram Premium 1 Year" : "Telegram Premium for \(info.months) months"
+
+        rows.append(.init(left: .init(.initialize(string: "Gift", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: duration, color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
+
+        let reasonText: String
+        if info.isGiveaway {
+            reasonText = "Giveaway"
+        } else {
+            reasonText = "Gift"
+        }
         
-        rows.append(.init(left: .init(.initialize(string: "To", color: theme.colors.text, font: .normal(.text))), right: .init(name: to, leftView: { previous in
-            let control: AvatarControl
-            if let previous = previous as? AvatarControl {
-                control = previous
-            } else {
-                control = AvatarControl(font: .avatar(3))
-            }
-            control.setFrameSize(NSMakeSize(20, 20))
-            control.setPeer(account: arguments.context.account, peer: arguments.context.myPeer)
-            return control
-        })))
+        rows.append(.init(left: .init(.initialize(string: "Reason", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: reasonText, color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
 
-        rows.append(.init(left: .init(.initialize(string: "Gift", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "Telegram Premium for 3 months", color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
-
-        rows.append(.init(left: .init(.initialize(string: "Reason", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "Giveaway", color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
-
-        rows.append(.init(left: .init(.initialize(string: "Date", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: "21/09/23 at 18:00", color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
+        rows.append(.init(left: .init(.initialize(string: "Date", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: info.date), color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
 
         
         return rows
@@ -144,13 +175,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("This link allows you to activate a **Telegram Premium** subscription."), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+    let headerText: String
+    if state.info.usedDate == nil {
+        headerText = "This link allows you to activate a **Telegram Premium** subscription."
+    } else {
+        headerText = "This link was used to activate a **Telegram Premium** subscription."
+    }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(headerText), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
     index += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("link"), equatable: InputDataEquatable(state.link), comparable: nil, item: { initialSize, stableId in
         return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: state.link, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20), rightAction: .init(image: theme.icons.fast_copy_link, action: {
             arguments.copyLink(state.link)
-        }))
+        }), singleLine: true)
     }))
     index += 1
   
@@ -168,17 +205,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 //    entries.append(.sectionId(sectionId, type: .normal))
 //    sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("You can also send this [link](share) to a friend as a gift.", linkHandler:arguments.execute), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
-    index += 1
+    if let usedDate = state.info.usedDate {
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("This link was used on \(stringForFullDate(timestamp: usedDate)).", linkHandler:arguments.execute), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+        index += 1
+    } else {
+        if state.toPeer?.peer == nil {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("You can also send this [link](share) to a friend as a gift.", linkHandler:arguments.execute), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+            index += 1
+        }
+    }
+    
     
     return entries
 }
 
-func GiftLinkModalController(context: AccountContext, peerId: PeerId) -> InputDataModalController {
+func GiftLinkModalController(context: AccountContext, info: PremiumGiftCodeInfo) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State()
+    let initialState = State(info: info)
     var close:(()->Void)? = nil
     var getController:(()->InputDataController?)? = nil
 
@@ -194,10 +239,9 @@ func GiftLinkModalController(context: AccountContext, peerId: PeerId) -> InputDa
     }, execute: { link in
         if link == "share" {
             showModal(with: ShareModalController(ShareLinkObject(context, link: stateValue.with { $0.link })), for: context.window)
-        } else {
-            execute(inapp: inApp(for: link.nsstring, context: context, openInfo: { peerId, _, _, _ in
-                PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
-            }))
+        } else if let id = Int64(link) {
+            let peerId = PeerId(id)
+            PeerInfoController.push(navigation: context.bindings.rootNavigation(), context: context, peerId: peerId)
             close?()
         }
         
@@ -217,15 +261,66 @@ func GiftLinkModalController(context: AccountContext, peerId: PeerId) -> InputDa
         _ = controller?.returnKeyAction()
     }, singleButton: true)
     
+    
+    controller.afterTransaction = { [weak modalInteractions] _ in
+        modalInteractions?.updateDone({ button in
+            let canUse = stateValue.with { $0.canUse(context.peerId) }
+            let text: String
+            if canUse {
+                text = "Use Link"
+            } else {
+                text = strings().modalOK
+            }
+            button.set(text: text, for: .Normal)
+        })
+    }
+    
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
     
+    
+    controller.validateData = { _ in
+        let canUse = stateValue.with { $0.canUse(context.peerId) }
+        if canUse {
+            _ = context.engine.payments.applyPremiumGiftCode(slug: info.slug).start()
+            PlayConfetti(for: context.window)
+            showModalText(for: context.window, text: "You successfully activated gift link.")
+            close?()
+        } else {
+            close?()
+        }
+        return .none
+    }
+   
+    
     getController = { [weak controller] in
         return controller
     }
+    
+    let fromPeer: Signal<TelegramEngine.EngineData.Item.Peer.Peer.Result, NoError> = context.engine.data.get(
+        TelegramEngine.EngineData.Item.Peer.Peer(id: info.fromPeerId)
+    )
+    let toPeer: Signal<TelegramEngine.EngineData.Item.Peer.Peer.Result, NoError>
+    
+    if let toPeerId = info.toPeerId {
+        toPeer = context.engine.data.get(
+            TelegramEngine.EngineData.Item.Peer.Peer(id: toPeerId)
+        )
+    } else {
+        toPeer = .single(Optional(nil))
+    }
+    
+    actionsDisposable.add(combineLatest(toPeer, fromPeer).start(next: { toPeer, fromPeer in
+        updateState { current in
+            var current = current
+            current.fromPeer = .init(fromPeer?._asPeer())
+            current.toPeer = .init(toPeer?._asPeer())
+            return current
+        }
+    }))
     
     close = { [weak modalController] in
         modalController?.modal?.close()
