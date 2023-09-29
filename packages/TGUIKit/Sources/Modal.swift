@@ -300,7 +300,7 @@ private final class ModalHeaderView: View {
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         
-        backgroundColor = customTheme().background
+        backgroundColor = .clear
         borderColor = customTheme().border
         border = [.Bottom]
         
@@ -409,7 +409,7 @@ private final class ModalHeaderView: View {
             background = customTheme().activeBackground
             borderColor = customTheme().activeBorder
         case .normal:
-            background = customTheme().background
+            background = .clear
             borderColor = customTheme().border
         }
         if animated {

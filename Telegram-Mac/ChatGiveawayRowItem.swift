@@ -77,9 +77,9 @@ final class ChatGiveawayRowItem : ChatRowItem {
         winners_attr.detectBoldColorInString(with: .medium(.text))
         self.winnerText = .init(winners_attr, alignment: .center, alwaysStaticItems: true)
         
-        let under = wpPresentation.activity.lightness > 0.8 ? NSColor(0x000000) : NSColor(0xffffff)
+        let under = theme.colors.underSelectedColor
 
-        badge = .init(.initialize(string: "\(media.quantity)", color: under, font: .medium(.short)), wpPresentation.activity, aroundFill: under)
+        badge = .init(.initialize(string: "X\(media.quantity)", color: under, font: .avatar(.small)), theme.colors.accent, aroundFill: under, additionSize: NSMakeSize(16, 7))
         
         var channels:[Channel] = []
         for peerId in media.channelPeerIds {
@@ -107,6 +107,14 @@ final class ChatGiveawayRowItem : ChatRowItem {
         }
     }
     
+    func howItWorks() {
+        
+        let peerNames = channels.map { $0.peer.displayTitle }.joined(separator: ", ")
+        
+        let date = stringForFullDate(timestamp: media.untilDate)
+        alert(for: context.window, info: "The giveaway is sponsored by the admins of **\(peerNames)**, who acquired **\(media.quantity) Telegram Premium** subscriptions for **\(media.months)** months for its followers.\n\nOn **\(date)**, Telegram will automatically select **\(media.quantity)** random subscribers of **\(peerNames)**.")
+    }
+    
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         
         
@@ -121,7 +129,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         height += headerText.layoutSize.height
         height += 10
         height += participantsText.layoutSize.height
-        height += 10
+        height += 5
         
         //channels
         for channel in channels {
@@ -282,6 +290,12 @@ private final class ChatGiveawayRowView: ChatRowView {
         winnerTextView.userInteractionEnabled = false
         winnerTextView.isSelectable = false
 
+        
+        action.set(handler: { [weak self] _ in
+            if let item = self?.item as? ChatGiveawayRowItem {
+                item.howItWorks()
+            }
+        }, for: .Click)
     }
     
 
@@ -334,7 +348,7 @@ private final class ChatGiveawayRowView: ChatRowView {
         badgeView.centerX(y: mediaView.frame.maxY - badgeView.frame.height + 5)
         headerTextView.centerX(y: mediaView.frame.maxY + 10)
         participantsTextView.centerX(y: headerTextView.frame.maxY + 10)
-        channels.centerX(y: participantsTextView.frame.maxY + 10)
+        channels.centerX(y: participantsTextView.frame.maxY + 5)
         winnerTextView.centerX(y: channels.frame.maxY + 10)
         action.frame = NSMakeRect(0, winnerTextView.frame.maxY + 10, contentView.frame.width, 30)
     }
