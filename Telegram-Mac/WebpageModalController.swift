@@ -1478,6 +1478,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         return super.escapeKeyAction()
     }
+    
+    override var hasNextResponder: Bool {
+        return false
+    }
 
 }
 

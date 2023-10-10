@@ -844,7 +844,7 @@ open class ViewController : NSObject {
         if canBecomeResponder {
             self.window?.removeObserver(for: self)
         }
-        if haveNextResponder {
+        if hasNextResponder {
             self.window?.remove(object: self, for: .Tab)
         }
         NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: window)
@@ -863,7 +863,7 @@ open class ViewController : NSObject {
                 self.window?.touchBar = self.window?.makeTouchBar()
           //  }
         }
-        if haveNextResponder {
+        if hasNextResponder {
             self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
                 guard let `self` = self else {return .rejected}
                 
@@ -986,7 +986,7 @@ open class ViewController : NSObject {
         return nil
     }
     
-    open var haveNextResponder: Bool {
+    open var hasNextResponder: Bool {
         return false
     }
     
@@ -1352,7 +1352,7 @@ open class ModalController : ModalViewController {
     }
 
     
-    open override var haveNextResponder: Bool {
+    open override var hasNextResponder: Bool {
         return true
     }
     
