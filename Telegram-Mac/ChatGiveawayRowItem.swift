@@ -107,12 +107,169 @@ final class ChatGiveawayRowItem : ChatRowItem {
         }
     }
     
-    func howItWorks() {
+    func learnMore() {
         
-        let peerNames = channels.map { $0.peer.displayTitle }.joined(separator: ", ")
+        guard let message = self.message else {
+            return
+        }
+        let context = self.context
         
-        let date = stringForFullDate(timestamp: media.untilDate)
-        alert(for: context.window, info: "The giveaway is sponsored by the admins of **\(peerNames)**, who acquired **\(media.quantity) Telegram Premium** subscriptions for **\(media.months)** months for its followers.\n\nOn **\(date)**, Telegram will automatically select **\(media.quantity)** random subscribers of **\(peerNames)**.")
+        let giveaway = self.media
+        
+        let signal = context.engine.payments.premiumGiveawayInfo(peerId: message.id.peerId, messageId: message.id)
+
+
+        _ = showModalProgress(signal: signal, for: context.window).start(next: { info in
+            
+            guard let info = info else {
+                return
+            }
+            
+            let date = stringForFullDate(timestamp: giveaway.untilDate)
+            let startDate = stringForFullDate(timestamp: message.timestamp)
+            
+            let title: String
+            let text: String
+            var warning: String?
+            
+            var peerName = ""
+            if let peerId = giveaway.channelPeerIds.first, let peer = message.peers[peerId] {
+                peerName = peer.compactDisplayTitle
+            }
+            
+            var ok: String = strings().alertOK
+            var cancel: String? = nil
+            var prizeSlug: String? = nil
+            
+            var openSlug:(String)->Void = { slug in
+                execute(inapp: .gift(link: "", slug: slug, context: context))
+            }
+  
+            switch info {
+            case let .ongoing(status):
+                title = "About This Giveaway"
+                
+                
+                let intro: String
+                if case .almostOver = status {
+                    intro = "The giveaway was sponsored by the admins of **\(peerName)**, who acquired **\(giveaway.quantity) Telegram Premium** subscriptions for **\(giveaway.months)** months for its followers."
+                } else {
+                    intro = "The giveaway is sponsored by the admins of **\(peerName)**, who acquired **\(giveaway.quantity) Telegram Premium** subscriptions for **\(giveaway.months)** months for its followers."
+                }
+                
+                let ending: String
+                if case .almostOver = status {
+                    if giveaway.flags.contains(.onlyNewSubscribers) {
+                        if giveaway.channelPeerIds.count > 1 {
+                            ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** and other listed channels after **\(startDate)**."
+                        } else {
+                            ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
+                        }
+                    } else {
+                        if giveaway.channelPeerIds.count > 1 {
+                            ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)** and other listed channels."
+                        } else {
+                            ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)**."
+                        }
+                    }
+                } else {
+                    if giveaway.flags.contains(.onlyNewSubscribers) {
+                        if giveaway.channelPeerIds.count > 1 {
+                            ending = "On **\(date)**, Telegram will automatically select **\(giveaway.quantity)** random users that joined **\(peerName)** and **\(giveaway.channelPeerIds.count - 1)** other listed channels after **\(startDate)**."
+                        } else {
+                            ending = "On **\(date)**, Telegram will automatically select **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
+                        }
+                    } else {
+                        if giveaway.channelPeerIds.count > 1 {
+                            ending = "On **\(date)**, Telegram will automatically select **\(giveaway.quantity)** random subscribers of **\(peerName)** and **\(giveaway.channelPeerIds.count - 1)** other listed channels."
+                        } else {
+                            ending = "On **\(date)**, Telegram will automatically select **\(giveaway.quantity)** random subscribers of **\(peerName)**."
+                        }
+                    }
+                }
+                
+                var participation: String
+                switch status {
+                case .notQualified:
+                    if giveaway.channelPeerIds.count > 1 {
+                        participation = "To take part in this giveaway please join the channel **\(peerName)** (**\(giveaway.channelPeerIds.count - 1)** other listed channels) before **\(date)**."
+                    } else {
+                        participation = "To take part in this giveaway please join the channel **\(peerName)** before **\(date)**."
+                    }
+                case let .notAllowed(reason):
+                    switch reason {
+                    case let .joinedTooEarly(joinedOn):
+                        let joinDate = stringForFullDate(timestamp: joinedOn)
+                        participation = "You are not eligible to participate in this giveaway, because you joined this channel on **\(joinDate)**, which is before the contest started."
+                    case let .channelAdmin(adminId):
+                        let _ = adminId
+                        participation = "You are not eligible to participate in this giveaway, because you are an admin of participating channel (**\(peerName)**)."
+                    }
+                case .participating:
+                    if giveaway.channelPeerIds.count > 1 {
+                        participation = "You are participating in this giveaway, because you have joined the channel **\(peerName)** (**\(giveaway.channelPeerIds.count - 1)** other listed channels)."
+                    } else {
+                        participation = "You are participating in this giveaway, because you have joined the channel **\(peerName)**."
+                    }
+                case .almostOver:
+                    participation = "The giveaway is over, preparing results."
+                }
+                
+                if !participation.isEmpty {
+                    participation = "\n\n\(participation)"
+                }
+                
+                text = "\(intro)\n\n\(ending)\(participation)"
+            case let .finished(status, finishDate, _, activatedCount):
+                let date = stringForFullDate(timestamp: finishDate)
+                title = "Giveaway Ended"
+                
+                let intro = "The giveaway was sponsored by the admins of **\(peerName)**, who acquired **\(giveaway.quantity) Telegram Premium** subscriptions for **\(giveaway.months)** months for its followers."
+                
+                var ending: String
+                if giveaway.flags.contains(.onlyNewSubscribers) {
+                    if giveaway.channelPeerIds.count > 1 {
+                        ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** and other listed channels after **\(startDate)**."
+                    } else {
+                        ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
+                    }
+                } else {
+                    if giveaway.channelPeerIds.count > 1 {
+                        ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)** and other listed channels."
+                    } else {
+                        ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)**."
+                    }
+                }
+                
+                if activatedCount > 0 {
+                    ending += " \(activatedCount) of the winners already used their gift links."
+                }
+                
+                var result: String
+                switch status {
+                case .refunded:
+                    result = ""
+                    warning = "The channel cancelled the prizes by reversing the payment for them."
+                    ok = strings().modalOK
+                case .notWon:
+                    result = "\n\nYou didn't win a prize in this giveaway."
+                case let .won(slug):
+                    result = "\n\nYou won a prize in this giveaway. 🏆"
+                    ok = "View My Prize"
+                    cancel = strings().alertCancel
+                    prizeSlug = slug
+                }
+                
+                text = "\(intro)\n\n\(ending)\(result)"
+            }
+            if let cancel = cancel, let prizeSlug = prizeSlug {
+                verifyAlert(for: context.window, header: title, information: text, ok: ok, cancel: cancel, successHandler: { _ in
+                    openSlug(prizeSlug)
+                })
+            } else {
+                alert(for: context.window, header: title, info: text)
+            }
+        })
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -293,7 +450,7 @@ private final class ChatGiveawayRowView: ChatRowView {
         
         action.set(handler: { [weak self] _ in
             if let item = self?.item as? ChatGiveawayRowItem {
-                item.howItWorks()
+                item.learnMore()
             }
         }, for: .Click)
     }
@@ -334,7 +491,7 @@ private final class ChatGiveawayRowView: ChatRowView {
         action.set(font: .medium(.text), for: .Normal)
         action.set(color: item.wpPresentation.activity, for: .Normal)
         //TODOLANG
-        action.set(text: "HOW DOES IT WORK?", for: .Normal)
+        action.set(text: "LEARN MORE", for: .Normal)
         action.layer?.cornerRadius = .cornerRadius
         action.layer?.borderWidth = System.pixel
         action.scaleOnClick = true

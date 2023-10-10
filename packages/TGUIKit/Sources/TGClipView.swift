@@ -133,15 +133,20 @@ public class TGClipView: NSClipView,CALayerDelegate {
         return self.point ?? self.bounds.origin
     }
     
-    public func updateBounds(to point: NSPoint) {
+    public func updateBounds(to point: NSPoint, cancel: Bool = false) {
         if self.bounds.origin != point {
-            CATransaction.begin()
-            NSAnimationContext.beginGrouping()
-            NSAnimationContext.current.duration = 0
-            self.animator().setBoundsOrigin(point)
-            self.animator().scroll(to: point)
-            NSAnimationContext.endGrouping()
-            CATransaction.commit()
+            if cancel {
+                CATransaction.begin()
+                NSAnimationContext.beginGrouping()
+                NSAnimationContext.current.duration = 0
+                self.animator().scroll(to: point)
+                self.animator().setBoundsOrigin(point)
+                NSAnimationContext.endGrouping()
+                CATransaction.commit()
+            } else {
+                self.scroll(to: point)
+            }
+            
             self.destinationOrigin = nil
             self.scrollDidComplete?(true)
         }
@@ -193,7 +198,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     func cancelScrolling() {
         if let point = self.destinationOrigin {
-            updateBounds(to: point)
+            updateBounds(to: point, cancel: true)
         }
     }
     

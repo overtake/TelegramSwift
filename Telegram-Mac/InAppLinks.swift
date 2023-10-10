@@ -746,15 +746,11 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                         var options: [ModalAlertData.Option] = []
                                         options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
                                         
-                                        if botApp.flags.contains(.requiresWriteAccess) {
-                                            options.append(.init(string: strings().webAppFirstOpenAllowWrite, isSelected: false, mandatory: false))
-                                        }
-                                        
                                         let data = ModalAlertData(title: strings().webAppFirstOpenTitle, info: strings().webAppFirstOpenInfo(peer.displayTitle), description: nil, ok: strings().webBotAccountDisclaimerOK, options: options)
                                         showModalAlert(for: context.window, data: data, completion: { result in
                                             FastSettings.markWebAppAsConfirmed(peer.id)
                                             
-                                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, result.selected[1] == true), for: context.window)
+                                            let signal = showModalProgress(signal: makeRequestAppWebView(botApp, true), for: context.window)
                                             
                                             _ = signal.start(next: { botApp, url in
                                                 if let url = url {
@@ -1433,7 +1429,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/", "addlist/", "boost", "giftcode/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login", "addlist", "boost", "giftcode"]
 
 let ton_scheme:String = "ton://"
 
@@ -2158,6 +2154,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         return .boost(link: urlString, username: "\(_private_)\(channelId)", context: context)
                     } else if let username = vars[keyURLUsername], let context = context {
                         return .boost(link: urlString, username: username, context: context)
+                    }
+                case known_scheme[20]:
+                    if let slug = vars[keyURLSlug], let context = context {
+                        return .gift(link: urlString, slug: slug, context: context)
                     }
                 default:
                     break

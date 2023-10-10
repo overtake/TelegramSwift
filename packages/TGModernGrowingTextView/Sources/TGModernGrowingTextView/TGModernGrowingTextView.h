@@ -13,6 +13,8 @@ extern NSString * _Nonnull const TGCustomLinkAttributeName;
 extern NSString * _Nonnull const TGSpoilerAttributeName;
 extern NSString * _Nonnull const TGAnimatedEmojiAttributeName;
 extern NSString * _Nonnull const TGEmojiHolderAttributeName;
+extern NSString * _Nonnull const TGQuoteAttributeName;
+extern NSString * _Nonnull const QuoteAttributeName;
 
 
 typedef NS_ENUM(NSInteger, TGTextInputTagId) {
@@ -57,6 +59,7 @@ typedef NS_ENUM(NSInteger, TGTextInputTagId) {
 - (void)responderDidUpdate;
 - (void)textViewDidReachedLimit:(id __nonnull)textView;
 - (void)makeUrlOfRange: (NSRange)range;
+- (void)makeQuoteOfRange: (NSRange)range;
 - (BOOL)copyTextWithRTF:(NSAttributedString *)rtf;
 - (NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers;
 @end
@@ -68,6 +71,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 @interface TGGrowingTextView : NSTextView<NSServicesMenuRequestor>
 @property (nonatomic,weak) id <TGModernGrowingDelegate> __nullable weakd;
 @property (nonatomic,weak) TGModernGrowingTextView  * _Nullable weakTextView;
+@property (nonatomic,strong) NSColor* _Nonnull selectedTextColor;
 
 
 @end
@@ -129,6 +133,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 -(void)italicWord;
 -(void)boldWord;
 -(void)strikethroughWord;
+-(void)makeQuote;
 -(void)underlineWord;
 -(void)spoilerWord;
 -(void)removeAllAttributes;

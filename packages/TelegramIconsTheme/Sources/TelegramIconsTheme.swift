@@ -9794,6 +9794,110 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var message_quote_accent: CGImage {
+      if let image = cached.with({ $0["message_quote_accent"] }) {
+          return image
+      } else {
+          let image = _message_quote_accent()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_accent"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_red: CGImage {
+      if let image = cached.with({ $0["message_quote_red"] }) {
+          return image
+      } else {
+          let image = _message_quote_red()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_red"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_orange: CGImage {
+      if let image = cached.with({ $0["message_quote_orange"] }) {
+          return image
+      } else {
+          let image = _message_quote_orange()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_orange"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_violet: CGImage {
+      if let image = cached.with({ $0["message_quote_violet"] }) {
+          return image
+      } else {
+          let image = _message_quote_violet()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_violet"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_green: CGImage {
+      if let image = cached.with({ $0["message_quote_green"] }) {
+          return image
+      } else {
+          let image = _message_quote_green()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_green"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_cyan: CGImage {
+      if let image = cached.with({ $0["message_quote_cyan"] }) {
+          return image
+      } else {
+          let image = _message_quote_cyan()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_cyan"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_blue: CGImage {
+      if let image = cached.with({ $0["message_quote_blue"] }) {
+          return image
+      } else {
+          let image = _message_quote_blue()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_blue"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_pink: CGImage {
+      if let image = cached.with({ $0["message_quote_pink"] }) {
+          return image
+      } else {
+          let image = _message_quote_pink()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_pink"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10548,6 +10652,14 @@ public final class TelegramIconsTheme {
   private let _message_story_expired: ()->CGImage
   private let _message_story_expired_bubble_incoming: ()->CGImage
   private let _message_story_expired_bubble_outgoing: ()->CGImage
+  private let _message_quote_accent: ()->CGImage
+  private let _message_quote_red: ()->CGImage
+  private let _message_quote_orange: ()->CGImage
+  private let _message_quote_violet: ()->CGImage
+  private let _message_quote_green: ()->CGImage
+  private let _message_quote_cyan: ()->CGImage
+  private let _message_quote_blue: ()->CGImage
+  private let _message_quote_pink: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11302,7 +11414,15 @@ public final class TelegramIconsTheme {
       story_chatlist_reply_active: @escaping()->CGImage,
       message_story_expired: @escaping()->CGImage,
       message_story_expired_bubble_incoming: @escaping()->CGImage,
-      message_story_expired_bubble_outgoing: @escaping()->CGImage
+      message_story_expired_bubble_outgoing: @escaping()->CGImage,
+      message_quote_accent: @escaping()->CGImage,
+      message_quote_red: @escaping()->CGImage,
+      message_quote_orange: @escaping()->CGImage,
+      message_quote_violet: @escaping()->CGImage,
+      message_quote_green: @escaping()->CGImage,
+      message_quote_cyan: @escaping()->CGImage,
+      message_quote_blue: @escaping()->CGImage,
+      message_quote_pink: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12057,5 +12177,13 @@ public final class TelegramIconsTheme {
       self._message_story_expired = message_story_expired
       self._message_story_expired_bubble_incoming = message_story_expired_bubble_incoming
       self._message_story_expired_bubble_outgoing = message_story_expired_bubble_outgoing
+      self._message_quote_accent = message_quote_accent
+      self._message_quote_red = message_quote_red
+      self._message_quote_orange = message_quote_orange
+      self._message_quote_violet = message_quote_violet
+      self._message_quote_green = message_quote_green
+      self._message_quote_cyan = message_quote_cyan
+      self._message_quote_blue = message_quote_blue
+      self._message_quote_pink = message_quote_pink
   }
 }

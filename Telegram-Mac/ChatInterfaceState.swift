@@ -13,15 +13,31 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 import TGModernGrowingTextView
+import InputView
 
-struct ChatTextFontAttributes: OptionSet {
-    var rawValue: Int32 = 0
 
-    static let bold = ChatTextFontAttributes(rawValue: 1 << 0)
-    static let italic = ChatTextFontAttributes(rawValue: 1 << 1)
-    static let monospace = ChatTextFontAttributes(rawValue: 1 << 2)
-    static let blockQuote = ChatTextFontAttributes(rawValue: 1 << 3)
+final class ChatTextInputTextQuoteAttribute: NSObject {
+    override init() {
+        super.init()
+    }
+    
+    static var attribute: ChatTextInputTextQuoteAttribute {
+        return .init()
+    }
+    
+    override public func isEqual(_ object: Any?) -> Bool {
+        guard let other = object as? ChatTextInputTextQuoteAttribute else {
+            return false
+        }
+        
+        let _ = other
+        
+        return self === other
+    }
+
 }
+
+
 
 
 
@@ -53,6 +69,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case url(Range<Int>, String)
     case animated(Range<Int>, String, Int64, TelegramMediaFile?, ItemCollectionId?, CGRect?)
     case emojiHolder(Range<Int>, Int64, CGRect, String)
+    case quote(Range<Int>)
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         
@@ -82,6 +99,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             self = .underline(range)
         case 9:
             self = .animated(range, try container.decode(String.self, forKey: "id"), try container.decode(Int64.self, forKey: "fileId"), try container.decodeIfPresent(TelegramMediaFile.self, forKey: "file"), try container.decodeIfPresent(ItemCollectionId.self, forKey: "info"), nil)
+        case 10:
+            self = .quote(range)
         default:
             fatalError("input attribute not supported")
         }
@@ -110,6 +129,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             return 9
         case .emojiHolder:
             return 10
+        case .quote:
+            return 11
         }
     }
     
@@ -157,6 +178,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             if let info = info {
                 try container.encode(info, forKey: "info")
             }
+        case .quote:
+            try container.encode(Int32(10), forKey: "_rawValue")
         case .emojiHolder:
            break
         }
@@ -187,11 +210,13 @@ extension ChatTextInputAttribute {
             let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: url, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
             return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .animated(range, id, fileId, file, info, fromRect):
-            let tag = TGTextAttachment(identifier: "\(id)", fileId: fileId, file: file, text: "", info: info, from: fromRect ?? .zero)
+            let tag = TGTextAttachment(identifier: "\(id)", fileId: fileId, file: file, text: "", info: info, from: fromRect ?? .zero, type: TGTextAttachment.emoji)
             return (TGAnimatedEmojiAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .emojiHolder(range, id, fromRect, emoji):
             let tag = TGInputTextEmojiHolder(uniqueId: id, emoji: emoji, rect: fromRect, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: NSColor.clear))
             return (TGEmojiHolderAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .quote(range):
+            return (QuoteAttributeName, ChatTextInputTextQuoteAttribute.attribute, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
 
@@ -206,6 +231,8 @@ extension ChatTextInputAttribute {
         case let .animated(range, _, _, _, _, _):
             return range
         case let .emojiHolder(range, _, _, _):
+            return range
+        case let .quote(range):
             return range
         }
     }
@@ -234,6 +261,8 @@ extension ChatTextInputAttribute {
             return .animated(range, id, fileId, file, info, fromRect)
         case let .emojiHolder(_, id, rect, emoji):
             return .emojiHolder(range, id, rect, emoji)
+        case .quote:
+            return .quote(range)
         }
     }
 }
@@ -263,11 +292,47 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute, associatedMe
             inputAttributes.append(.underline(entity.range))
         case let .CustomEmoji(_, fileId):
             inputAttributes.append(.animated(entity.range, "\(arc4random())", fileId, nil, nil, nil))
+        case .BlockQuote:
+            inputAttributes.append(.quote(entity.range))
         default:
             break
         }
     }
     return inputAttributes
+}
+
+func expandQuotes(from attributedString: NSAttributedString, selectedRange: NSRange) -> (NSAttributedString, NSRange) {
+    
+    
+    var selectedRange = selectedRange
+    
+    var attachments: [QuoteTextAttachment] = []
+    attributedString.enumerateAttribute(.attachment, in: attributedString.range, using: { value, range, _ in
+        if let attachment = value as? QuoteTextAttachment {
+            attachments.append(attachment)
+            attachment.range = range
+        }
+    })
+    
+    let string = NSMutableAttributedString(attributedString: attributedString)
+    
+    attachments = attachments.sorted(by: { lhs, rhs in
+        return lhs.range.location > rhs.range.location
+    })
+    
+    
+    for attachment in attachments {
+        string.replaceCharacters(in: attachment.range, with: "")
+        string.insert(attachment.input.attributedString(), at: attachment.range.location)
+        
+        if selectedRange.location > attachment.range.location {
+            selectedRange.location += (attachment.input.inputText.length - attachment.range.length)
+        }
+        else if let intersection = selectedRange.intersection(attachment.range), intersection.length > 0 {
+            selectedRange.length += (intersection.length - attachment.range.length)
+        }
+    }
+    return (string, selectedRange)
 }
 
 func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAttribute] {
@@ -301,6 +366,8 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                         inputAttributes.append(.code(range.location ..< range.location + range.length))
                     }
                 }
+            } else if key == NSAttributedString.Key.quote {
+                inputAttributes.append(.quote(range.location ..< range.location + range.length))
             } else if let tag = value as? TGInputTextTag {
                 if let uid = tag.attachment as? NSNumber {
                     if uid == -1 {
@@ -312,8 +379,10 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                     inputAttributes.append(.url(range.location ..< range.location + range.length, url))
                 }
             } else if let attachment = value as? TGTextAttachment {
-                if let fileId = attachment.fileId as? Int64 {
-                    inputAttributes.append(.animated(range.location ..< range.location + range.length, attachment.identifier, fileId, attachment.file as? TelegramMediaFile, attachment.info as? ItemCollectionId, attachment.fromRect == .zero ? nil : attachment.fromRect))
+                if attachment.type == TGTextAttachment.emoji {
+                    if let fileId = attachment.fileId as? Int64 {
+                        inputAttributes.append(.animated(range.location ..< range.location + range.length, attachment.identifier, fileId, attachment.file as? TelegramMediaFile, attachment.info as? ItemCollectionId, attachment.fromRect == .zero ? nil : attachment.fromRect))
+                    }
                 }
             } else if let attachment = value as? TGInputTextEmojiHolder {
                 inputAttributes.append(.emojiHolder(range.location ..< range.location + range.length, attachment.uniqueId, attachment.rect, attachment.emoji))
@@ -356,8 +425,11 @@ final class ChatTextInputState: Codable, Equatable {
     }
 
     let inputText: String
+    
+    
     let attributes:[ChatTextInputAttribute]
     let selectionRange: Range<Int>
+    
 
     init() {
         self.inputText = ""
@@ -437,6 +509,18 @@ final class ChatTextInputState: Codable, Equatable {
             }
         }
         return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attrs)
+    }
+    
+    func removeAttribute(_ attribute: ChatTextInputAttribute) -> ChatTextInputState {
+        var attrs = self.attributes
+        attrs.removeAll(where: {
+            $0 == attribute
+        })
+        return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attrs)
+    }
+    
+    func withUpdatedRange(_ range: Range<Int>) -> ChatTextInputState {
+        return .init(inputText: self.inputText, selectionRange: range, attributes: attributes)
     }
     
     func isFirstAnimatedEmoji(_ string: String) -> Bool {
@@ -519,13 +603,33 @@ final class ChatTextInputState: Codable, Equatable {
         }
         return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attributes)
     }
+    
+    func inputSelectedRange(_ selectedRange: Range<Int>) -> NSRange {
+        var selectedRange = NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound)
+        for attribute in attributes.sorted() {
+            switch attribute {
+            case let .quote(r):
+                let range = NSMakeRange(r.lowerBound, r.upperBound - r.lowerBound)
+                if range.location < selectedRange.location {
+                    selectedRange.location -= (range.length - 1)
+                } else if let intersection = selectedRange.intersection(range), intersection.length > 0 {
+                    selectedRange.length -= (range.length - 1)
+                }
+            default:
+                break
+            }
+        }
+        return selectedRange
+    }
+    
+    func inputAttributeString(_ theme: TelegramPresentationTheme = theme, initialSize: NSSize) -> NSAttributedString {
+        return attributedString(theme, expandQuotes: true, initialSize: initialSize)
+    }
 
-    func attributedString(_ theme: TelegramPresentationTheme) -> NSAttributedString {
+    func attributedString(_ theme: TelegramPresentationTheme = theme, expandQuotes: Bool = false, initialSize: NSSize = .zero) -> NSAttributedString {
         let string = NSMutableAttributedString()
         _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
 
-
-//        string.fixEmojiesFont(theme.fontSize)
 
         var fontAttributes: [NSRange: ChatTextFontAttributes] = [:]
 
@@ -557,7 +661,11 @@ final class ChatTextInputState: Codable, Equatable {
             default:
                 break inner
             }
-            string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
+//            if case .quote(let range) = attribute {
+//                
+//            } else {
+                string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
+//            }
         }
         for (range, fontAttributes) in fontAttributes {
             var font: NSFont?
@@ -569,11 +677,30 @@ final class ChatTextInputState: Codable, Equatable {
                 font = .bold(theme.fontSize)
             } else if fontAttributes == [.italic] {
                 font = .italic(theme.fontSize)
-            }else if fontAttributes == [.monospace] {
+            } else if fontAttributes == [.monospace] {
                 font = .menlo(theme.fontSize)
             }
             if let font = font {
                 string.addAttribute(.font, value: font, range: range)
+            }
+        }
+        if expandQuotes {
+            for attribute in attributes.sorted(by: <).reversed() {
+                switch attribute {
+                case let .quote(range):
+                    let nsrange = NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound)
+                    let str = string.attributedSubstring(from: nsrange).mutableCopy() as! NSMutableAttributedString
+                    str.addAttribute(.quote, value: ChatTextInputTextQuoteAttribute.attribute, range: str.range)
+                    let input = ChatTextInputState(inputText: str.string, selectionRange: range, attributes: chatTextAttributes(from: str))
+                    let quote = NSAttributedString.makeQuote(.init(identifier: "\(arc4random64())", input: input, initialSize: initialSize))
+                    
+                    string.replaceCharacters(in: nsrange, with: "")
+                    string.insert(quote, at: nsrange.location)
+                    
+                    string.addAttribute(.font, value: NSFont.normal(theme.fontSize), range: NSMakeRange(nsrange.location, quote.length))
+                default:
+                    break
+                }
             }
         }
         return string.copy() as! NSAttributedString
@@ -761,6 +888,8 @@ final class ChatTextInputState: Codable, Equatable {
                     attributes.append(.animated(newRange.min ..< newRange.max, id, fileId, file, info, fromRect))
                 case let .emojiHolder(_, id, rect, emoji):
                     attributes.append(.emojiHolder(newRange.min ..< newRange.max, id, rect, emoji))
+                case .quote:
+                    attributes.append(.quote(newRange.min ..< newRange.max))
                 }
           //  }
         }
@@ -832,6 +961,8 @@ final class ChatTextInputState: Codable, Equatable {
                 entities.append(.init(range: range, type: .TextUrl(url: url)))
             case let .animated(range, _, fileId, _, _, _):
                 entities.append(.init(range: range, type: .CustomEmoji(stickerPack: nil, fileId: fileId)))
+            case let .quote(range):
+                entities.append(.init(range: range, type: .BlockQuote))
             case .emojiHolder:
                 break sw
             }
@@ -1210,7 +1341,7 @@ struct ChatInterfaceState: Codable, Equatable {
         if self.inputState.inputText.isEmpty && self.replyMessageId == nil {
             return nil
         } else {
-            return SynchronizeableChatInputState(replyToMessageId: self.replyMessageId, text: self.inputState.inputText, entities: self.inputState.messageTextEntities(), timestamp: self.timestamp, textSelection: self.inputState.selectionRange)
+            return SynchronizeableChatInputState(replySubject: self.replyMessageId.flatMap { .init(messageId: $0, quote: nil) }, text: self.inputState.inputText, entities: self.inputState.messageTextEntities(), timestamp: self.timestamp, textSelection: self.inputState.selectionRange)
         }
     }
 
@@ -1219,7 +1350,7 @@ struct ChatInterfaceState: Codable, Equatable {
         if let state = state {
             let selectRange = state.textSelection ?? state.text.length ..< state.text.length
             result = result.withUpdatedInputState(ChatTextInputState(inputText: state.text, selectionRange: selectRange, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: state.entities))))
-                .withUpdatedReplyMessageId(state.replyToMessageId)
+                .withUpdatedReplyMessageId(state.replySubject?.messageId)
                 .withUpdatedTimestamp(timestamp)
         } else {
             result = result.withUpdatedHistoryScrollState(self.historyScrollState)

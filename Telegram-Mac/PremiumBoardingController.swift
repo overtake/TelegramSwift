@@ -886,7 +886,7 @@ final class PremiumBoardingController : ModalViewController {
 
         var canMakePayment: Bool = true
         #if APP_STORE || DEBUG
-        canMakePayment = inAppPurchaseManager.canMakePayments()
+        canMakePayment = inAppPurchaseManager.canMakePayments
         #endif
         
         let initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment)
@@ -1147,31 +1147,23 @@ final class PremiumBoardingController : ModalViewController {
                 }
             })
             
-            
             let _ = (context.engine.payments.canPurchasePremium(purpose: .subscription)
             |> deliverOnMainQueue).start(next: { [weak lockModal] available in
                 if available {
-                    paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct, account: context.account)
+                    
+                    paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct, purpose: .subscription)
                     |> deliverOnMainQueue).start(next: { [weak lockModal] status in
         
                         lockModal?.close()
                         needToShow = false
-        
-                        if case let .purchased(transaction) = status {
-                            let activate = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: InAppPurchaseManager.getReceiptData() ?? Data(), purpose: .subscription), for: context.window)
-                            activationDisposable.set(activate.start(error: { _ in
-                                showModalText(for: context.window, text: strings().errorAnError)
-                                inAppPurchaseManager.finishAllTransactions()
-                            }, completed: {
-                                close()
-                                inAppPurchaseManager.finishAllTransactions()
-                                delay(0.2, closure: {
-                                    PlayConfetti(for: context.window)
-                                    showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
-                                    let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
-                                })
-                            }))
-                        }
+                        close()
+                        inAppPurchaseManager.finishAllTransactions()
+                        delay(0.2, closure: {
+                            PlayConfetti(for: context.window)
+                            showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
+                            let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
+                        })
+                        
                     }, error: { [weak lockModal] error in
                         let errorText: String
                         switch error {
@@ -1232,14 +1224,18 @@ final class PremiumBoardingController : ModalViewController {
     }
     
     func restore() {
-        if let receiptData = InAppPurchaseManager.getReceiptData() {
-            let context = self.context
-            _ = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: receiptData, purpose: .restore), for: context.window).start(error: { _ in
+        let context = self.context
+        
+        context.inAppPurchaseManager.restorePurchases(completion: { restore in
+            switch restore {
+            case let .succeed(value):
+                if value {
+                    showModalText(for: context.window, text: strings().premiumRestoreSuccess)
+                }
+            case .failed:
                 showModalText(for: context.window, text: strings().premiumRestoreErrorUnknown)
-            }, completed: {
-                showModalText(for: context.window, text: strings().premiumRestoreSuccess)
-            })
-        }
+            }
+        })
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {

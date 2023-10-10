@@ -15,6 +15,7 @@ import SwiftSignalKit
 import InAppSettings
 import TGModernGrowingTextView
 import Strings
+import InputView
 
 /*
  static func == (lhs: ChatTextCustomEmojiAttribute, rhs: ChatTextCustomEmojiAttribute) -> Bool {
@@ -43,7 +44,7 @@ struct ChatTextCustomEmojiAttribute : Equatable {
         self.file = file
     }
     var attachment: TGTextAttachment {
-        return .init(identifier: "\(arc4random64())", fileId: self.fileId, file: file, text: emoji, info: nil)
+        return .init(identifier: "\(arc4random64())", fileId: self.fileId, file: file, text: emoji, info: nil, type: TGTextAttachment.emoji)
     }
 }
 
@@ -443,14 +444,50 @@ class ChatMessageItem: ChatRowItem {
                     
                     formatting = index < messageAttr.length
                 }
-            }
-            
-            
-             let copy = messageAttr.mutableCopy() as! NSMutableAttributedString
+//                formatting = messageAttr.length > 0
+//                index = 0
+//                while formatting {
+//                    var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
+//                    if let _ = messageAttr.attribute(.quote, at: index, effectiveRange: &effectiveRange), effectiveRange.location != NSNotFound {
+//                        let beforeAndAfter:(Int)->Bool = { index -> Bool in
+//                            let prefix:String = messageAttr.string.nsstring.substring(with: NSMakeRange(index, 1))
+//                            let whiteSpaceRange = prefix.rangeOfCharacter(from: NSCharacterSet.whitespaces)
+//                            var increment: Bool = false
+//                            if let _ = whiteSpaceRange {
+//                                messageAttr.replaceCharacters(in: NSMakeRange(index, 1), with: "\n")
+//                            } else if prefix != "\n" {
+//                                messageAttr.insert(.initialize(string: "\n"), at: index)
+//                                increment = true
+//                            }
+//                            return increment
+//                        }
+//                        if effectiveRange.min > 0 {
+//                            let increment = beforeAndAfter(effectiveRange.min)
+//                            if increment {
+//                                effectiveRange = NSMakeRange(effectiveRange.location, effectiveRange.length + 1)
+//                            }
+//                        }
+//                        if effectiveRange.max < messageAttr.length - 1 {
+//                            let increment = beforeAndAfter(effectiveRange.max)
+//                            if increment {
+//                                effectiveRange = NSMakeRange(effectiveRange.location, effectiveRange.length + 1)
+//                            }
+//                        }
+//                     }
+//                     
+//                     if effectiveRange.location != NSNotFound {
+//                         index += effectiveRange.length
+//                     } else {
+//                         index += 1
+//                     }
+//                     
+//                     formatting = index < messageAttr.length
+//                 }
+                
+             }
              
-             
-             
-            
+            let copy = messageAttr.mutableCopy() as! NSMutableAttributedString
+
             if let peer = message.peers[message.id.peerId] {
                 if peer is TelegramSecretChat {
                     copy.detectLinks(type: [.Links, .Mentions], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo: chatInteraction.openInfo)
@@ -771,10 +808,6 @@ class ChatMessageItem: ChatRowItem {
             self.block = (.zero, nil)
         }
         
-//        if actionButtonText != nil, let wp = webpageLayout {
-//            wp.layout(with: NSMakeSize(max(200, min(wp.size.width, 320), textLayout.layoutSize.width), wp.size.height))
-//        }
-        
         var contentSize = NSMakeSize(max(webpageLayout?.contentRect.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
         
         if let webpageLayout = webpageLayout {
@@ -961,6 +994,8 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback(nsString!.substring(with: range), { bankCard in
                     openBank(bankCard)
                 }), range: range)
+            case .BlockQuote:
+                string.addAttribute(.quote, value: TextViewBlockQuoteData(id: .random(in: 0 ..< Int.max), title: nil, color: linkColor), range: range)
             case let .Custom(type):
                 if type == ApplicationSpecificEntityType.Timecode {
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)

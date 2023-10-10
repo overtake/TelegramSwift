@@ -22,6 +22,12 @@ import ThemeSettings
 import Accelerate
 import TGModernGrowingTextView
 
+extension NSAttributedString.Key {
+    static var quote: NSAttributedString.Key {
+        return .init(QuoteAttributeName)
+    }
+}
+
 extension RenderedChannelParticipant {
     func withUpdatedBannedRights(_ info: ChannelParticipantBannedInfo) -> RenderedChannelParticipant {
         let updated: ChannelParticipant
@@ -3843,9 +3849,23 @@ extension NSAttributedString {
         let attach = NSMutableAttributedString()
         let fixed = text.replacingOccurrences(of: "⚙", with: "⚙️")
         _ = attach.append(string: fixed, font: .normal(theme.fontSize))
-        attach.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: fixed, info: info, from: fromRect ?? .zero), range: NSMakeRange(0, text.length))
+        attach.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: fixed, info: info, from: fromRect ?? .zero, type: TGTextAttachment.emoji), range: NSMakeRange(0, text.length))
         return attach
     }
+    
+    static func makeQuote(_ quote: QuoteTextAttachment) -> NSAttributedString {
+        let quote = NSMutableAttributedString(attachment: quote)
+        return quote
+    }
+    
+    static func makeQuoteAttributeString(_ quote: NSAttributedString) -> NSAttributedString {
+        let quote = NSMutableAttributedString(attributedString: quote)
+        quote.addAttribute(.quote, value: ChatTextInputTextQuoteAttribute.attribute, range: quote.range)
+//        quote.insert(.initialize(string: "\n"), at: 0)
+//        quote.append(string: "\n", font: .normal(theme.fontSize))
+        return quote
+    }
+    
     static func makeEmojiHolder(_ emoji: String, fromRect: NSRect?) -> NSAttributedString {
         let attach = NSMutableAttributedString()
         _ = attach.append(string: emoji)

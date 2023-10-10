@@ -12,6 +12,11 @@ import TelegramCore
 import TGModernGrowingTextView
 import Postbox
 
+extension TGTextAttachment {
+    static var emoji: String = "emoji"
+    static var quote: String = "quote"
+}
+
 
 
 
@@ -107,12 +112,20 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.textFont = .normal(.text)
         
         let context = self.chatInteraction.context
-                
+        let chatInteraction = self.chatInteraction
+        
         textView.installGetAttach({ attachment, size in
-            let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
-            let view = ChatInputAnimatedEmojiAttach(frame: rect)
-            view.set(attachment, size: rect.size, context: context)
-            return view
+            if attachment.type == TGTextAttachment.emoji {
+                let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
+                let view = ChatInputAnimatedEmojiAttach(frame: rect)
+                view.set(attachment, size: rect.size, context: context)
+                return view
+            } else if attachment.type == TGTextAttachment.quote, let attachment = attachment as? QuoteTextAttachment {
+                let quoteView = InputQuoteView(frame: size.bounds)
+                quoteView.set(attachment, interaction: chatInteraction)
+                return quoteView
+            }
+            return nil
         })
         
         contentView.addSubview(textView)
@@ -498,40 +511,36 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 textView.inputView.isEditable = false
             }
         }
+        
+        let input = state.effectiveInput
+        
         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         
-        if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
-            let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
+        let range = input.inputSelectedRange(input.selectionRange)
 
-           
-            
+        let inputText = input.inputAttributeString(theme, initialSize: self.textViewSize(self.textView))
+        
+        if textView.string() != inputText.string || input.attributes != prevState.effectiveInput.attributes {
+
             let current = textView.attributedString().copy() as! NSAttributedString
             let currentRange = textView.selectedRange()
 
-            let item = SimpleUndoItem(attributedString: current, be: state.effectiveInput.attributedString(theme), wasRange: currentRange, be: range)
+            let item = SimpleUndoItem(attributedString: current, be: inputText, wasRange: currentRange, be: range)
             if !initial {
                 self.textView.addSimpleItem(item)
             } else {
-                self.textView.setAttributedString(state.effectiveInput.attributedString(theme), animated:animated)
+                self.textView.setAttributedString(inputText, animated:animated)
                 if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
                     textView.setSelectedRange(range)
                 }
             }
-
+        } else if textView.selectedRange() != range {
+            textView.setSelectedRange(range)
         }
 
-        if prevState.effectiveInput.inputText.isEmpty {
-            self.textView.scrollToCursor()
-        }
         if initial {
             self.textView.update(true)
             self.textViewHeightChanged(self.textView.frame.height, animated: animated)
-        }
-        if state.effectiveInput != prevState.effectiveInput {
-            self.emojiHolderAnimator.apply(self.textView, chatInteraction: self.chatInteraction, current: state.effectiveInput)
-            if state.effectiveInput.inputText.count != prevState.effectiveInput.inputText.count {
-                self.textView.scrollToCursor()
-            }
         }
     }
     private var updateFirstTime: Bool = true
@@ -805,11 +814,14 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     func makeUnderline() {
         self.textView.underlineWord()
     }
+    func makeQuote() {
+        self.textView.makeQuote()
+    }
     func makeStrikethrough() {
         self.textView.strikethroughWord()
     }
     
-    func makeBold() {
+    func makeBold() { 
         self.textView.boldWord()
     }
     func removeAllAttributes() {
@@ -836,8 +848,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     func textViewTextDidChange(_ string: String) {
 
         
-        let attributed = self.textView.attributedString()
-        let range = self.textView.selectedRange()
+        let (attributed, range) = expandQuotes(from: self.textView.attributedString(), selectedRange: self.textView.selectedRange())
+                
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
         chatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
         
@@ -850,8 +862,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private var markNextTextChangeToFalseActivity: Bool = false
     
     public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
-        let attributed = self.textView.attributedString()
         
+        let (attributed, range) = expandQuotes(from: self.textView.attributedString(), selectedRange: range)
         let attrs = chatTextAttributes(from: attributed)
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.min ..< range.max, attributes: attrs)
         
@@ -860,9 +872,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             current = current.withUpdatedEffectiveInputState(state)
             if let disabledPreview = current.interfaceState.composeDisableUrlPreview {
                 if !current.effectiveInput.inputText.contains(disabledPreview) {
-
                     var detectedUrl: String?
-                    current.effectiveInput.attributedString(theme).enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: current.effectiveInput.attributedString(theme).range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+                    let attributedString = current.effectiveInput.attributedString()
+                    attributedString.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
                         if let tag = value as? TGInputTextTag, let url = tag.attachment as? String {
                             detectedUrl = url
                         }
@@ -918,6 +930,45 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             }
         }
         return self.chatState == .normal || self.chatState == .editing
+    }
+    
+    func makeQuote(of range: NSRange) {
+        guard range.min != range.max else {
+            return
+        }
+        
+        
+
+        var attachments: [QuoteTextAttachment] = []
+        
+        self.textView.attributedString().enumerateAttribute(.attachment, in: range, using: { value, range, stop in
+            if let value = value as? QuoteTextAttachment {
+                attachments.append(value)
+            }
+        })
+        if attachments.isEmpty {
+            let (string, range) = expandQuotes(from: self.textView.attributedString(), selectedRange: range)
+            let quote = NSAttributedString.makeQuoteAttributeString(string.attributedSubstring(from: range))
+            _ = self.chatInteraction.appendText(quote, selectedRange: range.lowerBound ..< range.upperBound)
+        } else {
+            chatInteraction.update { current in
+                var input = current.effectiveInput
+                
+                for attachment in attachments {
+                    let blockQuote = input.attributes.first(where: { attr in
+                        if case .quote(attachment.input.selectionRange) = attr {
+                            return true
+                        }
+                        return false
+                    })
+                    if let blockQuote = blockQuote {
+                        input = input.removeAttribute(blockQuote)
+                    }
+                }
+                input = input.withUpdatedRange(input.selectionRange.upperBound ..< input.selectionRange.upperBound)
+                return current.withUpdatedEffectiveInputState(input)
+            }
+        }
     }
     
     func makeUrl(of range: NSRange) {
@@ -979,15 +1030,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                     if let data = pasteboard.data(forType: .kInApp) {
                         let decoder = AdaptedPostboxDecoder()
                         if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
-                            let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString(theme)
-                            let current = textView.attributedString().copy() as! NSAttributedString
-                            let currentRange = textView.selectedRange()
-                            let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
-                            let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
-                            self.textView.addSimpleItem(item)
-                            DispatchQueue.main.async { [weak self] in
-                                self?.textView.scrollToCursor()
-                            }
+                            let state = decoded.unique(isPremium: chatInteraction.context.isPremium)
+                            
+                            chatInteraction.appendText(state.attributedString())
                             
                             return true
                         }
@@ -1009,9 +1054,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                                 let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
                                 self.textView.addSimpleItem(item)
                             }
-                            DispatchQueue.main.async { [weak self] in
-                                self?.textView.scrollToCursor()
-                            }
                             return true
                         }
                     }
@@ -1022,7 +1064,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             return !result
         }
         
-        
+        DispatchQueue.main.async { [weak self] in
+            self?.textView.scrollToCursor()
+        }
         return self.chatState != .normal
     }
     

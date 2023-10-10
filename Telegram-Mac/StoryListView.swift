@@ -244,7 +244,16 @@ private final class Reaction_InteractiveMedia : Control, InteractiveMedia {
         
         switch reaction {
         case let .custom(fileId):
-            layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .loop)
+            layer = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .loop, getColors: { file in
+                var colors: [LottieColor] = []
+                if isDefaultStatusesPackId(file.emojiReference) {
+                    colors.append(.init(keyPath: "", color: NSColor(0x000000)))
+                }
+                if file.paintToText {
+                    colors.append(.init(keyPath: "", color: NSColor(0x000000)))
+                }
+                return colors
+            })
         case .builtin:
             if let animation = state.reactions?.reactions.first(where: { $0.value == reaction }) {
                 let file = animation.selectAnimation
@@ -1479,9 +1488,6 @@ final class StoryListView : Control, Notifable {
                 let rect = mediaRect(media)
                 let entryViews = self.entry?.item.storyItem.views
                 var count = entryViews?.reactions.first(where: { $0.value == reaction })?.count
-                if self.entry?.item.storyItem.myReaction != nil, count == nil {
-                    count = 1
-                }
                 interactiveMedias_values[index].apply(area: media, count: count, arguments: arguments, animated: animated)
                 
                 index += 1

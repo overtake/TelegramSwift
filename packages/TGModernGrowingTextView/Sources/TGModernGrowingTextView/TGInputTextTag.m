@@ -3,8 +3,8 @@
 #import <CoreText/CoreText.h>
 
 @implementation TGTextAttachment
--(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info fromRect: (CGRect)fromRect {
-    if (self = [super init]) {
+-(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info fromRect: (CGRect)fromRect type: (NSString * _Nonnull)type {
+    if (self = [super initWithData:nil ofType:nil]) {
         
         NSRect rect = NSMakeRect(0, 0, 18, 16);
         NSImage *image = [[NSImage alloc] initWithSize:rect.size];
@@ -15,18 +15,23 @@
         _text = text;
         _file = file;
         _info = info;
+        _type = type;
         _fromRect = fromRect;
     }
     [self setBounds:NSMakeRect(0, -3, 18, 16)];
     return self;
 }
--(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info {
-    return [self initWithIdentifier:identifier fileId:fileId file:file text:text info:info fromRect:NSZeroRect];
+-(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info type: (NSString * _Nonnull)type {
+    return [self initWithIdentifier:identifier fileId:fileId file:file text:text info:info fromRect:NSZeroRect type: type];
 }
 
 
 -(id)unique {
-    return [[TGTextAttachment alloc] initWithIdentifier:[NSString stringWithFormat:@"%d", arc4random()] fileId:_fileId file: _file text:_text info:_info];
+    return [[TGTextAttachment alloc] initWithIdentifier:[NSString stringWithFormat:@"%d", arc4random()] fileId:_fileId file: _file text:_text info:_info type: _type];
+}
+
+-(NSSize)makeSizeFor:(NSView * _Nonnull)view textViewSize: (NSSize)textSize range: (NSRange)range {
+    return NSZeroSize;
 }
 
 @end

@@ -12,8 +12,9 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import InAppPurchaseManager
 
-private func generateTypeImage(_ image: NSImage, colorIndex: Int) -> CGImage {
+func generateGiveawayTypeImage(_ image: NSImage, colorIndex: Int) -> CGImage {
     
    let random_colors = theme.colors.peerColors(colorIndex)
    return generateImage(NSMakeSize(35, 35), contextGenerator: { (size, ctx) in
@@ -206,7 +207,7 @@ private final class GiveawayStarRowItem : GeneralRowItem {
 }
 
 private final class GiveawayStarRowItemView : TableRowView {
-    private let scene: PremiumStarSceneView = PremiumStarSceneView(frame: NSMakeRect(0, 0, 300, 150))
+    private let scene: PremiumStarSceneView = PremiumStarSceneView(frame: NSMakeRect(0, 0, 340, 180))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(scene)
@@ -229,73 +230,10 @@ private final class GiveawayStarRowItemView : TableRowView {
     }
 }
 
-private final class GiveawaySliderRowItem : GeneralRowItem {
-    fileprivate let quantity: Int32
-    fileprivate let updateQuantity:(Int32)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, quantity: Int32, viewType: GeneralViewType, updateQuantity:@escaping(Int32)->Void) {
-        self.quantity = quantity
-        self.updateQuantity = updateQuantity
-        super.init(initialSize, height: 30, stableId: stableId, viewType: viewType)
-    }
-    override func viewClass() -> AnyClass {
-        return GiveawaySliderRowItemView.self
-    }
-}
-
-private final class GiveawaySliderRowItemView : GeneralContainableRowView {
-    let progress: LinearProgressControl = LinearProgressControl(progressHeight: 6)
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        
-        progress.roundCorners = true
-        progress.alignment = .center
-        progress.containerBackground = theme.colors.grayIcon.withAlphaComponent(0.6)
-        progress.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
-        progress.scrubberImage = generateImage(NSMakeSize(20, 20), contextGenerator: { size, ctx in
-            let rect = CGRect(origin: .zero, size: size)
-            ctx.clear(rect)
-            ctx.setFillColor(theme.colors.accent.cgColor)
-            ctx.fillEllipse(in: rect)
-        })
-        addSubview(progress)
-        
-        progress.onUserChanged = { [weak self] value in
-            guard let item = self?.item as? GiveawaySliderRowItem else {
-                return
-            }
-            item.updateQuantity(Int32(round(value * 10)))
-        }
-
-        
-        self.layer?.masksToBounds = false
-    }
-    
-    override func set(item: TableRowItem, animated: Bool = false) {
-        super.set(item: item, animated: animated)
-        guard let item = item as? GiveawaySliderRowItem else {
-            return
-        }
-        progress.set(progress: CGFloat(item.quantity) / CGFloat(10.0), animated: animated)
-        
-    }
-    
-    override func layout() {
-        super.layout()
-        guard let item = item as? GiveawaySliderRowItem else {
-            return
-        }
-        progress.setFrameSize(NSMakeSize(containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, 20))
-        progress.centerX(y: 0)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
 
 private final class Arguments {
     let context: AccountContext
+    let subject: GiveawaySubject
     let updateQuantity:(Int32)->Void
     let updateReceiver:(State.GiveawayReceiver)->Void
     let updateType:(State.GiveawayType)->Void
@@ -304,8 +242,9 @@ private final class Arguments {
     let toggleOption:(State.PaymentOption)->Void
     let addChannel:()->Void
     let deleteChannel:(PeerId)->Void
-    init(context: AccountContext, updateQuantity:@escaping(Int32)->Void, updateReceiver:@escaping(State.GiveawayReceiver)->Void, updateType:@escaping(State.GiveawayType)->Void, selectDate:@escaping()->Void, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void, addChannel:@escaping()->Void, deleteChannel:@escaping(PeerId)->Void) {
+    init(context: AccountContext, subject: GiveawaySubject, updateQuantity:@escaping(Int32)->Void, updateReceiver:@escaping(State.GiveawayReceiver)->Void, updateType:@escaping(State.GiveawayType)->Void, selectDate:@escaping()->Void, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void, addChannel:@escaping()->Void, deleteChannel:@escaping(PeerId)->Void) {
         self.context = context
+        self.subject = subject
         self.updateQuantity = updateQuantity
         self.updateReceiver = updateReceiver
         self.updateType = updateType
@@ -317,10 +256,34 @@ private final class Arguments {
     }
 }
 
+
+private struct PremiumGiftProduct: Equatable {
+    let giftOption: PremiumGiftCodeOption
+    let storeProduct: InAppPurchaseManager.Product
+    
+    var id: String {
+        return self.storeProduct.id
+    }
+    
+    var months: Int32 {
+        return self.giftOption.months
+    }
+    
+    var price: String {
+        return self.storeProduct.price
+    }
+    
+    var pricePerMonth: String {
+        return self.storeProduct.pricePerMonth(Int(self.months))
+    }
+}
+
+
 private struct State : Equatable {
     enum GiveawayType : Equatable {
         case random
         case specific
+        case prepaid(Int32, Int32)
     }
     enum GiveawayReceiver : Equatable {
         case all
@@ -340,8 +303,14 @@ private struct State : Equatable {
                                     .init(title: "1 Year", desc: "$29.99 × 3", total: "$89.99", discount: "-30%")]
     
     var option: PaymentOption = .init(title: "3 Months", desc: "$13.99 × 3", total: "$41.99")
-    var date: Date = Date()
+    var date: Date = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + 60 * 60)
     var channels: [PeerEquatable]
+    var selectedPeers:[PeerEquatable] = []
+    
+    var products: [PremiumGiftProduct] = []
+    var premiumProduct: PremiumGiftProduct?
+    
+    var canMakePayment: Bool = true
 }
 
 private let _id_star = InputDataIdentifier("_id_star")
@@ -353,6 +322,7 @@ private let _id_add_channel = InputDataIdentifier("_id_add_channel")
 private let _id_receiver_all = InputDataIdentifier("_id_receiver_all")
 private let _id_receiver_new = InputDataIdentifier("_id_receiver_new")
 private let _id_select_date = InputDataIdentifier("_id_select_date")
+private let _id_prepaid = InputDataIdentifier("_id_prepaid")
 
 private func _id_peer(_ id: PeerId) -> InputDataIdentifier {
     return .init("_id_peer_\(id.toInt64())")
@@ -384,42 +354,58 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    
-    let random_icon = generateTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: 5)
-    let specific_icon = generateTypeImage(NSImage(named: "Icon_Giveaway_Specific")!, colorIndex: 6)
+    if state.type == .random || state.type == .specific {
+        let random_icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: 5)
+        let specific_icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Specific")!, colorIndex: 6)
 
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: "Create Giveaway", color: theme.colors.text, icon: random_icon, type: .selectableLeft(state.type == .random), viewType: .firstItem, enabled: true, description: "winners are chosen randomly", action: {
+            arguments.updateType(.random)
+        })))
+        index += 1
+        
+        let selectText: String
+        if state.selectedPeers.isEmpty {
+            selectText = "select recipients"
+        } else {
+            selectText = state.selectedPeers.map { $0.peer.displayTitle }.joined(separator: ", ")
+        }
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway_specific, data: .init(name: "Award Specific Users", color: theme.colors.text, icon: specific_icon, type: .selectableLeft(state.type == .specific), viewType: .lastItem, enabled: true, description: selectText, descTextColor: theme.colors.accent, action: {
+            arguments.updateType(.specific)
+        })))
+    } else if case let .prepaid(count, month) = state.type {
+        let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(month) % 7)
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid, data: .init(name: "\(count) Telegram Premium", color: theme.colors.text, icon: icon, type: .context("\(count)"), viewType: .singleItem, description: "\(month)-month subscriptions", descTextColor: theme.colors.grayText)))
+    }
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: "Create Giveaway", color: theme.colors.text, icon: random_icon, type: .selectableLeft(state.type == .random), viewType: .firstItem, enabled: true, description: "winners are chosen randomly", action: {
-        arguments.updateType(.random)
-    })))
-    index += 1
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway_specific, data: .init(name: "Award Specific Users", color: theme.colors.text, icon: specific_icon, type: .selectableLeft(state.type == .specific), viewType: .lastItem, enabled: true, description: "select recipients", descTextColor: theme.colors.accent, action: {
-        arguments.updateType(.specific)
-    })))
+   
   
     // entries
-    
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("QUANTITY OF PRIZES / BOOSTS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
-    index += 1
-    
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_size_header, equatable: .init(state.quantity), comparable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .firstItem, text: "\(state.quantity) Subscriptions / Boosts", font: .normal(.text), color: theme.colors.text, centerViewAlignment: true, hasBorder: false)
-    }))
-    
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_size, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return GiveawaySliderRowItem(initialSize, stableId: stableId, quantity: state.quantity, viewType: .lastItem, updateQuantity: arguments.updateQuantity)
-    }))
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Chose how many Premiums subscriptions to give away and boosts to receive."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-    index += 1
-    
-    
-    if state.type == .random {
+       
+    switch state.type {
+    case .random, .prepaid:
+        
+        if state.type == .random {
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("QUANTITY OF PRIZES / BOOSTS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: "\(state.quantity) BOOSTS", color: theme.colors.listGrayText, font: .normal(.small))))))
+            index += 1
+            
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_size, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                let sizes: [Int32] = [1, 3, 5, 7, 10, 25, 50]
+                return SelectSizeRowItem(initialSize, stableId: stableId, current: state.quantity, sizes: sizes, hasMarkers: false, titles: sizes.map { "\($0)" }, viewType: .singleItem, selectAction: { index in
+                    arguments.updateQuantity(sizes[index])
+                })
+            }))
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Chose how many Premiums subscriptions to give away and boosts to receive."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+            index += 1
+
+        }
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
@@ -438,15 +424,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         var channelItems: [ChannelTuple] = []
         
+        let maximumReached = arguments.context.appConfiguration.getGeneralValue("giveaway_add_peers_max", orElse: 10) == channels.count
+        
         for (i, channel) in channels.enumerated() {
             var viewType = bestGeneralViewType(channels, for: i)
-            if i == channels.count - 1 {
-                if channels.count == 1 {
-                    viewType = .firstItem
-                } else {
-                    viewType = .innerItem
+            if !maximumReached {
+                if i == channels.count - 1 {
+                    if channels.count == 1 {
+                        viewType = .firstItem
+                    } else {
+                        viewType = .innerItem
+                    }
                 }
             }
+            
             
             channelItems.append(.init(peer: channel, quantity: state.quantity, viewType: viewType, deletable: i != 0))
         }
@@ -465,8 +456,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }, menuOnAction: true)
             }))
         }
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_channel, data: .init(name: "Add Channel", color: theme.colors.accent, icon: theme.icons.proxyAddProxy, viewType: .lastItem, action: arguments.addChannel)))
+        if !maximumReached {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_channel, data: .init(name: "Add Channel", color: theme.colors.accent, icon: theme.icons.proxyAddProxy, viewType: .lastItem, action: arguments.addChannel)))
+        }
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Choose the channels users need to be subscribed to take part in the giveaway."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
@@ -501,37 +493,41 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Choose when 3 subscribers of your channel will be randomly selected to receive Telegram Premium."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
+    case .specific:
+        break
     }
-    
     
 
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("DURATION OF PREMIUM SUBSCRIPTIONS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
-    index += 1
-    
-    
-    struct PaymentTuple : Equatable {
-        var option: State.PaymentOption
-        var selected: Bool
-        var viewType: GeneralViewType
+    if state.type == .random || state.type == .specific {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("DURATION OF PREMIUM SUBSCRIPTIONS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        index += 1
+        
+        
+        struct PaymentTuple : Equatable {
+            var option: State.PaymentOption
+            var selected: Bool
+            var viewType: GeneralViewType
+        }
+        
+        var paymentOptions: [PaymentTuple] = []
+        for (i, option) in state.options.enumerated() {
+            paymentOptions.append(.init(option: option, selected: state.option == option, viewType: bestGeneralViewType(state.options, for: i)))
+        }
+        
+        for option in paymentOptions {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.title), equatable: .init(option), comparable: nil, item: { initialSize, stableId in
+                return GiveawayDurationOptionItem(initialSize, stableId: stableId, option: option.option, selected: option.selected, viewType: option.viewType, toggleOption: arguments.toggleOption)
+            }))
+        }
+        
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("You can review the list of features and terms of use for Telegram Premium [here](premium).", linkHandler: arguments.execute), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        index += 1
+
     }
-    
-    var paymentOptions: [PaymentTuple] = []
-    for (i, option) in state.options.enumerated() {
-        paymentOptions.append(.init(option: option, selected: state.option == option, viewType: bestGeneralViewType(state.options, for: i)))
-    }
-    
-    for option in paymentOptions {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option(option.option.title), equatable: .init(option), comparable: nil, item: { initialSize, stableId in
-            return GiveawayDurationOptionItem(initialSize, stableId: stableId, option: option.option, selected: option.selected, viewType: option.viewType, toggleOption: arguments.toggleOption)
-        }))
-    }
-    
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("You can review the list of features and terms of use for Telegram Premium [here](premium).", linkHandler: arguments.execute), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
-    index += 1
         
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -540,11 +536,38 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func GiveawayModalController(context: AccountContext, peerId: PeerId) -> InputDataModalController {
+enum GiveawaySubject {
+    case general
+    case prepaid(count: Int32, month: Int32)
+}
+
+func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: GiveawaySubject) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
+    
+    let paymentDisposable = MetaDisposable()
+    actionsDisposable.add(paymentDisposable)
+    
+    let activationDisposable = MetaDisposable()
+    actionsDisposable.add(activationDisposable)
+    
+    let inAppPurchaseManager = context.inAppPurchaseManager
+    
+    
+    
+    var canMakePayment: Bool = true
+    #if APP_STORE || DEBUG
+    canMakePayment = inAppPurchaseManager.canMakePayments
+    #endif
 
-    let initialState = State(channels: [.init(context.myPeer!)])
+    let type: State.GiveawayType
+    switch subject {
+    case .general:
+        type = .random
+    case let.prepaid(count, months):
+        type = .prepaid(count, months)
+    }
+    let initialState = State(type: type, channels: [], canMakePayment: canMakePayment)
     
     var close: (()->Void)? = nil
     
@@ -553,8 +576,31 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId) -> InputDa
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    let addSpecificUsers:()->Void = {
+        let behaviour = SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 10)
+        _ = selectModalPeers(window: context.window, context: context, title: "Select Users", behavior: behaviour, selectedPeerIds: Set(stateValue.with { $0.selectedPeers.map { $0.peer.id } })).start(next: { peerIds in
+            let peers: Signal<[PeerEquatable], NoError> = context.account.postbox.transaction { transaction in
+                var peers:[PeerEquatable] = []
+                for peerId in peerIds {
+                    if let peer = PeerEquatable(transaction.getPeer(peerId)) {
+                        peers.append(peer)
+                    }
+                }
+                return peers
+            } |> deliverOnMainQueue
+            
+            _ = peers.start(next: { value in
+                updateState { current in
+                    var current = current
+                    current.selectedPeers = value
+                    return current
+                }
+            })
+        })
+    }
 
-    let arguments = Arguments(context: context, updateQuantity: { value in
+    let arguments = Arguments(context: context, subject: subject, updateQuantity: { value in
         updateState { current in
             var current = current
             current.quantity = value
@@ -571,6 +617,9 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId) -> InputDa
             var current = current
             current.type = value
             return current
+        }
+        if value == .specific {
+            addSpecificUsers()
         }
     }, selectDate: {
         showModal(with: DateSelectorModalController(context: context, mode: .date(title: "Giveaway", doneTitle: "OK"), selectedAt: { value in
@@ -591,7 +640,19 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId) -> InputDa
             return current
         }
     }, addChannel: {
-        _ = selectModalPeers(window: context.window, context: context, title: "Select Channel", behavior: SelectChatsBehavior(settings: [.channels], excludePeerIds: stateValue.with { $0.channels.map { $0.peer.id } }, limit: 1)).start(next: { peerIds in
+        _ = selectModalPeers(window: context.window, context: context, title: "Select Channel", behavior: SelectChatsBehavior(settings: [.channels], excludePeerIds: stateValue.with { $0.channels.map { $0.peer.id } }, limit: 1), confirmation: { peerIds in
+            if let peerId = peerIds.first {
+                return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer in
+                    if peer.addressName == nil {
+                        return verifyAlertSignal(for: context.window, header: "Channel is Private", information: "Are you sure you want to add a private channel? Users won't be able to join it without an invite link.", ok: "Add") |> map { $0 == .basic }
+                    } else {
+                        return .single(true)
+                    }
+                }
+            } else {
+                return .single(true)
+            }
+        }).start(next: { peerIds in
             let signal = context.account.postbox.loadedPeerWithId(peerIds[0]) |> deliverOnMainQueue
             _ = signal.start(next: { peer in
                 updateState { current in
@@ -609,13 +670,141 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId) -> InputDa
         }
     })
     
+//    let products: Signal<[InAppPurchaseManager.Product], NoError>
+//    #if APP_STORE || DEBUG
+//    products = inAppPurchaseManager.availableProducts |> map {
+//        $0.filter { !$0.isSubscription }
+//    }
+//    #else
+//    products = .single([])
+//    #endif
+    
+    let productsAndDefaultPrice: Signal<([PremiumGiftProduct], (Int64, NSDecimalNumber)), NoError> = combineLatest(
+        .single([]) |> then(context.engine.payments.premiumGiftCodeOptions(peerId: peerId)),
+        context.inAppPurchaseManager.availableProducts
+    )
+    |> map { options, products in
+        var gifts: [PremiumGiftProduct] = []
+        for option in options {
+            if let product = products.first(where: { $0.id == option.storeProductId }), !product.isSubscription {
+                gifts.append(PremiumGiftProduct(giftOption: option, storeProduct: product))
+            }
+        }
+        let defaultPrice: (Int64, NSDecimalNumber)
+        if let defaultProduct = products.first(where: { $0.id == "org.telegram.telegramPremium.monthly" }) {
+            defaultPrice = (defaultProduct.priceCurrencyAndAmount.amount, defaultProduct.priceValue)
+        } else {
+            defaultPrice = (1, NSDecimalNumber(value: 1))
+        }
+        return (gifts, defaultPrice)
+    }
+    
+    
+    actionsDisposable.add(productsAndDefaultPrice.start(next: { products in
+            updateState { current in
+                var current = current
+                current.products = products.0
+                current.premiumProduct = products.0.first
+                return current
+            }
+    }))
+    
+    let buyNonStore:()->Void = {
+        
+    }
+    
+    let buyAppStore = {
+        
+        let premiumProduct = stateValue.with { $0.premiumProduct }
+
+        guard let premiumProduct = premiumProduct else {
+            buyNonStore()
+            return
+        }
+        
+        let lockModal = PremiumLockModalController()
+        
+        var needToShow = true
+        delay(0.2, closure: {
+            if needToShow {
+                showModal(with: lockModal, for: context.window)
+            }
+        })
+        
+        
+        let purpose: AppStoreTransactionPurpose = .giveaway(boostPeer: peerId, additionalPeerIds: stateValue.with { $0.channels.map { $0.peer.id }.filter { $0 != peerId } }, onlyNewSubscribers: stateValue.with { $0.receiver == .new }, randomId: Int64.random(in: .min ..< .max), untilDate: stateValue.with { Int32($0.date.timeIntervalSince1970) }, currency: premiumProduct.storeProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.storeProduct.priceCurrencyAndAmount.amount)
+        
+                
+        let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
+        |> deliverOnMainQueue).start(next: { [weak lockModal] available in
+            if available {
+                paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct.storeProduct, purpose: purpose)
+                |> deliverOnMainQueue).start(next: { [weak lockModal] status in
+    
+                    lockModal?.close()
+                    needToShow = false
+                    
+                    close?()
+                    inAppPurchaseManager.finishAllTransactions()
+                    delay(0.2, closure: {
+                        PlayConfetti(for: context.window)
+                        showModalText(for: context.window, text: "Giveaway created")
+                        let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
+                    })
+                    
+                }, error: { [weak lockModal] error in
+                    let errorText: String
+                    switch error {
+                        case .generic:
+                            errorText = strings().premiumPurchaseErrorUnknown
+                        case .network:
+                            errorText =  strings().premiumPurchaseErrorNetwork
+                        case .notAllowed:
+                            errorText =  strings().premiumPurchaseErrorNotAllowed
+                        case .cantMakePayments:
+                            errorText =  strings().premiumPurchaseErrorCantMakePayments
+                        case .assignFailed:
+                            errorText =  strings().premiumPurchaseErrorUnknown
+                        case .cancelled:
+                            errorText = strings().premiumBoardingAppStoreCancelled
+                    }
+                    lockModal?.close()
+                    showModalText(for: context.window, text: errorText)
+                    inAppPurchaseManager.finishAllTransactions()
+                }))
+            } else {
+                lockModal?.close()
+                needToShow = false
+            }
+        })
+    }
+    
+    
+    actionsDisposable.add((context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { channel in
+        updateState { current in
+            var current = current
+            current.channels.append(.init(channel))
+            return current
+        }
+    }))
+    
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
     let controller = InputDataController(dataSignal: signal, title: "Giveaway")
     
+    controller.didLoaded = { controller, _ in
+        controller.genericView.layer?.masksToBounds = false
+        controller.tableView.layer?.masksToBounds = false
+        controller.tableView.documentView?.layer?.masksToBounds = false
+        controller.tableView.clipView.layer?.masksToBounds = false
+    }
     
+    controller.validateData = { _ in
+        buyAppStore()
+        return .none
+    }
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -625,7 +814,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId) -> InputDa
         _ = controller?.returnKeyAction()
     }, singleButton: true)
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, size: NSMakeSize(360, 300))
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()

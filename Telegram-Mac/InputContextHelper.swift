@@ -485,7 +485,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                             let attr = NSMutableAttributedString()
                             let text = (file.customEmojiText ?? file.stickerText ?? "😀").fixed
                             _ = attr.append(string: text)
-                            attr.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: text, info: nil), range: attr.range)
+                            attr.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: text, info: nil, type: TGTextAttachment.emoji), range: attr.range)
                             _ = chatInteraction.appendText(attr, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
                         }
                         

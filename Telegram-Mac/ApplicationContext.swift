@@ -518,16 +518,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 
         
         #if DEBUG
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-//            showModal(with: GiftLinkModalController(context: context, peerId: context.peerId), for: context.window)
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            context.bindings.rootNavigation().push(ExperimentalTextController(context))
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            showModal(with: GiveawayModalController(context: context, peerId: context.peerId), for: context.window)
-
-            return .invoked
-        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
+//        window.set(handler: { [weak self] _ -> KeyHandlerResult in
+//            showModal(with: GiveawayModalController(context: context, peerId: context.peerId), for: context.window)
+//
+//            return .invoked
+//        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         #endif
         
         

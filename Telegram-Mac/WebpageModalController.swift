@@ -900,7 +900,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             self.modal?.resize(with:size, animated: false)
             self.genericView.updateLayout(size, transition: .immediate)
         } else {
-            let size = NSMakeSize(380, min(550, size.height - 80))
+            let size = NSMakeSize(380, min(380 + 380 * 0.6, size.height - 80))
             self.modal?.resize(with:size, animated: false)
             self.genericView.updateLayout(size, transition: .immediate)
         }
@@ -928,6 +928,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             updateLocalizationAndTheme(theme: theme)
         }
     }
+    private var hasSettings: Bool = false
 
     fileprivate func sendClipboardTextEvent(requestId: String, fillData: Bool) {
         var paramsString: String
@@ -1111,6 +1112,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let isVisible = json["is_visible"] as? Bool {
                     self.isBackButton = isVisible
+                }
+            }
+        case "web_app_setup_settings_button":
+            if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
+                if let isVisible = json["is_visible"] as? Bool {
+                    self.hasSettings = isVisible
                 }
             }
         case "web_app_open_invoice":
@@ -1330,7 +1337,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 self?.reloadPage()
             }, itemImage: MenuAnimation.menu_reload.value))
 
-            if self?.requestData?.hasSettings == true {
+            if self?.hasSettings == true {
                 items.append(.init(strings().webAppSettings, handler: { [weak self] in
                     self?.settingsPressed()
                 }, itemImage: MenuAnimation.menu_gear.value))

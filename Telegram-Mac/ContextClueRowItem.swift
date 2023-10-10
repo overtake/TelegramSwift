@@ -38,9 +38,7 @@ class ContextClueRowItem: TableRowItem {
     let animated: [TelegramMediaFile]
     fileprivate let presentation: TelegramPresentationTheme?
     
-    var sources: [ContextClueRowItem.Source] {
-        return self.animated.map { .animated($0) } + self.clues.map { .emoji($0) }
-    }
+    let sources: [ContextClueRowItem.Source]
     
     init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], animated: [TelegramMediaFile], selected: Source?, canDisablePrediction: Bool, callback:((Source)->Void)? = nil, presentation: TelegramPresentationTheme?) {
         self.animated = context.isPremium ? Array(animated.prefix(30)) : Array(animated.filter { !$0.isPremiumEmoji }.prefix(30))
@@ -51,7 +49,7 @@ class ContextClueRowItem: TableRowItem {
         self.selected = selected
         self.presentation = presentation
         
-        let sources:[ContextClueRowItem.Source] = self.animated.map { .animated($0) } + self.clues.map { .emoji($0) }
+        self.sources = self.clues.map { .emoji($0) } + self.animated.map { .animated($0) }
 
         if let selected = selected, let index = sources.firstIndex(of: selected) {
             self.selectedIndex = index
@@ -287,7 +285,7 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
             clues.selectedIndex = row
             if byClick, let window = window as? Window {
                 if let callback = clues.callback {
-                    let sources:[ContextClueRowItem.Source] = clues.animated.map { .animated($0) } + clues.clues.map { .emoji($0) }
+                    let sources:[ContextClueRowItem.Source] = clues.sources
                     callback(sources[row])
                 } else {
                     window.sendKeyEvent(.Return, modifierFlags: [])

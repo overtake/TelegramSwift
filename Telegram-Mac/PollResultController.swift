@@ -77,7 +77,7 @@ private func pollResultEntries(_ state: PollResultState, context: AccountContext
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.poll.text), data: InputDataGeneralTextData(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: NSEdgeInsetsMake(0, 16, 0, 16)), fontSize: .huge)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.poll.text), data: InputDataGeneralTextData(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: NSEdgeInsetsMake(0, 0, 0, 0)), fontSize: .huge)))
     index += 1
     
     

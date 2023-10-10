@@ -207,6 +207,8 @@ final class ChatInteraction : InterfaceObserver  {
     
     var openStory:(MessageId, StoryId)->Void = { _, _ in }
     
+    var quote:(String, MessageId)->Void = { _, _ in }
+    
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())
@@ -379,7 +381,7 @@ final class ChatInteraction : InterfaceObserver  {
             self.update({$0.updatedInterfaceState({$0.withUpdatedInputState(state)})})
         }
     }
-    func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
+    @discardableResult func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
 
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
         let inputText = presentation.effectiveInput.attributedString(theme).mutableCopy() as! NSMutableAttributedString
@@ -762,7 +764,8 @@ final class ChatInteraction : InterfaceObserver  {
                     case let .url(url):
                         execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
                     case .text:
-                        _ = (enqueueMessages(account: strongSelf.context.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
+                        let replyId = strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId
+                        _ = (enqueueMessages(account: strongSelf.context.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
                             strongSelf?.scrollToLatest(true)
                         })
                     case .requestPhone:
@@ -925,6 +928,8 @@ final class ChatInteraction : InterfaceObserver  {
             updateInput(with: action.payload)
         }
     }
+    
+
     
 }
 

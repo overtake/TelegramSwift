@@ -128,7 +128,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
         case let .modern(_, insets):
             let height: CGFloat = super.height + insets.top + insets.bottom + nameLayout!.0.size.height
             if let descLayout = self.descLayout {
-                return height + descLayout.layoutSize.height + 2
+                return height + 4
             }
             return height
         }

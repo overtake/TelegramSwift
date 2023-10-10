@@ -3503,7 +3503,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                 func apply(_ controller: ChatController, atDate: Int32?) {
                     let chatInteraction = controller.chatInteraction
-                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, threadId: chatInteraction.mode.threadId64, botId: results.botId, result: result, replyToMessageId: takeReplyId())
+                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, threadId: chatInteraction.mode.threadId64, botId: results.botId, result: result, replyToMessageId: takeReplyId().flatMap { .init(messageId: $0, quote: nil) })
                     if value {
                         controller.nextTransaction.set(handler: afterSentTransition)
                     }
@@ -4244,7 +4244,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     let media = TelegramMediaContact(firstName: myPeer.firstName ?? "", lastName: myPeer.lastName ?? "", phoneNumber: myPeer.phone ?? "", peerId: myPeer.id, vCardData: nil)
                     let canSend = peer.canSendMessage(strongSelf.mode.isThreadMode, media: media, threadData: strongSelf.chatInteraction.presentation.threadInfo)
                     if canSend {
-                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
+                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
                         strongSelf.nextTransaction.set(handler: afterSentTransition)
                     }
                 }
@@ -4584,6 +4584,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     strongSelf.unblockDisposable.set(context.blockedPeersContext.remove(peerId: peer.id).start())
                 }
             }
+        }
+        
+        chatInteraction.quote = { [weak self] text, messageId in
+            guard let `self` = self else {
+                return
+            }
+            _ = self.chatInteraction.appendText(NSAttributedString.makeQuoteAttributeString(.init(string: text)))
         }
         
         chatInteraction.updatePinned = { [weak self] pinnedId, dismiss, silent, forThisPeerOnlyIfPossible in
@@ -6089,7 +6096,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         collectFloatingPhotos(animated: animated && transition.state.isNone, currentAnimationRows: currentAnimationRows)
 
         self.genericView.tableView.notifyScrollHandlers()
-
         
         genericView.chatTheme = processedView.theme
                    
@@ -6977,7 +6983,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         #if DEBUG
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.chatInteraction.blockContact()
+            self?.navigationController?.push(ExperimentalTextController(context))
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
 
@@ -7003,6 +7009,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.genericView.inputView.makeUnderline()
             return .invoked
         }, with: self, for: .U, priority: .high, modifierFlags: [.shift, .command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.inputView.makeQuote()
+            return .invoked
+        }, with: self, for: .I, priority: .high, modifierFlags: [.shift, .command])
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.inputView.makeSpoiler()
