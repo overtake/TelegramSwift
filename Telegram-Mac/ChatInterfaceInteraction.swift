@@ -558,17 +558,26 @@ final class ChatInteraction : InterfaceObserver  {
                 
                                 let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
                                 showModalAlert(for: context.window, data: data, completion: { result in
-                                    open()
                                     if installBot {
                                         installAttachMenuBot(context: context, peer: peer, completion: { value in
+                                            open()
                                             if value {
                                                 showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
                                             }
                                         })
+                                    } else {
+                                        open()
                                     }
                                 })
                             } else {
-                                open()
+                                let installBot = attach.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true
+                                if installBot {
+                                    installAttachMenuBot(context: context, peer: peer, completion: { _ in
+                                        open()
+                                    })
+                                } else {
+                                    open()
+                                }
                             }
                             
                         }, error: { _ in

@@ -531,7 +531,7 @@ private final class TitleForumView : Control {
         self.state = state
         let size = self.frame.size
         let hasSidebar = state.filterData.sidebar && !state.filterData.isEmpty
-        let text_w = size.width - (!hasSidebar ? Window.controlsInset + 15 : 0) - 10 - 40
+        let text_w = size.width - 80 - 10 - 40
 
         
         let t_layout = TextViewLayout(.initialize(string: forumData.peer.displayTitle, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
@@ -551,6 +551,7 @@ private final class TitleForumView : Control {
         settings.contextMenu = { [weak arguments] in
             return arguments?.contextMenu()
         }
+        needsLayout = true
     }
     
     override func layout() {
@@ -558,8 +559,7 @@ private final class TitleForumView : Control {
         guard let state = self.state else {
             return
         }
-        let hasSidebar = state.filterData.sidebar && !state.filterData.isEmpty
-        let text_w = frame.size.width - (!hasSidebar ? Window.controlsInset + 15 : 0) - 10 - 40
+        let text_w = frame.size.width - 80 - 10 - 40
 
         title.resize(text_w)
         status.resize(text_w)
@@ -780,6 +780,7 @@ class PeerListContainerView : Control {
                 }, for: .Click)
             }
             current.update(state, forumData: forumData, arguments: arguments)
+            
         } else if let view = self.forumTitle {
             performSubviewRemoval(view, animated: animated)
             self.forumTitle = nil
@@ -1182,16 +1183,8 @@ class PeerListContainerView : Control {
             searchY += (StoryListChatListRowItem.InterfaceState.revealed.height * storiesItem.progress) + 9 * storiesItem.progress
         }
 
-        
-        var leftSearchInset: CGFloat = 0
-//        if let _ = self.backButton {
-//            if state.mode.groupId == .archive {
-//                leftSearchInset += 40
-//            } else {
-//                leftSearchInset += (40 * (1 - progress))
-//            }
-//        }
-        let searchRect = NSMakeRect(10 + leftSearchInset, searchY, (size.width - 10 * 2) - leftSearchInset, componentSize.height)
+
+        let searchRect = NSMakeRect(10, searchY, (size.width - 10 * 2), componentSize.height)
         
         
         var bottomInset: CGFloat = 0

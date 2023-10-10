@@ -83,7 +83,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case 9:
             self = .animated(range, try container.decode(String.self, forKey: "id"), try container.decode(Int64.self, forKey: "fileId"), try container.decodeIfPresent(TelegramMediaFile.self, forKey: "file"), try container.decodeIfPresent(ItemCollectionId.self, forKey: "info"), nil)
         default:
-            fatalError("input attribute not supported")
+            self = .bold(range)
+            //fatalError("input attribute not supported")
         }
     }
     var weight: Int {
