@@ -155,7 +155,7 @@ private final class Arguments {
 
 extension ChannelBoostStatus {
     func increment() -> ChannelBoostStatus {
-        return .init(level: self.level, boosts: self.boosts + 1, currentLevelBoosts: self.currentLevelBoosts, nextLevelBoosts: self.nextLevelBoosts, premiumAudience: self.premiumAudience, url: self.url)
+        return .init(level: self.level, boosts: self.boosts + 1, currentLevelBoosts: self.currentLevelBoosts, nextLevelBoosts: self.nextLevelBoosts, premiumAudience: self.premiumAudience, url: self.url, prepaidGiveaways: self.prepaidGiveaways)
     }
 }
 

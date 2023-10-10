@@ -152,6 +152,14 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
     
     public let textView: InputTextView
     
+    private var placeholder: TextView? = nil
+    public var placeholderString: NSAttributedString? = nil {
+        didSet {
+            updatePlaceholder(animated: false)
+        }
+    }
+    
+    
     private var emojiContent: EmojiProviderView
     public var emojiViewProvider: ((ChatTextInputTextCustomEmojiAttribute, NSSize, InputViewTheme) -> NSView)? {
         get {
@@ -229,6 +237,7 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
         textView.frame = self.bounds
         emojiContent.frame = self.bounds
         self.textView.delegate = self
+
         containerView.addSubview(textView)
         containerView.addSubview(emojiContent)
         self.documentView = containerView
@@ -267,6 +276,8 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
     
 
     @objc public func textDidChange(_ notification: Notification) {
+        self.updatePlaceholder(animated: true)
+
         CATransaction.begin()
         self.selectionChangedForEditedText = true
         
@@ -274,6 +285,7 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
         
         self.textView.updateTextContainerInset()
         CATransaction.commit()
+        
     }
     
     @objc public func textDidChangeSelection(_ notification: Notification) {
@@ -299,14 +311,52 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
     
     public func updateLayout(size: CGSize, textHeight: CGFloat, transition: ContainedViewLayoutTransition) {
         
-        let transition = ContainedViewLayoutTransition.immediate
+        let immediate = ContainedViewLayoutTransition.immediate
         let contentRect = CGRect(origin: .zero, size: NSMakeSize(size.width, textHeight))
-        transition.updateFrame(view: self.containerView, frame: contentRect)
-        transition.updateFrame(view: self.textView, frame: contentRect)
+        immediate.updateFrame(view: self.containerView, frame: contentRect)
+        immediate.updateFrame(view: self.textView, frame: contentRect)
         
-        transition.updateFrame(view: emojiContent, frame: contentRect)
+        immediate.updateFrame(view: emojiContent, frame: contentRect)
 
+        if let placeholder = self.placeholder {
+            placeholder.resize(size.width)
+            transition.updateFrame(view: placeholder, frame: placeholder.centerFrameY(x: 0))
+        }
+        
         self.textView.updateLayout(size: size)
+    }
+    
+    private func updatePlaceholder(animated: Bool) {
+        if let placeholderString = placeholderString, self.attributedText.string.isEmpty {
+            let current: TextView
+            let isNew: Bool
+            if let view = self.placeholder {
+                current = view
+                isNew = false
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                self.placeholder = current
+                containerView.addSubview(current, positioned: .below, relativeTo: containerView.subviews.first)
+                isNew = true
+            }
+            let layout = TextViewLayout(placeholderString)
+            layout.measure(width: frame.width)
+            current.update(layout)
+            current.centerY(x: 0)
+            
+            if animated, isNew {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                current.layer?.animatePosition(from: current.frame.origin.offsetBy(dx: 20, dy: 0), to: current.frame.origin)
+            }
+        } else if let view = self.placeholder {
+            performSubviewPosRemoval(view, pos: NSMakePoint(20, view.frame.minY), animated: animated)
+            if animated {
+                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false)
+            }
+            self.placeholder = nil
+        }
     }
 }
 

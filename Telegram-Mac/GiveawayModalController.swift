@@ -294,21 +294,25 @@ private struct State : Equatable {
         var desc: String
         var total: String
         var discount: String?
+        var months: Int32
+    }
+    struct DefaultPrice : Equatable {
+        let intergal: Int64
+        let decimal: NSDecimalNumber
     }
     var receiver: GiveawayReceiver = .all
     var type: GiveawayType = .random
-    var quantity: Int32 = 3
-    var options: [PaymentOption] = [.init(title: "3 Months", desc: "$13.99 × 3", total: "$41.99"),
-                                    .init(title: "6 Months", desc: "$15.99 × 3", total: "$47.99", discount: "-15%"),
-                                    .init(title: "1 Year", desc: "$29.99 × 3", total: "$89.99", discount: "-30%")]
+    var quantity: Int32 = 10
     
-    var option: PaymentOption = .init(title: "3 Months", desc: "$13.99 × 3", total: "$41.99")
+    var selectedMonths: Int32 = 12
+    
     var date: Date = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + 60 * 60)
     var channels: [PeerEquatable]
     var selectedPeers:[PeerEquatable] = []
     
     var products: [PremiumGiftProduct] = []
-    var premiumProduct: PremiumGiftProduct?
+    
+    var defaultPrice: DefaultPrice = .init(intergal: 1, decimal: 1)
     
     var canMakePayment: Bool = true
 }
@@ -505,16 +509,59 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("DURATION OF PREMIUM SUBSCRIPTIONS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
+        let recipientCount: Int
+        switch state.type {
+        case .random, .prepaid:
+            recipientCount = Int(state.quantity)
+        case .specific:
+            recipientCount = state.selectedPeers.count
+        }
+        
         
         struct PaymentTuple : Equatable {
             var option: State.PaymentOption
             var selected: Bool
             var viewType: GeneralViewType
         }
-        
         var paymentOptions: [PaymentTuple] = []
-        for (i, option) in state.options.enumerated() {
-            paymentOptions.append(.init(option: option, selected: state.option == option, viewType: bestGeneralViewType(state.options, for: i)))
+        
+        var i: Int32 = 0
+        var existingMonths = Set<Int32>()
+        
+        var products:[PremiumGiftProduct] = []
+        
+        for product in state.products {
+            if existingMonths.contains(product.months) {
+                continue
+            }
+            existingMonths.insert(product.months)
+            products.append(product)
+        }
+        
+        for (i, product) in products.enumerated() {
+            
+            let giftTitle: String
+            if product.months == 12 {
+                giftTitle = "1 Year"
+            } else {
+                giftTitle = "\(product.months) Months"
+            }
+            let discountValue = Int((1.0 - Float(product.storeProduct.priceCurrencyAndAmount.amount) / Float(product.months) / Float(state.defaultPrice.intergal)) * 100.0)
+            let discount: String?
+            if discountValue > 0 {
+                discount = "-\(discountValue)%"
+            } else {
+                discount = nil
+            }
+            let subtitle = "\(product.storeProduct.price) x \(recipientCount)"
+            let label = product.storeProduct.multipliedPrice(count: recipientCount)
+            
+            let selectedMonths = state.selectedMonths
+            let isSelected = product.months == selectedMonths
+            let option = State.PaymentOption(title: giftTitle, desc: subtitle, total: label, discount: discount, months: product.months)
+            
+            paymentOptions.append(.init(option: option, selected: isSelected, viewType: bestGeneralViewType(products, for: i)))
+
         }
         
         for option in paymentOptions {
@@ -636,7 +683,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
     }, toggleOption: { value in
         updateState { current in
             var current = current
-            current.option = value
+            current.selectedMonths = value.months
             return current
         }
     }, addChannel: {
@@ -704,7 +751,6 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
             updateState { current in
                 var current = current
                 current.products = products.0
-                current.premiumProduct = products.0.first
                 return current
             }
     }))
@@ -715,12 +761,29 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
     
     let buyAppStore = {
         
-        let premiumProduct = stateValue.with { $0.premiumProduct }
-
-        guard let premiumProduct = premiumProduct else {
-            buyNonStore()
+        let state = stateValue.with { $0 }
+        
+        var selectedProduct: PremiumGiftProduct?
+        let selectedMonths = state.selectedMonths
+        if let product = state.products.first(where: { $0.months == selectedMonths && $0.giftOption.users == state.quantity }) {
+            selectedProduct = product
+        }
+        
+        guard let premiumProduct = selectedProduct else {
+            verifyAlert(for: context.window, header: "Reduce Quantity", information: "You can't acquire \(state.quantity) \(selectedMonths)-month subscriptions in the app. Do you want to reduce quantity to 25?", ok: "Reduce", successHandler: { _ in
+                updateState { state in
+                    var updatedState = state
+                    updatedState.quantity = 25
+                    return updatedState
+                }
+            })
             return
         }
+
+//        guard let premiumProduct = premiumProduct else {
+//            buyNonStore()
+//            return
+//        }
         
         let lockModal = PremiumLockModalController()
         
