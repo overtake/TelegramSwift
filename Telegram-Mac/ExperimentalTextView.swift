@@ -183,13 +183,13 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         addSubview(view)
         view.delegate = self
         
-        self.view.emojiViewProvider = { [weak self] attachment, size, theme in
+        self.view.emojiViewProvider = { attachment, size, theme in
             let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
             let view = InputAnimatedEmojiAttach(frame: rect)
             view.set(attachment, size: rect.size, context: context, textColor: theme.textColor)
             return view
         }
-
+        self.view.placeholderString = .initialize(string: "Write a message...", color: theme.colors.grayText, font: .normal(theme.fontSize))
     }
     
     
