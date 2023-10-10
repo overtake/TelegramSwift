@@ -2239,6 +2239,8 @@ class ChatRowItem: TableRowItem {
                 }
                 if let action = message.media[0] as? TelegramMediaAction {
                    switch action.action {
+                   case .giftCode:
+                       return ChatGiveawayGiftRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                    case .phoneCall:
                        return ChatCallRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                    default:

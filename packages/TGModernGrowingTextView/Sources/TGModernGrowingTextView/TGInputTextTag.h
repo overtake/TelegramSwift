@@ -1,15 +1,19 @@
 #import <AppKit/AppKit.h>
 
 @interface TGTextAttachment : NSTextAttachment
+@property (nonatomic,strong,readonly) NSString * _Nonnull type;
 @property (nonatomic,strong,readonly) NSString * _Nonnull identifier;
 @property (nonatomic,strong,readonly) NSString * _Nonnull text;
 @property (nonatomic,strong,readonly) id _Nonnull fileId;
 @property (nonatomic,strong,readonly) id _Nullable file;
 @property (nonatomic,strong,readonly) id _Nullable info;
 @property (nonatomic,assign,readonly) CGRect fromRect;
--(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info fromRect: (CGRect)fromRect;
--(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info;
+-(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info fromRect: (CGRect)fromRect type: (NSString * _Nonnull)type;
+-(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info type: (NSString * _Nonnull)type;
 -(id _Nonnull)unique;
+
+-(NSSize)makeSizeFor:(NSView * _Nonnull)view textViewSize: (NSSize)textSize range: (NSRange)range;
+
 @end
 
 @interface TGInputTextAttribute : NSObject

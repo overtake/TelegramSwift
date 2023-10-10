@@ -1411,7 +1411,7 @@ class WallpaperPreviewController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: strings().wallpaperPreviewApply, accept: { [weak self] in
             self?.applyAndClose()
-        }, drawBorder: true, height: 50, singleButton: true)
+        }, drawBorder: true, height: 50)
     }
     override func initializer() -> NSView {
         return WallpaperPreviewView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), source: source, context: context, wallpaper: wallpaper);

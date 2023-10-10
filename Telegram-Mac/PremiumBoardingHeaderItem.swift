@@ -53,7 +53,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                     
                     let range = attr.string.nsstring.range(of: "🤡")
                     if range.location != NSNotFound {
-                        attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: TGTextAttachment(identifier: "\(arc4random())", fileId: packFile.fileId.id, file: packFile, text: "", info: nil), range: range)
+                        attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: TGTextAttachment(identifier: "\(arc4random())", fileId: packFile.fileId.id, file: packFile, text: "", info: nil, type: TGTextAttachment.emoji), range: range)
                     }
                     
                     title = attr

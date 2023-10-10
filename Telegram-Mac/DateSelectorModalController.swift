@@ -146,9 +146,9 @@ class DateSelectorModalController: ModalViewController {
         self.mode = mode
         switch mode {
         case .schedule:
-            super.init(frame: NSMakeRect(0, 0, 350, 180))
+            super.init(frame: NSMakeRect(0, 0, 330, 180))
         case .date:
-            super.init(frame: NSMakeRect(0, 0, 350, 70))
+            super.init(frame: NSMakeRect(0, 0, 330, 70))
         }
         self.bar = .init(height: 0)
     }

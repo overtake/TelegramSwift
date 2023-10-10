@@ -918,7 +918,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
                 
                 let range = attr.string.nsstring.range(of: "🤡")
                 if range.location != NSNotFound {
-                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: TGTextAttachment(identifier: "\(arc4random())", fileId: status.fileId, file: nil, text: "", info: nil), range: range)
+                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: TGTextAttachment(identifier: "\(arc4random())", fileId: status.fileId, file: nil, text: "", info: nil, type: TGTextAttachment.emoji), range: range)
                 }
                 let layout = TextViewLayout(attr, alignment: .center)
                 layout.measure(width: frame.width - 80)

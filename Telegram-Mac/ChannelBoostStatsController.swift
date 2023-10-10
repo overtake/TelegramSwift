@@ -288,8 +288,8 @@ private final class Arguments {
     let shareLink:(String)->Void
     let copyLink:(String)->Void
     let showMore:()->Void
-    let giveaway:()->Void
-    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void, giveaway:@escaping()->Void) {
+    let giveaway:(GiveawaySubject)->Void
+    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void, giveaway:@escaping(GiveawaySubject)->Void) {
         self.context = context
         self.shareLink = shareLink
         self.copyLink = copyLink
@@ -349,6 +349,14 @@ private struct State : Equatable {
 private func _id_peer(_ id: PeerId, _ index: Int) -> InputDataIdentifier {
     return .init("_id_peer_\(id.toInt64())_\(index)")
 }
+private func _id_prepaid(_ subject: GiveawaySubject) ->InputDataIdentifier {
+    switch subject {
+    case .general:
+        return .init("_id_general")
+    case .prepaid(let count, let month):
+        return .init("_id_prepaid_\(count), \(month)")
+    }
+}
 private let _id_loading = InputDataIdentifier("_id_loading")
 private let _id_empty_boosters = InputDataIdentifier("_id_empty_boosters")
 private let _id_load_more = InputDataIdentifier("_id_load_more")
@@ -402,6 +410,43 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("overview"), equatable: InputDataEquatable(overviewItems), comparable: nil, item: { initialSize, stableId in
             return ChannelOverviewStatsRowItem(initialSize, stableId: stableId, items: overviewItems, viewType: .singleItem)
         }))
+        
+        //TODOLANG
+        
+        let prepaid:[GiveawaySubject] = [.prepaid(count: 70, month: 3), .prepaid(count: 200, month: 6)]
+        
+        
+        if !prepaid.isEmpty {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("PREPAID GIVEAWAYS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+            
+            for (i, item) in prepaid.enumerated() {
+                switch item {
+                case let .prepaid(count, month):
+                    
+                    let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(month) % 7)
+                    let viewType = bestGeneralViewType(prepaid, for: i)
+                    
+                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid(item), data: .init(name: "\(count) Telegram Premium", color: theme.colors.text, icon: icon, type: .context("\(count)"), viewType: viewType, description: "\(month)-month subscriptions", descTextColor: theme.colors.grayText, action: {
+                        arguments.giveaway(item)
+                    })))
+                default:
+                    break
+                }
+            }
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Select a giveaway you already paid for to set it up."), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            index += 1
+
+        }
+        
+        
+//        entries.append(.boostPrepaidTitle(presentationData.theme, "PREPAID GIVEAWAYS"))
+//                    entries.append(.boostPrepaid(0, presentationData.theme, "70 Telegram Premium", "3-month subscriptions", 3, 70))
+//                    entries.append(.boostPrepaid(1, presentationData.theme, "200 Telegram Premium", "6-month subscriptions", 6, 200))
+//                    entries.append(.boostPrepaidInfo(presentationData.theme, "Select a giveaway you already paid for to set it up."))
+
 
         if let boosters = state.booster {
            
@@ -492,7 +537,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         //TODOLANG
 
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: "Get Boosts Via Gifts", color: theme.colors.accent, icon: NSImage(named: "Icon_Boost_Giveaway")?.precomposed(theme.colors.accent, flipVertical: true), viewType: .singleItem, action: arguments.giveaway)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: "Get Boosts Via Gifts", color: theme.colors.accent, icon: NSImage(named: "Icon_Boost_Giveaway")?.precomposed(theme.colors.accent, flipVertical: true), viewType: .singleItem, action: {
+            arguments.giveaway(.general)
+        })))
 
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Get more boosts for your channel by gifting  Premium to your subscribers."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
@@ -547,8 +594,8 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
         copyToClipboard(link)
     }, showMore: { [weak boostersContext] in
         boostersContext?.loadMore()
-    }, giveaway: {
-        showModal(with: GiveawayModalController(context: context, peerId: peerId), for: context.window)
+    }, giveaway: { subject in
+        showModal(with: GiveawayModalController(context: context, peerId: peerId, subject: subject), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

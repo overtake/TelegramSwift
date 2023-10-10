@@ -9,6 +9,7 @@
 import Foundation
 import SwiftSignalKit
 import AppKit
+import ColorPalette
 
 public final class BackgroundGradientView : View {
     public var values:(top: NSColor?, bottom: NSColor?, rotation: Int32?)? {
@@ -1157,7 +1158,8 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         let grayForeground: NSColor
         let activeBackground: NSColor
         let activeBorder: NSColor
-        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = .clear, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground, activeBackground: NSColor = presentation.colors.background, activeBorder: NSColor = presentation.colors.border) {
+        let listBackground: NSColor
+        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = .clear, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground, activeBackground: NSColor = presentation.colors.background, activeBorder: NSColor = presentation.colors.border, listBackground: NSColor = presentation.colors.listBackground) {
             self.text = text
             self.grayText = grayText
             self.background = background
@@ -1166,6 +1168,7 @@ open class ModalViewController : ViewController, ModalControllerHelper {
             self.grayForeground = grayForeground
             self.activeBackground = activeBackground
             self.activeBorder = activeBorder
+            self.listBackground = listBackground
         }
         public init(presentation: PresentationTheme) {
             self.text = presentation.colors.text
@@ -1176,11 +1179,16 @@ open class ModalViewController : ViewController, ModalControllerHelper {
             self.grayForeground = presentation.colors.grayForeground
             self.activeBackground = presentation.colors.background
             self.activeBorder = presentation.colors.border
+            self.listBackground = presentation.colors.listBackground
         }
     }
     
     open var modalTheme:Theme {
         return Theme()
+    }
+    
+    open var hasBorder: Bool {
+        return true
     }
     
     open var closable:Bool {

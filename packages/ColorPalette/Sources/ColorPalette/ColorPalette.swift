@@ -9,6 +9,68 @@
 import Cocoa
 import Colors
 
+public final class InputViewTheme: Equatable {
+    public final class Quote: Equatable {
+        public let background: NSColor
+        public let foreground: NSColor
+        public let icon: NSImage
+        public init(
+            background: NSColor,
+            foreground: NSColor,
+            icon: NSImage
+        ) {
+            self.background = background
+            self.foreground = foreground
+            self.icon = icon
+        }
+        
+        public static func ==(lhs: Quote, rhs: Quote) -> Bool {
+            if !lhs.background.isEqual(rhs.background) {
+                return false
+            }
+            if !lhs.foreground.isEqual(rhs.foreground) {
+                return false
+            }
+            if lhs.icon != rhs.icon {
+                return false
+            }
+            return true
+        }
+    }
+    
+    public let quote: Quote
+    public let indicatorColor: NSColor
+    public let backgroundColor: NSColor
+    public let selectingColor: NSColor
+    public let textColor: NSColor
+    public init(quote: Quote, indicatorColor: NSColor, backgroundColor: NSColor, selectingColor: NSColor, textColor: NSColor) {
+        self.quote = quote
+        self.indicatorColor = indicatorColor
+        self.backgroundColor = backgroundColor
+        self.selectingColor = selectingColor
+        self.textColor = textColor
+    }
+    
+    public static func ==(lhs: InputViewTheme, rhs: InputViewTheme) -> Bool {
+        if lhs.quote != rhs.quote {
+            return false
+        }
+        if lhs.indicatorColor != rhs.indicatorColor {
+            return false
+        }
+        if lhs.backgroundColor != rhs.backgroundColor {
+            return false
+        }
+        if lhs.selectingColor != rhs.selectingColor {
+            return false
+        }
+        if lhs.textColor != rhs.textColor {
+            return false
+        }
+        return true
+    }
+}
+
 
 public struct SearchTheme {
     public let backgroundColor: NSColor

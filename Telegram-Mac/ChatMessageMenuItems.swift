@@ -262,6 +262,14 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var fifthBlock:[ContextMenuItem] = []
         var sixBlock:[ContextMenuItem] = []
         
+        #if DEBUG
+        if !message.text.isEmpty {
+            firstBlock.append(ContextMenuItem("Quote", handler: {
+                chatInteraction.quote(message.text.prefixWithDots(Int.random(in: 0..<message.text.length)), message.id)
+            }))
+        }
+        #endif
+        
         
         if let adAttribute = data.message.adAttribute {
             

@@ -210,6 +210,7 @@
 		275549192747C24F0098A3CD /* device_ubuntu.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2755490E2747C24D0098A3CD /* device_ubuntu.tgs */; };
 		2755491A2747C24F0098A3CD /* device_linux.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2755490F2747C24F0098A3CD /* device_linux.tgs */; };
 		2755491D274B7FCB0098A3CD /* TextRecognizing in Frameworks */ = {isa = PBXBuildFile; productRef = 2755491C274B7FCB0098A3CD /* TextRecognizing */; };
+		275801442ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275801432ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift */; };
 		275C14132A61780F000DDACF /* expired_story.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275C14122A61780F000DDACF /* expired_story.tgs */; };
 		275C14152A6549F8000DDACF /* StoryNoReplyInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */; };
 		275C14172A66A3CD000DDACF /* AvatarStoryControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */; };
@@ -288,6 +289,9 @@
 		277C209527A2F5940070B3BF /* ManagedFile in Frameworks */ = {isa = PBXBuildFile; productRef = 277C209427A2F5940070B3BF /* ManagedFile */; };
 		277C209827A2F6160070B3BF /* YuvConversion in Frameworks */ = {isa = PBXBuildFile; productRef = 277C209727A2F6160070B3BF /* YuvConversion */; };
 		277C34A8267B5BC100B1CAA7 /* ChatInputMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */; };
+		277D28172ACBE1DD00CC6420 /* QuoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277D28162ACBE1DD00CC6420 /* QuoteView.swift */; };
+		277D281A2AD02F1800CC6420 /* InputView in Frameworks */ = {isa = PBXBuildFile; productRef = 277D28192AD02F1800CC6420 /* InputView */; };
+		277D281C2AD0322E00CC6420 /* ExperimentalTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277D281B2AD0322E00CC6420 /* ExperimentalTextView.swift */; };
 		277DFE6127842E6600F78396 /* Translate in Frameworks */ = {isa = PBXBuildFile; productRef = 277DFE6027842E6600F78396 /* Translate */; };
 		277DFE6327843B6700F78396 /* TranslateModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277DFE6227843B6700F78396 /* TranslateModalController.swift */; };
 		277DFE6627843F5100F78396 /* TranslateTableRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277DFE6527843F5100F78396 /* TranslateTableRowItem.swift */; };
@@ -1692,6 +1696,7 @@
 		2755490E2747C24D0098A3CD /* device_ubuntu.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_ubuntu.tgs; sourceTree = "<group>"; };
 		2755490F2747C24F0098A3CD /* device_linux.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_linux.tgs; sourceTree = "<group>"; };
 		2755491B274B7B3C0098A3CD /* TextRecognizing */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TextRecognizing; path = packages/TextRecognizing; sourceTree = "<group>"; };
+		275801432ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGiveawayGiftRowItem.swift; sourceTree = "<group>"; };
 		275C14122A61780F000DDACF /* expired_story.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = expired_story.tgs; sourceTree = "<group>"; };
 		275C14142A6549F8000DDACF /* StoryNoReplyInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryNoReplyInput.swift; sourceTree = "<group>"; };
 		275C14162A66A3CD000DDACF /* AvatarStoryControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarStoryControl.swift; sourceTree = "<group>"; };
@@ -1778,6 +1783,9 @@
 		277C209127A2F5680070B3BF /* ManagedFile */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = ManagedFile; path = "submodules/telegram-ios/submodules/ManagedFile"; sourceTree = "<group>"; };
 		277C209627A2F6090070B3BF /* YuvConversion */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = YuvConversion; path = "submodules/telegram-ios/submodules/YuvConversion"; sourceTree = "<group>"; };
 		277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputMenuView.swift; sourceTree = "<group>"; };
+		277D28162ACBE1DD00CC6420 /* QuoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteView.swift; sourceTree = "<group>"; };
+		277D28182AD02EF900CC6420 /* InputView */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = InputView; path = packages/InputView; sourceTree = "<group>"; };
+		277D281B2AD0322E00CC6420 /* ExperimentalTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentalTextView.swift; sourceTree = "<group>"; };
 		277DFE5F27842E3A00F78396 /* Translate */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Translate; path = packages/Translate; sourceTree = "<group>"; };
 		277DFE6227843B6700F78396 /* TranslateModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateModalController.swift; sourceTree = "<group>"; };
 		277DFE6527843F5100F78396 /* TranslateTableRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslateTableRowItem.swift; sourceTree = "<group>"; };
@@ -2952,6 +2960,7 @@
 				272C1830267D00350030B5FB /* CoreMediaIO.framework in Frameworks */,
 				D00746EE2577A6BE0000DF74 /* Carbon.framework in Frameworks */,
 				2700B222273ADC94003E4018 /* HotKey in Frameworks */,
+				277D281A2AD02F1800CC6420 /* InputView in Frameworks */,
 				27B6D05327393A3600C785C7 /* Postbox in Frameworks */,
 				27B6D04F27393A2A00C785C7 /* TelegramApi in Frameworks */,
 				279FD2A7273C1251004F08A1 /* Zip in Frameworks */,
@@ -3791,6 +3800,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				277D28182AD02EF900CC6420 /* InputView */,
 				27E60C0F29ED272800E10E39 /* Emoji */,
 				27AAAD5829A49F2500F70A9A /* System */,
 				27D6044C2958647000588C21 /* DarwinDirStat */,
@@ -4376,6 +4386,7 @@
 				2733670C2760F3010027441E /* ChatMessageMenuItems.swift */,
 				271999D82A372549009A3CC7 /* ChatStoryRowItem.swift */,
 				27C50AD82AC6EEB200FED2E4 /* ChatGiveawayRowItem.swift */,
+				275801432ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -4598,6 +4609,7 @@
 				A7E83213255E992D0095A167 /* WaveView.swift */,
 				A7E832182562CFC70095A167 /* VoiceBlobView.swift */,
 				27F4F17B2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift */,
+				277D28162ACBE1DD00CC6420 /* QuoteView.swift */,
 			);
 			name = input;
 			sourceTree = "<group>";
@@ -5767,6 +5779,7 @@
 			isa = PBXGroup;
 			children = (
 				A7F28336239A808500742C20 /* TemplateController.swift */,
+				277D281B2AD0322E00CC6420 /* ExperimentalTextView.swift */,
 			);
 			name = experemental;
 			sourceTree = "<group>";
@@ -6248,6 +6261,7 @@
 				27D9130F28353E53007CF40F /* InAppPurchaseManager */,
 				2738A2D3289C41CE00EC1010 /* CurrencyFormat */,
 				27AAAD5929A4A11600F70A9A /* System */,
+				277D28192AD02F1800CC6420 /* InputView */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -7096,6 +7110,7 @@
 				9F0AE6C02199CDB500A8B53A /* SVideoView.swift in Sources */,
 				C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */,
 				2738A2E828A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift in Sources */,
+				277D28172ACBE1DD00CC6420 /* QuoteView.swift in Sources */,
 				D0BEB99A216D10920055B718 /* MediaPreviewEditControl.swift in Sources */,
 				9FDA713420E65D49001ED8ED /* PeerMediaPlayerAnimationView.swift in Sources */,
 				271FB8862893EB9A001C25DC /* GifKeyboardController.swift in Sources */,
@@ -7430,6 +7445,7 @@
 				D076A07E248A5F890077BC0A /* GifPanelTabRowItem.swift in Sources */,
 				9FB7CB6D221EB22700888EA9 /* CallSettingsModalController.swift in Sources */,
 				C230B8F11DD348970057F596 /* AccountInfoItem.swift in Sources */,
+				275801442ACB178D0038F0A3 /* ChatGiveawayGiftRowItem.swift in Sources */,
 				C2FBC1E71DC631980063A23B /* SPPreviewController.swift in Sources */,
 				D0ABA3F72549C37E00031678 /* MessageSharedRowItem.swift in Sources */,
 				27FFCEC52694BA58006CA024 /* WidgetAppearance.swift in Sources */,
@@ -7579,6 +7595,7 @@
 				27FFCEC72694BC95006CA024 /* WidgetController.swift in Sources */,
 				C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */,
 				2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */,
+				277D281C2AD0322E00CC6420 /* ExperimentalTextView.swift in Sources */,
 				C2DE5D281F3CA5FE0081EC1E /* InstantPageItem.swift in Sources */,
 				27ABFD272858C65B006C3301 /* FasterStarsView.swift in Sources */,
 				27C50AD92AC6EEB200FED2E4 /* ChatGiveawayRowItem.swift in Sources */,
@@ -7907,7 +7924,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.1.1;
+				MARKETING_VERSION = 10.1.2;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -7952,7 +7969,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 10.1.1;
+				MARKETING_VERSION = 10.1.2;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -8179,6 +8196,10 @@
 		277C209727A2F6160070B3BF /* YuvConversion */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = YuvConversion;
+		};
+		277D28192AD02F1800CC6420 /* InputView */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = InputView;
 		};
 		277DFE6027842E6600F78396 /* Translate */ = {
 			isa = XCSwiftPackageProductDependency;

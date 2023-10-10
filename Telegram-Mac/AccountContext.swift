@@ -19,6 +19,17 @@ import FetchManager
 import InAppPurchaseManager
 import ApiCredentials
 
+extension AppConfiguration {
+    func getGeneralValue(_ key: String, orElse defaultValue: Int32) -> Int32 {
+        if let value = self.data?[key] as? Double {
+            return Int32(value)
+        } else {
+            return defaultValue
+        }
+    }
+
+}
+
 private let globalStoryDisposable = MetaDisposable()
 
 func SetOpenStoryDisposable(_ disposable: Disposable?) {
@@ -376,7 +387,7 @@ final class AccountContext {
         self.engine = TelegramEngine(account: account)
         self.isSupport = isSupport
         #if !SHARE
-        self.inAppPurchaseManager = .init(premiumProductId: ApiEnvironment.premiumProductId)
+        self.inAppPurchaseManager = .init(engine: engine)
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.inlinePacksContext = .init(postbox: account.postbox, engine: self.engine)

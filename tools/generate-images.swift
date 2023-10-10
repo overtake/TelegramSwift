@@ -879,7 +879,16 @@ func initialize() -> [String] {
     array.append("message_story_expired")
     array.append("message_story_expired_bubble_incoming")
     array.append("message_story_expired_bubble_outgoing")
-
+    
+    
+    array.append("message_quote_accent")
+    array.append("message_quote_red")
+    array.append("message_quote_orange")
+    array.append("message_quote_violet")
+    array.append("message_quote_green")
+    array.append("message_quote_cyan")
+    array.append("message_quote_blue")
+    array.append("message_quote_pink")
 
     return array
 }

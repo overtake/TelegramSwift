@@ -1480,17 +1480,21 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     @IBAction func showQuickSwitcher(_ sender: Any) {
-        
-        if let context = contextValue?.context, authContextValue == nil {
+        if authContextValue == nil {
             _ = sharedContextOnce.start(next: { applicationContext in
                 if !applicationContext.notificationManager.isLocked {
-                    if !hasModals() {
-                        showModal(with: QuickSwitcherModalController(context), for: self.window)
+                    self.enumerateApplicationContexts { applicationContext in
+                        if applicationContext.context.window.isKeyWindow {
+                            if !hasModals(applicationContext.context.window) {
+                                showModal(with: QuickSwitcherModalController(applicationContext.context), for: applicationContext.context.window)
+                                applicationContext.context.window.makeKeyAndOrderFront(sender)
+                            }
+                        }
                     }
                 }
             })
         }
-        window.makeKeyAndOrderFront(sender)
+        
     }
     
     func applyExternalLoginCode(_ code: String) {

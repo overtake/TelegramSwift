@@ -17,6 +17,9 @@ import GZIP
 import Svg
 import ColorPalette
 import ThemeSettings
+#if !SHARE
+import InputView
+#endif
 
 let premiumGradient = [NSColor(hexString: "#6B93FF"), NSColor(hexString: "#976FFF"), NSColor(hexString: "#E46ACE")]
 
@@ -1570,11 +1573,16 @@ class TelegramPresentationTheme : PresentationTheme {
     let bubbled: Bool
     let wallpaper: ThemeWallpaper
     
+    
     #if !SHARE
     static func defaultBackground(_ palette: ColorPalette)-> TableBackgroundMode {
         return .background(image: builtinBackgound(palette), intensity: nil, colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
     }
+    var textInput: ChatTextInputPresentation {
+        return .init(text: colors.text, accent: colors.accent, fontSize: fontSize)
+    }
     #endif
+    
 
    
     private var _emptyChatNavigationPrev: CGImage?
@@ -1876,7 +1884,7 @@ class TelegramPresentationTheme : PresentationTheme {
         if !Thread.isMainThread && generated {
             self._backgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize)
         }
-        super.init(colors: colors, search: search)
+        super.init(colors: colors, search: search, inputTheme: .init(quote: .init(background: colors.accent.withAlphaComponent(0.2), foreground: colors.accent, icon: NSImage(named: "Icon_Quote")!), indicatorColor: colors.accent, backgroundColor: colors.background, selectingColor: colors.selectText, textColor: colors.text))
     }
     
     var dark: Bool {
@@ -2706,12 +2714,18 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               story_chatlist_reply_active: { NSImage(named: "Icon_StoryReply")!.precomposed(palette.underSelectedColor) },
                               message_story_expired: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitle) },
                               message_story_expired_bubble_incoming: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitleBubble_incoming) },
-                              message_story_expired_bubble_outgoing: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitleBubble_outgoing) }
+                              message_story_expired_bubble_outgoing: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitleBubble_outgoing) },
+                              message_quote_accent: { NSImage(named: "Icon_Quote")!.precomposed(palette.accent) },
+                              message_quote_red: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarRedTop) },
+                              message_quote_orange: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarOrangeTop) },
+                              message_quote_violet: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarVioletTop) },
+                              message_quote_green: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarGreenTop) },
+                              message_quote_cyan: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarCyanTop) },
+                              message_quote_blue: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarBlueTop) },
+                              message_quote_pink: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarPinkTop) }
 
     )
-
 }
-
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.accentSelect,
@@ -2828,6 +2842,12 @@ func generateWebAppThemeParams(_ presentationTheme: PresentationTheme) -> [Strin
         "link_color": Int32(bitPattern: presentationTheme.colors.link.rgb),
         "button_color": Int32(bitPattern: presentationTheme.colors.accent.rgb),
         "button_text_color": Int32(bitPattern: presentationTheme.colors.underSelectedColor.rgb),
-        "secondary_bg_color":Int32(bitPattern: presentationTheme.colors.listBackground.rgb)
+        "secondary_bg_color":Int32(bitPattern: presentationTheme.colors.listBackground.rgb),
+        "header_bg_color": Int32(bitPattern: presentationTheme.colors.listBackground.rgb),
+        "accent_text_color": Int32(bitPattern: presentationTheme.colors.accent.rgb),
+        "section_bg_color": Int32(bitPattern: presentationTheme.colors.background.rgb),
+        "section_header_text_color": Int32(bitPattern: presentationTheme.colors.listGrayText.rgb),
+        "subtitle_text_color": Int32(bitPattern: presentationTheme.colors.grayText.rgb),
+        "destructive_text_color": Int32(bitPattern: presentationTheme.colors.redUI.rgb),
     ]
 }

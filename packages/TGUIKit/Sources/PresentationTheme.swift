@@ -10,9 +10,9 @@ import Cocoa
 import SwiftSignalKit
 import ColorPalette
 
-private var _theme:Atomic<PresentationTheme> = Atomic(value: whiteTheme)
+private var _theme:Atomic<PresentationTheme> = Atomic(value: defaultPresentation)
 
-public let whiteTheme = PresentationTheme(colors: whitePalette, search: SearchTheme(.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), {localizedString("SearchField.Search")}, .text, .grayText))
+private let defaultPresentation = PresentationTheme(colors: whitePalette, search: SearchTheme(.grayBackground, #imageLiteral(resourceName: "Icon_SearchField").precomposed(), #imageLiteral(resourceName: "Icon_SearchClear").precomposed(), {localizedString("SearchField.Search")}, .text, .grayText), inputTheme: .init(quote: .init(background: NSColor.accent.withAlphaComponent(0.2), foreground: NSColor.accent, icon: NSImage(named: "Icon_Quote")!), indicatorColor: NSColor.accent, backgroundColor: NSColor.grayBackground, selectingColor: NSColor.selectText, textColor: NSColor.textColor))
 
 
 
@@ -29,12 +29,14 @@ open class PresentationTheme : Equatable {
     
     public let colors:ColorPalette
     public let search: SearchTheme
+    public let inputTheme: InputViewTheme
     
     public let resourceCache = PresentationsResourceCache()
     
-    public init(colors: ColorPalette, search: SearchTheme) {
+    public init(colors: ColorPalette, search: SearchTheme, inputTheme: InputViewTheme) {
         self.colors = colors
         self.search = search
+        self.inputTheme = inputTheme
     }
     
     public static var current: PresentationTheme {

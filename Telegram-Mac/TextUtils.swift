@@ -14,6 +14,8 @@ import TGUIKit
 import SwiftSignalKit
 import CurrencyFormat
 import ColorPalette
+import InputView
+
 enum MessageTextMediaViewType {
     case emoji
     case text
@@ -83,6 +85,9 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             }
         case let dice as TelegramMediaDice:
             messageText = dice.emoji
+        case let dice as TelegramMediaGiveaway:
+            //TODOLANG
+            messageText = "Giveaway"
         case let fileMedia as TelegramMediaFile:
             if fileMedia.probablySticker {
                 messageText = strings().chatListSticker(fileMedia.stickerText ?? "")

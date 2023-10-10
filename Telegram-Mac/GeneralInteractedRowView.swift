@@ -335,7 +335,7 @@ class GeneralInteractedRowView: GeneralRowView {
                         x += 35
                     } else {
                         if item.descLayout != nil {
-                            f.origin.y = insets.top
+                           // f.origin.y = insets.top
                         }
                     }
                     ctx.draw(icon, in: NSMakeRect(x, f.minY, f.width, f.height))
@@ -349,7 +349,11 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
                     var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
                     textRect.origin.x = insets.left + textXAdditional
-                    textRect.origin.y = insets.top - 1
+                    if item.descLayout == nil {
+                        textRect.origin.y = insets.top - 1
+                    } else {
+                        textRect.origin.y = 5
+                    }
                     
                     nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
@@ -530,7 +534,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
                 
                 if let descriptionView = self.descriptionView {
-                    descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - innerInsets.bottom)
+                    descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - 5)
                 }
                 var nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6
                 

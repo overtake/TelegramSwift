@@ -103,7 +103,7 @@ private class ModalInteractionsContainer : View {
     let interactions:ModalInteractions
     let borderView:View?
     
-    
+    private let backgroundView = View()
     
     override func mouseUp(with event: NSEvent) {
         
@@ -194,6 +194,14 @@ private class ModalInteractionsContainer : View {
 
         }
         
+        self.layer?.masksToBounds = false
+        backgroundView.backgroundColor = interactions.customTheme().listBackground
+        
+        
+        if interactions.singleButton {
+            addSubview(backgroundView)
+        }
+        
         addSubview(acceptView)
         if let cancelView = cancelView {
             addSubview(cancelView)
@@ -255,9 +263,13 @@ private class ModalInteractionsContainer : View {
     fileprivate override func layout() {
         super.layout()
         
+        
+        
         if self.interactions.singleButton {
+            backgroundView.frame = NSMakeRect(20, -10, frame.width - 40, frame.height + 10)
             acceptView.frame = CGRect(origin: NSMakePoint(20, 0), size: NSMakeSize(frame.width - 40, 40))
         } else {
+            self.backgroundView.frame = bounds
             if cancelView == nil {
                 acceptView.frame = bounds
             } else {
@@ -412,7 +424,7 @@ private final class ModalHeaderView: View {
             background = .clear
             borderColor = customTheme().border
         }
-        if animated {
+        if animated, self.layer?.animation(forKey: "backgroundColor") == nil {
             self.layer?.animateBackground()
         }
     }
