@@ -379,8 +379,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             arguments.updateType(.specific)
         })))
     } else if case let .prepaid(count, month) = state.type {
+        let countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(count)", color: theme.colors.accent, font: .avatar(.text)))
         let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(month) % 7)
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid, data: .init(name: "\(count) Telegram Premium", color: theme.colors.text, icon: icon, type: .context("\(count)"), viewType: .singleItem, description: "\(month)-month subscriptions", descTextColor: theme.colors.grayText)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid, data: .init(name: "\(count) Telegram Premium", color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: .singleItem, description: "\(month)-month subscriptions", descTextColor: theme.colors.grayText)))
     }
     
    
@@ -449,7 +450,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         for item in channelItems {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                 
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: nil, status: "this channel will receive \(item.quantity) boosts", inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, contextMenuItems: {
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: nil, status: item.peer.peer.id == state.channels[0].peer.id ? "this channel will receive \(item.quantity) boosts" : nil, inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, contextMenuItems: {
                     var items: [ContextMenuItem] = []
                     if item.deletable {
                         items.append(ContextMenuItem("Remove", handler: {

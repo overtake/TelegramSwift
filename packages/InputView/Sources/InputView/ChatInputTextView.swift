@@ -204,9 +204,8 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
     }
     
     public func addUndoItem(_ item: InputViewUndoItem) {
-        if item.be != self.attributedText {
-            self.textView.addUndoItem(item)
-        }
+        self.textView.addUndoItem(item)
+        self.updatePlaceholder(animated: true)
     }
     
     public var textContainerInset: NSEdgeInsets {
@@ -385,7 +384,7 @@ private final class ChatInputTextContainer: NSTextContainer {
             let index = Int(characterIndex)
             if index >= 0 && index < string.length {
                 let attributes = textStorage.attributes(at: index, effectiveRange: nil)
-                let blockQuote = attributes[NSAttributedString.Key(rawValue: "Attribute__Blockquote")] as? NSObject
+                let blockQuote = attributes[ChatTextInputAttributes.quote] as? NSObject
                 if let blockQuote {
                     result.origin.x += 9.0
                     result.size.width -= 9.0
@@ -396,7 +395,7 @@ private final class ChatInputTextContainer: NSTextContainer {
                         isFirstLine = true
                     } else {
                         let previousAttributes = textStorage.attributes(at: index - 1, effectiveRange: nil)
-                        let previousBlockQuote = previousAttributes[NSAttributedString.Key(rawValue: "Attribute__Blockquote")] as? NSObject
+                        let previousBlockQuote = previousAttributes[ChatTextInputAttributes.quote] as? NSObject
                         if let previousBlockQuote {
                             if !blockQuote.isEqual(previousBlockQuote) {
                                 isFirstLine = true
@@ -477,6 +476,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         self.drawsBackground = true
         self.backgroundColor = NSColor.red.withAlphaComponent(0.01)
         self.isRichText = false
+        self.font = .normal(.text)
         
         self.allowsDocumentBackgroundColorChange = true
                
@@ -524,13 +524,13 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         
         let attributes = textStorage.attributes(at: characterIndex, effectiveRange: nil)
-        guard let blockQuote = attributes[NSAttributedString.Key("Attribute__Blockquote")] as? NSObject else {
+        guard let blockQuote = attributes[ChatTextInputAttributes.quote] as? NSObject else {
             return 0.0
         }
         
         if characterIndex != 0 {
             let previousAttributes = textStorage.attributes(at: characterIndex - 1, effectiveRange: nil)
-            let previousBlockQuote = previousAttributes[NSAttributedString.Key("Attribute__Blockquote")] as? NSObject
+            let previousBlockQuote = previousAttributes[ChatTextInputAttributes.quote] as? NSObject
             if let previousBlockQuote, blockQuote.isEqual(previousBlockQuote) {
                 return 0.0
             }
@@ -555,13 +555,13 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         
         let attributes = textStorage.attributes(at: characterIndex, effectiveRange: nil)
-        guard let blockQuote = attributes[NSAttributedString.Key("Attribute__Blockquote")] as? NSObject else {
+        guard let blockQuote = attributes[ChatTextInputAttributes.quote] as? NSObject else {
             return 0.0
         }
         
         if characterIndex + 1 < textStorage.length {
             let nextAttributes = textStorage.attributes(at: characterIndex + 1, effectiveRange: nil)
-            let nextBlockQuote = nextAttributes[NSAttributedString.Key("Attribute__Blockquote")] as? NSObject
+            let nextBlockQuote = nextAttributes[ChatTextInputAttributes.quote] as? NSObject
             if let nextBlockQuote, blockQuote.isEqual(nextBlockQuote) {
                 return 0.0
             }
@@ -585,10 +585,10 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
             let topAttributes = self.customTextStorage.attributes(at: 0, effectiveRange: nil)
             let bottomAttributes = self.customTextStorage.attributes(at: self.customTextStorage.length - 1, effectiveRange: nil)
             
-            if topAttributes[NSAttributedString.Key("Attribute__Blockquote")] != nil {
+            if topAttributes[ChatTextInputAttributes.quote] != nil {
                 result.bottom += 8.0
             }
-            if bottomAttributes[NSAttributedString.Key("Attribute__Blockquote")] != nil {
+            if bottomAttributes[ChatTextInputAttributes.quote] != nil {
                 result.bottom += 8.0
             }
         }
@@ -603,10 +603,10 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
             let topAttributes = self.customTextStorage.attributes(at: 0, effectiveRange: nil)
             let bottomAttributes = self.customTextStorage.attributes(at: self.customTextStorage.length - 1, effectiveRange: nil)
             
-            if topAttributes[NSAttributedString.Key("Attribute__Blockquote")] != nil {
+            if topAttributes[ChatTextInputAttributes.quote] != nil {
                 result.bottom += 7.0
             }
-            if bottomAttributes[NSAttributedString.Key("Attribute__Blockquote")] != nil {
+            if bottomAttributes[ChatTextInputAttributes.quote] != nil {
                 result.bottom += 8.0
             }
         }
@@ -627,8 +627,11 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
             self.measurementLayoutManager.ensureLayout(for: self.measurementTextContainer)
         }
         
-        let textSize = self.measurementLayoutManager.usedRect(for: self.measurementTextContainer).size
+        var textSize = self.measurementLayoutManager.usedRect(for: self.measurementTextContainer).size
         
+        if string.isEmpty {
+            textSize.height += 2
+        }
         return textSize.height + insets.top + insets.bottom + self.textContainerOrigin.y * 2
     }
     
@@ -669,16 +672,17 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         textStorage.enumerateAttributes(in: NSMakeRange(0, textStorage.length), options: [], using: { attributes, range, _ in
             if let value = attributes[ChatTextInputAttributes.customEmoji] as? ChatTextInputTextCustomEmojiAttribute {
                 
-                
-                let glyphRange = self.customLayoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-                if self.customLayoutManager.isValidGlyphIndex(glyphRange.location) && self.customLayoutManager.isValidGlyphIndex(glyphRange.location + glyphRange.length - 1) {
-                } else {
-                    return
-                }
+                if attributes[ChatTextInputAttributes.spoiler] == nil {
+                    let glyphRange = self.customLayoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+                    if self.customLayoutManager.isValidGlyphIndex(glyphRange.location) && self.customLayoutManager.isValidGlyphIndex(glyphRange.location + glyphRange.length - 1) {
+                    } else {
+                        return
+                    }
 
-                var boundingRect = self.customLayoutManager.boundingRect(forGlyphRange: glyphRange, in: self.customTextContainer)
-                boundingRect.origin.y += self.textContainerOrigin.y
-                rects.append((boundingRect, value))
+                    var boundingRect = self.customLayoutManager.boundingRect(forGlyphRange: glyphRange, in: self.customTextContainer)
+                    boundingRect.origin.y += self.textContainerOrigin.y
+                    rects.append((boundingRect, value))
+                }
             }
         })
         
@@ -692,7 +696,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         let textStorage = self.customTextStorage
 
         
-        textStorage.enumerateAttribute(NSAttributedString.Key(rawValue: "Attribute__Spoiler"), in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
+        textStorage.enumerateAttribute(ChatTextInputAttributes.spoiler, in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
             if let value {
                 let _ = value
                 
@@ -742,7 +746,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         let textStorage = self.customTextStorage
 
         
-        textStorage.enumerateAttribute(NSAttributedString.Key(rawValue: "Attribute__Blockquote"), in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
+        textStorage.enumerateAttribute(ChatTextInputAttributes.quote, in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
             if let value {
                 let _ = value
                 
