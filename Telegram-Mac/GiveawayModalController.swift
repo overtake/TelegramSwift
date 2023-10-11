@@ -385,8 +385,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
-    let random_icon = generateTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: 5)
-    let specific_icon = generateTypeImage(NSImage(named: "Icon_Giveaway_Specific")!, colorIndex: 6)
+    let random_icon = generateTypeImage(NSImage(named: "Icon_Boost_Random")!, colorIndex: 5)
+    let specific_icon = generateTypeImage(NSImage(named: "Icon_Boost_Specific")!, colorIndex: 6)
 
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: "Create Giveaway", color: theme.colors.text, icon: random_icon, type: .selectableLeft(state.type == .random), viewType: .firstItem, enabled: true, description: "winners are chosen randomly", action: {
