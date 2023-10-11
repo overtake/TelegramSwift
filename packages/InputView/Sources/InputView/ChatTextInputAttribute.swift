@@ -142,7 +142,7 @@ public func textAttributedStringForStateText(_ stateText: NSAttributedString, fo
             var font: NSFont?
             var fontSize = fontSize
             if fontAttributes.contains(.blockQuote) {
-                fontSize = round(fontSize * 0.8235294117647058)
+                fontSize = round(fontSize)
             }
             if fontAttributes == [.bold, .italic, .monospace] {
                 font = NSFont.semiboldItalicMonospace(fontSize)
@@ -283,8 +283,14 @@ public final class ChatTextInputTextCustomEmojiAttribute: NSObject, Codable {
     
     override public func isEqual(_ object: Any?) -> Bool {
         if let other = object as? ChatTextInputTextCustomEmojiAttribute {
-            return self === other
-            //return self.stickerPack == other.stickerPack && self.fileId == other.fileId && self.file?.fileId == other.file?.fileId
+            return self.fileId == other.fileId && self.file?.fileId == other.file?.fileId
+        } else {
+            return false
+        }
+    }
+    public override func isEqual(to object: Any?) -> Bool {
+        if let other = object as? ChatTextInputTextCustomEmojiAttribute {
+            return self.fileId == other.fileId && self.file?.fileId == other.file?.fileId
         } else {
             return false
         }
@@ -789,7 +795,7 @@ public func refreshChatTextInputAttributes(textView: NSTextView, primaryTextColo
                 var font: NSFont?
                 var baseFontSize = baseFontSize
                 if fontAttributes.contains(.blockQuote) {
-                    baseFontSize = round(baseFontSize * 0.8235294117647058)
+                    baseFontSize = round(baseFontSize)
                 }
                 if fontAttributes == [.bold, .italic, .monospace] {
                     font = NSFont.semiboldItalicMonospace(baseFontSize)

@@ -84,7 +84,7 @@ class SearchEmptyRowView : TableRowView {
             if let customTheme = item.customTheme {
                 return customTheme.backgroundColor
             }
-            return item.viewType.rowBackground
+            return .clear
         } else {
             return super.backdorColor
         }

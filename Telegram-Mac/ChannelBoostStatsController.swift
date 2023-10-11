@@ -426,10 +426,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 switch item {
                 case let .prepaid(count, month):
                     
+                    let countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(count)", color: theme.colors.accent, font: .avatar(.text)))
+                    
                     let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(month) % 7)
                     let viewType = bestGeneralViewType(prepaid, for: i)
                     
-                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid(item), data: .init(name: "\(count) Telegram Premium", color: theme.colors.text, icon: icon, type: .context("\(count)"), viewType: viewType, description: "\(month)-month subscriptions", descTextColor: theme.colors.grayText, action: {
+                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid(item), data: .init(name: "\(count) Telegram Premium", color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: viewType, description: "\(month)-month subscriptions", descTextColor: theme.colors.grayText, action: {
                         arguments.giveaway(item)
                     })))
                 default:

@@ -24,6 +24,25 @@ import InputView
 let premiumGradient = [NSColor(hexString: "#6B93FF"), NSColor(hexString: "#976FFF"), NSColor(hexString: "#E46ACE")]
 
 
+func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -> CGImage {
+    let layout = TextNode.layoutText(count, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
+    let image = NSImage(named: "Icon_Boost_Prepaid")!.precomposed(bgColor, flipVertical: true)
+
+    return generateImage(NSMakeSize(layout.0.size.width + 10 + image.backingSize.width + 5, 24), rotatedContext: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.round(size, size.height / 2)
+        ctx.setFillColor(bgColor.withAlphaComponent(0.2).cgColor)
+        ctx.fill(size.bounds)
+        
+        var rect = size.bounds.focus(layout.0.size)
+        rect.origin.x = size.width - rect.size.width - 5
+        layout.1.draw(rect, in: ctx, backingScaleFactor: 2, backgroundColor: .clear)
+        
+        var imageRect = size.bounds.focus(image.backingSize)
+        imageRect.origin.x = 5
+        ctx.draw(image, in: imageRect)
+    })!
+}
 
 
 func generateFilledCircleImage(diameter: CGFloat, color: NSColor?, strokeColor: NSColor? = nil, strokeWidth: CGFloat? = nil, backgroundColor: NSColor? = nil) -> CGImage {

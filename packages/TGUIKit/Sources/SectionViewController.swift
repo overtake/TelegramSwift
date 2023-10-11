@@ -212,7 +212,7 @@ open class SectionViewController: GenericViewController<SectionControllerView> {
         if selectedIndex != index || !animated {
             selectedSection = sections[index]
             let controller = sections[index].controller
-            controller._frameRect = NSMakeRect(0, 0, frame.width, frame.height - 50)
+            controller._frameRect = NSMakeRect(0, 0, frame.width, frame.height + 50)
             controller.loadViewIfNeeded()
             selectedIndex = index
             selectionUpdateHandler?(index)

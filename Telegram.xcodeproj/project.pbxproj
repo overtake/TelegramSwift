@@ -556,6 +556,7 @@
 		27CE156E297966D8001F8CE8 /* emoji_category_what.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE1555297966D5001F8CE8 /* emoji_category_what.tgs */; };
 		27CE156F297966D8001F8CE8 /* emoji_category_home.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE1556297966D6001F8CE8 /* emoji_category_home.tgs */; };
 		27CE1570297966D8001F8CE8 /* emoji_category_neutral.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE1557297966D8001F8CE8 /* emoji_category_neutral.tgs */; };
+		27CE2DC22AD6623D001FA1C7 /* UIInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CE2DC12AD6623D001FA1C7 /* UIInputView.swift */; };
 		27CE375B2760931E007E6F1B /* AppMenuAnimatedImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CE375A2760931E007E6F1B /* AppMenuAnimatedImage.swift */; };
 		27CE37652760960A007E6F1B /* menu_archive.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE375D27609604007E6F1B /* menu_archive.tgs */; };
 		27CE37662760960A007E6F1B /* menu_unread.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE375E27609605007E6F1B /* menu_unread.tgs */; };
@@ -2015,6 +2016,7 @@
 		27CE1555297966D5001F8CE8 /* emoji_category_what.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = emoji_category_what.tgs; sourceTree = "<group>"; };
 		27CE1556297966D6001F8CE8 /* emoji_category_home.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = emoji_category_home.tgs; sourceTree = "<group>"; };
 		27CE1557297966D8001F8CE8 /* emoji_category_neutral.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = emoji_category_neutral.tgs; sourceTree = "<group>"; };
+		27CE2DC12AD6623D001FA1C7 /* UIInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIInputView.swift; sourceTree = "<group>"; };
 		27CE375A2760931E007E6F1B /* AppMenuAnimatedImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenuAnimatedImage.swift; sourceTree = "<group>"; };
 		27CE375D27609604007E6F1B /* menu_archive.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_archive.tgs; sourceTree = "<group>"; };
 		27CE375E27609605007E6F1B /* menu_unread.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_unread.tgs; sourceTree = "<group>"; };
@@ -4610,6 +4612,7 @@
 				A7E832182562CFC70095A167 /* VoiceBlobView.swift */,
 				27F4F17B2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift */,
 				277D28162ACBE1DD00CC6420 /* QuoteView.swift */,
+				27CE2DC12AD6623D001FA1C7 /* UIInputView.swift */,
 			);
 			name = input;
 			sourceTree = "<group>";
@@ -7016,6 +7019,7 @@
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
 				2726BDF5286F31B30044D260 /* EmojiesPackItem.swift in Sources */,
 				27FE779A26F4944800E1C90B /* ChatThemeSelectorController.swift in Sources */,
+				27CE2DC22AD6623D001FA1C7 /* UIInputView.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
 				27D9130E2833BE60007CF40F /* PremiumAboutRowItem.swift in Sources */,
 				A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */,
