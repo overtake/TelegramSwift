@@ -20,6 +20,7 @@ import ObjcUtils
 import TGModernGrowingTextView
 import ThemeSettings
 import InAppSettings
+import InputView
 
 extension Message {
     
@@ -2286,11 +2287,8 @@ public extension NSAttributedString {
                     string = link
                 }
                 if let string = string {
-                    let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
-                    modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
+                    modified.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute.init(url: string), range: range)
                 }
-            } else if let _ = attr[.init(rawValue: TGAnimatedEmojiAttributeName)] {
-               
             } else if let font = attr[.font] as? NSFont {
                 let newFont: NSFont
                 if font.fontDescriptor.symbolicTraits.contains(.bold) && font.fontDescriptor.symbolicTraits.contains(.italic) {

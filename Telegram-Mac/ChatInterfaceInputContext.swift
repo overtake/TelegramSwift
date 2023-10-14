@@ -259,10 +259,7 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         
         let range = NSRange(string: inputState.inputText, range: possibleQueryRange)
         
-        if inputState.isEmojiHolder(at: range) {
-            return .none
-        }
-        
+
         let query = String(value) 
         if possibleTypes == [.hashtag] {
             return .hashtag(query)

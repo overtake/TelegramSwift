@@ -62,9 +62,6 @@ final class StoryNoReplyInput : Control, StoryInput {
         
     }
     
-    func makeUrl() {
-        
-    }
     
     func resetInputView() {
         
@@ -78,7 +75,7 @@ final class StoryNoReplyInput : Control, StoryInput {
         return false
     }
     
-    var text: TGModernGrowingTextView? {
+    var text: UITextView? {
         return nil
     }
     

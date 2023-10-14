@@ -17,7 +17,8 @@ import QuartzCore
 
 final class InputSwapSuggestionsPanel : View, TableViewDelegate {
     
-    private weak var textView: TGModernGrowingTextView?
+    private let inputView: NSTextView
+    private let textContent: NSClipView
     private let _window: Window
     private let context: AccountContext
     private let tableView = HorizontalTableView(frame: .zero)
@@ -26,9 +27,11 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
     private let chatInteraction: ChatInteraction
     private let presentation: TelegramPresentationTheme
     private let backgroundLayer = SimpleShapeLayer()
-    
-    init(_ textView: TGModernGrowingTextView, relativeView: NSView, window: Window, context: AccountContext, chatInteraction: ChatInteraction, presentation: TelegramPresentationTheme = theme) {
-        self.textView = textView
+    private let highlightRect:(NSRange, Bool)-> NSRect
+    init(inputView: NSTextView, textContent:NSClipView, relativeView: NSView, window: Window, context: AccountContext, chatInteraction: ChatInteraction, presentation: TelegramPresentationTheme = theme, highlightRect:@escaping(NSRange, Bool)-> NSRect) {
+        self.textContent = textContent
+        self.highlightRect = highlightRect
+        self.inputView = inputView
         self.context = context
         self.relativeView = relativeView
         self._window = window
@@ -40,7 +43,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         
         self.layer?.addSublayer(backgroundLayer)
         let center = NotificationCenter.default
-        center.addObserver(self, selector: #selector(updateAfterScroll), name: NSView.boundsDidChangeNotification, object: textView.scroll.contentView)
+        center.addObserver(self, selector: #selector(updateAfterScroll), name: NSView.boundsDidChangeNotification, object: textContent)
 
         tableView.layer?.cornerRadius = 10
         
@@ -169,7 +172,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
     func apply(_ items: [TelegramMediaFile], range: NSRange, animated: Bool, isNew: Bool) {
         
         
-        guard let textView = textView, let relativeView = relativeView else {
+        guard let relativeView = relativeView else {
             return
         }
         
@@ -178,9 +181,9 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         
         relativeView.addSubview(self)
         let size = NSMakeSize(min(40 * 5 + 20, CGFloat(items.count) * 40) + 10, 55)
-        let rect = textView.highlightRect(for: range, whole: false)
+        let rect = self.highlightRect(range, false)
 
-        let convert = textView.inputView.convert(rect, to: relativeView)
+        let convert = inputView.convert(rect, to: relativeView)
         
         
         var index: Int = 0
@@ -244,13 +247,13 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
     }
     
     func updateRect(transition: ContainedViewLayoutTransition) {
-        guard let textView = textView, let relativeView = relativeView, let range = self.range else {
+        guard let relativeView = relativeView, let range = self.range else {
             return
         }
         
         let size = self.frame.size
-        let rect = textView.highlightRect(for: range, whole: false)
-        let convert = textView.inputView.convert(rect, to: relativeView)
+        let rect = self.highlightRect(range, false)
+        let convert = inputView.convert(rect, to: relativeView)
         
         let mid = convert.midX - size.width / 2
         
@@ -261,7 +264,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         
         let x = containerView.frame.width / 2 - (frame.minX - mid)
         
-        self.isHidden = !NSPointInRect(NSMakePoint(rect.midX, rect.midY), textView.scroll.documentVisibleRect)
+        self.isHidden = !NSPointInRect(NSMakePoint(rect.midX, rect.midY), textContent.documentVisibleRect)
 
         adjustBackground(relativePositionX: x, animated: transition.isAnimated)
         

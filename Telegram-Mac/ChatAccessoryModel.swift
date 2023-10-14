@@ -37,6 +37,7 @@ class ChatAccessoryView : Button {
                 
        
         self.layer?.addSublayer(borderLayer)
+        
     }
     
     override init() {
@@ -62,11 +63,11 @@ class ChatAccessoryView : Button {
         
         let x: CGFloat = model.leftInset + (model.isSideAccessory ? 10 : 0)
 
-        let headerRect = CGRect(origin: NSMakePoint(x, (model.isSideAccessory ? 5 : 0) + model.topOffset), size: headerView.frame.size)
+        let headerRect = CGRect(origin: NSMakePoint(x, (model.isSideAccessory ? 5 : 0) + model.topOffset + 1), size: headerView.frame.size)
         transition.updateFrame(view: headerView, frame: headerRect)
         
         if let textView = textView {
-            let textRect = CGRect(origin: NSMakePoint(x, headerRect.height + model.yInset + (model.isSideAccessory ? 5 : 0) + model.topOffset), size: textView.frame.size)
+            let textRect = CGRect(origin: NSMakePoint(x, headerRect.height + (model.isSideAccessory ? 5 : 0) + model.topOffset + 1), size: textView.frame.size)
             transition.updateFrame(view: textView, frame: textRect)
             if let view = shimmerEffect {
                 let rect = CGRect(origin: textRect.origin, size: view.frame.size)
@@ -79,14 +80,43 @@ class ChatAccessoryView : Button {
     func updateModel(_ model: ChatAccessoryModel, animated: Bool) {
         self.model = model
         self.backgroundColor = model.presentation.background
- 
         
+        var cornerRadius: CGFloat = 0
+        if model.modelType == .modern {
+            cornerRadius = 2
+        } else {
+            if model.isSideAccessory {
+                cornerRadius = .cornerRadius
+            }
+        }
+                
         borderLayer.opacity = model.drawLine ? 1 : 0
         borderLayer.backgroundColor = model.presentation.border.cgColor
+        self.layer?.cornerRadius = cornerRadius
+       
+        
         if model.drawLine {
-            let borderRect = NSMakeRect((model.isSideAccessory ? 10 : 0), (model.isSideAccessory ? 5 : 0) + model.topOffset, 2, model.size.height - model.topOffset - (model.isSideAccessory ? 10 : 0))
+            
+            var x: CGFloat = 0
+            var y: CGFloat = 0
+            var width: CGFloat = 2
+            var height: CGFloat = model.size.height //
+            var cornerRadius: CGFloat = 0
+            switch model.modelType {
+            case .modern:
+                width = 4
+                x = -(width / 2)
+                height = model.size.height
+            case .classic:
+                x = model.isSideAccessory ? 10 : 0
+                y = model.isSideAccessory ? 5 : 0 + model.topOffset
+                height = model.size.height - model.topOffset - (model.isSideAccessory ? 10 : 0)
+                cornerRadius = width / 2
+            }
+            
+            let borderRect = NSMakeRect(x, y, width, height)
             borderLayer.frame = borderRect
-            borderLayer.cornerRadius = borderRect.width / 2
+            borderLayer.cornerRadius = cornerRadius
         }
                 
         headerView.update(model.header)
@@ -174,7 +204,12 @@ class ChatAccessoryView : Button {
     
     func updateTheme() {
         if let model = model {
-            self.backgroundColor = model.presentation.background
+            switch model.modelType {
+            case .modern:
+                self.backgroundColor = model.presentation.border.withAlphaComponent(0.1)
+            case .classic:
+                self.backgroundColor = model.presentation.background
+            }
         }
     }
     
@@ -289,6 +324,19 @@ struct ChatAccessoryPresentation {
 
 class ChatAccessoryModel: NSObject {
     
+    enum ModelType {
+        case modern
+        case classic
+    }
+    
+    var modelType: ModelType {
+        if isSideAccessory {
+            return .classic
+        }
+        
+        return .modern
+    }
+    
     
     public let nodeReady = Promise<Bool>()
     
@@ -385,7 +433,11 @@ class ChatAccessoryModel: NSObject {
     
     let yInset:CGFloat = 2
     var leftInset:CGFloat {
-        return drawLine ? 8 : 8
+        return drawLine ? 6 : 6
+    }
+    
+    var rightInset:CGFloat {
+        return 4
     }
     
     var header:TextViewLayout?
@@ -397,47 +449,17 @@ class ChatAccessoryModel: NSObject {
     func measureSize(_ width:CGFloat = 0, sizeToFit: Bool = false) -> Void {
         self.sizeToFit = sizeToFit
         
-        header?.measure(width: width - leftInset)
-        message?.measure(width: width - leftInset)
+        header?.measure(width: width - leftInset - rightInset)
+        message?.measure(width: width - leftInset - rightInset)
         
-        
-        
-        if let header = header, let message = message {            
-            self.size = NSMakeSize(sizeToFit ? max(header.layoutSize.width, message.layoutSize.width) + leftInset + (isSideAccessory ? 20 : 0) : width, max(34, header.layoutSize.height + message.layoutSize.height + yInset + (isSideAccessory ? 10 : 0)))
+        if let header = header, let message = message {
+            self.size = NSMakeSize(sizeToFit ? max(header.layoutSize.width, message.layoutSize.width) + leftInset + rightInset + (isSideAccessory ? 20 : 0) : width, max(36, header.layoutSize.height + message.layoutSize.height + yInset + (isSideAccessory ? 10 : 0)))
             self.size.height += topOffset
         } else {
-            self.size = NSMakeSize(width, 34)
+            self.size = NSMakeSize(width, 36)
         }
         self.width = width
     }
     
-    
-    
-//
-//    func draw(_ layer: CALayer, in ctx: CGContext) {
-//        if let view = view {
-//            ctx.setFillColor(presentation.background.cgColor)
-//            ctx.fill(layer.bounds)
-//
-//            ctx.setFillColor(presentation.border.cgColor)
-//
-//            if drawLine {
-//                let radius:CGFloat = 1.0
-//                ctx.fill(NSMakeRect((isSideAccessory ? 10 : 0), radius + (isSideAccessory ? 5 : 0) + topOffset, 2, size.height - topOffset - radius * 2 - (isSideAccessory ? 10 : 0)))
-//                ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: (isSideAccessory ? 5 : 0) + topOffset), size: CGSize(width: radius + radius, height: radius + radius)))
-//                ctx.fillEllipse(in: CGRect(origin: CGPoint(x: (isSideAccessory ? 10 : 0), y: size.height - radius * 2 -  (isSideAccessory ? 5 : 0)), size: CGSize(width: radius + radius, height: radius + radius)))
-//            }
-//
-//            if  let header = header, let message = message {
-//                header.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), (isSideAccessory ? 5 : 0) + topOffset, header.0.size.width, header.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: presentation.background)
-//                if headerAttr == nil {
-//                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), floorToScreenPixels(view.backingScaleFactor, topOffset + (size.height - topOffset - message.0.size.height)/2), message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: presentation.background)
-//                } else {
-//                    message.1.draw(NSMakeRect(leftInset + (isSideAccessory ? 10 : 0), header.0.size.height + yInset + (isSideAccessory ? 5 : 0) + topOffset, message.0.size.width, message.0.size.height), in: ctx, backingScaleFactor: view.backingScaleFactor, backgroundColor: presentation.background)
-//                }
-//            }
-//        }
-//
-//    }
 
 }

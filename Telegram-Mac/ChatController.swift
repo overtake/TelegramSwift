@@ -542,7 +542,9 @@ class ChatControllerView : View, ChatInputDelegate {
             transition.updateFrame(view: currentView, frame: NSMakeRect(0, 0, frame.width, currentView.frame.height))
         }
         
-        var tableHeight = frame.height - inputView.frame.height - header.state.toleranceHeight
+        let inputHeight = inputView.height(for: frame.width)
+        
+        var tableHeight = frame.height - inputHeight - header.state.toleranceHeight
         
         if let themeSelector = themeSelectorView {
             tableHeight -= themeSelector.frame.height
@@ -558,11 +560,10 @@ class ChatControllerView : View, ChatInputDelegate {
         
         let inputY: CGFloat = themeSelectorView != nil ? frame.height : tableView.frame.maxY
         
-        let inputRect = NSMakeRect(0, inputY, frame.width, inputView.frame.height)
-        if inputRect != inputView.frame {
-            transition.updateFrame(view: inputView, frame: inputRect)
-            inputView.updateLayout(size: NSMakeSize(frame.width, inputView.frame.height), transition: transition)
-        }
+        let inputRect = NSMakeRect(0, inputY, frame.width, inputHeight)
+        transition.updateFrame(view: inputView, frame: inputRect)
+        inputView.updateLayout(size: NSMakeSize(frame.width, inputView.frame.height), transition: transition)
+
 
         
         transition.updateFrame(view: gradientMaskView, frame: tableView.frame)
@@ -799,7 +800,9 @@ class ChatControllerView : View, ChatInputDelegate {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(self.inputView.textView, relativeView: self, window: chatInteraction.context.window, context: chatInteraction.context, chatInteraction: chatInteraction)
+                current = InputSwapSuggestionsPanel(inputView: self.inputView.textView.inputView, textContent: self.inputView.textView.scrollView.contentView, relativeView: self, window: chatInteraction.context.window, context: chatInteraction.context, chatInteraction: chatInteraction, highlightRect: { [weak self] range, whole in
+                    return self?.inputView.textView.highlight(for: range, whole: whole) ?? .zero
+                })
                 self.textInputSuggestionsView = current
                 isNew = true
             }
@@ -4590,7 +4593,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {
                 return
             }
-            _ = self.chatInteraction.appendText(NSAttributedString.makeQuoteAttributeString(.init(string: text)))
         }
         
         chatInteraction.updatePinned = { [weak self] pinnedId, dismiss, silent, forThisPeerOnlyIfPossible in
@@ -7459,8 +7461,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if textInputContextState.1.contains(.swapEmoji) {
                         let stringRange = textInputContextState.0
                         let range = NSRange(string: input.inputText, range: stringRange)
-                        let accept = self.genericView.hasEmojiSwap || !input.isEmojiHolder(at: range)
-                        if !input.isAnimatedEmoji(at: range) && accept {
+                        if !input.isAnimatedEmoji(at: range) {
                             let query = String(input.inputText[stringRange])
                             let signal = InputSwapSuggestionsPanelItems(query, peerId: chatInteraction.peerId, context: chatInteraction.context)
                             |> deliverOnMainQueue

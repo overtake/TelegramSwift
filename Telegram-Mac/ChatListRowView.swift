@@ -311,7 +311,7 @@ final class ChatListTopicNameAndTextLayout {
                     let file = ForumUI.makeIconFile(title: data.title, iconColor: data.iconColor, isGeneral: data.id == 1)
                     item = .init(source: .attribute(.init(fileId: Int64(data.iconColor), file: file, emoji: "")))
                 }
-                attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: item, range: range)
+                attr.addAttribute(TextInputAttributes.embedded, value: item, range: range)
             }
             
             _ = attr.append(string: "\n")
@@ -366,7 +366,7 @@ final class ChatListTopicNameAndTextLayout {
                         let file = ForumUI.makeIconFile(title: item.title, iconColor: item.iconColor, isGeneral: item.id == 1)
                         embedded = .init(source: .attribute(.init(fileId: Int64(item.iconColor), file: file, emoji: "")))
                     }
-                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: embedded, range: range)
+                    attr.addAttribute(TextInputAttributes.embedded, value: embedded, range: range)
                     
                     _ = attr.append(string: " ")
                 }

@@ -10,6 +10,54 @@ import Cocoa
 import SwiftSignalKit
 import ColorPalette
 
+private func combineIntersectingRectangles(_ rectangles: [CGRect]) -> [CGRect] {
+    
+    if rectangles.isEmpty {
+        return []
+    }
+    var combinedRectangles: [CGRect] = []
+    
+    for rect in rectangles {
+        var mergedRect = rect
+        
+        // Iterate through the combinedRectangles and check for intersection
+        for (index, existingRect) in combinedRectangles.enumerated() {
+            if mergedRect.intersects(existingRect) {
+                mergedRect = mergedRect.union(existingRect)
+                combinedRectangles[index] = mergedRect
+                return combineIntersectingRectangles(combinedRectangles)
+            }
+        }
+        
+        combinedRectangles.append(mergedRect)
+    }
+    
+    return combinedRectangles
+}
+
+
+
+
+
+
+public struct TextInputAttributes {
+    public static let bold = NSAttributedString.Key(rawValue: "Attribute__Bold")
+    public static let italic = NSAttributedString.Key(rawValue: "Attribute__Italic")
+    public static let monospace = NSAttributedString.Key(rawValue: "Attribute__Monospace")
+    public static let strikethrough = NSAttributedString.Key(rawValue: "Attribute__Strikethrough")
+    public static let underline = NSAttributedString.Key(rawValue: "Attribute__Underline")
+    public static let textMention = NSAttributedString.Key(rawValue: "Attribute__TextMention")
+    public static let textUrl = NSAttributedString.Key(rawValue: "Attribute__TextUrl")
+    public static let spoiler = NSAttributedString.Key(rawValue: "Attribute__Spoiler")
+    public static let customEmoji = NSAttributedString.Key(rawValue: "Attribute__CustomEmoji")
+    public static let code = NSAttributedString.Key(rawValue: "Attribute__Code")
+    public static let quote = NSAttributedString.Key(rawValue: "Attribute__Blockquote")
+    
+    public static let embedded = NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")
+
+    public static let allAttributes = [TextInputAttributes.bold, TextInputAttributes.italic, TextInputAttributes.monospace, TextInputAttributes.strikethrough, TextInputAttributes.underline, TextInputAttributes.textMention, TextInputAttributes.textUrl, TextInputAttributes.spoiler, TextInputAttributes.customEmoji, TextInputAttributes.code, TextInputAttributes.quote]
+}
+
 
 
 func findClosestRect(rectangles: [CGRect], point: CGPoint) -> CGRect? {
@@ -19,7 +67,6 @@ func findClosestRect(rectangles: [CGRect], point: CGPoint) -> CGRect? {
         
         let point = NSMakePoint(point.x, point.y + rect.height / 2)
         if rect.contains(point) {
-            // If the rect contains the point, return it immediately
             return rect
         }
         
@@ -97,12 +144,10 @@ private final class TextViewBlockQuote {
 
 public final class TextViewBlockQuoteData: NSObject {
     public let id: Int
-    public let title: NSAttributedString?
     public let color: NSColor
     
-    public init(id: Int, title: NSAttributedString?, color: NSColor) {
+    public init(id: Int, color: NSColor) {
         self.id = id
-        self.title = title
         self.color = color
         
         super.init()
@@ -114,13 +159,6 @@ public final class TextViewBlockQuoteData: NSObject {
         }
         
         if self.id != other.id {
-            return false
-        }
-        if let lhsTitle = self.title, let rhsTitle = other.title {
-            if !lhsTitle.isEqual(to: rhsTitle) {
-                return false
-            }
-        } else if (self.title == nil) != (other.title == nil) {
             return false
         }
         if !self.color.isEqual(other.color) {
@@ -433,6 +471,8 @@ public final class TextViewLayout : Equatable {
     public var mayBlocked: Bool = false
     fileprivate var blockImage:(CGPoint, CGImage?) = (CGPoint(), nil)
     
+    var monospacedRects: [NSRect] = []
+    
     public fileprivate(set) var lineSpacing:CGFloat?
     
     public var hasBlock: Bool {
@@ -531,7 +571,6 @@ public final class TextViewLayout : Equatable {
         let blockQuoteIconInset: CGFloat = 12.0
         
         struct StringSegment {
-            let title: NSAttributedString?
             let substring: NSAttributedString
             let firstCharacterOffset: Int
             let isBlockQuote: Bool
@@ -549,7 +588,6 @@ public final class TextViewLayout : Equatable {
                 found = true
                 if segmentCharacterOffset != effectiveRange.location {
                     stringSegments.append(StringSegment(
-                        title: nil,
                         substring: attributedString.attributedSubstring(from: NSRange(
                             location: segmentCharacterOffset,
                             length: effectiveRange.location - segmentCharacterOffset
@@ -563,7 +601,6 @@ public final class TextViewLayout : Equatable {
                 if let value = value as? TextViewBlockQuoteData {
                     if effectiveRange.length != 0 {
                         stringSegments.append(StringSegment(
-                            title: value.title,
                             substring: attributedString.attributedSubstring(from: effectiveRange),
                             firstCharacterOffset: effectiveRange.location,
                             isBlockQuote: true,
@@ -572,7 +609,6 @@ public final class TextViewLayout : Equatable {
                     }
                 } else {
                     stringSegments.append(StringSegment(
-                        title: nil,
                         substring: attributedString.attributedSubstring(from: effectiveRange),
                         firstCharacterOffset: effectiveRange.location,
                         isBlockQuote: false,
@@ -585,7 +621,6 @@ public final class TextViewLayout : Equatable {
             if !found {
                 if segmentCharacterOffset != wholeStringLength {
                     stringSegments.append(StringSegment(
-                        title: nil,
                         substring: attributedString.attributedSubstring(from: NSRange(
                             location: segmentCharacterOffset,
                             length: wholeStringLength - segmentCharacterOffset
@@ -601,7 +636,6 @@ public final class TextViewLayout : Equatable {
         }
         
         struct CalculatedSegment {
-            var titleLine: TextViewLine?
             var lines: [TextViewLine] = []
             var tintColor: NSColor?
             var isBlockQuote: Bool = false
@@ -631,45 +665,7 @@ public final class TextViewLayout : Equatable {
             }
             
             var additionalSegmentRightInset = blockQuoteIconInset
-            
-            if let title = segment.title {
-                let rawTitleLine = CTLineCreateWithAttributedString(title)
-                if let titleLine = CTLineCreateTruncatedLine(rawTitleLine, constrainedSegmentWidth + additionalSegmentRightInset, .end, nil) {
-                    var lineAscent: CGFloat = 0.0
-                    var lineDescent: CGFloat = 0.0
-                    let lineWidth = CTLineGetTypographicBounds(titleLine, &lineAscent, &lineDescent, nil)
-                    
-                    var isRTL = false
-                    let glyphRuns = CTLineGetGlyphRuns(titleLine) as NSArray
-                    if glyphRuns.count != 0 {
-                        let run = glyphRuns[0] as! CTRun
-                        if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
-                            isRTL = true
-                        }
-                    }
-                    var penFlush = self.penFlush
-                    if penFlush == 0 {
-                        if isRTL {
-                            penFlush = 1
-                        }
-                    } else if isRTL, penFlush == 1 {
-                        penFlush = 0
-                    }
-                    
-                    calculatedSegment.titleLine = TextViewLine(
-                        line: titleLine,
-                        frame: CGRect(origin: CGPoint(x: additionalOffsetX, y: 0.0), size: CGSize(width: lineWidth + additionalSegmentRightInset, height: lineAscent + lineDescent)),
-                        range: NSMakeRange(0, 0),
-                        lineRange: NSMakeRange(0, 0),
-                        penFlush: penFlush,
-                        isRTL: isRTL,
-                        strikethrough: [],
-                        embeddedItems: []
-                    )
-                    additionalSegmentRightInset = 0.0
-                }
-            }
-            
+                        
             while true {
                 let lineCharacterCount = CTTypesetterSuggestLineBreak(typesetter, currentLineStartIndex, constrainedSegmentWidth + additionalSegmentRightInset)
                 
@@ -724,9 +720,7 @@ public final class TextViewLayout : Equatable {
         let isTruncated = false
         
         for segment in calculatedSegments {
-            if let titleLine = segment.titleLine {
-                size.width = max(size.width, titleLine.frame.origin.x + titleLine.frame.width + segment.additionalWidth)
-            }
+
             for line in segment.lines {
                 size.width = max(size.width, line.frame.origin.x + line.frame.width + segment.additionalWidth)
             }
@@ -749,14 +743,6 @@ public final class TextViewLayout : Equatable {
             let blockMinY = size.height - insets.height
             var blockWidth: CGFloat = 0.0
             
-            if let titleLine = segment.titleLine {
-                titleLine.frame = CGRect(origin: CGPoint(x: titleLine.frame.origin.x, y: size.height + titleLine.frame.size.height), size: titleLine.frame.size)
-                titleLine.frame.size.width += max(0.0, segment.additionalWidth - 2.0)
-                size.height += titleLine.frame.height
-                blockWidth = max(blockWidth, titleLine.frame.origin.x + titleLine.frame.width)
-                
-                lines.append(titleLine)
-            }
             
             for line in segment.lines {
                 line.frame = CGRect(origin: CGPoint(x: line.frame.origin.x, y: size.height + line.frame.size.height), size: line.frame.size)
@@ -799,16 +785,16 @@ public final class TextViewLayout : Equatable {
         
         self.insets = .zero
         
-        var found = false
-        attributedString.enumerateAttribute(NSAttributedString.Key("Attribute__Blockquote"), in: NSRange(location: 0, length: attributedString.length), using: { value, effectiveRange, _ in
-            if let _ = value as? TextViewBlockQuoteData {
-                found = true
-            }
-        })
-        
-        if found {
-            return calculateLayoutV2(isBigEmoji: isBigEmoji, lineSpacing: lineSpacing, saveRTL: saveRTL)
-        }
+//        var found = false
+//        attributedString.enumerateAttribute(NSAttributedString.Key("Attribute__Blockquote"), in: NSRange(location: 0, length: attributedString.length), using: { value, effectiveRange, _ in
+//            if let _ = value as? TextViewBlockQuoteData {
+//                found = true
+//            }
+//        })
+//        
+//        if found {
+//            return calculateLayoutV2(isBigEmoji: isBigEmoji, lineSpacing: lineSpacing, saveRTL: saveRTL)
+//        }
 
         
         let font: CTFont
@@ -823,7 +809,7 @@ public final class TextViewLayout : Equatable {
         }
         
         self.lines.removeAll()
-        
+        self.monospacedRects.removeAll()
         
         let fontAscent = CTFontGetAscent(font)
         let fontDescent = CTFontGetDescent(font)
@@ -835,6 +821,7 @@ public final class TextViewLayout : Equatable {
         var fontLineSpacing:CGFloat = lineSpacing ?? floor(fontLineHeight * 0.12)
 
         
+        let attributedString = self.attributedString
         
         var maybeTypesetter: CTTypesetter?
         
@@ -877,6 +864,9 @@ public final class TextViewLayout : Equatable {
             bottomCutoutEnabled = true
         }
 
+        let pre:(Int)-> Float? = { index in
+            return (attributedString.attribute(.preformattedPre, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber)?.floatValue
+        }
         
         var first = true
         var breakInset: CGFloat = 0
@@ -927,34 +917,48 @@ public final class TextViewLayout : Equatable {
                 lineOriginY += 2
             }
             
-            if attributedString.length > 0, let space = (attributedString.attribute(.preformattedPre, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber), mayBlocked {
+            if attributedString.length > 0, let space = pre(lastLineCharacterIndex), mayBlocked {
                 
                 
-                
-                
-                breakInset = CGFloat(space.floatValue * 2)
-                lineCutoutOffset += CGFloat(space.floatValue)
+                breakInset = CGFloat(space * 2)
+                lineCutoutOffset += CGFloat(space)
                 lineAdditionalWidth += breakInset
                 
-                lineOriginY += CGFloat(space.floatValue/2)
+              
 
-                if !isWasPreformatted && !first {
-                    lineOriginY += CGFloat(space.floatValue)
-                    fontLineSpacing = CGFloat(space.floatValue) - fontLineSpacing
+                if !isWasPreformatted {
+                    layoutSize.height += CGFloat(space)
+                  //  fontLineSpacing = CGFloat(space.floatValue) - fontLineSpacing
                 } else {
-                    if isWasPreformatted || first {
-                        fontLineSpacing = -CGFloat(space.floatValue/2)
-                        lineOriginY -= (CGFloat(space.floatValue + space.floatValue/2))
+                    
+                    if isWasPreformatted {
+                        
+                    } else if first {
+                        layoutSize.height += CGFloat(space)
                     }
+                    
+//                    if isWasPreformatted {
+//                        lineOriginY += CGFloat(space.floatValue/2)
+//                    }
+//                    
+//                    if isWasPreformatted || first {
+//                        if !isWasPreformatted {
+//                            fontLineSpacing = -CGFloat(space.floatValue/2)
+//                        }
+//                        lineOriginY -= (CGFloat(space.floatValue))
+//                    }
                 }
 
-                isPreformattedLine = CGFloat(space.floatValue)
+                isPreformattedLine = CGFloat(space)
                 isWasPreformatted = true
             } else {
                 
-                if isWasPreformatted && !first {
-                    lineOriginY -= (2 - fontLineSpacing)
-                }
+//                if isWasPreformatted && !first {
+//                    lineOriginY -= (2 - fontLineSpacing)
+//                }
+//                if let isPreformattedLine = isPreformattedLine {
+//                    fontLineSpacing += isPreformattedLine
+//                }
                 
                 isWasPreformatted = false
             }
@@ -1084,7 +1088,7 @@ public final class TextViewLayout : Equatable {
                             
                             let x = lowerX < upperX ? lowerX : upperX
                             strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
-                        } else if let embeddedItem = attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable {
+                        } else if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
                             var ascent: CGFloat = 0.0
                             var descent: CGFloat = 0.0
                             CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
@@ -1143,7 +1147,7 @@ public final class TextViewLayout : Equatable {
                             let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
                             let x = lowerX < upperX ? lowerX : upperX
                             strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
-                        } else if let embeddedItem = attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable {
+                        } else if let embeddedItem = attributes[TextInputAttributes.embedded] as? AnyHashable {
                             var ascent: CGFloat = 0.0
                             var descent: CGFloat = 0.0
                             CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
@@ -1182,9 +1186,10 @@ public final class TextViewLayout : Equatable {
             
             if mayBlocked {
                 if let isPreformattedLine = isPreformattedLine {
-                    layoutSize.height += isPreformattedLine * 2
-                    if lastLineCharacterIndex == attributedString.length {
-                        layoutSize.height += isPreformattedLine/2
+                    if pre(lastLineCharacterIndex) == nil  {
+                        layoutSize.height += CGFloat(4) + 2
+                    } else if lastLineCharacterIndex == attributedString.length {
+                        layoutSize.height += isPreformattedLine + isPreformattedLine / 2
                     }
                     // fontLineSpacing = isPreformattedLine
                 }
@@ -1192,21 +1197,15 @@ public final class TextViewLayout : Equatable {
             
         }
         
-        if mayBlocked {
-            let sortedIndices = (0 ..< monospacedRects.count).sorted(by: { monospacedRects[$0].width > monospacedRects[$1].width })
-            for i in 0 ..< sortedIndices.count {
-                let index = sortedIndices[i]
-                for j in -1 ... 1 {
-                    if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
-                        if abs(monospacedRects[index + j].width - monospacedRects[index].width) < 40.0 {
-                            monospacedRects[index + j].size.width = max(monospacedRects[index + j].width, monospacedRects[index].width)
-                        }
-                    }
-                }
-            }
+        self.monospacedRects = combineIntersectingRectangles(monospacedRects)
+       
+        
+//        if mayBlocked {
             
-            self.blockImage = generateRectsImage(color: presentation.colors.grayBackground, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
-        }
+        
+//
+//            self.blockImage = generateRectsImage(color: presentation.colors.grayBackground, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
+//        }
         
         var embeddedItems: [EmbeddedItem] = []
         for line in lines {
@@ -1663,7 +1662,7 @@ public final class TextViewLayout : Equatable {
                         var rect:NSRect = line.frame
                         
                         rect.size.width = abs(endOffset - startOffset)
-                        rect.origin.x = min(startOffset, endOffset)
+                        rect.origin.x = min(startOffset, endOffset) + line.frame.origin.x
                         rect.origin.y = rect.minY - rect.height + 2
                         rect.size.height += ceil(descent - leading)
                         
@@ -1760,42 +1759,38 @@ public final class TextViewLayout : Equatable {
         }
        
         var blockRange: NSRange = NSMakeRange(NSNotFound, 0)
-        if let _ = attributedString.attribute(.preformattedPre, at: startIndex, effectiveRange: &blockRange) {
-            self.selectedRange = TextSelectedRange(range: blockRange, color: selectText, def: true)
-        } else {
-            var firstIndex: Int = startIndex
-            var lastIndex: Int = startIndex
+        var firstIndex: Int = startIndex
+        var lastIndex: Int = startIndex
+        
+        var firstFound: Bool = false
+        var lastFound: Bool = false
+        
+        while (firstIndex > 0 && !firstFound) || (lastIndex < self.attributedString.length - 1 && !lastFound) {
             
-            var firstFound: Bool = false
-            var lastFound: Bool = false
+            let firstSymbol = self.attributedString.string.nsstring.substring(with: NSMakeRange(firstIndex, 1))
+            let lastSymbol = self.attributedString.string.nsstring.substring(with: NSMakeRange(lastIndex, 1))
             
-            while (firstIndex > 0 && !firstFound) || (lastIndex < self.attributedString.length - 1 && !lastFound) {
-                
-                let firstSymbol = self.attributedString.string.nsstring.substring(with: NSMakeRange(firstIndex, 1))
-                let lastSymbol = self.attributedString.string.nsstring.substring(with: NSMakeRange(lastIndex, 1))
-                
-                let firstBlock = attributedString.attribute(.init("Attribute__Blockquote"), at: firstIndex, effectiveRange: nil)
-                let lastBlock = attributedString.attribute(.init("Attribute__Blockquote"), at: firstIndex, effectiveRange: nil)
+            let firstBlock = attributedString.attribute(.init("Attribute__Blockquote"), at: firstIndex, effectiveRange: nil)
+            let lastBlock = attributedString.attribute(.init("Attribute__Blockquote"), at: firstIndex, effectiveRange: nil)
 
-                
-                firstFound = firstSymbol == "\n" || firstBlock != nil
-                lastFound = lastSymbol == "\n" || lastBlock != nil
-                                
-                if firstIndex > 0, !firstFound {
-                    firstIndex -= 1
-                }
-                if lastIndex < self.attributedString.length - 1, !lastFound {
-                    lastIndex += 1
-                }
+            
+            firstFound = firstSymbol == "\n" || firstBlock != nil
+            lastFound = lastSymbol == "\n" || lastBlock != nil
+                            
+            if firstIndex > 0, !firstFound {
+                firstIndex -= 1
             }
-            if lastFound {
-               lastIndex = max(lastIndex - 1, 0)
+            if lastIndex < self.attributedString.length - 1, !lastFound {
+                lastIndex += 1
             }
-            if firstFound {
-               firstIndex = min(firstIndex + 1, self.attributedString.length - 1)
-           }
-            self.selectedRange = TextSelectedRange(range: NSMakeRange(firstIndex, (lastIndex + 1) - firstIndex), color: selectText, def: true)
         }
+        if lastFound {
+           lastIndex = max(lastIndex - 1, 0)
+        }
+        if firstFound {
+           firstIndex = min(firstIndex + 1, self.attributedString.length - 1)
+       }
+        self.selectedRange = TextSelectedRange(range: NSMakeRange(firstIndex, (lastIndex + 1) - firstIndex), color: selectText, def: true)
         
     }
     
@@ -2086,9 +2081,22 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
 
         if let layout = textLayout, drawingLayer == layer {
             
-            ctx.setAllowsFontSubpixelPositioning(true)
-            ctx.setShouldSubpixelPositionFonts(true)
+//            ctx.setFillColor(NSColor.blue.cgColor)
+//            ctx.fill(layer.bounds)
+//            ctx.setAllowsFontSubpixelPositioning(true)
+//            ctx.setShouldSubpixelPositionFonts(true)
 
+            ctx.setAllowsAntialiasing(true)
+                    
+            ctx.setAllowsFontSmoothing(true)
+            ctx.setShouldSmoothFonts(true)
+            
+            ctx.setAllowsFontSubpixelPositioning(backingScaleFactor == 1.0)
+            ctx.setShouldSubpixelPositionFonts(backingScaleFactor == 1.0)
+            
+            ctx.setAllowsFontSubpixelQuantization(true)
+            ctx.setShouldSubpixelQuantizeFonts(true)
+                    
             
             if clearExceptRevealed {
                 let path = CGMutablePath()
@@ -2100,27 +2108,22 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 ctx.clip()
             }
             
-            if !System.supportsTransparentFontDrawing {
-                ctx.setAllowsAntialiasing(true)
-                
-                ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
-                ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
-                
-                if backingScaleFactor == 1.0 && !disableBackgroundDrawing {
-                    ctx.setFillColor(backgroundColor.cgColor)
-                    for line in layout.lines {
-                        ctx.fill(NSMakeRect(0, line.frame.minY - line.frame.height - 2, line.frame.width, line.frame.height + 6))
-                    }
-                }
-            } else {
-                
-                ctx.setAllowsAntialiasing(true)
-                ctx.setShouldAntialias(true)
-                
-                ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
-                ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
-            }
-           
+            
+            
+//            if !System.supportsTransparentFontDrawing {
+//                ctx.setAllowsAntialiasing(true)
+//                
+//                ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
+//                ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
+//                
+//                if backingScaleFactor == 1.0 && !disableBackgroundDrawing {
+//                    ctx.setFillColor(backgroundColor.cgColor)
+//                    for line in layout.lines {
+//                        ctx.fill(NSMakeRect(0, line.frame.minY - line.frame.height - 2, line.frame.width, line.frame.height + 6))
+//                    }
+//                }
+//            } 
+//           
             
             
             if let image = layout.blockImage.1, !hasBackground {
@@ -2210,21 +2213,17 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                                 beginLineIndex = layout.attributedString.length - 1
                             }
                             
-                            NSLog("beginIndex: \(beginLineIndex)")
+                           
+                            rect.size.width = width
                             
-                            let blockValue:CGFloat = 0//layout.mayBlocked ? CGFloat((layout.attributedString.attribute(.preformattedPre, at: beginLineIndex, effectiveRange: nil) as? NSNumber)?.floatValue ?? 0) : 0
-                            
-
-                            
-                            rect.size.width = width - blockValue / 2
-                            
-                            rect.origin.x = rect.minX + penOffset + startOffset + blockValue
-                            rect.origin.y = rect.minY - rect.height + blockValue / 2 + rect.height * 0.12
+                            rect.origin.x = rect.minX + penOffset + startOffset
+                            rect.origin.y = rect.minY - rect.height + rect.height * 0.12
                             rect.size.height += ceil(descent - leading)
                             let color:NSColor = window?.isKeyWindow == true || !range.1 ? range.0.color : NSColor.lightGray
                             
                             ctx.setFillColor(color.cgColor)
                             ctx.fill(rect)
+                           
                         }
                         
                         i += isReversed ? -1 : 1
@@ -2238,20 +2237,20 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             
             let startPosition = focus(layout.layoutSize).origin
             
-            
             ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
             
             
-            for blockQuote in layout.blockQuotes {
-                let radius: CGFloat = 3.0
+            for blockQuote in layout.monospacedRects {
+                let radius: CGFloat = 2.0
                 
-                let blockFrame = blockQuote.frame
+                let blockFrame = blockQuote
+                let tintColor = NSColor.green
                 
-                ctx.setFillColor(blockQuote.tintColor.withMultipliedAlpha(0.1).cgColor)
+                ctx.setFillColor(tintColor.withMultipliedAlpha(0.7).cgColor)
                 ctx.addPath(CGPath(roundedRect: blockFrame, cornerWidth: radius, cornerHeight: radius, transform: nil))
                 ctx.fillPath()
                 
-                ctx.setFillColor(blockQuote.tintColor.cgColor)
+                ctx.setFillColor(tintColor.cgColor)
                 
                 let iconSize = quoteIcon.backingSize
                 let quoteRect = CGRect(origin: CGPoint(x: blockFrame.maxX - 4.0 - iconSize.width, y: blockFrame.minY + 4.0), size: iconSize)
@@ -2267,11 +2266,16 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 ctx.closePath()
                 ctx.fillPath()
             }
-
             
-//            ctx.textMatrix = textMatrix
-//            ctx.textPosition = CGPoint(x: textPosition.x, y: textPosition.y)
-//            
+            let spoilerRects = layout.spoilerRects(!inAnimation)
+            if !spoilerRects.isEmpty {
+                ctx.beginPath()
+                ctx.addRects(spoilerRects)
+                ctx.closePath()
+                ctx.addRect(CGRect(x: 0, y: 0, width: layer.frame.width, height: layer.frame.height))
+                ctx.clip(using: .evenOdd)
+            }
+            
             for stroke in layout.strokeRects {
                 ctx.setFillColor(stroke.1.cgColor)
                 ctx.fill(stroke.0)
@@ -2331,15 +2335,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     ctx.fill(NSMakeRect(strikethrough.frame.minX, line.frame.minY - line.frame.height / 2 + 2, strikethrough.frame.width, .borderSize))
                 }
                 
-//                for embeddedItem in line.embeddedItems {
-//                    ctx.clear(embeddedItem.frame.offsetBy(dx: ctx.textPosition.x, dy: ctx.textPosition.y).insetBy(dx: -1.5, dy: -1.5))
-//                }
-
-                // spoiler was here
             }
-            for spoiler in layout.spoilerRects(!inAnimation) {
-                ctx.clear(spoiler)
-            }
+//            for spoiler in layout.spoilerRects(!inAnimation) {
+//                ctx.clear(spoiler)
+//            }
             
         }
     }

@@ -1528,7 +1528,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
             textView.animates = false
-            textView.setAttributedString(state.effectiveInput.attributedString(theme), animated:animated)
+            textView.setAttributedString(state.effectiveInput.attributedString(), animated:animated)
             textView.animates = true
         }
         let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)

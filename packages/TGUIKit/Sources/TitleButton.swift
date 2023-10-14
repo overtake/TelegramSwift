@@ -215,7 +215,7 @@ open class TitleButton: ImageButton {
          guard let font = font, let string = string else {
              return .zero
          }
-         let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
+         let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font)
         let layout = TextViewLayout(attributedString)
         layout.measure(width: .greatestFiniteMagnitude)
         var size:NSSize = layout.layoutSize

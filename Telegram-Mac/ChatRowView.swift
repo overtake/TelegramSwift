@@ -12,7 +12,7 @@ import TelegramCore
 import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
-
+import InputView
 
 
 class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDelegate, RevealTableView {
@@ -480,11 +480,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 replyView = ChatAccessoryView(frame: replyFrame(item))
                 rowView.addSubview(replyView!)
             }
-            if reply.isSideAccessory {
-                replyView?.layer?.cornerRadius = .cornerRadius
-            } else {
-                replyView?.layer?.cornerRadius = 0
-            }
+            
             replyView?.removeAllHandlers()
             replyView?.set(handler: { [weak item, weak reply] _ in
                 if reply is ExpiredStoryReplyModel {
@@ -900,8 +896,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                             attr.append(string: "@\(addressName) ", font: .normal(theme.fontSize))
                         } else {
                             attr.append(string: peer.compactDisplayTitle + " ", font: .normal(theme.fontSize))
-                            let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: peer.id.toInt64()), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
-                            attr.addAttribute(.init(rawValue: TGCustomLinkAttributeName), value: tag, range: attr.range)
+                            attr.addAttribute(TextInputAttributes.textMention, value: ChatTextInputTextMentionAttribute(peerId: peer.id), range: attr.range)
                         }
                         _ = chatInteraction?.appendText(attr)
                     }, itemImage: MenuAnimation.menu_atsign.value))

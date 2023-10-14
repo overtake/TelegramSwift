@@ -10,18 +10,44 @@ import Foundation
 import Cocoa
 import TGUIKit
 import InputView
+import ColorPalette
+import SwiftSignalKit
 
+
+
+extension Updated_ChatTextInputState : Equatable {
+    func textInputState() -> ChatTextInputState {
+        return .init(attributedText: self.inputText, selectionRange: self.selectionRange)
+    }
+    public static func ==(lhs: Updated_ChatTextInputState, rhs: Updated_ChatTextInputState) -> Bool {
+        if lhs.inputText.string != rhs.inputText.string {
+            return false
+        }
+        if lhs.textInputState().attributes != rhs.textInputState().attributes {
+            return false
+        }
+        return lhs.selectionRange == rhs.selectionRange
+    }
+}
 
 
 final class TextView_Interactions : InterfaceObserver {
     var presentation: Updated_ChatTextInputState
-    init(presentation: Updated_ChatTextInputState) {
+    
+    var max_height: CGFloat = 50
+    var min_height: CGFloat = 50
+    var max_input: Int = 100000
+    var supports_continuity_camera: Bool = false
+    var inputIsEnabled: Bool = true
+    
+    init(presentation: Updated_ChatTextInputState = .init()) {
         self.presentation = presentation
     }
     
     func update(animated:Bool = true, _ f:(Updated_ChatTextInputState)->Updated_ChatTextInputState)->Void {
         let oldValue = self.presentation
-        self.presentation = f(presentation)
+        let presentation = f(oldValue)
+        self.presentation = presentation
         if oldValue != presentation {
             self.notifyObservers(value: presentation, oldValue:oldValue, animated:animated)
         }
@@ -43,35 +69,74 @@ final class TextView_Interactions : InterfaceObserver {
         return Updated_ChatTextInputState(inputText: inputText, selectionRange: nRange)
     }
     
-    var inputDidUpdate:((Updated_ChatTextInputState)->Void)?
+    var inputDidUpdate:((Updated_ChatTextInputState)->Void) = { _ in }
+    var processEnter:(NSEvent)->Bool = { _ in return true }
+    var processPaste:(NSPasteboard)->Bool = { _ in return false }
+    var processAttriburedCopy: (NSAttributedString) -> Bool = { _ in return false }
+    var responderDidUpdate:()->Void = { }
 }
 
 
-
-
-private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
+final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     func inputViewIsEnabled() -> Bool {
-        return true
+        return interactions.inputIsEnabled
     }
     
     func inputViewProcessEnter(_ theEvent: NSEvent) -> Bool {
-        return FastSettings.checkSendingAbility(for: theEvent)
+        return interactions.processEnter(theEvent)
     }
     
     func inputViewMaybeClosed() -> Bool {
         return false
     }
-    
     func inputMaximumHeight() -> CGFloat {
-        return 340
+        return max_height
     }
+    func inputMaximumLenght() -> Int {
+        return max_input_length
+    }
+    func inputViewSupportsContinuityCamera() -> Bool {
+        return supports_continuity_camera
+    }
+    func inputViewProcessPastepoard(_ pboard: NSPasteboard) -> Bool {
+        return self.interactions.processPaste(pboard)
+    }
+    func inputViewCopyAttributedString(_ attributedString: NSAttributedString) -> Bool {
+        return self.interactions.processAttriburedCopy(attributedString)
+    }
+    
+    func inputViewResponderDidUpdate() {
+        self.interactions.responderDidUpdate()
+    }
+    
+    var inputTheme: InputViewTheme = theme.inputTheme {
+        didSet {
+            let placeholder = self.placeholder
+            self.placeholder = placeholder
+            self.view.theme = inputTheme
+            self.chatInputTextViewDidUpdateText()
+        }
+    }
+    
+    var placeholder: String = "" {
+        didSet {
+            self.view.placeholderString = .initialize(string: placeholder, color: inputTheme.grayTextColor, font: .normal(inputTheme.fontSize))
+        }
+    }
+    
+    private var revealSpoilers: Bool = false {
+        didSet {
+            self.updateInput(current: self.interactions.presentation, previous: self.interactions.presentation)
+        }
+    }
+    
+    private let delayDisposable = MetaDisposable()
     
     private var updatingInputState: Bool = false
     
     func chatInputTextViewDidUpdateText() {
-        refreshChatTextInputAttributes(self.view.textView, theme: theme.textInput, spoilersRevealed: false, availableEmojis: Set())
-        refreshChatTextInputTypingAttributes(self.view.textView, theme: theme.textInput)
-
+        refreshInputView()
+        
         let inputTextState = self.inputTextState
      
         self.interactions.update { _ in
@@ -84,9 +149,14 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         return Updated_ChatTextInputState(inputText: stateAttributedStringForText(view.attributedText.copy() as! NSAttributedString), selectionRange: selectionRange)
     }
 
+    private func refreshInputView() {
+        refreshTextInputAttributes(self.view.textView, theme: inputTheme, spoilersRevealed: revealSpoilers, availableEmojis: Set())
+        refreshChatTextInputTypingAttributes(self.view.textView, theme: inputTheme)
+    }
     
     func chatInputTextViewDidChangeSelection(dueToEditing: Bool) {
         if !dueToEditing && !self.updatingInputState {
+            refreshInputView()
             let inputTextState = self.inputTextState
             interactions.update { _ in
                 inputTextState
@@ -101,10 +171,6 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     
     func chatInputTextViewDidFinishEditing() {
         
-    }
-    
-    func chatInputTextViewMenu(forTextRange textRange: NSRange, suggestedActions: [NSMenuItem]) -> ContextMenu {
-        return ContextMenu()
     }
     
     func chatInputTextView(shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
@@ -123,13 +189,22 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         return true
     }
     
-    func inputApplyTransform(_ reason: InputViewTransformReason, textRange: NSRange) {
+    func inputViewRevealSpoilers() {
+        self.revealSpoilers = true
+        delayDisposable.set(delaySignal(5.0).start(completed: { [weak self] in
+            self?.revealSpoilers = false
+        }))
+    }
+    
+    func inputApplyTransform(_ reason: InputViewTransformReason) {
         switch reason {
         case let .attribute(attribute):
             self.interactions.update({ current in
                 return chatTextInputAddFormattingAttribute(current, attribute: attribute)
             })
         case .url:
+            let range = self.interactions.presentation.selectionRange
+            let textRange = NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound)
             guard textRange.min != textRange.max, let window = kitWindow else {
                 return
             }
@@ -137,7 +212,7 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
             let text = self.interactions.presentation.inputText.attributedSubstring(from: textRange)
             var link: String?
             text.enumerateAttributes(in: NSMakeRange(0, text.length)) { attributes, _, _ in
-                if let linkAttribute = attributes[ChatTextInputAttributes.textUrl] as? ChatTextInputTextUrlAttribute {
+                if let linkAttribute = attributes[TextInputAttributes.textUrl] as? TextInputTextUrlAttribute {
                     link = linkAttribute.url
                 }
             }
@@ -168,10 +243,49 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         }
     }
     
+    func scrollToCursor() {
+        
+    }
+    
+    func string() -> String {
+        return self.inputTextState.inputText.string
+    }
+    
+    func highlight(for range: NSRange, whole: Bool) -> NSRect {
+        return self.view.highlight(for: range, whole: whole)
+    }
+    
+    var inputView:NSTextView {
+        return self.view.inputView
+    }
+    
+    var selectedRange: NSRange {
+        return self.view.selectedRange
+    }
+    var scrollView: NSScrollView {
+        return self.view
+    }
+    
+    var max_height: CGFloat {
+        return interactions.max_height
+    }
+    var max_input_length: Int {
+        return interactions.max_input
+    }
+    var min_height: CGFloat {
+        return interactions.min_height
+    }
+    var supports_continuity_camera: Bool {
+        return interactions.supports_continuity_camera
+    }
+    
     private let view: ChatInputTextView
+    
     let interactions: TextView_Interactions
     
-    required init(frame frameRect: NSRect, context: AccountContext, interactions: TextView_Interactions) {
+    var context: AccountContext?
+    
+    required init(frame frameRect: NSRect, interactions: TextView_Interactions) {
         self.view = ChatInputTextView(frame: frameRect.size.bounds)
         self.interactions = interactions
         super.init(frame: frameRect)
@@ -179,13 +293,14 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         addSubview(view)
         view.delegate = self
         
-        self.view.emojiViewProvider = { attachment, size, theme in
+        self.view.emojiViewProvider = { [weak self] attachment, size, theme in
             let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
             let view = InputAnimatedEmojiAttach(frame: rect)
-            view.set(attachment, size: rect.size, context: context, textColor: theme.textColor)
+            if let context = self?.context {
+                view.set(attachment, size: rect.size, context: context, textColor: theme.textColor)
+            }
             return view
         }
-        self.view.placeholderString = .initialize(string: "Write a message...", color: theme.colors.grayText, font: .normal(theme.fontSize))
     }
     
     
@@ -197,8 +312,8 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
+    required convenience init(frame frameRect: NSRect) {
+        self.init(frame: frameRect, interactions: .init())
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -208,6 +323,16 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         return false
     }
         
+    
+    func set(_ input: ChatTextInputState) {
+        let inputState = input.textInputState()
+        if self.interactions.presentation != inputState {
+            self.interactions.update { _ in
+                return inputState
+            }
+        }
+    }
+    
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? Updated_ChatTextInputState, let oldValue = oldValue as? Updated_ChatTextInputState {
             self.updateInput(current: value, previous: oldValue)
@@ -218,23 +343,29 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         
         self.updatingInputState = true
         
-        let attributedText = textAttributedStringForStateText(current.inputText, fontSize: theme.textInput.fontSize, textColor: theme.textInput.text, accentTextColor: theme.textInput.accent, writingDirection: nil, spoilersRevealed: false, availableEmojis: Set())
+
+        
+        let attributedText = textAttributedStringForStateText(current.inputText, fontSize: inputTheme.fontSize, textColor: inputTheme.textColor, accentTextColor: inputTheme.accentColor, writingDirection: nil, spoilersRevealed: revealSpoilers, availableEmojis: Set())
         
         
-        let textViewAttributed = textAttributedStringForStateText(view.attributedText.copy() as! NSAttributedString, fontSize: theme.textInput.fontSize, textColor: theme.textInput.text, accentTextColor: theme.textInput.accent, writingDirection: nil, spoilersRevealed: false, availableEmojis: Set())
+        let textViewAttributed = textAttributedStringForStateText(view.attributedText.copy() as! NSAttributedString, fontSize: inputTheme.fontSize, textColor: inputTheme.textColor, accentTextColor: inputTheme.accentColor, writingDirection: nil, spoilersRevealed: revealSpoilers, availableEmojis: Set())
+
 
         
         let selectionRange = NSMakeRange(current.selectionRange.lowerBound, current.selectionRange.count)
 
-        if attributedText != textViewAttributed {
+        if attributedText.string != textViewAttributed.string || chatTextAttributes(from: attributedText) != chatTextAttributes(from: textViewAttributed) {
             let undoItem = InputViewUndoItem(was: textViewAttributed, be: attributedText, wasRange: self.view.selectedRange, beRange: selectionRange)
             self.view.addUndoItem(undoItem)
         }
         
-        refreshChatTextInputAttributes(view.textView, theme: theme.textInput, spoilersRevealed: false, availableEmojis: Set())
+        refreshInputView()
+
         
+        if previous != current {
+            self.interactions.inputDidUpdate(current)
+        }
         self.updatingInputState = false
-        self.interactions.inputDidUpdate?(current)
 
     }
     
@@ -247,8 +378,28 @@ private final class UITextView : View, Notifable, ChatInputTextViewDelegate {
         return self.view.textHeightForWidth(width)
     }
     
+    func setToEnd() {
+        self.interactions.update({ current in
+            var current = current
+            current.selectionRange = current.inputText.length ..< current.inputText.length
+            return current
+        })
+    }
+    
+    func selectAll() {
+        self.interactions.update({ current in
+            var current = current
+            current.selectionRange = 0 ..< current.inputText.length
+            return current
+        })
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        self.view.theme = theme.inputTheme
+        self.inputTheme = theme.inputTheme
+    }
+    
+    deinit {
+        delayDisposable.dispose()
     }
 }

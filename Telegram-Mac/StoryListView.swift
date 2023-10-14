@@ -530,10 +530,9 @@ final class StoryListView : Control, Notifable {
             for entity in entities {
                 switch entity.type {
                 case .Spoiler:
-                    let color: NSColor = darkAppearance.colors.text
                     let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
                     if let range = attributed.range.intersection(range) {
-                        attributed.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
+                        attributed.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
                     }
                 default:
                     break
@@ -542,11 +541,10 @@ final class StoryListView : Control, Notifable {
             InlineStickerItem.apply(to: attributed, associatedMedia: [:], entities: entities, isPremium: context.isPremium)
             
             
-            attributed.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: attributed.range, options: .init(), using: { value, range, stop in
-                if let text = value as? TGInputTextTag {
-                    if let color = text.attribute.value as? NSColor {
-                        spoilers.append(.init(range: range, color: color, isRevealed: false))
-                    }
+            attributed.enumerateAttribute(TextInputAttributes.spoiler, in: attributed.range, options: .init(), using: { value, range, stop in
+                if let _ = value {
+                    let color: NSColor = darkAppearance.colors.text
+                    spoilers.append(.init(range: range, color: color, isRevealed: false))
                 }
             })
             
@@ -839,13 +837,10 @@ final class StoryListView : Control, Notifable {
     var textView: NSTextView? {
         return self.inputView.input
     }
-    var inputTextView: TGModernGrowingTextView? {
+    var inputTextView: UITextView? {
         return self.inputView.text
     }
     
-    func makeUrl() {
-        self.inputView.makeUrl()
-    }
     
     func setArguments(_ arguments: StoryArguments?) -> Void {
         self.arguments = arguments

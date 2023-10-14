@@ -1597,9 +1597,6 @@ class TelegramPresentationTheme : PresentationTheme {
     static func defaultBackground(_ palette: ColorPalette)-> TableBackgroundMode {
         return .background(image: builtinBackgound(palette), intensity: nil, colors: [0xdbddbb, 0x6ba587, 0xd5d88d, 0x88b884].map { .init(argb: $0) }, rotation: nil)
     }
-    var textInput: ChatTextInputPresentation {
-        return .init(text: colors.text, accent: colors.accent, fontSize: fontSize)
-    }
     #endif
     
 
@@ -1903,7 +1900,7 @@ class TelegramPresentationTheme : PresentationTheme {
         if !Thread.isMainThread && generated {
             self._backgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize)
         }
-        super.init(colors: colors, search: search, inputTheme: .init(quote: .init(background: colors.accent.withAlphaComponent(0.2), foreground: colors.accent, icon: NSImage(named: "Icon_Quote")!), indicatorColor: colors.accent, backgroundColor: colors.background, selectingColor: colors.selectText, textColor: colors.text))
+        super.init(colors: colors, search: search, inputTheme: .init(quote: .init(background: colors.accent.withAlphaComponent(0.1), foreground: colors.accent, icon: NSImage(named: "Icon_Quote")!), indicatorColor: colors.accent, backgroundColor: colors.background, selectingColor: colors.selectText, textColor: colors.text, accentColor: colors.accent, grayTextColor: colors.grayText, fontSize: fontSize))
     }
     
     var dark: Bool {

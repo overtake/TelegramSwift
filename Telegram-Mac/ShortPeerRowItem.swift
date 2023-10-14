@@ -275,7 +275,7 @@ class ShortPeerRowItem: GeneralRowItem {
         
         if let status = status {
             let sAttr:NSMutableAttributedString = NSMutableAttributedString()
-            let _ = sAttr.append(string: status, color: enabled ? self.statusStyle.foregroundColor : customTheme?.grayTextColor ?? theme.colors.grayText, font: self.statusStyle.font, coreText: true)
+            let _ = sAttr.append(string: status, color: enabled ? self.statusStyle.foregroundColor : customTheme?.grayTextColor ?? theme.colors.grayText, font: self.statusStyle.font)
             sAttr.addAttribute(.selectedColor, value: customTheme?.underSelectedColor ?? theme.colors.underSelectedColor, range: sAttr.range)
             statusAttr = sAttr.copy() as? NSAttributedString
         }

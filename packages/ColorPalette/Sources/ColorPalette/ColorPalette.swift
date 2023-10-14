@@ -43,12 +43,18 @@ public final class InputViewTheme: Equatable {
     public let backgroundColor: NSColor
     public let selectingColor: NSColor
     public let textColor: NSColor
-    public init(quote: Quote, indicatorColor: NSColor, backgroundColor: NSColor, selectingColor: NSColor, textColor: NSColor) {
+    public let accentColor: NSColor
+    public let fontSize: CGFloat
+    public let grayTextColor: NSColor
+    public init(quote: Quote, indicatorColor: NSColor, backgroundColor: NSColor, selectingColor: NSColor, textColor: NSColor, accentColor: NSColor, grayTextColor: NSColor, fontSize: CGFloat) {
         self.quote = quote
         self.indicatorColor = indicatorColor
         self.backgroundColor = backgroundColor
         self.selectingColor = selectingColor
         self.textColor = textColor
+        self.accentColor = accentColor
+        self.fontSize = fontSize
+        self.grayTextColor = grayTextColor
     }
     
     public static func ==(lhs: InputViewTheme, rhs: InputViewTheme) -> Bool {
@@ -65,6 +71,15 @@ public final class InputViewTheme: Equatable {
             return false
         }
         if lhs.textColor != rhs.textColor {
+            return false
+        }
+        if lhs.fontSize != rhs.fontSize {
+            return false
+        }
+        if lhs.grayTextColor != rhs.grayTextColor {
+            return false
+        }
+        if lhs.accentColor != rhs.accentColor {
             return false
         }
         return true

@@ -105,7 +105,7 @@ public extension NSFont {
         if let font = caches[.init(type: .normal, size: size)] {
             return font
         }
-        return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.regular)
+        return NSFont.systemFont(ofSize: size)
     }
     
     static func light(_ size:FontSize) ->NSFont {
@@ -132,7 +132,7 @@ public extension NSFont {
         if let font = caches[.init(type: .bolditalic, size: size)] {
             return font
         }
-        return NSFontManager.shared.convert(.normal(size), toHaveTrait: [.italicFontMask, .boldFontMask])
+        return NSFontManager.shared.convert(.medium(size), toHaveTrait: [.italicFontMask])
     }
     static func italicMonospace(_ size: FontSize) -> NSFont {
         if let font = caches[.init(type: .italicmonospace, size: size)] {
@@ -209,7 +209,7 @@ public extension NSFont {
         if let font = caches[.init(type: .bold, size: size)] {
             return font
         }
-        return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.bold)
+        return NSFont.systemFont(ofSize: size, weight: NSFont.Weight.semibold)
     }
     
     static func digitalRound(_ size: FontSize) -> NSFont {

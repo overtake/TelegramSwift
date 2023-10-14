@@ -420,7 +420,7 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         country.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, backgroundColor: theme.colors.grayBackground)
         country.set(font: .normal(.header), for: .Normal)
         
-        codeText.placeholderAttributedString = .initialize(string: strings().loginCodePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false)
+        codeText.placeholderAttributedString = .initialize(string: strings().loginCodePlaceholder, color: theme.colors.grayText, font: .normal(.header))
         nextView.image = NSImage(named: "Icon_GeneralNext")?.precomposed(theme.colors.border)
         
         self.updatePlaceholder()

@@ -203,9 +203,6 @@ final class StoryChannelInputView : Control, StoryInput {
         
     }
     
-    func makeUrl() {
-        
-    }
     
     func resetInputView() {
         
@@ -215,7 +212,7 @@ final class StoryChannelInputView : Control, StoryInput {
         return false
     }
     
-    var text: TGModernGrowingTextView? {
+    var text: UITextView? {
         return nil
     }
     

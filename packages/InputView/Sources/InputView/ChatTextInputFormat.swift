@@ -7,6 +7,7 @@
 
 import Foundation
 import TelegramCore
+import TGUIKit
 
 private extension EnginePeer {
     var compactDisplayTitle: String {
@@ -53,8 +54,8 @@ public func chatTextInputAddFormattingAttribute(_ state: Updated_ChatTextInputSt
             result.removeAttribute(attribute, range: nsRange)
         }
         if addAttribute {
-            if attribute == ChatTextInputAttributes.quote {
-                result.addAttribute(attribute, value: ChatTextInputTextQuoteAttribute(), range: nsRange)
+            if attribute == TextInputAttributes.quote {
+                result.addAttribute(attribute, value: TextInputTextQuoteAttribute(), range: nsRange)
                 if nsRange.upperBound != result.length && (result.string as NSString).character(at: nsRange.upperBound) != 0x0a {
                     result.insert(NSAttributedString(string: "\n"), at: nsRange.upperBound)
                 }
@@ -106,7 +107,7 @@ public func chatTextInputAddLinkAttribute(_ state: Updated_ChatTextInputState, s
         var attributesToRemove: [(NSAttributedString.Key, NSRange)] = []
         state.inputText.enumerateAttributes(in: nsRange, options: .longestEffectiveRangeNotRequired) { attributes, range, stop in
             for (key, _) in attributes {
-                if key == ChatTextInputAttributes.textUrl {
+                if key == TextInputAttributes.textUrl {
                     attributesToRemove.append((key, range))
                     linkRange = linkRange.union(range)
                 } else {
@@ -119,7 +120,7 @@ public func chatTextInputAddLinkAttribute(_ state: Updated_ChatTextInputState, s
         for (attribute, range) in attributesToRemove {
             result.removeAttribute(attribute, range: range)
         }
-        result.addAttribute(ChatTextInputAttributes.textUrl, value: ChatTextInputTextUrlAttribute(url: url), range: nsRange)
+        result.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute(url: url), range: nsRange)
         return Updated_ChatTextInputState(inputText: result, selectionRange: selectionRange)
     } else {
         return state
@@ -141,7 +142,7 @@ public func chatTextInputAddMentionAttribute(_ state: Updated_ChatTextInputState
         return Updated_ChatTextInputState(inputText: inputText, selectionRange: selectionPosition ..< selectionPosition)
     } else if !peer.compactDisplayTitle.isEmpty {
         let replacementText = NSMutableAttributedString()
-        replacementText.append(NSAttributedString(string: peer.compactDisplayTitle, attributes: [ChatTextInputAttributes.textMention: ChatTextInputTextMentionAttribute(peerId: peer.id)]))
+        replacementText.append(NSAttributedString(string: peer.compactDisplayTitle, attributes: [TextInputAttributes.textMention: ChatTextInputTextMentionAttribute(peerId: peer.id)]))
         replacementText.append(NSAttributedString(string: " "))
         
         let updatedRange = NSRange(location: range.location , length: range.length)
@@ -165,7 +166,7 @@ public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, 
     var attributesToRemove: [(NSAttributedString.Key, NSRange)] = []
     state.inputText.enumerateAttributes(in: nsRange, options: .longestEffectiveRangeNotRequired) { attributes, range, stop in
         for (key, _) in attributes {
-            if key == ChatTextInputAttributes.quote {
+            if key == TextInputAttributes.quote {
                 attributesToRemove.append((key, range))
                 quoteRange = quoteRange.union(range)
             } else {
@@ -178,7 +179,7 @@ public func chatTextInputAddQuoteAttribute(_ state: Updated_ChatTextInputState, 
     for (attribute, range) in attributesToRemove {
         result.removeAttribute(attribute, range: range)
     }
-    result.addAttribute(ChatTextInputAttributes.quote, value: ChatTextInputTextQuoteAttribute(), range: nsRange)
+    result.addAttribute(TextInputAttributes.quote, value: TextInputTextQuoteAttribute(), range: nsRange)
     return Updated_ChatTextInputState(inputText: result, selectionRange: selectionRange)
 }
 

@@ -453,10 +453,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         if let textLayout = textLayout {
                             let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
                             attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
-                                if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
+                                if let value = data[TextInputAttributes.embedded] as? InlineStickerItem {
                                     switch value.source {
                                     case let .attribute(value):
-                                        attr.replaceCharacters(in: range, with: value.attachment.text)
+                                        attr.replaceCharacters(in: range, with: value.emoji)
                                     default:
                                         break
                                     }
@@ -479,10 +479,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 } else if !data.message.isCopyProtected() {
                     let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
                     attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
-                        if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
+                        if let value = data[TextInputAttributes.embedded] as? InlineStickerItem {
                             switch value.source {
                             case let .attribute(value):
-                                attr.replaceCharacters(in: range, with: value.attachment.text)
+                                attr.replaceCharacters(in: range, with: value.emoji)
                             default:
                                 break
                             }

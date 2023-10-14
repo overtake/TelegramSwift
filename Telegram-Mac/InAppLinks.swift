@@ -16,6 +16,7 @@ import SwiftSignalKit
 import MtProtoKit
 import ThemeSettings
 import Translate
+import InputView
 //import WalletCore
 
 private let inapp:String = "chat://"
@@ -201,12 +202,7 @@ var globalLinkExecutor:TextViewInteractions {
         }, copyAttributedString: { string in
             let pb = NSPasteboard.general
 
-            if !FastSettings.enableRTF {
-                pb.clearContents()
-                pb.declareTypes([.string], owner: nil)
-                pb.setString(string.string, forType: .string)
-                return true
-            }
+ 
             let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
             
             var replaceRanges:[(NSRange, String)] = []
@@ -218,31 +214,15 @@ var globalLinkExecutor:TextViewInteractions {
                         break
                     default:
                         if appLink.link != modified.string.nsstring.substring(with: range) {
-                            modified.addAttribute(NSAttributedString.Key.link, value: appLink.link, range: range)
-                            modified.addAttribute(.init(TGCustomLinkAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: appLink.link, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link)), range: range)
+                            modified.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute(url: appLink.link), range: range)
                         }
                     }
-                    
                 }
-                if let appLink = attr[NSAttributedString.Key(TGCustomLinkAttributeName)] as? TGInputTextTag {
-                    if (appLink.attachment as? String) != modified.string.nsstring.substring(with: range) {
-                        modified.addAttribute(NSAttributedString.Key.link, value: appLink.attachment, range: range)
+                if let sticker = attr[TextInputAttributes.embedded] as? InlineStickerItem {
+                    if case let .attribute(emoji) = sticker.source {
+                        modified.addAttribute(TextInputAttributes.customEmoji, value: TextInputTextCustomEmojiAttribute(fileId: emoji.fileId, file: emoji.file, emoji: emoji.emoji), range: range)
+                        replaceRanges.append((range, emoji.emoji))
                     }
-                }
-                if let sticker = attr[.init("Attribute__EmbeddedItem")] as? InlineStickerItem, case let .attribute(emoji) = sticker.source {
-                    modified.addAttribute(.init(TGAnimatedEmojiAttributeName), value: emoji.attachment, range: range)
-                    replaceRanges.append((range, emoji.attachment.text))
-                }
-                if attr[.foregroundColor] != nil {
-                    modified.removeAttribute(.foregroundColor, range: range)
-                }
-                if let font = attr[.font] as? NSFont {
-                    if let newFont = NSFont(name: font.fontName, size: 0) {
-                        modified.setFont(font: newFont, range: range)
-                    }
-                }
-                if attr[.paragraphStyle] != nil {
-                    modified.removeAttribute(.paragraphStyle, range: range)
                 }
             })
             
@@ -250,14 +230,14 @@ var globalLinkExecutor:TextViewInteractions {
                 modified.replaceCharacters(in: range.0, with: range.1)
             }
             
-            let input = ChatTextInputState(inputText: modified.string, selectionRange: 0 ..< modified.string.length, attributes: chatTextAttributes(from: modified))
+            let input = ChatTextInputState(attributedText: modified, selectionRange: 0 ..< modified.length)
             
             if !modified.string.isEmpty {
                 pb.clearContents()
                 let rtf = try? modified.data(from: modified.range, documentAttributes: [NSAttributedString.DocumentAttributeKey.documentType : NSAttributedString.DocumentType.rtf])
                 
                 
-                pb.declareTypes([.rtf, .kInApp, .string], owner: nil)
+                pb.declareTypes([.rtf, .kInApp], owner: nil)
 
                 let encoder = AdaptedPostboxEncoder()
                 let encoded = try? encoder.encode(input)

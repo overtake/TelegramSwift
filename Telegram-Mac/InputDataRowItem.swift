@@ -178,7 +178,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.inputPlaceholder = holder
         placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: customTheme?.grayTextColor ?? theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
     
-        _currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text), coreText: false)
+        _currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text))
         self.mode = mode
     
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, error: error, customTheme: customTheme)
@@ -231,7 +231,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let currentAttributed: NSMutableAttributedString = NSMutableAttributedString()
-        _ = currentAttributed.append(string: (defaultText ?? ""), font: .normal(.text), coreText: false)
+        _ = currentAttributed.append(string: (defaultText ?? ""), font: .normal(.text))
         currentAttributed.append(currentText)
                 
         if mode == .secure {

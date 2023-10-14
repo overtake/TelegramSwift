@@ -176,8 +176,8 @@ class Sender: NSObject {
         
         
         if FastSettings.isPossibleReplaceEmojies {
-            let text = input.attributedString(theme).stringEmojiReplacements
-            if text != input.attributedString(theme) {
+            let text = input.attributedString().stringEmojiReplacements
+            if text != input.attributedString() {
                 input = ChatTextInputState(inputText: text.string, selectionRange: 0 ..< text.string.length, attributes: chatTextAttributes(from: text))
             }
         }
@@ -222,7 +222,7 @@ class Sender: NSObject {
                 attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
             }
             if !subState.inputText.isEmpty || mediaReference != nil {
-                return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upCollections : [])
+                return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upstairCollections : [])
             } else {
                 return nil
             }
@@ -621,7 +621,7 @@ class Sender: NSObject {
                     attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
                 }
                 
-                return EnqueueMessage.message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: nil, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upCollections : [])
+                return EnqueueMessage.message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: nil, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upstairCollections : [])
             }
             messages.insert(contentsOf: mapped, at: 0)
         }

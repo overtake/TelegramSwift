@@ -13,6 +13,8 @@ import TelegramCore
 import TGModernGrowingTextView
 import Postbox
 import InAppSettings
+import TGUIKit
+import InputView
 
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
     let inputQuery = chatPresentationInterfaceState.inputContext
@@ -557,12 +559,13 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
             var detectedRange: NSRange = NSMakeRange(NSNotFound, 0)
             let text = chatPresentationInterfaceState.effectiveInput.inputText.prefix(4096)
             
-            var attr = chatPresentationInterfaceState.effectiveInput.attributedString(theme)
+            var attr = chatPresentationInterfaceState.effectiveInput.attributedString()
             attr = attr.attributedSubstring(from: NSMakeRange(0, min(attr.length, 4096)))
-            attr.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+            
+            attr.enumerateAttribute(TextInputAttributes.textUrl, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
                 
-                if let tag = value as? TGInputTextTag, let url = tag.attachment as? String {
-                    detectedUrl = url
+                if let tag = value as? TextInputTextUrlAttribute {
+                    detectedUrl = tag.url
                     detectedRange = range
                 }
                 let s: ObjCBool = (detectedUrl != nil) ? true : false

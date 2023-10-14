@@ -13,7 +13,7 @@ import Postbox
 import TGUIKit
 import SwiftSignalKit
 import TGModernGrowingTextView
-
+import InputView
 class ChatMediaLayoutParameters : Equatable {
     
     var showMedia:(Message)->Void = {_ in }
@@ -464,14 +464,10 @@ class ChatMediaItem: ChatRowItem {
                     for entity in attr.entities {
                         switch entity.type {
                         case .Spoiler:
-                            let color: NSColor
-                            if entry.renderType == .bubble {
-                                color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
-                            } else {
-                                color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
-                            }
                             let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                            caption.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
+                            if let range = caption.range.intersection(range) {
+                                caption.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
+                            }
                         default:
                             break
                         }
@@ -486,11 +482,15 @@ class ChatMediaItem: ChatRowItem {
                 
                 InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
                 
-                caption.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: caption.range, options: .init(), using: { value, range, stop in
-                    if let text = value as? TGInputTextTag {
-                        if let color = text.attribute.value as? NSColor {
-                            spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                caption.enumerateAttribute(TextInputAttributes.spoiler, in: caption.range, options: .init(), using: { value, range, stop in
+                    if let _ = value {
+                        let color: NSColor
+                        if entry.renderType == .bubble {
+                            color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
+                        } else {
+                            color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
                         }
+                        spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
                     }
                 })
                 

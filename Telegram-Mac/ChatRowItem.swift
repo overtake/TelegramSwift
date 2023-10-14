@@ -2433,27 +2433,7 @@ class ChatRowItem: TableRowItem {
             forwardHeader = nil
         }
         
-        if !isBubbled {
-            replyModel?.measureSize(widthForContent, sizeToFit: true)
-        } else if let replyModel = replyModel {
-            if let item = self as? ChatMessageItem, item.webpageLayout == nil && !replyModel.isSideAccessory {
-                if isBubbled {
-                    replyModel.measureSize(max(blockWidth, 200), sizeToFit: true)
-                } else {
-                    replyModel.measureSize(max(contentSize.width, 200), sizeToFit: true)
-                }
-            } else {
-                if !hasBubble {
-                    replyModel.measureSize(min(width - _contentSize.width - contentOffset.x - 80, 300), sizeToFit: true)
-                } else {
-                    if _contentSize.width == 0 {
-                        replyModel.measureSize(200, sizeToFit: true)
-                    } else {
-                        replyModel.measureSize(_contentSize.width - bubbleDefaultInnerInset, sizeToFit: true)
-                    }
-                }
-            }
-        }
+        
         
         if let value = topicLinkLayout {
             if !isBubbled {
@@ -2529,6 +2509,35 @@ class ChatRowItem: TableRowItem {
                  replyMarkupModel?.measureSize(_contentSize.width)
             }
         }
+        
+        if !isBubbled {
+            if let replyModel = replyModel {
+                replyModel.measureSize(widthForContent, sizeToFit: true)
+                if replyModel.size.width < _contentSize.width {
+                    replyModel.measureSize(_contentSize.width, sizeToFit: false)
+                }
+            }
+        } else if let replyModel = replyModel {
+            if let item = self as? ChatMessageItem, item.webpageLayout == nil && !replyModel.isSideAccessory {
+                if isBubbled {
+                    replyModel.measureSize(max(blockWidth, 200), sizeToFit: true)
+                    var fill_size = bubbleFrame.width - bubbleDefaultInnerInset
+                    if replyModel.size.width < fill_size {
+                        replyModel.measureSize(fill_size, sizeToFit: false)
+                    }
+                }
+            } else {
+                if !hasBubble {
+                    replyModel.measureSize(min(width - _contentSize.width - contentOffset.x - 80, 300), sizeToFit: true)
+                } else {
+                    if _contentSize.width == 0 {
+                        replyModel.measureSize(200, sizeToFit: true)
+                    } else {
+                        replyModel.measureSize(_contentSize.width - bubbleContentInset * 2, sizeToFit: false)
+                    }
+                }
+            }
+        }
       
         
         return result
@@ -2540,7 +2549,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var bubbleContentInset: CGFloat {
-        return 13
+        return 11
     }
     
     var additionBubbleInset: CGFloat {
