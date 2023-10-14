@@ -172,8 +172,10 @@ private final class WallpaperColorBrightnessView: View {
         context.setFillColor(NSColor.white.cgColor)
         context.fillPath()
         
+        
         let innerPath = CGMutablePath()
-        innerPath.addRoundedRect(in: bounds.insetBy(dx: 1.0, dy: 1.0), cornerWidth: bounds.height / 2.0, cornerHeight: bounds.height / 2.0)
+        let rect = bounds.insetBy(dx: 1.0, dy: 1.0)
+        innerPath.addRoundedRect(in: rect, cornerWidth: rect.height / 2.0, cornerHeight: rect.height / 2.0)
         context.addPath(innerPath)
         context.clip()
         
