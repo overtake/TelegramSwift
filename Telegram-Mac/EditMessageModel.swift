@@ -23,6 +23,10 @@ class EditMessageModel: ChatAccessoryModel {
         make(with: state.message)
     }
     
+    override var modelType: ChatAccessoryModel.ModelType {
+        return .classic
+    }
+    
     override var view: ChatAccessoryView? {
         didSet {
             updateImageIfNeeded()

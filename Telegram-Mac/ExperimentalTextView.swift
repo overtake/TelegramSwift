@@ -21,7 +21,7 @@ final class ExperimentalTextView: Control {
     private let context: AccountContext
     required init(frame frameRect: NSRect, context: AccountContext, interactions: TextView_Interactions) {
         self.context = context
-        self.view = UITextView(frame: frameRect.size.bounds, context: context, interactions: interactions)
+        self.view = UITextView(frame: frameRect.size.bounds, interactions: interactions)
         super.init(frame: frameRect)
         addSubview(view)
         
@@ -44,7 +44,7 @@ final class ExperimentalTextView: Control {
             interactions.sendAnimatedEmoji = { [weak self] item, info, _, _ in
                                 
                 let emoji = NSMutableAttributedString(string: "🤡")
-                emoji.addAttribute(ChatTextInputAttributes.customEmoji, value: ChatTextInputTextCustomEmojiAttribute(interactivelySelectedFromPackId: info?.id, fileId: item.file.fileId.id, file: item.file, topicInfo: nil), range:emoji.range)
+                emoji.addAttribute(TextInputAttributes.customEmoji, value: TextInputTextCustomEmojiAttribute(collectionId: info?.id, fileId: item.file.fileId.id, file: item.file, emoji: item.getStringRepresentationsOfIndexKeys().first!), range:emoji.range)
                 
                 self?.view.insertText(emoji)
 

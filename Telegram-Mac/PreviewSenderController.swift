@@ -12,6 +12,7 @@ import TelegramCore
 import TGModernGrowingTextView
 import SwiftSignalKit
 import Postbox
+import InputView
 
 private enum SecretMediaTtl {
     case off
@@ -85,7 +86,7 @@ private final class PreviewContextInteraction : InterfaceObserver {
 
 fileprivate class PreviewSenderView : Control {
     fileprivate let tableView:TableView = TableView(frame: NSZeroRect)
-    fileprivate let textView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSMakeRect(0, 0, 280, 34))
+    fileprivate let textView:UITextView
     fileprivate let sendButton = ImageButton()
     fileprivate let emojiButton = ImageButton()
     fileprivate let actionsContainerView: View = View()
@@ -151,14 +152,15 @@ fileprivate class PreviewSenderView : Control {
     
     private let disposable = MetaDisposable()
     private let theme: TelegramPresentationTheme
+    
     required init(frame frameRect: NSRect, theme: TelegramPresentationTheme) {
         self.theme = theme
+        self.textView = UITextView(frame: NSMakeRect(0, 0, 280, 34))
         super.init(frame: frameRect)
         
         backgroundColor = theme.colors.background
         separator.backgroundColor = theme.colors.border
         textContainerView.backgroundColor = theme.colors.background
-        textView.setBackgroundColor(theme.colors.background)
         closeButton.set(image: theme.icons.modalClose, for: .Normal)
         _ = closeButton.sizeToFit()
         
@@ -256,13 +258,11 @@ fileprivate class PreviewSenderView : Control {
         sendButton.centerY(x: emojiButton.frame.maxX + 20)
         
         backgroundColor = theme.colors.background
-        textView.background = theme.colors.background
-        textView.textFont = .normal(.text)
-        textView.textColor = theme.colors.text
-        textView.selectedTextColor = theme.colors.selectText
-        textView.linkColor = theme.colors.link
-        textView.max_height = 180
         
+        
+        textView.interactions.max_height = 180
+        textView.interactions.min_height = 50
+
         emojiButton.set(handler: { [weak self] control in
             self?.controller?.showEmoji(for: control)
         }, for: .Hover)
@@ -352,7 +352,9 @@ fileprivate class PreviewSenderView : Control {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(self.textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: self.theme)
+                current = InputSwapSuggestionsPanel(inputView: self.textView.inputView, textContent: self.textView.scrollView.contentView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: self.theme, highlightRect: { [weak self] range, whole in
+                    return self?.textView.highlight(for: range, whole: whole) ?? .zero
+                })
                 self.textInputSuggestionsView = current
                 isNew = true
             }
@@ -367,29 +369,17 @@ fileprivate class PreviewSenderView : Control {
         disposable.dispose()
     }
     
+    func textViewSize() -> (NSSize, CGFloat) {
+        let w = textWidth
+        let height = self.textView.height(for: w)
+        return (NSMakeSize(w, min(max(height, textView.min_height), textView.max_height)), height)
+    }
+    
     var additionHeight: CGFloat {
-        return max(50, textView.frame.height + 16) + headerView.frame.height
-    }
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-    }
-    
-    override func change(size: NSSize, animated: Bool, _ save: Bool = true, removeOnCompletion: Bool = true, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion: ((Bool) -> Void)? = nil) {
-        self.updateHeight(self.textView.frame.height, animated)
-        super._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+        return textViewSize().0.height + headerView.frame.height
     }
     
     func updateHeight(_ height: CGFloat, _ animated: Bool) {
-        CATransaction.begin()
-        textContainerView.change(size: NSMakeSize(frame.width, height + 16), animated: animated)
-        textContainerView.change(pos: NSMakePoint(0, frame.height - textContainerView.frame.height), animated: animated)
-        textView._change(pos: NSMakePoint(10, height == 34 ? 8 : 11), animated: animated)
-
-        actionsContainerView.change(pos: NSMakePoint(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height), animated: animated)
-
-        separator.change(pos: NSMakePoint(0, textContainerView.frame.minY), animated: animated)
-        CATransaction.commit()
         
         let transition: ContainedViewLayoutTransition
         if animated {
@@ -397,10 +387,8 @@ fileprivate class PreviewSenderView : Control {
         } else {
             transition = .immediate
         }
-        self.textInputSuggestionsView?.updateRect(transition: transition)
-
         
-       // needsLayout = true
+        self.updateLayout(size: NSMakeSize(self.frame.width, height), transition: transition)
     }
     
     func applyOptions(_ options:[PreviewOptions], count: Int, canCollage: Bool, canSpoiler: Bool) {
@@ -413,60 +401,71 @@ fileprivate class PreviewSenderView : Control {
         needsLayout = true
     }
     
-    override func layout() {
-        super.layout()
-        actionsContainerView.setFrameOrigin(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height)
-        headerView.setFrameSize(frame.width, 50)
+    var textWidth: CGFloat {
+        return frame.width - 10 - actionsContainerView.frame.width
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
+        transition.updateFrame(view: actionsContainerView, frame: CGRect(origin: CGPointMake(size.width - actionsContainerView.frame.width, size.height - actionsContainerView.frame.height), size: actionsContainerView.frame.size))
         
-        let height = frame.height - additionHeight
+        transition.updateFrame(view: headerView, frame: CGRect(origin: .zero, size: NSMakeSize(size.width, 50)))
+        
+        let height = size.height - additionHeight
         
         let listHeight = tableView.listHeight
-        tableView.frame = NSMakeRect(0, headerView.frame.maxY - 6, frame.width, min(height, listHeight))
         
-        draggingView.frame = tableView.frame
-
+        let tableRect = NSMakeRect(0, headerView.frame.maxY - 6, frame.width, min(height, listHeight))
+        transition.updateFrame(view: tableView, frame: tableRect)
+        transition.updateFrame(view: draggingView, frame: draggingView.frame)
         
+        transition.updateFrame(view: closeButton, frame: closeButton.centerFrameY(x: headerView.frame.width - closeButton.frame.width - 10))
         
-        closeButton.centerY(x: headerView.frame.width - closeButton.frame.width - 10)
-        
-        collageButton.centerY(x: closeButton.frame.minX - 10 - collageButton.frame.width)
 
         var inset: CGFloat = 10
 
         if !photoButton.isHidden {
-            photoButton.centerY(x: inset)
+            transition.updateFrame(view: photoButton, frame: photoButton.centerFrameY(x: inset))
             inset += photoButton.frame.width + 10
         }
         
         if !fileButton.isHidden {
-            fileButton.centerY(x: inset)
+            transition.updateFrame(view: fileButton, frame: fileButton.centerFrameY(x: inset))
             inset += fileButton.frame.width + 10
         }
         
         if !archiveButton.isHidden {
-            archiveButton.centerY(x: inset)
+            transition.updateFrame(view: archiveButton, frame: archiveButton.centerFrameY(x: inset))
             inset += archiveButton.frame.width + 10
         }
         
         if !spoilerButton.isHidden {
             if collageButton.isHidden {
-                spoilerButton.centerY(x: closeButton.frame.minX - 10 - spoilerButton.frame.width)
+                transition.updateFrame(view: spoilerButton, frame: spoilerButton.centerFrameY(x: closeButton.frame.minX - 10 - spoilerButton.frame.width))
             } else {
-                spoilerButton.centerY(x: collageButton.frame.minX - 10 - spoilerButton.frame.width)
+                transition.updateFrame(view: spoilerButton, frame: spoilerButton.centerFrameY(x: collageButton.frame.minX - 10 - spoilerButton.frame.width))
             }
         }
+                
+        let (textSize, textHeight) = textViewSize()
         
-        textContainerView.setFrameSize(frame.width, textView.frame.height + 16)
-        textContainerView.setFrameOrigin(0, frame.height - textContainerView.frame.height)
-        textView.setFrameSize(NSMakeSize(textContainerView.frame.width - 10 - actionsContainerView.frame.width, textView.frame.height))
-        textView.setFrameOrigin(10, textView.frame.height == 34 ? 8 : 11)
+        let textContainerRect = NSMakeRect(0, size.height - textSize.height, size.width, textSize.height)
+        transition.updateFrame(view: textContainerView, frame: textContainerRect)
         
-        separator.frame = NSMakeRect(0, textContainerView.frame.minY, frame.width, .borderSize)
-
-        forHelperView.frame = NSMakeRect(0, textContainerView.frame.minY, 0, 0)
         
-        self.textInputSuggestionsView?.updateRect(transition: .immediate)
+        transition.updateFrame(view: textView, frame: CGRect(origin: CGPoint(x: 10, y: 0), size: textSize))
+        textView.updateLayout(size: textSize, textHeight: textHeight, transition: transition)
+        
+        transition.updateFrame(view: separator, frame: NSMakeRect(0, textContainerView.frame.minY, size.width, .borderSize))
+        
+        transition.updateFrame(view: forHelperView, frame: NSMakeRect(0, textContainerView.frame.minY, 0, 0))
+        
+        self.textInputSuggestionsView?.updateRect(transition: transition)
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
 
     }
     
@@ -825,7 +824,7 @@ private struct UrlAndState : Equatable {
 }
 
 
-class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Notifable {
+class PreviewSenderController: ModalViewController, Notifable {
    
     private var lockInteractiveChanges: Bool = false
     private var _urls:[URL] = []
@@ -858,8 +857,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private var sent: Bool = false
     private let pasteDisposable = MetaDisposable()
     
-    private let emojiHolderAnimator = EmojiHolderAnimator()
-
     private let inputSwapDisposable = MetaDisposable()
     private var temporaryInputState: ChatTextInputState?
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
@@ -1017,50 +1014,72 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return placeholder
     }
     
+    private func set(_ state: Updated_ChatTextInputState) {
+        self.contextChatInteraction.update({
+            $0.withUpdatedEffectiveInputState(state.textInputState())
+        })
+    }
+    
+    private func inputDidUpdateLayout(animated: Bool) {
+        updateSize(frame.width, animated: animated)
+
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         let context = self.context
         let initialSize = self.atomicSize
         let theme = self.presentation ?? theme
-
         
-        genericView.textView.inputView.isEditable = true
+        self.genericView.textView.updateLocalizationAndTheme(theme: theme)
+        
+        self.genericView.textView.interactions.inputDidUpdate = { [weak self] state in
+            guard let `self` = self else {
+                return
+            }
+            self.set(state)
+            self.inputDidUpdateLayout(animated: true)
+        }
+        
+        self.genericView.textView.interactions.processEnter = { [weak self] event in
+            return self?.processEnter(event) ?? true
+        }
+        self.genericView.textView.interactions.processPaste = { [weak self] pasteboard in
+            return self?.processPaste(pasteboard) ?? false
+        }
+        self.genericView.textView.interactions.processAttriburedCopy = { attributedString in
+            return globalLinkExecutor.copyAttributedString(attributedString)
+        }
+        
         genericView.emojiButton.isHidden = false
 
         
-        
-        genericView.textView.installGetAttach({ attachment, size in
-            let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
-            let view = ChatInputAnimatedEmojiAttach(frame: rect)
-            view.set(attachment, size: rect.size, context: context)
-            return view
-        })
-        
+        self.genericView.textView.context = context
         genericView.draggingView.controller = self
         genericView.controller = self
-        genericView.textView.delegate = self
         inputInteraction.add(observer: self)
         
-        self.genericView.textView.setPlaceholderAttributedString(.initialize(string: self.inputPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
+        self.genericView.textView.placeholder = self.inputPlaceholder
+        
         
         if let attributedString = attributedString {
-            genericView.textView.setAttributedString(attributedString, animated: false)
+            genericView.textView.set(.init(attributedText: stateAttributedStringForText(attributedString), selectionRange: attributedString.length ..< attributedString.length))
         } else {
-            self.temporaryInputState = chatInteraction.presentation.interfaceState.inputState
-            let text = chatInteraction.presentation.interfaceState.inputState.attributedString(theme)
-            genericView.textView.setAttributedString(text, animated: false)
+            let input = chatInteraction.presentation.interfaceState.inputState
+            self.temporaryInputState = input
+            genericView.textView.set(input)
             chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedInputState(ChatTextInputState())})})
         }
         
         let interactions = EntertainmentInteractions(.emoji, peerId: chatInteraction.peerId)
         
         interactions.sendEmoji = { [weak self] emoji, fromRect in
-            _ = self?.contextChatInteraction.appendText(.makeEmojiHolder(emoji, fromRect: fromRect))
+            _ = self?.contextChatInteraction.appendText(.initialize(string: emoji))
         }
         interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
             let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
-            _ = self?.contextChatInteraction.appendText(.makeAnimated(sticker.file, text: text, fromRect: fromRect))
+            _ = self?.contextChatInteraction.appendText(.makeAnimated(sticker.file, text: text))
         }
         
         emoji.update(with: interactions, chatInteraction: contextChatInteraction)
@@ -1206,15 +1225,14 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self.genericView.tableView.reloadHeight()
             CATransaction.commit()
             
-            self.genericView.textView.setPlaceholderAttributedString(.initialize(string: self.inputPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
+            self.genericView.textView.placeholder = self.inputPlaceholder
             
             
 
             if self.genericView.tableView.isEmpty {
                 self.closeModal()
                 if self.chatInteraction.presentation.effectiveInput.inputText.isEmpty {
-                    let attributedString = self.genericView.textView.attributedString()
-                    let input = ChatTextInputState(inputText: attributedString.string, selectionRange: attributedString.string.length ..< attributedString.string.length, attributes: chatTextAttributes(from: attributedString))
+                    let input = self.genericView.textView.interactions.presentation.textInputState()
                     self.chatInteraction.update({$0.withUpdatedEffectiveInputState(input)})
                 }
             } else {
@@ -1260,7 +1278,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         self.urlsAndStateValue.set(UrlAndState(self.urls, state))
         self.genericView.updateWithSlowMode(chatInteraction.presentation.slowMode, urlsCount: self.urls.count)
         
-        self.genericView.textView.setPlaceholderAttributedString(.initialize(string: self.inputPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
+        self.genericView.textView.placeholder = self.inputPlaceholder
         
         self.genericView.stateValueInteractiveUpdate = { [weak self] state in
             guard let `self` = self else { return }
@@ -1286,13 +1304,13 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             guard let `self` = self else { return }
             
             let slowMode = self.chatInteraction.presentation.slowMode
-            let attributed = self.genericView.textView.attributedString()
+            let inputState = self.genericView.textView.interactions.presentation
 
             if let slowMode = slowMode, slowMode.hasLocked {
                 self.genericView.textView.shake()
-            } else if self.inputPlaceholder != strings().previewSenderCaptionPlaceholder && slowMode != nil && attributed.length > 0 {
+            } else if self.inputPlaceholder != strings().previewSenderCaptionPlaceholder && slowMode != nil && inputState.inputText.length > 0 {
                 tooltip(for: self.genericView.sendButton, text: strings().slowModeMultipleError)
-                self.genericView.textView.setSelectedRange(NSMakeRange(0, attributed.length))
+                self.genericView.textView.selectAll()
                 self.genericView.textView.shake()
             } else {
                 let peer = self.chatInteraction.peer
@@ -1319,7 +1337,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     }
                 }
                 
-                var input:ChatTextInputState = ChatTextInputState(inputText: attributed.string, selectionRange: 0 ..< 0, attributes: chatTextAttributes(from: attributed)).subInputState(from: NSMakeRange(0, attributed.length))
+                var input:ChatTextInputState = inputState.textInputState().subInputState(from: NSMakeRange(0, inputState.inputText.length))
                 
                 if input.attributes.isEmpty {
                     input = ChatTextInputState(inputText: input.inputText.trimmed)
@@ -1472,38 +1490,38 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.textView.boldWord()
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.bold))
             return .invoked
         }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.textView.underlineWord()
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.underline))
             return .invoked
         }, with: self, for: .U, priority: .modal, modifierFlags: [.shift, .command])
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.textView.spoilerWord()
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.spoiler))
             return .invoked
         }, with: self, for: .P, priority: .modal, modifierFlags: [.shift, .command])
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.textView.strikethroughWord()
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.strikethrough))
             return .invoked
         }, with: self, for: .X, priority: .modal, modifierFlags: [.shift, .command])
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
-            self.makeUrl(of: self.genericView.textView.selectedRange())
+            self.genericView.textView.inputApplyTransform(.url)
             return .invoked
         }, with: self, for: .U, priority: .modal, modifierFlags: [.command])
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.textView.italicWord()
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.italic))
             return .invoked
         }, with: self, for: .I, priority: .modal, modifierFlags: [.command])
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.textView.codeWord()
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.monospace))
             return .invoked
         }, with: self, for: .K, priority: .modal, modifierFlags: [.command, .shift])
         
@@ -1582,7 +1600,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return true
     }
     override func firstResponder() -> NSResponder? {
-        return genericView.textView
+        return genericView.textView.inputView
     }
     
     private let asMedia: Bool
@@ -1608,15 +1626,14 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         inputContextHelper = InputContextHelper(chatInteraction: contextChatInteraction)
         self.chatInteraction = chatInteraction
-        super.init(frame:NSMakeRect(0, 0, 320, mainWindow.frame.height - 80))
+        super.init(frame:NSMakeRect(0, 0, 320, 300))
         bar = .init(height: 0)
         
 
         contextChatInteraction.movePeerToInput = { [weak self] peer in
             if let strongSelf = self {
-                let string = strongSelf.genericView.textView.string()
-                let range = strongSelf.genericView.textView.selectedRange()
-                let textInputState = ChatTextInputState(inputText: string, selectionRange: range.min ..< range.max, attributes: chatTextAttributes(from: strongSelf.genericView.textView.attributedString()))
+                let textInputState = strongSelf.genericView.textView.inputTextState.textInputState()
+                
                 strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(textInputState)})
                 if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
                     let inputText = textInputState.inputText
@@ -1637,11 +1654,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                         let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
                         strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
                     }
-                    
-//                    let updatedText = strongSelf.contextChatInteraction.presentation.effectiveInput
-//                    
-//                    strongSelf.genericView.textView.setAttributedString(updatedText.attributedString, animated: true)
-//                    strongSelf.genericView.textView.setSelectedRange(NSMakeRange(updatedText.selectionRange.lowerBound, updatedText.selectionRange.lowerBound + updatedText.selectionRange.upperBound))
                 }
             }
         }
@@ -1653,40 +1665,15 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     func showEmoji(for control: Control) {
         showPopover(for: control, with: emoji)
     }
+
     
-    func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
-        updateSize(frame.width, animated: animated)
-    }
-    
-    func textViewEnterPressed(_ event: NSEvent) -> Bool {
+    func processEnter(_ event: NSEvent) -> Bool {
         if FastSettings.checkSendingAbility(for: event) {
             return true
         }
         return false
     }
     
-    
-    func textViewTextDidChange(_ string: String) {
-        if FastSettings.isPossibleReplaceEmojies {
-            let previousString = contextChatInteraction.presentation.effectiveInput.inputText
-            
-            if previousString != string {
-                let difference = string.replacingOccurrences(of: previousString, with: "")
-                if difference.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).isEmpty {
-                    let replacedEmojies = string.stringEmojiReplacements
-                    if string != replacedEmojies {
-                        self.genericView.textView.setString(replacedEmojies)
-                    }
-                }
-            }
-            
-        }
-        
-        let attributed = genericView.textView.attributedString()
-        let range = self.genericView.textView.selectedRange()
-        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-        contextChatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
-    }
     
     func isEqual(to other: Notifable) -> Bool {
         return false
@@ -1710,7 +1697,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 }
             }
             if value.effectiveInput != oldValue.effectiveInput {
-                self.emojiHolderAnimator.apply(self.genericView.textView, chatInteraction: self.contextChatInteraction, current: value.effectiveInput)
                 self.genericView.textView.scrollToCursor()
             }
         }
@@ -1743,30 +1729,20 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self.inputSwapDisposable.set(nil)
         }
         
-        let textView = genericView.textView
+        genericView.textView.set(input)
         
-        if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
-            textView.animates = false
-            textView.setAttributedString(state.effectiveInput.attributedString(theme), animated:animated)
-            textView.animates = true
-        }
-        let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
-        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
-            textView.setSelectedRange(range)
-        }
-        textViewTextDidChangeSelectedRange(range)
+        self.updateContextQuery(NSMakeRange(input.selectionRange.lowerBound, input.selectionRange.upperBound - input.selectionRange.lowerBound))
     }
     
-    
-    func textViewTextDidChangeSelectedRange(_ range: NSRange) {
+    func updateContextQuery(_ range: NSRange) {
         
         let animated: Bool = true
-        let string = genericView.textView.string()
+        let state = genericView.textView.interactions.presentation.textInputState()
 
-        if let peer = chatInteraction.peer, !string.isEmpty, let (possibleQueryRange, possibleTypes, _) = textInputStateContextQueryRangeAndType(ChatTextInputState(inputText: string, selectionRange: range.min ..< range.max, attributes: []), includeContext: false) {
+        if let peer = chatInteraction.peer, let (possibleQueryRange, possibleTypes, _) = textInputStateContextQueryRangeAndType(state, includeContext: false) {
             
             if (possibleTypes.contains(.mention) && (peer.isGroup || peer.isSupergroup)) || possibleTypes.contains(.emoji) || possibleTypes.contains(.emojiFast) {
-                let query = String(string[possibleQueryRange])
+                let query = String(state.inputText[possibleQueryRange])
                 if let (updatedContextQueryState, updatedContextQuerySignal) = chatContextQueryForSearchMention(chatLocations: [chatInteraction.chatLocation], possibleTypes.contains(.emoji) ? .emoji(query, firstWord: false) : possibleTypes.contains(.emojiFast) ? .emoji(query, firstWord: true) : .mention(query: query, includeRecent: false), currentQuery: self.contextQueryState?.0, context: context, filter: .filterSelf(includeNameless: true, includeInlineBots: false)) {
                     self.contextQueryState?.1.dispose()
                     var inScope = true
@@ -1796,6 +1772,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     }
                 }
             } else {
+                self.contextQueryState?.1.dispose()
                 inputInteraction.update(animated: animated, {
                     $0.updatedInputQueryResult { _ in
                         return nil
@@ -1805,51 +1782,17 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             
             
         } else {
+            self.contextQueryState?.1.dispose()
             inputInteraction.update(animated: animated, {
                 $0.updatedInputQueryResult { _ in
                     return nil
                 }
             })
         }
-        
-        let attributed = self.genericView.textView.attributedString()
-        
-        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-        contextChatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
-
-    }
-    
-    func textViewDidReachedLimit(_ textView: Any) {
-        genericView.textView.shake()
-    }
-    
-    func canTransformInputText() -> Bool {
-        return true
     }
     
     
-    func makeUrl(of range: NSRange) {
-        guard range.min != range.max, let window = window else {
-            return
-        }
-        var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-        let defaultTag: TGInputTextTag? = genericView.textView.attributedString().attribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), at: range.location, effectiveRange: &effectiveRange) as? TGInputTextTag
-        
-        let defaultUrl = defaultTag?.attachment as? String
-        
-        if defaultUrl == nil {
-            effectiveRange = range
-        }
-        if effectiveRange.location == NSNotFound {
-            effectiveRange = range
-        }
-        
-        showModal(with: InputURLFormatterModalController(string: self.genericView.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] text, url in
-            self?.genericView.textView.addLink(url, text: text, range: effectiveRange)
-        }), for: window)
-    }
-    
-    func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
+    func processPaste(_ pasteboard: NSPasteboard) -> Bool {
         
         let result = InputPasteboardParser.canProccessPasteboard(pasteboard, context: context)
         
@@ -1862,12 +1805,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
                     
                     let (attributed, attachments) = attributed.applyRtf()
-                    let current = self.genericView.textView.attributedString().copy() as! NSAttributedString
-                    let currentRange = self.genericView.textView.selectedRange()
-                    let (attributedString, range) = current.appendAttributedString(attributed.attributedSubstring(from: NSMakeRange(0, min(Int(self.maxCharactersLimit(self.genericView.textView)), attributed.length))), selectedRange: currentRange)
-                    let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
-                    self.genericView.textView.addSimpleItem(item)
-
+                    self.contextChatInteraction.appendText(attributed)
                     if !attachments.isEmpty {
                         self.pasteDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
                             if !urls.isEmpty {
@@ -1893,20 +1831,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return !result
     }
     
-    func copyText(withRTF rtf: NSAttributedString!) -> Bool {
-        return globalLinkExecutor.copyAttributedString(rtf)
-    }
-    
     func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
         return NSMakeSize(textView.frame.width, textView.frame.height)
-    }
-    
-    func textViewIsTypingEnabled() -> Bool {
-        return true
-    }
-    
-    func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return ChatInteraction.maxInput
     }
     
     override func viewClass() -> AnyClass {
@@ -1919,7 +1845,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     override func didResizeView(_ size: NSSize, animated: Bool) {
-        self.genericView.updateHeight(self.genericView.textView.frame.height, animated)
+        self.genericView.updateHeight(size.height, animated)
+    }
+    
+    override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
+        super.updateFrame(frame, transition: transition)
     }
     
 }

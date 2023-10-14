@@ -557,6 +557,7 @@
 		27CE156F297966D8001F8CE8 /* emoji_category_home.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE1556297966D6001F8CE8 /* emoji_category_home.tgs */; };
 		27CE1570297966D8001F8CE8 /* emoji_category_neutral.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE1557297966D8001F8CE8 /* emoji_category_neutral.tgs */; };
 		27CE2DC22AD6623D001FA1C7 /* UIInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CE2DC12AD6623D001FA1C7 /* UIInputView.swift */; };
+		27CE2DDE2AD66B4E001FA1C7 /* ChatInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CE2DDD2AD66B4E001FA1C7 /* ChatInputView.swift */; };
 		27CE375B2760931E007E6F1B /* AppMenuAnimatedImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CE375A2760931E007E6F1B /* AppMenuAnimatedImage.swift */; };
 		27CE37652760960A007E6F1B /* menu_archive.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE375D27609604007E6F1B /* menu_archive.tgs */; };
 		27CE37662760960A007E6F1B /* menu_unread.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CE375E27609605007E6F1B /* menu_unread.tgs */; };
@@ -1007,7 +1008,6 @@
 		C2271F571D9D46BC00424F7B /* ShortPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F561D9D46BC00424F7B /* ShortPeerRowItem.swift */; };
 		C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F581D9D46CA00424F7B /* ShortPeerRowView.swift */; };
 		C22A899F1EBCC2AA005B963D /* CallNavigationHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22A899E1EBCC2AA005B963D /* CallNavigationHeaderView.swift */; };
-		C22B635C1D96A14E00085C19 /* ChatInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22B635B1D96A14E00085C19 /* ChatInputView.swift */; };
 		C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E06311D8044CC00A11C88 /* ChatListController.swift */; };
 		C22E063D1D80929400A11C88 /* ChatListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22E063C1D80929400A11C88 /* ChatListRowItem.swift */; };
 		C22EBCB81DFAB36A0034C435 /* ChatMapRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22EBCB71DFAB36A0034C435 /* ChatMapRowItem.swift */; };
@@ -2017,6 +2017,7 @@
 		27CE1556297966D6001F8CE8 /* emoji_category_home.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = emoji_category_home.tgs; sourceTree = "<group>"; };
 		27CE1557297966D8001F8CE8 /* emoji_category_neutral.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = emoji_category_neutral.tgs; sourceTree = "<group>"; };
 		27CE2DC12AD6623D001FA1C7 /* UIInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIInputView.swift; sourceTree = "<group>"; };
+		27CE2DDD2AD66B4E001FA1C7 /* ChatInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputView.swift; sourceTree = "<group>"; };
 		27CE375A2760931E007E6F1B /* AppMenuAnimatedImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenuAnimatedImage.swift; sourceTree = "<group>"; };
 		27CE375D27609604007E6F1B /* menu_archive.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_archive.tgs; sourceTree = "<group>"; };
 		27CE375E27609605007E6F1B /* menu_unread.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_unread.tgs; sourceTree = "<group>"; };
@@ -2474,7 +2475,6 @@
 		C2271F561D9D46BC00424F7B /* ShortPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShortPeerRowItem.swift; sourceTree = "<group>"; };
 		C2271F581D9D46CA00424F7B /* ShortPeerRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ShortPeerRowView.swift; sourceTree = "<group>"; };
 		C22A899E1EBCC2AA005B963D /* CallNavigationHeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallNavigationHeaderView.swift; sourceTree = "<group>"; };
-		C22B635B1D96A14E00085C19 /* ChatInputView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatInputView.swift; sourceTree = "<group>"; };
 		C22E06311D8044CC00A11C88 /* ChatListController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListController.swift; sourceTree = "<group>"; };
 		C22E063C1D80929400A11C88 /* ChatListRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatListRowItem.swift; sourceTree = "<group>"; };
 		C22EBCB71DFAB36A0034C435 /* ChatMapRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatMapRowItem.swift; sourceTree = "<group>"; };
@@ -4600,7 +4600,7 @@
 				9F21F65320B5A41B00332C85 /* location */,
 				C2777B5C1DCE48F4008B69DD /* panels */,
 				C29B5F3F1DC7858100D13E65 /* context */,
-				C22B635B1D96A14E00085C19 /* ChatInputView.swift */,
+				27CE2DDD2AD66B4E001FA1C7 /* ChatInputView.swift */,
 				C2303E721D9966BD00098E12 /* ChatInputActionsView.swift */,
 				C2303E771D997C3100098E12 /* ChatInputAttachView.swift */,
 				277C34A7267B5BC100B1CAA7 /* ChatInputMenuView.swift */,
@@ -7332,6 +7332,7 @@
 				273274E826A8190F00E04289 /* WallpaperAdditionColorView.swift in Sources */,
 				274E58602A825A6600EEBDBF /* PeersStatusView.swift in Sources */,
 				C23C5AE11E1136D1005903E1 /* GroupNameRowItem.swift in Sources */,
+				27CE2DDE2AD66B4E001FA1C7 /* ChatInputView.swift in Sources */,
 				2719D8142A1774BC00081079 /* StoryViewersModalController.swift in Sources */,
 				2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */,
 				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
@@ -7582,7 +7583,6 @@
 				9F147F6F223014EB00D71BD1 /* PasscodeControllers.swift in Sources */,
 				C2271DAA1DAD8716001792B6 /* PeerInfoController.swift in Sources */,
 				D001E978243B4639009025F9 /* LeftSidebarFolderItem.swift in Sources */,
-				C22B635C1D96A14E00085C19 /* ChatInputView.swift in Sources */,
 				2728991C26CBCDA900F4D288 /* TitleAndInfoAlertItem.swift in Sources */,
 				D076F8872296CAB2004F895A /* ChannelDisscussionGroup.swift in Sources */,
 				27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */,

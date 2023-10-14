@@ -414,7 +414,9 @@ final class TelegramChatColors {
         return bubbled ? incoming ? palette.greenBubble_incoming : palette.greenBubble_outgoing : palette.greenUI
     }
     func linkColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? palette.linkBubble_incoming : palette.linkBubble_outgoing : palette.accent
+        return bubbled ? (incoming ? presentation.colors.chatReplyTitleBubble_incoming : presentation.colors.chatReplyTitleBubble_outgoing) : presentation.colors.chatReplyTitle
+//
+//        return bubbled ? incoming ? palette.linkBubble_incoming : palette.linkBubble_outgoing : palette.accent
     }
     
     func pollSelected(_ incoming: Bool, _ bubbled: Bool, icons: TelegramIconsTheme) -> CGImage {

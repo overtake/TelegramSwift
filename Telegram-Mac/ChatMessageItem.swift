@@ -43,9 +43,6 @@ struct ChatTextCustomEmojiAttribute : Equatable {
         self.emoji = emoji
         self.file = file
     }
-    var attachment: TGTextAttachment {
-        return .init(identifier: "\(arc4random64())", fileId: self.fileId, file: file, text: emoji, info: nil, type: TGTextAttachment.emoji)
-    }
 }
 
 
@@ -115,7 +112,7 @@ final class InlineStickerItem : Hashable {
                     let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
                     var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
                     let text = copy.string.nsstring.substring(with: range).fixed
-                    updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
+                    updatedAttributes[TextInputAttributes.embedded] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
                     
                     let insertString = NSAttributedString(string: "🤡", attributes: updatedAttributes)
                     copy.replaceCharacters(in: range, with: insertString)
@@ -400,89 +397,6 @@ class ChatMessageItem: ChatRowItem {
                 messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
                 }).mutableCopy() as! NSMutableAttributedString
-
-                
-                
-                var formatting: Bool = messageAttr.length > 0
-                var index:Int = 0
-                while formatting {
-                    var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-                    if let _ = messageAttr.attribute(.preformattedPre, at: index, effectiveRange: &effectiveRange), effectiveRange.location != NSNotFound {
-                        
-                        let beforeAndAfter:(Int)->Bool = { index -> Bool in
-                            let prefix:String = messageAttr.string.nsstring.substring(with: NSMakeRange(index, 1))
-                            let whiteSpaceRange = prefix.rangeOfCharacter(from: NSCharacterSet.whitespaces)
-                            var increment: Bool = false
-                            if let _ = whiteSpaceRange {
-                                messageAttr.replaceCharacters(in: NSMakeRange(index, 1), with: "\n")
-                            } else if prefix != "\n" {
-                                messageAttr.insert(.initialize(string: "\n"), at: index)
-                                increment = true
-                            }
-                            return increment
-                        }
-                        
-                        if effectiveRange.min > 0 {
-                            let increment = beforeAndAfter(effectiveRange.min)
-                            if increment {
-                                effectiveRange = NSMakeRange(effectiveRange.location, effectiveRange.length + 1)
-                            }
-                        }
-                        if effectiveRange.max < messageAttr.length - 1 {
-                            let increment = beforeAndAfter(effectiveRange.max)
-                            if increment {
-                                effectiveRange = NSMakeRange(effectiveRange.location, effectiveRange.length + 1)
-                            }
-                        }
-                    }
-                    
-                    if effectiveRange.location != NSNotFound {
-                        index += effectiveRange.length
-                    } else {
-                        index += 1
-                    }
-                    
-                    formatting = index < messageAttr.length
-                }
-//                formatting = messageAttr.length > 0
-//                index = 0
-//                while formatting {
-//                    var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-//                    if let _ = messageAttr.attribute(.quote, at: index, effectiveRange: &effectiveRange), effectiveRange.location != NSNotFound {
-//                        let beforeAndAfter:(Int)->Bool = { index -> Bool in
-//                            let prefix:String = messageAttr.string.nsstring.substring(with: NSMakeRange(index, 1))
-//                            let whiteSpaceRange = prefix.rangeOfCharacter(from: NSCharacterSet.whitespaces)
-//                            var increment: Bool = false
-//                            if let _ = whiteSpaceRange {
-//                                messageAttr.replaceCharacters(in: NSMakeRange(index, 1), with: "\n")
-//                            } else if prefix != "\n" {
-//                                messageAttr.insert(.initialize(string: "\n"), at: index)
-//                                increment = true
-//                            }
-//                            return increment
-//                        }
-//                        if effectiveRange.min > 0 {
-//                            let increment = beforeAndAfter(effectiveRange.min)
-//                            if increment {
-//                                effectiveRange = NSMakeRange(effectiveRange.location, effectiveRange.length + 1)
-//                            }
-//                        }
-//                        if effectiveRange.max < messageAttr.length - 1 {
-//                            let increment = beforeAndAfter(effectiveRange.max)
-//                            if increment {
-//                                effectiveRange = NSMakeRange(effectiveRange.location, effectiveRange.length + 1)
-//                            }
-//                        }
-//                     }
-//                     
-//                     if effectiveRange.location != NSNotFound {
-//                         index += effectiveRange.length
-//                     } else {
-//                         index += 1
-//                     }
-//                     
-//                     formatting = index < messageAttr.length
-//                 }
                 
              }
              
@@ -531,15 +445,9 @@ class ChatMessageItem: ChatRowItem {
                      for entity in attr.entities {
                          switch entity.type {
                          case .Spoiler:
-                             let color: NSColor
-                             if entry.renderType == .bubble {
-                                 color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
-                             } else {
-                                 color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
-                             }
                              let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
                              if let range = copy.range.intersection(range) {
-                                 copy.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
+                                 copy.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
                              }
                          default:
                              break
@@ -552,20 +460,27 @@ class ChatMessageItem: ChatRowItem {
 //             copy.fixUndefinedEmojies()
 
              
+             
+             
+
+             copy.enumerateAttribute(TextInputAttributes.spoiler, in: copy.range, options: .init(), using: { value, range, stop in
+                 if let _ = value {
+                     let color: NSColor
+                     if entry.renderType == .bubble {
+                         color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
+                     } else {
+                         color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
+                     }
+                     spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                 }
+             })
+             
+             
              if let text = message.restrictedText(context.contentSettings) {
                  self.messageText = .initialize(string: text, color: theme.colors.grayText, font: .italic(theme.fontSize))
              } else {
                  self.messageText = copy
              }
-             
-
-             copy.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: copy.range, options: .init(), using: { value, range, stop in
-                 if let text = value as? TGInputTextTag {
-                     if let color = text.attribute.value as? NSColor {
-                         spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
-                     }
-                 }
-             })
              
              textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                  chatInteraction?.update({
@@ -574,7 +489,7 @@ class ChatMessageItem: ChatRowItem {
                      })
                  })
              })
-            textLayout.mayBlocked = entry.renderType != .bubble
+            textLayout.mayBlocked = true//entry.renderType = .bubble
             
             if let highlightFoundText = entry.additionalData.highlightFoundText {
                 let string = copy.string.lowercased()
@@ -932,11 +847,13 @@ class ChatMessageItem: ChatRowItem {
                 if underlineLinks {
                     string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
                 }
+                string.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute(url: url), range: range)
             case .Bold:
                 fontAttributes.append((range, .bold))
+                string.addAttribute(TextInputAttributes.bold, value: true as NSNumber, range: range)
             case .Italic:
                 fontAttributes.append((range, .italic))
-
+                string.addAttribute(TextInputAttributes.italic, value: true as NSNumber, range: range)
             case .Mention:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 if nsString == nil {
@@ -952,6 +869,8 @@ class ChatMessageItem: ChatRowItem {
                 if underlineLinks {
                     string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
                 }
+                string.addAttribute(TextInputAttributes.textMention, value: ChatTextInputTextMentionAttribute(peerId: peerId), range: range)
+
             case .BotCommand:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: textColor, range: range)
                 if nsString == nil {
@@ -960,7 +879,7 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
             case .Code:
-                string.addAttribute(.preformattedCode, value: 4.0, range: range)
+//                string.addAttribute(.preformattedPre, value: 4.0, range: range)
                 fontAttributes.append((range, .monospace))
 
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
@@ -968,11 +887,12 @@ class ChatMessageItem: ChatRowItem {
                     copyToClipboard(link)
                     context.bindings.showControllerToaster(ControllerToaster(text: strings().shareLinkCopied), true)
                 }), range: range)
+                string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
             case  .Pre:
-                string.addAttribute(.preformattedCode, value: 4.0, range: range)
+//                string.addAttribute(.preformattedPre, value: 4.0, range: range)
                 fontAttributes.append((range, .monospace))
-               // string.addAttribute(.preformattedPre, value: 4.0, range: range)
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
+                string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
             case .Hashtag:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 if nsString == nil {
@@ -984,8 +904,10 @@ class ChatMessageItem: ChatRowItem {
                 }
             case .Strikethrough:
                 string.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
+                string.addAttribute(TextInputAttributes.strikethrough, value: true as NSNumber, range: range)
             case .Underline:
                 string.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+                string.addAttribute(TextInputAttributes.underline, value: true as NSNumber, range: range)
             case .BankCard:
                 if nsString == nil {
                     nsString = text as NSString
@@ -995,7 +917,14 @@ class ChatMessageItem: ChatRowItem {
                     openBank(bankCard)
                 }), range: range)
             case .BlockQuote:
-                string.addAttribute(.quote, value: TextViewBlockQuoteData(id: .random(in: 0 ..< Int.max), title: nil, color: linkColor), range: range)
+                string.addAttribute(TextInputAttributes.quote, value: true as NSNumber, range: range)
+                string.addAttribute(.preformattedPre, value: 4 as NSNumber, range: range)
+                string.addAttribute(.foregroundColor, value: NSColor.red.cgColor, range: range)
+                
+                //TextViewBlockQuoteData(id: Int(arc4random64()), color: linkColor),
+                
+                //string.addAttribute(.backgroundColor, value: NSColor.green.cgColor, range: range)
+
             case let .Custom(type):
                 if type == ApplicationSpecificEntityType.Timecode {
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)

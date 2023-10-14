@@ -384,7 +384,7 @@ final class ChatInteraction : InterfaceObserver  {
     @discardableResult func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
 
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
-        let inputText = presentation.effectiveInput.attributedString(theme).mutableCopy() as! NSMutableAttributedString
+        let inputText = presentation.effectiveInput.attributedString().mutableCopy() as! NSMutableAttributedString
         
         if self.presentation.state != .normal && presentation.state != .editing {
             return selectedRange.lowerBound ..< selectedRange.lowerBound

@@ -295,9 +295,9 @@ final class ChatGiveawayRowItem : ChatRowItem {
         var point: CGPoint = NSMakePoint(0, 0)
         var index = 0
         for (i, channel) in channels.enumerated() {
-            if point.x + channel.size.width > width || index == 2 {
+            if point.x + channel.size.width > w || index == 2 {
                 point.x = 0
-                point.y = channel.size.height + 5
+                point.y += channel.size.height + 5
                 index = 0
             }
             channels[i].rect = CGRect(origin: point, size: channel.size)

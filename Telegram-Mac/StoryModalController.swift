@@ -282,7 +282,7 @@ final class StoryInteraction : InterfaceObserver {
     func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
 
         var selectedRange = selectedRange ?? presentation.input.selectionRange
-        let inputText = presentation.input.attributedString(darkAppearance).mutableCopy() as! NSMutableAttributedString
+        let inputText = presentation.input.attributedString().mutableCopy() as! NSMutableAttributedString
         
         
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
@@ -1004,7 +1004,9 @@ private final class StoryViewController: Control, Notifable {
                 current = view
                 isNew = false
             } else {
-                current = InputSwapSuggestionsPanel(textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: darkAppearance)
+                current = InputSwapSuggestionsPanel(inputView: textView.inputView, textContent: textView.scrollView.contentView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction, presentation: darkAppearance, highlightRect: { [weak textView] range, whole in
+                    return textView?.highlight(for: range, whole: whole) ?? .zero
+                })
                 self.textInputSuggestionsView = current
                 isNew = true
             }
@@ -1488,11 +1490,8 @@ private final class StoryViewController: Control, Notifable {
     var inputView: NSTextView? {
         return self.current?.textView
     }
-    var inputTextView: TGModernGrowingTextView? {
+    var inputTextView: UITextView? {
         return self.current?.inputTextView
-    }
-    func makeUrl() {
-        self.current?.makeUrl()
     }
     
     func zoomIn() {
@@ -2145,8 +2144,7 @@ final class StoryModalController : ModalViewController, Notifable {
                     if textInputContextState.1.contains(.swapEmoji), value.inputInFocus {
                         let stringRange = textInputContextState.0
                         let range = NSRange(string: input.inputText, range: stringRange)
-                        let accept = self.genericView.hasEmojiSwap || !input.isEmojiHolder(at: range)
-                        if !input.isAnimatedEmoji(at: range) && accept {
+                        if !input.isAnimatedEmoji(at: range) {
                             let query = String(input.inputText[stringRange])
                             let signal = InputSwapSuggestionsPanelItems(query, peerId: chatInteraction.peerId, context: chatInteraction.context)
                             |> deliverOnMainQueue
@@ -2411,7 +2409,7 @@ final class StoryModalController : ModalViewController, Notifable {
                                 showModal(with: PremiumBoardingController(context: context, source: .premium_stickers, presentation: darkAppearance), for: context.window)
                             })
                         } else {
-                            sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil, nil)]), entryId, id, .reaction(reaction))
+                            sendText(.init(inputText: text, selectionRange: 0..<0, attributes: [.animated(0..<text.length, text, fileId, file, nil)]), entryId, id, .reaction(reaction))
                             self?.genericView.playReaction(reaction)
                         }
                     }
@@ -2745,7 +2743,7 @@ final class StoryModalController : ModalViewController, Notifable {
             
         }
         chatInteraction.sendPlainText = { [weak self] text in
-            _ = self?.interactions.appendText(.makeEmojiHolder(text, fromRect: nil))
+            _ = self?.interactions.appendText(.initialize(string: text))
             self?.applyFirstResponder()
         }
         chatInteraction.appendAttributedText = { [weak self] attr in
@@ -3055,7 +3053,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if self?.isNotMainScreen == true {
                 return .rejected
             }
-            self?.genericView.inputTextView?.boldWord()
+            self?.genericView.inputTextView?.inputApplyTransform(.attribute(TextInputAttributes.bold))
             return .invoked
         }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
         
@@ -3079,7 +3077,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if self?.isNotMainScreen == true {
                 return .rejected
             }
-            self?.genericView.inputTextView?.underlineWord()
+            self?.genericView.inputTextView?.inputApplyTransform(.attribute(TextInputAttributes.underline))
             return .invoked
         }, with: self, for: .U, priority: .modal, modifierFlags: [.shift, .command])
         
@@ -3087,7 +3085,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if self?.isNotMainScreen == true {
                 return .rejected
             }
-            self?.genericView.inputTextView?.spoilerWord()
+            self?.genericView.inputTextView?.inputApplyTransform(.attribute(TextInputAttributes.spoiler))
             return .invoked
         }, with: self, for: .P, priority: .modal, modifierFlags: [.shift, .command])
         
@@ -3095,7 +3093,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if self?.isNotMainScreen == true {
                 return .rejected
             }
-            self?.genericView.inputTextView?.strikethroughWord()
+            self?.genericView.inputTextView?.inputApplyTransform(.attribute(TextInputAttributes.strikethrough))
             return .invoked
         }, with: self, for: .X, priority: .modal, modifierFlags: [.shift, .command])
         
@@ -3103,7 +3101,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if self?.isNotMainScreen == true {
                 return .rejected
             }
-            self?.genericView.inputTextView?.removeAllAttributes()
+            self?.genericView.inputTextView?.inputApplyTransform(.clear)
             return .invoked
         }, with: self, for: .Backslash, priority: .modal, modifierFlags: [.command])
         
@@ -3111,7 +3109,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if self?.isNotMainScreen == true {
                 return .rejected
             }
-            self?.genericView.makeUrl()
+            self?.genericView.inputTextView?.inputApplyTransform(.url)
             return .invoked
         }, with: self, for: .U, priority: .modal, modifierFlags: [.command])
         
@@ -3119,7 +3117,7 @@ final class StoryModalController : ModalViewController, Notifable {
             if self?.isNotMainScreen == true {
                 return .rejected
             }
-            self?.genericView.inputTextView?.italicWord()
+            self?.genericView.inputTextView?.inputApplyTransform(.attribute(TextInputAttributes.italic))
             return .invoked
         }, with: self, for: .I, priority: .modal, modifierFlags: [.command])
         

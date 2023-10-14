@@ -7,13 +7,9 @@
 
 import Foundation
 
-public struct Updated_ChatTextInputState: Equatable {
+public struct Updated_ChatTextInputState {
     public var inputText: NSAttributedString
     public var selectionRange: Range<Int>
-    
-    public static func ==(lhs: Updated_ChatTextInputState, rhs: Updated_ChatTextInputState) -> Bool {
-        return lhs.inputText.isEqual(to: rhs.inputText) && lhs.selectionRange == rhs.selectionRange
-    }
     
     public init() {
         self.inputText = NSAttributedString()

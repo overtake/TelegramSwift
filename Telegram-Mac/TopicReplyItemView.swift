@@ -55,7 +55,7 @@ final class TopicReplyItemLayout {
                 let file = ForumUI.makeIconFile(title: threadData.title, iconColor: threadData.iconColor, isGeneral: message.threadId == 1)
                 item = .init(source: .attribute(.init(fileId: Int64(threadData.iconColor), file: file, emoji: "")))
             }
-            attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: item, range: range)
+            attr.addAttribute(TextInputAttributes.embedded, value: item, range: range)
         }
         
         self.text = .init(attr, maximumNumberOfLines: maxiumLines, alignment: .left, alwaysStaticItems: true)

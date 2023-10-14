@@ -125,9 +125,9 @@ public extension NSAttributedString {
         return NSMakeRange(loc, length)
     }
     
-    static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSAttributedString {
+    static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSAttributedString {
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        _ = attr.append(string: string, color: color, font: font, coreText: true)
+        _ = attr.append(string: string, color: color, font: font)
         
         return attr.copy() as! NSAttributedString
     }
@@ -327,7 +327,55 @@ public struct ParsingType: OptionSet {
 
 public extension NSMutableAttributedString {
     
-    @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSRange {
+    func mergeIntersectingAttributes(keepBest: Bool = true) {
+        let mergedAttributedString = self
+        let fullRange = NSRange(location: 0, length: self.length)
+
+        for attributeName in self.attributes(at: 0, effectiveRange: nil).keys {
+            var intersectionRanges = [NSRange]()
+
+            var location = 0
+            while location < fullRange.length {
+                var effectiveRange = NSRange()
+                let attributeValue = self.attribute(attributeName, at: location, effectiveRange: &effectiveRange)
+                if effectiveRange.length > 0 {
+                    intersectionRanges.append(effectiveRange)
+                }
+                location = NSMaxRange(effectiveRange)
+            }
+
+            if intersectionRanges.count > 1 {
+                if keepBest {
+                    // Find the best attribute value (e.g., the one with the largest range)
+                    var bestRange = NSRange()
+                    var bestValue: Any?
+
+                    for range in intersectionRanges {
+                        if range.length > bestRange.length {
+                            bestRange = range
+                            bestValue = self.attribute(attributeName, at: range.location, effectiveRange: nil)
+                        }
+                    }
+
+                    // Remove all intersecting ranges except the best one
+                    for range in intersectionRanges {
+                        if range != bestRange {
+                            mergedAttributedString.removeAttribute(attributeName, range: range)
+                        }
+                    }
+                } else {
+                    // Keep only the first attribute and remove the rest
+                    let firstRange = intersectionRanges.first!
+                    for i in 1..<intersectionRanges.count {
+                        let intersectionRange = intersectionRanges[i]
+                        mergedAttributedString.removeAttribute(attributeName, range: intersectionRange)
+                    }
+                }
+            }
+        }
+    }
+    
+    @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSRange {
         
         if(string == nil) {
             return NSMakeRange(0, 0)
@@ -348,9 +396,6 @@ public extension NSMutableAttributedString {
         }
         
         if let f = font {
-//            if coreText {
-//                 self.setCTFont(font: f, range: range)
-//            }
             self.setFont(font: f, range: range)
         }
         
@@ -374,9 +419,6 @@ public extension NSMutableAttributedString {
         self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
     }
     
-    func setCTFont(font:NSFont, range:NSRange) -> Void {
-        self.addAttribute(NSAttributedString.Key(kCTFontAttributeName as String), value: CTFontCreateWithFontDescriptor(font.fontDescriptor, 0, nil), range: range)
-    }
     
     func setSelected(color:NSColor,range:NSRange) -> Void {
         self.addAttribute(.selectedColor, value: color, range: range)

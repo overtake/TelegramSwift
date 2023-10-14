@@ -27,6 +27,9 @@ class ForwardPanelModel: ChatAccessoryModel {
     deinit {
     }
     
+    override var modelType: ChatAccessoryModel.ModelType {
+        return .classic
+    }
     
     func make() -> Void {
         

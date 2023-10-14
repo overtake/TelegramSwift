@@ -892,7 +892,7 @@ class ChatServiceItem: ChatRowItem {
                 attributedString.insert(.initialize(string: "🤡", color: grayTextColor, font: .normal(theme.fontSize)), at: 0)
                 let file = LocalAnimatedSticker.expired_story.monochromeFile
                 
-                attributedString.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: "🤡"))), range: NSMakeRange(0, 2))
+                attributedString.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: "🤡"))), range: NSMakeRange(0, 2))
 
                 
             } else if let item = message.associatedStories[story.storyId]?.get(Stories.StoredItem.self), let peer = message.author, let peerReference = PeerReference(peer) {

@@ -25,7 +25,8 @@ class ReplyModel: ChatAccessoryModel {
     private let headerAsName: Bool
     private let customHeader: String?
     private let translate: ChatLiveTranslateContext.State.Result?
-    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil, translate: ChatLiveTranslateContext.State.Result? = nil) {
+    private let forceClassic: Bool
+    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, forceClassic: Bool = false) {
         self.isPinned = isPinned
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
@@ -33,6 +34,7 @@ class ReplyModel: ChatAccessoryModel {
         self.headerAsName = headerAsName
         self.customHeader = customHeader
         self.translate = translate
+        self.forceClassic = forceClassic
         super.init(context: context, presentation: presentation, drawLine: drawLine)
         
       
@@ -57,6 +59,14 @@ class ReplyModel: ChatAccessoryModel {
              })
         }
        
+    }
+    
+    override var modelType: ChatAccessoryModel.ModelType {
+        if isPinned || forceClassic {
+            return .classic
+        } else {
+            return super.modelType
+        }
     }
     
     override weak var view:ChatAccessoryView? {
@@ -267,14 +277,14 @@ class ReplyModel: ChatAccessoryModel {
             }
             let attr = NSMutableAttributedString()
             attr.append(text)
-            attr.addAttribute(.foregroundColor, value: message.media.isEmpty || message.anyMedia is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, range: attr.range)
+            attr.addAttribute(.foregroundColor, value: presentation.enabledText, range: attr.range)
             attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
             
 //            attr.fixUndefinedEmojies()
             self.message = .init(attr, maximumNumberOfLines: 1)
         } else {
             self.header = nil
-            self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.disabledText, font: .normal(.text)), maximumNumberOfLines: 1)
+            self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.enabledText, font: .normal(.text)), maximumNumberOfLines: 1)
             display = true
         }
         
@@ -558,7 +568,7 @@ class ExpiredStoryReplyModel: ChatAccessoryModel {
 
         let file = LocalAnimatedSticker.expired_story.monochromeFile
         
-        text.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: "🤡"))), range: NSMakeRange(0, 2))
+        text.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: "🤡"))), range: NSMakeRange(0, 2))
 
 
         

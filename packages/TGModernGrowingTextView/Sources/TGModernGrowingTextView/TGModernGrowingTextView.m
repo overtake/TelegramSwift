@@ -172,7 +172,6 @@ NSString *const QuoteAttributeName = @"Attribute__Blockquote";
 
 -(void)setSelectedRange:(NSRange)charRange affinity:(NSSelectionAffinity)affinity stillSelecting:(BOOL)stillSelectingFlag {
     [super setSelectedRange:charRange affinity:affinity stillSelecting:stillSelectingFlag];
-    [[NSNotificationCenter defaultCenter] postNotificationName:NSTextViewDidChangeSelectionNotification object:self];
 }
     
 

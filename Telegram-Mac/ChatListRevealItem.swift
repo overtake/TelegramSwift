@@ -205,7 +205,7 @@ final class ChatListRevealView : TableStickView {
             let unreadCount:ChatListFilterBadge? = item.counters.count(for: tab)
             let icon: CGImage?
             if let unreadCount = unreadCount, unreadCount.count > 0 {
-                let attributedString = NSAttributedString.initialize(string: "\(unreadCount.count.prettyNumber)", color: item.presentation.colors.background, font: .medium(.short), coreText: true)
+                let attributedString = NSAttributedString.initialize(string: "\(unreadCount.count.prettyNumber)", color: item.presentation.colors.background, font: .medium(.short))
                 let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(CGFloat.greatestFiniteMagnitude, CGFloat.greatestFiniteMagnitude), nil, false, .center)
                 var size = NSMakeSize(textLayout.0.size.width + 8, textLayout.0.size.height + 5)
                 size = NSMakeSize(max(size.height,size.width), size.height)

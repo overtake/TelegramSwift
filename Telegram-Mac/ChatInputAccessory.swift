@@ -192,7 +192,7 @@ class ChatInputAccessory: View {
             
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {
-            displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, dismissReply: dismissReply)
+            displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, dismissReply: dismissReply, forceClassic: true)
             iconView.image = theme.icons.chat_action_reply_message
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
@@ -283,6 +283,7 @@ class ChatInputAccessory: View {
             self.size = NSMakeSize(width, displayNode.size.height)
         }
     }
+    
     
     
 }

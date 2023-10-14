@@ -12,6 +12,7 @@ import TGUIKit
 import Postbox
 import TelegramCore
 import TGModernGrowingTextView
+import InputView
 
 
 
@@ -485,7 +486,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                             let attr = NSMutableAttributedString()
                             let text = (file.customEmojiText ?? file.stickerText ?? "😀").fixed
                             _ = attr.append(string: text)
-                            attr.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: text, info: nil, type: TGTextAttachment.emoji), range: attr.range)
+                            attr.addAttribute(TextInputAttributes.customEmoji, value: TextInputTextCustomEmojiAttribute(fileId: file.fileId.id, file: file, emoji: text), range: attr.range)
                             _ = chatInteraction.appendText(attr, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
                         }
                         

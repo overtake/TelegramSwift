@@ -46,8 +46,6 @@ public enum InputViewTransformReason {
 
 public protocol ChatInputTextViewDelegate: AnyObject {
     
-    
-    
     func chatInputTextViewDidUpdateText()
     func chatInputTextViewDidChangeSelection(dueToEditing: Bool)
     func chatInputTextViewDidBeginEditing()
@@ -58,12 +56,21 @@ public protocol ChatInputTextViewDelegate: AnyObject {
     func chatInputTextViewShouldPaste() -> Bool
     
     func inputTextCanTransform() -> Bool
-    func inputApplyTransform(_ reason: InputViewTransformReason, textRange: NSRange)
+    func inputApplyTransform(_ reason: InputViewTransformReason)
     func inputMaximumHeight() -> CGFloat
+    func inputMaximumLenght() -> Int
     
     func inputViewIsEnabled() -> Bool
     func inputViewProcessEnter(_ theEvent: NSEvent) -> Bool
     func inputViewMaybeClosed() -> Bool
+    
+    func inputViewSupportsContinuityCamera() -> Bool
+    func inputViewProcessPastepoard(_ pboard: NSPasteboard) -> Bool
+    func inputViewCopyAttributedString(_ attributedString: NSAttributedString) -> Bool
+    
+    func inputViewRevealSpoilers()
+    
+    func inputViewResponderDidUpdate()
 }
 
 
@@ -75,7 +82,7 @@ private final class EmojiProviderView: View {
         var index: Int
     }
     
-    fileprivate var emojiViewProvider: ((ChatTextInputTextCustomEmojiAttribute, NSSize, InputViewTheme) -> NSView)?
+    fileprivate var emojiViewProvider: ((TextInputTextCustomEmojiAttribute, NSSize, InputViewTheme) -> NSView)?
     
     
     private var emojiLayers: [Key: NSView] = [:]
@@ -93,7 +100,7 @@ private final class EmojiProviderView: View {
         fatalError("init(frame:) has not been implemented")
     }
     
-    func update(emojiRects: [(CGRect, ChatTextInputTextCustomEmojiAttribute)], theme: InputViewTheme) {
+    func update(emojiRects: [(CGRect, TextInputTextCustomEmojiAttribute)], theme: InputViewTheme) {
         var nextIndexById: [Int64: Int] = [:]
         
         var validKeys = Set<Key>()
@@ -141,6 +148,14 @@ private final class EmojiProviderView: View {
 
 
 open class ChatInputTextView: ScrollView, NSTextViewDelegate {
+    
+    private let _undo: UndoManager = .init()
+
+    
+    public func undoManager(for view: NSTextView) -> UndoManager? {
+        return _undo
+    }
+    
     public weak var delegate: ChatInputTextViewDelegate? {
         didSet {
             self.textView.customDelegate = self.delegate
@@ -161,7 +176,7 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
     
     
     private var emojiContent: EmojiProviderView
-    public var emojiViewProvider: ((ChatTextInputTextCustomEmojiAttribute, NSSize, InputViewTheme) -> NSView)? {
+    public var emojiViewProvider: ((TextInputTextCustomEmojiAttribute, NSSize, InputViewTheme) -> NSView)? {
         get {
             return emojiContent.emojiViewProvider
         } set {
@@ -180,6 +195,10 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
                 self.textView.selectedRange = value
             }
         }
+    }
+    
+    public func highlight(for range: NSRange, whole: Bool) -> NSRect {
+        return self.textView.highlightRect(forRange: range, whole: whole)
     }
     
     public var attributedText: NSAttributedString {
@@ -227,6 +246,10 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
             textView.theme = newValue
         }
     }
+    
+    public var inputView: NSTextView {
+        return self.textView
+    }
 
     public required override init(frame: CGRect) {
         self.emojiContent = .init()
@@ -241,6 +264,9 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
         containerView.addSubview(emojiContent)
         self.documentView = containerView
         
+        self.backgroundColor = .clear
+        self.layer?.backgroundColor = NSColor.clear.cgColor
+
         
         NotificationCenter.default.addObserver(forName: NSTextView.didChangeSelectionNotification, object: textView, queue: nil, using: { [weak self] notification in
             self?.textDidChangeSelection(notification)
@@ -250,6 +276,12 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
             self?.emojiContent.update(emojiRects: rects, theme: theme)
         }
 
+        self.textView.shouldUpdateLayout = { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            self.updateLayout(size: self.frame.size, textHeight: self.textHeightForWidth(self.frame.width), transition: .immediate)
+        }
     }
     
     deinit {
@@ -311,11 +343,18 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
     public func updateLayout(size: CGSize, textHeight: CGFloat, transition: ContainedViewLayoutTransition) {
         
         let immediate = ContainedViewLayoutTransition.immediate
-        let contentRect = CGRect(origin: .zero, size: NSMakeSize(size.width, textHeight))
+        let contentRect = CGRect(origin: .zero, size: NSMakeSize(size.width, max(textHeight, size.height)))
         immediate.updateFrame(view: self.containerView, frame: contentRect)
-        immediate.updateFrame(view: self.textView, frame: contentRect)
         
-        immediate.updateFrame(view: emojiContent, frame: contentRect)
+        let textRect: NSRect
+        if textHeight < size.height {
+            textRect = focus(NSMakeSize(size.width, textHeight))
+        } else {
+            textRect = contentRect
+        }
+        immediate.updateFrame(view: self.textView, frame: textRect)
+
+        immediate.updateFrame(view: emojiContent, frame: textRect)
 
         if let placeholder = self.placeholder {
             placeholder.resize(size.width)
@@ -384,7 +423,7 @@ private final class ChatInputTextContainer: NSTextContainer {
             let index = Int(characterIndex)
             if index >= 0 && index < string.length {
                 let attributes = textStorage.attributes(at: index, effectiveRange: nil)
-                let blockQuote = attributes[ChatTextInputAttributes.quote] as? NSObject
+                let blockQuote = attributes[TextInputAttributes.quote] as? NSObject
                 if let blockQuote {
                     result.origin.x += 9.0
                     result.size.width -= 9.0
@@ -395,7 +434,7 @@ private final class ChatInputTextContainer: NSTextContainer {
                         isFirstLine = true
                     } else {
                         let previousAttributes = textStorage.attributes(at: index - 1, effectiveRange: nil)
-                        let previousBlockQuote = previousAttributes[ChatTextInputAttributes.quote] as? NSObject
+                        let previousBlockQuote = previousAttributes[TextInputAttributes.quote] as? NSObject
                         if let previousBlockQuote {
                             if !blockQuote.isEqual(previousBlockQuote) {
                                 isFirstLine = true
@@ -434,6 +473,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     
     
     var onRedraw:(()->Void)? = nil
+    var shouldUpdateLayout:(()->Void)? = nil
     
     private let customTextContainer: ChatInputTextContainer
     private let customTextStorage: NSTextStorage
@@ -446,7 +486,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     private var blockQuotes: [Int: QuoteBackgroundView] = [:]
     private var spoilers: [Int: SpoilerView] = [:]
     
-    fileprivate var updateEmojies:(([(CGRect, ChatTextInputTextCustomEmojiAttribute)], InputViewTheme)->Void)?
+    fileprivate var updateEmojies:(([(CGRect, TextInputTextCustomEmojiAttribute)], InputViewTheme)->Void)?
 
     public var defaultTextContainerInset: NSEdgeInsets = NSEdgeInsets() {
         didSet {
@@ -505,14 +545,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    override public func copy(_ sender: Any?) {
-        super.copy(sender)
-    }
-    
-    override public func paste(_ sender: Any?) {
-        super.paste(sender)
-    }
+   
     
     public func layoutManager(_ layoutManager: NSLayoutManager, paragraphSpacingBeforeGlyphAt glyphIndex: Int, withProposedLineFragmentRect rect: NSRect) -> CGFloat {
         guard let textStorage = layoutManager.textStorage else {
@@ -524,13 +557,13 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         
         let attributes = textStorage.attributes(at: characterIndex, effectiveRange: nil)
-        guard let blockQuote = attributes[ChatTextInputAttributes.quote] as? NSObject else {
+        guard let blockQuote = attributes[TextInputAttributes.quote] as? NSObject else {
             return 0.0
         }
         
         if characterIndex != 0 {
             let previousAttributes = textStorage.attributes(at: characterIndex - 1, effectiveRange: nil)
-            let previousBlockQuote = previousAttributes[ChatTextInputAttributes.quote] as? NSObject
+            let previousBlockQuote = previousAttributes[TextInputAttributes.quote] as? NSObject
             if let previousBlockQuote, blockQuote.isEqual(previousBlockQuote) {
                 return 0.0
             }
@@ -555,13 +588,13 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         
         let attributes = textStorage.attributes(at: characterIndex, effectiveRange: nil)
-        guard let blockQuote = attributes[ChatTextInputAttributes.quote] as? NSObject else {
+        guard let blockQuote = attributes[TextInputAttributes.quote] as? NSObject else {
             return 0.0
         }
         
         if characterIndex + 1 < textStorage.length {
             let nextAttributes = textStorage.attributes(at: characterIndex + 1, effectiveRange: nil)
-            let nextBlockQuote = nextAttributes[ChatTextInputAttributes.quote] as? NSObject
+            let nextBlockQuote = nextAttributes[TextInputAttributes.quote] as? NSObject
             if let nextBlockQuote, blockQuote.isEqual(nextBlockQuote) {
                 return 0.0
             }
@@ -585,10 +618,10 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
             let topAttributes = self.customTextStorage.attributes(at: 0, effectiveRange: nil)
             let bottomAttributes = self.customTextStorage.attributes(at: self.customTextStorage.length - 1, effectiveRange: nil)
             
-            if topAttributes[ChatTextInputAttributes.quote] != nil {
+            if topAttributes[TextInputAttributes.quote] != nil {
                 result.bottom += 8.0
             }
-            if bottomAttributes[ChatTextInputAttributes.quote] != nil {
+            if bottomAttributes[TextInputAttributes.quote] != nil {
                 result.bottom += 8.0
             }
         }
@@ -603,10 +636,10 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
             let topAttributes = self.customTextStorage.attributes(at: 0, effectiveRange: nil)
             let bottomAttributes = self.customTextStorage.attributes(at: self.customTextStorage.length - 1, effectiveRange: nil)
             
-            if topAttributes[ChatTextInputAttributes.quote] != nil {
+            if topAttributes[TextInputAttributes.quote] != nil {
                 result.bottom += 7.0
             }
-            if bottomAttributes[ChatTextInputAttributes.quote] != nil {
+            if bottomAttributes[TextInputAttributes.quote] != nil {
                 result.bottom += 8.0
             }
         }
@@ -614,7 +647,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     }
     
     public override var textContainerOrigin: NSPoint {
-        return NSMakePoint(defaultTextContainerInset.left, 3)
+        return NSMakePoint(defaultTextContainerInset.left, 5)
     }
     
     public func textHeightForWidth(_ width: CGFloat) -> CGFloat {
@@ -643,6 +676,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
             self.customLayoutManager.invalidateLayout(forCharacterRange: NSRange(location: 0, length: self.customTextStorage.length), actualCharacterRange: nil)
             self.customLayoutManager.ensureLayout(for: self.customTextContainer)
         }
+        updateTextElements()
     }
     
     public func setAttributedString(_ attributedString: NSAttributedString) {
@@ -667,22 +701,25 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     private func validateEmojies() {
         
         let textStorage = self.customTextStorage
-        var rects: [(CGRect, ChatTextInputTextCustomEmojiAttribute)] = []
+        var rects: [(CGRect, TextInputTextCustomEmojiAttribute)] = []
 
         textStorage.enumerateAttributes(in: NSMakeRange(0, textStorage.length), options: [], using: { attributes, range, _ in
-            if let value = attributes[ChatTextInputAttributes.customEmoji] as? ChatTextInputTextCustomEmojiAttribute {
+            if let value = attributes[TextInputAttributes.customEmoji] as? TextInputTextCustomEmojiAttribute {
                 
-                if attributes[ChatTextInputAttributes.spoiler] == nil {
-                    let glyphRange = self.customLayoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-                    if self.customLayoutManager.isValidGlyphIndex(glyphRange.location) && self.customLayoutManager.isValidGlyphIndex(glyphRange.location + glyphRange.length - 1) {
-                    } else {
+                if let spoiler = attributes[TextInputAttributes.spoiler] as? NSNumber {
+                    if spoiler == 1 {
                         return
                     }
-
-                    var boundingRect = self.customLayoutManager.boundingRect(forGlyphRange: glyphRange, in: self.customTextContainer)
-                    boundingRect.origin.y += self.textContainerOrigin.y
-                    rects.append((boundingRect, value))
                 }
+                let glyphRange = self.customLayoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+                if self.customLayoutManager.isValidGlyphIndex(glyphRange.location) && self.customLayoutManager.isValidGlyphIndex(glyphRange.location + glyphRange.length - 1) {
+                } else {
+                    return
+                }
+
+                var boundingRect = self.customLayoutManager.boundingRect(forGlyphRange: glyphRange, in: self.customTextContainer)
+                boundingRect.origin.y += self.textContainerOrigin.y
+                rects.append((boundingRect, value))
             }
         })
         
@@ -696,9 +733,8 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         let textStorage = self.customTextStorage
 
         
-        textStorage.enumerateAttribute(ChatTextInputAttributes.spoiler, in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
-            if let value {
-                let _ = value
+        textStorage.enumerateAttribute(TextInputAttributes.spoiler, in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
+            if let value = value as? NSNumber, value.intValue == 1 {
                 
                 let glyphRange = self.customLayoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
                 if self.customLayoutManager.isValidGlyphIndex(glyphRange.location) && self.customLayoutManager.isValidGlyphIndex(glyphRange.location + glyphRange.length - 1) {
@@ -716,7 +752,9 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                     self.spoilers[id] = spoiler
                     self.addSubview(spoiler)
                 }
-                
+                if let delegate = self.customDelegate {
+                    spoiler.set(delegate)
+                }
                 var boundingRect = self.customLayoutManager.boundingRect(forGlyphRange: glyphRange, in: self.customTextContainer)
                 boundingRect.origin.y += self.textContainerOrigin.y
                 spoiler.frame = boundingRect
@@ -746,7 +784,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         let textStorage = self.customTextStorage
 
         
-        textStorage.enumerateAttribute(ChatTextInputAttributes.quote, in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
+        textStorage.enumerateAttribute(TextInputAttributes.quote, in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
             if let value {
                 let _ = value
                 
@@ -785,15 +823,17 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                 }
                 //     boundingRect.origin.y += 5.0
                 
+                boundingRect.origin.y += self.textContainerOrigin.y
+
                 boundingRect.origin.x -= 3.0
                 boundingRect.size.width += 9.0
                 boundingRect.size.width += 18.0
                 boundingRect.size.width = min(boundingRect.size.width, self.bounds.width - 18.0)
                 
-                boundingRect.origin.y -= (4.0 - self.textContainerOrigin.y)
+                boundingRect.origin.y -= (4.0)
                 boundingRect.size.height += 8.0
                 
-                blockQuote.frame = boundingRect
+                blockQuote.frame = boundingRect.offsetBy(dx: 0, dy: frame.minY)
                 blockQuote.update(size: boundingRect.size, theme: theme.quote)
 
 
@@ -902,31 +942,31 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     }
     
     @objc private func makeBold(_ id: Any) {
-        self.customDelegate?.inputApplyTransform(.attribute(ChatTextInputAttributes.bold), textRange: self.selectedRange())
+        self.customDelegate?.inputApplyTransform(.attribute(TextInputAttributes.bold))
     }
     @objc private func makeItalic(_ id: Any) {
-        self.customDelegate?.inputApplyTransform(.attribute(ChatTextInputAttributes.italic), textRange: self.selectedRange())
+        self.customDelegate?.inputApplyTransform(.attribute(TextInputAttributes.italic))
     }
     @objc private func makeCode(_ id: Any) {
-        self.customDelegate?.inputApplyTransform(.attribute(ChatTextInputAttributes.monospace), textRange: self.selectedRange())
+        self.customDelegate?.inputApplyTransform(.attribute(TextInputAttributes.monospace))
     }
     @objc private func makeUrl(_ id: Any) {
-        self.customDelegate?.inputApplyTransform(.url, textRange: self.selectedRange())
+        self.customDelegate?.inputApplyTransform(.url)
     }
     @objc private func makeStrikethrough(_ id: Any) {
-        self.customDelegate?.inputApplyTransform(.attribute(ChatTextInputAttributes.strikethrough), textRange: self.selectedRange())
+        self.customDelegate?.inputApplyTransform(.attribute(TextInputAttributes.strikethrough))
     }
     @objc private func makeUnderline(_ id: Any) {
-        self.customDelegate?.inputApplyTransform(.attribute(ChatTextInputAttributes.underline), textRange: self.selectedRange())
+        self.customDelegate?.inputApplyTransform(.attribute(TextInputAttributes.underline))
     }
     @objc private func makeSpoiler(_ id: Any) {
-        self.customDelegate?.inputApplyTransform(.attribute(ChatTextInputAttributes.spoiler), textRange: self.selectedRange())
+        self.customDelegate?.inputApplyTransform(.attribute(TextInputAttributes.spoiler))
     }
     @objc private func makeQuote(_ id: Any) {
-        self.customDelegate?.inputApplyTransform(.attribute(ChatTextInputAttributes.quote), textRange: self.selectedRange())
+        self.customDelegate?.inputApplyTransform(.attribute(TextInputAttributes.quote))
     }
     @objc private func removeAll(_ id: Any) {
-        self.customDelegate?.inputApplyTransform(.clear, textRange: self.selectedRange())
+        self.customDelegate?.inputApplyTransform(.clear)
     }
     
     @objc func addUndoItem(_ item: InputViewUndoItem) {
@@ -936,6 +976,8 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         self.textStorage?.setAttributedString(item.be)
         self.setSelectedRange(item.beRange)
+        self.shouldUpdateLayout?()
+        self.updateTextContainerInset()
     }
 
     @objc func removeUndoItem(_ item: InputViewUndoItem) {
@@ -945,6 +987,8 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         self.textStorage?.setAttributedString(item.was)
         self.setSelectedRange(item.wasRange)
+        self.shouldUpdateLayout?()
+        self.updateTextContainerInset()
     }
     
     public override func draw(_ dirtyRect: NSRect) {
@@ -989,7 +1033,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
             return NSZeroRect
         }
         
-        var r = aRange
+        let r = aRange
         let startLineRange = (self.string as NSString).lineRange(for: NSRange(location: r.location, length: 0))
         var er = NSMaxRange(r) - 1
         let text = self.string
@@ -1003,9 +1047,9 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         
         let gr = self.customLayoutManager.glyphRange(forCharacterRange: aRange, actualCharacterRange: nil)
-        var br = self.customLayoutManager.boundingRect(forGlyphRange: gr, in: self.customTextContainer)
+        let br = self.customLayoutManager.boundingRect(forGlyphRange: gr, in: self.customTextContainer)
         let b = self.bounds
-        var h = br.size.height
+        let h = br.size.height
         var w: CGFloat = 0
         
         if whole {
@@ -1027,7 +1071,59 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         
         return aRect
     }
-
+    
+    public override func validRequestor(forSendType sendType: NSPasteboard.PasteboardType?, returnType: NSPasteboard.PasteboardType?) -> Any? {
+        guard let delegate = self.customDelegate else {
+            return nil
+        }
+        if delegate.inputViewSupportsContinuityCamera(), let returnType = returnType, NSImage.imageTypes.contains(returnType.rawValue) {
+            return self
+        }
+        return nil
+    }
+    
+    public override func readSelection(from pboard: NSPasteboard) -> Bool {
+        guard let delegate = self.customDelegate else {
+            return super.readSelection(from: pboard)
+        }
+        if pboard.canReadItem(withDataConformingToTypes: NSImage.imageTypes) {
+            return delegate.inputViewProcessPastepoard(pboard)
+        } else {
+            return super.readSelection(from: pboard)
+        }
+    }
+    
+    
+    @objc override public func copy(_ sender: Any?) {
+        guard let delegate = self.customDelegate else {
+            return super.copy(sender)
+        }
+        if !delegate.inputViewCopyAttributedString(self.attributedString().attributedSubstring(from: self.selectedRange())) {
+            super.copy(sender)
+        }
+    }
+    
+    @objc override public func paste(_ sender: Any?) {
+        guard let delegate = self.customDelegate else {
+            return super.paste(sender)
+        }
+        if !delegate.inputViewProcessPastepoard(NSPasteboard.general) {
+            super.paste(sender)
+        }
+    }
+    
+    public override func becomeFirstResponder() -> Bool {
+        DispatchQueue.main.async { [weak self] in
+            self?.customDelegate?.inputViewResponderDidUpdate()
+        }
+        return super.becomeFirstResponder()
+    }
+    public override func resignFirstResponder() -> Bool {
+        DispatchQueue.main.async { [weak self] in
+            self?.customDelegate?.inputViewResponderDidUpdate()
+        }
+        return super.resignFirstResponder()
+    }
 }
 
 private final class QuoteBackgroundView: View {
@@ -1074,15 +1170,24 @@ private final class QuoteBackgroundView: View {
 }
 
 
-private final class SpoilerView: View {
+private final class SpoilerView: Control {
     private var theme: InputViewTheme?
-    
+    private weak var delegate: ChatInputTextViewDelegate?
     private let dustView: InvisibleInkDustView = InvisibleInkDustView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(dustView)
         self.layer?.masksToBounds = false
         self.dustView.layer?.masksToBounds = false
+        
+        set(handler: { [weak self] _ in
+            self?.delegate?.inputViewRevealSpoilers()
+        }, for: .Click)
+        
+    }
+    
+    func set(_ delegate: ChatInputTextViewDelegate) {
+        self.delegate = delegate
     }
     
     required init?(coder: NSCoder) {
@@ -1092,5 +1197,7 @@ private final class SpoilerView: View {
         dustView.frame = size.bounds
         dustView.update(size: size, color: theme.textColor, textColor: .white, rects: [size.bounds], wordRects: [size.bounds.insetBy(dx: 2, dy: 2)])
     }
+    
+    
 }
 

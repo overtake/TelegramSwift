@@ -259,28 +259,16 @@ public class TextNode: NSObject {
 
     open func draw(_ dirtyRect: NSRect, in ctx: CGContext, backingScaleFactor: CGFloat, backgroundColor: NSColor) {
         
-        if !System.supportsTransparentFontDrawing {
-            if backingScaleFactor == 1.0 {
-                ctx.setFillColor(backgroundColor.cgColor)
-                ctx.fill(dirtyRect)
-            }
-            
-            ctx.setAllowsAntialiasing(true)
-            ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
-            ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
-            
-            ctx.setAllowsFontSubpixelPositioning(true)
-            ctx.setShouldSubpixelPositionFonts(true)
-        } else {
-            ctx.setAllowsFontSubpixelPositioning(true)
-            ctx.setShouldSubpixelPositionFonts(true)
-            
-            ctx.setAllowsAntialiasing(true)
-            ctx.setShouldAntialias(true)
-            
-            ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
-            ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
-        }
+        ctx.setAllowsAntialiasing(true)
+                
+        ctx.setAllowsFontSmoothing(true)
+        ctx.setShouldSmoothFonts(true)
+        
+        ctx.setAllowsFontSubpixelPositioning(backingScaleFactor == 1.0)
+        ctx.setShouldSubpixelPositionFonts(backingScaleFactor == 1.0)
+        
+        ctx.setAllowsFontSubpixelQuantization(true)
+        ctx.setShouldSubpixelQuantizeFonts(true)
         
         
         //let contextPtr = NSGraphicsContext.current()?.graphicsPort
