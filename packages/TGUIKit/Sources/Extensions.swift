@@ -1562,6 +1562,9 @@ public extension NSRange {
     var max:Int {
         return self.location + self.length
     }
+    var isEmpty: Bool {
+        return self.length == 0
+    }
     func indexIn(_ index: Int) -> Bool {
         return NSLocationInRange(index, self)
     }

@@ -93,7 +93,7 @@ final class ChatInteraction : InterfaceObserver  {
         case video
     }
     
-    var setupReplyMessage: (MessageId?) -> Void = {_ in}
+    var setupReplyMessage: (Message?, EngineMessageReplySubject?) -> Void = { _, _ in}
     var beginMessageSelection: (MessageId?) -> Void = {_ in}
     var deleteMessages: ([MessageId]) -> Void = {_ in }
     var forwardMessages: ([Message]) -> Void = {_ in}
@@ -207,7 +207,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     var openStory:(MessageId, StoryId)->Void = { _, _ in }
     
-    var quote:(String, MessageId)->Void = { _, _ in }
+    var quote:(EngineMessageReplyQuote, MessageId)->Void = { _, _ in }
     
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
@@ -492,9 +492,16 @@ final class ChatInteraction : InterfaceObserver  {
                     })
                 }
             case let .forward(messageIds, inputState, _):
-                update(animated: animated, {$0.updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(inputState ?? $0.inputState)})})
-                update({
-                    $0.withoutInitialAction()
+                update(animated: animated, {
+                    $0.updatedInterfaceState({
+                        $0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(inputState ?? $0.inputState)
+                    }).withoutInitialAction()
+                })
+            case let .reply(subject, _):
+                update(animated: animated, {
+                    $0.updatedInterfaceState({
+                        $0.withUpdatedReplyMessageId(subject)
+                    }).withoutInitialAction()
                 })
             case .ad:
                 break
@@ -527,7 +534,7 @@ final class ChatInteraction : InterfaceObserver  {
                     return nil
                 } |> take(1) |> deliverOnMainQueue
                 
-                let replyId = presentation.interfaceState.replyMessageId
+                let replyId = presentation.interfaceState.replyMessageId?.messageId
                 let peerId = self.peerId
                 let threadId = presentation.chatLocation.threadId
                 
@@ -667,7 +674,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     func openWebviewFromMenu(buttonText: String, url: String) {
         if let bot = peer {
-            let replyTo = self.presentation.interfaceState.replyMessageId
+            let replyTo = self.presentation.interfaceState.replyMessageId?.messageId
             let threadId = self.presentation.chatLocation.threadId
             let context = self.context
             let peerId = self.peerId
@@ -725,7 +732,7 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
     func openWebview(bot:Peer, title: String?, buttonText: String, url: String, simple: Bool, inline: Bool) {
-        let replyTo = self.presentation.interfaceState.replyMessageId
+        let replyTo = self.presentation.interfaceState.replyMessageId?.messageId
         let threadId = self.presentation.chatLocation.threadId
         let botId = bot.id
         let context = self.context

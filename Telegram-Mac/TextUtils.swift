@@ -738,6 +738,9 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
         case let .giftCode(slug, fromGiveaway, boostPeerId, months):
             //TODOLANG
             text = "GIFTCODE"
+        case .giveawayLaunched:
+            //TODOLANG
+            text = "GIVEAWAY LAUNCHED"
         case let .topicEdited(components):
             var fileId: Int64?
             if let component = components.first {

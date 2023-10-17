@@ -90,6 +90,9 @@
 		27303AC12AC1D13600433CED /* GiveawayModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303AC02AC1D13600433CED /* GiveawayModalController.swift */; };
 		27303ACB2AC2B20C00433CED /* GiftLinkModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */; };
 		27303ACD2AC2BD5000433CED /* InputDataTableBasedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */; };
+		27307E982ADDA40B00D970EE /* menu_quote.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27307E972ADDA40A00D970EE /* menu_quote.tgs */; };
+		27307E9A2ADE6E0C00D970EE /* SelectCountryModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27307E992ADE6E0C00D970EE /* SelectCountryModalController.swift */; };
+		27307E9C2ADEB45800D970EE /* SelectColorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27307E9B2ADEB45800D970EE /* SelectColorController.swift */; };
 		273274E626A818AE00E04289 /* WallpaperColorPickerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */; };
 		273274E826A8190F00E04289 /* WallpaperAdditionColorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */; };
 		2733670D2760F3010027441E /* ChatMessageMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2733670C2760F3010027441E /* ChatMessageMenuItems.swift */; };
@@ -1583,6 +1586,9 @@
 		27303AC02AC1D13600433CED /* GiveawayModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiveawayModalController.swift; sourceTree = "<group>"; };
 		27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GiftLinkModalController.swift; sourceTree = "<group>"; };
 		27303ACC2AC2BD5000433CED /* InputDataTableBasedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDataTableBasedItem.swift; sourceTree = "<group>"; };
+		27307E972ADDA40A00D970EE /* menu_quote.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_quote.tgs; sourceTree = "<group>"; };
+		27307E992ADE6E0C00D970EE /* SelectCountryModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectCountryModalController.swift; sourceTree = "<group>"; };
+		27307E9B2ADEB45800D970EE /* SelectColorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectColorController.swift; sourceTree = "<group>"; };
 		273274E526A818AE00E04289 /* WallpaperColorPickerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperColorPickerContainerView.swift; sourceTree = "<group>"; };
 		273274E726A8190F00E04289 /* WallpaperAdditionColorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperAdditionColorView.swift; sourceTree = "<group>"; };
 		27335F0225C8295100FD040C /* GroupVideoView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupVideoView.swift; sourceTree = "<group>"; };
@@ -3267,6 +3273,7 @@
 				274952842AA472F600499498 /* BoostChannelModalController.swift */,
 				27303AC02AC1D13600433CED /* GiveawayModalController.swift */,
 				27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */,
+				27307E992ADE6E0C00D970EE /* SelectCountryModalController.swift */,
 			);
 			name = boost;
 			sourceTree = "<group>";
@@ -4296,6 +4303,7 @@
 				9F17E5B8212F173900C25A65 /* AutoNightViewController.swift */,
 				D04D213E230D68B800609388 /* CustomAccentColorModalController.swift */,
 				D02BD7BF232D0FB800D1814A /* AppAppearanceViewController.swift */,
+				27307E9B2ADEB45800D970EE /* SelectColorController.swift */,
 			);
 			name = appearance;
 			sourceTree = "<group>";
@@ -5838,6 +5846,7 @@
 				27D91312283646CA007CF40F /* text_to_voice.tgs */,
 				277E228128E5DC9D00001689 /* forum_topic.tgs */,
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
+				27307E972ADDA40A00D970EE /* menu_quote.tgs */,
 				274952812AA1E79E00499498 /* hand_animation.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27C50ADA2AC6F86D00FED2E4 /* premium_gift_3.tgs */,
@@ -6387,6 +6396,7 @@
 				2733671327620B600027441E /* menu_copy.tgs in Resources */,
 				27E7E4A0270E040600CF3A24 /* thumbsup.tgs in Resources */,
 				274952872AA48A7200499498 /* menu_lighting.tgs in Resources */,
+				27307E982ADDA40B00D970EE /* menu_quote.tgs in Resources */,
 				2751E7A127F34415003E3937 /* menu_autodelete_1d.tgs in Resources */,
 				27803BF727A3E944007B0FA9 /* menu_folder_star.tgs in Resources */,
 				27D9131F283BC0EB007CF40F /* flecks.jpg in Resources */,
@@ -6940,6 +6950,7 @@
 				C21BE3AF1FD099AA00C1C849 /* DeveloperViewController.swift in Sources */,
 				2719D8162A1F555500081079 /* StoryChatContent.swift in Sources */,
 				D070DB8122D3638F008A0BBE /* StickersViewController.swift in Sources */,
+				27307E9C2ADEB45800D970EE /* SelectColorController.swift in Sources */,
 				C2777B621DCFB4C9008B69DD /* ChatServiceItem.swift in Sources */,
 				278E86D7265D49100006685D /* MicroListenerController.swift in Sources */,
 				2748C56127BA477900F05503 /* Auth_Token.swift in Sources */,
@@ -7571,6 +7582,7 @@
 				9F72974020BD9C6A0067F815 /* VideoPlayer.swift in Sources */,
 				A7F283002395168300742C20 /* SettingsSearchRecentQueries.swift in Sources */,
 				9F10CE8A20611536002DD61A /* PassportHeaderItem.swift in Sources */,
+				27307E9A2ADE6E0C00D970EE /* SelectCountryModalController.swift in Sources */,
 				C29C3E731E4397F300193A7E /* StickerPreviewHandler.swift in Sources */,
 				D04D213F230D68B800609388 /* CustomAccentColorModalController.swift in Sources */,
 				C29A65071E098B610071BCEF /* ShareModalController.swift in Sources */,

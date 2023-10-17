@@ -42,7 +42,7 @@ class ChatInputAccessory: View {
             self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
         }
         dismissReply = { [weak self] in
-            self?.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil).withUpdatedDismissedForceReplyId($0.replyMessageId)})})
+            self?.chatInteraction.update({$0.updatedInterfaceState({$0.withUpdatedReplyMessageId(nil).withUpdatedDismissedForceReplyId($0.replyMessageId?.messageId)})})
         }
         dismissEdit = { [weak self] in
             self?.chatInteraction.cancelEditing()
@@ -192,14 +192,14 @@ class ChatInputAccessory: View {
             
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {
-            displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, dismissReply: dismissReply, forceClassic: true)
+            displayNode = ReplyModel(replyMessageId: replyMessageId.messageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, quote: replyMessageId.quote, dismissReply: dismissReply, forceClassic: true)
             iconView.image = theme.icons.chat_action_reply_message
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
             }, for: .Click)
             
             container.set(handler: { [weak self] _ in
-               self?.chatInteraction.focusMessageId(nil, replyMessageId, .CenterEmpty)
+                self?.chatInteraction.focusMessageId(nil, replyMessageId.messageId, .CenterEmpty)
             }, for: .Click)
         }
         
@@ -277,7 +277,7 @@ class ChatInputAccessory: View {
 
     
     func measureSize(_ width: CGFloat) {
-        displayNode?.measureSize(width - 59)
+        displayNode?.measureSize(width - 59 - (displayNode?.cutout?.topLeft?.width ?? 0))
         
         if let displayNode = displayNode {
             self.size = NSMakeSize(width, displayNode.size.height)

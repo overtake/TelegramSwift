@@ -15,6 +15,7 @@ import SwiftSignalKit
 import ObjcUtils
 import Translate
 import InAppSettings
+import InputView
 
 final class ChatMenuItemsData {
     let chatInteraction: ChatInteraction
@@ -262,13 +263,24 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var fifthBlock:[ContextMenuItem] = []
         var sixBlock:[ContextMenuItem] = []
         
-        #if DEBUG
-        if !message.text.isEmpty {
-            firstBlock.append(ContextMenuItem("Quote", handler: {
-                chatInteraction.quote(message.text.prefixWithDots(Int.random(in: 0..<message.text.length)), message.id)
-            }))
+        
+        if let layout = textLayout?.0, !layout.selectedRange.range.isEmpty, chatInteraction.mode != .pinned, chatInteraction.mode != .scheduled {
+            firstBlock.append(ContextMenuItem(strings().chatMessageContextQuote, handler: {
+                
+                let quote_length_max = context.appConfiguration.getGeneralValue("quote_length_max", orElse: 1024)
+                if layout.selectedString.length > quote_length_max {
+                    alert(for: context.window, info: strings().chatMessageContextQuoteLimitExceed)
+                } else {
+                    let attributed = enititesAttributedStringForText(layout.selectedString).trimmed
+                    let entities = messageTextEntitiesInRange(entities: ChatTextInputState(attributedText: attributed, selectionRange: 0..<0).messageTextEntities(), range: attributed.range, onlyQuoteable: true)
+                    
+                    let quote = EngineMessageReplyQuote(text: attributed.string, entities: entities)
+                    chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: quote))
+
+                }
+                
+            }, itemImage: MenuAnimation.menu_quote.value))
         }
-        #endif
         
         
         if let adAttribute = data.message.adAttribute {
@@ -362,7 +374,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
         if canReplyMessage(data.message, peerId: data.peerId, mode: data.chatMode, threadData: chatInteraction.presentation.threadInfo)  {
             firstBlock.append(ContextMenuItem(strings().messageContextReply1, handler: {
-                data.chatInteraction.setupReplyMessage(data.message.id)
+                data.chatInteraction.setupReplyMessage(data.message, .init(messageId: data.message.id, quote: nil))
             }, itemImage: MenuAnimation.menu_reply.value, keyEquivalent: .cmdr))
         }
         

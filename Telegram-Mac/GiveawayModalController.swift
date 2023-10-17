@@ -13,6 +13,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import InAppPurchaseManager
+import CurrencyFormat
 
 func generateGiveawayTypeImage(_ image: NSImage, colorIndex: Int) -> CGImage {
     
@@ -165,7 +166,7 @@ private final class GiveawayDurationOptionItemView : GeneralContainableRowView {
                 self.addSubview(current)
             }
             current.backgroundColor = theme.colors.accent
-            current.layer?.cornerRadius = 2
+            current.layer?.cornerRadius = 3
             current.update(discount)
         } else if let view = self.discountView {
             performSubviewRemoval(view, animated: animated)
@@ -189,7 +190,7 @@ private final class GiveawayDurationOptionItemView : GeneralContainableRowView {
         
         if let discount = discountView {
             discount.setFrameOrigin(NSMakePoint(selectingControl.frame.maxX + item.viewType.innerInset.left, containerView.frame.height - discount.frame.height - 4))
-            descView.setFrameOrigin(NSMakePoint(discount.frame.maxX + 2, containerView.frame.height - descView.frame.height - 4))
+            descView.setFrameOrigin(NSMakePoint(discount.frame.maxX + 4, containerView.frame.height - descView.frame.height - 4))
         } else {
             descView.setFrameOrigin(NSMakePoint(selectingControl.frame.maxX + item.viewType.innerInset.left, containerView.frame.height - descView.frame.height - 4))
         }
@@ -259,10 +260,10 @@ private final class Arguments {
 
 private struct PremiumGiftProduct: Equatable {
     let giftOption: PremiumGiftCodeOption
-    let storeProduct: InAppPurchaseManager.Product
+    let storeProduct: InAppPurchaseManager.Product?
     
     var id: String {
-        return self.storeProduct.id
+        return self.storeProduct?.id ?? ""
     }
     
     var months: Int32 {
@@ -270,11 +271,33 @@ private struct PremiumGiftProduct: Equatable {
     }
     
     var price: String {
-        return self.storeProduct.price
+        if let storeProduct = storeProduct {
+            return formatCurrencyAmount(storeProduct.priceCurrencyAndAmount.amount, currency: storeProduct.priceCurrencyAndAmount.currency)
+        }
+        return formatCurrencyAmount(giftOption.amount, currency: giftOption.currency)
     }
     
     var pricePerMonth: String {
-        return self.storeProduct.pricePerMonth(Int(self.months))
+        if let storeProduct = storeProduct {
+            return storeProduct.pricePerMonth(Int(self.months))
+        } else {
+            return formatCurrencyAmount(giftOption.amount / Int64(giftOption.months), currency: giftOption.currency)
+        }
+    }
+    var priceCurrencyAndAmount:(currency: String, amount: Int64) {
+        if let storeProduct = storeProduct {
+            return storeProduct.priceCurrencyAndAmount
+        } else {
+            return (currency: giftOption.currency, amount: giftOption.amount)
+        }
+    }
+    
+    func multipliedPrice(count: Int) -> String {
+        if let storeProduct = storeProduct {
+            return storeProduct.multipliedPrice(count: count)
+        } else {
+            return formatCurrencyAmount(giftOption.amount * Int64(count), currency: giftOption.currency)
+        }
     }
 }
 
@@ -315,6 +338,8 @@ private struct State : Equatable {
     var defaultPrice: DefaultPrice = .init(intergal: 1, decimal: 1)
     
     var canMakePayment: Bool = true
+    
+    var countries: [Country] = []
 }
 
 private let _id_star = InputDataIdentifier("_id_star")
@@ -474,11 +499,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("USERS ELIGIBLE FOR THE GIVEAWAY"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_receiver_all, data: .init(name: "All subscribers", color: theme.colors.text, type: .selectableLeft(state.receiver == .all), viewType: .firstItem, action: {
+        let countryText: String
+        if state.countries.isEmpty {
+            countryText = "from all countries"
+        } else {
+            countryText = "from \(state.countries.count) countries"
+        }
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_receiver_all, data: .init(name: "All subscribers", color: theme.colors.text, type: .selectableLeft(state.receiver == .all), viewType: .firstItem, description: countryText, descTextColor: theme.colors.accent, action: {
             arguments.updateReceiver(.all)
         })))
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_receiver_new, data: .init(name: "Only new subscribers", color: theme.colors.text, type: .selectableLeft(state.receiver == .new), viewType: .lastItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_receiver_new, data: .init(name: "Only new subscribers", color: theme.colors.text, type: .selectableLeft(state.receiver == .new), viewType: .lastItem, description: countryText, descTextColor: theme.colors.accent, action: {
             arguments.updateReceiver(.new)
         })))
 
@@ -547,15 +579,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             } else {
                 giftTitle = "\(product.months) Months"
             }
-            let discountValue = Int((1.0 - Float(product.storeProduct.priceCurrencyAndAmount.amount) / Float(product.months) / Float(state.defaultPrice.intergal)) * 100.0)
+            
+            let discountValue = Int((1.0 - Float(product.priceCurrencyAndAmount.amount) / Float(product.months) / Float(state.defaultPrice.intergal)) * 100.0)
             let discount: String?
             if discountValue > 0 {
                 discount = "-\(discountValue)%"
             } else {
                 discount = nil
             }
-            let subtitle = "\(product.storeProduct.price) x \(recipientCount)"
-            let label = product.storeProduct.multipliedPrice(count: recipientCount)
+            let subtitle = "\(product.price) x \(recipientCount)"
+            let label = product.multipliedPrice(count: recipientCount)
             
             let selectedMonths = state.selectedMonths
             let isSelected = product.months == selectedMonths
@@ -655,10 +688,21 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
             return current
         }
     }, updateReceiver: { value in
-        updateState { current in
-            var current = current
-            current.receiver = value
-            return current
+        let equal = value == stateValue.with { $0.receiver }
+        if equal {
+            showModal(with: SelectCountries(context: context, selected: stateValue.with { $0.countries }, complete: { list in
+                updateState { current in
+                    var current = current
+                    current.countries = list
+                    return current
+                }
+            }), for: context.window)
+        } else {
+            updateState { current in
+                var current = current
+                current.receiver = value
+                return current
+            }
         }
     }, updateType: { value in
         updateState { current in
@@ -718,29 +762,28 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
         }
     })
     
-//    let products: Signal<[InAppPurchaseManager.Product], NoError>
-//    #if APP_STORE || DEBUG
-//    products = inAppPurchaseManager.availableProducts |> map {
-//        $0.filter { !$0.isSubscription }
-//    }
-//    #else
-//    products = .single([])
-//    #endif
+    let products: Signal<[InAppPurchaseManager.Product], NoError>
+    #if APP_STORE //|| DEBUG
+    products = inAppPurchaseManager.availableProducts |> map {
+        $0.filter { !$0.isSubscription }
+    }
+    #else
+    products = .single([])
+    #endif
     
     let productsAndDefaultPrice: Signal<([PremiumGiftProduct], (Int64, NSDecimalNumber)), NoError> = combineLatest(
-        .single([]) |> then(context.engine.payments.premiumGiftCodeOptions(peerId: peerId)),
-        context.inAppPurchaseManager.availableProducts
+        context.engine.payments.premiumGiftCodeOptions(peerId: peerId),
+        products
     )
     |> map { options, products in
         var gifts: [PremiumGiftProduct] = []
         for option in options {
-            if let product = products.first(where: { $0.id == option.storeProductId }), !product.isSubscription {
-                gifts.append(PremiumGiftProduct(giftOption: option, storeProduct: product))
-            }
+            let product = products.first(where: { $0.id == option.storeProductId })
+            gifts.append(PremiumGiftProduct(giftOption: option, storeProduct: product))
         }
         let defaultPrice: (Int64, NSDecimalNumber)
-        if let defaultProduct = products.first(where: { $0.id == "org.telegram.telegramPremium.monthly" }) {
-            defaultPrice = (defaultProduct.priceCurrencyAndAmount.amount, defaultProduct.priceValue)
+        if let defaultProduct = options.first(where: { $0.storeProductId == "org.telegram.telegramPremium.threeMonths.code_x1" }) {
+            defaultPrice = (defaultProduct.amount / Int64(defaultProduct.months), NSDecimalNumber(value: 1))
         } else {
             defaultPrice = (1, NSDecimalNumber(value: 1))
         }
@@ -752,11 +795,48 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
             updateState { current in
                 var current = current
                 current.products = products.0
+                current.defaultPrice = .init(intergal: products.1.0, decimal: products.1.1)
                 return current
             }
     }))
     
+
     let buyNonStore:()->Void = {
+        let state = stateValue.with { $0 }
+        
+        var selectedProduct: PremiumGiftProduct?
+        let selectedMonths = state.selectedMonths
+        if let product = state.products.first(where: { $0.months == selectedMonths && $0.giftOption.users == state.quantity }) {
+            selectedProduct = product
+        }
+        
+        guard let premiumProduct = selectedProduct else {
+            return
+        }
+        
+        let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
+        let countries = state.countries.map { $0.id }
+        
+        let source = BotPaymentInvoiceSource.premiumGiveaway(boostPeer: peerId, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970), currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount, option: premiumProduct.giftOption)
+        
+        let invoice = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: source), for: context.window)
+
+        actionsDisposable.add(invoice.start(next: { invoice in
+            showModal(with: PaymentsCheckoutController(context: context, source: source, invoice: invoice, completion: { status in
+            
+                switch status {
+                case .paid:
+                    PlayConfetti(for: context.window)
+                    showModalText(for: context.window, text: "Giveaway created")
+                    close?()
+                default:
+                    break
+                }
+                
+            }), for: context.window)
+        }, error: { error in
+            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+        }))
         
     }
     
@@ -781,10 +861,10 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
             return
         }
 
-//        guard let premiumProduct = premiumProduct else {
-//            buyNonStore()
-//            return
-//        }
+        guard let storeProduct = premiumProduct.storeProduct else {
+            buyNonStore()
+            return
+        }
         
         let lockModal = PremiumLockModalController()
         
@@ -795,14 +875,13 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
             }
         })
         
-        
-        let purpose: AppStoreTransactionPurpose = .giveaway(boostPeer: peerId, additionalPeerIds: stateValue.with { $0.channels.map { $0.peer.id }.filter { $0 != peerId } }, onlyNewSubscribers: stateValue.with { $0.receiver == .new }, randomId: Int64.random(in: .min ..< .max), untilDate: stateValue.with { Int32($0.date.timeIntervalSince1970) }, currency: premiumProduct.storeProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.storeProduct.priceCurrencyAndAmount.amount)
+        let purpose: AppStoreTransactionPurpose = .giveaway(boostPeer: peerId, additionalPeerIds: stateValue.with { $0.channels.map { $0.peer.id }.filter { $0 != peerId } }, countries: stateValue.with { $0.countries.map { $0.id } }, onlyNewSubscribers: stateValue.with { $0.receiver == .new }, randomId: Int64.random(in: .min ..< .max), untilDate: stateValue.with { Int32($0.date.timeIntervalSince1970) }, currency: premiumProduct.priceCurrencyAndAmount.currency, amount: premiumProduct.priceCurrencyAndAmount.amount)
         
                 
         let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
         |> deliverOnMainQueue).start(next: { [weak lockModal] available in
             if available {
-                paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct.storeProduct, purpose: purpose)
+                paymentDisposable.set((inAppPurchaseManager.buyProduct(storeProduct, purpose: purpose)
                 |> deliverOnMainQueue).start(next: { [weak lockModal] status in
     
                     lockModal?.close()
@@ -856,7 +935,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Giveaway")
+    let controller = InputDataController(dataSignal: signal, title: "Boosts via Gifts")
     
     controller.didLoaded = { controller, _ in
         controller.genericView.layer?.masksToBounds = false

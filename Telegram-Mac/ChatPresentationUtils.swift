@@ -510,6 +510,48 @@ final class TelegramChatColors {
     }
     
     func replyTitle(_ item: ChatRowItem) -> NSColor {
+        
+        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.author {
+            if message.id.peerId.namespace == Namespaces.Peer.CloudGroup || message.id.peerId.namespace == Namespaces.Peer.CloudChannel {
+                if let nameColor = author.nameColor {
+                    switch nameColor {
+                    case .red:
+                        return item.presentation.colors.peerAvatarRedBottom
+                    case .orange:
+                        return item.presentation.colors.peerAvatarOrangeBottom
+                    case .violet:
+                        return item.presentation.colors.peerAvatarVioletBottom
+                    case .green:
+                        return item.presentation.colors.peerAvatarGreenBottom
+                    case .cyan:
+                        return item.presentation.colors.peerAvatarCyanBottom
+                    case .blue:
+                        return item.presentation.colors.peerAvatarBlueBottom
+                    case .pink:
+                        return item.presentation.colors.peerAvatarPinkBottom
+                    case .redDash:
+                        return item.presentation.colors.peerAvatarRedBottom
+                    case .orangeDash:
+                        return item.presentation.colors.peerAvatarOrangeBottom
+                    case .violetDash:
+                        return item.presentation.colors.peerAvatarVioletBottom
+                    case .greenDash:
+                        return item.presentation.colors.peerAvatarGreenBottom
+                    case .cyanDash:
+                        return item.presentation.colors.peerAvatarCyanBottom
+                    case .blueDash:
+                        return item.presentation.colors.peerAvatarBlueBottom
+                    case .other13:
+                        return NSColor.red
+                    case .other14:
+                        return NSColor.red
+                    case .other15:
+                        return NSColor.red
+                    }
+                }
+            }
+        }
+        
         return item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTitleBubble_incoming : item.presentation.colors.chatReplyTitleBubble_outgoing) : item.presentation.colors.chatReplyTitle
     }
     func replyText(_ item: ChatRowItem) -> NSColor {

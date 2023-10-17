@@ -148,7 +148,7 @@ class ChatGroupedItem: ChatRowItem {
                     }
                 })
                 
-                let layout: ChatRowItem.RowCaption = .init(id: stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
+                let layout: ChatRowItem.RowCaption = .init(message: message, id: stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({
                         $0.updatedInterfaceState({
                             $0.withRevealedSpoiler(message.id)
@@ -179,6 +179,12 @@ class ChatGroupedItem: ChatRowItem {
                 } else {
                     return .single(nil)
                 }
+            }
+            layout.layout.interactions.menuItems = { [weak layout, weak self] type in
+                if let layout = layout, let interactions = self?.chatInteraction, let entry = self?.entry {
+                    return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout, type), chatInteraction: interactions)
+                }
+                return .complete()
             }
         }
                 

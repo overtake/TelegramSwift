@@ -560,10 +560,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 }
 
 func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> InputDataController {
-
+    
     let actionsDisposable = DisposableSet()
     var getController:(()->InputDataController?)? = nil
-
+    
     let initialState = State()
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -574,8 +574,8 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
     
     let boostData = context.engine.peers.getChannelBoostStatus(peerId: peerId)
     let boostersContext = ChannelBoostersContext(account: context.account, peerId: peerId)
-
-
+    
+    
     actionsDisposable.add(combineLatest(context.account.postbox.loadedPeerWithId(peerId), boostData, boostersContext.state).start(next: { peer, boostData, boosters in
         
         updateState { current in
@@ -612,6 +612,12 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
+    
+    controller.didAppear = { controller in
+        context.window.set(handler: { _ -> KeyHandlerResult in
+            arguments.giveaway(.general)
+            return .invoked
+        }, with: controller, for: .T, priority: .supreme, modifierFlags: [.command])}
     
     getController = { [weak controller] in
         return controller

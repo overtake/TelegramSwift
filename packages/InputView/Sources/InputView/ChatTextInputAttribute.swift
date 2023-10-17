@@ -113,20 +113,7 @@ public let originalTextAttributeKey = NSAttributedString.Key(rawValue: "Attribut
 
 public func stateAttributedStringForText(_ text: NSAttributedString) -> NSAttributedString {
     let sourceString = NSMutableAttributedString(attributedString: text)
-    while true {
-        var found = false
-        let fullRange = NSRange(sourceString.string.startIndex ..< sourceString.string.endIndex, in: sourceString.string)
-        sourceString.enumerateAttribute(NSAttributedString.Key.attachment, in: fullRange, options: [.longestEffectiveRangeNotRequired], using: { value, range, stop in
-            if let value = value as? EmojiTextAttachment {
-                sourceString.replaceCharacters(in: range, with: NSAttributedString(string: value.text, attributes: [TextInputAttributes.customEmoji: value.emoji]))
-                stop.pointee = true
-                found = true
-            }
-        })
-        if !found {
-            break
-        }
-    }
+  
     
     let result = NSMutableAttributedString(string: sourceString.string)
     let fullRange = NSRange(location: 0, length: result.length)
@@ -140,6 +127,29 @@ public func stateAttributedStringForText(_ text: NSAttributedString) -> NSAttrib
     })
     return result
 }
+
+public func enititesAttributedStringForText(_ text: NSAttributedString) -> NSAttributedString {
+    let sourceString = NSMutableAttributedString(attributedString: text)
+    let fullRange = NSRange(sourceString.string.startIndex ..< sourceString.string.endIndex, in: sourceString.string)
+    sourceString.enumerateAttribute(TextInputAttributes.customEmoji, in: fullRange, options: [.longestEffectiveRangeNotRequired], using: { value, range, stop in
+        if let value = value as? TextInputTextCustomEmojiAttribute {
+            sourceString.replaceCharacters(in: range, with: value.emoji)
+        }
+    })
+
+    
+    let result = NSMutableAttributedString(string: sourceString.string)
+    
+    sourceString.enumerateAttributes(in: fullRange, options: [], using: { attributes, range, _ in
+        for (key, value) in attributes {
+            if TextInputAttributes.allAttributes.contains(key) || key == NSAttributedString.Key.attachment {
+                result.addAttribute(key, value: value, range: range)
+            }
+        }
+    })
+    return result
+}
+
 
 public struct ChatTextFontAttributes: OptionSet {
     public var rawValue: Int32 = 0

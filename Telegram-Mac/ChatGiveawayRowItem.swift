@@ -15,6 +15,17 @@ import SwiftSignalKit
 import DateUtils
 import InAppSettings
 
+
+private func flagEmoji(countryCode: String) -> String {
+    let base : UInt32 = 127397
+    var flagString = ""
+    for v in countryCode.uppercased().unicodeScalars {
+        flagString.unicodeScalars.append(UnicodeScalar(base + v.value)!)
+    }
+    return flagString
+}
+
+
 final class ChatGiveawayRowItem : ChatRowItem {
     
     
@@ -31,7 +42,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
     let headerText: TextViewLayout
     let participantsText: TextViewLayout
     let winnerText: TextViewLayout
-    
+    let countryText: TextViewLayout?
     let badge: BadgeNode
     
     let media: TelegramMediaGiveaway
@@ -76,6 +87,43 @@ final class ChatGiveawayRowItem : ChatRowItem {
         _ = winners_attr.append(string: "\(stringForFullDate(timestamp: media.untilDate))", color: wpPresentation.text, font: .normal(.text))
         winners_attr.detectBoldColorInString(with: .medium(.text))
         self.winnerText = .init(winners_attr, alignment: .center, alwaysStaticItems: true)
+        
+        let countriesText: String
+        if !media.countries.isEmpty {
+            let locale = appAppearance.locale
+            let countryNames = media.countries.map { id in
+                if let countryName = locale.localizedString(forRegionCode: id) {
+                    return "\(flagEmoji(countryCode: id))\(countryName)"
+                } else {
+                    return id
+                }
+            }
+            var countries: String = ""
+            if countryNames.count == 1, let country = countryNames.first {
+                countries = country
+            } else {
+                for i in 0 ..< countryNames.count {
+                    countries.append(countryNames[i])
+                    if i == countryNames.count - 2 {
+                        countries.append(" and ")
+                    } else if i < countryNames.count - 2 {
+                        countries.append(", ")
+                    }
+                }
+            }
+            countriesText = "from \(countries)"
+        } else {
+            countriesText = ""
+        }
+        
+        if !countriesText.isEmpty {
+            let country_attr = NSMutableAttributedString()
+            _ = country_attr.append(string: countriesText, color: wpPresentation.text, font: .normal(.text))
+            self.countryText = .init(country_attr, alignment: .center, alwaysStaticItems: true)
+        } else {
+            self.countryText = nil
+        }
+
         
         let under = theme.colors.underSelectedColor
 
@@ -125,9 +173,10 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 return
             }
             
-            let date = stringForFullDate(timestamp: giveaway.untilDate)
+            let untilDate = stringForFullDate(timestamp: giveaway.untilDate)
             let startDate = stringForFullDate(timestamp: message.timestamp)
-            
+
+
             let title: String
             let text: String
             var warning: String?
@@ -146,9 +195,10 @@ final class ChatGiveawayRowItem : ChatRowItem {
             }
   
             switch info {
-            case let .ongoing(status):
-                title = "About This Giveaway"
+            case let .ongoing(start, status):
+                let startDate = stringForFullDate(timestamp: start)
                 
+                title = "About This Giveaway"
                 
                 let intro: String
                 if case .almostOver = status {
@@ -158,33 +208,17 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 }
                 
                 let ending: String
-                if case .almostOver = status {
-                    if giveaway.flags.contains(.onlyNewSubscribers) {
-                        if giveaway.channelPeerIds.count > 1 {
-                            ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** and other listed channels after **\(startDate)**."
-                        } else {
-                            ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
-                        }
+                if giveaway.flags.contains(.onlyNewSubscribers) {
+                    if giveaway.channelPeerIds.count > 1 {
+                        ending = "On **\(untilDate)**, Telegram will automatically select **\(giveaway.quantity)** random users that joined **\(peerName)** and **\(giveaway.channelPeerIds.count - 1)** other listed channels after **\(startDate)**."
                     } else {
-                        if giveaway.channelPeerIds.count > 1 {
-                            ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)** and other listed channels."
-                        } else {
-                            ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)**."
-                        }
+                        ending = "On **\(untilDate)**, Telegram will automatically select **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
                     }
                 } else {
-                    if giveaway.flags.contains(.onlyNewSubscribers) {
-                        if giveaway.channelPeerIds.count > 1 {
-                            ending = "On **\(date)**, Telegram will automatically select **\(giveaway.quantity)** random users that joined **\(peerName)** and **\(giveaway.channelPeerIds.count - 1)** other listed channels after **\(startDate)**."
-                        } else {
-                            ending = "On **\(date)**, Telegram will automatically select **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
-                        }
+                    if giveaway.channelPeerIds.count > 1 {
+                        ending = "On **\(untilDate)**, Telegram will automatically select **\(giveaway.quantity)** random subscribers of **\(peerName)** and **\(giveaway.channelPeerIds.count - 1)** other listed channels."
                     } else {
-                        if giveaway.channelPeerIds.count > 1 {
-                            ending = "On **\(date)**, Telegram will automatically select **\(giveaway.quantity)** random subscribers of **\(peerName)** and **\(giveaway.channelPeerIds.count - 1)** other listed channels."
-                        } else {
-                            ending = "On **\(date)**, Telegram will automatically select **\(giveaway.quantity)** random subscribers of **\(peerName)**."
-                        }
+                        ending = "On **\(untilDate)**, Telegram will automatically select **\(giveaway.quantity)** random subscribers of **\(peerName)**."
                     }
                 }
                 
@@ -192,9 +226,9 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 switch status {
                 case .notQualified:
                     if giveaway.channelPeerIds.count > 1 {
-                        participation = "To take part in this giveaway please join the channel **\(peerName)** (**\(giveaway.channelPeerIds.count - 1)** other listed channels) before **\(date)**."
+                        participation = "To take part in this giveaway please join the channel **\(peerName)** (**\(giveaway.channelPeerIds.count - 1)** other listed channels) before **\(untilDate)**."
                     } else {
-                        participation = "To take part in this giveaway please join the channel **\(peerName)** before **\(date)**."
+                        participation = "To take part in this giveaway please join the channel **\(peerName)** before **\(untilDate)**."
                     }
                 case let .notAllowed(reason):
                     switch reason {
@@ -204,6 +238,9 @@ final class ChatGiveawayRowItem : ChatRowItem {
                     case let .channelAdmin(adminId):
                         let _ = adminId
                         participation = "You are not eligible to participate in this giveaway, because you are an admin of participating channel (**\(peerName)**)."
+                    case let .disallowedCountry(countryCode):
+                        let _ = countryCode
+                        participation = "You are not eligible to participate in this giveaway, because your country is not included in the terms of the giveaway."
                     }
                 case .participating:
                     if giveaway.channelPeerIds.count > 1 {
@@ -220,8 +257,9 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 }
                 
                 text = "\(intro)\n\n\(ending)\(participation)"
-            case let .finished(status, finishDate, _, activatedCount):
-                let date = stringForFullDate(timestamp: finishDate)
+            case let .finished(status, start, finish, _, activatedCount):
+                let startDate = stringForFullDate(timestamp: start)
+                let finishDate = stringForFullDate(timestamp: finish)
                 title = "Giveaway Ended"
                 
                 let intro = "The giveaway was sponsored by the admins of **\(peerName)**, who acquired **\(giveaway.quantity) Telegram Premium** subscriptions for **\(giveaway.months)** months for its followers."
@@ -229,15 +267,15 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 var ending: String
                 if giveaway.flags.contains(.onlyNewSubscribers) {
                     if giveaway.channelPeerIds.count > 1 {
-                        ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** and other listed channels after **\(startDate)**."
+                        ending = "On **\(finishDate)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** and other listed channels after **\(startDate)**."
                     } else {
-                        ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
+                        ending = "On **\(finishDate)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
                     }
                 } else {
                     if giveaway.channelPeerIds.count > 1 {
-                        ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)** and other listed channels."
+                        ending = "On **\(finishDate)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)** and other listed channels."
                     } else {
-                        ending = "On **\(date)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)**."
+                        ending = "On **\(finishDate)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)**."
                     }
                 }
                 
@@ -262,6 +300,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 
                 text = "\(intro)\n\n\(ending)\(result)"
             }
+
             if let cancel = cancel, let prizeSlug = prizeSlug {
                 verifyAlert(for: context.window, header: title, information: text, ok: ok, cancel: cancel, successHandler: { _ in
                     openSlug(prizeSlug)
@@ -279,8 +318,12 @@ final class ChatGiveawayRowItem : ChatRowItem {
         headerText.measure(width: width)
         participantsText.measure(width: width)
         winnerText.measure(width: width)
-
+        
         let w = max(headerText.layoutSize.width, participantsText.layoutSize.width, winnerText.layoutSize.width)
+
+        
+        countryText?.measure(width: w)
+
         
         var height: CGFloat = 100
         height += headerText.layoutSize.height
@@ -343,8 +386,14 @@ final class ChatGiveawayRowItem : ChatRowItem {
             height += last.rect.maxY + 10
         }
         
+        if let countryText = countryText {
+            height += countryText.layoutSize.height
+            height += 10
+        }
+        
         height += winnerText.layoutSize.height
         height += 10
+        
 
         height += 30
         
@@ -420,6 +469,7 @@ private final class ChatGiveawayRowView: ChatRowView {
     private let headerTextView = TextView()
     private let participantsTextView = TextView()
     private let winnerTextView = TextView()
+    private var countryText: TextView?
     
     private let badgeView = View()
     
@@ -481,6 +531,23 @@ private final class ChatGiveawayRowView: ChatRowView {
             channels.addSubview(ChannelView(frame: .zero))
         }
         
+        if let countryText = item.countryText {
+            let current: TextView
+            if let view = self.countryText {
+                current = view
+            } else {
+                current = TextView()
+                current.userInteractionEnabled = false
+                current.isSelectable = false
+                self.countryText = current
+                addSubview(current)
+            }
+            current.update(countryText)
+        } else if let view = self.countryText {
+            performSubviewRemoval(view, animated: animated)
+            self.countryText = nil
+        }
+        
         for (i, channel) in item.channels.enumerated() {
             let view = channels.subviews[i] as! ChannelView
             view.update(channel, item: item, presentation: item.wpPresentation)
@@ -506,7 +573,13 @@ private final class ChatGiveawayRowView: ChatRowView {
         headerTextView.centerX(y: mediaView.frame.maxY + 10)
         participantsTextView.centerX(y: headerTextView.frame.maxY + 10)
         channels.centerX(y: participantsTextView.frame.maxY + 5)
-        winnerTextView.centerX(y: channels.frame.maxY + 10)
+        
+        var y: CGFloat = channels.frame.maxY + 10
+        if let countryText = countryText {
+            countryText.centerX(y: y)
+            y += countryText.frame.height + 10
+        }
+        winnerTextView.centerX(y: y)
         action.frame = NSMakeRect(0, winnerTextView.frame.maxY + 10, contentView.frame.width, 30)
     }
     

@@ -9,6 +9,8 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+import TelegramCore
+import Postbox
 
 class ChatAccessoryView : Button {
     var imageView: TransformImageView?
@@ -63,7 +65,7 @@ class ChatAccessoryView : Button {
         
         let x: CGFloat = model.leftInset + (model.isSideAccessory ? 10 : 0)
 
-        let headerRect = CGRect(origin: NSMakePoint(x, (model.isSideAccessory ? 5 : 0) + model.topOffset + 1), size: headerView.frame.size)
+        let headerRect = CGRect(origin: NSMakePoint(x + model.mediaInset, (model.isSideAccessory ? 5 : 0) + model.topOffset + 1), size: headerView.frame.size)
         transition.updateFrame(view: headerView, frame: headerRect)
         
         if let textView = textView {
@@ -83,7 +85,7 @@ class ChatAccessoryView : Button {
         
         var cornerRadius: CGFloat = 0
         if model.modelType == .modern {
-            cornerRadius = 2
+            cornerRadius = 3
         } else {
             if model.isSideAccessory {
                 cornerRadius = .cornerRadius
@@ -104,7 +106,7 @@ class ChatAccessoryView : Button {
             var cornerRadius: CGFloat = 0
             switch model.modelType {
             case .modern:
-                width = 4
+                width = 6
                 x = -(width / 2)
                 height = model.size.height
             case .classic:
@@ -346,6 +348,19 @@ class ChatAccessoryModel: NSObject {
     
     var updateImageSignal: Signal<ImageDataTransformation, NoError>?
 
+    var updatedMedia: Media? {
+        return nil
+    }
+    
+    var cutout: TextViewCutout? {
+        let cutoutSize: NSSize?
+        if updatedMedia != nil {
+            cutoutSize = .init(width: 36, height: 14)
+        } else {
+            cutoutSize = nil
+        }
+        return .init(topLeft: cutoutSize)
+    }
     
     open var backgroundColor:NSColor {
         didSet {
@@ -433,11 +448,18 @@ class ChatAccessoryModel: NSObject {
     
     let yInset:CGFloat = 2
     var leftInset:CGFloat {
-        return drawLine ? 6 : 6
+        return drawLine ? 10 : 10
+    }
+    
+    var mediaInset: CGFloat {
+        return 0
+    }
+    var mediaTopInset: CGFloat {
+        return 4
     }
     
     var rightInset:CGFloat {
-        return 4
+        return 6
     }
     
     var header:TextViewLayout?
@@ -453,7 +475,9 @@ class ChatAccessoryModel: NSObject {
         message?.measure(width: width - leftInset - rightInset)
         
         if let header = header, let message = message {
-            self.size = NSMakeSize(sizeToFit ? max(header.layoutSize.width, message.layoutSize.width) + leftInset + rightInset + (isSideAccessory ? 20 : 0) : width, max(36, header.layoutSize.height + message.layoutSize.height + yInset + (isSideAccessory ? 10 : 0)))
+            let width = sizeToFit ? max(header.layoutSize.width, message.layoutSize.width) + leftInset + rightInset + (isSideAccessory ? 20 : 0) : width
+            let height = max(36, header.layoutSize.height + message.layoutSize.height + yInset * 2 + (isSideAccessory ? 10 : 0))
+            self.size = NSMakeSize(width, height)
             self.size.height += topOffset
         } else {
             self.size = NSMakeSize(width, 36)

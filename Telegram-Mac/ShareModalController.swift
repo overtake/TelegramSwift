@@ -733,7 +733,7 @@ class ShareContactObject : ShareObject {
                 let attributes:[MessageAttribute] = attributes(peerId)
                 _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
             }
-            _ = Sender.shareContact(context: context, peerId: peerId, media: media, replyId: threadId).start()
+            _ = Sender.shareContact(context: context, peerId: peerId, media: media, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }).start()
         }
         return .complete()
     }
@@ -886,7 +886,7 @@ class ShareMessageObject : ShareObject {
             let threadId = threadIds[peerId] ?? threadId
             
             signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
-                let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
+                let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                 var caption: Signal<[MessageId?], NoError>?
                 if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                     let parsingUrlType: ParsingType
@@ -978,7 +978,7 @@ class ShareStoryObject : ShareObject {
             
             signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
                 
-                let forward: Signal<[MessageId?], NoError> = Sender.enqueue(media: media, context: context, peerId: peerId, replyId: threadId , silent: withoutSound, atDate: date)
+                let forward: Signal<[MessageId?], NoError> = Sender.enqueue(media: media, context: context, peerId: peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, silent: withoutSound, atDate: date)
                 var caption: Signal<[MessageId?], NoError>?
                 if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                     let parsingUrlType: ParsingType
@@ -1025,6 +1025,101 @@ class ShareStoryObject : ShareObject {
         }
         return true
     }
+}
+
+final class ReplyForwardMessageObject : ShareObject {
+    private let subject: EngineMessageReplySubject
+    private let message: Message
+    init(_ context: AccountContext, message: Message, subject: EngineMessageReplySubject) {
+        self.subject = subject
+        self.message = message
+        super.init(context)
+    }
+    override var multipleSelection: Bool {
+        return false
+    }
+    
+    override func statusString(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> String? {
+        return peer.id == context.peerId ? nil : presence?.status.string
+    }
+
+    
+    override func possibilityPerformTo(_ peer: Peer) -> Bool {
+        let canSend = peer.canSendMessage(media: message.media.first)
+        return !excludePeerIds.contains(peer.id) && canSend
+    }
+    
+    override func perform(to peerIds: [PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        
+        if let peerId = peerIds.first {
+            let context = self.context
+            let subject = self.subject
+            let messageId = subject.messageId
+            let peers = context.account.postbox.transaction { transaction -> Peer? in
+                return transaction.getPeer(peerId)
+            }
+            
+            let messages: Signal<[Message], NoError> = context.account.postbox.transaction { transaction in
+                var list:[Message] = []
+                if let message = transaction.getMessage(messageId) {
+                    list.append(message)
+                }
+                return list
+            }
+            
+            return combineLatest(messages, peers)
+                |> deliverOnMainQueue
+                |> castError(String.self)
+                |> mapToSignal {  messages, peer in
+                    
+                    let messageIds = messages.map { $0.id }
+                    
+                    let navigation = self.context.bindings.rootNavigation()
+                    if let peer = peer {
+                        
+                        if let controller = navigation.controller as? ChatController, controller.chatInteraction.chatLocation == .peer(peerId) {
+                            controller.chatInteraction.update({ current in
+                                current.withoutSelectionState().updatedInterfaceState {
+                                    $0.withUpdatedReplyMessageId(subject)
+                                }
+                            })
+                        } else {
+                            let initialAction: ChatInitialAction = .reply(subject, behavior: .automatic)
+                            
+                            if let threadId = threadId {
+                                return ForumUI.openTopic(makeMessageThreadId(threadId), peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction) |> filter {$0}
+                                |> take(1)
+                                |> ignoreValues
+                                |> castError(String.self)
+                            }
+                            
+                            (navigation.controller as? ChatController)?.chatInteraction.update({ $0.withoutSelectionState() })
+                            
+                            var existed: Bool = false
+                            navigation.enumerateControllers { controller, _ in
+                                if let controller = controller as? ChatController, controller.chatInteraction.peerId == peerId {
+                                    existed = true
+                                }
+                                return existed
+                            }
+                            let newone: ChatController
+                            
+                            if existed {
+                                newone = ChatController(context: context, chatLocation: .peer(peerId), initialAction: initialAction)
+                            } else {
+                                newone = ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: initialAction)
+                            }
+                            navigation.push(newone)
+                            return newone.ready.get() |> filter {$0} |> take(1) |> ignoreValues |> castError(String.self)
+                        }
+                    }
+                    return .complete()
+                }
+        }
+        return .complete()
+    }
+    
+    
 }
 
 final class ForwardMessagesObject : ShareObject {
@@ -1115,7 +1210,7 @@ final class ForwardMessagesObject : ShareObject {
                                 let attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
                                 _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start()
                             }
-                            _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId, replyId: threadId).start()
+                            _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }).start()
                             if let controller = context.bindings.rootNavigation().controller as? ChatController {
                                 controller.chatInteraction.update({$0.withoutSelectionState()})
                             }
@@ -1199,7 +1294,7 @@ final class ForwardMessagesObject : ShareObject {
                 let threadId = threadIds[peerId] ?? threadId
                 
                 signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
-                    let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
+                    let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                     var caption: Signal<[MessageId?], NoError>?
                     if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                         let parsingUrlType: ParsingType

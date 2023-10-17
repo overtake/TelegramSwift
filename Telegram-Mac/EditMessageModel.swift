@@ -45,33 +45,24 @@ class EditMessageModel: ChatAccessoryModel {
         }
     }
     
-    override var leftInset: CGFloat {
-        var imageDimensions: CGSize?
-        let message = state.message
-        if !message.containsSecretMedia {
-            for media in message.media {
+    override var mediaInset: CGFloat {
+        return updatedMedia != nil ? 30 + leftInset : 0
+    }
+    
+    override var updatedMedia: Media? {
+        var updatedMedia: Media?
+        if !self.state.message.containsSecretMedia {
+            for media in self.state.message.media {
                 if let image = media as? TelegramMediaImage {
-                    if let representation = largestRepresentationForPhoto(image) {
-                        imageDimensions = representation.dimensions.size
-                    }
+                    updatedMedia = image
                     break
                 } else if let file = media as? TelegramMediaFile, file.isVideo {
-                    if let dimensions = file.dimensions?.size {
-                        imageDimensions = dimensions
-                    } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
-                        imageDimensions = representation.dimensions.size
-                    }
+                    updatedMedia = file
                     break
                 }
             }
         }
-        
-        
-        if let _ = imageDimensions {
-            return 30 + super.leftInset * 2
-        }
-        
-        return super.leftInset
+        return updatedMedia
     }
     
 
@@ -95,36 +86,25 @@ class EditMessageModel: ChatAccessoryModel {
         self.setNeedDisplay()
     }
     private func updateImageIfNeeded() {
-        if let view = self.view {
+        if let view = self.view, let updatedMedia = self.updatedMedia {
             let account = context.account
             let message = self.state.message
-            var updatedMedia: Media?
             var imageDimensions: CGSize?
             var hasRoundImage = false
-            if !message.containsSecretMedia {
-                for media in message.media {
-                    if let image = media as? TelegramMediaImage {
-                        updatedMedia = image
-                        if let representation = largestRepresentationForPhoto(image) {
-                            imageDimensions = representation.dimensions.size
-                        }
-                        break
-                    } else if let file = media as? TelegramMediaFile, file.isVideo {
-                        updatedMedia = file
-                        
-                        if let dimensions = file.dimensions {
-                            imageDimensions = dimensions.size
-                        } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
-                            imageDimensions = representation.dimensions.size
-                        }
-                        if file.isInstantVideo {
-                            hasRoundImage = true
-                        }
-                        break
-                    }
+            if let image = updatedMedia as? TelegramMediaImage {
+                if let representation = largestRepresentationForPhoto(image) {
+                    imageDimensions = representation.dimensions.size
+                }
+            } else if let file = updatedMedia as? TelegramMediaFile, file.isVideo {
+                if let dimensions = file.dimensions {
+                    imageDimensions = dimensions.size
+                } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
+                    imageDimensions = representation.dimensions.size
+                }
+                if file.isInstantVideo {
+                    hasRoundImage = true
                 }
             }
-            
             
             if let imageDimensions = imageDimensions {
                 let boundingSize = CGSize(width: 30.0, height: 30.0)
@@ -137,7 +117,7 @@ class EditMessageModel: ChatAccessoryModel {
                 if view.imageView?.superview == nil {
                     view.addSubview(view.imageView!)
                 }
-                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), floorToScreenPixels(System.backingScale, self.topOffset + (self.size.height - self.topOffset - boundingSize.height)/2))
+                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), mediaTopInset)
                 
                 
                 let mediaUpdated = true
@@ -157,15 +137,15 @@ class EditMessageModel: ChatAccessoryModel {
                     }
                 }
                 
-                if let updateImageSignal = updateImageSignal, let media = updatedMedia {
-                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor), clearInstantly: false)
+                if let updateImageSignal = updateImageSignal {
+                    view.imageView?.setSignal(signal: cachedMedia(media: updatedMedia, arguments: arguments, scale: view.backingScaleFactor), clearInstantly: false)
                     if view.imageView?.isFullyLoaded == false {
-                        view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { [weak media] result in
-                            if let media = media {
-                                cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                        view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { [weak updatedMedia] result in
+                            if let updatedMedia = updatedMedia {
+                                cacheMedia(result, media: updatedMedia, arguments: arguments, scale: System.backingScale)
                             }
                         })
-                        if let media = media as? TelegramMediaImage, !media.isLocalResource {
+                        if let media = updatedMedia as? TelegramMediaImage, !media.isLocalResource {
                             self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                         }
                     }

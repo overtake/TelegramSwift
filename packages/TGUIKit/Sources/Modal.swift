@@ -195,12 +195,12 @@ private class ModalInteractionsContainer : View {
         }
         
         self.layer?.masksToBounds = false
-        backgroundView.backgroundColor = interactions.customTheme().listBackground
-        
-        
-        if interactions.singleButton {
-            addSubview(backgroundView)
-        }
+//        backgroundView.backgroundColor = interactions.customTheme().listBackground
+//        
+//        
+//        if interactions.singleButton {
+//            addSubview(backgroundView)
+//        }
         
         addSubview(acceptView)
         if let cancelView = cancelView {
