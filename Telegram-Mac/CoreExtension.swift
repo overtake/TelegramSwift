@@ -2625,7 +2625,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
                 if let threadId = threadId {
                     _ = context.engine.peers.removeForumChannelThread(id: peerId, threadId: threadId).start()
                 } else {
-                    _ = context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: result == .thrid || forceRemoveGlobally).start()
+                    _ = context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: result == .thrid).start()
                     if peer.isBot && result == .thrid {
                         _ = context.blockedPeersContext.add(peerId: peerId).start()
                     }
