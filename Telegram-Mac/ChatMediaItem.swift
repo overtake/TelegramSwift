@@ -494,7 +494,7 @@ class ChatMediaItem: ChatRowItem {
                     }
                 })
                 
-                captionLayouts.append(.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
+                captionLayouts.append(.init(message: message, id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({
                         $0.updatedInterfaceState({
                             $0.withRevealedSpoiler(message.id)
@@ -516,6 +516,15 @@ class ChatMediaItem: ChatRowItem {
             interactions.topWindow = { [weak self] in
                 return self?.menuAdditionView ?? .single(nil)
             }
+            if let layout = self.captionLayouts.first {
+                interactions.menuItems = { [weak layout, weak self] type in
+                    if let layout = layout, let interactions = self?.chatInteraction, let entry = self?.entry {
+                        return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout, type), chatInteraction: interactions)
+                    }
+                    return .complete()
+                }
+            }
+            
             for textLayout in self.captionLayouts.map ({ $0.layout }) {
                 textLayout.interactions = interactions
                 if let highlightFoundText = entry.additionalData.highlightFoundText {

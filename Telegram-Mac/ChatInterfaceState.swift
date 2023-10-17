@@ -743,11 +743,12 @@ struct ChatInterfaceTempState: Equatable {
 
 
 struct ChatInterfaceState: Codable, Equatable {
+    
+    
+    
     static func == (lhs: ChatInterfaceState, rhs: ChatInterfaceState) -> Bool {
         return lhs.associatedMessageIds == rhs.associatedMessageIds && lhs.historyScrollMessageIndex == rhs.historyScrollMessageIndex && lhs.historyScrollState == rhs.historyScrollState && lhs.editState == rhs.editState && lhs.timestamp == rhs.timestamp && lhs.inputState == rhs.inputState && lhs.replyMessageId == rhs.replyMessageId && lhs.forwardMessageIds == rhs.forwardMessageIds && lhs.dismissedPinnedMessageId == rhs.dismissedPinnedMessageId && lhs.composeDisableUrlPreview == rhs.composeDisableUrlPreview && lhs.dismissedForceReplyId == rhs.dismissedForceReplyId && lhs.messageActionsState == rhs.messageActionsState && isEqualMessageList(lhs: lhs.forwardMessages, rhs: rhs.forwardMessages) && lhs.hideSendersName == rhs.hideSendersName && lhs.themeEditing == rhs.themeEditing && lhs.hideCaptions == rhs.hideCaptions && lhs.revealedSpoilers == rhs.revealedSpoilers && lhs.tempSenderName == rhs.tempSenderName
     }
-
-
 
     var associatedMessageIds: [MessageId] {
         return []
@@ -763,7 +764,7 @@ struct ChatInterfaceState: Codable, Equatable {
     let editState:ChatEditState?
     let timestamp: Int32
     let inputState: ChatTextInputState
-    let replyMessageId: MessageId?
+    let replyMessageId: EngineMessageReplySubject?
     let replyMessage: Message?
     let themeEditing: Bool
 
@@ -809,14 +810,8 @@ struct ChatInterfaceState: Codable, Equatable {
 
         try container.encode(self.timestamp, forKey: "ts")
         try container.encode(self.inputState, forKey: "is")
-        if let replyMessageId = self.replyMessageId {
-            try container.encode(replyMessageId.peerId.toInt64(), forKey: "r.p")
-            try container.encode(replyMessageId.namespace, forKey: "r.n")
-            try container.encode(replyMessageId.id, forKey: "r.i")
-        } else {
-            try container.encodeNil(forKey: "r.p")
-            try container.encodeNil(forKey: "r.n")
-            try container.encodeNil(forKey: "r.i")
+        if let reply = self.replyMessageId {
+            try container.encode(reply, forKey: "reply")
         }
 
         try container.encode(EngineMessage.Id.encodeArrayToData(self.forwardMessageIds), forKey: "fm")
@@ -845,25 +840,9 @@ struct ChatInterfaceState: Codable, Equatable {
             try container.encodeNil(forKey: "hss")
         }
 
-//        if let forwardOptionsState = self.forwardOptionsState {
-//            try container.encode(forwardOptionsState, forKey: "fo")
-//        } else {
-//            try container.encodeNil(forKey: "fo")
-//        }
-
         if let dismissedForceReplyId = self.dismissedForceReplyId {
-            try container.encode(dismissedForceReplyId.peerId.toInt64(), forKey: "d.f.p")
-            try container.encode(dismissedForceReplyId.namespace, forKey: "d.f.n")
-            try container.encode(dismissedForceReplyId.id, forKey: "d.f.i")
-        } else {
-            try container.encodeNil(forKey: "d.f.p")
-            try container.encodeNil(forKey: "d.f.n")
-            try container.encodeNil(forKey: "d.f.i")
+            try container.encode(dismissedForceReplyId, forKey: "dismissed_force_reply")
         }
-        
-//        try container.encode(self.hideSendersName, forKey: "h.s.n")
-//        try container.encode(self.hideCaptions, forKey: "h.c")
-
     }
     
 
@@ -871,7 +850,7 @@ struct ChatInterfaceState: Codable, Equatable {
         if self.inputState.inputText.isEmpty && self.replyMessageId == nil {
             return nil
         } else {
-            return SynchronizeableChatInputState(replySubject: self.replyMessageId.flatMap { .init(messageId: $0, quote: nil) }, text: self.inputState.inputText, entities: self.inputState.messageTextEntities(), timestamp: self.timestamp, textSelection: self.inputState.selectionRange)
+            return SynchronizeableChatInputState(replySubject: self.replyMessageId, text: self.inputState.inputText, entities: self.inputState.messageTextEntities(), timestamp: self.timestamp, textSelection: self.inputState.selectionRange)
         }
     }
 
@@ -880,7 +859,7 @@ struct ChatInterfaceState: Codable, Equatable {
         if let state = state {
             let selectRange = state.textSelection ?? state.text.length ..< state.text.length
             result = result.withUpdatedInputState(ChatTextInputState(inputText: state.text, selectionRange: selectRange, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: state.entities))))
-                .withUpdatedReplyMessageId(state.replySubject?.messageId)
+                .withUpdatedReplyMessageId(state.replySubject)
                 .withUpdatedTimestamp(timestamp)
         } else {
             result = result.withUpdatedHistoryScrollState(self.historyScrollState)
@@ -909,7 +888,7 @@ struct ChatInterfaceState: Codable, Equatable {
         self.revealedSpoilers = Set()
     }
 
-    init(timestamp: Int32, inputState: ChatTextInputState, replyMessageId: MessageId?, replyMessage: Message?, forwardMessageIds: [MessageId], messageActionsState:ChatInterfaceMessageActionsState, dismissedPinnedMessageId: [MessageId], composeDisableUrlPreview: String?, historyScrollState: ChatInterfaceHistoryScrollState?, dismissedForceReplyId: MessageId?, editState: ChatEditState?, forwardMessages:[Message], hideSendersName: Bool, themeEditing: Bool, hideCaptions: Bool, revealedSpoilers: Set<MessageId>, tempSenderName: Bool?) {
+    init(timestamp: Int32, inputState: ChatTextInputState, replyMessageId: EngineMessageReplySubject?, replyMessage: Message?, forwardMessageIds: [MessageId], messageActionsState:ChatInterfaceMessageActionsState, dismissedPinnedMessageId: [MessageId], composeDisableUrlPreview: String?, historyScrollState: ChatInterfaceHistoryScrollState?, dismissedForceReplyId: MessageId?, editState: ChatEditState?, forwardMessages:[Message], hideSendersName: Bool, themeEditing: Bool, hideCaptions: Bool, revealedSpoilers: Set<MessageId>, tempSenderName: Bool?) {
         self.timestamp = timestamp
         self.inputState = inputState
         self.replyMessageId = replyMessageId
@@ -942,14 +921,7 @@ struct ChatInterfaceState: Codable, Equatable {
             self.inputState = ChatTextInputState()
         }
 
-        let replyMessageIdPeerId: Int64? = try container.decodeIfPresent(Int64.self, forKey: "r.p")
-        let replyMessageIdNamespace: Int32? = try container.decodeIfPresent(Int32.self, forKey: "r.n")
-        let replyMessageIdId: Int32? = try container.decodeIfPresent(Int32.self, forKey: "r.i")
-        if let replyMessageIdPeerId = replyMessageIdPeerId, let replyMessageIdNamespace = replyMessageIdNamespace, let replyMessageIdId = replyMessageIdId {
-            self.replyMessageId = EngineMessage.Id(peerId: EnginePeer.Id(replyMessageIdPeerId), namespace: replyMessageIdNamespace, id: replyMessageIdId)
-        } else {
-            self.replyMessageId = nil
-        }
+        self.replyMessageId = try container.decodeIfPresent(EngineMessageReplySubject.self, forKey: "reply")
 
         if let forwardMessageIdsData = try container.decodeIfPresent(Data.self, forKey: "fm") {
             self.forwardMessageIds = EngineMessage.Id.decodeArrayFromData(forwardMessageIdsData)
@@ -986,14 +958,8 @@ struct ChatInterfaceState: Codable, Equatable {
         self.historyScrollState = try container.decodeIfPresent(ChatInterfaceHistoryScrollState.self, forKey: "hss")
 
 
-        let dismissedForceReplyIdPeerId: Int64? = try container.decodeIfPresent(Int64.self, forKey: "d.f.p")
-        let dismissedForceReplyIdNamespace: Int32? = try container.decodeIfPresent(Int32.self, forKey: "d.f.n")
-        let dismissedForceReplyIdId: Int32? = try container.decodeIfPresent(Int32.self, forKey: "d.f.i")
-        if let dismissedForceReplyIdPeerId = dismissedForceReplyIdPeerId, let dismissedForceReplyIdNamespace = dismissedForceReplyIdNamespace, let dismissedForceReplyIdId = dismissedForceReplyIdId {
-            self.dismissedForceReplyId = MessageId(peerId: PeerId(dismissedForceReplyIdPeerId), namespace: dismissedForceReplyIdNamespace, id: dismissedForceReplyIdId)
-        } else {
-            self.dismissedForceReplyId = nil
-        }
+        self.dismissedForceReplyId = try container.decodeIfPresent(MessageId.self, forKey: "dismissed_force_reply")
+        
         //TODO
         self.editState = nil
         self.replyMessage = nil
@@ -1028,7 +994,7 @@ struct ChatInterfaceState: Codable, Equatable {
         return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: self.replyMessageId, replyMessage: self.replyMessage, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: nil, forwardMessages: self.forwardMessages, hideSendersName: self.hideSendersName, themeEditing: self.themeEditing, hideCaptions: self.hideCaptions, revealedSpoilers: self.revealedSpoilers, tempSenderName: self.tempSenderName)
     }
 
-    func withUpdatedReplyMessageId(_ replyMessageId: MessageId?) -> ChatInterfaceState {
+    func withUpdatedReplyMessageId(_ replyMessageId: EngineMessageReplySubject?) -> ChatInterfaceState {
         return ChatInterfaceState(timestamp: self.timestamp, inputState: self.inputState, replyMessageId: replyMessageId, replyMessage: nil, forwardMessageIds: self.forwardMessageIds, messageActionsState:self.messageActionsState, dismissedPinnedMessageId: self.dismissedPinnedMessageId, composeDisableUrlPreview: self.composeDisableUrlPreview, historyScrollState: self.historyScrollState, dismissedForceReplyId: self.dismissedForceReplyId, editState: self.editState, forwardMessages: self.forwardMessages, hideSendersName: self.hideSendersName, themeEditing: self.themeEditing, hideCaptions: self.hideCaptions, revealedSpoilers: self.revealedSpoilers, tempSenderName: self.tempSenderName)
     }
 

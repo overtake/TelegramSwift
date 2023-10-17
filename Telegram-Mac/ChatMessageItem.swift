@@ -509,7 +509,7 @@ class ChatMessageItem: ChatRowItem {
             
             var media = message.anyMedia
             if let game = media as? TelegramMediaGame {
-                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
+                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil, displayOptions: .default)))
             }
             
             self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType)
@@ -917,14 +917,9 @@ class ChatMessageItem: ChatRowItem {
                     openBank(bankCard)
                 }), range: range)
             case .BlockQuote:
-                string.addAttribute(TextInputAttributes.quote, value: true as NSNumber, range: range)
-                string.addAttribute(.preformattedPre, value: 4 as NSNumber, range: range)
-                string.addAttribute(.foregroundColor, value: NSColor.red.cgColor, range: range)
-                
-                //TextViewBlockQuoteData(id: Int(arc4random64()), color: linkColor),
-                
-                //string.addAttribute(.backgroundColor, value: NSColor.green.cgColor, range: range)
-
+                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), color: linkColor, space: 4), range: range)
+            case let .CustomEmoji(_, fileId: fileId):
+                string.addAttribute(TextInputAttributes.customEmoji, value: TextInputTextCustomEmojiAttribute(fileId: fileId, file: nil, emoji: string.attributedSubstring(from: range).string), range: range)
             case let .Custom(type):
                 if type == ApplicationSpecificEntityType.Timecode {
                     string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)

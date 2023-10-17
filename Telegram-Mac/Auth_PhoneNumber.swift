@@ -93,7 +93,7 @@ private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
 }
 
 
-private extension Country {
+extension Country {
     var fullName: String {
         if let code = self.countryCodes.first {
             return "\(emojiFlagForISOCountryCode(self.id))" + " " + name + " +\(code.code)"

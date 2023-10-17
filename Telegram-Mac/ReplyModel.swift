@@ -26,7 +26,8 @@ class ReplyModel: ChatAccessoryModel {
     private let customHeader: String?
     private let translate: ChatLiveTranslateContext.State.Result?
     private let forceClassic: Bool
-    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, forceClassic: Bool = false) {
+    private let quote: EngineMessageReplyQuote?
+    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, quote: EngineMessageReplyQuote? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, forceClassic: Bool = false) {
         self.isPinned = isPinned
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
@@ -35,6 +36,7 @@ class ReplyModel: ChatAccessoryModel {
         self.customHeader = customHeader
         self.translate = translate
         self.forceClassic = forceClassic
+        self.quote = quote
         super.init(context: context, presentation: presentation, drawLine: drawLine)
         
       
@@ -69,6 +71,7 @@ class ReplyModel: ChatAccessoryModel {
         }
     }
     
+    
     override weak var view:ChatAccessoryView? {
         didSet {
             updateImageIfNeeded()
@@ -81,34 +84,8 @@ class ReplyModel: ChatAccessoryModel {
         }
     }
     
-    override var leftInset: CGFloat {
-        var imageDimensions: CGSize?
-        if let message = replyMessage {
-            if !message.containsSecretMedia {
-                if let media = message.anyMedia {
-                    if let image = media as? TelegramMediaImage {
-                        if let representation = largestRepresentationForPhoto(image) {
-                            imageDimensions = representation.dimensions.size
-                        }
-                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
-                        if let dimensions = file.dimensions {
-                            imageDimensions = dimensions.size
-                        } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
-                            imageDimensions = representation.dimensions.size
-                        } else if file.isAnimatedSticker {
-                            imageDimensions = NSMakeSize(30, 30)
-                        }
-                    }
-                }
-            }
-
-            
-            if let _ = imageDimensions {
-                return 30 + super.leftInset * 2
-            }
-        }
-        
-        return super.leftInset
+    override var mediaInset: CGFloat {
+        return updatedMedia != nil ? 30 + leftInset : 0
     }
     
     deinit {
@@ -120,8 +97,11 @@ class ReplyModel: ChatAccessoryModel {
         self.make(with: replyMessage, isLoading: isLoading, display: true)
     }
     
-    private func updateImageIfNeeded() {
-        if let message = self.replyMessage, let view = self.view {
+    override var updatedMedia: Media? {
+        if let message = self.replyMessage {
+            if self.quote != nil, self.customHeader != nil {
+                return nil
+            }
             var updatedMedia: Media?
             var imageDimensions: CGSize?
             var hasRoundImage = false
@@ -148,7 +128,32 @@ class ReplyModel: ChatAccessoryModel {
                     }
                 }
             }
+            return updatedMedia
+        }
+        return nil
+    }
+    
+    private func updateImageIfNeeded() {
+        if let message = self.replyMessage, let updatedMedia = self.updatedMedia, let view = self.view {
             
+            var imageDimensions: CGSize?
+            var hasRoundImage = false
+            if let image = updatedMedia as? TelegramMediaImage {
+                if let representation = largestRepresentationForPhoto(image) {
+                    imageDimensions = representation.dimensions.size
+                }
+            } else if let file = updatedMedia as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
+                if let dimensions = file.dimensions?.size {
+                    imageDimensions = dimensions
+                } else if let representation = largestImageRepresentation(file.previewRepresentations) {
+                    imageDimensions = representation.dimensions.size
+                } else if file.isAnimatedSticker {
+                    imageDimensions = NSMakeSize(30, 30)
+                }
+                if file.isInstantVideo {
+                    hasRoundImage = true
+                }
+            }
             
             if let imageDimensions = imageDimensions {
                 let boundingSize = CGSize(width: 30.0, height: 30.0)
@@ -162,7 +167,7 @@ class ReplyModel: ChatAccessoryModel {
                     view.addSubview(view.imageView!)
                 }
                 
-                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), floorToScreenPixels(System.backingScale, self.topOffset + (max(34, self.size.height) - self.topOffset - boundingSize.height)/2))
+                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), self.mediaTopInset)
                 
                 
                 let mediaUpdated = true
@@ -199,18 +204,18 @@ class ReplyModel: ChatAccessoryModel {
                 }
                 
                 
-                if let updateImageSignal = updateImageSignal, let media = updatedMedia {
+                if let updateImageSignal = updateImageSignal {
                     
-                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale), clearInstantly: false)
+                    view.imageView?.setSignal(signal: cachedMedia(media: updatedMedia, arguments: arguments, scale: System.backingScale), clearInstantly: false)
 
                     
-                    view.imageView?.setSignal(updateImageSignal, animate: true, synchronousLoad: true, cacheImage: { [weak media] result in
-                        if let media = media {
-                            cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                    view.imageView?.setSignal(updateImageSignal, animate: true, synchronousLoad: true, cacheImage: { [weak updatedMedia] result in
+                        if let updatedMedia = updatedMedia {
+                            cacheMedia(result, media: updatedMedia, arguments: arguments, scale: System.backingScale)
                         }
                     })
                     
-                    if let media = media as? TelegramMediaImage {
+                    if let media = updatedMedia as? TelegramMediaImage {
                         self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.context.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                     }
                     
@@ -243,8 +248,6 @@ class ReplyModel: ChatAccessoryModel {
 
         if let message = message {
             
-            
-            
             var title: String? = message.effectiveAuthor?.displayTitle
             if let info = message.forwardInfo {
                 title = info.authorTitle
@@ -265,7 +268,14 @@ class ReplyModel: ChatAccessoryModel {
             if let translate = self.translate, let translateText = message.translationAttribute(toLang: translate.toLang)?.text  {
                 text = .initialize(string: translateText, color: theme.colors.text, font: .normal(.text))
             } else {
-                text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
+                if let quote = quote {
+                    let textAttr = NSMutableAttributedString()
+                    textAttr.append(string: quote.text, color: theme.colors.text, font: .normal(.text))
+                    InlineStickerItem.apply(to: textAttr, associatedMedia: [:], entities:  quote.entities, isPremium: context.isPremium, ignoreSpoiler: true)
+                    text = textAttr
+                } else {
+                    text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
+                }
             }
             
             
@@ -280,11 +290,11 @@ class ReplyModel: ChatAccessoryModel {
             attr.addAttribute(.foregroundColor, value: presentation.enabledText, range: attr.range)
             attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
             
-//            attr.fixUndefinedEmojies()
-            self.message = .init(attr, maximumNumberOfLines: 1)
+            
+            self.message = .init(attr, maximumNumberOfLines: quote != nil && self.modelType == .modern ? 0 : 1, cutout: self.cutout)
         } else {
             self.header = nil
-            self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.enabledText, font: .normal(.text)), maximumNumberOfLines: 1)
+            self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.enabledText, font: .normal(.text)), maximumNumberOfLines: 1, cutout: self.cutout)
             display = true
         }
         
@@ -322,21 +332,6 @@ class ReplyModel: ChatAccessoryModel {
 
     
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -386,12 +381,10 @@ class StoryReplyModel: ChatAccessoryModel {
         return false
     }
     
-    override var leftInset: CGFloat {
-        if isUnsupported {
-            return super.leftInset
-        }
-        return 30 + super.leftInset * 2
+    override var mediaInset: CGFloat {
+        return 30
     }
+    
     
     deinit {
         disposable.dispose()
@@ -402,23 +395,34 @@ class StoryReplyModel: ChatAccessoryModel {
         self.make(message: self.msg, display: true)
     }
     
+    override var updatedMedia: Media? {
+        if case let .item(item) = self.story, let media = item.media {
+            var updatedMedia: Media?
+            
+            if let image = media as? TelegramMediaImage {
+                updatedMedia = image
+            } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
+                updatedMedia = file
+            }
+            return updatedMedia
+        }
+        return nil
+    }
+    
     private func updateImageIfNeeded() {
         guard let peer = msg.peers[storyId.peerId], let peerReference = PeerReference(peer) else {
             return
         }
        
-        if let view = self.view, case let .item(item) = self.story, let media = item.media {
-            var updatedMedia: Media?
+        if let view = self.view, let media = updatedMedia, case let .item(item) = self.story {
             var imageDimensions: CGSize?
             
             if let image = media as? TelegramMediaImage {
-                updatedMedia = image
                 if let representation = largestRepresentationForPhoto(image) {
                     imageDimensions = representation.dimensions.size
                 }
             } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
-                updatedMedia = file
-                
+            
                 if let dimensions = file.dimensions?.size {
                     imageDimensions = dimensions
                 } else if let representation = largestImageRepresentation(file.previewRepresentations) {

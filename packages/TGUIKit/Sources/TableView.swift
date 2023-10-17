@@ -3249,7 +3249,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
-        rowRect.origin.y = round(min(max(rowRect.minY + relativeInset, -contentInsets.top), documentSize.height - height) + inset.top)
+        rowRect.origin.y = round(min(max(rowRect.minY + relativeInset, (!tableView.isFlipped ? 0 : -contentInsets.top)), documentSize.height - height) + inset.top)
         
         if self.tableView.isFlipped {
             rowRect.origin.y = min(rowRect.origin.y, documentSize.height - clipView.bounds.height)

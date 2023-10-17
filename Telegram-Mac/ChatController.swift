@@ -420,12 +420,15 @@ class ChatControllerView : View, ChatInputDelegate {
     func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
         let animated = animated && !inLiveResize && !tableView.clipView.isAnimateScrolling
         var added:[NSView] = []
+        let superview = floatingPhotosView//value.isAnchor ? floatingPhotosView : self.tableView.documentView!
         for value in values {
             if let view = value.photoView {
+                
                 view.layer?.removeAnimation(forKey: "opacity")
-                view._change(pos: value.point, animated: animated && view.superview == floatingPhotosView, duration: 0.2, timingFunction: .easeOut)
-                if view.superview != floatingPhotosView {
-                    floatingPhotosView.addSubview(view)
+                view._change(pos: value.point, animated: animated && view.superview == superview, duration: 0.2, timingFunction: .easeOut)
+                
+                if view.superview != superview {
+                    superview.addSubview(view)
                     let moveAsNew = currentAnimationRows.first(where: {
                         $0.index == value.items.first?.index
                     })
@@ -437,8 +440,8 @@ class ChatControllerView : View, ChatInputDelegate {
                 added.append(view)
             }
         }
-        let toRemove = floatingPhotosView.subviews.filter {
-            !added.contains($0)
+        let toRemove = superview.subviews.filter {
+            !added.contains($0) && $0 is ChatAvatarView
         }
         for view in toRemove {
             performSubviewRemoval(view, animated: animated, timingFunction: .easeOut, checkCompletion: true)
@@ -601,7 +604,7 @@ class ChatControllerView : View, ChatInputDelegate {
         
         self.textInputSuggestionsView?.updateRect(transition: transition)
         
-        self.chatInteraction.updateFrame(frame, transition)
+        //self.chatInteraction.updateFrame(frame, transition)
     }
 
     override var responder: NSResponder? {
@@ -1793,6 +1796,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let gap: CGFloat = 13
             let inset: CGFloat = 3
             
+            let isAnchor: Bool = false
+            
             let lastMax: CGFloat = items[items.count - 1].frame.maxY - inset
             let firstMin: CGFloat = items[0].frame.minY + inset
             
@@ -1823,8 +1828,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
 
             }
+            //point = self.genericView.tableView.documentView!.convert(point, from: self.genericView.floatingPhotosView)
+
             
-            let value: ChatFloatingPhoto = .init(point: point, items: groupped.0, photoView: photoView)
+            let value: ChatFloatingPhoto = .init(point: point, items: groupped.0, photoView: photoView, isAnchor: isAnchor)
             floating.append(value)
         }
         
@@ -1993,8 +2000,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let peerId = self.chatInteraction.peerId
         let threadId = chatInteraction.mode.threadId
 
-        let takeReplyId:()->MessageId? = { [weak self] in
-            return self?.chatInteraction.presentation.interfaceState.replyMessageId ?? threadId
+        let takeReplyId:()->EngineMessageReplySubject? = { [weak self] in
+            var reply = self?.chatInteraction.presentation.interfaceState.replyMessageId
+            if reply == nil, let threadId = threadId {
+                reply = .init(messageId: threadId, quote: nil)
+            }
+            return reply
         }
         if let id = threadId {
             let threadId = makeMessageThreadId(id)
@@ -2656,25 +2667,28 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.setupReplyMessage = { [weak self] messageId in
+        chatInteraction.setupReplyMessage = { [weak self] message, subject in
             guard let `self` = self else { return }
             
             switch self.mode {
             case .scheduled, .pinned:
                 return
-            case .history:
-                break
-            case .thread:
+            default:
                 break
             }
             
+            if let subject = subject, let message = message, self.chatInteraction.peer?.canSendMessage() == false {
+                showModal(with: ShareModalController(ReplyForwardMessageObject(context, message: message, subject: subject)), for: context.window)
+                return
+            }
+            
             self.chatInteraction.focusInputField()
-            let signal:Signal<Message?, NoError> = messageId == nil ? .single(nil) : self.chatInteraction.context.account.postbox.messageAtId(messageId!)
+            let signal:Signal<Message?, NoError> = subject == nil ? .single(nil) : self.chatInteraction.context.account.postbox.messageAtId(subject!.messageId)
             _ = (signal |> deliverOnMainQueue).start(next: { [weak self] message in
                 self?.chatInteraction.update({ current in
-                    var current = current.updatedInterfaceState({$0.withUpdatedReplyMessageId(messageId).withUpdatedReplyMessage(message)})
-                    if messageId == current.keyboardButtonsMessage?.replyAttribute?.messageId {
-                        current = current.updatedInterfaceState({$0.withUpdatedDismissedForceReplyId(messageId)})
+                    var current = current.updatedInterfaceState({$0.withUpdatedReplyMessageId(subject).withUpdatedReplyMessage(message)})
+                    if subject?.messageId == current.keyboardButtonsMessage?.replyAttribute?.messageId {
+                        current = current.updatedInterfaceState({ $0.withUpdatedDismissedForceReplyId(subject?.messageId) })
                     }
                     return current
                 })
@@ -2988,7 +3002,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return .complete()
                                 }
                                 
-                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, replyId: threadId, hideNames: hideNames, hideCaptions: hideCaptions, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId)
+                                return Sender.forwardMessages(messageIds: messages.map { $0.id }, context: context, peerId: peerId, replyId: takeReplyId(), hideNames: hideNames, hideCaptions: hideCaptions, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId)
                             }
                             
                             invokeSignal = invokeSignal |> then(fwd |> ignoreValues)
@@ -3506,7 +3520,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                 func apply(_ controller: ChatController, atDate: Int32?) {
                     let chatInteraction = controller.chatInteraction
-                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, threadId: chatInteraction.mode.threadId64, botId: results.botId, result: result, replyToMessageId: takeReplyId().flatMap { .init(messageId: $0, quote: nil) })
+                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, threadId: chatInteraction.mode.threadId64, botId: results.botId, result: result, replyToMessageId: takeReplyId())
                     if value {
                         controller.nextTransaction.set(handler: afterSentTransition)
                     }
@@ -3841,6 +3855,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             if let strongSelf = self {
                
+                if toId.peerId != strongSelf.chatInteraction.peerId {
+                    strongSelf.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(toId.peerId), messageId: toId))
+                }
                 
                 switch strongSelf.mode {
                 case .history, .thread:
@@ -4589,7 +4606,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.quote = { [weak self] text, messageId in
+        chatInteraction.quote = { [weak self] quote, messageId in
             guard let `self` = self else {
                 return
             }
@@ -6134,7 +6151,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let message = initialData.buttonKeyboardMessage {
                 if message.requestsSetupReply {
                     if message.id != current.interfaceState.dismissedForceReplyId {
-                        current = current.updatedInterfaceState({$0.withUpdatedReplyMessageId(message.id)})
+                        current = current.updatedInterfaceState({
+                            $0.withUpdatedReplyMessageId(.init(messageId: message.id, quote: nil))
+                        })
                     }
                 }
             }
@@ -6892,11 +6911,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let `self` = self, let window = self.window, !hasModals(window), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
-                var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
+                var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessage
                 self.genericView.tableView.enumerateItems(with: { item in
                     if let item = item as? ChatRowItem, let message = item.message {
-                        if canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode), currentReplyId == nil || (message.id < currentReplyId!) {
-                            currentReplyId = message.id
+                        if canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode), currentReplyId == nil || (message.id < currentReplyId!.id) {
+                            currentReplyId = message
                             self.genericView.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsetsZero, timingFunction: .linear)
                             return false
                         }
@@ -6905,7 +6924,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 })
                 
                 let result:KeyHandlerResult = currentReplyId != nil ? .invoked : .rejected
-                self.chatInteraction.setupReplyMessage(currentReplyId)
+                let subject: EngineMessageReplySubject?
+                if let currentReplyId = currentReplyId {
+                    subject = .init(messageId: currentReplyId.id, quote: nil)
+                } else {
+                    subject = nil
+                }
+                self.chatInteraction.setupReplyMessage(currentReplyId, subject)
                 
                 return result
             }
@@ -6914,11 +6939,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             if let `self` = self, let window = self.window, !hasModals(window), self.chatInteraction.presentation.interfaceState.editState == nil, self.chatInteraction.presentation.interfaceState.inputState.inputText.isEmpty {
-                var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessageId
+                var currentReplyId = self.chatInteraction.presentation.interfaceState.replyMessage
                 self.genericView.tableView.enumerateItems(reversed: true, with: { item in
                     if let item = item as? ChatRowItem, let message = item.message {
-                        if canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode), currentReplyId != nil && (message.id > currentReplyId!) {
-                            currentReplyId = message.id
+                        if canReplyMessage(message, peerId: self.chatInteraction.peerId, mode: self.chatInteraction.mode), currentReplyId != nil && (message.id > currentReplyId!.id) {
+                            currentReplyId = message
                             self.genericView.tableView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsetsZero, timingFunction: .linear)
                             return false
                         }
@@ -6927,7 +6952,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 })
                 
                 let result:KeyHandlerResult = currentReplyId != nil ? .invoked : .rejected
-                self.chatInteraction.setupReplyMessage(currentReplyId)
+                let subject: EngineMessageReplySubject?
+                if let currentReplyId = currentReplyId {
+                    subject = .init(messageId: currentReplyId.id, quote: nil)
+                } else {
+                    subject = nil
+                }
+                self.chatInteraction.setupReplyMessage(currentReplyId, subject)
                 
                 return result
             }
@@ -6983,13 +7014,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .invoked
         }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
         
-        #if DEBUG
-        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.navigationController?.push(ExperimentalTextController(context))
-            return .invoked
-        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
-
-        #endif
         
        
     

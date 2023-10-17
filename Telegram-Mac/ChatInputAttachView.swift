@@ -114,7 +114,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     let chatMode = chatInteraction.presentation.chatMode
 
-                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId ?? chatMode.threadId
+                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId?.messageId ?? chatMode.threadId
                     
                     let threadId = chatInteraction.presentation.chatLocation.threadId
                     

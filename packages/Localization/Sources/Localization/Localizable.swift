@@ -2989,6 +2989,10 @@ public final class L10n {
   public static func chatMessageAdText(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Message.Ad.Text", p1)
   }
+  /// Quote
+  public static var chatMessageContextQuote: String  { return L10n.tr("Localizable", "Chat.Message.Context.Quote") }
+  /// Loo Long.
+  public static var chatMessageContextQuoteLimitExceed: String  { return L10n.tr("Localizable", "Chat.Message.Context.Quote.LimitExceed") }
   /// This message was imported from another app. We can't guarantee it's real.
   public static var chatMessageImportedText: String  { return L10n.tr("Localizable", "Chat.Message.Imported.Text") }
   /// JOIN AS LISTENER
@@ -10867,6 +10871,10 @@ public final class L10n {
   public static var selectAreaControlDimensionOriginal: String  { return L10n.tr("Localizable", "SelectAreaControl.Dimension.Original") }
   /// Square
   public static var selectAreaControlDimensionSquare: String  { return L10n.tr("Localizable", "SelectAreaControl.Dimension.Square") }
+  /// Save Countries
+  public static var selectCountriesOK: String  { return L10n.tr("Localizable", "SelectCountries.OK") }
+  /// Select Countries
+  public static var selectCountriesTitle: String  { return L10n.tr("Localizable", "SelectCountries.Title") }
   /// Search Members
   public static var selectPeersTitleSearchMembers: String  { return L10n.tr("Localizable", "SelectPeers.Title.SearchMembers") }
   /// Add to Channel
@@ -12867,6 +12875,8 @@ public final class L10n {
   public static var textViewTransformCode: String  { return L10n.tr("Localizable", "TextView.Transform.Code") }
   /// Italic
   public static var textViewTransformItalic: String  { return L10n.tr("Localizable", "TextView.Transform.Italic") }
+  /// Quote
+  public static var textViewTransformQuote: String  { return L10n.tr("Localizable", "TextView.Transform.Quote") }
   /// Clear Transformations
   public static var textViewTransformRemoveAll: String  { return L10n.tr("Localizable", "TextView.Transform.RemoveAll") }
   /// Spoiler
