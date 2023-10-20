@@ -115,8 +115,8 @@ public class InputDataModalController : ModalViewController {
         return result
     }
     
-    public override var haveNextResponder: Bool {
-        return controller.haveNextResponder
+    public override var hasNextResponder: Bool {
+        return controller.hasNextResponder
     }
     
     public override func nextResponder() -> NSResponder? {
@@ -757,7 +757,7 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     func jumpNext() {
-        if haveNextResponder {
+        if hasNextResponder {
             _ = window?.makeFirstResponder(self.nextResponder())
         }
     }
@@ -850,7 +850,7 @@ class InputDataController: GenericViewController<InputDataView> {
         return BarView(controller: self)
     }
     
-    override var haveNextResponder: Bool {
+    override var hasNextResponder: Bool {
         return true
     }
     

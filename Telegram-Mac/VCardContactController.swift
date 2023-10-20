@@ -174,7 +174,7 @@ import SwiftSignalKit
 //        return controller.controller.returnKeyAction()
 //    }
 //    
-//    public override var haveNextResponder: Bool {
+//    public override var hasNextResponder: Bool {
 //        return true
 //    }
 //    
