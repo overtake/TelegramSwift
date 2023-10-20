@@ -548,11 +548,16 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         let invokeCallback:(Peer, MessageId?, ChatInitialAction?) -> Void = { peer, messageId, action in
             if peer.isForum {
                 if let messageId = messageId {
-                    _ = ForumUI.openTopic(makeMessageThreadId(messageId), peerId: peer.id, context: context, animated: true, addition: true).start(next: { result in
-                        if !result {
-                            ForumUI.open(peer.id, context: context)
-                        }
+                    
+                    _ = (context.engine.messages.getMessagesLoadIfNecessary([messageId]) |> deliverOnMainQueue).start(next: { message in
+                        _ = ForumUI.openTopic(message.first?.threadId ?? makeMessageThreadId(messageId), peerId: peer.id, context: context, messageId: messageId, animated: true, addition: true).start(next: { result in
+                            if !result {
+                                ForumUI.open(peer.id, context: context)
+                            }
+                        })
                     })
+                    
+                    
                 } else {
                     ForumUI.open(peer.id, context: context)
                 }

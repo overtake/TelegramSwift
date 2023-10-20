@@ -77,7 +77,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case 10:
             self = .quote(range)
         default:
-            fatalError("input attribute not supported")
+            self = .bold(range)
+            //fatalError("input attribute not supported")
         }
     }
     var weight: Int {
