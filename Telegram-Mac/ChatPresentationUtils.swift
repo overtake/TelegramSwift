@@ -525,7 +525,7 @@ final class TelegramChatColors {
     
     func replyTitle(_ item: ChatRowItem) -> (NSColor, NSColor?) {
         var isDashed: Bool = false
-        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.author {
+        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
             isDashed = author.nameColor?.isDashed == true
             if message.id.peerId.namespace == Namespaces.Peer.CloudGroup || message.id.peerId.namespace == Namespaces.Peer.CloudChannel {
                 if let nameColor = author.nameColor, message.isIncoming(item.context.account, item.renderType == .bubble) {
