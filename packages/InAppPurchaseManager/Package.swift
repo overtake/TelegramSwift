@@ -16,6 +16,7 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
         .package(name: "CurrencyFormat", path: "../CurrencyFormat"),
+        .package(name: "TGUIKit", path: "../TGUIKit"),
         .package(name: "SSignalKit", path: "../../submodules/telegram-ios/submodules/SSignalKit"),
         .package(name: "TelegramCore", path: "../../submodules/telegram-ios/submodules/TelegramCore"),
         .package(name: "Postbox", path: "../../submodules/telegram-ios/submodules/Postbox"),
@@ -31,6 +32,7 @@ let package = Package(
                 .product(name: "SwiftSignalKit", package: "SSignalKit", condition: nil),
                 .product(name: "TelegramCore", package: "TelegramCore", condition: nil),
                 .product(name: "Postbox", package: "Postbox", condition: nil),
+                .product(name: "TGUIKit", package: "Postbox", condition: nil),
                 .product(name: "InAppSettings", package: "InAppSettings", condition: nil)
             ]),
     ]

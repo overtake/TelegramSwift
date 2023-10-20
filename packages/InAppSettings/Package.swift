@@ -19,6 +19,7 @@ let package = Package(
         .package(name: "Postbox", path: "../submodules/telegram-ios/submodules/Postbox"),
         .package(name: "TelegramCore", path: "../submodules/telegram-ios/submodules/TelegramCore"),
         .package(name: "KeyboardKey", path: "../KeyboardKey"),
+        .package(name: "TGUIKit", path: "../TGUIKit"),
         .package(name: "Strings", path: "../Strings"),
     ],
     targets: [
@@ -30,6 +31,7 @@ let package = Package(
                            .product(name: "Postbox", package: "Postbox", condition: nil),
                            .product(name: "KeyboardKey", package: "KeyboardKey", condition: nil),
                            .product(name: "Strings", package: "Strings", condition: nil),
+                           .product(name: "TGUIKit", package: "TGUIKit", condition: nil),
                            .product(name: "TelegramCore", package: "TelegramCore", condition: nil)]),
     ]
 )
