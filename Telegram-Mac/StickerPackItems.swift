@@ -324,9 +324,6 @@ private final class StickerPackRowView : HorizontalRowView {
     
     override var isEmojiLite: Bool {
         if let item = item as? StickerPackRowItem {
-            if item.isTopic {
-                return true
-            }
             return item.context.isLite(.emoji)
         }
         return super.isEmojiLite
@@ -340,6 +337,7 @@ private final class StickerPackRowView : HorizontalRowView {
             lockedView.frame = CGRect.init(origin: point, size: lockedView.frame.size)
         }
     }
+    private var previousColor: NSColor? = nil
     
     override func set(item:TableRowItem, animated:Bool = false) {
         
@@ -357,13 +355,25 @@ private final class StickerPackRowView : HorizontalRowView {
             
             
             let current: InlineStickerItemLayer?
-            if let view = self.inlineSticker, view.file?.fileId == file?.fileId {
+            let color = item.color ?? theme.colors.accent
+            let animated = animated && previousColor == color
+
+            if let view = self.inlineSticker, view.file?.fileId == file?.fileId, view.textColor == color {
                 current = view
             } else {
-                self.inlineSticker?.removeFromSuperlayer()
+                if let itemLayer = self.inlineSticker {
+                    if previousColor != color {
+                        delay(0.1, closure: {
+                            performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                        })
+                    } else {
+                        performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                    }
+                }
+                
                 self.inlineSticker = nil
                 if let file = file {
-                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26), textColor: item.color ?? theme.colors.accent)
+                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26), playPolicy: item.isTopic ? .framesCount(1) : .loop, textColor: color)
                     self.container.layer?.addSublayer(current!)
                     self.inlineSticker = current
                 } else {
@@ -383,7 +393,7 @@ private final class StickerPackRowView : HorizontalRowView {
             }
             
             self.set(locked: (!item.context.isPremium && item.isPremium) || (item.installed != nil && !item.installed!), unlock: unlock, animated: animated)
-
+            previousColor = color
         }
         
         

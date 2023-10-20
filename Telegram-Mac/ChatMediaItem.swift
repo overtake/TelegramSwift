@@ -249,9 +249,9 @@ class ChatMediaItem: ChatRowItem {
     }
     
     
-    override var topInset:CGFloat {
-        return 4
-    }
+//    override var topInset:CGFloat {
+//        return 4
+//    }
     
     var mediaBubbleCornerInset: CGFloat {
         return 1
@@ -277,6 +277,9 @@ class ChatMediaItem: ChatRowItem {
         return super.defaultContentTopOffset
     }
     
+    override var topInset: CGFloat {
+        return 4
+    }
 
     var hasUpsideSomething: Bool {
         return authorText != nil || replyModel != nil || topicLinkLayout != nil || forwardNameLayout != nil
@@ -289,8 +292,9 @@ class ChatMediaItem: ChatRowItem {
             offset.y -= (defaultContentInnerInset + 1)
         } else if hasBubble, !isBubbleFullFilled, hasUpsideSomething {
             offset.y += defaultContentInnerInset
+        } else if hasBubble, isBubbleFullFilled, hasUpsideSomething {
+            offset.y += topInset
         }
-        
         return offset
     }
     
@@ -517,8 +521,8 @@ class ChatMediaItem: ChatRowItem {
                 return self?.menuAdditionView ?? .single(nil)
             }
             if let layout = self.captionLayouts.first {
-                interactions.menuItems = { [weak layout, weak self] type in
-                    if let layout = layout, let interactions = self?.chatInteraction, let entry = self?.entry {
+                interactions.menuItems = { [weak self] type in
+                    if let interactions = self?.chatInteraction, let entry = self?.entry {
                         return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout, type), chatInteraction: interactions)
                     }
                     return .complete()

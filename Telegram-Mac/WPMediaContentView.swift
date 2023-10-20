@@ -67,8 +67,8 @@ class WPMediaContentView: WPContentView {
     }
 
     
-    override func update(with layout: WPLayout) {
-        super.update(with: layout)
+    override func update(with layout: WPLayout, animated: Bool) {
+        super.update(with: layout, animated: animated)
         
         if let layout = layout as? WPMediaLayout {
             if contentNode == nil || !contentNode!.isKind(of: layout.contentNode())  {

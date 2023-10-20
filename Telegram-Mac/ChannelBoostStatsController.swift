@@ -288,8 +288,8 @@ private final class Arguments {
     let shareLink:(String)->Void
     let copyLink:(String)->Void
     let showMore:()->Void
-    let giveaway:(GiveawaySubject)->Void
-    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void, giveaway:@escaping(GiveawaySubject)->Void) {
+    let giveaway:(PrepaidGiveaway?)->Void
+    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void, giveaway:@escaping(PrepaidGiveaway?)->Void) {
         self.context = context
         self.shareLink = shareLink
         self.copyLink = copyLink
@@ -349,13 +349,8 @@ private struct State : Equatable {
 private func _id_peer(_ id: PeerId, _ index: Int) -> InputDataIdentifier {
     return .init("_id_peer_\(id.toInt64())_\(index)")
 }
-private func _id_prepaid(_ subject: GiveawaySubject) ->InputDataIdentifier {
-    switch subject {
-    case .general:
-        return .init("_id_general")
-    case .prepaid(let count, let month):
-        return .init("_id_prepaid_\(count), \(month)")
-    }
+private func _id_prepaid(_ subject: PrepaidGiveaway) ->InputDataIdentifier {
+    return .init("_id_prepaid_\(subject.id)")
 }
 private let _id_loading = InputDataIdentifier("_id_loading")
 private let _id_empty_boosters = InputDataIdentifier("_id_empty_boosters")
@@ -413,7 +408,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         //TODOLANG
         
-        let prepaid:[GiveawaySubject] = [.prepaid(count: 70, month: 3), .prepaid(count: 200, month: 6)]
+        let prepaid:[PrepaidGiveaway] = state.boostStatus?.prepaidGiveaways ?? []
+        
         
         
         if !prepaid.isEmpty {
@@ -423,20 +419,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             index += 1
             
             for (i, item) in prepaid.enumerated() {
-                switch item {
-                case let .prepaid(count, month):
-                    
-                    let countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(count)", color: theme.colors.accent, font: .avatar(.text)))
-                    
-                    let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(month) % 7)
-                    let viewType = bestGeneralViewType(prepaid, for: i)
-                    
-                    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid(item), data: .init(name: "\(count) Telegram Premium", color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: viewType, description: "\(month)-month subscriptions", descTextColor: theme.colors.grayText, action: {
-                        arguments.giveaway(item)
-                    })))
-                default:
-                    break
-                }
+                let countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(item.quantity)", color: theme.colors.accent, font: .avatar(.text)))
+                
+                let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(item.months) % 7)
+                let viewType = bestGeneralViewType(prepaid, for: i)
+                
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid(item), data: .init(name: "\(item.quantity) Telegram Premium", color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: viewType, description: "\(item.months)-month subscriptions", descTextColor: theme.colors.grayText, action: {
+                    arguments.giveaway(item)
+                })))
             }
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Select a giveaway you already paid for to set it up."), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
@@ -459,18 +449,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsBoostersCountable(Int(boosters.count))), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
 
+            let boosts = boosters.boosts.filter { $0.peer != nil }
             
-            if !boosters.boosters.isEmpty {
+            if !boosts.isEmpty {
                 
                 struct Tuple: Equatable {
-                    let booster: ChannelBoostersContext.State.Booster
+                    let booster: ChannelBoostersContext.State.Boost
                     let viewType: GeneralViewType
                 }
                 
                 var items: [Tuple] = []
-                for (i, booster) in boosters.boosters.enumerated() {
-                    var viewType: GeneralViewType = bestGeneralViewType(boosters.boosters, for: i)
-                    if i == boosters.boosters.count - 1, boosters.canLoadMore || boosters.isLoadingMore {
+                for (i, booster) in boosts.enumerated() {
+                    var viewType: GeneralViewType = bestGeneralViewType(boosters.boosts, for: i)
+                    if i == boosts.count - 1, (boosters.canLoadMore && boosters.count < boosters.boosts.count) || boosters.isLoadingMore {
                         viewType = .innerItem
                     }
                     items.append(.init(booster: booster, viewType: viewType))
@@ -480,19 +471,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 var indexes: [PeerId : Int] = [:]
                 
                 for item in items {
-                    let peerId = item.booster.peer._asPeer().id
+                    let peerId = item.booster.peer!._asPeer().id
+                    let peer = item.booster.peer!._asPeer()
                     let peerIndex = indexes[peerId] ?? 0
                     let stableId = _id_peer(peerId, peerIndex)
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: stableId, equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
-                        return ShortPeerRowItem(initialSize, peer: item.booster.peer._asPeer(), account: arguments.context.account, context: arguments.context, status: strings().statsBoostsExpiresOn(stringForFullDate(timestamp: item.booster.expires)), inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, action: {
-                            arguments.openPeerInfo(item.booster.peer.id)
+                        return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, status: strings().statsBoostsExpiresOn(stringForFullDate(timestamp: item.booster.expires)), inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, action: {
+                            arguments.openPeerInfo(peerId)
                         })
                     }))
                     indexes[peerId] = peerIndex + 1
                 }
                 
                 
-                if boosters.canLoadMore && boosters.count > boosters.boosters.count {
+                if boosters.canLoadMore && boosters.count > boosters.count {
                     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().statsBoostsShowMore, color: theme.colors.accent, viewType: .lastItem, action: arguments.showMore)))
                 } else if boosters.isLoadingMore {
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_loading, equatable: .init(boosters), comparable: nil, item: { initialSize, stableId in
@@ -540,7 +532,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         //TODOLANG
 
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: "Get Boosts Via Gifts", color: theme.colors.accent, icon: NSImage(named: "Icon_Boost_Giveaway")?.precomposed(theme.colors.accent, flipVertical: true), viewType: .singleItem, action: {
-            arguments.giveaway(.general)
+            arguments.giveaway(nil)
         })))
 
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Get more boosts for your channel by gifting  Premium to your subscribers."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
@@ -573,7 +565,7 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
     }
     
     let boostData = context.engine.peers.getChannelBoostStatus(peerId: peerId)
-    let boostersContext = ChannelBoostersContext(account: context.account, peerId: peerId)
+    let boostersContext = ChannelBoostersContext(account: context.account, peerId: peerId, gift: false)
     
     
     actionsDisposable.add(combineLatest(context.account.postbox.loadedPeerWithId(peerId), boostData, boostersContext.state).start(next: { peer, boostData, boosters in
@@ -596,8 +588,8 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
         copyToClipboard(link)
     }, showMore: { [weak boostersContext] in
         boostersContext?.loadMore()
-    }, giveaway: { subject in
-        showModal(with: GiveawayModalController(context: context, peerId: peerId, subject: subject), for: context.window)
+    }, giveaway: { prepaid in
+        showModal(with: GiveawayModalController(context: context, peerId: peerId, prepaid: prepaid), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -615,7 +607,7 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
     
     controller.didAppear = { controller in
         context.window.set(handler: { _ -> KeyHandlerResult in
-            arguments.giveaway(.general)
+            arguments.giveaway(nil)
             return .invoked
         }, with: controller, for: .T, priority: .supreme, modifierFlags: [.command])}
     

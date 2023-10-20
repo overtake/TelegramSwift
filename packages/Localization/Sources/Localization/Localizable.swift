@@ -303,6 +303,8 @@ public final class L10n {
   public static var appearanceNewTheme: String  { return L10n.tr("Localizable", "Appearance.NewTheme") }
   /// Reset to Defaults
   public static var appearanceReset: String  { return L10n.tr("Localizable", "Appearance.Reset") }
+  /// Your Name Color
+  public static var appearanceYourNameColor: String  { return L10n.tr("Localizable", "Appearance.YourNameColor") }
   /// Incompatible with macOS, click to edit
   public static var appearanceCloudThemeUnsupported: String  { return L10n.tr("Localizable", "Appearance.CloudTheme.Unsupported") }
   /// Remove
@@ -2037,6 +2039,14 @@ public final class L10n {
   public static var chatLiveLocation: String  { return L10n.tr("Localizable", "Chat.LiveLocation") }
   /// owner
   public static var chatOwnerBadge: String  { return L10n.tr("Localizable", "Chat.OwnerBadge") }
+  /// Reply to %@
+  public static func chatReplyMessagePanelTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.ReplyMessagePanelTitle", p1)
+  }
+  /// Reply to quote by %@
+  public static func chatReplyQuotePanelTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.ReplyQuotePanelTitle", p1)
+  }
   /// %d of %d
   public static func chatSearchCount(_ p1: Int, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Chat.SearchCount", p1, p2)
@@ -4153,6 +4163,16 @@ public final class L10n {
   public static var chatInputBotMenu: String  { return L10n.tr("Localizable", "ChatInput.BotMenu") }
   /// Show Next
   public static var chatInputShowNext: String  { return L10n.tr("Localizable", "ChatInput.ShowNext") }
+  /// Above the Message
+  public static var chatInputEditLinkAboveTheMessage: String  { return L10n.tr("Localizable", "ChatInput.EditLink.AboveTheMessage") }
+  /// Below the Message
+  public static var chatInputEditLinkBelowTheMessage: String  { return L10n.tr("Localizable", "ChatInput.EditLink.BelowTheMessage") }
+  /// Larger Media
+  public static var chatInputEditLinkLargerMedia: String  { return L10n.tr("Localizable", "ChatInput.EditLink.LargerMedia") }
+  /// Remove Preview
+  public static var chatInputEditLinkRemovePreview: String  { return L10n.tr("Localizable", "ChatInput.EditLink.RemovePreview") }
+  /// Smaller Media
+  public static var chatInputEditLinkSmallerMedia: String  { return L10n.tr("Localizable", "ChatInput.EditLink.SmallerMedia") }
   /// Archived Chats
   public static var chatListArchivedChats: String  { return L10n.tr("Localizable", "ChatList.ArchivedChats") }
   /// Show All
@@ -8479,6 +8499,8 @@ public final class L10n {
   public static var peerInfoBlockUser: String  { return L10n.tr("Localizable", "PeerInfo.BlockUser") }
   /// Add To Group or Channel
   public static var peerInfoBotAddTo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo") }
+  /// Channel Color
+  public static var peerInfoChannelColor: String  { return L10n.tr("Localizable", "PeerInfo.ChannelColor") }
   /// Thank you! Your report will be reviewed by our team soon.
   public static var peerInfoChannelReported: String  { return L10n.tr("Localizable", "PeerInfo.ChannelReported") }
   /// Channel Type
@@ -10871,6 +10893,28 @@ public final class L10n {
   public static var selectAreaControlDimensionOriginal: String  { return L10n.tr("Localizable", "SelectAreaControl.Dimension.Original") }
   /// Square
   public static var selectAreaControlDimensionSquare: String  { return L10n.tr("Localizable", "SelectAreaControl.Dimension.Square") }
+  /// Apply
+  public static var selectColorApply: String  { return L10n.tr("Localizable", "SelectColor.Apply") }
+  /// Reply to your message
+  public static var selectColorMessage1: String  { return L10n.tr("Localizable", "SelectColor.Message1") }
+  /// Your name and replies to your messages will be shown in the selected color.
+  public static var selectColorMessage2: String  { return L10n.tr("Localizable", "SelectColor.Message2") }
+  /// Subscribe to [Telegram Premium]() to choose a custom color for your name.
+  public static var selectColorPremium: String  { return L10n.tr("Localizable", "SelectColor.Premium") }
+  /// COLOR PREVIEW
+  public static var selectColorPreview: String  { return L10n.tr("Localizable", "SelectColor.Preview") }
+  /// You can choose and individual color to tint your channel name, the links channel send, and replies to channel messages.
+  public static var selectColorInfoChannel: String  { return L10n.tr("Localizable", "SelectColor.Info.Channel") }
+  /// You can choose and individual color to tint your name, the links you send, and replies to your messages.
+  public static var selectColorInfoUser: String  { return L10n.tr("Localizable", "SelectColor.Info.User") }
+  /// Your selected color will also tint the link preview.
+  public static var selectColorMessage2PreviewText: String  { return L10n.tr("Localizable", "SelectColor.Message2.Preview.Text") }
+  /// Link Preview.
+  public static var selectColorMessage2PreviewTitle: String  { return L10n.tr("Localizable", "SelectColor.Message2.Preview.Title") }
+  /// Channel Color
+  public static var selectColorTitleChannel: String  { return L10n.tr("Localizable", "SelectColor.Title.Channel") }
+  /// Your Name Color
+  public static var selectColorTitleUser: String  { return L10n.tr("Localizable", "SelectColor.Title.User") }
   /// Save Countries
   public static var selectCountriesOK: String  { return L10n.tr("Localizable", "SelectCountries.OK") }
   /// Select Countries

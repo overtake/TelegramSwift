@@ -7558,6 +7558,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var profile_channel_color: CGImage {
+      if let image = cached.with({ $0["profile_channel_color"] }) {
+          return image
+      } else {
+          let image = _profile_channel_color()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_channel_color"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var profile_removed: CGImage {
       if let image = cached.with({ $0["profile_removed"] }) {
           return image
@@ -9898,6 +9911,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var message_quote_bubble_incoming: CGImage {
+      if let image = cached.with({ $0["message_quote_bubble_incoming"] }) {
+          return image
+      } else {
+          let image = _message_quote_bubble_incoming()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_bubble_incoming"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var message_quote_bubble_outgoing: CGImage {
+      if let image = cached.with({ $0["message_quote_bubble_outgoing"] }) {
+          return image
+      } else {
+          let image = _message_quote_bubble_outgoing()
+          _ = cached.modify { current in 
+              var current = current
+              current["message_quote_bubble_outgoing"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -10480,6 +10519,7 @@ public final class TelegramIconsTheme {
   private let _profile_group_discussion: ()->CGImage
   private let _profile_requests: ()->CGImage
   private let _profile_reactions: ()->CGImage
+  private let _profile_channel_color: ()->CGImage
   private let _profile_removed: ()->CGImage
   private let _profile_links: ()->CGImage
   private let _destruct_clear_history: ()->CGImage
@@ -10660,6 +10700,8 @@ public final class TelegramIconsTheme {
   private let _message_quote_cyan: ()->CGImage
   private let _message_quote_blue: ()->CGImage
   private let _message_quote_pink: ()->CGImage
+  private let _message_quote_bubble_incoming: ()->CGImage
+  private let _message_quote_bubble_outgoing: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -11243,6 +11285,7 @@ public final class TelegramIconsTheme {
       profile_group_discussion: @escaping()->CGImage,
       profile_requests: @escaping()->CGImage,
       profile_reactions: @escaping()->CGImage,
+      profile_channel_color: @escaping()->CGImage,
       profile_removed: @escaping()->CGImage,
       profile_links: @escaping()->CGImage,
       destruct_clear_history: @escaping()->CGImage,
@@ -11422,7 +11465,9 @@ public final class TelegramIconsTheme {
       message_quote_green: @escaping()->CGImage,
       message_quote_cyan: @escaping()->CGImage,
       message_quote_blue: @escaping()->CGImage,
-      message_quote_pink: @escaping()->CGImage
+      message_quote_pink: @escaping()->CGImage,
+      message_quote_bubble_incoming: @escaping()->CGImage,
+      message_quote_bubble_outgoing: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -12005,6 +12050,7 @@ public final class TelegramIconsTheme {
       self._profile_group_discussion = profile_group_discussion
       self._profile_requests = profile_requests
       self._profile_reactions = profile_reactions
+      self._profile_channel_color = profile_channel_color
       self._profile_removed = profile_removed
       self._profile_links = profile_links
       self._destruct_clear_history = destruct_clear_history
@@ -12185,5 +12231,7 @@ public final class TelegramIconsTheme {
       self._message_quote_cyan = message_quote_cyan
       self._message_quote_blue = message_quote_blue
       self._message_quote_pink = message_quote_pink
+      self._message_quote_bubble_incoming = message_quote_bubble_incoming
+      self._message_quote_bubble_outgoing = message_quote_bubble_outgoing
   }
 }

@@ -58,7 +58,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         let isIncoming: Bool = object.message!.isIncoming(context.account, object.renderType == .bubble)
 
         
-        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, object.renderType == .bubble), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType)
+        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: (theme.chat.activityColor(isIncoming, object.renderType == .bubble), nil), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType)
 
         
         let media = object.message!.media.first! as! TelegramMediaGiveaway
@@ -132,7 +132,9 @@ final class ChatGiveawayRowItem : ChatRowItem {
         var channels:[Channel] = []
         for peerId in media.channelPeerIds {
             if let peer = object.message?.peers[peerId] {
-                channels.append(.init(peer: peer, text: .init(.initialize(string: peer.displayTitle, color: wpPresentation.activity, font: .medium(.text))), rect: .zero))
+                
+                let color = peer.nameColor?.color ?? wpPresentation.activity.0
+                channels.append(.init(peer: peer, text: .init(.initialize(string: peer.displayTitle, color: color, font: .medium(.text))), rect: .zero))
             }
         }
         self.channels = channels
@@ -450,7 +452,8 @@ private final class ChatGiveawayRowView: ChatRowView {
             self.item = item
             self.avatar.setPeer(account: item.context.account, peer: channel.peer)
             self.textView.update(channel.text)
-            self.backgroundColor = presentation.activity.withAlphaComponent(0.2)
+            
+            self.backgroundColor = channel.peer.nameColor?.color.withAlphaComponent(0.2) ?? presentation.activity.0.withAlphaComponent(0.2)
             self.setFrameSize(channel.size)
             self.layer?.cornerRadius = frame.height / 2
             
@@ -556,13 +559,12 @@ private final class ChatGiveawayRowView: ChatRowView {
         
         item.badge.view?.needsDisplay = true
         action.set(font: .medium(.text), for: .Normal)
-        action.set(color: item.wpPresentation.activity, for: .Normal)
+        action.set(color: item.wpPresentation.activity.0, for: .Normal)
+        action.set(background: item.wpPresentation.activity.0.withAlphaComponent(0.1), for: .Normal)
         //TODOLANG
         action.set(text: "LEARN MORE", for: .Normal)
         action.layer?.cornerRadius = .cornerRadius
-        action.layer?.borderWidth = System.pixel
         action.scaleOnClick = true
-        action.layer?.borderColor = item.wpPresentation.activity.cgColor
         
     }
     

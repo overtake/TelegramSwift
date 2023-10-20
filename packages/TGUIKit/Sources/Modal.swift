@@ -195,12 +195,12 @@ private class ModalInteractionsContainer : View {
         }
         
         self.layer?.masksToBounds = false
-//        backgroundView.backgroundColor = interactions.customTheme().listBackground
-//        
-//        
-//        if interactions.singleButton {
-//            addSubview(backgroundView)
-//        }
+        backgroundView.backgroundColor = interactions.customTheme().listBackground
+        
+        
+        if interactions.singleButton {
+            addSubview(backgroundView)
+        }
         
         addSubview(acceptView)
         if let cancelView = cancelView {
@@ -266,7 +266,7 @@ private class ModalInteractionsContainer : View {
         
         
         if self.interactions.singleButton {
-            backgroundView.frame = NSMakeRect(20, -10, frame.width - 40, frame.height + 10)
+            backgroundView.frame = bounds
             acceptView.frame = CGRect(origin: NSMakePoint(20, 0), size: NSMakeSize(frame.width - 40, 40))
         } else {
             self.backgroundView.frame = bounds

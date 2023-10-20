@@ -46,7 +46,7 @@ class EditMessageModel: ChatAccessoryModel {
     }
     
     override var mediaInset: CGFloat {
-        return updatedMedia != nil ? 30 + leftInset : 0
+        return updatedMedia != nil ? 30 + 6 : 0
     }
     
     override var updatedMedia: Media? {
@@ -77,10 +77,10 @@ class EditMessageModel: ChatAccessoryModel {
         let text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
         
         messageAttr.append(text)
-        messageAttr.addAttribute(.foregroundColor, value: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, range: messageAttr.range)
+//        messageAttr.addAttribute(.foregroundColor, value: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, range: messageAttr.range)
         messageAttr.addAttribute(.font, value: NSFont.normal(.text), range: messageAttr.range)
         
-        self.message = .init(messageAttr, maximumNumberOfLines: 1)
+        self.message = .init(messageAttr, maximumNumberOfLines: 1, cutout: self.cutout)
         nodeReady.set(.single(true))
         updateImageIfNeeded()
         self.setNeedDisplay()

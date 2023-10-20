@@ -16,6 +16,26 @@ import TGUIKit
 import InAppSettings
 
 
+func generatePeerNameColorImage(_ peer: Peer?) -> CGImage {
+    let attr = NSMutableAttributedString()
+    let color = peer?.nameColor ?? .blue
+    
+    _ = attr.append(string: (peer?.compactDisplayTitle ?? "").prefixWithDots(15), color: color.color, font: .avatar(.short))
+    let textNode = TextNode.layoutText(attr, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    
+    var size = textNode.0.size
+    size.width += 16
+    size.height += 8
+    return generateImage(size, rotatedContext: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.round(rect.size, size.height / 2)
+        ctx.setFillColor(color.color.withAlphaComponent(0.1).cgColor)
+        ctx.fill(rect)
+        textNode.1.draw(rect.focus(textNode.0.size), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    })!
+}
+
 private extension TelegramBuiltinTheme {
     var baseTheme: TelegramBaseTheme {
         switch self {
@@ -148,7 +168,8 @@ private final class AppAppearanceViewArguments {
     let shareLocal:(ColorPalette)->Void
     let toggleDarkMode:(Bool)->Void
     let toggleRevealThemes:()->Void
-    init(context: AccountContext, togglePalette: @escaping(InstallThemeSource)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(CGFloat)->Void, selectAccentColor: @escaping(AppearanceAccentColor?)->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, removeTheme:@escaping(TelegramTheme)->Void, editTheme: @escaping(TelegramTheme)->Void, shareTheme:@escaping(TelegramTheme)->Void, shareLocal:@escaping(ColorPalette)->Void, toggleDarkMode: @escaping(Bool)->Void, toggleRevealThemes:@escaping()->Void) {
+    let userNameColor:()->Void
+    init(context: AccountContext, togglePalette: @escaping(InstallThemeSource)->Void, toggleBubbles: @escaping(Bool)->Void, toggleFontSize: @escaping(CGFloat)->Void, selectAccentColor: @escaping(AppearanceAccentColor?)->Void, selectChatBackground:@escaping()->Void, openAutoNightSettings:@escaping()->Void, removeTheme:@escaping(TelegramTheme)->Void, editTheme: @escaping(TelegramTheme)->Void, shareTheme:@escaping(TelegramTheme)->Void, shareLocal:@escaping(ColorPalette)->Void, toggleDarkMode: @escaping(Bool)->Void, toggleRevealThemes:@escaping()->Void, userNameColor:@escaping()->Void) {
         self.context = context
         self.togglePalette = togglePalette
         self.toggleBubbles = toggleBubbles
@@ -162,6 +183,7 @@ private final class AppAppearanceViewArguments {
         self.shareLocal = shareLocal
         self.toggleDarkMode = toggleDarkMode
         self.toggleRevealThemes = toggleRevealThemes
+        self.userNameColor = userNameColor
     }
 }
 
@@ -178,6 +200,7 @@ private let _id_theme_night_mode = InputDataIdentifier("_id_theme_night_mode")
 
 private let _id_cloud_themes = InputDataIdentifier("_id_cloud_themes")
 
+private let _id_name_color = InputDataIdentifier("_id_name_color")
 
 private func appAppearanceEntries(appearance: Appearance, state: State, settings: ThemePaletteSettings, cloudThemes: [TelegramTheme], generated:  CloudThemesCachedData, autoNightSettings: AutoNightThemePreferences, animatedEmojiStickers: [String: StickerPackItem], arguments: AppAppearanceViewArguments) -> [InputDataEntry] {
     
@@ -203,21 +226,7 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
             cloudThemes.append(cloud)
         }
     }
-    
-//    var smartThemesList:[SmartThemeCachedData] = []
-//    var values:[SmartThemeCachedData] = generated.list[.init(base: appearance.presentation.colors.parent.baseTheme, bubbled: appearance.presentation.bubbled)] ?? []
-//    if let value = generated.default {
-//        smartThemesList.append(value)
-//    }
-//    if values.isEmpty {
-//        values = generated.list[.init(base: appearance.presentation.dark ? .night : .classic, bubbled: appearance.presentation.bubbled)] ?? []
-//    }
-//    for smartTheme in values {
-//        smartThemesList.append(smartTheme)
-//    }
-//    if let custom = generated.custom {
-//        smartThemesList.append(custom)
-//    }
+   
     
     if appearance.presentation.cloudTheme == nil || appearance.presentation.cloudTheme?.settings != nil {
         let copy = cloudThemes
@@ -347,17 +356,23 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
     })))
     index += 1
     
+   
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_chat_mode, data: InputDataGeneralData(name: strings().appearanceSettingsBubblesMode, color: appearance.presentation.colors.text, type: .switchable(appearance.presentation.bubbled), viewType: appearance.presentation.bubbled ? .innerItem : .lastItem, action: {
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_chat_mode, data: InputDataGeneralData(name: strings().appearanceSettingsBubblesMode, color: appearance.presentation.colors.text, type: .switchable(appearance.presentation.bubbled), viewType: .innerItem, action: {
         arguments.toggleBubbles(!appearance.presentation.bubbled)
     })))
     index += 1
     
    
     if appearance.presentation.bubbled {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_wallpaper1, data: InputDataGeneralData(name: strings().generalSettingsChatBackground, color: appearance.presentation.colors.text, type: .next, viewType: .lastItem, action: arguments.selectChatBackground)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_theme_wallpaper1, data: InputDataGeneralData(name: strings().generalSettingsChatBackground, color: appearance.presentation.colors.text, type: .next, viewType: .innerItem, action: arguments.selectChatBackground)))
         index += 1
     }
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_name_color, data: InputDataGeneralData(name: strings().appearanceYourNameColor, color: appearance.presentation.colors.text, type: .imageContext(generatePeerNameColorImage(state.myPeer), ""), viewType: .lastItem, action: arguments.userNameColor)))
+    index += 1
+    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -404,12 +419,16 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
 
 private struct State : Equatable {
     var revealed: Bool
+    var myPeer: TelegramUser?
 }
 
 func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeSettingsEntryTag? = nil) -> InputDataController {
     
     let applyCloudThemeDisposable = MetaDisposable()
     let updateDisposable = MetaDisposable()
+    
+    
+    let actionsDisposable = DisposableSet()
     
     
     let initialState = State(revealed: false)
@@ -420,6 +439,13 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
         statePromise.set(stateValue.modify (f))
     }
     
+    actionsDisposable.add(getPeerView(peerId: context.peerId, postbox: context.account.postbox).start(next: { peer in
+        updateState { current in
+            var current = current
+            current.myPeer = peer as? TelegramUser
+            return current
+        }
+    }))
     
     let applyTheme:(InstallThemeSource)->Void = { source in
         switch source {
@@ -569,6 +595,8 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
             current.revealed = !current.revealed
             return current
         }
+    }, userNameColor: {
+        context.bindings.rootNavigation().push(SelectColorController(context: context, source: .account(context.myPeer!)))
     })
     
     
@@ -663,6 +691,10 @@ func AppAppearanceViewController(context: AccountContext, focusOnItemTag: ThemeS
             controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
         }
         controller.genericView.tableView.needUpdateVisibleAfterScroll = true
+    }
+    
+    controller.onDeinit = {
+        actionsDisposable.dispose()
     }
     
     return controller

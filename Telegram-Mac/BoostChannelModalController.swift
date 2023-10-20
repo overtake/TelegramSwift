@@ -155,61 +155,19 @@ private final class Arguments {
 
 extension ChannelBoostStatus {
     func increment() -> ChannelBoostStatus {
-        return .init(level: self.level, boosts: self.boosts + 1, currentLevelBoosts: self.currentLevelBoosts, nextLevelBoosts: self.nextLevelBoosts, premiumAudience: self.premiumAudience, url: self.url, prepaidGiveaways: self.prepaidGiveaways)
+        return .init(level: self.level, boosts: self.boosts + 1, giftBoosts: self.giftBoosts, currentLevelBoosts: self.currentLevelBoosts, nextLevelBoosts: self.nextLevelBoosts, premiumAudience: self.premiumAudience, url: self.url, prepaidGiveaways: self.prepaidGiveaways, boostedByMe: self.boostedByMe)
     }
 }
 
-extension CanApplyBoostStatus.ErrorReason : Equatable {
-    public static func == (lhs: CanApplyBoostStatus.ErrorReason, rhs: CanApplyBoostStatus.ErrorReason) -> Bool {
-        switch lhs {
-        case .generic:
-            if case .generic = rhs {
-                return true
-            }
-        case .premiumRequired:
-            if case .premiumRequired = rhs {
-                return true
-            }
-        case .floodWait(let int32):
-            if case .floodWait(int32) = rhs {
-                return true
-            }
-        case .peerBoostAlreadyActive:
-            if case .peerBoostAlreadyActive = rhs {
-                return true
-            }
-        case .giftedPremiumNotAllowed:
-            if case .giftedPremiumNotAllowed = rhs {
-                return true
-            }
-        }
-        return false
-    }
-}
-extension CanApplyBoostStatus : Equatable {
-    public static func == (lhs: TelegramCore.CanApplyBoostStatus, rhs: TelegramCore.CanApplyBoostStatus) -> Bool {
-        switch lhs {
-        case .replace:
-            if case .replace = rhs {
-                return true
-            }
-        case .ok:
-            if case .ok = rhs {
-                return true
-            }
-        case let .error(error):
-            if case .error(error) = rhs {
-                return true
-            }
-        }
-        return false
-    }
-}
 
 private struct State : Equatable {
     var peer: PeerEquatable
     var status: ChannelBoostStatus
-    var canApplyStatus: CanApplyBoostStatus
+    
+    var canApplyStatus: Bool {
+        return true
+    }
+    
     var samePeer: Bool
     var percentToNext: CGFloat {
         if let nextLevelBoosts = status.nextLevelBoosts {
@@ -219,10 +177,10 @@ private struct State : Equatable {
         }
     }
     var isAdmin: Bool {
-        return peer.peer.groupAccess.isCreator && self.boosted
+        return peer.peer.groupAccess.isCreator //&& self.boosted
     }
     var boosted: Bool {
-        return canApplyStatus == .error(.peerBoostAlreadyActive)
+        return status.boostedByMe
     }
     var link: String {
         if let address = peer.peer.addressName {
@@ -803,7 +761,7 @@ private final class AcceptRowView : TableRowView {
                 if state.isAdmin {
                     title = strings().modalCopyLink
                 } else {
-                    if state.canApplyStatus == .error(.peerBoostAlreadyActive) {
+                    if state.boosted {
                         title = strings().modalOK
                     } else {
                         title = strings().channelBoostBoostChannel
@@ -813,7 +771,7 @@ private final class AcceptRowView : TableRowView {
             }
             set(background: theme.colors.accent, for: .Normal)
             
-            self.gradient.isHidden = !gradient
+            //self.gradient.isHidden = !gradient
             
             let layout = TextViewLayout(.initialize(string: title, color: NSColor.white, font: .medium(.text)))
             layout.measure(width: .greatestFiniteMagnitude)
@@ -917,11 +875,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, canApplyStatus: CanApplyBoostStatus) -> InputDataModalController {
+func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(peer: .init(peer), status: boosts, canApplyStatus: canApplyStatus, samePeer: context.globalLocationId == .peer(peer.id))
+    let initialState = State(peer: .init(peer), status: boosts, samePeer: context.globalLocationId == .peer(peer.id))
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -932,73 +890,70 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
     var close:(()->Void)? = nil
     
     let arguments = Arguments(context: context, boost: {
-
-        let canApplyStatus = stateValue.with { $0.canApplyStatus }
         
         let commit:()->Void = {
-            _ = context.engine.peers.applyChannelBoost(peerId: peer.id).start()
+            _ = context.engine.peers.applyChannelBoost(peerId: peer.id, slots: []).start()
             updateState { current in
                 var current = current
                 current.status = current.status.increment()
-                current.canApplyStatus = .error(.peerBoostAlreadyActive)
                 return current
             }
             PlayConfetti(for: context.window)
         }
-        
-        switch canApplyStatus {
-        case .ok:
-            commit()
-        case let .replace(previousPeer):
-            let text = strings().channelBoostReplaceBoost(previousPeer._asPeer().compactDisplayTitle, peer.compactDisplayTitle)
-            
-            verifyAlert(for: context.window, information: text, ok: strings().channelBoostReplace, cancel: strings().modalCancel, successHandler: { result in
-                commit()
-            })
-            
-        case let .error(error):
-            let title: String?
-            let text: String?
-            var dismiss: Bool = false
-            var needPremium = false
-            switch error {
-            case .generic:
-                title = appName
-                text = strings().unknownError
-            case let .floodWait(timeout):
-                title = strings().channelBoostErrorBoostTooOftenTitle
-                let valueText = timeIntervalString(Int(timeout))
-                text = strings().channelBoostErrorBoostTooOftenText(valueText) 
-                dismiss = true
-            case .peerBoostAlreadyActive:
-                title = nil
-                text = nil
-                dismiss = true
-            case .premiumRequired:
-                title = strings().channelBoostErrorPremiumNeededTitle
-                text = strings().channelBoostErrorPremiumNeededText
-                needPremium = true
-            case .giftedPremiumNotAllowed:
-                title = strings().channelBoostErrorGiftedPremiumNotAllowedTitle
-                text = strings().channelBoostErrorGiftedPremiumNotAllowedText
-                dismiss = true
-            }
-            
-            if dismiss {
-                close?()
-            }
-            if let title = title, let text = text {
-                if needPremium {
-                    verifyAlert_button(for: context.window, header: title, information: text, option: strings().channelBoostErrorPremiumNeededTextOK, successHandler: { result in
-                        if result == .thrid {
-                            showModal(with: PremiumBoardingController(context: context, source: .channel_boost(peer.id)), for: context.window)
-                        }
-                    })
-                } else {
-                    alert(for: context.window, header: title, info: text)
-                }
-            }
-        }
+//        
+//        switch canApplyStatus {
+//        case .ok:
+//            commit()
+//        case let .replace(previousPeer):
+//            let text = strings().channelBoostReplaceBoost(previousPeer._asPeer().compactDisplayTitle, peer.compactDisplayTitle)
+//            
+//            verifyAlert(for: context.window, information: text, ok: strings().channelBoostReplace, cancel: strings().modalCancel, successHandler: { result in
+//                commit()
+//            })
+//            
+//        case let .error(error):
+//            let title: String?
+//            let text: String?
+//            var dismiss: Bool = false
+//            var needPremium = false
+//            switch error {
+//            case .generic:
+//                title = appName
+//                text = strings().unknownError
+//            case let .floodWait(timeout):
+//                title = strings().channelBoostErrorBoostTooOftenTitle
+//                let valueText = timeIntervalString(Int(timeout))
+//                text = strings().channelBoostErrorBoostTooOftenText(valueText) 
+//                dismiss = true
+//            case .peerBoostAlreadyActive:
+//                title = nil
+//                text = nil
+//                dismiss = true
+//            case .premiumRequired:
+//                title = strings().channelBoostErrorPremiumNeededTitle
+//                text = strings().channelBoostErrorPremiumNeededText
+//                needPremium = true
+//            case .giftedPremiumNotAllowed:
+//                title = strings().channelBoostErrorGiftedPremiumNotAllowedTitle
+//                text = strings().channelBoostErrorGiftedPremiumNotAllowedText
+//                dismiss = true
+//            }
+//            
+//            if dismiss {
+//                close?()
+//            }
+//            if let title = title, let text = text {
+//                if needPremium {
+//                    verifyAlert_button(for: context.window, header: title, information: text, option: strings().channelBoostErrorPremiumNeededTextOK, successHandler: { result in
+//                        if result == .thrid {
+//                            showModal(with: PremiumBoardingController(context: context, source: .channel_boost(peer.id)), for: context.window)
+//                        }
+//                    })
+//                } else {
+//                    alert(for: context.window, header: title, info: text)
+//                }
+//            }
+//        }
     }, openChannel: {
         close?()
         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peer.id)))

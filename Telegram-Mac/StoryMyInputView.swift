@@ -34,7 +34,7 @@ final class Story_AvatarContentView: View {
         
         if let peers = peers {
             let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
-                return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(14), genCap: true, synchronousLoad: false)
+                return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(14), genCap: true, synchronousLoad: false)
             })
             
             
@@ -159,7 +159,7 @@ private func makeItem(_ peer: Peer, context: AccountContext, callback:@escaping(
         callback(peer.id)
     }, peer: peer, context: context, reaction: nil, destination: .common)
     
-    ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), selfAsSaved: false)
+    ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), selfAsSaved: false)
     
     return item
 }

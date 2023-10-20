@@ -92,6 +92,62 @@ class ChatInputAccessory: View {
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissUrlPreview()
             }, for: .Click)
+            
+            let toggleLinkPosition:(Bool)->Void = { [weak self] below in
+                self?.chatInteraction.update {
+                    $0.updatedInterfaceState {
+                        $0.withUpdatedLinkBelowMessage(below)
+                    }
+                }
+            }
+            let toggleLinkSize:(Bool)->Void = { [weak self] big in
+                self?.chatInteraction.update {
+                    $0.updatedInterfaceState {
+                        $0.withUpdatedLargeMedia(big)
+                    }
+                }
+            }
+            
+            container.contextMenu = { [weak self] in
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().chatInputEditLinkAboveTheMessage, handler: {
+                    toggleLinkPosition(false)
+                }, itemImage: state.interfaceState.linkBelowMessage ? nil : MenuAnimation.menu_check_selected.value))
+                
+                menu.addItem(ContextMenuItem(strings().chatInputEditLinkBelowTheMessage, handler: {
+                    toggleLinkPosition(true)
+                }, itemImage: !state.interfaceState.linkBelowMessage ? nil : MenuAnimation.menu_check_selected.value))
+                
+                if let presentation = self?.chatInteraction.presentation, let urlPreview = presentation.urlPreview {
+                    switch urlPreview.1.content {
+                    case let .Loaded(content):
+                        if let defaultValue = content.isMediaLargeByDefault {
+                            menu.addItem(ContextSeparatorItem())
+                            
+                            let value = state.interfaceState.largeMedia ?? defaultValue
+                            
+                            menu.addItem(ContextMenuItem(strings().chatInputEditLinkLargerMedia, handler: {
+                                toggleLinkSize(true)
+                            }, itemImage: value ? MenuAnimation.menu_check_selected.value : nil))
+                            
+                            menu.addItem(ContextMenuItem(strings().chatInputEditLinkSmallerMedia, handler: {
+                                toggleLinkSize(false)
+                            }, itemImage: !value ? MenuAnimation.menu_check_selected.value : nil))
+                        }
+                    default:
+                        break
+                    }
+                }
+                
+                menu.addItem(ContextSeparatorItem())
+
+                menu.addItem(ContextMenuItem(strings().chatInputEditLinkRemovePreview, handler: { [weak self] in
+                    self?.dismissUrlPreview()
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                
+                return menu
+            }
+            
         } else if let editState = state.interfaceState.editState {
             displayNode = EditMessageModel(state: editState, context: context)
             iconView.image = theme.icons.chat_action_edit_message

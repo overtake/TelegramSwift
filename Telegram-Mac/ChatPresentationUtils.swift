@@ -14,6 +14,8 @@ import SwiftSignalKit
 import Postbox
 import TelegramIconsTheme
 
+
+
 final class ChatMediaPresentation : Equatable {
     
     let isIncoming: Bool
@@ -355,9 +357,21 @@ final class TelegramChatColors {
     func activityForeground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.fileActivityForegroundBubble_incoming : palette.fileActivityForegroundBubble_outgoing : palette.fileActivityForeground
     }
-    
-    func webPreviewActivity(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
+    func activityColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
+    }
+    func webPreviewActivity(_ message: Message, account: Account, bubbled: Bool) -> (NSColor, NSColor?) {
+        let isIncoming = message.isIncoming(account, bubbled)
+        var isDashed: Bool = false
+        if let author = message.author {
+            isDashed = author.nameColor?.isDashed == true
+            if let nameColor = author.nameColor, isIncoming {
+                return nameColor.dashColors
+            }
+        }
+        let color = bubbled ? isIncoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
+        
+        return (color, isDashed ? color.withAlphaComponent(0.3) : nil)
     }
     func pollOptionBorder(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return (bubbled ? incoming ?  grayText(incoming, bubbled) : grayText(incoming, bubbled) : palette.grayText).withAlphaComponent(0.2)
@@ -509,55 +523,36 @@ final class TelegramChatColors {
         return array[index]
     }
     
-    func replyTitle(_ item: ChatRowItem) -> NSColor {
-        
+    func replyTitle(_ item: ChatRowItem) -> (NSColor, NSColor?) {
+        var isDashed: Bool = false
         if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.author {
+            isDashed = author.nameColor?.isDashed == true
             if message.id.peerId.namespace == Namespaces.Peer.CloudGroup || message.id.peerId.namespace == Namespaces.Peer.CloudChannel {
-                if let nameColor = author.nameColor {
-                    switch nameColor {
-                    case .red:
-                        return item.presentation.colors.peerAvatarRedBottom
-                    case .orange:
-                        return item.presentation.colors.peerAvatarOrangeBottom
-                    case .violet:
-                        return item.presentation.colors.peerAvatarVioletBottom
-                    case .green:
-                        return item.presentation.colors.peerAvatarGreenBottom
-                    case .cyan:
-                        return item.presentation.colors.peerAvatarCyanBottom
-                    case .blue:
-                        return item.presentation.colors.peerAvatarBlueBottom
-                    case .pink:
-                        return item.presentation.colors.peerAvatarPinkBottom
-                    case .redDash:
-                        return item.presentation.colors.peerAvatarRedBottom
-                    case .orangeDash:
-                        return item.presentation.colors.peerAvatarOrangeBottom
-                    case .violetDash:
-                        return item.presentation.colors.peerAvatarVioletBottom
-                    case .greenDash:
-                        return item.presentation.colors.peerAvatarGreenBottom
-                    case .cyanDash:
-                        return item.presentation.colors.peerAvatarCyanBottom
-                    case .blueDash:
-                        return item.presentation.colors.peerAvatarBlueBottom
-                    case .other13:
-                        return NSColor.red
-                    case .other14:
-                        return NSColor.red
-                    case .other15:
-                        return NSColor.red
-                    }
+                if let nameColor = author.nameColor, message.isIncoming(item.context.account, item.renderType == .bubble) {
+                    return nameColor.dashColors
                 }
             }
         }
+        let color = item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTitleBubble_incoming : item.presentation.colors.chatReplyTitleBubble_outgoing) : item.presentation.colors.chatReplyTitle
         
-        return item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTitleBubble_incoming : item.presentation.colors.chatReplyTitleBubble_outgoing) : item.presentation.colors.chatReplyTitle
+        return (color, isDashed ? color.withAlphaComponent(0.3) : nil)
     }
+    
+    func replyQuote(_ item: ChatRowItem) -> CGImage {
+        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.author {
+            if message.id.peerId.namespace == Namespaces.Peer.CloudGroup || message.id.peerId.namespace == Namespaces.Peer.CloudChannel {
+                if let nameColor = author.nameColor {
+                    return nameColor.quoteIcon
+                }
+            }
+        }
+        return item.hasBubble ? (item.isIncoming ? item.presentation.icons.message_quote_bubble_incoming : item.presentation.icons.message_quote_bubble_outgoing) : item.presentation.icons.message_quote_accent
+    }
+    
     func replyText(_ item: ChatRowItem) -> NSColor {
         return item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTextEnabledBubble_incoming : item.presentation.colors.chatReplyTextEnabledBubble_outgoing) : item.presentation.colors.chatReplyTextEnabled
     }
     func replyDisabledText(_ item: ChatRowItem) -> NSColor {
-        return item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTextDisabledBubble_incoming : item.presentation.colors.chatReplyTextDisabledBubble_outgoing) : item.presentation.colors.chatReplyTextDisabled
+        return replyTitle(item).0
     }
 }

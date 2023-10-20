@@ -180,8 +180,8 @@ class ChatGroupedItem: ChatRowItem {
                     return .single(nil)
                 }
             }
-            layout.layout.interactions.menuItems = { [weak layout, weak self] type in
-                if let layout = layout, let interactions = self?.chatInteraction, let entry = self?.entry {
+            layout.layout.interactions.menuItems = { [weak self] type in
+                if let interactions = self?.chatInteraction, let entry = self?.entry {
                     return chatMenuItems(for: layout.message, entry: entry, textLayout: (layout.layout, type), chatInteraction: interactions)
                 }
                 return .complete()

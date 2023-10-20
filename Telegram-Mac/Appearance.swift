@@ -44,6 +44,40 @@ func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -
     })!
 }
 
+func chatReplyLineDashTemplateImage(_ color: (NSColor, NSColor?), flipped: Bool) -> CGImage? {
+    let radius: CGFloat = 3.0
+    var offset: CGFloat = 5.0
+    
+    var updated: (NSColor, NSColor?) = color
+    
+ 
+    let generator:(NSSize, CGContext) -> Void = { size, context in
+        context.clear(size.bounds)
+                        
+        context.setFillColor(updated.0.cgColor)
+        context.fill(size.bounds)
+        
+        if let color = updated.1 {
+            context.move(to: CGPoint(x: size.width, y: offset))
+            context.addLine(to: CGPoint(x: size.width, y: offset + radius * 3.0))
+            context.addLine(to: CGPoint(x: 0.0, y: offset + radius * 4.0))
+            context.addLine(to: CGPoint(x: 0.0, y: offset + radius))
+            context.closePath()
+            
+            
+            context.setFillColor(color.cgColor)
+            context.fillPath()
+        }
+        
+    }
+    if flipped {
+        return generateImage(CGSize(width: radius, height: radius * 6.0), contextGenerator: generator)
+    } else {
+        return generateImage(CGSize(width: radius, height: radius * 6.0), rotatedContext: generator)
+    }
+}
+
+
 
 func generateFilledCircleImage(diameter: CGFloat, color: NSColor?, strokeColor: NSColor? = nil, strokeWidth: CGFloat? = nil, backgroundColor: NSColor? = nil) -> CGImage {
     return generateImage(CGSize(width: diameter, height: diameter), contextGenerator: { size, context in
@@ -2558,7 +2592,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_group_destruct: {NSImage(named: "Icon_Profile_Destruct")!.precomposed(flipVertical: true)},
                                                profile_group_discussion: {NSImage(named: "Icon_Profile_Discussion")!.precomposed(flipVertical: true)},
                                                profile_requests: {NSImage(named: "Icon_Profile_Requests")!.precomposed(palette.accent, flipVertical: true)},
-                                               profile_reactions: {NSImage(named: "Icon_PeerInfo_Reactions")!.precomposed(flipVertical: true)},
+                                               profile_reactions: { NSImage(named: "Icon_PeerInfo_Reactions")!.precomposed(flipVertical: true) },
+                                                profile_channel_color: { NSImage(named: "Icon_PeerInfo_ChannelColor")!.precomposed(flipVertical: true) },
                                                profile_removed: {NSImage(named: "Icon_Profile_Removed")!.precomposed(flipVertical: true)},
                                                profile_links: {NSImage(named: "Icon_Profile_Links")!.precomposed(flipVertical: true)},
                                                destruct_clear_history: { NSImage(named: "Icon_ClearChat")!.precomposed(palette.redUI, flipVertical: true) },
@@ -2732,13 +2767,15 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                               message_story_expired_bubble_incoming: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitleBubble_incoming) },
                               message_story_expired_bubble_outgoing: { NSImage(named: "Icon_StoryExpired")!.precomposed(palette.chatReplyTitleBubble_outgoing) },
                               message_quote_accent: { NSImage(named: "Icon_Quote")!.precomposed(palette.accent) },
-                              message_quote_red: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarRedTop) },
-                              message_quote_orange: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarOrangeTop) },
-                              message_quote_violet: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarVioletTop) },
-                              message_quote_green: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarGreenTop) },
-                              message_quote_cyan: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarCyanTop) },
-                              message_quote_blue: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarBlueTop) },
-                              message_quote_pink: { NSImage(named: "Icon_Quote")!.precomposed(palette.peerAvatarPinkTop) }
+                              message_quote_red: { NSImage(named: "Icon_Quote")!.precomposed(NSColor(0xCC5049)) },
+                              message_quote_orange: { NSImage(named: "Icon_Quote")!.precomposed(NSColor(0xD67722)) },
+                              message_quote_violet: { NSImage(named: "Icon_Quote")!.precomposed(NSColor(0x955CDB)) },
+                              message_quote_green: { NSImage(named: "Icon_Quote")!.precomposed(NSColor(0x40A920)) },
+                              message_quote_cyan: { NSImage(named: "Icon_Quote")!.precomposed(NSColor(0x309EBA)) },
+                              message_quote_blue: { NSImage(named: "Icon_Quote")!.precomposed(NSColor(0x368AD1)) },
+                              message_quote_pink: { NSImage(named: "Icon_Quote")!.precomposed(NSColor(0xC7508B)) },
+                              message_quote_bubble_incoming: { NSImage(named: "Icon_Quote")!.precomposed(palette.chatReplyTitleBubble_incoming) },
+                              message_quote_bubble_outgoing: { NSImage(named: "Icon_Quote")!.precomposed(palette.chatReplyTitleBubble_outgoing) }
 
     )
 }
