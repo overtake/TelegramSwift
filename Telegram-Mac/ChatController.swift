@@ -420,13 +420,13 @@ class ChatControllerView : View, ChatInputDelegate {
     func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
         let animated = animated && !inLiveResize && !tableView.clipView.isAnimateScrolling
         var added:[NSView] = []
-        let superview = floatingPhotosView//value.isAnchor ? floatingPhotosView : self.tableView.documentView!
         for value in values {
             if let view = value.photoView {
-                
+                let superview = value.isAnchor ? floatingPhotosView : self.tableView.documentView!
+
                 view.layer?.removeAnimation(forKey: "opacity")
                 view._change(pos: value.point, animated: animated && view.superview == superview, duration: 0.2, timingFunction: .easeOut)
-                
+                                
                 if view.superview != superview {
                     superview.addSubview(view)
                     let moveAsNew = currentAnimationRows.first(where: {
@@ -440,7 +440,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 added.append(view)
             }
         }
-        let toRemove = superview.subviews.filter {
+        let toRemove = (floatingPhotosView.subviews + self.tableView.documentView!.subviews).filter {
             !added.contains($0) && $0 is ChatAvatarView
         }
         for view in toRemove {
@@ -1796,7 +1796,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let gap: CGFloat = 13
             let inset: CGFloat = 3
             
-            let isAnchor: Bool = false
+            var isAnchor: Bool = false
             
             let lastMax: CGFloat = items[items.count - 1].frame.maxY - inset
             let firstMin: CGFloat = items[0].frame.minY + inset
@@ -1805,6 +1805,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 point.y = lastMax - offset.y - ph
             } else if offset.y + gap > firstMin {
                 point.y = gap
+                isAnchor = true
             } else {
                 point.y = firstMin - offset.y
             }
@@ -1828,7 +1829,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
 
             }
-            //point = self.genericView.tableView.documentView!.convert(point, from: self.genericView.floatingPhotosView)
+            if !isAnchor {
+                point = self.genericView.tableView.documentView!.convert(point, from: self.genericView.floatingPhotosView)
+            }
 
             
             let value: ChatFloatingPhoto = .init(point: point, items: groupped.0, photoView: photoView, isAnchor: isAnchor)
@@ -1982,9 +1985,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         }))
         
-        self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
-            self?.updateFloatingPhotos(position, animated: false)
-        }))
         
         self.genericView.tableView.scrollDidUpdate = { [weak self] position in
             self?.updateFloatingPhotos(position, animated: false)
@@ -2967,7 +2967,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             return
                         } else  if !presentation.effectiveInput.inputText.trimmed.isEmpty {
                             setNextToTransaction = true
-                            invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId, mediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
+                            invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, linkBelowMessage: presentation.interfaceState.linkBelowMessage, largeMedia: presentation.interfaceState.largeMedia, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId, mediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
                                 _ = strongSelf?.nextTransaction.execute()
                             }) |> deliverOnMainQueue |> ignoreValues
                             

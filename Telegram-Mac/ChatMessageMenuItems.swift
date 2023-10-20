@@ -274,7 +274,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     let attributed = enititesAttributedStringForText(layout.selectedString).trimmed
                     let entities = messageTextEntitiesInRange(entities: ChatTextInputState(attributedText: attributed, selectionRange: 0..<0).messageTextEntities(), range: attributed.range, onlyQuoteable: true)
                     
-                    let quote = EngineMessageReplyQuote(text: attributed.string, entities: entities)
+                    let quote = EngineMessageReplyQuote(text: attributed.string, entities: entities, media: message.media.first)
                     chatInteraction.setupReplyMessage(message, .init(messageId: message.id, quote: quote))
 
                 }
@@ -686,7 +686,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     _ = forwardObject.perform(to: [peer.id], threadId: makeThreadIdMessageId(peerId: peer.id, threadId: threadId)).start()
                 }))
 
-                ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil))
+                ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil))
                 
                 return item
             }

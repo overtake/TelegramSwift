@@ -234,7 +234,6 @@ private final class GiveawayStarRowItemView : TableRowView {
 
 private final class Arguments {
     let context: AccountContext
-    let subject: GiveawaySubject
     let updateQuantity:(Int32)->Void
     let updateReceiver:(State.GiveawayReceiver)->Void
     let updateType:(State.GiveawayType)->Void
@@ -243,9 +242,8 @@ private final class Arguments {
     let toggleOption:(State.PaymentOption)->Void
     let addChannel:()->Void
     let deleteChannel:(PeerId)->Void
-    init(context: AccountContext, subject: GiveawaySubject, updateQuantity:@escaping(Int32)->Void, updateReceiver:@escaping(State.GiveawayReceiver)->Void, updateType:@escaping(State.GiveawayType)->Void, selectDate:@escaping()->Void, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void, addChannel:@escaping()->Void, deleteChannel:@escaping(PeerId)->Void) {
+    init(context: AccountContext, updateQuantity:@escaping(Int32)->Void, updateReceiver:@escaping(State.GiveawayReceiver)->Void, updateType:@escaping(State.GiveawayType)->Void, selectDate:@escaping()->Void, execute:@escaping(String)->Void, toggleOption:@escaping(State.PaymentOption)->Void, addChannel:@escaping()->Void, deleteChannel:@escaping(PeerId)->Void) {
         self.context = context
-        self.subject = subject
         self.updateQuantity = updateQuantity
         self.updateReceiver = updateReceiver
         self.updateType = updateType
@@ -306,7 +304,7 @@ private struct State : Equatable {
     enum GiveawayType : Equatable {
         case random
         case specific
-        case prepaid(Int32, Int32)
+        case prepaid(PrepaidGiveaway)
     }
     enum GiveawayReceiver : Equatable {
         case all
@@ -403,10 +401,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway_specific, data: .init(name: "Award Specific Users", color: theme.colors.text, icon: specific_icon, type: .selectableLeft(state.type == .specific), viewType: .lastItem, enabled: true, description: selectText, descTextColor: theme.colors.accent, action: {
             arguments.updateType(.specific)
         })))
-    } else if case let .prepaid(count, month) = state.type {
-        let countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(count)", color: theme.colors.accent, font: .avatar(.text)))
-        let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(month) % 7)
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid, data: .init(name: "\(count) Telegram Premium", color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: .singleItem, description: "\(month)-month subscriptions", descTextColor: theme.colors.grayText)))
+    } else if case let .prepaid(prepaid) = state.type {
+        let countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(prepaid.quantity)", color: theme.colors.accent, font: .avatar(.text)))
+        let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(prepaid.months) % 7)
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid, data: .init(name: "\(prepaid.quantity) Telegram Premium", color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: .singleItem, description: "\(prepaid.months)-month subscriptions", descTextColor: theme.colors.grayText)))
     }
     
    
@@ -622,7 +620,7 @@ enum GiveawaySubject {
     case prepaid(count: Int32, month: Int32)
 }
 
-func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: GiveawaySubject) -> InputDataModalController {
+func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: PrepaidGiveaway?) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     
@@ -642,11 +640,10 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
     #endif
 
     let type: State.GiveawayType
-    switch subject {
-    case .general:
+    if let prepaid = prepaid {
+        type = .prepaid(prepaid)
+    } else {
         type = .random
-    case let.prepaid(count, months):
-        type = .prepaid(count, months)
     }
     let initialState = State(type: type, channels: [], canMakePayment: canMakePayment)
     
@@ -681,7 +678,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
         })
     }
 
-    let arguments = Arguments(context: context, subject: subject, updateQuantity: { value in
+    let arguments = Arguments(context: context, updateQuantity: { value in
         updateState { current in
             var current = current
             current.quantity = value
@@ -945,6 +942,19 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, subject: G
     }
     
     controller.validateData = { _ in
+        if let prepaid = prepaid {
+            let state = stateValue.with { $0 }
+            let additionalPeerIds = state.channels.map { $0.peer.id }.filter { $0 != peerId }
+            let countries = state.countries.map { $0.id }
+            let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
+            _ = showModalProgress(signal: signal, for: context.window).start(completed: {
+                PlayConfetti(for: context.window)
+                showModalText(for: context.window, text: "Giveaway created")
+                close?()
+            })
+        } else {
+            
+        }
         buyAppStore()
         return .none
     }

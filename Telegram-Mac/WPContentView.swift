@@ -12,7 +12,7 @@ import TelegramCore
 
 
 
-class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
+class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
     
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
@@ -28,39 +28,12 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
 
     
     private(set) var containerView:View = View()
-    
     private(set) var content:WPLayout?
-    
-    private var instantPageButton: TitleButton? = nil
-    
-    override var backgroundColor: NSColor {
-        didSet {
-            
-            containerView.backgroundColor = backgroundColor
-            for subview in containerView.subviews {
-                if !(subview is TransformImageView) {
-                    subview.background = backgroundColor
-                }
-            }
-            if let content = content {
-                instantPageButton?.layer?.borderColor = content.presentation.activity.cgColor
-                instantPageButton?.set(color: content.presentation.activity, for: .Normal)
-                
-                if content.hasInstantPage {
-                    instantPageButton?.set(image: content.presentation.ivIcon, for: .Normal)
-                    instantPageButton?.set(image: content.presentation.ivIcon, for: .Highlight)
-                } else {
-                    instantPageButton?.removeImage(for: .Normal)
-                    instantPageButton?.removeImage(for: .Highlight)
-                }
-            }
-            
-            setNeedsDisplay()
-        }
-    }
+    private var action: TitleButton? = nil
+
     
     var selectableTextViews: [TextView] {
-        return [textView]
+        return []
     }
     
     func previewMediaIfPossible() -> Bool {
@@ -72,27 +45,22 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
         
         guard let content = content else {return}
         
-        ctx.setFillColor(content.presentation.activity.cgColor)
-        let radius:CGFloat = 1.0
-        ctx.fill(NSMakeRect(0, radius, 2, layer.bounds.height - radius * 2))
-        ctx.fillEllipse(in: CGRect(origin: CGPoint(), size: CGSize(width: radius + radius, height: radius + radius)))
-        ctx.fillEllipse(in: CGRect(origin: CGPoint(x: 0.0, y: layer.bounds.height - radius * 2), size: CGSize(width: radius + radius, height: radius + radius)))
+        ctx.setFillColor(PeerNameColorCache.value.get(content.presentation.activity, flipped: true).cgColor)
+        let radius:CGFloat = 3.0
         
-        if let siteName = content.siteName {
-            siteName.1.draw(NSMakeRect(content.insets.left, 0, siteName.0.size.width, siteName.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-        }
+        ctx.fill(NSMakeRect(-radius, 0, radius * 2, layer.bounds.height))
     }
     
     override func layout() {
         super.layout()
         if let content = self.content {
             containerView.frame = content.contentRect
-            if !textView.isEqual(to: content.textLayout) {
-                textView.update(content.textLayout)
-            }
+            textView.update(content.textLayout)
             textView.isHidden = content.textLayout == nil
-            _ = instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(content.contentRect.width, 30), thatFit: true)
-            instantPageButton?.setFrameOrigin(0, content.contentRect.height - 30)
+            if let action = action {
+                _ = action.sizeToFit(NSZeroSize, NSMakeSize(content.contentRect.width, 36), thatFit: true)
+                action.setFrameOrigin(0, content.contentRect.height - action.frame.height + content.imageInsets.top * 2)
+            }
         }
         needsDisplay = true
     }
@@ -103,8 +71,23 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
     
     required public override init() {
         super.init()
+        
+        self.isDynamicColorUpdateLocked = true
+        
+        textView.isSelectable = false
+        textView.userInteractionEnabled = false
+        
         super.addSubview(containerView)
         addSubview(textView)
+        
+        
+        self.scaleOnClick = true
+        
+        layer?.cornerRadius = 4
+        
+        set(handler: { [weak self] _ in
+            self?.content?.invokeAction()
+        }, for: .Click)
     }
     
     required init?(coder: NSCoder) {
@@ -127,46 +110,42 @@ class WPContentView: View, MultipleSelectable, ModalPreviewRowViewProtocol {
         
     }
 
-    func update(with layout:WPLayout) -> Void {
+    func update(with layout:WPLayout, animated: Bool) -> Void {
         self.content = layout
         
-        
-        if layout.hasInstantPage || layout.isProxyConfig {
-            if instantPageButton == nil {
-                instantPageButton = TitleButton()
+        if let text = layout.action_text {
+            let current: TitleButton
+            if let view = self.action {
+                current = view
+            } else {
+                current = TitleButton()
+                self.action = current
+                current.disableActions()
+                addSubview(current)
+                current.userInteractionEnabled = false
                 
-                instantPageButton?.layer?.cornerRadius = .cornerRadius
-                instantPageButton?.layer?.borderWidth = 1
-                instantPageButton?.disableActions()
-                
-             addSubview(instantPageButton!)
             }
-            instantPageButton?.layer?.borderColor = layout.presentation.activity.cgColor
 
-            instantPageButton?.set(color: layout.presentation.activity, for: .Normal)
-         
-            instantPageButton?.set(font: .medium(.title), for: .Normal)
-            instantPageButton?.set(background: .clear, for: .Normal)
-            instantPageButton?.set(text: layout.isProxyConfig ? strings().chatApplyProxy : strings().chatInstantView, for: .Normal)
-            _ = instantPageButton?.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 30), thatFit: false)
+            current.border = [.Top]
+            current.borderColor = layout.presentation.activity.0.withAlphaComponent(0.1)
+            current.set(color: layout.presentation.activity.0, for: .Normal)
+            current.set(font: .medium(.title), for: .Normal)
+            current.set(background: .clear, for: .Normal)
+            current.set(text: text, for: .Normal)
+            _ = current.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 36), thatFit: false)
             
-            instantPageButton?.removeAllHandlers()
-            instantPageButton?.set(handler : { [weak layout] _ in
-                if let content = layout {
-                    if content.hasInstantPage {
-                        showInstantPage(InstantPageViewController(content.context, webPage: content.parent.media[0] as! TelegramMediaWebpage, message: content.parent.text))
-                    } else if let proxyConfig = content.proxyConfig {
-                        applyExternalProxy(proxyConfig, accountManager: content.context.sharedContext.accountManager)
-                    }
-                }
-            }, for: .Click)
-            
-        } else {
-            instantPageButton?.removeFromSuperview()
-            instantPageButton = nil
+            current.set(color: layout.presentation.activity.0, for: .Normal)
+            if layout.hasInstantPage {
+                current.set(image: NSImage.init(named: "Icon_ChatIV")!.precomposed(layout.presentation.activity.0), for: .Normal)
+            } else {
+                current.removeImage(for: .Normal)
+            }
+        } else if let view = self.action {
+            performSubviewRemoval(view, animated: animated)
+            self.action = nil
         }
         let color = self.backgroundColor
-        self.backgroundColor = color
+        self.backgroundColor = layout.presentation.activity.0.withAlphaComponent(0.1) //color
         self.needsLayout = true
     }
     

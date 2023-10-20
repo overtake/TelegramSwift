@@ -63,6 +63,13 @@ class ReplyModel: ChatAccessoryModel {
        
     }
     
+    override var quoteIcon: CGImage? {
+        if quote != nil {
+            return presentation.quoteIcon
+        }
+        return super.quoteIcon
+    }
+    
     override var modelType: ChatAccessoryModel.ModelType {
         if isPinned || forceClassic {
             return .classic
@@ -85,7 +92,7 @@ class ReplyModel: ChatAccessoryModel {
     }
     
     override var mediaInset: CGFloat {
-        return updatedMedia != nil ? 30 + leftInset : 0
+        return updatedMedia != nil ? 30 + 6 : 0
     }
     
     deinit {
@@ -98,37 +105,15 @@ class ReplyModel: ChatAccessoryModel {
     }
     
     override var updatedMedia: Media? {
-        if let message = self.replyMessage {
-            if self.quote != nil, self.customHeader != nil {
-                return nil
+        
+        let anyMedia: Media? = self.quote?.media ?? (replyMessage?.containsSecretMedia == false ? self.replyMessage?.anyMedia : nil)
+        
+        if let media = anyMedia {
+            if let image = media as? TelegramMediaImage {
+                return image
+            } else if let file = anyMedia as? TelegramMediaFile, (file.isVideo || file.isSticker || file.isGraphicFile) && !file.isVideoSticker {
+                return file
             }
-            var updatedMedia: Media?
-            var imageDimensions: CGSize?
-            var hasRoundImage = false
-            if !message.containsSecretMedia {
-                if let media = message.anyMedia {
-                    if let image = media as? TelegramMediaImage {
-                        updatedMedia = image
-                        if let representation = largestRepresentationForPhoto(image) {
-                            imageDimensions = representation.dimensions.size
-                        }
-                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
-                        updatedMedia = file
-                        
-                        if let dimensions = file.dimensions?.size {
-                            imageDimensions = dimensions
-                        } else if let representation = largestImageRepresentation(file.previewRepresentations) {
-                            imageDimensions = representation.dimensions.size
-                        } else if file.isAnimatedSticker {
-                            imageDimensions = NSMakeSize(30, 30)
-                        }
-                        if file.isInstantVideo {
-                            hasRoundImage = true
-                        }
-                    }
-                }
-            }
-            return updatedMedia
         }
         return nil
     }
@@ -142,7 +127,7 @@ class ReplyModel: ChatAccessoryModel {
                 if let representation = largestRepresentationForPhoto(image) {
                     imageDimensions = representation.dimensions.size
                 }
-            } else if let file = updatedMedia as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
+            } else if let file = updatedMedia as? TelegramMediaFile {
                 if let dimensions = file.dimensions?.size {
                     imageDimensions = dimensions
                 } else if let representation = largestImageRepresentation(file.previewRepresentations) {
@@ -260,9 +245,20 @@ class ReplyModel: ChatAccessoryModel {
                     break
                 }
             }
+            if modelType == .classic {
+                if quote != nil {
+                    title = strings().chatReplyQuotePanelTitle(title ?? "")
+                } else {
+                    title = strings().chatReplyMessagePanelTitle(title ?? "")
+                }
+            }
+            
+            
             if isPinned {
                 title = strings().chatHeaderPinnedMessage
             }
+            
+            
             
             let text: NSAttributedString
             if let translate = self.translate, let translateText = message.translationAttribute(toLang: translate.toLang)?.text  {
@@ -281,9 +277,9 @@ class ReplyModel: ChatAccessoryModel {
             
             
             if let header = customHeader {
-                self.header = .init(.initialize(string: header, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
+                self.header = .init(.initialize(string: header, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
             } else {
-                self.header = .init(.initialize(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
+                self.header = .init(.initialize(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
             }
             let attr = NSMutableAttributedString()
             attr.append(text)
@@ -308,21 +304,6 @@ class ReplyModel: ChatAccessoryModel {
             self.view?.setFrameSize(self.size)
             self.setNeedDisplay()
         }
-    }
-    
-    override func measureSize(_ width: CGFloat = 0, sizeToFit: Bool = false) {
-        super.measureSize(width, sizeToFit: sizeToFit)
-        
-//        if let translate = translate, let message = self.message {
-//            switch translate {
-//            case .loading:
-//                _shimm = message.generateBlock(backgroundColor: .blackTransparent)
-//            case .complete:
-//                _shimm = (.zero, nil)
-//            }
-//        } else {
-//            _shimm = (.zero, nil)
-//        }
     }
     
     private var _shimm: (NSPoint, CGImage?) = (.zero, nil)
@@ -382,7 +363,7 @@ class StoryReplyModel: ChatAccessoryModel {
     }
     
     override var mediaInset: CGFloat {
-        return 30
+        return 36
     }
     
     
@@ -401,7 +382,7 @@ class StoryReplyModel: ChatAccessoryModel {
             
             if let image = media as? TelegramMediaImage {
                 updatedMedia = image
-            } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
+            } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker || file.isGraphicFile) && !file.isVideoSticker {
                 updatedMedia = file
             }
             return updatedMedia
@@ -421,7 +402,7 @@ class StoryReplyModel: ChatAccessoryModel {
                 if let representation = largestRepresentationForPhoto(image) {
                     imageDimensions = representation.dimensions.size
                 }
-            } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
+            } else if let file = media as? TelegramMediaFile {
             
                 if let dimensions = file.dimensions?.size {
                     imageDimensions = dimensions
@@ -504,7 +485,7 @@ class StoryReplyModel: ChatAccessoryModel {
         
         let title: String = peer.displayTitle
         let text: NSAttributedString = .initialize(string: isUnsupported ? strings().chatListStoryUnsupported : strings().chatListStory, color: presentation.disabledText, font: .normal(.text))
-        self.header = .init(.initialize(string: title, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.header = .init(.initialize(string: title, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
         self.message = .init(text, maximumNumberOfLines: 1)
         
         measureSize(width, sizeToFit: sizeToFit)
@@ -576,7 +557,7 @@ class ExpiredStoryReplyModel: ChatAccessoryModel {
 
 
         
-        self.header = .init(.initialize(string: title, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.header = .init(.initialize(string: title, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
         self.message = .init(text, maximumNumberOfLines: 1)
         
         measureSize(width, sizeToFit: sizeToFit)

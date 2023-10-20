@@ -169,9 +169,21 @@ class WPArticleLayout: WPLayout {
     private let fullSizeSites:[String] = ["instagram","twitter"]
     
     var isFullImageSize: Bool {
+        
+        
+        if let attr = parent.webpagePreviewAttribute {
+            if let forceLargeMedia = attr.forceLargeMedia {
+                return forceLargeMedia
+            }
+        }
+        if let value = content.isMediaLargeByDefault {
+            return value
+        }
+        
         if content.type == "telegram_background" || content.type == "telegram_theme" {
             return true
         }
+       
         let website = content.websiteName?.lowercased()
         if let type = content.type, mediaTypes.contains(type) || (fullSizeSites.contains(website ?? "") || content.instantPage != nil) || content.text == nil  {
             if let imageSize = imageSize {
@@ -191,9 +203,9 @@ class WPArticleLayout: WPLayout {
         if oldWidth != width {
             super.measure(width: width)
             
-            let maxw = min(320, width - 50)
+            let maxw = width - insets.left - insets.right
             
-            var contentSize:NSSize = NSMakeSize(width - insets.left, 0)
+            var contentSize:NSSize = NSMakeSize(maxw, 0)
             
             if let groupLayout = groupLayout {
                 groupLayout.measure(NSMakeSize(max(contentSize.width, maxw), maxw))
@@ -202,8 +214,7 @@ class WPArticleLayout: WPLayout {
                 contentSize.width = max(groupLayout.dimensions.width, contentSize.width)
             }
             
-            var emptyColor: TransformImageEmptyColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
-            var isColor: Bool = false
+            var emptyColor: TransformImageEmptyColor? = nil
             if let wallpaper = wallpaper {
                 switch wallpaper {
                 case let .wallpaper(_, _, preview):
@@ -222,10 +233,8 @@ class WPArticleLayout: WPLayout {
                                 emptyColor = .color(NSColor(argb: color))
                             }
                         }
-                    case .color:
-                        isColor = true
-                    case .gradient:
-                        isColor = true
+                    default:
+                        break
                     }
                 default:
                     break
@@ -239,21 +248,15 @@ class WPArticleLayout: WPLayout {
                 } else if isTheme {
                     contrainedImageSize = imageSize.fitted(NSMakeSize(maxw, maxw))
                 } else {
-                    contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, maxw), maxw))
+                    contrainedImageSize = imageSize.fitted(NSMakeSize(min(maxw, maxw), maxw))
                 }
-              //  if presentation.renderType == .bubble {
-                if isColor {
-                    contrainedImageSize = imageSize.fitted(NSMakeSize(maxw, maxw))
-                } else if !isTheme  {
-                    contrainedImageSize.width = max(contrainedImageSize.width, maxw)
-                }
-              //  }
+
                 textLayout?.cutout = nil
                 smallThumb = false
                 contentSize.height += contrainedImageSize.height
                 contentSize.width = contrainedImageSize.width
                 if textLayout != nil {
-                    contentSize.height += 6
+                    contentSize.height += insets.top
                 }
             } else {
                 if let _ = imageSize, !isFullImageSize {
@@ -276,10 +279,10 @@ class WPArticleLayout: WPLayout {
                 contentSize.height += textLayout.layoutSize.height
                 
                 if textLayout.cutout != nil {
-                    contentSize.height = max(content.image != nil ? contrainedImageSize.height : 0,contentSize.height)
-                    contentSize.width = min(max(textLayout.layoutSize.width, (siteName?.0.size.width ?? 0) + contrainedImageSize.width), width - insets.left)
+                    contentSize.height = max(content.image != nil ? contrainedImageSize.height + imageInsets.top + imageInsets.bottom : 0, contentSize.height)
+                    contentSize.width = min(max(textLayout.layoutSize.width, contrainedImageSize.width), maxw)
                 } else if imageSize == nil {
-                    contentSize.width = max(max(textLayout.layoutSize.width, groupLayout?.dimensions.width ?? 0), (siteName?.0.size.width ?? 0))
+                    contentSize.width = max(textLayout.layoutSize.width, groupLayout?.dimensions.width ?? 0)
                 }
             }
             

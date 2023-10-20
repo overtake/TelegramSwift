@@ -882,7 +882,7 @@ class ChatListRowItem: TableRowItem {
             isEmpty = false
         }
         if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId, !isEmpty {
-            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil, nil, peer.isForum)
+            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, peer.nameColor, nil, nil, peer.isForum)
         } else {
             self.photo = .Empty
         }

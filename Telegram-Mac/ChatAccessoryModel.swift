@@ -26,6 +26,8 @@ class ChatAccessoryView : Button {
     
     private weak var model: ChatAccessoryModel?
     
+    private var quoteView: ImageView?
+    
     private let borderLayer = SimpleShapeLayer()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -65,16 +67,20 @@ class ChatAccessoryView : Button {
         
         let x: CGFloat = model.leftInset + (model.isSideAccessory ? 10 : 0)
 
-        let headerRect = CGRect(origin: NSMakePoint(x + model.mediaInset, (model.isSideAccessory ? 5 : 0) + model.topOffset + 1), size: headerView.frame.size)
+        let headerRect = CGRect(origin: NSMakePoint(x + model.mediaInset, (model.isSideAccessory ? 5 : 0) + model.topOffset + 2), size: headerView.frame.size)
         transition.updateFrame(view: headerView, frame: headerRect)
         
         if let textView = textView {
-            let textRect = CGRect(origin: NSMakePoint(x, headerRect.height + (model.isSideAccessory ? 5 : 0) + model.topOffset + 1), size: textView.frame.size)
+            let textRect = CGRect(origin: NSMakePoint(x, headerRect.height + (model.isSideAccessory ? 5 : 0) + model.topOffset + 2), size: textView.frame.size)
             transition.updateFrame(view: textView, frame: textRect)
             if let view = shimmerEffect {
                 let rect = CGRect(origin: textRect.origin, size: view.frame.size)
                 transition.updateFrame(view: view, frame: rect.offsetBy(dx: -5, dy: -1))
             }
+        }
+        
+        if let quoteView = quoteView {
+            transition.updateFrame(view: quoteView, frame: NSMakeRect(size.width - quoteView.frame.width - 2, 2, quoteView.frame.width, quoteView.frame.height))
         }
                 
     }
@@ -91,9 +97,9 @@ class ChatAccessoryView : Button {
                 cornerRadius = .cornerRadius
             }
         }
-                
+        borderLayer.backgroundColor = PeerNameColorCache.value.get(model.presentation.title).cgColor
+
         borderLayer.opacity = model.drawLine ? 1 : 0
-        borderLayer.backgroundColor = model.presentation.border.cgColor
         self.layer?.cornerRadius = cornerRadius
        
         
@@ -189,6 +195,23 @@ class ChatAccessoryView : Button {
             }
         }
         
+        if let quote = model.quoteIcon {
+            let current: ImageView
+            if let view = self.quoteView {
+                current = view
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.quoteView = current
+            }
+            current.image = quote
+            current.sizeToFit()
+            
+        } else if let view = self.quoteView {
+            performSubviewRemoval(view, animated: animated)
+            self.quoteView = nil
+        }
+        
         
         let transition: ContainedViewLayoutTransition
         if animated {
@@ -208,7 +231,7 @@ class ChatAccessoryView : Button {
         if let model = model {
             switch model.modelType {
             case .modern:
-                self.backgroundColor = model.presentation.border.withAlphaComponent(0.1)
+                self.backgroundColor = model.presentation.title.0.withAlphaComponent(0.1)
             case .classic:
                 self.backgroundColor = model.presentation.background
             }
@@ -314,13 +337,13 @@ class ChatAccessoryView : Button {
 
 struct ChatAccessoryPresentation {
     let background: NSColor
-    let title: NSColor
+    let title: (NSColor, NSColor?)
     let enabledText: NSColor
     let disabledText: NSColor
-    let border: NSColor
+    let quoteIcon: CGImage
     let app: TelegramPresentationTheme
     func withUpdatedBackground(_ backgroundColor: NSColor) -> ChatAccessoryPresentation {
-        return ChatAccessoryPresentation(background: backgroundColor, title: title, enabledText: enabledText, disabledText: disabledText, border: border, app: app)
+        return ChatAccessoryPresentation(background: backgroundColor, title: self.title, enabledText: self.enabledText, disabledText: self.disabledText, quoteIcon: self.quoteIcon, app: self.app)
     }
 }
 
@@ -339,6 +362,10 @@ class ChatAccessoryModel: NSObject {
         return .modern
     }
     
+    var quoteIcon: CGImage? {
+        return nil
+    }
+    
     
     public let nodeReady = Promise<Bool>()
     
@@ -355,7 +382,7 @@ class ChatAccessoryModel: NSObject {
     var cutout: TextViewCutout? {
         let cutoutSize: NSSize?
         if updatedMedia != nil {
-            cutoutSize = .init(width: 36, height: 14)
+            cutoutSize = .init(width: 36, height: 18)
         } else {
             cutoutSize = nil
         }
@@ -377,7 +404,7 @@ class ChatAccessoryModel: NSObject {
             self.view?.updateTheme()
         }
         get {
-            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: theme.colors.accent, enabledText: theme.colors.text, disabledText: theme.colors.grayText, border: theme.colors.accent, app: theme)
+            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: (theme.colors.accent, nil), enabledText: theme.colors.text, disabledText: theme.colors.grayText, quoteIcon: theme.icons.message_quote_accent, app: theme)
         }
     }
     
@@ -448,7 +475,7 @@ class ChatAccessoryModel: NSObject {
     
     let yInset:CGFloat = 2
     var leftInset:CGFloat {
-        return drawLine ? 10 : 10
+        return drawLine ? 8 : 8
     }
     
     var mediaInset: CGFloat {
@@ -471,12 +498,19 @@ class ChatAccessoryModel: NSObject {
     func measureSize(_ width:CGFloat = 0, sizeToFit: Bool = false) -> Void {
         self.sizeToFit = sizeToFit
         
-        header?.measure(width: width - leftInset - rightInset)
+        header?.measure(width: width - leftInset - rightInset - (quoteIcon != nil ? 12 : 0))
         message?.measure(width: width - leftInset - rightInset)
         
         if let header = header, let message = message {
-            let width = sizeToFit ? max(header.layoutSize.width, message.layoutSize.width) + leftInset + rightInset + (isSideAccessory ? 20 : 0) : width
-            let height = max(36, header.layoutSize.height + message.layoutSize.height + yInset * 2 + (isSideAccessory ? 10 : 0))
+            var model_w = max(header.layoutSize.width + mediaInset, message.layoutSize.width) + leftInset + rightInset
+            if isSideAccessory {
+                model_w += 20
+            }
+            if quoteIcon != nil {
+                model_w += 12
+            }
+            let width = sizeToFit ? model_w : width
+            let height = max(38, header.layoutSize.height + message.layoutSize.height + yInset * 2 + (isSideAccessory ? 10 : 0))
             self.size = NSMakeSize(width, height)
             self.size.height += topOffset
         } else {

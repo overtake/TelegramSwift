@@ -21,17 +21,12 @@ class ChatContactRowItem: ChatRowItem {
     let nameLayout: TextViewLayout
     let vCard: CNContact?
     let contact: TelegramMediaContact
-    let appearance: WPLayoutPresentation
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         
         if let message = object.message, let contact = message.media[0] as? TelegramMediaContact {
             let attr = NSMutableAttributedString()
             
             let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
-
-            
-            self.appearance = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, object.renderType == .bubble), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType)
-
             
             if let _ = contact.vCardData?.data(using: .utf8) {
                 //let contacts = try? CNContactVCardSerialization.contacts(with: vCard)
@@ -148,15 +143,15 @@ class ChatContactRowView : ChatRowView {
                 if actionButton == nil {
                     actionButton = TitleButton()
                     actionButton?.layer?.cornerRadius = .cornerRadius
-                    actionButton?.layer?.borderWidth = 1
                     actionButton?.disableActions()
                     actionButton?.set(font: .normal(.text), for: .Normal)
                     addSubview(actionButton!)
                 }
                 actionButton?.removeAllHandlers()
                 actionButton?.set(text: strings().chatViewContact, for: .Normal)
-                actionButton?.layer?.borderColor = item.appearance.activity.cgColor
-                actionButton?.set(color: item.appearance.activity, for: .Normal)
+                let color = item.presentation.chat.activityColor(item.isIncoming, item.isBubbled)
+                actionButton?.set(background: color.withAlphaComponent(0.1), for: .Normal)
+                actionButton?.set(color: color, for: .Normal)
                 _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.contentSize.width, 30), thatFit: true)
                 
             } else {

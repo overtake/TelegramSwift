@@ -135,6 +135,15 @@ class ChatMessageItem: ChatRowItem {
         return [textLayout]
     }
     
+    var webpageAboveContent: Bool {
+        if let attr = message?.webpagePreviewAttribute, self.webpageLayout != nil {
+            if attr.leadingPreview {
+                return true
+            }
+        }
+        return false
+    }
+    
     override func tableViewDidUpdated() {
         webpageLayout?.table = self.table
     }
@@ -224,60 +233,6 @@ class ChatMessageItem: ChatRowItem {
                 return strings().chatMessageViewChannel
             }
         }
-        if let webpage = webpageLayout, !webpage.hasInstantPage {
-            let content = webpage.content
-            let link = inApp(for: webpage.content.url.nsstring, context: context, messageId: message?.id, openInfo: chatInteraction.openInfo)
-            switch link {
-            case let .followResolvedName(_, _, postId, _, action, _):
-                if let action = action {
-                    inner: switch action {
-                    case let .joinVoiceChat(hash):
-                        if hash != nil {
-                            return strings().chatMessageJoinVoiceChatAsSpeaker
-                        } else {
-                            return strings().chatMessageJoinVoiceChatAsListener
-                        }
-                    case .makeWebview:
-                        return strings().chatMessageOpenApp
-                    default:
-                        break inner
-                    }
-                } else {
-                    switch content.type {
-                    case "telegram_channel":
-                        return strings().chatMessageViewChannel
-                    case "telegram_group":
-                        return strings().chatMessageViewGroup
-                    case "telegram_megagroup":
-                        return strings().chatMessageViewGroup
-                    case "telegram_gigagroup":
-                        return strings().chatMessageViewGroup
-                    case "telegram_user":
-                        return strings().chatMessageSendMessage
-                    default:
-                        break
-                    }
-                }
-                if let postId = postId, postId > 0 {
-                    return strings().chatMessageActionShowMessage
-                }
-            case .folder:
-                return strings().chatMessageViewChatList
-            case .story:
-                return strings().chatMessageOpenStory
-            case .boost:
-                return strings().chatMessageBoostChannel
-            default:
-                break
-            }
-            if webpage.wallpaper != nil {
-                return strings().chatViewBackground
-            }
-            if webpage.isTheme {
-                return strings().chatActionViewTheme
-            }
-        }
-        
         if unsupported {
             return strings().chatUnsupportedUpdatedApp
         }
@@ -509,10 +464,10 @@ class ChatMessageItem: ChatRowItem {
             
             var media = message.anyMedia
             if let game = media as? TelegramMediaGame {
-                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil, displayOptions: .default)))
+                media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
             }
             
-            self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(isIncoming, entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType)
+            self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(message, account: context.account, bubbled: entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType)
 
             
             if let webpage = media as? TelegramMediaWebpage {
@@ -679,42 +634,32 @@ class ChatMessageItem: ChatRowItem {
         if textLayout.lastLineIsRtl {
             return true
         }
-        if let webpageLayout = webpageLayout {
-             if let webpageLayout = webpageLayout as? WPArticleLayout {
-                 if webpageLayout.hasInstantPage {
-                     return true
-                 }
-                 if let _ = webpageLayout.imageSize {
-                     return true
-                 }
-                 if actionButtonText != nil {
-                     return true
-                 }
-                 if webpageLayout.groupLayout != nil {
-                     return true
-                 }
-                 
-             } else if webpageLayout is WPMediaLayout {
-                 return true
-             }
-         }
-        
-        if self.webpageLayout?.content.type == "proxy" {
-            return true
+        if let _ = webpageLayout, !webpageAboveContent || messageText.string.isEmpty {
+             return true
+        }
+        return super.isForceRightLine
+    }
+    
+    
+    override var min_block_width: CGFloat {
+        if webpageLayout != nil {
+            return 340
         } else {
-            return super.isForceRightLine
+            return super.min_block_width
         }
     }
+    
+    
     private(set) var isTranslateLoading: Bool = false
     private(set) var block: (NSPoint, CGImage?) = (.zero, nil)
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         let size:NSSize = super.makeContentSize(width)
      
-        webpageLayout?.measure(width: min(width, 380))
+        webpageLayout?.measure(width: width)
         
         
         
-        let textBlockWidth: CGFloat = isBubbled ? max((webpageLayout?.size.width ?? width), min(240, width)) : width
+        let textBlockWidth: CGFloat = isBubbled ? min(webpageLayout?.size.width ?? width, width) : width
         
         textLayout.measure(width: textBlockWidth, isBigEmoji: containsBigEmoji)
         if isTranslateLoading {
@@ -723,7 +668,7 @@ class ChatMessageItem: ChatRowItem {
             self.block = (.zero, nil)
         }
         
-        var contentSize = NSMakeSize(max(webpageLayout?.contentRect.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
+        var contentSize = NSMakeSize(max(webpageLayout?.size.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
         
         if let webpageLayout = webpageLayout {
             contentSize.height += webpageLayout.size.height + defaultContentInnerInset
@@ -738,6 +683,8 @@ class ChatMessageItem: ChatRowItem {
         
         return contentSize
     }
+    
+    
     
     var actionButtonHeight: CGFloat {
         return 36

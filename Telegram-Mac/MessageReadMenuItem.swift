@@ -242,7 +242,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                 chatInteraction?.openInfo(peer.0.id, false, nil, nil)
             }, peer: peer.0, context: context, reaction: reaction, readTimestamp: peer.2)
             let signal:Signal<(CGImage?, Bool), NoError>
-            signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+            signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.nameColor, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
             _ = signal.start(next: { [weak item] image, _ in
                 if let image = image {
                     item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
@@ -352,7 +352,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
             
             if let peers = peers {
                 let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
-                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false)
+                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false)
                 })
                 
                 

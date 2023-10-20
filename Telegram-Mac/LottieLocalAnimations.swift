@@ -81,7 +81,8 @@ enum LocalAnimatedSticker : String {
     
     case bot_menu_close
     case bot_close_menu
-    
+    case bot_menu_web_app
+
     case request_join_link
     case thumbsup
     case zoom
@@ -123,6 +124,7 @@ enum LocalAnimatedSticker : String {
     case premium_gift_12
     case premium_gift_6
     case premium_gift_3
+    
     
     case menu_add_to_folder
     case menu_archive

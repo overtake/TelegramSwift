@@ -15,7 +15,7 @@ import TelegramCore
 
 struct WPLayoutPresentation {
     let text: NSColor
-    let activity: NSColor
+    let activity: (NSColor, NSColor?)
     let link: NSColor
     let selectText: NSColor
     let ivIcon: CGImage
@@ -36,11 +36,9 @@ class WPLayout: Equatable {
     
     private(set) var textLayout:TextViewLayout?
     private let mayCopyText: Bool
-    private(set) var siteName:(TextNodeLayout, TextNode)?
-    private var _nameNode:TextNode?
     
-    var insets: NSEdgeInsets = NSEdgeInsets(left:8.0, top:0.0)
-    
+    var insets: NSEdgeInsets = NSEdgeInsets(left: 8.0, right: 6, top: 3, bottom: 5)
+    var imageInsets: NSEdgeInsets = NSEdgeInsets(left: 0, right: 0, top: 3, bottom: 0)
     
     var mediaCount: Int? {
         if let instantPage = content.instantPage, isGalleryAssemble, content.type == "telegram_album" {
@@ -70,7 +68,7 @@ class WPLayout: Equatable {
     
     var webPage: TelegramMediaWebpage {
         if let game = parent.anyMedia as? TelegramMediaGame {
-            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: arc4random64()), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil, displayOptions: .init(position: nil, largeMedia: nil))))
+            return TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: arc4random64()), content: .Loaded(TelegramMediaWebpageLoadedContent.init(url: "", displayUrl: "", hash: 0, type: "game", websiteName: game.title, title: nil, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
         }
         return parent.anyMedia as! TelegramMediaWebpage
     }
@@ -107,13 +105,17 @@ class WPLayout: Equatable {
             default:
                 siteName = websiteName
             }
-            _siteNameAttr = .initialize(string: siteName, color: presentation.activity, font: .medium(.text))
-            _nameNode = TextNode()
+            _siteNameAttr = .initialize(string: siteName, color: presentation.activity.0, font: .medium(.text))
         }
         
         
         let attributedText:NSMutableAttributedString = NSMutableAttributedString()
         
+        
+        if let siteName = _siteNameAttr {
+            attributedText.append(siteName)
+            attributedText.append(string: "\n", font: .normal(.text))
+        }
         var text = content.type != "telegram_background" ? content.text?.trimmed : nil
         
         if text == nil, let story = content.story, let storedItem = parent.associatedStories[story.storyId]?.get(Stories.StoredItem.self) {
@@ -275,21 +277,96 @@ class WPLayout: Equatable {
     private(set) var oldWidth:CGFloat = 0
     
     func measure(width: CGFloat)  {
-        if oldWidth != width {
-            self.oldWidth = width
-            siteName = TextNode.layoutText(maybeNode: _nameNode, _siteNameAttr, nil, 1, .end, NSMakeSize(width - 50, 20), nil, false, .left)
-        }
-        
-        if let siteName = siteName {
-            insets.top = siteName.0.size.height + 2.0
-        }
         
     }
     
     func layout(with size:NSSize) -> Void {
-        let size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width) , size.height + (hasInstantPage ? 30 + 6 : 0) + (isProxyConfig ? 30 + 6 : 0))
+        
+        var buttonSize: CGFloat = 0
+        if action_text != nil {
+            buttonSize += 39
+        }
+        let size = NSMakeSize(max(size.width, hasInstantPage ? 160 : size.width), size.height + buttonSize)
+        
         self.contentRect = NSMakeRect(insets.left, insets.top, size.width, size.height)
-        self.size = NSMakeSize(size.width + insets.left + insets.right, size.height + insets.top + insets.bottom)
+        self.size = NSMakeSize(size.width + insets.left + insets.right, size.height + insets.bottom + insets.top)
+    }
+    
+    var action_text:String? {
+        if self.isProxyConfig {
+            return strings().chatApplyProxy
+        } else if hasInstantPage {
+            return strings().chatInstantView
+        }
+        if !self.hasInstantPage {
+            let content = self.content
+            let link = inApp(for: content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
+            switch link {
+            case let .followResolvedName(_, _, postId, _, action, _):
+                var actionIsSource: Bool = false
+                if case .source = action {
+                    actionIsSource = true
+                }
+                if let action = action, !actionIsSource {
+                    inner: switch action {
+                    case let .joinVoiceChat(hash):
+                        if hash != nil {
+                            return strings().chatMessageJoinVoiceChatAsSpeaker
+                        } else {
+                            return strings().chatMessageJoinVoiceChatAsListener
+                        }
+                    case .makeWebview:
+                        return strings().chatMessageOpenApp
+                    default:
+                        break inner
+                    }
+                } else {
+                    switch content.type {
+                    case "telegram_channel":
+                        return strings().chatMessageViewChannel
+                    case "telegram_group":
+                        return strings().chatMessageViewGroup
+                    case "telegram_megagroup":
+                        return strings().chatMessageViewGroup
+                    case "telegram_gigagroup":
+                        return strings().chatMessageViewGroup
+                    case "telegram_user":
+                        return strings().chatMessageSendMessage
+                    default:
+                        break
+                    }
+                }
+                if let postId = postId, postId > 0 {
+                    return strings().chatMessageActionShowMessage
+                }
+            case .folder:
+                return strings().chatMessageViewChatList
+            case .story:
+                return strings().chatMessageOpenStory
+            case .boost:
+                return strings().chatMessageBoostChannel
+            default:
+                break
+            }
+            if self.wallpaper != nil {
+                return strings().chatViewBackground
+            }
+            if self.isTheme {
+                return strings().chatActionViewTheme
+            }
+        }
+        return nil
+    }
+    
+    func invokeAction() {
+        if self.hasInstantPage {
+            showInstantPage(InstantPageViewController(context, webPage: parent.media[0] as! TelegramMediaWebpage, message: parent.text))
+        } else if let proxyConfig = self.proxyConfig {
+            applyExternalProxy(proxyConfig, accountManager: context.sharedContext.accountManager)
+        } else {
+            let link = inApp(for: self.content.url.nsstring, context: context, messageId: parent.id, openInfo: chatInteraction.openInfo)
+            execute(inapp: link)
+        }
     }
     
     var hasInstantPage: Bool {

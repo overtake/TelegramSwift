@@ -645,6 +645,7 @@ func initialize() -> [String] {
     
     array.append("profile_requests")
     array.append("profile_reactions")
+    array.append("profile_channel_color")
 
     array.append("profile_removed")
     array.append("profile_links")
@@ -889,6 +890,11 @@ func initialize() -> [String] {
     array.append("message_quote_cyan")
     array.append("message_quote_blue")
     array.append("message_quote_pink")
+    
+    array.append("message_quote_bubble_incoming")
+    array.append("message_quote_bubble_outgoing")
+
+    
 
     return array
 }

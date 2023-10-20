@@ -14,10 +14,148 @@ import SwiftSignalKit
 import TGUIKit
 import FastBlur
 
+
+
+final class PeerNameColorCache {
+    
+    struct Key : Hashable {
+        let color: NSColor
+        let dash: NSColor?
+        let flipped: Bool
+    }
+    
+    
+    static let value: PeerNameColorCache = PeerNameColorCache()
+    private var colors: [Key : NSColor] = [:]
+    private init() {
+        for color in PeerNameColor.allCases {
+            cache(color.dashColors, flipped: false)
+            cache(color.dashColors, flipped: true)
+        }
+    }
+    
+    @discardableResult private func cache(_ color: (NSColor, NSColor?), flipped: Bool = false) -> NSColor {
+        if let _ = color.1 {
+            let image = chatReplyLineDashTemplateImage(color, flipped: flipped)!
+            let pattern = NSColor(patternImage: NSImage(cgImage: image, size: image.backingSize))
+            colors[Key(color: color.0, dash: color.1, flipped: flipped)] = pattern
+            return pattern
+        } else {
+            colors[.init(color: color.0, dash: nil, flipped: flipped)] = color.0
+            return color.0
+        }
+    }
+    
+    func get(_ color:(NSColor, NSColor?), flipped: Bool = false) -> NSColor {
+        let found = self.colors[.init(color: color.0, dash: color.1, flipped: flipped)]
+        if let found = found {
+            return found
+        } else {
+            return cache(color, flipped: flipped)
+        }
+    }
+    
+}
+
+
+
+public extension PeerNameColor {
+    var color: NSColor {
+        return self.dashColors.0
+    }
+    
+    var index: Int {
+        switch self {
+        case .red, .redDash:
+            return 0
+        case .orange,.orangeDash:
+            return 1
+        case .violet,.violetDash:
+            return 2
+        case .green, .greenDash:
+            return 3
+        case .cyan, .cyanDash:
+            return 4
+        case .blue, .blueDash:
+            return 5
+        case .pink:
+            return 6
+        }
+    }
+    
+    
+    var dashColors: (NSColor, NSColor?) {
+        switch self {
+        case .red:
+            return (NSColor(rgb: 0xCC5049), nil)
+        case .orange:
+            return (NSColor(rgb: 0xD67722), nil)
+        case .violet:
+            return (NSColor(rgb: 0x955CDB), nil)
+        case .green:
+            return (NSColor(rgb: 0x40A920), nil)
+        case .cyan:
+            return (NSColor(rgb: 0x309EBA), nil)
+        case .blue:
+            return (NSColor(rgb: 0x368AD1), nil)
+        case .pink:
+            return (NSColor(rgb: 0xC7508B), nil)
+        case .redDash:
+            return (NSColor(rgb: 0xE15052), NSColor(rgb: 0xF9AE63))
+        case .orangeDash:
+            return (NSColor(rgb: 0xE0802B), NSColor(rgb: 0xFAC534))
+        case .violetDash:
+            return (NSColor(rgb: 0xA05FF3), NSColor(rgb: 0xF48FFF))
+        case .greenDash:
+            return (NSColor(rgb: 0x27A910), NSColor(rgb: 0xA7DC57))
+        case .cyanDash:
+            return (NSColor(rgb: 0x27ACCE), NSColor(rgb: 0x82E8D6))
+        case .blueDash:
+            return (NSColor(rgb: 0x3391D4), NSColor(rgb: 0x7DD3F0))
+        }
+    }
+    
+    var isDashed: Bool {
+        return self.dashColors.1 != nil
+    }
+    
+    var quoteIcon: CGImage {
+        switch self {
+        case .red:
+            return theme.icons.message_quote_red
+        case .orange:
+            return theme.icons.message_quote_orange
+        case .violet:
+            return theme.icons.message_quote_violet
+        case .green:
+            return theme.icons.message_quote_green
+        case .cyan:
+            return theme.icons.message_quote_cyan
+        case .blue:
+            return theme.icons.message_quote_blue
+        case .pink:
+            return theme.icons.message_quote_pink
+        case .redDash:
+            return theme.icons.message_quote_red
+        case .orangeDash:
+            return theme.icons.message_quote_orange
+        case .violetDash:
+            return theme.icons.message_quote_violet
+        case .greenDash:
+            return theme.icons.message_quote_green
+        case .cyanDash:
+            return theme.icons.message_quote_cyan
+        case .blueDash:
+            return theme.icons.message_quote_blue
+        }
+    }
+}
+
+
 let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
 enum PeerPhoto {
-    case peer(Peer, TelegramMediaImageRepresentation?, [String], Message?)
+    case peer(Peer, TelegramMediaImageRepresentation?, PeerNameColor?, [String], Message?)
     case topic(EngineMessageHistoryThread.Info, Bool)
 }
 
@@ -28,10 +166,10 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
     let isForum: Bool = peer.isForum && !disableForum
     
     if let representation = representation {
-        return cachedPeerPhoto(peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
+        return cachedPeerPhoto(peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             return autoreleasepool {
                 if let cached = cached {
-                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> map {
+                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                         return (cached, false)
                     }
                 } else {
@@ -128,7 +266,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             if tiny {
                                 return .single((image, animated))
                             }
-                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> map {
+                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                                 return (image, animated)
                             }
                         } else {
@@ -154,9 +292,9 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
             }
         }
         
-        
-        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt64Value() % 7)))
-        
+        let index = peer.nameColor?.index ?? Int(abs(peer.id.id._internalGetInt64Value() % 7))
+        let color = theme.colors.peerColors(index)
+
         
         let symbol = letters.reduce("", { (current, letter) -> String in
             return current + letter
@@ -184,7 +322,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
 func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(17), genCap: Bool = true, synchronousLoad: Bool = false, disableForum: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
-    case let .peer(peer, representation, displayLetters, message):
+    case let .peer(peer, representation, peerNameColor, displayLetters, message):
         return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad, disableForum: disableForum)
     case let .topic(info, isGeneral):
         #if !SHARE
@@ -334,7 +472,8 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
     return Signal { subscriber in
         let letters = peer.displayLetters
         
-        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt64Value() % 7)))
+        let index = peer.nameColor?.index ?? Int(abs(peer.id.id._internalGetInt64Value() % 7))
+        let color = theme.colors.peerColors(index)
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))

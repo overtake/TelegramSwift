@@ -350,6 +350,7 @@ final class InlineStickerItemLayer : SimpleLayer {
     struct Key: Hashable {
         var id: Int64
         var index: Int
+        var color: NSColor? = nil
     }
     private let account: Account
     private var infoDisposable: Disposable?
@@ -452,7 +453,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.frame = size.bounds
         self.initialize()
         self.file = file
-        self.updateSize(size: size, sync: false)
+        self.updateSize(size: size, sync: synchronyous)
         
     }
 
@@ -658,7 +659,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 data = account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: sync)
             }
             if file.isAnimatedSticker || file.isVideoSticker || (file.isCustomEmoji && (file.isSticker || file.isVideo)) {
-                self.resourceDisposable.set((data |> deliverOn(lottieThreadPool) |> map { resourceData -> Data? in
+                self.resourceDisposable.set((data |> map { resourceData -> Data? in
                     if resourceData.complete {
                         if file.isWebm {
                             return resourceData.path.data(using: .utf8)!

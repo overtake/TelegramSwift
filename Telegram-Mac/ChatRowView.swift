@@ -908,7 +908,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func fillPhoto(_ item:ChatRowItem, animated: Bool) -> Void {
-        if item.hasPhoto, let peer = item.peer, item.renderType != .bubble {
+        if item.hasPhoto, let peer = item.peer, item.fillPhoto {
             if avatar == nil {
                 avatar = ChatRowView.makePhotoView(item)
                 rowView.addSubview(avatar!)

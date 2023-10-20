@@ -347,6 +347,8 @@
 		2786368027C7CF1200690B10 /* group_call_maxmin.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2786367F27C7CF1200690B10 /* group_call_maxmin.tgs */; };
 		2786368227C8B55D00690B10 /* group_call_stream_empty in Resources */ = {isa = PBXBuildFile; fileRef = 2786368127C8B55D00690B10 /* group_call_stream_empty */; };
 		2786368527C8B76200690B10 /* DownloadsControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2786368427C8B76200690B10 /* DownloadsControl.swift */; };
+		27867A272AE0364200E25BB8 /* bot_menu_web_app.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */; };
+		27867A292AE2876100E25BB8 /* BoostReassignController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27867A282AE2876100E25BB8 /* BoostReassignController.swift */; };
 		278680AD26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */; };
 		278926C327550BB200923087 /* ColorPalette in Frameworks */ = {isa = PBXBuildFile; productRef = 278926C227550BB200923087 /* ColorPalette */; };
 		278926C527550C8200923087 /* FoundationUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 278926C427550C8200923087 /* FoundationUtils */; };
@@ -1849,6 +1851,8 @@
 		2786367F27C7CF1200690B10 /* group_call_maxmin.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = group_call_maxmin.tgs; sourceTree = "<group>"; };
 		2786368127C8B55D00690B10 /* group_call_stream_empty */ = {isa = PBXFileReference; lastKnownFileType = file; path = group_call_stream_empty; sourceTree = "<group>"; };
 		2786368427C8B76200690B10 /* DownloadsControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsControl.swift; sourceTree = "<group>"; };
+		27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = bot_menu_web_app.tgs; sourceTree = "<group>"; };
+		27867A282AE2876100E25BB8 /* BoostReassignController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoostReassignController.swift; sourceTree = "<group>"; };
 		278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperPatternPreviewController.swift; sourceTree = "<group>"; };
 		278926CD27551B4800923087 /* common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = common.xcconfig; sourceTree = "<group>"; };
 		278926CE27551B5600923087 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
@@ -3274,6 +3278,7 @@
 				27303AC02AC1D13600433CED /* GiveawayModalController.swift */,
 				27303ACA2AC2B20C00433CED /* GiftLinkModalController.swift */,
 				27307E992ADE6E0C00D970EE /* SelectCountryModalController.swift */,
+				27867A282AE2876100E25BB8 /* BoostReassignController.swift */,
 			);
 			name = boost;
 			sourceTree = "<group>";
@@ -5845,6 +5850,7 @@
 				27CE375C276095DA007E6F1B /* menu */,
 				27D91312283646CA007CF40F /* text_to_voice.tgs */,
 				277E228128E5DC9D00001689 /* forum_topic.tgs */,
+				27867A262AE0364100E25BB8 /* bot_menu_web_app.tgs */,
 				27A710B628B8C8F100E65838 /* custom_reaction.tgs */,
 				27307E972ADDA40A00D970EE /* menu_quote.tgs */,
 				274952812AA1E79E00499498 /* hand_animation.tgs */,
@@ -6404,6 +6410,7 @@
 				27CE1561297966D8001F8CE8 /* emoji_category_search_to_arrow.tgs in Resources */,
 				275549162747C24F0098A3CD /* device_safari.tgs in Resources */,
 				27803C0227A3E944007B0FA9 /* menu_folder_folder.tgs in Resources */,
+				27867A272AE0364200E25BB8 /* bot_menu_web_app.tgs in Resources */,
 				27F4F18228463BF100A3B4D4 /* premium_double.tgs in Resources */,
 				2786368027C7CF1200690B10 /* group_call_maxmin.tgs in Resources */,
 				27672EB226F8D62E00297DB4 /* 4.m4a in Resources */,
@@ -6926,6 +6933,7 @@
 				A76C8AA424221F5400FDB071 /* StatisticsLoadingRowItem.swift in Sources */,
 				C2DE5D2C1F3CA6E80081EC1E /* InstantPageMediaItem.swift in Sources */,
 				C218FF981F41FF2300DD7D35 /* InstantPageAnchorItem.swift in Sources */,
+				27867A292AE2876100E25BB8 /* BoostReassignController.swift in Sources */,
 				A7C41DB623586DC100CF9402 /* PeerPhotosMonthItem.swift in Sources */,
 				A7C7215B23FD4BAA00CE3F75 /* LottieLocalAnimations.swift in Sources */,
 				C218FF941F3CC99200DD7D35 /* instantPageWebEmbedView.swift in Sources */,

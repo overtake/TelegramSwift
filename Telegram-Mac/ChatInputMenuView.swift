@@ -60,10 +60,15 @@ final class ChatInputMenuView : View {
         let sticker: LocalAnimatedSticker
         let playPolicy: LottiePlayPolicy
         
-        if botMenu.revealed {
-            sticker = .bot_menu_close
-        } else {
-            sticker = .bot_close_menu
+        switch botMenu.menuButton {
+        case .webView:
+            sticker = .bot_menu_web_app
+        default:
+            if botMenu.revealed {
+                sticker = .bot_menu_close
+            } else {
+                sticker = .bot_close_menu
+            }
         }
         
         if previous == nil || previous?.revealed == botMenu.revealed || !animated {

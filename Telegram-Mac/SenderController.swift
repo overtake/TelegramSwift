@@ -162,7 +162,7 @@ class Sender: NSObject {
         return preview
     }
 
-    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, replyStoryId: StoryId? = nil, disablePreview:Bool = false, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue( input:ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:EngineMessageReplySubject?, replyStoryId: StoryId? = nil, disablePreview:Bool = false, linkBelowMessage: Bool = false, largeMedia: Bool? = nil, silent: Bool = false, atDate:Date? = nil, sendAsPeerId: PeerId? = nil, mediaPreview: TelegramMediaWebpage? = nil, emptyHandler:(()->Void)? = nil) ->Signal<[MessageId?],NoError> {
         
         var inset:Int = 0
         let dynamicEmojiOrder = context.stickerSettings.dynamicPackOrder
@@ -196,6 +196,8 @@ class Sender: NSObject {
         }
         
         
+        
+        
         let parsingUrlType: ParsingType
         if peerId.namespace != Namespaces.Peer.SecretChat {
             parsingUrlType = [.Hashtags]
@@ -220,6 +222,10 @@ class Sender: NSObject {
             }
             if let sendAsPeerId = sendAsPeerId {
                 attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
+            }
+            
+            if linkBelowMessage {
+                attributes.append(WebpagePreviewMessageAttribute(leadingPreview: linkBelowMessage, forceLargeMedia: largeMedia, isManuallyAdded: false))
             }
             if !subState.inputText.isEmpty || mediaReference != nil {
                 return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, replyToMessageId: replyId, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upstairCollections : [])
