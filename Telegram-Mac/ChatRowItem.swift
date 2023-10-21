@@ -2137,7 +2137,7 @@ class ChatRowItem: TableRowItem {
                         replyModel?.isSideAccessory = isBubbled && !hasBubble
                     }
                 }
-                if let attribute = attribute as? QuotedReplyMessageAttribute {
+                if let attribute = attribute as? QuotedReplyMessageAttribute, self.replyModel == nil {
                     self.replyModel = ReplyModel(replyMessageId: message.id, context: context, replyMessage: message, quote: attribute.quote, presentation: replyPresentation, customHeader: attribute.authorName)
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
