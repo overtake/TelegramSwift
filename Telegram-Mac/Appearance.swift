@@ -50,6 +50,7 @@ func chatReplyLineDashTemplateImage(_ color: (NSColor, NSColor?), flipped: Bool)
     
     var updated: (NSColor, NSColor?) = color
     
+
  
     let generator:(NSSize, CGContext) -> Void = { size, context in
         context.clear(size.bounds)
