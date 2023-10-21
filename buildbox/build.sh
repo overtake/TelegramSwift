@@ -22,19 +22,19 @@ BUILD_MACHINE="macOS";
 
 BUILDBOX_DIR="buildbox"
 BUILD_CONFIGURATION="$1"
-#
-#rm -rf "$HOME/build-$BUILD_CONFIGURATION"
-#mkdir -p "$HOME/build-$BUILD_CONFIGURATION"
+
+rm -rf "$HOME/build-$BUILD_CONFIGURATION"
+mkdir -p "$HOME/build-$BUILD_CONFIGURATION"
 
 PROCESS_ID="$$"
-VM_NAME="macos14_Xcode15-bd3b2ad1e1c11bd38ca3-build-telegram-53219"  #"$VM_BASE_NAME-$(openssl rand -hex 10)-build-telegram-$PROCESS_ID"
+VM_NAME="$VM_BASE_NAME-$(openssl rand -hex 10)-build-telegram-$PROCESS_ID"
 
-#prlctl clone "$VM_BASE_NAME" --linked --name "$VM_NAME"
-#prlctl start "$VM_NAME"
+prlctl clone "$VM_BASE_NAME" --linked --name "$VM_NAME"
+prlctl start "$VM_NAME"
 
-#
-#rm -f "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar"
-#tar cf "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" --exclude "$BUILDBOX_DIR" --exclude ".git" --exclude "./submodules/telegram-ios/.git" --exclude "./submodules/rlottie/.git" --exclude "./submodules/Sparkle/.git" --exclude "./submodules/ton/.git" --exclude "./submodules/Zip/.git"  --exclude "./submodules/libtgvoip/.git" "."
+
+rm -f "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar"
+tar cf "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" --exclude "$BUILDBOX_DIR" --exclude ".git" --exclude "./submodules/telegram-ios/.git" --exclude "./submodules/rlottie/.git" --exclude "./submodules/Sparkle/.git" --exclude "./submodules/ton/.git" --exclude "./submodules/Zip/.git"  --exclude "./submodules/libtgvoip/.git" "."
 
 
 
@@ -50,13 +50,13 @@ while [ 1 ]; do
 sleep 1
 done
 #
-#ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null telegram@"$VM_IP" -o ServerAliveInterval=60 -t "rm -rf build/"
-#ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null telegram@"$VM_IP" -o ServerAliveInterval=60 -t "mkdir -p build;"
-#scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -pr "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" telegram@"$VM_IP":build
-#
-#ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null telegram@"$VM_IP" -o ServerAliveInterval=60 -t "tar -xf build/Telegram.tar -C ./build"
-#ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null telegram@"$VM_IP" -o ServerAliveInterval=60 -t "mkdir -p build/buildbox"
-#scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -pr "$BUILDBOX_DIR/build-vm.sh" telegram@"$VM_IP":build/buildbox
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null telegram@"$VM_IP" -o ServerAliveInterval=60 -t "rm -rf build/"
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null telegram@"$VM_IP" -o ServerAliveInterval=60 -t "mkdir -p build;"
+scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -pr "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar" telegram@"$VM_IP":build
+
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null telegram@"$VM_IP" -o ServerAliveInterval=60 -t "tar -xf build/Telegram.tar -C ./build"
+ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null telegram@"$VM_IP" -o ServerAliveInterval=60 -t "mkdir -p build/buildbox"
+scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -pr "$BUILDBOX_DIR/build-vm.sh" telegram@"$VM_IP":build/buildbox
 ssh -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null telegram@"$VM_IP" -o ServerAliveInterval=60 -t "$GUEST_SHELL -l build/buildbox/build-vm.sh $BUILD_CONFIGURATION" || true
 
 scp -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -pr telegram@"$VM_IP":build/output/Telegram.tar "$HOME/build-$BUILD_CONFIGURATION/Telegram.tar"
