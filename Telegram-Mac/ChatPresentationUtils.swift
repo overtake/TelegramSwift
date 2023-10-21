@@ -363,7 +363,7 @@ final class TelegramChatColors {
     func webPreviewActivity(_ message: Message, account: Account, bubbled: Bool) -> (NSColor, NSColor?) {
         let isIncoming = message.isIncoming(account, bubbled)
         var isDashed: Bool = false
-        if let author = message.author {
+        if let author = message.effectiveAuthor {
             isDashed = author.nameColor?.isDashed == true
             if let nameColor = author.nameColor, isIncoming {
                 return nameColor.dashColors
@@ -527,10 +527,8 @@ final class TelegramChatColors {
         var isDashed: Bool = false
         if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
             isDashed = author.nameColor?.isDashed == true
-            if message.id.peerId.namespace == Namespaces.Peer.CloudGroup || message.id.peerId.namespace == Namespaces.Peer.CloudChannel {
-                if let nameColor = author.nameColor, message.isIncoming(item.context.account, item.renderType == .bubble) {
-                    return nameColor.dashColors
-                }
+            if let nameColor = author.nameColor, message.isIncoming(item.context.account, item.renderType == .bubble) {
+                return nameColor.dashColors
             }
         }
         let color = item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTitleBubble_incoming : item.presentation.colors.chatReplyTitleBubble_outgoing) : item.presentation.colors.chatReplyTitle
@@ -539,8 +537,8 @@ final class TelegramChatColors {
     }
     
     func replyQuote(_ item: ChatRowItem) -> CGImage {
-        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.author {
-            if message.id.peerId.namespace == Namespaces.Peer.CloudGroup || message.id.peerId.namespace == Namespaces.Peer.CloudChannel {
+        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
+            if item.isIncoming {
                 if let nameColor = author.nameColor {
                     return nameColor.quoteIcon
                 }
