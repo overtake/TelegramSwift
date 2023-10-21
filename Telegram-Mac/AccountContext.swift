@@ -19,6 +19,8 @@ import FetchManager
 import InAppPurchaseManager
 import ApiCredentials
 
+let clown: String = "🤡"
+
 extension AppConfiguration {
     func getGeneralValue(_ key: String, orElse defaultValue: Int32) -> Int32 {
         if let value = self.data?[key] as? Double {
