@@ -279,7 +279,15 @@ class ReplyModel: ChatAccessoryModel {
             if let header = customHeader {
                 self.header = .init(.initialize(string: header, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
             } else {
-                self.header = .init(.initialize(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
+                let header = NSMutableAttributedString()
+                header.append(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title.0, font: .medium(.text))
+               // header.insert(.initialize(string: clown), at: 0)
+                
+//                let file =
+//                
+//                header.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: packFile.fileId.id, file: packFile, emoji: ""))), range: NSMakeRange(0, 2))
+
+                self.header = .init(header, maximumNumberOfLines: 1)
             }
             let attr = NSMutableAttributedString()
             attr.append(text)

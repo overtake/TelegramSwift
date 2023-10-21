@@ -21,7 +21,8 @@ class ChatAccessoryView : Button {
     private var shimmerMask: SimpleLayer?
 
     
-    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+    private var text_inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+    private var header_inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
     
     private weak var model: ChatAccessoryModel?
@@ -91,7 +92,7 @@ class ChatAccessoryView : Button {
         
         var cornerRadius: CGFloat = 0
         if model.modelType == .modern {
-            cornerRadius = 3
+            cornerRadius = 4
         } else {
             if model.isSideAccessory {
                 cornerRadius = .cornerRadius
@@ -149,7 +150,11 @@ class ChatAccessoryView : Button {
         }
      
         if let message = model.message, let view = self.textView {
-            updateInlineStickers(context: model.context, view: view, textLayout: message)
+            updateInlineStickers(context: model.context, view: view, textLayout: message, itemViews: &text_inlineStickerItemViews)
+        }
+        
+        if let textLayout = model.header {
+            updateInlineStickers(context: model.context, view: self.headerView, textLayout: textLayout, itemViews: &header_inlineStickerItemViews)
         }
         
         if let blockImage = model.shimm.1 {
@@ -252,7 +257,12 @@ class ChatAccessoryView : Button {
     
     
     @objc func updateAnimatableContent() -> Void {
-        for (_, value) in inlineStickerItemViews {
+        for (_, value) in text_inlineStickerItemViews {
+            if let superview = value.superview {
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow && !isLite
+            }
+        }
+        for (_, value) in header_inlineStickerItemViews {
             if let superview = value.superview {
                 value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow && !isLite
             }
@@ -261,7 +271,7 @@ class ChatAccessoryView : Button {
     
     private var isLite: Bool = false
     
-    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout, itemViews: inout [InlineStickerItemLayer.Key: InlineStickerItemLayer]) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var index: Int = textView.hashValue
         self.isLite = context.isLite(.emoji)
@@ -284,12 +294,12 @@ class ChatAccessoryView : Button {
                 let rect = item.rect.insetBy(dx: -2, dy: -2)
                 
                 let view: InlineStickerItemLayer
-                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                if let current = itemViews[id], current.frame.size == rect.size {
                     view = current
                 } else {
-                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    itemViews[id]?.removeFromSuperlayer()
                     view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
-                    self.inlineStickerItemViews[id] = view
+                    itemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)
                 }
@@ -300,14 +310,14 @@ class ChatAccessoryView : Button {
         }
         
         var removeKeys: [InlineStickerItemLayer.Key] = []
-        for (key, itemLayer) in self.inlineStickerItemViews {
+        for (key, itemLayer) in itemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
                 itemLayer.removeFromSuperlayer()
             }
         }
         for key in removeKeys {
-            self.inlineStickerItemViews.removeValue(forKey: key)
+            itemViews.removeValue(forKey: key)
         }
         updateAnimatableContent()
     }
