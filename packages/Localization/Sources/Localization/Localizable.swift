@@ -1223,6 +1223,22 @@ public final class L10n {
   public static var channelBlockUserCanSendStickers: String  { return L10n.tr("Localizable", "Channel.BlockUser.CanSendStickers") }
   /// This channel is private.
   public static var channelBoostPrivateError: String  { return L10n.tr("Localizable", "Channel.Boost.PrivateError") }
+  /// Get Boosts Via Gifts
+  public static var channelBoostsStatsGetBoostsViaGifts: String  { return L10n.tr("Localizable", "Channel.BoostsStats.GetBoostsViaGifts") }
+  /// Get more boosts for your channel by gifting  Premium to your subscribers.
+  public static var channelBoostsStatsGetBoostsViaGiftsInfo: String  { return L10n.tr("Localizable", "Channel.BoostsStats.GetBoostsViaGifts.Info") }
+  /// Select a giveaway you already paid for to set it up.
+  public static var channelBoostsStatsPrepaidInfo: String  { return L10n.tr("Localizable", "Channel.BoostsStats.Prepaid.Info") }
+  /// %d-months subscriptions
+  public static func channelBoostsStatsPrepaidMonths(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.BoostsStats.Prepaid.Months", p1)
+  }
+  /// %d Telegram Premium
+  public static func channelBoostsStatsPrepaidQuantity(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Channel.BoostsStats.Prepaid.Quantity", p1)
+  }
+  /// PREPAID GIVEAWAYS
+  public static var channelBoostsStatsPrepaidTitle: String  { return L10n.tr("Localizable", "Channel.BoostsStats.Prepaid.Title") }
   /// %d
   public static func channelCommentsCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Channel.Comments.Count_countable", p1)
@@ -3433,6 +3449,12 @@ public final class L10n {
   public static func chatServiceDisabledTheme(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.DisabledTheme", p1)
   }
+  /// You received a gift
+  public static var chatServiceGiftLink: String  { return L10n.tr("Localizable", "Chat.Service.GiftLink") }
+  /// %1$@ just started a giveaway of Telegram Premium subscriptions for its followers.
+  public static func chatServiceGiveawayStarted(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.GiveawayStarted", p1)
+  }
   /// You have successfully transferred **%1$@** to **%2$@** for **%3$@**
   public static func chatServicePaymentSent1(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PaymentSent1", p1, p2, p3)
@@ -4169,10 +4191,12 @@ public final class L10n {
   public static var chatInputEditLinkBelowTheMessage: String  { return L10n.tr("Localizable", "ChatInput.EditLink.BelowTheMessage") }
   /// Larger Media
   public static var chatInputEditLinkLargerMedia: String  { return L10n.tr("Localizable", "ChatInput.EditLink.LargerMedia") }
-  /// Remove Preview
+  /// Remove Link Preview
   public static var chatInputEditLinkRemovePreview: String  { return L10n.tr("Localizable", "ChatInput.EditLink.RemovePreview") }
   /// Smaller Media
   public static var chatInputEditLinkSmallerMedia: String  { return L10n.tr("Localizable", "ChatInput.EditLink.SmallerMedia") }
+  /// Reply in Another Chat
+  public static var chatInputReplyReplyToAnother: String  { return L10n.tr("Localizable", "ChatInput.Reply.ReplyToAnother") }
   /// Archived Chats
   public static var chatListArchivedChats: String  { return L10n.tr("Localizable", "ChatList.ArchivedChats") }
   /// Show All
@@ -4189,6 +4213,8 @@ public final class L10n {
   public static var chatListEmptyText: String  { return L10n.tr("Localizable", "ChatList.EmptyText") }
   /// Channels
   public static var chatListFeeds: String  { return L10n.tr("Localizable", "ChatList.Feeds") }
+  /// Giveaway
+  public static var chatListGiveaway: String  { return L10n.tr("Localizable", "ChatList.Giveaway") }
   /// Group Channel
   public static var chatListGroupChannel: String  { return L10n.tr("Localizable", "ChatList.GroupChannel") }
   /// Hide Muted
@@ -6291,6 +6317,216 @@ public final class L10n {
   public static var gifsPaneReactions: String  { return L10n.tr("Localizable", "GifsPane.Reactions") }
   /// TRENDING GIFS
   public static var gifsPaneTrending: String  { return L10n.tr("Localizable", "GifsPane.Trending") }
+  /// Gift Link
+  public static var giftLinkTitle: String  { return L10n.tr("Localizable", "GiftLink.Title") }
+  /// Use Link
+  public static var giftLinkUseLink: String  { return L10n.tr("Localizable", "GiftLink.UseLink") }
+  /// You successfully activated gift link.
+  public static var giftLinkUseSuccess: String  { return L10n.tr("Localizable", "GiftLink.UseSuccess") }
+  /// This link allows you to activate a **Telegram Premium** subscription.
+  public static var giftLinkInfoNotUsed: String  { return L10n.tr("Localizable", "GiftLink.Info.NotUsed") }
+  /// This link was used to activate a **Telegram Premium** subscription.
+  public static var giftLinkInfoUsed: String  { return L10n.tr("Localizable", "GiftLink.Info.Used") }
+  /// You can also send this [link](share) to a friend as a gift.
+  public static var giftLinkInfoNotUsedInfo: String  { return L10n.tr("Localizable", "GiftLink.Info.NotUsed.Info") }
+  /// This link was used on %@.
+  public static func giftLinkInfoUsedInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GiftLink.Info.Used.Info", p1)
+  }
+  /// Telegram Premium for %d months
+  public static func giftLinkPremiumDurationMonths(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "GiftLink.PremiumDuration.Months", p1)
+  }
+  /// Telegram Premium 1 Year
+  public static var giftLinkPremiumDurationYear: String  { return L10n.tr("Localizable", "GiftLink.PremiumDuration.Year") }
+  /// Date
+  public static var giftLinkRowDate: String  { return L10n.tr("Localizable", "GiftLink.Row.Date") }
+  /// From
+  public static var giftLinkRowFrom: String  { return L10n.tr("Localizable", "GiftLink.Row.From") }
+  /// Gift
+  public static var giftLinkRowGift: String  { return L10n.tr("Localizable", "GiftLink.Row.Gift") }
+  /// Reason
+  public static var giftLinkRowReason: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason") }
+  /// To
+  public static var giftLinkRowTo: String  { return L10n.tr("Localizable", "GiftLink.Row.To") }
+  /// Gift
+  public static var giftLinkRowReasonGift: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Gift") }
+  /// Giveaway
+  public static var giftLinkRowReasonGiveaway: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Giveaway") }
+  /// Start Giveaway
+  public static var giveawayStartGiveaway: String  { return L10n.tr("Localizable", "Giveaway.StartGiveaway") }
+  /// Boosts via Gifts
+  public static var giveawayTitle: String  { return L10n.tr("Localizable", "Giveaway.Title") }
+  /// Giveaway created
+  public static var giveawayAlertCreated: String  { return L10n.tr("Localizable", "Giveaway.Alert.Created") }
+  /// 🎁 Gift
+  public static var giveawayBoosterReasonGift: String  { return L10n.tr("Localizable", "Giveaway.Booster.Reason.Gift") }
+  /// 🏆 Giveaway
+  public static var giveawayBoosterReasonGiveaway: String  { return L10n.tr("Localizable", "Giveaway.Booster.Reason.Giveaway") }
+  /// Add Channel
+  public static var giveawayChannelsAdd: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add") }
+  /// %d
+  public static func giveawayChannelsBoostReceiveCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive_countable", p1)
+  }
+  /// this channel will receive %d boosts
+  public static func giveawayChannelsBoostReceiveFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive_few", p1)
+  }
+  /// this channel will receive %d boosts
+  public static func giveawayChannelsBoostReceiveMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive_many", p1)
+  }
+  /// this channel will receive %d boost
+  public static func giveawayChannelsBoostReceiveOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive_one", p1)
+  }
+  /// this channel will receive %d boosts
+  public static func giveawayChannelsBoostReceiveOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive_other", p1)
+  }
+  /// this channel will receive %d boosts
+  public static func giveawayChannelsBoostReceiveTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive_two", p1)
+  }
+  /// this channel will receive %d boosts
+  public static func giveawayChannelsBoostReceiveZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Channels.BoostReceive_zero", p1)
+  }
+  /// CHANNELS INCLUDED IN THE GIVEAWAY
+  public static var giveawayChannelsHeader: String  { return L10n.tr("Localizable", "Giveaway.Channels.Header") }
+  /// Select Channel
+  public static var giveawayChannelsAddSelectChannel: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.SelectChannel") }
+  /// Private Channel
+  public static var giveawayChannelsAddPrivateHeader: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Private.Header") }
+  /// Add
+  public static var giveawayChannelsAddPrivateOk: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Private.Ok") }
+  /// Are you sure you want to add a private channel? Users won't be able to join it without an invite link.
+  public static var giveawayChannelsAddPrivateText: String  { return L10n.tr("Localizable", "Giveaway.Channels.Add.Private.Text") }
+  /// Remove
+  public static var giveawayChannelsContextRemove: String  { return L10n.tr("Localizable", "Giveaway.Channels.Context.Remove") }
+  /// Ends
+  public static var giveawayDateEnds: String  { return L10n.tr("Localizable", "Giveaway.Date.Ends") }
+  /// Choose when 3 subscribers of your channel will be randomly selected to receive Telegram Premium.
+  public static var giveawayDateInfo: String  { return L10n.tr("Localizable", "Giveaway.Date.Info") }
+  /// Giveaway
+  public static var giveawayDateSelectDate: String  { return L10n.tr("Localizable", "Giveaway.Date.SelectDate") }
+  /// DATE WHEN GIVEAWAY ENDS
+  public static var giveawayDateTitle: String  { return L10n.tr("Localizable", "Giveaway.Date.Title") }
+  /// OK
+  public static var giveawayDateSelectDateOK: String  { return L10n.tr("Localizable", "Giveaway.Date.SelectDate.OK") }
+  /// Get more boosts for your channel by gifting
+  public static var giveawayHeaderText: String  { return L10n.tr("Localizable", "Giveaway.Header.Text") }
+  /// **Gift Telegram Premium**
+  public static var giveawayHeaderTitle: String  { return L10n.tr("Localizable", "Giveaway.Header.Title") }
+  /// You can review the list of features and terms of use for Telegram Premium [here](premium).
+  public static var giveawayPaymentOptionsInfo: String  { return L10n.tr("Localizable", "Giveaway.PaymentOptions.Info") }
+  /// %d Months
+  public static func giveawayPaymentOptionsMonths(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.PaymentOptions.Months", p1)
+  }
+  /// DURATION OF PREMIUM SUBSCRIPTIONS
+  public static var giveawayPaymentOptionsTitle: String  { return L10n.tr("Localizable", "Giveaway.PaymentOptions.Title") }
+  /// 1 Year
+  public static var giveawayPaymentOptionsYear: String  { return L10n.tr("Localizable", "Giveaway.PaymentOptions.Year") }
+  /// Reduce
+  public static var giveawayPaymentOptionsReduceOK: String  { return L10n.tr("Localizable", "Giveaway.PaymentOptions.Reduce.OK") }
+  /// You can't acquire %1$@ %2$@-months subscriptions in the app. Do you want to reduce quantity to 25?
+  public static func giveawayPaymentOptionsReduceText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Giveaway.PaymentOptions.Reduce.Text", p1, p2)
+  }
+  /// Reduce Quantity
+  public static var giveawayPaymentOptionsReduceTitle: String  { return L10n.tr("Localizable", "Giveaway.PaymentOptions.Reduce.Title") }
+  /// QUANTITY OF PRIZES / BOOSTS
+  public static var giveawayQuantityHeader: String  { return L10n.tr("Localizable", "Giveaway.Quantity.Header") }
+  /// Chose how many Premiums subscriptions to give away and boosts to receive.
+  public static var giveawayQuantityInfo: String  { return L10n.tr("Localizable", "Giveaway.Quantity.Info") }
+  /// %d
+  public static func giveawayQuantityRightCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Quantity.Right_countable", p1)
+  }
+  /// %d BOOSTS
+  public static func giveawayQuantityRightFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Quantity.Right_few", p1)
+  }
+  /// %d BOOSTS
+  public static func giveawayQuantityRightMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Quantity.Right_many", p1)
+  }
+  /// %d BOOST
+  public static func giveawayQuantityRightOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Quantity.Right_one", p1)
+  }
+  /// %d BOOSTS
+  public static func giveawayQuantityRightOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Quantity.Right_other", p1)
+  }
+  /// %d BOOSTS
+  public static func giveawayQuantityRightTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Quantity.Right_two", p1)
+  }
+  /// %d BOOSTS
+  public static func giveawayQuantityRightZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Quantity.Right_zero", p1)
+  }
+  /// All subscribers
+  public static var giveawayReceiverTypeAll: String  { return L10n.tr("Localizable", "Giveaway.ReceiverType.All") }
+  /// %d
+  public static func giveawayReceiverTypeCountriesCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.ReceiverType.Countries_countable", p1)
+  }
+  /// from %d countries
+  public static func giveawayReceiverTypeCountriesFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.ReceiverType.Countries_few", p1)
+  }
+  /// from %d countries
+  public static func giveawayReceiverTypeCountriesMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.ReceiverType.Countries_many", p1)
+  }
+  /// from %d country
+  public static func giveawayReceiverTypeCountriesOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.ReceiverType.Countries_one", p1)
+  }
+  /// from %d countries
+  public static func giveawayReceiverTypeCountriesOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.ReceiverType.Countries_other", p1)
+  }
+  /// from %d countries
+  public static func giveawayReceiverTypeCountriesTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.ReceiverType.Countries_two", p1)
+  }
+  /// from %d countries
+  public static func giveawayReceiverTypeCountriesZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.ReceiverType.Countries_zero", p1)
+  }
+  /// from all countries
+  public static var giveawayReceiverTypeCountriesZeroValueHolder: String  { return L10n.tr("Localizable", "Giveaway.ReceiverType.Countries_ZeroValueHolder") }
+  /// Choose if you want to limit the giveaway only to those who joined the channel after the giveaway started.
+  public static var giveawayReceiverTypeInfo: String  { return L10n.tr("Localizable", "Giveaway.ReceiverType.Info") }
+  /// Only new subscribers
+  public static var giveawayReceiverTypeNew: String  { return L10n.tr("Localizable", "Giveaway.ReceiverType.New") }
+  /// USERS ELIGIBLE FOR THE GIVEAWAY
+  public static var giveawayReceiverTypeTitle: String  { return L10n.tr("Localizable", "Giveaway.ReceiverType.Title") }
+  /// %d-months subscriptions
+  public static func giveawayTypePrepaidDesc(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Type.Prepaid.Desc", p1)
+  }
+  /// %d Telegram Premium
+  public static func giveawayTypePrepaidTitle(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Giveaway.Type.Prepaid.Title", p1)
+  }
+  /// winners are chosen randomly
+  public static var giveawayTypeRandomText: String  { return L10n.tr("Localizable", "Giveaway.Type.Random.Text") }
+  /// Create Giveaway
+  public static var giveawayTypeRandomTitle: String  { return L10n.tr("Localizable", "Giveaway.Type.Random.Title") }
+  /// select recipients
+  public static var giveawayTypeSpecificText: String  { return L10n.tr("Localizable", "Giveaway.Type.Specific.Text") }
+  /// Award Specific Users
+  public static var giveawayTypeSpecificTitle: String  { return L10n.tr("Localizable", "Giveaway.Type.Specific.Title") }
+  /// Select Users
+  public static var giveawayTypeSpecificModalSelectUsers: String  { return L10n.tr("Localizable", "Giveaway.Type.Specific.Modal.SelectUsers") }
+  /// Choose the channels users need to be subscribed to take part in the giveaway.
+  public static var givewayChannelsInfo: String  { return L10n.tr("Localizable", "Giveway.Channels.Info") }
   /// Off
   public static var globalTimerOff: String  { return L10n.tr("Localizable", "GlobalTimer.Off") }
   /// Set Custom Time

@@ -29,7 +29,13 @@ extension AppConfiguration {
             return defaultValue
         }
     }
-
+    func getBoolValue(_ key: String, orElse defaultValue: Bool) -> Bool {
+        if let value = self.data?[key] as? Bool {
+            return value
+        } else {
+            return defaultValue
+        }
+    }
 }
 
 private let globalStoryDisposable = MetaDisposable()

@@ -442,11 +442,11 @@ class InstalledStickerPacksController: TableViewController {
             })
             
         }, openStickersBot: {
-            resolveDisposable.set((context.engine.peers.resolvePeerByName(name: "stickers") |> deliverOnMainQueue).start(next: { peerId in
-                if let peerId = peerId {
-                   // navigateToChatControllerImpl?(peerId)
-                }
-            }))
+//            resolveDisposable.set((context.engine.peers.resolvePeerByName(name: "stickers") |> deliverOnMainQueue).start(next: { peerId in
+//                if let peerId = peerId {
+//                   // navigateToChatControllerImpl?(peerId)
+//                }
+//            }))
         }, openFeatured: { [weak self] in
             self?.navigationController?.push(FeaturedStickerPacksController(context))
         }, openArchived: { [weak self] archived in

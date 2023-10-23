@@ -225,7 +225,7 @@ class Sender: NSObject {
             }
             
             if linkBelowMessage {
-                attributes.append(WebpagePreviewMessageAttribute(leadingPreview: linkBelowMessage, forceLargeMedia: largeMedia, isManuallyAdded: false))
+                attributes.append(WebpagePreviewMessageAttribute(leadingPreview: linkBelowMessage, forceLargeMedia: largeMedia, isManuallyAdded: false, isSafe: true))
             }
             if !subState.inputText.isEmpty || mediaReference != nil {
                 return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, replyToMessageId: replyId, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upstairCollections : [])

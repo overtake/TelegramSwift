@@ -248,7 +248,7 @@ class ChatInputAccessory: View {
             
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {
-            displayNode = ReplyModel(replyMessageId: replyMessageId.messageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, quote: replyMessageId.quote, dismissReply: dismissReply, forceClassic: true)
+            displayNode = ReplyModel(message: nil, replyMessageId: replyMessageId.messageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, quote: replyMessageId.quote, dismissReply: dismissReply, forceClassic: true)
             iconView.image = theme.icons.chat_action_reply_message
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
@@ -257,6 +257,15 @@ class ChatInputAccessory: View {
             container.set(handler: { [weak self] _ in
                 self?.chatInteraction.focusMessageId(nil, replyMessageId.messageId, .CenterEmpty)
             }, for: .Click)
+            
+            container.contextMenu = {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().chatInputReplyReplyToAnother, handler: {
+                    self.chatInteraction.replyToAnother(replyMessageId, true)
+                }, itemImage: MenuAnimation.menu_replace.value))
+                return menu
+                
+            }
         }
         
         if let displayNode = displayNode {

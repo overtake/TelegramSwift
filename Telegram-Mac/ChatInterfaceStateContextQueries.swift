@@ -16,6 +16,17 @@ import InAppSettings
 import TGUIKit
 import InputView
 
+extension WebpagePreviewResult {
+    var result: TelegramMediaWebpage? {
+        switch self {
+        case .progress:
+            return nil
+        case let .result(webpage):
+            return webpage
+        }
+    }
+}
+
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
     let inputQuery = chatPresentationInterfaceState.inputContext
     switch chatPresentationInterfaceState.state {
@@ -286,16 +297,14 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
         }
         let contextBot = context.engine.peers.resolvePeerByName(name: addressName)
-            |> mapToSignal { peer -> Signal<Peer?, NoError> in
-                if let peer = peer {
-                    return context.account.postbox.loadedPeerWithId(peer._asPeer().id)
-                        |> map { peer -> Peer? in
-                            return peer
-                        }
-                        |> take(1)
-                } else {
-                    return .single(nil)
+            |> mapToSignal { result -> Signal<Peer?, NoError> in
+                switch result {
+                case .progress:
+                    return .never()
+                case let .result(peer):
+                    return .single(peer?._asPeer())
                 }
+                
             }
             |> mapToSignal { peer -> Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> in
                 if let user = peer as? TelegramUser, let botInfo = user.botInfo, let _ = botInfo.inlinePlaceholder {
@@ -601,16 +610,16 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                     let invoke:(inAppLink)->Void = { link in
                         switch link {
                         case let .external(detectedUrl, _), let .joinchat(detectedUrl, _, _, _), let .wallpaper(detectedUrl, _, _), let .theme(detectedUrl, _, _), let .instantView(detectedUrl, _, _):
-                            subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
-                                return { _ in return value }
-                                }))
+                            subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> filter { $0 != .progress } |> map { value in
+                                return { _ in return value.result }
+                            }))
                         case let .followResolvedName(_, username, _, _, _, _):
                             if username.hasPrefix("_private_") {
                                 subscriber.putNext((nil, .single({ _ in return nil })))
                                 subscriber.putCompletion()
                             } else {
-                                subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
-                                    return { _ in return value }
+                                subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> filter { $0 != .progress } |> map { value in
+                                    return { _ in return value.result }
                                 }))
                             }
                         default:

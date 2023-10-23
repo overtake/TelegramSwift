@@ -279,7 +279,7 @@ class ChatAccessoryView : Button {
         let textColor: NSColor
         if textLayout.attributedString.length > 0 {
             var range:NSRange = NSMakeRange(NSNotFound, 0)
-            let attrs = textLayout.attributedString.attributes(at: 0, effectiveRange: &range)
+            let attrs = textLayout.attributedString.attributes(at: max(0, textLayout.attributedString.length - 1), effectiveRange: &range)
             textColor = attrs[.foregroundColor] as? NSColor ?? theme.colors.text
         } else {
             textColor = theme.colors.text
@@ -288,13 +288,13 @@ class ChatAccessoryView : Button {
         for item in textLayout.embeddedItems {
             if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
                 
-                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: textColor)
                 validIds.append(id)
                 
                 let rect = item.rect.insetBy(dx: -2, dy: -2)
                 
                 let view: InlineStickerItemLayer
-                if let current = itemViews[id], current.frame.size == rect.size {
+                if let current = itemViews[id], current.frame.size == rect.size && current.textColor == id.color {
                     view = current
                 } else {
                     itemViews[id]?.removeFromSuperlayer()

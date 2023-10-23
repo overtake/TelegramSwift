@@ -25,7 +25,6 @@ private final class JoinCloudFolderHeaderItem : GeneralRowItem {
         } else {
             self.badgeNode = nil
         }
-        //TODOLANG
         self.nameLayout = .init(.initialize(string: name, color: theme.colors.accent, font: .medium(.title)))
         self.leftLayout = .init(.initialize(string: strings().sharedFolderTitleAllChats, color: theme.colors.listGrayText, font: .normal(.text)))
         self.rightLayout = .init(.initialize(string: strings().sharedFolderTitlePersonal, color: theme.colors.listGrayText, font: .normal(.text)))

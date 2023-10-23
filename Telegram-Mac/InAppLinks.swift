@@ -19,6 +19,33 @@ import Translate
 import InputView
 //import WalletCore
 
+extension ResolvePeerResult : Equatable {
+    var result: EnginePeer? {
+        switch self {
+        case .progress:
+            return nil
+        case let .result(peer):
+            return peer
+        }
+    }
+    public static func ==(lhs: ResolvePeerResult, rhs: ResolvePeerResult) -> Bool {
+        switch lhs {
+        case .progress:
+            if case .progress = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .result(lhsPeer):
+            if case let .result(rhsPeer) = rhs {
+                return PeerEquatable(lhsPeer?._asPeer()) == PeerEquatable(rhsPeer?._asPeer())
+            } else {
+                return false
+            }
+        }
+    }
+}
+
 private let inapp:String = "chat://"
 private let tgme:String = "tg://"
 
@@ -83,11 +110,8 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
             return .single(nil)
         }
     } else {
-        return context.engine.peers.resolvePeerByName(name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
-            if let peerId = peerId {
-                return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> map(Optional.init)
-            }
-            return .single(nil)
+        return context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> mapToSignal { result -> Signal<Peer?, NoError> in
+            return .single(result.result?._asPeer())
         } |> deliverOnMainQueue
     }
     
@@ -422,11 +446,12 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 }
             }
         } else {
-            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> mapToSignalPromotingError { peerId -> Signal<Peer, Error> in
-                if let peerId = peerId {
-                    return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> castError(Error.self)
+            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> mapToSignalPromotingError { result -> Signal<Peer, Error> in
+                if let result = result.result {
+                    return .single(result._asPeer())
+                } else {
+                    return .fail(.doesntExists)
                 }
-                return .fail(.doesntExists)
             } |> mapError { _ in
                 return .doesntExists
             }
@@ -516,11 +541,12 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 }
             }
         } else {
-            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> mapToSignalPromotingError { peerId -> Signal<Peer, Error> in
-                if let peerId = peerId {
-                    return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> castError(Error.self)
+            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress} |> mapToSignalPromotingError { result -> Signal<Peer, Error> in
+                if let result = result.result {
+                    return .single(result._asPeer())
+                } else {
+                    return .fail(.doesntExists)
                 }
-                return .fail(.doesntExists)
             } |> mapError { _ in
                 return .doesntExists
             }
@@ -549,12 +575,18 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             if peer.isForum {
                 if let messageId = messageId {
                     
-                    _ = (context.engine.messages.getMessagesLoadIfNecessary([messageId]) |> deliverOnMainQueue).start(next: { message in
-                        _ = ForumUI.openTopic(message.first?.threadId ?? makeMessageThreadId(messageId), peerId: peer.id, context: context, messageId: messageId, animated: true, addition: true).start(next: { result in
-                            if !result {
-                                ForumUI.open(peer.id, context: context)
-                            }
-                        })
+                    _ = (context.engine.messages.getMessagesLoadIfNecessary([messageId]) |> deliverOnMainQueue).start(next: { result in
+                        switch result {
+                        case .progress:
+                            break
+                        case let .result(messages):
+                            _ = ForumUI.openTopic(messages.first?.threadId ?? makeMessageThreadId(messageId), peerId: peer.id, context: context, messageId: messageId, animated: true, addition: true).start(next: { result in
+                                if !result {
+                                    ForumUI.open(peer.id, context: context)
+                                }
+                            })
+                        }
+                        
                     })
                     
                     
@@ -608,14 +640,11 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             if phone == username {
                 signal = context.engine.peers.resolvePeerByPhone(phone: phone)
             } else {
-                signal = context.engine.peers.resolvePeerByName(name: username)
+                signal = context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> map { $0.result }
             }
                 
-            let _ = showModalProgress(signal: signal |> mapToSignal { peerId -> Signal<Peer?, NoError> in
-                if let peerId = peerId {
-                    return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> map {Optional($0)}
-                }
-                return .single(nil)
+            let _ = showModalProgress(signal: signal |> mapToSignal { result -> Signal<Peer?, NoError> in
+                return .single(result?._asPeer())
             } |> deliverOnMainQueue, for: context.window).start(next: { peer in
                 if let peer = peer {
                     let messageId:MessageId?
@@ -633,10 +662,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                 let standart = ["users", "groups", "channels", "bots"]
                                 
                                 if let choose = choose, choose.count == 1, !choose.contains(where: { value in standart.contains(value) }) {
-                                    let signal = context.engine.peers.resolvePeerByName(name: choose[0]) |> deliverOnMainQueue
+                                    let signal = context.engine.peers.resolvePeerByName(name: choose[0]) |> filter { $0 != .progress } |> deliverOnMainQueue
                                     
                                     _ = signal.start(next: { peer in
-                                        if let peer = peer {
+                                        if let peer = peer.result {
                                             invokeCallback(peer._asPeer(), messageId, action)
                                         }
                                     })
@@ -774,7 +803,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }
         afterComplete(true)
     case let .inviteBotToGroup(_, username, context, action, rights, isChannel, callback):
-        let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: context.window).start(next: { botPeerId in
+        let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter { $0.result != nil } |> map { $0.result! } |> deliverOnMainQueue, for: context.window).start(next: { botPeerId in
             
             
             var payload: String = ""
@@ -1035,7 +1064,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         })
         afterComplete(true)
     case let .story(_, username, storyId, messageId, context):
-        let signal = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username), for: context.window)
+        let signal = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter { $0 != .progress } |> map { $0.result?._asPeer() }, for: context.window)
         _ = signal.start(next: { peer in
             if let peer = peer {
                 let controller = context.bindings.rootNavigation().controller as? ChatController
@@ -2259,7 +2288,7 @@ public struct ParsedWalletUrl {
 
 
 func resolveInstantViewUrl(account: Account, url: String) -> Signal<inAppLink, NoError> {
-    return webpagePreview(account: account, url: url)
+    return webpagePreview(account: account, url: url) |> filter { $0 != .progress } |> map { $0.result }
         |> mapToSignal { webpage -> Signal<inAppLink, NoError> in
             if let webpage = webpage {
                 

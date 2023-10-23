@@ -13,7 +13,168 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+private func generateBoostReason(_ text: String, color: NSColor = theme.colors.accent) -> CGImage {
+    let attr = NSMutableAttributedString()
+    
+    _ = attr.append(string: text, color: color, font: .medium(.text))
+    let textNode = TextNode.layoutText(attr, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    
+    var size = textNode.0.size
+    size.width += 16
+    size.height += 8
+    return generateImage(size, rotatedContext: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.round(rect.size, size.height / 2)
+        ctx.setFillColor(color.withAlphaComponent(0.1).cgColor)
+        ctx.fill(rect)
+        textNode.1.draw(rect.focus(textNode.0.size), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    })!
+}
+private let light = NSImage(named: "Icon_Booster_Multiplier")!.precomposed(.white, flipVertical: true)
+private func generateBoostMultiply(_ text: String, color: NSColor = premiumGradient[0]) -> CGImage {
+    let attr = NSMutableAttributedString()
+    
+    _ = attr.append(string: text, color: .white, font: .avatar(.small))
+    let textNode = TextNode.layoutText(attr, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
+    
+    //x
+    var size = textNode.0.size
+    size.width += light.backingSize.width + 8
+    size.height += 4
+    return generateImage(size, rotatedContext: { size, ctx in
+        let rect = NSMakeRect(0, 0, size.width, size.height)
+        ctx.clear(rect)
+        ctx.round(rect.size, size.height / 2)
+        ctx.setFillColor(color.cgColor)
+        ctx.fill(rect)
+        
+        var imageRect = rect.focus(light.backingSize)
+        imageRect.origin.x = 3
+        ctx.draw(light, in: imageRect)
+        
+        var textRect = rect.focus(textNode.0.size)
+        textRect.origin.x = imageRect.maxX + 2
+        textRect.origin.y += 0.5
+        textNode.1.draw(textRect, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+    })!
+}
 
+private final class BoosterRowItem : GeneralRowItem {
+    fileprivate let name: TextViewLayout
+    fileprivate let status: TextViewLayout
+    fileprivate let reason: CGImage?
+    fileprivate let multiply: CGImage
+    fileprivate let boost: ChannelBoostersContext.State.Boost
+    fileprivate let context: AccountContext
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, boost: ChannelBoostersContext.State.Boost, viewType: GeneralViewType, action: @escaping()->Void) {
+        self.context = context
+        self.boost = boost
+        self.name = .init(.initialize(string: boost.peer?._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)))
+        self.status = .init(.initialize(string: strings().statsBoostsExpiresOn(stringForFullDate(timestamp: boost.expires)), color: theme.colors.grayText, font: .normal(.text)))
+        
+        var label: String?
+        if boost.flags.contains(.isGiveaway) {
+            label = strings().giveawayBoosterReasonGiveaway
+        } else if boost.flags.contains(.isGift) {
+            label = strings().giveawayBoosterReasonGift
+        }
+
+        if let label = label {
+            self.reason = generateBoostReason(label)
+        } else {
+            self.reason = nil
+        }
+        self.multiply = generateBoostMultiply("\(boost.multiplier)")
+        super.init(initialSize, height: 50, stableId: stableId, viewType: viewType, action: action)
+    }
+    
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        let text_width: CGFloat = blockWidth - (reason?.backingSize.width ?? 0) - 20 - 10 - 10 - 30
+        
+        self.name.measure(width: text_width)
+        self.status.measure(width: text_width)
+        
+        return true
+    }
+    
+    override func viewClass() -> AnyClass {
+        return BoosterRowItemView.self
+    }
+}
+
+private final class BoosterRowItemView : GeneralContainableRowView {
+    private let nameView = TextView()
+    private let statusView = TextView()
+    private let multiplierView = ImageView()
+    private let reasonView = ImageView()
+    private let avatar = AvatarControl(font: .avatar(13))
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(nameView)
+        addSubview(statusView)
+        addSubview(multiplierView)
+        addSubview(reasonView)
+        
+        self.addSubview(self.avatar)
+        self.avatar.setFrameSize(NSMakeSize(36, 36))
+        
+        nameView.userInteractionEnabled = false
+        nameView.isSelectable = false
+        
+        statusView.userInteractionEnabled = false
+        statusView.isSelectable = false
+        
+        containerView.set(handler: { [weak self] _ in
+            (self?.item as? GeneralRowItem)?.action()
+        }, for: .Click)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    override func set(item: TableRowItem, animated: Bool = false) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? BoosterRowItem else {
+            return
+        }
+        self.nameView.update(item.name)
+        self.statusView.update(item.status)
+        self.avatar.setPeer(account: item.context.account, peer: item.boost.peer?._asPeer())
+
+        self.reasonView.image = item.reason
+        self.reasonView.sizeToFit()
+        self.reasonView.isHidden = item.reason == nil
+        
+        self.multiplierView.image = item.multiply
+        self.multiplierView.sizeToFit()
+        needsLayout = true
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
+        transition.updateFrame(view: avatar, frame: CGRect(origin: NSMakePoint(10, 7), size: avatar.frame.size))
+        transition.updateFrame(view: nameView, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, 7), size: nameView.frame.size))
+        transition.updateFrame(view: multiplierView, frame: CGRect(origin: NSMakePoint(nameView.frame.maxX + 5, 7), size: multiplierView.frame.size))
+
+        
+        transition.updateFrame(view: statusView, frame: CGRect(origin: NSMakePoint(avatar.frame.maxX + 10, avatar.frame.maxY - statusView.frame.height), size: statusView.frame.size))
+        
+        transition.updateFrame(view: reasonView, frame: reasonView.centerFrameY(x: containerView.frame.width - reasonView.frame.width - 10))
+
+    }
+    
+    override var additionBorderInset: CGFloat {
+        return 30 + 10
+    }
+    
+}
 
 private final class BoostRowItem : TableRowItem {
     fileprivate let context: AccountContext
@@ -206,7 +367,7 @@ private final class BoostRowItemView : TableRowView {
 
                 ctx.clip(to: size.bounds, mask: clipImage)
                 
-                let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+                let colors = premiumGradient.compactMap { $0.cgColor } as NSArray
                 
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
                 
@@ -415,7 +576,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if !prepaid.isEmpty {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("PREPAID GIVEAWAYS"), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelBoostsStatsPrepaidTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
             
             for (i, item) in prepaid.enumerated() {
@@ -424,20 +585,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(item.months) % 7)
                 let viewType = bestGeneralViewType(prepaid, for: i)
                 
-                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid(item), data: .init(name: "\(item.quantity) Telegram Premium", color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: viewType, description: "\(item.months)-month subscriptions", descTextColor: theme.colors.grayText, action: {
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid(item), data: .init(name: strings().channelBoostsStatsPrepaidQuantity(Int(item.quantity)), color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: viewType, description: strings().channelBoostsStatsPrepaidMonths(Int(item.months)), descTextColor: theme.colors.grayText, action: {
                     arguments.giveaway(item)
                 })))
             }
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Select a giveaway you already paid for to set it up."), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelBoostsStatsPrepaidInfo), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
 
         }
-        
-        
-//        entries.append(.boostPrepaidTitle(presentationData.theme, "PREPAID GIVEAWAYS"))
-//                    entries.append(.boostPrepaid(0, presentationData.theme, "70 Telegram Premium", "3-month subscriptions", 3, 70))
-//                    entries.append(.boostPrepaid(1, presentationData.theme, "200 Telegram Premium", "6-month subscriptions", 6, 200))
-//                    entries.append(.boostPrepaidInfo(presentationData.theme, "Select a giveaway you already paid for to set it up."))
 
 
         if let boosters = state.booster {
@@ -476,9 +631,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     let peerIndex = indexes[peerId] ?? 0
                     let stableId = _id_peer(peerId, peerIndex)
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: stableId, equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
-                        return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, status: strings().statsBoostsExpiresOn(stringForFullDate(timestamp: item.booster.expires)), inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, action: {
+                        return BoosterRowItem(initialSize, stableId: stableId, context: arguments.context, boost: item.booster, viewType: item.viewType, action: {
                             arguments.openPeerInfo(peerId)
+
                         })
+//                        return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, status: strings().statsBoostsExpiresOn(stringForFullDate(timestamp: item.booster.expires)), inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, action: {
+//                            arguments.openPeerInfo(peerId)
+//                        })
                     }))
                     indexes[peerId] = peerIndex + 1
                 }
@@ -526,17 +685,23 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
         // entries
         
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-        
+       
         //TODOLANG
+        
+        let boosts_available = arguments.context.appConfiguration.getBoolValue("giveaway_gifts_purchase_available", orElse: false)
 
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: "Get Boosts Via Gifts", color: theme.colors.accent, icon: NSImage(named: "Icon_Boost_Giveaway")?.precomposed(theme.colors.accent, flipVertical: true), viewType: .singleItem, action: {
-            arguments.giveaway(nil)
-        })))
+        if boosts_available {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: strings().channelBoostsStatsGetBoostsViaGifts, color: theme.colors.accent, icon: NSImage(named: "Icon_Boost_Giveaway")?.precomposed(theme.colors.accent, flipVertical: true), viewType: .singleItem, action: {
+                arguments.giveaway(nil)
+            })))
 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Get more boosts for your channel by gifting  Premium to your subscribers."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().channelBoostsStatsGetBoostsViaGiftsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+        }
+       
 
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1

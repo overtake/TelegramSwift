@@ -21,7 +21,7 @@ import ThemeSettings
 import InputView
 #endif
 
-let premiumGradient = [NSColor(hexString: "#6B93FF"), NSColor(hexString: "#976FFF"), NSColor(hexString: "#E46ACE")]
+let premiumGradient = [NSColor(rgb: 0x6B93FF), NSColor(rgb: 0x976FFF), NSColor(rgb: 0xE46ACE)]
 
 
 func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -> CGImage {
@@ -627,7 +627,7 @@ func generateStickerPackPremium() -> CGImage {
         let image = NSImage(named: "Icon_Premium_StickerPack")!.precomposed()
         ctx.clip(to: size.bounds, mask: image)
 
-        let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+        let colors = premiumGradient.compactMap { $0.cgColor } as NSArray
         let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
         
         var locations: [CGFloat] = []
@@ -1031,7 +1031,7 @@ private func generatePremiumIcon(_ icon: CGImage) -> CGImage {
         ctx.clear(size.bounds)
         ctx.round(size, 5)
         
-        let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+        let colors = premiumGradient.compactMap { $0.cgColor } as NSArray
         
         let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
         

@@ -207,7 +207,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     var openStory:(MessageId, StoryId)->Void = { _, _ in }
     
-    var quote:(EngineMessageReplyQuote, MessageId)->Void = { _, _ in }
+    var replyToAnother:(EngineMessageReplySubject, Bool)->Void = { _, _ in }
     
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
