@@ -94,10 +94,15 @@ class TermsModalController: ModalViewController {
                 self?.close()
             })
             if let botname = self.proceedBotAfterAgree {
-                _ = (self.context.engine.peers.resolvePeerByName(name: botname) |> deliverOnMainQueue).start(next: { [weak self] peerId in
+                _ = (self.context.engine.peers.resolvePeerByName(name: botname) |> deliverOnMainQueue).start(next: { [weak self] result in
                     guard let `self` = self else {return}
-                    if let peerId = peerId {
-                        self.context.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peerId._asPeer().id)))
+                    switch result {
+                    case .progress:
+                        break
+                    case let .result(peer):
+                        if let peer = peer {
+                            self.context.bindings.rootNavigation().push(ChatController(context: self.context, chatLocation: .peer(peer._asPeer().id)))
+                        }
                     }
                 })
             }

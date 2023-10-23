@@ -560,7 +560,7 @@ private final class BoostRowItemView : TableRowView {
 
                 ctx.clip(to: size.bounds, mask: clipImage)
                 
-                let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+                let colors = premiumGradient.compactMap { $0.cgColor } as NSArray
                 
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
                 

@@ -14,6 +14,8 @@ import SwiftSignalKit
 import Postbox
 class ReplyModel: ChatAccessoryModel {
 
+    private let parent: Message?
+    private let replyMessageId: MessageId
     private(set) var replyMessage:Message?
     private var disposable:MetaDisposable = MetaDisposable()
     private let isPinned:Bool
@@ -27,7 +29,9 @@ class ReplyModel: ChatAccessoryModel {
     private let translate: ChatLiveTranslateContext.State.Result?
     private let forceClassic: Bool
     private let quote: EngineMessageReplyQuote?
-    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, quote: EngineMessageReplyQuote? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, forceClassic: Bool = false) {
+    init(message: Message?, replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, quote: EngineMessageReplyQuote? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, forceClassic: Bool = false) {
+        self.parent = message
+        self.replyMessageId = replyMessageId
         self.isPinned = isPinned
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
@@ -233,6 +237,8 @@ class ReplyModel: ChatAccessoryModel {
 
         if let message = message {
             
+           
+            
             var title: String? = message.effectiveAuthor?.displayTitle
             if let info = message.forwardInfo {
                 title = info.authorTitle
@@ -245,6 +251,13 @@ class ReplyModel: ChatAccessoryModel {
                     break
                 }
             }
+            
+            for attr in message.attributes {
+                if let attr = attr as? QuotedReplyMessageAttribute {
+                    title = attr.authorName ?? ""
+                }
+            }
+            
             if modelType == .classic {
                 if quote != nil {
                     title = strings().chatReplyQuotePanelTitle(title ?? "")
@@ -265,10 +278,16 @@ class ReplyModel: ChatAccessoryModel {
                 text = .initialize(string: translateText, color: theme.colors.text, font: .normal(.text))
             } else {
                 if let quote = quote {
-                    let textAttr = NSMutableAttributedString()
-                    textAttr.append(string: quote.text, color: theme.colors.text, font: .normal(.text))
-                    InlineStickerItem.apply(to: textAttr, associatedMedia: [:], entities:  quote.entities, isPremium: context.isPremium, ignoreSpoiler: true)
-                    text = textAttr
+                    if quote.text.isEmpty, let media = quote.media {
+                        let message = Message(media, stableId: 0, messageId: replyMessageId)
+                        text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
+                    } else {
+                        let textAttr = NSMutableAttributedString()
+                        textAttr.append(string: quote.text, color: theme.colors.text, font: .normal(.text))
+                        InlineStickerItem.apply(to: textAttr, associatedMedia: [:], entities:  quote.entities, isPremium: context.isPremium, ignoreSpoiler: true)
+                        text = textAttr
+                    }
+                    
                 } else {
                     text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
                 }
@@ -281,7 +300,17 @@ class ReplyModel: ChatAccessoryModel {
             } else {
                 let header = NSMutableAttributedString()
                 header.append(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title.0, font: .medium(.text))
-               // header.insert(.initialize(string: clown), at: 0)
+                
+                if let parent = self.parent, parent.id.peerId != replyMessageId.peerId {
+                    if let peer = message.peers[message.id.peerId] {
+                        if peer.isChannel {
+                            header.insert(.embedded(name: "Icon_Reply_Channel", color: presentation.title.0, resize: false), at: 0)
+                        } else if peer.isGroup || peer.isSupergroup {
+                            header.append(.embedded(name: "Icon_Reply_Group", color: presentation.title.0, resize: false))
+                            header.append(string: peer.compactDisplayTitle, color: presentation.title.0, font: .medium(.text))
+                        }
+                    }
+                }
                 
 //                let file =
 //                

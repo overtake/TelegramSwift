@@ -85,9 +85,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             }
         case let dice as TelegramMediaDice:
             messageText = dice.emoji
-        case let dice as TelegramMediaGiveaway:
-            //TODOLANG
-            messageText = "Giveaway"
+        case let _ as TelegramMediaGiveaway:
+            messageText = strings().chatListGiveaway
         case let fileMedia as TelegramMediaFile:
             if fileMedia.probablySticker {
                 messageText = strings().chatListSticker(fileMedia.stickerText ?? "")
@@ -735,12 +734,10 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServicePremiumGiftSent(authorName, formatted)
             }
-        case let .giftCode(slug, fromGiveaway, boostPeerId, months):
-            //TODOLANG
-            text = "GIFTCODE"
+        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months):
+            text = strings().chatServiceGiftLink
         case .giveawayLaunched:
-            //TODOLANG
-            text = "GIVEAWAY LAUNCHED"
+            text = strings().chatServiceGiveawayStarted(authorName)
         case let .topicEdited(components):
             var fileId: Int64?
             if let component = components.first {

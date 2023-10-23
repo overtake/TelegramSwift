@@ -101,7 +101,7 @@ private struct State : Equatable {
                 }
             }
             
-            rows.append(.init(left: .init(.initialize(string: "From", color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
+            rows.append(.init(left: .init(.initialize(string: strings().giftLinkRowFrom, color: theme.colors.text, font: .normal(.text))), right: .init(name: from, leftView: { previous in
                 let control: AvatarControl
                 if let previous = previous as? AvatarControl {
                     control = previous
@@ -127,7 +127,7 @@ private struct State : Equatable {
                 }
             }
             
-            rows.append(.init(left: .init(.initialize(string: "To", color: theme.colors.text, font: .normal(.text))), right: .init(name: to, leftView: { previous in
+            rows.append(.init(left: .init(.initialize(string: strings().giftLinkRowTo, color: theme.colors.text, font: .normal(.text))), right: .init(name: to, leftView: { previous in
                 let control: AvatarControl
                 if let previous = previous as? AvatarControl {
                     control = previous
@@ -140,20 +140,20 @@ private struct State : Equatable {
             })))
         }
         
-        let duration: String = info.months == 12 ? "Telegram Premium 1 Year" : "Telegram Premium for \(info.months) months"
+        let duration: String = info.months == 12 ? strings().giftLinkPremiumDurationYear : strings().giftLinkPremiumDurationMonths(Int(info.months))
 
-        rows.append(.init(left: .init(.initialize(string: "Gift", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: duration, color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
+        rows.append(.init(left: .init(.initialize(string: strings().giftLinkRowGift, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: duration, color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
 
         let reasonText: String
         if info.isGiveaway {
-            reasonText = "Giveaway"
+            reasonText = strings().giftLinkRowReasonGiveaway
         } else {
-            reasonText = "Gift"
+            reasonText = strings().giftLinkRowReasonGift
         }
         
-        rows.append(.init(left: .init(.initialize(string: "Reason", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: reasonText, color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
+        rows.append(.init(left: .init(.initialize(string: strings().giftLinkRowReason, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: reasonText, color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
 
-        rows.append(.init(left: .init(.initialize(string: "Date", color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: info.date), color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
+        rows.append(.init(left: .init(.initialize(string: strings().giftLinkRowDate, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: info.date), color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
 
         
         return rows
@@ -177,9 +177,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     let headerText: String
     if state.info.usedDate == nil {
-        headerText = "This link allows you to activate a **Telegram Premium** subscription."
+        headerText = strings().giftLinkInfoNotUsed
     } else {
-        headerText = "This link was used to activate a **Telegram Premium** subscription."
+        headerText = strings().giftLinkInfoUsed
     }
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(headerText), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
     index += 1
@@ -206,11 +206,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 //    sectionId += 1
     
     if let usedDate = state.info.usedDate {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("This link was used on \(stringForFullDate(timestamp: usedDate)).", linkHandler:arguments.execute), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().giftLinkInfoUsedInfo(stringForFullDate(timestamp: usedDate)), linkHandler:arguments.execute), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
         index += 1
     } else {
         if state.toPeer?.peer == nil {
-            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("You can also send this [link](share) to a friend as a gift.", linkHandler:arguments.execute), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().giftLinkInfoNotUsedInfo, linkHandler:arguments.execute), data: .init(color: theme.colors.text, detectBold: true, viewType: .singleItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
             index += 1
         }
     }
@@ -251,13 +251,13 @@ func GiftLinkModalController(context: AccountContext, info: PremiumGiftCodeInfo)
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Gift Link")
+    let controller = InputDataController(dataSignal: signal, title: strings().giftLinkTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: "Use Link", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().giftLinkUseLink, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
     
@@ -267,7 +267,7 @@ func GiftLinkModalController(context: AccountContext, info: PremiumGiftCodeInfo)
             let canUse = stateValue.with { $0.canUse(context.peerId) }
             let text: String
             if canUse {
-                text = "Use Link"
+                text = strings().giftLinkUseLink
             } else {
                 text = strings().modalOK
             }
@@ -287,7 +287,7 @@ func GiftLinkModalController(context: AccountContext, info: PremiumGiftCodeInfo)
         if canUse {
             _ = context.engine.payments.applyPremiumGiftCode(slug: info.slug).start()
             PlayConfetti(for: context.window)
-            showModalText(for: context.window, text: "You successfully activated gift link.")
+            showModalText(for: context.window, text: strings().giftLinkUseSuccess)
             close?()
         } else {
             close?()

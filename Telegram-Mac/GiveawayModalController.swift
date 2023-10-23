@@ -37,8 +37,9 @@ func generateGiveawayTypeImage(_ image: NSImage, colorIndex: Int) -> CGImage {
        ctx.draw(icon, in: rect)
        
    })!
-    
 }
+
+
 
 private final class GiveawayDurationOptionItem : GeneralRowItem {
     
@@ -372,10 +373,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("**Gift Telegram Premium**"), data: .init(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 18, centerViewAlignment: true, alignment: .center)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayHeaderTitle), data: .init(color: theme.colors.text, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 18, centerViewAlignment: true, alignment: .center)))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Get more boosts for your channel by gifting"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 13, centerViewAlignment: true, alignment: .center)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayHeaderText), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .modern(position: .inner, insets: .init()), fontSize: 13, centerViewAlignment: true, alignment: .center)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -386,25 +387,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let specific_icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Specific")!, colorIndex: 6)
 
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: "Create Giveaway", color: theme.colors.text, icon: random_icon, type: .selectableLeft(state.type == .random), viewType: .firstItem, enabled: true, description: "winners are chosen randomly", action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway, data: .init(name: strings().giveawayTypeRandomTitle, color: theme.colors.text, icon: random_icon, type: .selectableLeft(state.type == .random), viewType: .firstItem, enabled: true, description: strings().giveawayTypeRandomText, action: {
             arguments.updateType(.random)
         })))
         index += 1
         
         let selectText: String
         if state.selectedPeers.isEmpty {
-            selectText = "select recipients"
+            selectText = strings().giveawayTypeSpecificText
         } else {
             selectText = state.selectedPeers.map { $0.peer.displayTitle }.joined(separator: ", ")
         }
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway_specific, data: .init(name: "Award Specific Users", color: theme.colors.text, icon: specific_icon, type: .selectableLeft(state.type == .specific), viewType: .lastItem, enabled: true, description: selectText, descTextColor: theme.colors.accent, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_giveaway_specific, data: .init(name: strings().giveawayTypeSpecificTitle, color: theme.colors.text, icon: specific_icon, type: .selectableLeft(state.type == .specific), viewType: .lastItem, enabled: true, description: selectText, descTextColor: theme.colors.accent, action: {
             arguments.updateType(.specific)
         })))
     } else if case let .prepaid(prepaid) = state.type {
         let countIcon = generalPrepaidGiveawayIcon(theme.colors.accent, count: .initialize(string: "\(prepaid.quantity)", color: theme.colors.accent, font: .avatar(.text)))
         let icon = generateGiveawayTypeImage(NSImage(named: "Icon_Giveaway_Random")!, colorIndex: Int(prepaid.months) % 7)
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid, data: .init(name: "\(prepaid.quantity) Telegram Premium", color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: .singleItem, description: "\(prepaid.months)-month subscriptions", descTextColor: theme.colors.grayText)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_prepaid, data: .init(name: strings().giveawayTypePrepaidTitle(Int(prepaid.quantity)), color: theme.colors.text, icon: icon, type: .imageContext(countIcon, ""), viewType: .singleItem, description: strings().giveawayTypePrepaidDesc(Int(prepaid.months)), descTextColor: theme.colors.grayText)))
     }
     
    
@@ -419,7 +420,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.sectionId(sectionId, type: .normal))
             sectionId += 1
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("QUANTITY OF PRIZES / BOOSTS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: "\(state.quantity) BOOSTS", color: theme.colors.listGrayText, font: .normal(.small))))))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayQuantityHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem, rightItem: .init(isLoading: false, text: .initialize(string: strings().giveawayQuantityRightCountable(Int(state.quantity)), color: theme.colors.listGrayText, font: .normal(.small))))))
             index += 1
             
             
@@ -430,7 +431,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 })
             }))
             
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Chose how many Premiums subscriptions to give away and boosts to receive."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayQuantityInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
             index += 1
 
         }
@@ -438,7 +439,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("CHANNELS INCLUDED IN THE GIVEAWAY"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayChannelsHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
         var channels: [PeerEquatable] = state.channels
@@ -473,10 +474,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         for item in channelItems {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                 
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: nil, status: item.peer.peer.id == state.channels[0].peer.id ? "this channel will receive \(item.quantity) boosts" : nil, inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, contextMenuItems: {
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: nil, status: item.peer.peer.id == state.channels[0].peer.id ? strings().giveawayChannelsBoostReceiveCountable(Int(item.quantity)) : nil, inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, contextMenuItems: {
                     var items: [ContextMenuItem] = []
                     if item.deletable {
-                        items.append(ContextMenuItem("Remove", handler: {
+                        items.append(ContextMenuItem(strings().giveawayChannelsContextRemove, handler: {
                             arguments.deleteChannel(item.peer.peer.id)
                         }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     }
@@ -485,48 +486,43 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }))
         }
         if !maximumReached {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_channel, data: .init(name: "Add Channel", color: theme.colors.accent, icon: theme.icons.proxyAddProxy, viewType: .lastItem, action: arguments.addChannel)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_channel, data: .init(name: strings().giveawayChannelsAdd, color: theme.colors.accent, icon: theme.icons.proxyAddProxy, viewType: .lastItem, action: arguments.addChannel)))
         }
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Choose the channels users need to be subscribed to take part in the giveaway."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().givewayChannelsInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("USERS ELIGIBLE FOR THE GIVEAWAY"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayReceiverTypeTitle), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
-        let countryText: String
-        if state.countries.isEmpty {
-            countryText = "from all countries"
-        } else {
-            countryText = "from \(state.countries.count) countries"
-        }
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_receiver_all, data: .init(name: "All subscribers", color: theme.colors.text, type: .selectableLeft(state.receiver == .all), viewType: .firstItem, description: countryText, descTextColor: theme.colors.accent, action: {
+        let countryText: String = strings().giveawayReceiverTypeCountriesCountable(state.countries.count)
+
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_receiver_all, data: .init(name: strings().giveawayReceiverTypeAll, color: theme.colors.text, type: .selectableLeft(state.receiver == .all), viewType: .firstItem, description: countryText, descTextColor: theme.colors.accent, action: {
             arguments.updateReceiver(.all)
         })))
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_receiver_new, data: .init(name: "Only new subscribers", color: theme.colors.text, type: .selectableLeft(state.receiver == .new), viewType: .lastItem, description: countryText, descTextColor: theme.colors.accent, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_receiver_new, data: .init(name: strings().giveawayReceiverTypeNew, color: theme.colors.text, type: .selectableLeft(state.receiver == .new), viewType: .lastItem, description: countryText, descTextColor: theme.colors.accent, action: {
             arguments.updateReceiver(.new)
         })))
 
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Choose if you want to limit the giveaway only to those who joined the channel after the giveaway started."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayReceiverTypeInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("DATE WHEN GIVEAWAY ENDS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayDateTitle), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
 
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_select_date, data: .init(name: "Ends", color: theme.colors.text, type: .nextContext(stringForFullDate(timestamp: Int32(state.date.timeIntervalSince1970))), viewType: .singleItem, action: arguments.selectDate)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_select_date, data: .init(name: strings().giveawayDateEnds, color: theme.colors.text, type: .nextContext(stringForFullDate(timestamp: Int32(state.date.timeIntervalSince1970))), viewType: .singleItem, action: arguments.selectDate)))
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Choose when 3 subscribers of your channel will be randomly selected to receive Telegram Premium."), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayDateInfo), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
     case .specific:
         break
@@ -537,7 +533,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("DURATION OF PREMIUM SUBSCRIPTIONS"), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().giveawayPaymentOptionsTitle), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
         index += 1
         
         let recipientCount: Int
@@ -573,9 +569,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             let giftTitle: String
             if product.months == 12 {
-                giftTitle = "1 Year"
+                giftTitle = strings().giveawayPaymentOptionsYear
             } else {
-                giftTitle = "\(product.months) Months"
+                giftTitle = strings().giveawayPaymentOptionsMonths(Int(product.months)) 
             }
             
             let discountValue = Int((1.0 - Float(product.priceCurrencyAndAmount.amount) / Float(product.months) / Float(state.defaultPrice.intergal)) * 100.0)
@@ -603,7 +599,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown("You can review the list of features and terms of use for Telegram Premium [here](premium).", linkHandler: arguments.execute), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().giveawayPaymentOptionsInfo, linkHandler: arguments.execute), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
         index += 1
 
     }
@@ -657,7 +653,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
     
     let addSpecificUsers:()->Void = {
         let behaviour = SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 10)
-        _ = selectModalPeers(window: context.window, context: context, title: "Select Users", behavior: behaviour, selectedPeerIds: Set(stateValue.with { $0.selectedPeers.map { $0.peer.id } })).start(next: { peerIds in
+        _ = selectModalPeers(window: context.window, context: context, title: strings().giveawayTypeSpecificModalSelectUsers, behavior: behaviour, selectedPeerIds: Set(stateValue.with { $0.selectedPeers.map { $0.peer.id } })).start(next: { peerIds in
             let peers: Signal<[PeerEquatable], NoError> = context.account.postbox.transaction { transaction in
                 var peers:[PeerEquatable] = []
                 for peerId in peerIds {
@@ -711,7 +707,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             addSpecificUsers()
         }
     }, selectDate: {
-        showModal(with: DateSelectorModalController(context: context, mode: .date(title: "Giveaway", doneTitle: "OK"), selectedAt: { value in
+        showModal(with: DateSelectorModalController(context: context, mode: .date(title: strings().giveawayDateSelectDate, doneTitle: strings().giveawayDateSelectDateOK), selectedAt: { value in
             updateState { current in
                 var current = current
                 current.date = value
@@ -729,11 +725,11 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             return current
         }
     }, addChannel: {
-        _ = selectModalPeers(window: context.window, context: context, title: "Select Channel", behavior: SelectChatsBehavior(settings: [.channels], excludePeerIds: stateValue.with { $0.channels.map { $0.peer.id } }, limit: 1), confirmation: { peerIds in
+        _ = selectModalPeers(window: context.window, context: context, title: strings().giveawayChannelsAddSelectChannel, behavior: SelectChatsBehavior(settings: [.channels], excludePeerIds: stateValue.with { $0.channels.map { $0.peer.id } }, limit: 1), confirmation: { peerIds in
             if let peerId = peerIds.first {
                 return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer in
                     if peer.addressName == nil {
-                        return verifyAlertSignal(for: context.window, header: "Channel is Private", information: "Are you sure you want to add a private channel? Users won't be able to join it without an invite link.", ok: "Add") |> map { $0 == .basic }
+                        return verifyAlertSignal(for: context.window, header: strings().giveawayChannelsAddPrivateHeader, information: strings().giveawayChannelsAddPrivateText, ok: strings().giveawayChannelsAddPrivateOk) |> map { $0 == .basic }
                     } else {
                         return .single(true)
                     }
@@ -760,9 +756,9 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
     })
     
     let products: Signal<[InAppPurchaseManager.Product], NoError>
-    #if APP_STORE //|| DEBUG
+    #if APP_STORE || DEBUG
     products = inAppPurchaseManager.availableProducts |> map {
-        $0.filter { !$0.isSubscription }
+        $0
     }
     #else
     products = .single([])
@@ -779,7 +775,9 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             gifts.append(PremiumGiftProduct(giftOption: option, storeProduct: product))
         }
         let defaultPrice: (Int64, NSDecimalNumber)
-        if let defaultProduct = options.first(where: { $0.storeProductId == "org.telegram.telegramPremium.threeMonths.code_x1" }) {
+        if let defaultProduct = products.first(where: { $0.id == "org.telegram.telegramPremium.monthly" }) {
+            defaultPrice = (defaultProduct.priceCurrencyAndAmount.amount, defaultProduct.priceValue)
+        } else if let defaultProduct = options.first(where: { $0.storeProductId == "org.telegram.telegramPremium.threeMonths.code_x1" }) {
             defaultPrice = (defaultProduct.amount / Int64(defaultProduct.months), NSDecimalNumber(value: 1))
         } else {
             defaultPrice = (1, NSDecimalNumber(value: 1))
@@ -824,7 +822,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
                 switch status {
                 case .paid:
                     PlayConfetti(for: context.window)
-                    showModalText(for: context.window, text: "Giveaway created")
+                    showModalText(for: context.window, text: strings().giveawayAlertCreated)
                     close?()
                 default:
                     break
@@ -848,7 +846,8 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
         }
         
         guard let premiumProduct = selectedProduct else {
-            verifyAlert(for: context.window, header: "Reduce Quantity", information: "You can't acquire \(state.quantity) \(selectedMonths)-month subscriptions in the app. Do you want to reduce quantity to 25?", ok: "Reduce", successHandler: { _ in
+            
+            verifyAlert(for: context.window, header: strings().giveawayPaymentOptionsReduceTitle, information: strings().giveawayPaymentOptionsReduceText("\(state.quantity)", "\(selectedMonths)"), ok: strings().giveawayPaymentOptionsReduceOK, successHandler: { _ in
                 updateState { state in
                     var updatedState = state
                     updatedState.quantity = 25
@@ -878,7 +877,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
         let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
         |> deliverOnMainQueue).start(next: { [weak lockModal] available in
             if available {
-                paymentDisposable.set((inAppPurchaseManager.buyProduct(storeProduct, purpose: purpose)
+                paymentDisposable.set((inAppPurchaseManager.buyProduct(storeProduct, quantity: premiumProduct.giftOption.storeQuantity, purpose: purpose)
                 |> deliverOnMainQueue).start(next: { [weak lockModal] status in
     
                     lockModal?.close()
@@ -888,7 +887,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
                     inAppPurchaseManager.finishAllTransactions()
                     delay(0.2, closure: {
                         PlayConfetti(for: context.window)
-                        showModalText(for: context.window, text: "Giveaway created")
+                        showModalText(for: context.window, text: strings().giveawayAlertCreated)
                         let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
                     })
                     
@@ -932,7 +931,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: "Boosts via Gifts")
+    let controller = InputDataController(dataSignal: signal, title: strings().giveawayTitle)
     
     controller.didLoaded = { controller, _ in
         controller.genericView.layer?.masksToBounds = false
@@ -949,7 +948,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
             let signal = context.engine.payments.launchPrepaidGiveaway(peerId: peerId, id: prepaid.id, additionalPeerIds: additionalPeerIds, countries: countries, onlyNewSubscribers: state.receiver == .new, randomId: Int64.random(in: .min ..< .max), untilDate: Int32(state.date.timeIntervalSince1970))
             _ = showModalProgress(signal: signal, for: context.window).start(completed: {
                 PlayConfetti(for: context.window)
-                showModalText(for: context.window, text: "Giveaway created")
+                showModalText(for: context.window, text: strings().giveawayAlertCreated)
                 close?()
             })
         } else {
@@ -963,7 +962,7 @@ func GiveawayModalController(context: AccountContext, peerId: PeerId, prepaid: P
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: "Start Giveaway", accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().giveawayStartGiveaway, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, singleButton: true)
     

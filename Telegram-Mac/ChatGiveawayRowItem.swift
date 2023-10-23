@@ -335,12 +335,12 @@ final class ChatGiveawayRowItem : ChatRowItem {
         
         //channels
         for channel in channels {
-            channel.text.measure(width: w)
+            channel.text.measure(width: w - 30)
         }
         var point: CGPoint = NSMakePoint(0, 0)
         var index = 0
         for (i, channel) in channels.enumerated() {
-            if point.x + channel.size.width > w || index == 2 {
+            if point.x + channel.size.width > w || index == 2, point.x != 0 {
                 point.x = 0
                 point.y += channel.size.height + 5
                 index = 0
@@ -354,7 +354,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         var current:[Channel] = []
         var y: CGFloat = 0
         for channel in channels {
-            if y != channel.rect.minY {
+            if y != channel.rect.minY, !current.isEmpty {
                 lines.append(current)
                 current.removeAll()
             }

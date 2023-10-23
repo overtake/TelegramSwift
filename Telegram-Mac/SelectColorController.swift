@@ -506,7 +506,9 @@ private struct State : Equatable {
         .violetDash,
         .greenDash,
         .cyanDash,
-        .blueDash]
+        .blueDash,
+        .pinkDash]
+    
     var selected: PeerNameColor = .blue
     var backgroundEmojiId: Int64? = nil
     var saving: Bool = false

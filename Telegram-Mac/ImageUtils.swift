@@ -78,7 +78,7 @@ public extension PeerNameColor {
             return 4
         case .blue, .blueDash:
             return 5
-        case .pink:
+        case .pink, .pinkDash:
             return 6
         }
     }
@@ -112,6 +112,8 @@ public extension PeerNameColor {
             return (NSColor(rgb: 0x27ACCE), NSColor(rgb: 0x82E8D6))
         case .blueDash:
             return (NSColor(rgb: 0x3391D4), NSColor(rgb: 0x7DD3F0))
+        case .pinkDash:
+            return (NSColor(rgb: 0xdd4371), NSColor(rgb: 0xffbe9f))
         }
     }
     
@@ -147,6 +149,8 @@ public extension PeerNameColor {
             return theme.icons.message_quote_cyan
         case .blueDash:
             return theme.icons.message_quote_blue
+        case .pinkDash:
+            return theme.icons.message_quote_pink
         }
     }
 }

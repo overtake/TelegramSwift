@@ -52,7 +52,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         
         
         switch media.action {
-        case let .giftCode(slug, fromGiveaway, boostPeerId, months):
+        case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months):
             self.data = .init(slug: slug, fromGiveaway: fromGiveaway, boostPeerId: boostPeerId, months: months)
         default:
             fatalError()

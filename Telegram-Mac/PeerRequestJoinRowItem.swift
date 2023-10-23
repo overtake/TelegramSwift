@@ -45,7 +45,6 @@ final class PeerRequestJoinRowItem: GeneralRowItem {
         
         if data.added || data.dismissed {
             let text: String
-            //TODOLANG
             if data.added {
                 text = strings().requestJoinListStatusApproved
             } else {

@@ -3110,11 +3110,16 @@ enum FaqDestination {
 func openFaq(context: AccountContext, dest: FaqDestination = .telegram) {
     let language = appCurrentLanguage.languageCode[appCurrentLanguage.languageCode.index(appCurrentLanguage.languageCode.endIndex, offsetBy: -2) ..< appCurrentLanguage.languageCode.endIndex]
     
-    _ = showModalProgress(signal: webpagePreview(account: context.account, url: dest.url) |> deliverOnMainQueue, for: context.window).start(next: { webpage in
-        if let webpage = webpage {
-            showInstantPage(InstantPageViewController(context, webPage: webpage, message: nil))
-        } else {
-            execute(inapp: .external(link: dest.url + language, true))
+    _ = showModalProgress(signal: webpagePreview(account: context.account, url: dest.url) |> filter { $0 != .progress} |> deliverOnMainQueue, for: context.window).start(next: { result in
+        switch result {
+        case let .result(webpage):
+            if let webpage = webpage {
+                showInstantPage(InstantPageViewController(context, webPage: webpage, message: nil))
+            } else {
+                execute(inapp: .external(link: dest.url + language, true))
+            }
+        default:
+            break
         }
     })
 }
@@ -3847,6 +3852,20 @@ extension NSAttributedString {
         let value = TextInputTextCustomEmojiAttribute(collectionId: info, fileId: file.fileId.id, file: file, emoji: text)
         attach.addAttribute(TextInputAttributes.customEmoji, value: value, range: attach.range)
         return attach
+    }
+    
+    static func embedded(name: String, color: NSColor, resize: Bool) -> NSAttributedString {
+        
+        let file = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: name, ext: "", color: color, resize: resize), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+        
+        let emoji: String = clown
+        
+        let attr = NSMutableAttributedString()
+        attr.append(string: emoji)
+        attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: emoji))), range: NSMakeRange(0, emoji.length))
+        
+        return attr
+
     }
 }
 

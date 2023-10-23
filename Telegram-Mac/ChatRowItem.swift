@@ -2126,7 +2126,7 @@ class ChatRowItem: TableRowItem {
                         if replyMessage.isExpiredStory, let media = replyMessage.media.first as? TelegramMediaStory {
                             self.replyModel = ExpiredStoryReplyModel(message: message, storyId: media.storyId, bubbled: renderType == .bubble, context: context, presentation: replyPresentation)
                         } else {
-                            self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, quote: attribute.quote, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, translate: entry.additionalData.replyTranslate)
+                            self.replyModel = ReplyModel(message: message, replyMessageId: attribute.messageId, context: context, replyMessage: replyMessage, quote: attribute.quote, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation, translate: entry.additionalData.replyTranslate)
                         }
                         replyModel?.isSideAccessory = isBubbled && !hasBubble
                     }
@@ -2138,7 +2138,13 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                 if let attribute = attribute as? QuotedReplyMessageAttribute, self.replyModel == nil {
-                    self.replyModel = ReplyModel(replyMessageId: message.id, context: context, replyMessage: message, quote: attribute.quote, presentation: replyPresentation, customHeader: attribute.authorName)
+                    let replyMessage: Message?
+                    if let replyAttr = message.replyAttribute, let message = message.associatedMessages[replyAttr.messageId] {
+                        replyMessage = message
+                    } else {
+                        replyMessage = nil
+                    }
+                    self.replyModel = ReplyModel(message: message, replyMessageId: message.id, context: context, replyMessage: replyMessage ?? message, quote: attribute.quote, presentation: replyPresentation, customHeader: attribute.authorName)
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
                     let attr: NSAttributedString = .initialize(string: max(1, attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
@@ -2564,7 +2570,6 @@ class ChatRowItem: TableRowItem {
                 }
             }
         }
-      
         
         return result
     }

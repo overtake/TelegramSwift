@@ -248,7 +248,11 @@ class WPArticleLayout: WPLayout {
                 } else if isTheme {
                     contrainedImageSize = imageSize.fitted(NSMakeSize(maxw, maxw))
                 } else {
-                    contrainedImageSize = imageSize.fitted(NSMakeSize(min(maxw, maxw), maxw))
+                    if action_text != nil {
+                        contrainedImageSize = NSMakeSize(min(250, maxw), min(250, maxw))
+                    } else {
+                        contrainedImageSize = imageSize.aspectFitted(NSMakeSize(maxw, maxw))
+                    }
                 }
 
                 textLayout?.cutout = nil

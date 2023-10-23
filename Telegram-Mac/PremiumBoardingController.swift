@@ -746,7 +746,7 @@ private final class PremiumBoardingView : View {
             gradient.startPoint = CGPoint(x: 0, y: 0)
             gradient.endPoint = CGPoint(x: 1, y: 0)
             
-            gradient.colors = premiumGradient.compactMap { $0?.cgColor }
+            gradient.colors = premiumGradient.compactMap { $0.cgColor }
             
             okButton.layer?.insertSublayer(gradient, at: 0)
             

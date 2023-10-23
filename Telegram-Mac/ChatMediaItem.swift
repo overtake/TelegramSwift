@@ -289,7 +289,7 @@ class ChatMediaItem: ChatRowItem {
         var offset = super.contentOffset
         
         if hasBubble, isBubbleFullFilled, !hasUpsideSomething {
-            offset.y -= (defaultContentInnerInset + 1)
+            offset.y -= (defaultContentInnerInset )
         } else if hasBubble, !isBubbleFullFilled, hasUpsideSomething {
             offset.y += defaultContentInnerInset
         } else if hasBubble, isBubbleFullFilled, hasUpsideSomething {

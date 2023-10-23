@@ -2677,8 +2677,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 break
             }
             
-            if let subject = subject, let message = message, self.chatInteraction.peer?.canSendMessage() == false {
-                showModal(with: ShareModalController(ReplyForwardMessageObject(context, message: message, subject: subject)), for: context.window)
+            if let subject = subject, self.chatInteraction.peer?.canSendMessage() == false {
+                self.chatInteraction.replyToAnother(subject, false)
                 return
             }
             
@@ -4606,10 +4606,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.quote = { [weak self] quote, messageId in
-            guard let `self` = self else {
-                return
+        chatInteraction.replyToAnother = { [weak self] subject, reset in
+            
+            if reset {
+                self?.chatInteraction.update({
+                    $0.updatedInterfaceState({
+                        $0.withUpdatedReplyMessageId(nil)
+                    })
+                })
             }
+            
+            let message = context.engine.data.get(TelegramEngine.EngineData.Item.Messages.Message(id: subject.messageId)) |> deliverOnMainQueue
+            
+            _ = message.start(next: { message in
+                if let message = message?._asMessage() {
+                    showModal(with: ShareModalController(ReplyForwardMessageObject(context, message: message, subject: subject)), for: context.window)
+                }
+                
+            })
         }
         
         chatInteraction.updatePinned = { [weak self] pinnedId, dismiss, silent, forThisPeerOnlyIfPossible in

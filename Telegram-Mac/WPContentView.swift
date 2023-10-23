@@ -83,7 +83,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         
         self.scaleOnClick = true
         
-        layer?.cornerRadius = 4
+        layer?.cornerRadius = .cornerRadius
         
         set(handler: { [weak self] _ in
             self?.content?.invokeAction()
