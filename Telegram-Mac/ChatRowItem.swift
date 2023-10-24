@@ -1983,6 +1983,12 @@ class ChatRowItem: TableRowItem {
                         nameColor = presentation.colors.greenUI
                     }
                     
+                    if message.adAttribute != nil, let author = message.author {
+                        let value = abs(Int(author.id.id._internalGetInt64Value()) % 7)
+                        nameColor = peer.nameColor?.color ?? presentation.chat.peerName(value)
+                    }
+                    
+                    
                     if canFillAuthorName {
                         let range = attr.append(string: title, color: nameColor, font: .medium(.text))
                         if peer.id.id._internalGetInt64Value() != 0 {

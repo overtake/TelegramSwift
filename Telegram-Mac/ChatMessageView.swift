@@ -27,7 +27,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func set(isExternalUrl: Bool) {
+        func set(isExternalUrl: Bool, color: NSColor) {
             if isExternalUrl {
                 let current: ImageView
                 if let view = self.urlView {
@@ -37,7 +37,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     addSubview(current)
                     self.urlView = current
                 }
-                current.image = theme.icons.chatActionUrl
+                current.image = NSImage.init(named: "Icon_InlineBotUrl")?.precomposed(color)
                 current.sizeToFit()
             } else if let view = self.urlView {
                 view.removeFromSuperview()
@@ -150,8 +150,6 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
             var add = item.additionalLineForDateInBubbleState ?? 0
             if !item.isBubbled {
                 add = 0
-            } else if webpageContent != nil {
-                add = 0
             }
             let contentRect = self.contentFrame(item)
             transition.updateFrame(view: actionButton, frame: CGRect(origin: NSMakePoint(contentRect.minX, contentRect.maxY - actionButton.frame.height + add), size: actionButton.frame.size))
@@ -249,7 +247,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     self.rowView.addSubview(actionButton!)
                     isNew = true
                 }
-                actionButton?.set(isExternalUrl: item.hasExternalLink)
+                actionButton?.set(isExternalUrl: item.hasExternalLink, color: item.wpPresentation.activity.0)
                 actionButton?.scaleOnClick = true
                 actionButton?.removeAllHandlers()
                 actionButton?.set(handler: { [weak item] _ in
