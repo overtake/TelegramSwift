@@ -99,7 +99,8 @@ class WPArticleContentView: WPContentView {
             } else if let link = layout.themeLink {
                 execute(inapp: link)
             } else if !content.url.isEmpty {
-                execute(inapp: .external(link: content.url, false))
+                let safe = layout.parent.webpagePreviewAttribute?.isSafe == true
+                execute(inapp: .external(link: content.url, !safe))
             }
 
         }

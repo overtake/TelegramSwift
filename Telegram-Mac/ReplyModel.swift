@@ -251,13 +251,14 @@ class ReplyModel: ChatAccessoryModel {
                     break
                 }
             }
-            
-            for attr in message.attributes {
-                if let attr = attr as? QuotedReplyMessageAttribute {
-                    title = attr.authorName ?? ""
+            if self.parent?.id == message.id {
+                for attr in message.attributes {
+                    if let attr = attr as? QuotedReplyMessageAttribute {
+                        title = attr.authorName ?? ""
+                    }
                 }
             }
-            
+           
             if modelType == .classic {
                 if quote != nil {
                     title = strings().chatReplyQuotePanelTitle(title ?? "")
@@ -312,9 +313,6 @@ class ReplyModel: ChatAccessoryModel {
                     }
                 }
                 
-//                let file =
-//                
-//                header.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: packFile.fileId.id, file: packFile, emoji: ""))), range: NSMakeRange(0, 2))
 
                 self.header = .init(header, maximumNumberOfLines: 1)
             }
@@ -401,6 +399,10 @@ class StoryReplyModel: ChatAccessoryModel {
     
     override var mediaInset: CGFloat {
         return 36
+    }
+    override var cutout: TextViewCutout? {
+        let cutoutSize: CGSize = .init(width: 36, height: 18)
+        return TextViewCutout(topLeft: cutoutSize)
     }
     
     
@@ -523,7 +525,7 @@ class StoryReplyModel: ChatAccessoryModel {
         let title: String = peer.displayTitle
         let text: NSAttributedString = .initialize(string: isUnsupported ? strings().chatListStoryUnsupported : strings().chatListStory, color: presentation.disabledText, font: .normal(.text))
         self.header = .init(.initialize(string: title, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
-        self.message = .init(text, maximumNumberOfLines: 1)
+        self.message = .init(text, maximumNumberOfLines: 1, cutout: cutout)
         
         measureSize(width, sizeToFit: sizeToFit)
         display = true

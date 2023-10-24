@@ -14,26 +14,26 @@ private func combineIntersectingRectangles(_ rectangles: [TextViewBlockQuote]) -
     
     if rectangles.isEmpty {
         return []
+    } else if rectangles.count == 1 {
+        return rectangles
     }
-    var combinedRectangles: [TextViewBlockQuote] = []
+    var result: [TextViewBlockQuote] = []
+    var big: TextViewBlockQuote = rectangles[0]
     
-    for value in rectangles {
-        var mergedRect = value
-        
-        // Iterate through the combinedRectangles and check for intersection
-        for (index, existingRect) in combinedRectangles.enumerated() {
-            if value.frame.intersects(existingRect.frame) {
-                let updatedFrame = mergedRect.frame.union(existingRect.frame)
-                mergedRect.frame = updatedFrame
-                combinedRectangles[index].frame = updatedFrame
-                return combineIntersectingRectangles(combinedRectangles)
+    for i in 1 ..< rectangles.count {
+        let current: TextViewBlockQuote = rectangles[i]
+        if current.frame.intersects(big.frame) {
+            big.frame = big.frame.union(current.frame)
+            if i == rectangles.count - 1 {
+                result.append(big)
             }
+        } else {
+            result.append(big)
+            big = rectangles[i]
         }
-        
-        combinedRectangles.append(mergedRect)
     }
-    
-    return combinedRectangles
+
+    return result
 }
 
 
@@ -84,7 +84,7 @@ func findClosestRect(rectangles: [CGRect], point: CGPoint) -> CGRect? {
 }
 
 private let quoteIcon: CGImage = {
-    return NSImage(named: "Icon_Quote")!.precomposed(flipVertical: true)
+    return NSImage(named: "Icon_Quote")!.precomposed(flipVertical: false)
 }()
 
 
@@ -134,9 +134,9 @@ public extension NSAttributedString.Key {
 
 private final class TextViewBlockQuote {
     var frame: CGRect
-    var tintColor: NSColor
+    var tintColor: (NSColor, NSColor?)
     
-    init(frame: CGRect, tintColor: NSColor) {
+    init(frame: CGRect, tintColor: (NSColor, NSColor?)) {
         self.frame = frame
         self.tintColor = tintColor
     }
@@ -145,9 +145,9 @@ private final class TextViewBlockQuote {
 
 public final class TextViewBlockQuoteData: NSObject {
     public let id: Int
-    public let color: NSColor
+    public let color: (NSColor, NSColor?)
     public let space: CGFloat
-    public init(id: Int, color: NSColor, space: CGFloat = 4) {
+    public init(id: Int, color: (NSColor, NSColor?), space: CGFloat = 4) {
         self.id = id
         self.color = color
         self.space = space
@@ -162,7 +162,7 @@ public final class TextViewBlockQuoteData: NSObject {
         if self.id != other.id {
             return false
         }
-        if !self.color.isEqual(other.color) {
+        if !self.color.0.isEqual(other.color.0) {
             return false
         }
         if self.space != other.space {
@@ -573,219 +573,6 @@ public final class TextViewLayout : Equatable {
         return lines[lines.count - 1].frame.height
     }
     
-    func calculateLayoutV2(isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil, saveRTL: Bool = false) -> Void {
-        let blockQuoteLeftInset: CGFloat = 7.0
-        let blockQuoteRightInset: CGFloat = 0.0
-        let blockQuoteIconInset: CGFloat = 12.0
-        
-        struct StringSegment {
-            let substring: NSAttributedString
-            let firstCharacterOffset: Int
-            let isBlockQuote: Bool
-            let tintColor: NSColor?
-        }
-        var stringSegments: [StringSegment] = []
-        
-        let rawWholeString = attributedString.string as NSString
-        let wholeStringLength = rawWholeString.length
-        
-        var segmentCharacterOffset = 0
-        while true {
-            var found = false
-            attributedString.enumerateAttribute(NSAttributedString.Key("Attribute__Blockquote"), in: NSRange(location: segmentCharacterOffset, length: wholeStringLength - segmentCharacterOffset), using: { value, effectiveRange, _ in
-                found = true
-                if segmentCharacterOffset != effectiveRange.location {
-                    stringSegments.append(StringSegment(
-                        substring: attributedString.attributedSubstring(from: NSRange(
-                            location: segmentCharacterOffset,
-                            length: effectiveRange.location - segmentCharacterOffset
-                        )),
-                        firstCharacterOffset: segmentCharacterOffset,
-                        isBlockQuote: false,
-                        tintColor: nil
-                    ))
-                }
-                
-                if let value = value as? TextViewBlockQuoteData {
-                    if effectiveRange.length != 0 {
-                        stringSegments.append(StringSegment(
-                            substring: attributedString.attributedSubstring(from: effectiveRange),
-                            firstCharacterOffset: effectiveRange.location,
-                            isBlockQuote: true,
-                            tintColor: value.color
-                        ))
-                    }
-                } else {
-                    stringSegments.append(StringSegment(
-                        substring: attributedString.attributedSubstring(from: effectiveRange),
-                        firstCharacterOffset: effectiveRange.location,
-                        isBlockQuote: false,
-                        tintColor: nil
-                    ))
-                }
-                
-                segmentCharacterOffset = effectiveRange.location + effectiveRange.length
-            })
-            if !found {
-                if segmentCharacterOffset != wholeStringLength {
-                    stringSegments.append(StringSegment(
-                        substring: attributedString.attributedSubstring(from: NSRange(
-                            location: segmentCharacterOffset,
-                            length: wholeStringLength - segmentCharacterOffset
-                        )),
-                        firstCharacterOffset: segmentCharacterOffset,
-                        isBlockQuote: false,
-                        tintColor: nil
-                    ))
-                }
-                
-                break
-            }
-        }
-        
-        struct CalculatedSegment {
-            var lines: [TextViewLine] = []
-            var tintColor: NSColor?
-            var isBlockQuote: Bool = false
-            var additionalWidth: CGFloat = 0.0
-        }
-        
-        
-        var calculatedSegments: [CalculatedSegment] = []
-            
-        for segment in stringSegments {
-            var calculatedSegment = CalculatedSegment()
-            calculatedSegment.isBlockQuote = segment.isBlockQuote
-            calculatedSegment.tintColor = segment.tintColor
-            
-            let rawSubstring = segment.substring.string as NSString
-            let substringLength = rawSubstring.length
-            let typesetter = CTTypesetterCreateWithAttributedString(segment.substring as CFAttributedString)
-            
-            var currentLineStartIndex = 0
-            
-            var constrainedSegmentWidth = constrainedWidth
-            var additionalOffsetX: CGFloat = 0.0
-            if segment.isBlockQuote {
-                constrainedSegmentWidth -= blockQuoteLeftInset + blockQuoteRightInset
-                additionalOffsetX += blockQuoteLeftInset
-                calculatedSegment.additionalWidth += blockQuoteLeftInset + blockQuoteRightInset
-            }
-            
-            var additionalSegmentRightInset = blockQuoteIconInset
-                        
-            while true {
-                let lineCharacterCount = CTTypesetterSuggestLineBreak(typesetter, currentLineStartIndex, constrainedSegmentWidth + additionalSegmentRightInset)
-                
-                if lineCharacterCount != 0 {
-                    let line = CTTypesetterCreateLine(typesetter, CFRange(location: currentLineStartIndex, length: lineCharacterCount))
-                    var lineAscent: CGFloat = 0.0
-                    var lineDescent: CGFloat = 0.0
-                    let lineWidth = CTLineGetTypographicBounds(line, &lineAscent, &lineDescent, nil)
-                    
-                    var isRTL = false
-                    let glyphRuns = CTLineGetGlyphRuns(line) as NSArray
-                    if glyphRuns.count != 0 {
-                        let run = glyphRuns[0] as! CTRun
-                        if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
-                            isRTL = true
-                        }
-                    }
-                    var penFlush = self.penFlush
-                    if penFlush == 0 {
-                        if isRTL {
-                            penFlush = 1
-                        }
-                    } else if isRTL, penFlush == 1 {
-                        penFlush = 0
-                    }
-                    
-                    calculatedSegment.lines.append(TextViewLine(
-                        line: line,
-                        frame: CGRect(origin: CGPoint(x: additionalOffsetX, y: 0.0), size: CGSize(width: lineWidth + additionalSegmentRightInset, height: lineAscent + lineDescent)),
-                        range: NSRange(location: segment.firstCharacterOffset + currentLineStartIndex, length: lineCharacterCount), 
-                        lineRange: NSMakeRange(currentLineStartIndex, lineCharacterCount),
-                        penFlush: penFlush,
-                        isRTL: isRTL,
-                        strikethrough: [],
-                        embeddedItems: []
-                    ))
-                }
-                
-                additionalSegmentRightInset = 0.0
-                
-                currentLineStartIndex += lineCharacterCount
-                
-                if currentLineStartIndex >= substringLength {
-                    break
-                }
-            }
-            
-            calculatedSegments.append(calculatedSegment)
-        }
-                
-        var size = CGSize()
-        let isTruncated = false
-        
-        for segment in calculatedSegments {
-
-            for line in segment.lines {
-                size.width = max(size.width, line.frame.origin.x + line.frame.width + segment.additionalWidth)
-            }
-        }
-        
-        var lines: [TextViewLine] = []
-        var blockQuotes: [TextViewBlockQuote] = []
-        for i in 0 ..< calculatedSegments.count {
-            let segment = calculatedSegments[i]
-            if i != 0 {
-                if segment.isBlockQuote {
-                    size.height += 6.0
-                }
-            } else {
-                if segment.isBlockQuote {
-                    size.height += 5.0
-                }
-            }
-            
-            let blockMinY = size.height - insets.height
-            var blockWidth: CGFloat = 0.0
-            
-            
-            for line in segment.lines {
-                line.frame = CGRect(origin: CGPoint(x: line.frame.origin.x, y: size.height + line.frame.size.height), size: line.frame.size)
-                line.frame.size.width += max(0.0, segment.additionalWidth - 2.0)
-                size.height += line.frame.height
-                blockWidth = max(blockWidth, line.frame.origin.x + line.frame.width)
-                
-                lines.append(line)
-            }
-            
-            let blockMaxY = size.height
-            
-            if i != calculatedSegments.count - 1 {
-                if segment.isBlockQuote {
-                    size.height += 8.0
-                }
-            } else {
-                if segment.isBlockQuote {
-                    size.height += 6.0
-                }
-            }
-            
-            if segment.isBlockQuote, let tintColor = segment.tintColor {
-                blockQuotes.append(TextViewBlockQuote(frame: CGRect(origin: CGPoint(x: 0.0, y: blockMinY), size: CGSize(width: size.width, height: blockMaxY - (blockMinY) + 8.0)), tintColor: tintColor))
-            }
-        }
-
-        self.lines = lines
-        self.blockQuotes = blockQuotes
-        let rawTextSize = size
-//        size.width += insets.left + insets.right
-        size.height += 4.0
-        self.layoutSize = size
-
-    }
     
     func calculateLayout(isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil, saveRTL: Bool = false) -> Void {
         self.isBigEmoji = isBigEmoji
@@ -2233,9 +2020,13 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             
             for blockQuote in layout.blockQuotes {
                 let radius: CGFloat = 3.0
+                let lineWidth: CGFloat = 3.0
                 
                 let blockFrame = blockQuote.frame
-                let tintColor = blockQuote.tintColor
+                let tintColor = blockQuote.tintColor.0
+                let secondaryTintColor = blockQuote.tintColor.1
+                
+                
                 
                 ctx.setFillColor(tintColor.withAlphaComponent(0.1).cgColor)
                 ctx.addPath(CGPath(roundedRect: blockFrame, cornerWidth: radius, cornerHeight: radius, transform: nil))
@@ -2244,18 +2035,68 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 ctx.setFillColor(tintColor.cgColor)
                 
                 let iconSize = quoteIcon.backingSize
-                let quoteRect = CGRect(origin: CGPoint(x: blockFrame.maxX - 2.0 - iconSize.width, y: blockFrame.minY + 2.0), size: iconSize)
+
+                
+                let quoteRect = CGRect(origin: CGPoint(x: blockFrame.maxX - 4.0 - iconSize.width, y: blockFrame.minY + 4.0), size: iconSize)
+                ctx.saveGState()
+                ctx.translateBy(x: quoteRect.midX, y: quoteRect.midY)
+                ctx.scaleBy(x: 1.0, y: -1.0)
+                ctx.translateBy(x: -quoteRect.midX, y: -quoteRect.midY)
                 ctx.clip(to: quoteRect, mask: quoteIcon)
                 ctx.fill(quoteRect)
+                ctx.restoreGState()
                 ctx.resetClip()
                 
-                let lineFrame = CGRect(origin: CGPoint(x: blockFrame.minX, y: blockFrame.minY), size: CGSize(width: radius, height: blockFrame.height))
+                let lineFrame = CGRect(origin: CGPoint(x: blockFrame.minX, y: blockFrame.minY), size: CGSize(width: lineWidth, height: blockFrame.height))
                 ctx.move(to: CGPoint(x: lineFrame.minX, y: lineFrame.minY + radius))
                 ctx.addArc(tangent1End: CGPoint(x: lineFrame.minX, y: lineFrame.minY), tangent2End: CGPoint(x: lineFrame.minX + radius, y: lineFrame.minY), radius: radius)
                 ctx.addLine(to: CGPoint(x: lineFrame.minX + radius, y: lineFrame.maxY))
                 ctx.addArc(tangent1End: CGPoint(x: lineFrame.minX, y: lineFrame.maxY), tangent2End: CGPoint(x: lineFrame.minX, y: lineFrame.maxY - radius), radius: radius)
                 ctx.closePath()
-                ctx.fillPath()
+                ctx.clip()
+                
+                if let secondaryTintColor = secondaryTintColor {
+                    let isMonochrome = secondaryTintColor.alpha == 0.2
+                    
+                    do {
+                        ctx.saveGState()
+                    
+                        if isMonochrome {
+                            ctx.setFillColor(tintColor.withMultipliedAlpha(0.2).cgColor)
+                            ctx.fill(lineFrame)
+                            ctx.setFillColor(tintColor.cgColor)
+                        } else {
+                            ctx.setFillColor(tintColor.cgColor)
+                            ctx.fill(lineFrame)
+                            ctx.setFillColor(secondaryTintColor.cgColor)
+                        }
+                        
+                        let dashOffset: CGFloat = isMonochrome ? -4.0 : 5.0
+                        ctx.translateBy(x: blockFrame.minX, y: blockFrame.minY + dashOffset)
+                        
+                        var offset = 0.0
+                        while offset < blockFrame.height {
+                            ctx.move(to: CGPoint(x: 0.0, y: 3.0))
+                            ctx.addLine(to: CGPoint(x: lineWidth, y: 0.0))
+                            ctx.addLine(to: CGPoint(x: lineWidth, y: 9.0))
+                            ctx.addLine(to: CGPoint(x: 0.0, y: 9.0 + 3.0))
+                            ctx.closePath()
+                            ctx.fillPath()
+                            
+                            ctx.translateBy(x: 0.0, y: 18.0)
+                            offset += 18.0
+                        }
+                        
+                        ctx.restoreGState()
+                    }
+                } else {
+                    ctx.setFillColor(tintColor.cgColor)
+                    ctx.fill(lineFrame)
+                }
+                
+                ctx.resetClip()
+
+                
             }
             
             let spoilerRects = layout.spoilerRects(!inAnimation)
@@ -2986,4 +2827,222 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
          }
      }
  }
+ */
+
+
+/*
+ func calculateLayoutV2(isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil, saveRTL: Bool = false) -> Void {
+     let blockQuoteLeftInset: CGFloat = 7.0
+     let blockQuoteRightInset: CGFloat = 0.0
+     let blockQuoteIconInset: CGFloat = 12.0
+     
+     struct StringSegment {
+         let substring: NSAttributedString
+         let firstCharacterOffset: Int
+         let isBlockQuote: Bool
+         let tintColor: NSColor?
+     }
+     var stringSegments: [StringSegment] = []
+     
+     let rawWholeString = attributedString.string as NSString
+     let wholeStringLength = rawWholeString.length
+     
+     var segmentCharacterOffset = 0
+     while true {
+         var found = false
+         attributedString.enumerateAttribute(NSAttributedString.Key("Attribute__Blockquote"), in: NSRange(location: segmentCharacterOffset, length: wholeStringLength - segmentCharacterOffset), using: { value, effectiveRange, _ in
+             found = true
+             if segmentCharacterOffset != effectiveRange.location {
+                 stringSegments.append(StringSegment(
+                     substring: attributedString.attributedSubstring(from: NSRange(
+                         location: segmentCharacterOffset,
+                         length: effectiveRange.location - segmentCharacterOffset
+                     )),
+                     firstCharacterOffset: segmentCharacterOffset,
+                     isBlockQuote: false,
+                     tintColor: nil
+                 ))
+             }
+             
+             if let value = value as? TextViewBlockQuoteData {
+                 if effectiveRange.length != 0 {
+                     stringSegments.append(StringSegment(
+                         substring: attributedString.attributedSubstring(from: effectiveRange),
+                         firstCharacterOffset: effectiveRange.location,
+                         isBlockQuote: true,
+                         tintColor: value.color
+                     ))
+                 }
+             } else {
+                 stringSegments.append(StringSegment(
+                     substring: attributedString.attributedSubstring(from: effectiveRange),
+                     firstCharacterOffset: effectiveRange.location,
+                     isBlockQuote: false,
+                     tintColor: nil
+                 ))
+             }
+             
+             segmentCharacterOffset = effectiveRange.location + effectiveRange.length
+         })
+         if !found {
+             if segmentCharacterOffset != wholeStringLength {
+                 stringSegments.append(StringSegment(
+                     substring: attributedString.attributedSubstring(from: NSRange(
+                         location: segmentCharacterOffset,
+                         length: wholeStringLength - segmentCharacterOffset
+                     )),
+                     firstCharacterOffset: segmentCharacterOffset,
+                     isBlockQuote: false,
+                     tintColor: nil
+                 ))
+             }
+             
+             break
+         }
+     }
+     
+     struct CalculatedSegment {
+         var lines: [TextViewLine] = []
+         var tintColor: NSColor?
+         var isBlockQuote: Bool = false
+         var additionalWidth: CGFloat = 0.0
+     }
+     
+     
+     var calculatedSegments: [CalculatedSegment] = []
+         
+     for segment in stringSegments {
+         var calculatedSegment = CalculatedSegment()
+         calculatedSegment.isBlockQuote = segment.isBlockQuote
+         calculatedSegment.tintColor = segment.tintColor
+         
+         let rawSubstring = segment.substring.string as NSString
+         let substringLength = rawSubstring.length
+         let typesetter = CTTypesetterCreateWithAttributedString(segment.substring as CFAttributedString)
+         
+         var currentLineStartIndex = 0
+         
+         var constrainedSegmentWidth = constrainedWidth
+         var additionalOffsetX: CGFloat = 0.0
+         if segment.isBlockQuote {
+             constrainedSegmentWidth -= blockQuoteLeftInset + blockQuoteRightInset
+             additionalOffsetX += blockQuoteLeftInset
+             calculatedSegment.additionalWidth += blockQuoteLeftInset + blockQuoteRightInset
+         }
+         
+         var additionalSegmentRightInset = blockQuoteIconInset
+                     
+         while true {
+             let lineCharacterCount = CTTypesetterSuggestLineBreak(typesetter, currentLineStartIndex, constrainedSegmentWidth + additionalSegmentRightInset)
+             
+             if lineCharacterCount != 0 {
+                 let line = CTTypesetterCreateLine(typesetter, CFRange(location: currentLineStartIndex, length: lineCharacterCount))
+                 var lineAscent: CGFloat = 0.0
+                 var lineDescent: CGFloat = 0.0
+                 let lineWidth = CTLineGetTypographicBounds(line, &lineAscent, &lineDescent, nil)
+                 
+                 var isRTL = false
+                 let glyphRuns = CTLineGetGlyphRuns(line) as NSArray
+                 if glyphRuns.count != 0 {
+                     let run = glyphRuns[0] as! CTRun
+                     if CTRunGetStatus(run).contains(CTRunStatus.rightToLeft) {
+                         isRTL = true
+                     }
+                 }
+                 var penFlush = self.penFlush
+                 if penFlush == 0 {
+                     if isRTL {
+                         penFlush = 1
+                     }
+                 } else if isRTL, penFlush == 1 {
+                     penFlush = 0
+                 }
+                 
+                 calculatedSegment.lines.append(TextViewLine(
+                     line: line,
+                     frame: CGRect(origin: CGPoint(x: additionalOffsetX, y: 0.0), size: CGSize(width: lineWidth + additionalSegmentRightInset, height: lineAscent + lineDescent)),
+                     range: NSRange(location: segment.firstCharacterOffset + currentLineStartIndex, length: lineCharacterCount),
+                     lineRange: NSMakeRange(currentLineStartIndex, lineCharacterCount),
+                     penFlush: penFlush,
+                     isRTL: isRTL,
+                     strikethrough: [],
+                     embeddedItems: []
+                 ))
+             }
+             
+             additionalSegmentRightInset = 0.0
+             
+             currentLineStartIndex += lineCharacterCount
+             
+             if currentLineStartIndex >= substringLength {
+                 break
+             }
+         }
+         
+         calculatedSegments.append(calculatedSegment)
+     }
+             
+     var size = CGSize()
+     let isTruncated = false
+     
+     for segment in calculatedSegments {
+
+         for line in segment.lines {
+             size.width = max(size.width, line.frame.origin.x + line.frame.width + segment.additionalWidth)
+         }
+     }
+     
+     var lines: [TextViewLine] = []
+     var blockQuotes: [TextViewBlockQuote] = []
+     for i in 0 ..< calculatedSegments.count {
+         let segment = calculatedSegments[i]
+         if i != 0 {
+             if segment.isBlockQuote {
+                 size.height += 6.0
+             }
+         } else {
+             if segment.isBlockQuote {
+                 size.height += 5.0
+             }
+         }
+         
+         let blockMinY = size.height - insets.height
+         var blockWidth: CGFloat = 0.0
+         
+         
+         for line in segment.lines {
+             line.frame = CGRect(origin: CGPoint(x: line.frame.origin.x, y: size.height + line.frame.size.height), size: line.frame.size)
+             line.frame.size.width += max(0.0, segment.additionalWidth - 2.0)
+             size.height += line.frame.height
+             blockWidth = max(blockWidth, line.frame.origin.x + line.frame.width)
+             
+             lines.append(line)
+         }
+         
+         let blockMaxY = size.height
+         
+         if i != calculatedSegments.count - 1 {
+             if segment.isBlockQuote {
+                 size.height += 8.0
+             }
+         } else {
+             if segment.isBlockQuote {
+                 size.height += 6.0
+             }
+         }
+         
+         if segment.isBlockQuote, let tintColor = segment.tintColor {
+             blockQuotes.append(TextViewBlockQuote(frame: CGRect(origin: CGPoint(x: 0.0, y: blockMinY), size: CGSize(width: size.width, height: blockMaxY - (blockMinY) + 8.0)), tintColor: tintColor))
+         }
+     }
+
+     self.lines = lines
+     self.blockQuotes = blockQuotes
+     let rawTextSize = size
+//        size.width += insets.left + insets.right
+     size.height += 4.0
+     self.layoutSize = size
+
+ }
+
  */

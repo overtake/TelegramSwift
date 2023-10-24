@@ -550,6 +550,8 @@ final class InlineStickerItemLayer : SimpleLayer {
     
     private var isPreviousPreview: Bool = false
     
+    var noDelayBeforeplay = false
+    
     private var contextToken: (Int, MultiTargetContextCache.Key)?
     private func set(_ animation: LottieAnimation?, force: Bool = false) {
         self.animation = animation
@@ -557,7 +559,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             weak var layer: InlineStickerItemLayer? = self
             let key: MultiTargetContextCache.Key = .init(key: animation.key, unique: unique)
             
-            delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) || force ? 0 : 0.1).start(completed: { [weak self] in
+            delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) || force || noDelayBeforeplay ? 0 : 0.1).start(completed: { [weak self] in
 
                 self?.contextToken = (MultiTargetContextCache.create(animation, key: key, displayFrame: { image in
                     layer?.contents = image

@@ -32,7 +32,7 @@ private func generateBoostReason(_ text: String, color: NSColor = theme.colors.a
     })!
 }
 private let light = NSImage(named: "Icon_Booster_Multiplier")!.precomposed(.white, flipVertical: true)
-private func generateBoostMultiply(_ text: String, color: NSColor = premiumGradient[0]) -> CGImage {
+private func generateBoostMultiply(_ text: String, color: NSColor = premiumGradient[1]) -> CGImage {
     let attr = NSMutableAttributedString()
     
     _ = attr.append(string: text, color: .white, font: .avatar(.small))
@@ -70,8 +70,27 @@ private final class BoosterRowItem : GeneralRowItem {
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, boost: ChannelBoostersContext.State.Boost, viewType: GeneralViewType, action: @escaping()->Void) {
         self.context = context
         self.boost = boost
-        self.name = .init(.initialize(string: boost.peer?._asPeer().displayTitle, color: theme.colors.text, font: .medium(.text)))
-        self.status = .init(.initialize(string: strings().statsBoostsExpiresOn(stringForFullDate(timestamp: boost.expires)), color: theme.colors.grayText, font: .normal(.text)))
+        
+        let nameString: String
+        var expiresString: String = strings().statsBoostsExpiresOn(stringForFullDate(timestamp: boost.expires))
+        if let peer = boost.peer {
+            nameString = peer._asPeer().displayTitle
+        } else {
+            if boost.flags.contains(.isUnclaimed) {
+                nameString = strings().channelBoostBoosterUnclaimed
+            } else if boost.flags.contains(.isGiveaway) {
+                nameString = strings().channelBoostBoosterToBeDistributed
+            } else {
+                nameString = "Unknown"
+            }
+            let durationMonths = Int32(round(Float(boost.expires - boost.date) / (86400.0 * 30.0)))
+            let durationString = strings().channelBoostBoosterDuration(Int(durationMonths))
+
+            expiresString = "\(durationString) • \(stringForFullDate(timestamp: boost.expires))"
+        }
+       
+        self.name = .init(.initialize(string: nameString, color: theme.colors.text, font: .medium(.text)))
+        self.status = .init(.initialize(string: expiresString, color: theme.colors.grayText, font: .normal(.text)))
         
         var label: String?
         if boost.flags.contains(.isGiveaway) {
@@ -507,8 +526,8 @@ private struct State : Equatable {
     }
 }
 
-private func _id_peer(_ id: PeerId, _ index: Int) -> InputDataIdentifier {
-    return .init("_id_peer_\(id.toInt64())_\(index)")
+private func _id_boost(_ id: String) -> InputDataIdentifier {
+    return .init("_id_peer_\(id)")
 }
 private func _id_prepaid(_ subject: PrepaidGiveaway) ->InputDataIdentifier {
     return .init("_id_prepaid_\(subject.id)")
@@ -604,7 +623,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().statsBoostsBoostersCountable(Int(boosters.count))), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
             index += 1
 
-            let boosts = boosters.boosts.filter { $0.peer != nil }
+            let boosts = boosters.boosts
             
             if !boosts.isEmpty {
                 
@@ -621,27 +640,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }
                     items.append(.init(booster: booster, viewType: viewType))
                 }
-                
-                
-                var indexes: [PeerId : Int] = [:]
-                
+                                
                 for item in items {
-                    let peerId = item.booster.peer!._asPeer().id
-                    let peer = item.booster.peer!._asPeer()
-                    let peerIndex = indexes[peerId] ?? 0
-                    let stableId = _id_peer(peerId, peerIndex)
+                    let stableId = _id_boost(item.booster.id)
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: stableId, equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
                         return BoosterRowItem(initialSize, stableId: stableId, context: arguments.context, boost: item.booster, viewType: item.viewType, action: {
-                            arguments.openPeerInfo(peerId)
-
+                            if let peerId = item.booster.peer?.id {
+                                arguments.openPeerInfo(peerId)
+                            }
                         })
-//                        return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, status: strings().statsBoostsExpiresOn(stringForFullDate(timestamp: item.booster.expires)), inset: NSEdgeInsets(left: 20, right: 20), viewType: item.viewType, action: {
-//                            arguments.openPeerInfo(peerId)
-//                        })
                     }))
-                    indexes[peerId] = peerIndex + 1
                 }
-                
                 
                 if boosters.canLoadMore && boosters.count > boosters.count {
                     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_load_more, data: .init(name: strings().statsBoostsShowMore, color: theme.colors.accent, viewType: .lastItem, action: arguments.showMore)))

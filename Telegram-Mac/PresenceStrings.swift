@@ -235,7 +235,9 @@ func stringForShortTimestamp(hours: Int32, minutes: Int32) -> String {
     }
 }
 
-
+func stringForDuration(_ duration: Int32) -> String {
+    return String.durationTransformed(elapsed: Int(duration))
+}
 
 func stringForFullDate(timestamp: Int32) -> String {
     var t: time_t = Int(timestamp)

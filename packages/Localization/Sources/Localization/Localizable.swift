@@ -581,6 +581,58 @@ public final class L10n {
   public static var blockContactOptionsTitle: String  { return L10n.tr("Localizable", "BlockContact.Options.Title") }
   /// Blocked users can't send you messages or add you to groups. They will not see your profile pictures, online and last seen status.
   public static var blockedPeersEmptyDescrpition: String  { return L10n.tr("Localizable", "BlockedPeers.EmptyDescrpition") }
+  /// Boost your channel by gifting your subscribers Telegram Premium. [Get boosts]()
+  public static var boostGetBoosts: String  { return L10n.tr("Localizable", "Boost.GetBoosts") }
+  /// To boost **%@**, get more boosts by gifting **Telegram Premium** to a friend.
+  public static func boostGiftToGetMoreInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Boost.GiftToGetMore.Info", p1)
+  }
+  /// More Boosts Needed
+  public static var boostGiftToGetMoreTitle: String  { return L10n.tr("Localizable", "Boost.GiftToGetMore.Title") }
+  /// To boost **%1$@**, reassign a previous boost or gift **Telegram Premium** to a friend to get **%2$@** additional boosts
+  public static func boostReassignInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Info", p1, p2)
+  }
+  /// Reassign Boosts
+  public static var boostReassignOK: String  { return L10n.tr("Localizable", "BoostReassign.OK") }
+  /// %d %d
+  public static func boostReassignSuccessCountable(_ p1: Int, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Success_countable", p1, p2)
+  }
+  /// %d boosts are reassigned from %d other channel.
+  public static func boostReassignSuccessFew(_ p1: Int, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Success_few", p1, p2)
+  }
+  /// %d boosts are reassigned from %d other channel.
+  public static func boostReassignSuccessMany(_ p1: Int, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Success_many", p1, p2)
+  }
+  /// %d boosts are reassigned from %d other channel.
+  public static func boostReassignSuccessOne(_ p1: Int, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Success_one", p1, p2)
+  }
+  /// %d boosts are reassigned from %d other channel.
+  public static func boostReassignSuccessOther(_ p1: Int, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Success_other", p1, p2)
+  }
+  /// %d boosts are reassigned from %d other channel.
+  public static func boostReassignSuccessTwo(_ p1: Int, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Success_two", p1, p2)
+  }
+  /// %d boosts are reassigned from %d other channel.
+  public static func boostReassignSuccessZero(_ p1: Int, _ p2: Int) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Success_zero", p1, p2)
+  }
+  /// Reassign Boosts
+  public static var boostReassignTitle: String  { return L10n.tr("Localizable", "BoostReassign.Title") }
+  /// Available in %@
+  public static func boostReassignStatusAvailableIn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Status.AvailableIn", p1)
+  }
+  /// Boost expires on %@
+  public static func boostReassignStatusExpiresOn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "BoostReassign.Status.ExpiresOn", p1)
+  }
   /// Open Link
   public static var botInlineAuthHeader: String  { return L10n.tr("Localizable", "Bot.InlineAuth.Header") }
   /// Open
@@ -1803,6 +1855,14 @@ public final class L10n {
   }
   /// You Boosted The Channel
   public static var channelBoostYouBoostedOtherChannel: String  { return L10n.tr("Localizable", "ChannelBoost.YouBoostedOtherChannel") }
+  /// %dm
+  public static func channelBoostBoosterDuration(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChannelBoost.Booster.Duration", p1)
+  }
+  /// To Be Distributed
+  public static var channelBoostBoosterToBeDistributed: String  { return L10n.tr("Localizable", "ChannelBoost.Booster.ToBeDistributed") }
+  /// Unclaimed
+  public static var channelBoostBoosterUnclaimed: String  { return L10n.tr("Localizable", "ChannelBoost.Booster.Unclaimed") }
   /// You can change the channel you boost only once a day. Next time you can boost is in **%@**.
   public static func channelBoostErrorBoostTooOftenText(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChannelBoost.Error.BoostTooOftenText", p1)
@@ -4179,6 +4239,22 @@ public final class L10n {
   }
   /// Send first message to start this topic.
   public static var chatEmptyTopic: String  { return L10n.tr("Localizable", "ChatEmpty.Topic") }
+  /// You won a prize in a giveaway organized by **%1$@**.\n\nYour prize is a **Telegram Premium** subscription for **%2$@** months.
+  public static func chatGiftInfoFromGiveAway(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.FromGiveAway", p1, p2)
+  }
+  /// You've received a gift from **%1$@**.\n\nYour gift is a **Telegram Premium** subscription for **%2$@** months.
+  public static func chatGiftInfoNormal(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.Normal", p1, p2)
+  }
+  /// You have an unclaimed prize from a giveaway by **%1$@**.\n\nThis prize is a **Telegram Premium** subscription for **%2$@** months.
+  public static func chatGiftInfoUnclaimed(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "ChatGift.Info.Unclaimed", p1, p2)
+  }
+  /// **Congratulations!**
+  public static var chatGiftTitleClaimed: String  { return L10n.tr("Localizable", "ChatGift.Title.Claimed") }
+  /// **Unclaimed Prize**
+  public static var chatGiftTitleUnclaimed: String  { return L10n.tr("Localizable", "ChatGift.Title.Unclaimed") }
   /// Restart Topic
   public static var chatHeaderRestartTopic: String  { return L10n.tr("Localizable", "ChatHeader.RestartTopic") }
   /// Menu
@@ -6317,6 +6393,8 @@ public final class L10n {
   public static var gifsPaneReactions: String  { return L10n.tr("Localizable", "GifsPane.Reactions") }
   /// TRENDING GIFS
   public static var gifsPaneTrending: String  { return L10n.tr("Localizable", "GifsPane.Trending") }
+  /// No Recipient
+  public static var giftLinkNoRecipient: String  { return L10n.tr("Localizable", "GiftLink.NoRecipient") }
   /// Gift Link
   public static var giftLinkTitle: String  { return L10n.tr("Localizable", "GiftLink.Title") }
   /// Use Link
@@ -6349,10 +6427,12 @@ public final class L10n {
   public static var giftLinkRowReason: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason") }
   /// To
   public static var giftLinkRowTo: String  { return L10n.tr("Localizable", "GiftLink.Row.To") }
-  /// Gift
+  /// You were selected by the channel
   public static var giftLinkRowReasonGift: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Gift") }
   /// Giveaway
   public static var giftLinkRowReasonGiveaway: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Giveaway") }
+  /// Incomplete Giveaway
+  public static var giftLinkRowReasonGiveawayIncomplete: String  { return L10n.tr("Localizable", "GiftLink.Row.Reason.Giveaway.Incomplete") }
   /// Start Giveaway
   public static var giveawayStartGiveaway: String  { return L10n.tr("Localizable", "Giveaway.StartGiveaway") }
   /// Boosts via Gifts

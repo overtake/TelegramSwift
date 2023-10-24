@@ -804,8 +804,11 @@ final class StoryInputView : Control, StoryInput {
         self.arguments = arguments
         self.groupId = groupId
         
+        let isDashed = arguments?.context.myPeer?.nameColor?.isDashed == true
+        
+        let color = NSColor(rgb: 0xffffff)
         textView.context = arguments?.context
-        textView.inputTheme = .init(quote: .init(background: NSColor.white.withAlphaComponent(0.1), foreground: NSColor.white, icon: NSImage(named: "Icon_Quote")!), indicatorColor: darkAppearance.inputTheme.indicatorColor, backgroundColor: darkAppearance.inputTheme.backgroundColor, selectingColor: darkAppearance.inputTheme.selectingColor, textColor: darkAppearance.inputTheme.textColor, accentColor: darkAppearance.inputTheme.accentColor, grayTextColor: darkAppearance.inputTheme.grayTextColor, fontSize: darkAppearance.inputTheme.fontSize)
+        textView.inputTheme = .init(quote: .init(foreground: (color, isDashed ? color.withAlphaComponent(0.2) : nil), icon: NSImage(named: "Icon_Quote")!), indicatorColor: darkAppearance.inputTheme.indicatorColor, backgroundColor: darkAppearance.inputTheme.backgroundColor, selectingColor: darkAppearance.inputTheme.selectingColor, textColor: darkAppearance.inputTheme.textColor, accentColor: darkAppearance.inputTheme.accentColor, grayTextColor: darkAppearance.inputTheme.grayTextColor, fontSize: darkAppearance.inputTheme.fontSize)
         self.updateInputState()
         
         let input = arguments?.interaction.presentation.findInput(groupId)

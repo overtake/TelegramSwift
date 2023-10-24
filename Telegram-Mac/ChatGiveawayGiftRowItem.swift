@@ -24,11 +24,11 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         let fromGiveaway: Bool
         let boostPeerId: PeerId?
         let months: Int32
+        let unclaimed: Bool
     }
     
     let headerText: TextViewLayout
     let infoText: TextViewLayout
-    let winnerText: TextViewLayout
     
     let data: GiftData
     
@@ -53,48 +53,53 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         
         switch media.action {
         case let .giftCode(slug, fromGiveaway, isUnclaimed, boostPeerId, months):
-            self.data = .init(slug: slug, fromGiveaway: fromGiveaway, boostPeerId: boostPeerId, months: months)
+            self.data = .init(slug: slug, fromGiveaway: fromGiveaway, boostPeerId: boostPeerId, months: months, unclaimed: isUnclaimed)
         default:
             fatalError()
         }
         
-        let channelName: String?
+        let channelName: String
         let channelId: PeerId?
         if let peerId = self.data.boostPeerId, let peer = object.message?.peers[peerId] {
             channelName = peer.displayTitle
             channelId = peer.id
         } else {
-            channelName = nil
+            channelName = ""
             channelId = nil
         }
         
         //TODOLANG
         let header_attr = NSMutableAttributedString()
-        _ = header_attr.append(string: "**Congratulations**", color: wpPresentation.text, font: .normal(.text))
+        
+        let title: String
+        if data.unclaimed {
+            title = strings().chatGiftTitleUnclaimed
+        } else {
+            title = strings().chatGiftTitleClaimed
+        }
+
+        _ = header_attr.append(string: title, color: wpPresentation.text, font: .normal(.text))
         header_attr.detectBoldColorInString(with: .medium(.text))
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
         
         let info_attr = NSMutableAttributedString()
-        _ = info_attr.append(string: "You won a prize in a giveaway", color: wpPresentation.text, font: .normal(.text))
-        if let channelName = channelName, let peerId = channelId {
-            _ = info_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
-            info_attr.append(string: "organized by ", color: wpPresentation.text, font: .normal(.text))
-            let range = info_attr.append(string: "\(channelName)", color: wpPresentation.text, font: .medium(.text))
-            info_attr.addAttribute(.link, value: "https://t.me/c/\(peerId)", range: range)
-            info_attr.detectBoldColorInString(with: .medium(.text))
+        
+        let monthsValue = data.months
+        
+        let infoText: String
+        if data.unclaimed {
+            infoText = strings().chatGiftInfoUnclaimed(channelName, "\(monthsValue)")
+        } else if data.fromGiveaway {
+            infoText = strings().chatGiftInfoFromGiveAway(channelName, "\(monthsValue)")
+        } else {
+            infoText = strings().chatGiftInfoNormal(channelName, "\(monthsValue)")
         }
+
+        _ = info_attr.append(string: infoText, color: wpPresentation.text, font: .normal(.text))
+        info_attr.detectBoldColorInString(with: .medium(.text))
+        
         self.infoText = .init(info_attr, alignment: .center, alwaysStaticItems: true)
         
-        
-        
-        let winners_attr = NSMutableAttributedString()
-        _ = winners_attr.append(string: "Your prize is a **Telegram Premium**", color: wpPresentation.text, font: .normal(.text))
-        _ = winners_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
-        _ = winners_attr.append(string: "subscription for \(data.months) months", color: wpPresentation.text, font: .normal(.text))
-        winners_attr.detectBoldColorInString(with: .medium(.text))
-        self.winnerText = .init(winners_attr, alignment: .center, alwaysStaticItems: true)
-        
-        let under = theme.colors.underSelectedColor
 
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
         
@@ -127,13 +132,12 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         
-        
+        let width = min(width, 250)
         
         headerText.measure(width: width)
         infoText.measure(width: width)
-        winnerText.measure(width: width)
 
-        let w = max(headerText.layoutSize.width, infoText.layoutSize.width, winnerText.layoutSize.width)
+        let w = max(headerText.layoutSize.width, infoText.layoutSize.width)
         
         var height: CGFloat = 100
         height += headerText.layoutSize.height
@@ -141,8 +145,6 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         height += infoText.layoutSize.height
         height += 10
         
-        height += winnerText.layoutSize.height
-        height += 10
         
         height += 40
         
@@ -169,7 +171,6 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
     private let mediaView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 90, 90))
     private let headerTextView = TextView()
     private let infoTextView = TextView()
-    private let winnerTextView = TextView()
     
     private let container: View = View()
     
@@ -182,7 +183,6 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         container.addSubview(mediaView)
         container.addSubview(headerTextView)
         container.addSubview(infoTextView)
-        container.addSubview(winnerTextView)
         container.addSubview(action)
         
                 
@@ -191,8 +191,6 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         
         infoTextView.isSelectable = false
 
-        winnerTextView.userInteractionEnabled = false
-        winnerTextView.isSelectable = false
 
         action.set(handler: { [weak self] _ in
             if let item = self?.item as? ChatGiveawayGiftRowItem {
@@ -213,7 +211,6 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         
         headerTextView.update(item.headerText)
         infoTextView.update(item.infoText)
-        winnerTextView.update(item.winnerText)
         
         container.backgroundColor = theme.colors.background
         
@@ -244,8 +241,7 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         mediaView.centerX(y: 0)
         headerTextView.centerX(y: mediaView.frame.maxY + 10)
         infoTextView.centerX(y: headerTextView.frame.maxY + 10)
-        winnerTextView.centerX(y: infoTextView.frame.maxY + 10)
-        action.centerX(y: winnerTextView.frame.maxY + 10)
+        action.centerX(y: infoTextView.frame.maxY + 10)
     }
     
     override var backdorColor: NSColor {

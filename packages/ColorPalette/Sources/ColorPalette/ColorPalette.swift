@@ -11,24 +11,17 @@ import Colors
 
 public final class InputViewTheme: Equatable {
     public final class Quote: Equatable {
-        public let background: NSColor
-        public let foreground: NSColor
+        public let foreground: (NSColor, NSColor?)
         public let icon: NSImage
-        public init(
-            background: NSColor,
-            foreground: NSColor,
+        public init(foreground: (NSColor, NSColor?),
             icon: NSImage
         ) {
-            self.background = background
             self.foreground = foreground
             self.icon = icon
         }
         
         public static func ==(lhs: Quote, rhs: Quote) -> Bool {
-            if !lhs.background.isEqual(rhs.background) {
-                return false
-            }
-            if !lhs.foreground.isEqual(rhs.foreground) {
+            if !lhs.foreground.0.isEqual(rhs.foreground.0) {
                 return false
             }
             if lhs.icon != rhs.icon {
@@ -83,6 +76,11 @@ public final class InputViewTheme: Equatable {
             return false
         }
         return true
+    }
+    
+    public func withUpdatedQuote(_ isDashed: Bool) -> InputViewTheme {
+        let updated = isDashed ? (quote.foreground.0, quote.foreground.0.withAlphaComponent(0.2)) : quote.foreground
+        return .init(quote: .init(foreground: updated, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
     }
 }
 

@@ -48,7 +48,7 @@ func chatReplyLineDashTemplateImage(_ color: (NSColor, NSColor?), flipped: Bool)
     let radius: CGFloat = 3.0
     var offset: CGFloat = 5.0
     
-    var updated: (NSColor, NSColor?) = color
+    let updated: (NSColor, NSColor?) = color
     
 
  
@@ -59,13 +59,22 @@ func chatReplyLineDashTemplateImage(_ color: (NSColor, NSColor?), flipped: Bool)
         context.fill(size.bounds)
         
         if let color = updated.1 {
-            context.move(to: CGPoint(x: size.width, y: offset))
-            context.addLine(to: CGPoint(x: size.width, y: offset + radius * 3.0))
-            context.addLine(to: CGPoint(x: 0.0, y: offset + radius * 4.0))
-            context.addLine(to: CGPoint(x: 0.0, y: offset + radius))
+            
+            let path = CGMutablePath()
+            path.move(to: CGPoint(x: size.width, y: offset))
+            path.addLine(to: CGPoint(x: size.width, y: offset + radius * 3.0))
+            path.addLine(to: CGPoint(x: 0.0, y: offset + radius * 4.0))
+            path.addLine(to: CGPoint(x: 0.0, y: offset + radius))
+
+            
+            context.addPath(path)
             context.closePath()
+
+            context.setBlendMode(.clear)
+            context.fillPath()
             
-            
+            context.addPath(path)
+            context.setBlendMode(.normal)
             context.setFillColor(color.cgColor)
             context.fillPath()
         }
@@ -1935,7 +1944,7 @@ class TelegramPresentationTheme : PresentationTheme {
         if !Thread.isMainThread && generated {
             self._backgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize)
         }
-        super.init(colors: colors, search: search, inputTheme: .init(quote: .init(background: colors.accent.withAlphaComponent(0.1), foreground: colors.accent, icon: NSImage(named: "Icon_Quote")!), indicatorColor: colors.accent, backgroundColor: colors.background, selectingColor: colors.selectText, textColor: colors.text, accentColor: colors.accent, grayTextColor: colors.grayText, fontSize: fontSize))
+        super.init(colors: colors, search: search, inputTheme: .init(quote: .init(foreground: (colors.accent, nil), icon: NSImage(named: "Icon_Quote")!), indicatorColor: colors.accent, backgroundColor: colors.background, selectingColor: colors.selectText, textColor: colors.text, accentColor: colors.accent, grayTextColor: colors.grayText, fontSize: fontSize))
     }
     
     var dark: Bool {

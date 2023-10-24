@@ -144,12 +144,14 @@ private final class Arguments {
     let openChannel:()->Void
     let shareLink:(String)->Void
     let copyLink:(String)->Void
-    init(context: AccountContext, boost:@escaping()->Void, openChannel:@escaping()->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void) {
+    let openGiveaway:()->Void
+    init(context: AccountContext, boost:@escaping()->Void, openChannel:@escaping()->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, openGiveaway:@escaping()->Void) {
         self.context = context
         self.boost = boost
         self.copyLink = copyLink
         self.shareLink = shareLink
         self.openChannel = openChannel
+        self.openGiveaway = openGiveaway
     }
 }
 
@@ -163,12 +165,13 @@ extension ChannelBoostStatus {
 private struct State : Equatable {
     var peer: PeerEquatable
     var status: ChannelBoostStatus
-    
+    var myStatus: MyBoostStatus?
     var canApplyStatus: Bool {
         return true
     }
     
     var samePeer: Bool
+    var infoOnly: Bool
     var percentToNext: CGFloat {
         if let nextLevelBoosts = status.nextLevelBoosts {
             return CGFloat(status.boosts - status.currentLevelBoosts) / CGFloat(nextLevelBoosts - status.currentLevelBoosts)
@@ -177,7 +180,7 @@ private struct State : Equatable {
         }
     }
     var isAdmin: Bool {
-        return peer.peer.groupAccess.isCreator //&& self.boosted
+        return infoOnly && peer.peer.groupAccess.isCreator //&& self.boosted
     }
     var boosted: Bool {
         return status.boostedByMe
@@ -761,12 +764,8 @@ private final class AcceptRowView : TableRowView {
                 if state.isAdmin {
                     title = strings().modalCopyLink
                 } else {
-                    if state.boosted {
-                        title = strings().modalOK
-                    } else {
-                        title = strings().channelBoostBoostChannel
-                        gradient = true
-                    }
+                    title = strings().channelBoostBoostChannel
+                    gradient = true
                 }
             }
             set(background: theme.colors.accent, for: .Normal)
@@ -862,6 +861,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }))
         index += 1
         
+        entries.append(.sectionId(sectionId, type: .customModern(10)))
+        sectionId += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().boostGetBoosts, linkHandler: { _ in
+            arguments.openGiveaway()
+        }), data: .init(color: theme.colors.text, viewType: .textBottomItem, fontSize: 13, centerViewAlignment: true, alignment: .center)))
+        
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     } else {
@@ -875,32 +881,88 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus) -> InputDataModalController {
+func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: ChannelBoostStatus, myStatus: MyBoostStatus?, infoOnly: Bool = false) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
+    
+    let updateDisposable = MetaDisposable()
+    
+    actionsDisposable.add(updateDisposable)
 
-    let initialState = State(peer: .init(peer), status: boosts, samePeer: context.globalLocationId == .peer(peer.id))
+    let initialState = State(peer: .init(peer), status: boosts, myStatus: myStatus, samePeer: context.globalLocationId == .peer(peer.id), infoOnly: infoOnly)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    let peerId = peer.id
 
     var close:(()->Void)? = nil
     
     let arguments = Arguments(context: context, boost: {
         
-        let commit:()->Void = {
-            _ = context.engine.peers.applyChannelBoost(peerId: peer.id, slots: []).start()
-            updateState { current in
-                var current = current
-                current.status = current.status.increment()
-                return current
+        let myStatus = stateValue.with { $0.myStatus }
+        let nextLevelBoosts = stateValue.with { $0.status.nextLevelBoosts }
+        
+        var myBoostCount: Int32 = 0
+        var availableBoosts: [MyBoostStatus.Boost] = []
+        var occupiedBoosts: [MyBoostStatus.Boost] = []
+        if let myStatus = myStatus {
+            for boost in myStatus.boosts {
+                if let boostPeer = boost.peer {
+                    if boostPeer.id == peer.id {
+                        myBoostCount += 1
+                    } else {
+                        occupiedBoosts.append(boost)
+                    }
+                } else {
+                    availableBoosts.append(boost)
+                }
             }
-            PlayConfetti(for: context.window)
         }
-//        
+
+        
+        if let _ = nextLevelBoosts {
+            if let availableBoost = availableBoosts.first {
+                let _ = context.engine.peers.applyChannelBoost(peerId: peerId, slots: [availableBoost.slot]).startStandalone()
+                updateState { current in
+                    var current = current
+                    current.status = current.status.increment()
+                    return current
+                }
+                availableBoosts.removeFirst()
+                updateDisposable.set(nil)
+                delay(2.0, closure: {
+                    updateDisposable.set(context.engine.peers.getChannelBoostStatus(peerId: peerId).startStandalone(next: { status in
+                        updateState { current in
+                            var current = current
+                            if let status = status {
+                                current.status = status
+                            }
+                            return current
+                        }
+                    }))
+                })
+                
+                PlayConfetti(for: context.window)
+            } else if !occupiedBoosts.isEmpty, let _ = myStatus {
+                showModal(with: BoostReassignController(context: context, peer: peer, boosts: occupiedBoosts), for: context.window)
+                close?()
+            } else {
+                if context.isPremium {
+                    alert(for: context.window, header: strings().boostGiftToGetMoreTitle, info: strings().boostGiftToGetMoreInfo(peer.displayTitle))
+                } else {
+                    showModal(with: PremiumBoardingController(context: context, source: .channel_boost(peerId)), for: context.window)
+                }
+            }
+        } else {
+            close?()
+        }
+
+
+//
 //        switch canApplyStatus {
 //        case .ok:
 //            commit()
@@ -962,6 +1024,8 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
     }, copyLink: { link in
         showModalText(for: context.window, text: strings().shareLinkCopied)
         copyToClipboard(link)
+    }, openGiveaway: {
+        showModal(with: GiveawayModalController(context: context, peerId: peer.id, prepaid: nil), for: context.window)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

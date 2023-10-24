@@ -273,7 +273,7 @@ class ChatInputView: View, Notifable {
         accessory.update(with: chatInteraction.presentation, context: chatInteraction.context, animated: false)
         accessory.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
-        textView.updateLocalizationAndTheme(theme: theme)
+        textView.inputTheme = theme.inputTheme.withUpdatedQuote(chatInteraction.context.myPeer?.nameColor?.isDashed == true)
     }
     
     func notify(with value: Any, oldValue:Any, animated:Bool) {

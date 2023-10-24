@@ -1126,8 +1126,101 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     }
 }
 
+private let quoteIcon: CGImage = {
+    return NSImage(named: "Icon_Quote")!.precomposed(flipVertical: false)
+}()
+
 private final class QuoteBackgroundView: View {
-    private let lineLayer: SimpleLayer
+    
+    private final class Background : View {
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+        }
+        
+        var color:(NSColor, NSColor?) = (NSColor.accent, nil) {
+            didSet {
+                needsDisplay = true
+            }
+        }
+        
+        
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+        
+        
+        override func draw(_ layer: CALayer, in ctx: CGContext) {
+            
+            let radius: CGFloat = 3.0
+            let lineWidth: CGFloat = 3.0
+            
+            let blockFrame = self.bounds
+            let tintColor = color.0
+            let secondaryTintColor = color.1
+            
+            
+            
+            ctx.setFillColor(tintColor.withAlphaComponent(0.1).cgColor)
+            ctx.addPath(CGPath(roundedRect: blockFrame, cornerWidth: radius, cornerHeight: radius, transform: nil))
+            ctx.fillPath()
+            
+            ctx.setFillColor(tintColor.cgColor)
+                        
+            let lineFrame = CGRect(origin: CGPoint(x: blockFrame.minX, y: blockFrame.minY), size: CGSize(width: lineWidth, height: blockFrame.height))
+            ctx.move(to: CGPoint(x: lineFrame.minX, y: lineFrame.minY + radius))
+            ctx.addArc(tangent1End: CGPoint(x: lineFrame.minX, y: lineFrame.minY), tangent2End: CGPoint(x: lineFrame.minX + radius, y: lineFrame.minY), radius: radius)
+            ctx.addLine(to: CGPoint(x: lineFrame.minX + radius, y: lineFrame.maxY))
+            ctx.addArc(tangent1End: CGPoint(x: lineFrame.minX, y: lineFrame.maxY), tangent2End: CGPoint(x: lineFrame.minX, y: lineFrame.maxY - radius), radius: radius)
+            ctx.closePath()
+            ctx.clip()
+            
+            if let secondaryTintColor = secondaryTintColor {
+                let isMonochrome = secondaryTintColor.alpha == 0.2
+                
+                do {
+                    ctx.saveGState()
+                
+                    if isMonochrome {
+                        ctx.setFillColor(tintColor.withMultipliedAlpha(0.2).cgColor)
+                        ctx.fill(lineFrame)
+                        ctx.setFillColor(tintColor.cgColor)
+                    } else {
+                        ctx.setFillColor(tintColor.cgColor)
+                        ctx.fill(lineFrame)
+                        ctx.setFillColor(secondaryTintColor.cgColor)
+                    }
+                    
+                    let dashOffset: CGFloat = isMonochrome ? -4.0 : 5.0
+                    ctx.translateBy(x: blockFrame.minX, y: blockFrame.minY + dashOffset)
+                    
+                    var offset = 0.0
+                    while offset < blockFrame.height {
+                        ctx.move(to: CGPoint(x: 0.0, y: 3.0))
+                        ctx.addLine(to: CGPoint(x: lineWidth, y: 0.0))
+                        ctx.addLine(to: CGPoint(x: lineWidth, y: 9.0))
+                        ctx.addLine(to: CGPoint(x: 0.0, y: 9.0 + 3.0))
+                        ctx.closePath()
+                        ctx.fillPath()
+                        
+                        ctx.translateBy(x: 0.0, y: 18.0)
+                        offset += 18.0
+                    }
+                    
+                    ctx.restoreGState()
+                }
+            } else {
+                ctx.setFillColor(tintColor.cgColor)
+                ctx.fill(lineFrame)
+            }
+            
+            ctx.resetClip()
+        }
+    }
+    
+//    private let lineLayer: SimpleLayer
     private let iconView: ImageView
     
     private var theme: InputViewTheme.Quote?
@@ -1135,17 +1228,20 @@ private final class QuoteBackgroundView: View {
     var destination: InputViewSubviewDestination  {
         return .below
     }
+    private let backgroundView = Background(frame: .zero)
     
     required init(frame: CGRect) {
-        self.lineLayer = SimpleLayer()
+//        self.lineLayer = SimpleLayer()
         self.iconView = ImageView()
         
         super.init(frame: frame)
         
-        self.layer?.addSublayer(self.lineLayer)
+        addSubview(backgroundView)
+        
+//        self.layer?.addSublayer(self.lineLayer)
         self.addSubview(self.iconView)
         
-        self.layer?.cornerRadius = 3.0
+        self.layer?.cornerRadius = 4.0
         self.clipsToBounds = true
     }
     
@@ -1157,14 +1253,21 @@ private final class QuoteBackgroundView: View {
         if self.theme != theme {
             self.theme = theme
             
-            self.backgroundColor = theme.background
-            self.lineLayer.backgroundColor = theme.foreground.cgColor
-            self.iconView.image = theme.icon.precomposed(theme.foreground)
+          //  self.backgroundColor = theme.background
+            
+            backgroundView.color = theme.foreground
+            
+//            self.lineLayer.backgroundColor = theme.foreground.cgColor
+            self.iconView.image = theme.icon.precomposed(theme.foreground.0)
             self.iconView.sizeToFit()
         }
+        
+        
             
-        self.lineLayer.frame = CGRect(origin: CGPoint(x: 0.0, y: 00), size: CGSize(width: 3.0, height: size.height))
+//        self.lineLayer.frame = CGRect(origin: CGPoint(x: 0.0, y: 0), size: CGSize(width: 3.0, height: size.height))
         self.iconView.frame = CGRect(origin: CGPoint(x: size.width - 4.0 - self.iconView.frame.width, y: 4.0), size: self.iconView.frame.size)
+        
+        backgroundView.frame = size.bounds
     }
     
 }

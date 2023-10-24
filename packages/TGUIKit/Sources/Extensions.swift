@@ -434,6 +434,20 @@ public extension NSMutableAttributedString {
 
 public extension CALayer {
     
+    var layerTintColor: CGColor? {
+        get {
+            if let value = self.value(forKey: "contentsMultiplyColor"), CFGetTypeID(value as CFTypeRef) == CGColor.typeID {
+                let result = value as! CGColor
+                return result
+            } else {
+                return nil
+            }
+        } set(value) {
+            self.setValue(value, forKey: "contentsMultiplyColor")
+        }
+    }
+
+    
     func disableActions() -> Void {
         
         self.actions = ["onOrderIn":NSNull(),"sublayers":NSNull(),"bounds":NSNull(),"frame":NSNull(), "background":NSNull(), "position":NSNull(),"contents":NSNull(),"backgroundColor":NSNull(),"border":NSNull(), "shadowOffset": NSNull()]

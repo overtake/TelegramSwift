@@ -230,7 +230,7 @@ private final class PreviewRowView : GeneralContainableRowView {
 
 
 private func generateRingImage(nameColor: PeerNameColor) -> CGImage? {
-    return generateImage(CGSize(width: 40.0, height: 40.0), rotatedContext: { size, context in
+    return generateImage(CGSize(width: 35, height: 35), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
         
@@ -241,7 +241,7 @@ private func generateRingImage(nameColor: PeerNameColor) -> CGImage? {
 }
 
 private func generateFillImage(nameColor: PeerNameColor) -> CGImage? {
-    return generateImage(CGSize(width: 40.0, height: 40.0), rotatedContext: { size, context in
+    return generateImage(CGSize(width: 35, height: 35), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
         
@@ -329,7 +329,7 @@ private class PeerNameColorIconItem: TableRowItem {
         return 55
     }
     override var width: CGFloat {
-        return 40
+        return 55
     }
     
     override func viewClass() -> AnyClass {
@@ -337,17 +337,17 @@ private class PeerNameColorIconItem: TableRowItem {
     }
 }
 
-private final class PeerNameColorIconView : TableRowView {
+private final class PeerNameColorIconView : HorizontalRowView {
     
     private let fillView: SimpleLayer = SimpleLayer()
     private let ringView: SimpleLayer = SimpleLayer()
     private let control = Control()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        self.layer?.addSublayer(ringView)
-        self.layer?.addSublayer(fillView)
+        self.container.layer?.addSublayer(ringView)
+        self.container.layer?.addSublayer(fillView)
         addSubview(control)
-        let bounds = CGRect(origin: CGPoint(x: 0, y: 10), size: CGSize(width: 40.0, height: 40.0))
+        let bounds = CGRect(origin: CGPoint(x: 15, y: 17.5), size: CGSize(width: 35, height: 35))
         
         fillView.frame = bounds
         ringView.frame = bounds
@@ -414,7 +414,7 @@ private final class PeerNamesRowItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 50
+        return 55
     }
     
     override func viewClass() -> AnyClass {
@@ -689,9 +689,19 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
 
     controller.validateData = { _ in
         if case let .channel(peer) = source {
-            _ = context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: stateValue.with { $0.selected }, backgroundEmojiId: stateValue.with { $0.backgroundEmojiId }).start()
-           // execute(inapp: .boost(link: "", username: peer.addressName == nil ? "_private_\(peer.id.id._internalGetInt64Value())" : "\(peer.addressName!)", context: context))
-            close?()
+            
+            let signal = showModalProgress(signal: combineLatest(context.engine.peers.getChannelBoostStatus(peerId: peerId), context.engine.peers.getMyBoostStatus()), for: context.window)
+            
+            _ = signal.start(next: { stats, myStatus in
+                if let stats = stats {
+                    if stats.level == 0 {
+                        showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true), for: context.window)
+                    } else {
+                        _ = context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: stateValue.with { $0.selected }, backgroundEmojiId: stateValue.with { $0.backgroundEmojiId }).start()
+                        close?()
+                    }
+                }
+            })
         } else {
             if context.isPremium {
                 _ = context.engine.accountData.updateNameColorAndEmoji(nameColor: stateValue.with { $0.selected }, backgroundEmojiId: stateValue.with { $0.backgroundEmojiId }).start()

@@ -371,7 +371,7 @@ final class TelegramChatColors {
         }
         let color = bubbled ? isIncoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
         
-        return (color, isDashed ? color.withAlphaComponent(0.3) : nil)
+        return (color, isDashed ? color.withAlphaComponent(0.2) : nil)
     }
     func pollOptionBorder(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return (bubbled ? incoming ?  grayText(incoming, bubbled) : grayText(incoming, bubbled) : palette.grayText).withAlphaComponent(0.2)
@@ -533,7 +533,28 @@ final class TelegramChatColors {
         }
         let color = item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTitleBubble_incoming : item.presentation.colors.chatReplyTitleBubble_outgoing) : item.presentation.colors.chatReplyTitle
         
-        return (color, isDashed ? color.withAlphaComponent(0.3) : nil)
+        return (color, isDashed ? color.withAlphaComponent(0.2) : nil)
+    }
+    
+    func quoteColor(_ message: Message, isIncoming: Bool, bubbled: Bool) -> (NSColor, NSColor?) {
+        var isDashed: Bool = false
+        if let author = message.author {
+            isDashed = author.nameColor?.isDashed == true
+            if let nameColor = author.nameColor, isIncoming {
+                return nameColor.dashColors
+            }
+        }
+        let color = bubbled ? (isIncoming ? self.palette.chatReplyTitleBubble_incoming : self.palette.chatReplyTitleBubble_outgoing) : self.palette.chatReplyTitle
+        
+        return (color, isDashed ? color.withAlphaComponent(0.2) : nil)
+    }
+    
+    
+    func replyPattern(_ item: ChatRowItem) -> Int64? {
+        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
+            return author.backgroundEmojiId
+        }
+        return nil
     }
     
     func replyQuote(_ item: ChatRowItem) -> CGImage {
