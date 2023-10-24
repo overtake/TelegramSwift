@@ -26,7 +26,7 @@ class WPMediaLayout: WPLayout {
             self.media = file.withUpdatedPreviewRepresentations(representations)
         }
         if let media = media as? TelegramMediaFile {
-            self.parameters = ChatMediaGalleryParameters.layout(for: media, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(theme: theme), automaticDownload: downloadSettings.isDownloable(parent), isIncoming: parent.isIncoming(context.account, presentation.renderType == .bubble), isFile: true, autoplayMedia: autoplayMedia, isChatRelated: true, isCopyProtected: mayCopyText, isRevealed: false)
+            self.parameters = ChatMediaGalleryParameters.layout(for: media, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(theme: theme), automaticDownload: downloadSettings.isDownloable(parent), isIncoming: parent.isIncoming(context.account, presentation.renderType == .bubble), autoplayMedia: autoplayMedia, isChatRelated: true, isCopyProtected: mayCopyText, isRevealed: false)
 
         } else {
             self.parameters = ChatMediaGalleryParameters(isWebpage: true, media: self.media, automaticDownload: downloadSettings.isDownloable(parent))
@@ -49,7 +49,7 @@ class WPMediaLayout: WPLayout {
     override func measure(width: CGFloat) {
         super.measure(width: width)
         
-        var contentSize = ChatLayoutUtils.contentSize(for: media, with: width - insets.left, hasText: textLayout != nil && theme.bubbled)
+        var contentSize = ChatLayoutUtils.contentSize(for: media, with: width, hasText: textLayout != nil && theme.bubbled)
         
         
         self.mediaSize = contentSize
@@ -68,7 +68,7 @@ class WPMediaLayout: WPLayout {
             parameters.name = TextNode.layoutText(maybeNode: parameters.nameNode, NSAttributedString.initialize(string: parameters.fileName , color: theme.colors.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width - (parameters.hasThumb ? 80 : 50), 20), nil,false, .left)
         }
         
-        parameters?.makeLabelsForWidth(contentSize.width - 50)
+        parameters?.makeLabelsForWidth(contentSize.width)
         
 
         

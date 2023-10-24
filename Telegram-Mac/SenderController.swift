@@ -223,10 +223,10 @@ class Sender: NSObject {
             if let sendAsPeerId = sendAsPeerId {
                 attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
             }
+            attributes.append(WebpagePreviewMessageAttribute(leadingPreview: !linkBelowMessage, forceLargeMedia: largeMedia, isManuallyAdded: false, isSafe: true))
+
             
-            if linkBelowMessage {
-                attributes.append(WebpagePreviewMessageAttribute(leadingPreview: linkBelowMessage, forceLargeMedia: largeMedia, isManuallyAdded: false, isSafe: true))
-            }
+           
             if !subState.inputText.isEmpty || mediaReference != nil {
                 return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, replyToMessageId: replyId, replyToStoryId: replyStoryId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: dynamicEmojiOrder ? subState.upstairCollections : [])
             } else {
