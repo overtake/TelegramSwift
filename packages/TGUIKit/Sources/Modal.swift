@@ -519,7 +519,7 @@ private class ModalContainerView: View {
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: container, frame: size.bounds.insetBy(dx: 1, dy: 1))
+        transition.updateFrame(view: container, frame: !borderView.isHidden ? size.bounds.insetBy(dx: 1, dy: 1) : size.bounds)
         transition.updateFrame(view: borderView, frame: size.bounds)
     }
 }
@@ -761,8 +761,6 @@ public class Modal: NSObject {
         } else {
             focus = background.focus(NSMakeSize(size.width, size.height + headerOffset))
         }
-        
-        focus = focus.insetBy(dx: -1, dy: -1)
         
         if focus != container.frame {
            // CATransaction.begin()
