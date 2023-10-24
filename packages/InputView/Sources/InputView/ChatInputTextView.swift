@@ -424,7 +424,7 @@ private final class ChatInputTextContainer: NSTextContainer {
             if index >= 0 && index < string.length {
                 let attributes = textStorage.attributes(at: index, effectiveRange: nil)
                 let blockQuote = attributes[TextInputAttributes.quote] as? NSObject
-                if let blockQuote {
+                if let blockQuote = blockQuote {
                     result.origin.x += 9.0
                     result.size.width -= 9.0
                     result.size.width -= 7.0
@@ -435,7 +435,7 @@ private final class ChatInputTextContainer: NSTextContainer {
                     } else {
                         let previousAttributes = textStorage.attributes(at: index - 1, effectiveRange: nil)
                         let previousBlockQuote = previousAttributes[TextInputAttributes.quote] as? NSObject
-                        if let previousBlockQuote {
+                        if let previousBlockQuote = previousBlockQuote {
                             if !blockQuote.isEqual(previousBlockQuote) {
                                 isFirstLine = true
                             }
@@ -564,7 +564,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         if characterIndex != 0 {
             let previousAttributes = textStorage.attributes(at: characterIndex - 1, effectiveRange: nil)
             let previousBlockQuote = previousAttributes[TextInputAttributes.quote] as? NSObject
-            if let previousBlockQuote, blockQuote.isEqual(previousBlockQuote) {
+            if let previousBlockQuote = previousBlockQuote, blockQuote.isEqual(previousBlockQuote) {
                 return 0.0
             }
         }
@@ -595,7 +595,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         if characterIndex + 1 < textStorage.length {
             let nextAttributes = textStorage.attributes(at: characterIndex + 1, effectiveRange: nil)
             let nextBlockQuote = nextAttributes[TextInputAttributes.quote] as? NSObject
-            if let nextBlockQuote, blockQuote.isEqual(nextBlockQuote) {
+            if let nextBlockQuote = nextBlockQuote, blockQuote.isEqual(nextBlockQuote) {
                 return 0.0
             }
         }
@@ -785,7 +785,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
 
         
         textStorage.enumerateAttribute(TextInputAttributes.quote, in: NSRange(location: 0, length: textStorage.length), using: { value, range, _ in
-            if let value {
+            if let value = value {
                 let _ = value
                 
                 let glyphRange = self.customLayoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
