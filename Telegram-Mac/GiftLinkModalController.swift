@@ -55,10 +55,12 @@ private final class Arguments {
     let context: AccountContext
     let copyLink:(String)->Void
     let execute:(String)->Void
-    init(context: AccountContext, copyLink:@escaping(String)->Void, execute:@escaping(String)->Void) {
+    let openMessage:(MessageId)->Void
+    init(context: AccountContext, copyLink:@escaping(String)->Void, execute:@escaping(String)->Void, openMessage:@escaping(MessageId)->Void) {
         self.context = context
         self.copyLink = copyLink
         self.execute = execute
+        self.openMessage = openMessage
     }
 }
 
@@ -93,7 +95,7 @@ private struct State : Equatable {
             
             let from: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(fromPeer.displayTitle)](\(fromPeer.id.toInt64()))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, contents)
-            })), alwaysStaticItems: true)
+            })), maximumNumberOfLines: 1, alwaysStaticItems: true)
             
             from.interactions.processURL = { inapplink in
                 if let inapplink = inapplink as? String {
@@ -118,7 +120,7 @@ private struct State : Equatable {
         if let toPeer = self.toPeer?.peer {
             let to: TextViewLayout = .init(parseMarkdownIntoAttributedString("[\(toPeer.displayTitle)](\(toPeer.id.toInt64()))", attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
                 return (NSAttributedString.Key.link.rawValue, contents)
-            })), alwaysStaticItems: true)
+            })), maximumNumberOfLines: 1, alwaysStaticItems: true)
             
             
             to.interactions.processURL = { inapplink in
@@ -138,6 +140,8 @@ private struct State : Equatable {
                 control.setPeer(account: arguments.context.account, peer: toPeer)
                 return control
             })))
+        } else {
+            rows.append(.init(left: .init(.initialize(string: strings().giftLinkRowTo, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: strings().giftLinkNoRecipient, color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
         }
         
         let duration: String = info.months == 12 ? strings().giftLinkPremiumDurationYear : strings().giftLinkPremiumDurationMonths(Int(info.months))
@@ -146,12 +150,32 @@ private struct State : Equatable {
 
         let reasonText: String
         if info.isGiveaway {
-            reasonText = strings().giftLinkRowReasonGiveaway
+            if info.toPeerId == nil {
+                reasonText = strings().giftLinkRowReasonGiveawayIncomplete
+            } else {
+                reasonText = strings().giftLinkRowReasonGiveaway
+            }
         } else {
             reasonText = strings().giftLinkRowReasonGift
         }
+
+        let reasonLink: String
+        if let messageId = info.messageId {
+            reasonLink = "[\(reasonText)](t.me/\(messageId.peerId.id._internalGetInt64Value())/\(messageId.id))"
+        } else {
+            reasonLink = reasonText
+        }
+        let reason: TextViewLayout = .init(parseMarkdownIntoAttributedString(reasonLink, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.accentIcon), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, contents)
+        })), maximumNumberOfLines: 1, alwaysStaticItems: true)
+
+        reason.interactions.processURL = { _ in
+            if let messageId = info.messageId {
+                arguments.openMessage(messageId)
+            }
+        }
         
-        rows.append(.init(left: .init(.initialize(string: strings().giftLinkRowReason, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: reasonText, color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
+        rows.append(.init(left: .init(.initialize(string: strings().giftLinkRowReason, color: theme.colors.text, font: .normal(.text))), right: .init(name: reason, leftView: nil)))
 
         rows.append(.init(left: .init(.initialize(string: strings().giftLinkRowDate, color: theme.colors.text, font: .normal(.text))), right: .init(name: .init(.initialize(string: stringForFullDate(timestamp: info.date), color: theme.colors.text, font: .normal(.text)), alwaysStaticItems: true), leftView: nil)))
 
@@ -245,6 +269,9 @@ func GiftLinkModalController(context: AccountContext, info: PremiumGiftCodeInfo)
             close?()
         }
         
+    }, openMessage: { messageId in
+        close?()
+        context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -335,11 +362,4 @@ func GiftLinkModalController(context: AccountContext, info: PremiumGiftCodeInfo)
     
     return modalController
 }
-
-
-/*
- 
- */
-
-
 

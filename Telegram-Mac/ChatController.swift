@@ -876,10 +876,11 @@ class ChatControllerView : View, ChatInputDelegate {
     
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        let theme = (theme as! TelegramPresentationTheme)
+        let chatTheme = self.chatTheme ?? theme as! TelegramPresentationTheme
+
+        super.updateLocalizationAndTheme(theme: chatTheme)
         
-        let chatTheme = self.chatTheme ?? theme
+        
         if chatTheme.shouldBlurService, !isLite(.blur) {
             progressView?.blurBackground = chatTheme.blurServiceColor
             progressView?.backgroundColor = .clear
@@ -887,9 +888,9 @@ class ChatControllerView : View, ChatInputDelegate {
             progressView?.backgroundColor = chatTheme.colors.background.withAlphaComponent(0.7)
             progressView?.blurBackground = nil
         }
-        progressView?.progressColor = theme.chatServiceItemTextColor
-        scroller.updateLocalizationAndTheme(theme: theme)
-        tableView.emptyItem = ChatEmptyPeerItem(tableView.frame.size, chatInteraction: chatInteraction, theme: self.chatTheme ?? theme)
+        progressView?.progressColor = chatTheme.chatServiceItemTextColor
+        scroller.updateLocalizationAndTheme(theme: chatTheme)
+        tableView.emptyItem = ChatEmptyPeerItem(tableView.frame.size, chatInteraction: chatInteraction, theme: chatTheme)
     }
 
     

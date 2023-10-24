@@ -52,7 +52,7 @@ final class InputDataTableBasedItem : GeneralRowItem {
         let maxLeft = rows.map { $0.leftWidth }.max()!
         
         for row in rows {
-            row.measure(width - inset.left * 2 - maxLeft - 20 - 40)
+            row.measure(width - inset.left * 2 - maxLeft - 20 - 40 - 25)
         }
         
         return true

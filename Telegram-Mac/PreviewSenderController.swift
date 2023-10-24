@@ -421,6 +421,8 @@ fileprivate class PreviewSenderView : Control {
         
         transition.updateFrame(view: closeButton, frame: closeButton.centerFrameY(x: headerView.frame.width - closeButton.frame.width - 10))
         
+        transition.updateFrame(view: collageButton, frame: collageButton.centerFrameY(x: closeButton.frame.minX - 10 - collageButton.frame.width))
+
 
         var inset: CGFloat = 10
 
@@ -433,6 +435,10 @@ fileprivate class PreviewSenderView : Control {
             transition.updateFrame(view: fileButton, frame: fileButton.centerFrameY(x: inset))
             inset += fileButton.frame.width + 10
         }
+        
+        collageButton.centerY(x: closeButton.frame.minX - 10 - collageButton.frame.width)
+
+
         
         if !archiveButton.isHidden {
             transition.updateFrame(view: archiveButton, frame: archiveButton.centerFrameY(x: inset))
@@ -1032,7 +1038,8 @@ class PreviewSenderController: ModalViewController, Notifable {
         let initialSize = self.atomicSize
         let theme = self.presentation ?? theme
         
-        self.genericView.textView.updateLocalizationAndTheme(theme: theme)
+        self.genericView.textView.inputTheme =  theme.inputTheme.withUpdatedQuote(chatInteraction.context.myPeer?.nameColor?.isDashed == true)
+
         
         self.genericView.textView.interactions.inputDidUpdate = { [weak self] state in
             guard let `self` = self else {

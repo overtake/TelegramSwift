@@ -1193,10 +1193,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .loginCode(_, code):
         appDelegate?.applyExternalLoginCode(code)
     case let .boost(_, username, context):
-        let signal: Signal<(Peer, ChannelBoostStatus?)?, NoError> = resolveUsername(username: username, context: context) |> mapToSignal { value in
+        let signal: Signal<(Peer, ChannelBoostStatus?, MyBoostStatus?)?, NoError> = resolveUsername(username: username, context: context) |> mapToSignal { value in
             if let value = value {
-                return context.engine.peers.getChannelBoostStatus(peerId: value.id) |> map {
-                    (value, $0)
+                return combineLatest(context.engine.peers.getChannelBoostStatus(peerId: value.id), context.engine.peers.getMyBoostStatus()) |> map {
+                    (value, $0, $1)
                 }
             } else {
                 return .single(nil)
@@ -1204,7 +1204,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }
         _ = showModalProgress(signal: signal, for: context.window).start(next: { value in
             if let value = value, let boosts = value.1 {
-                showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts), for: context.window)
+                showModal(with: BoostChannelModalController(context: context, peer: value.0, boosts: boosts, myStatus: value.2 ), for: context.window)
             } else {
                 if value == nil {
                     if username.contains(_private_) {

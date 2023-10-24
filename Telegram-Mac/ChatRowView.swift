@@ -1096,7 +1096,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         for item in textLayout.embeddedItems {
             if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
                 
-                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index, color: textColor)
                 validIds.append(id)
                 
                 
@@ -1108,7 +1108,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
                 
                 let view: InlineStickerItemLayer
-                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, textColor == current.textColor {
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()

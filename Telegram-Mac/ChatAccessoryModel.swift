@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+
 class ChatAccessoryView : Button {
     var imageView: TransformImageView?
     let headerView = TextView()
@@ -20,6 +21,8 @@ class ChatAccessoryView : Button {
     private var shimmerEffect: ShimmerView?
     private var shimmerMask: SimpleLayer?
 
+    private var patternContentLayers: [SimpleLayer] = []
+    private var patternTarget: InlineStickerItemLayer?
     
     private var text_inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     private var header_inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
@@ -109,7 +112,7 @@ class ChatAccessoryView : Button {
             var x: CGFloat = 0
             var y: CGFloat = 0
             var width: CGFloat = 2
-            var height: CGFloat = model.size.height //
+            var height: CGFloat = model.size.height
             var cornerRadius: CGFloat = 0
             switch model.modelType {
             case .modern:
@@ -217,6 +220,78 @@ class ChatAccessoryView : Button {
             self.quoteView = nil
         }
         
+        if let pattern = model.presentation.pattern {
+            if patternTarget?.textColor != model.presentation.title.0 {
+                patternTarget = .init(account: model.context.account, inlinePacksContext: model.context.inlinePacksContext, emoji: .init(fileId: pattern, file: nil, emoji: ""), size: NSMakeSize(64, 64), playPolicy: .framesCount(1), textColor: model.presentation.title.0)
+                patternTarget?.noDelayBeforeplay = true
+                patternTarget?.isPlayable = true
+            }
+            patternTarget?.contentDidUpdate = { [weak self] content in
+                self?.updatePatternLayerImages()
+            }
+        } else {
+            patternTarget = nil
+        }
+        
+        if model.presentation.pattern != nil {
+            var maxIndex = 0
+            
+            struct Placement {
+                var position: CGPoint
+                var size: CGFloat
+                
+                init(_ position: CGPoint, _ size: CGFloat) {
+                    self.position = position
+                    self.size = size
+                }
+            }
+            
+            let placements: [Placement] = [
+                Placement(CGPoint(x: 176.0, y: 13.0), 38.0),
+                Placement(CGPoint(x: 51.0, y: 45.0), 58.0),
+                Placement(CGPoint(x: 349.0, y: 36.0), 58.0),
+                Placement(CGPoint(x: 132.0, y: 64.0), 46.0),
+                Placement(CGPoint(x: 241.0, y: 64.0), 54.0),
+                Placement(CGPoint(x: 68.0, y: 121.0), 44.0),
+                Placement(CGPoint(x: 178.0, y: 122.0), 47.0),
+                Placement(CGPoint(x: 315.0, y: 122.0), 47.0),
+            ]
+            
+            for placement in placements {
+                let patternContentLayer: SimpleLayer
+                if maxIndex < self.patternContentLayers.count {
+                    patternContentLayer = self.patternContentLayers[maxIndex]
+                } else {
+                    patternContentLayer = SimpleLayer()
+                    patternContentLayer.layerTintColor = model.presentation.title.0.cgColor
+                    self.layer?.addSublayer(patternContentLayer)
+                    self.patternContentLayers.append(patternContentLayer)
+                }
+               // patternContentLayer.contents = patternTarget?.contents // self.patternContentsTarget?.contents
+                
+                let itemSize = CGSize(width: placement.size / 3.0, height: placement.size / 3.0)
+                patternContentLayer.frame = CGRect(origin: CGPoint(x: model.size.width - placement.position.x / 3.0 - itemSize.width * 0.5, y: placement.position.y / 3.0 - itemSize.height * 0.5), size: itemSize)
+                
+                var alphaFraction = abs(placement.position.x) / 400.0
+                alphaFraction = min(1.0, max(0.0, alphaFraction))
+                patternContentLayer.opacity = 0.3 * Float(1.0 - alphaFraction)
+                
+                maxIndex += 1
+            }
+            
+            if maxIndex < self.patternContentLayers.count {
+                for i in maxIndex ..< self.patternContentLayers.count {
+                    self.patternContentLayers[i].removeFromSuperlayer()
+                }
+                self.patternContentLayers.removeSubrange(maxIndex ..< self.patternContentLayers.count)
+            }
+        } else {
+            for patternContentLayer in self.patternContentLayers {
+                patternContentLayer.removeFromSuperlayer()
+            }
+            self.patternContentLayers.removeAll()
+        }
+        
         
         let transition: ContainedViewLayoutTransition
         if animated {
@@ -231,6 +306,14 @@ class ChatAccessoryView : Button {
         
         self.updateTheme()
     }
+    
+    private func updatePatternLayerImages() {
+        let image = self.patternTarget?.contents
+        for patternContentLayer in self.patternContentLayers {
+            patternContentLayer.contents = image
+        }
+    }
+
     
     func updateTheme() {
         if let model = model {
@@ -351,9 +434,10 @@ struct ChatAccessoryPresentation {
     let enabledText: NSColor
     let disabledText: NSColor
     let quoteIcon: CGImage
+    let pattern: Int64?
     let app: TelegramPresentationTheme
     func withUpdatedBackground(_ backgroundColor: NSColor) -> ChatAccessoryPresentation {
-        return ChatAccessoryPresentation(background: backgroundColor, title: self.title, enabledText: self.enabledText, disabledText: self.disabledText, quoteIcon: self.quoteIcon, app: self.app)
+        return ChatAccessoryPresentation(background: backgroundColor, title: self.title, enabledText: self.enabledText, disabledText: self.disabledText, quoteIcon: self.quoteIcon, pattern: self.pattern, app: self.app)
     }
 }
 
@@ -414,7 +498,7 @@ class ChatAccessoryModel: NSObject {
             self.view?.updateTheme()
         }
         get {
-            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: (theme.colors.accent, nil), enabledText: theme.colors.text, disabledText: theme.colors.grayText, quoteIcon: theme.icons.message_quote_accent, app: theme)
+            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: (theme.colors.accent, nil), enabledText: theme.colors.text, disabledText: theme.colors.grayText, quoteIcon: theme.icons.message_quote_accent, pattern: nil, app: theme)
         }
     }
     
