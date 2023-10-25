@@ -1222,7 +1222,7 @@ private final class QuoteBackgroundView: View {
                     drawDashes()
                     ctx.restoreGState()
                     
-                    if let tertiaryTintColor {
+                    if let tertiaryTintColor = tertiaryTintColor {
                         ctx.saveGState()
                         ctx.translateBy(x: 0.0, y: dashHeight)
                         if isMonochrome {
