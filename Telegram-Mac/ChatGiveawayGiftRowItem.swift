@@ -42,7 +42,7 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
         let isIncoming: Bool = object.message!.isIncoming(context.account, object.renderType == .bubble)
 
         
-        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: (theme.chat.activityColor(isIncoming, object.renderType == .bubble), nil), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType)
+        self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, object.renderType == .bubble), activity: .init(main: theme.chat.activityColor(isIncoming, object.renderType == .bubble)), link: theme.chat.linkColor(isIncoming, object.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, object.renderType == .bubble, presentation: theme), renderType: object.renderType)
 
         
         
@@ -217,12 +217,12 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         container.layer?.cornerRadius = 10
         
         action.set(font: .medium(.text), for: .Normal)
-        action.set(color: item.wpPresentation.activity.0, for: .Normal)
+        action.set(color: item.wpPresentation.activity.main, for: .Normal)
         //TODOLANG
-        action.set(text: "Open Gift Link", for: .Normal)
+        action.set(text: strings().chatMessageOpenGiftLink, for: .Normal)
         action.layer?.borderWidth = System.pixel
         action.scaleOnClick = true
-        action.layer?.borderColor = item.wpPresentation.activity.0.cgColor
+        action.layer?.borderColor = item.wpPresentation.activity.main.cgColor
         action.sizeToFit(NSMakeSize(20, 10))
         
         action.layer?.cornerRadius = action.frame.height / 2

@@ -3039,6 +3039,8 @@ public final class L10n {
   }
   /// imported
   public static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
+  /// Open Gift Link
+  public static var chatMessageOpenGiftLink: String  { return L10n.tr("Localizable", "Chat.Message.OpenGiftLink") }
   /// Open Link
   public static var chatMessageOpenLink: String  { return L10n.tr("Localizable", "Chat.Message.OpenLink") }
   /// OPEN STORY
@@ -3087,6 +3089,8 @@ public final class L10n {
   public static var chatMessageContextQuote: String  { return L10n.tr("Localizable", "Chat.Message.Context.Quote") }
   /// Loo Long.
   public static var chatMessageContextQuoteLimitExceed: String  { return L10n.tr("Localizable", "Chat.Message.Context.Quote.LimitExceed") }
+  /// LEARN MORE
+  public static var chatMessageGiveawayLearnMore: String  { return L10n.tr("Localizable", "Chat.Message.Giveaway.LearnMore") }
   /// This message was imported from another app. We can't guarantee it's real.
   public static var chatMessageImportedText: String  { return L10n.tr("Localizable", "Chat.Message.Imported.Text") }
   /// JOIN AS LISTENER

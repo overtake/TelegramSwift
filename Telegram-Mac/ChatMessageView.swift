@@ -247,15 +247,15 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                     self.rowView.addSubview(actionButton!)
                     isNew = true
                 }
-                actionButton?.set(isExternalUrl: item.hasExternalLink, color: item.wpPresentation.activity.0)
+                actionButton?.set(isExternalUrl: item.hasExternalLink, color: item.wpPresentation.activity.main)
                 actionButton?.scaleOnClick = true
                 actionButton?.removeAllHandlers()
                 actionButton?.set(handler: { [weak item] _ in
                     item?.invokeAction()
                 }, for: .Click)
                 actionButton?.set(text: text, for: .Normal)
-                actionButton?.set(color: item.wpPresentation.activity.0, for: .Normal)
-                actionButton?.set(background: item.wpPresentation.activity.0.withAlphaComponent(0.1), for: .Normal)
+                actionButton?.set(color: item.wpPresentation.activity.main, for: .Normal)
+                actionButton?.set(background: item.wpPresentation.activity.main.withAlphaComponent(0.1), for: .Normal)
                 _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.actionButtonWidth, 36), thatFit: true)
                 if animated, isNew {
                     actionButton?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2, timingFunction: .easeOut)

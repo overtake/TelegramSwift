@@ -11,7 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
-
+import ColorPalette
 
 class ChatAccessoryView : Button {
     var imageView: TransformImageView?
@@ -32,7 +32,7 @@ class ChatAccessoryView : Button {
     
     private var quoteView: ImageView?
     
-    private let borderLayer = SimpleShapeLayer()
+    private let borderLayer = DashLayer()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         initialize()
@@ -101,7 +101,7 @@ class ChatAccessoryView : Button {
                 cornerRadius = .cornerRadius
             }
         }
-        borderLayer.backgroundColor = PeerNameColorCache.value.get(model.presentation.title).cgColor
+        borderLayer.colors = model.presentation.colors
 
         borderLayer.opacity = model.drawLine ? 1 : 0
         self.layer?.cornerRadius = cornerRadius
@@ -116,8 +116,8 @@ class ChatAccessoryView : Button {
             var cornerRadius: CGFloat = 0
             switch model.modelType {
             case .modern:
-                width = 6
-                x = -(width / 2)
+                width = 3
+                x = 0
                 height = model.size.height
             case .classic:
                 x = model.isSideAccessory ? 10 : 0
@@ -221,8 +221,8 @@ class ChatAccessoryView : Button {
         }
         
         if let pattern = model.presentation.pattern {
-            if patternTarget?.textColor != model.presentation.title.0 {
-                patternTarget = .init(account: model.context.account, inlinePacksContext: model.context.inlinePacksContext, emoji: .init(fileId: pattern, file: nil, emoji: ""), size: NSMakeSize(64, 64), playPolicy: .framesCount(1), textColor: model.presentation.title.0)
+            if patternTarget?.textColor != model.presentation.colors.main {
+                patternTarget = .init(account: model.context.account, inlinePacksContext: model.context.inlinePacksContext, emoji: .init(fileId: pattern, file: nil, emoji: ""), size: NSMakeSize(64, 64), playPolicy: .framesCount(1), textColor: model.presentation.colors.main)
                 patternTarget?.noDelayBeforeplay = true
                 patternTarget?.isPlayable = true
             }
@@ -263,7 +263,7 @@ class ChatAccessoryView : Button {
                     patternContentLayer = self.patternContentLayers[maxIndex]
                 } else {
                     patternContentLayer = SimpleLayer()
-                    patternContentLayer.layerTintColor = model.presentation.title.0.cgColor
+                    patternContentLayer.layerTintColor = model.presentation.colors.main.cgColor
                     self.layer?.addSublayer(patternContentLayer)
                     self.patternContentLayers.append(patternContentLayer)
                 }
@@ -319,7 +319,7 @@ class ChatAccessoryView : Button {
         if let model = model {
             switch model.modelType {
             case .modern:
-                self.backgroundColor = model.presentation.title.0.withAlphaComponent(0.1)
+                self.backgroundColor = model.presentation.colors.main.withAlphaComponent(0.1)
             case .classic:
                 self.backgroundColor = model.presentation.background
             }
@@ -430,14 +430,14 @@ class ChatAccessoryView : Button {
 
 struct ChatAccessoryPresentation {
     let background: NSColor
-    let title: (NSColor, NSColor?)
+    let colors: PeerNameColors.Colors
     let enabledText: NSColor
     let disabledText: NSColor
     let quoteIcon: CGImage
     let pattern: Int64?
     let app: TelegramPresentationTheme
     func withUpdatedBackground(_ backgroundColor: NSColor) -> ChatAccessoryPresentation {
-        return ChatAccessoryPresentation(background: backgroundColor, title: self.title, enabledText: self.enabledText, disabledText: self.disabledText, quoteIcon: self.quoteIcon, pattern: self.pattern, app: self.app)
+        return ChatAccessoryPresentation(background: backgroundColor, colors: self.colors, enabledText: self.enabledText, disabledText: self.disabledText, quoteIcon: self.quoteIcon, pattern: self.pattern, app: self.app)
     }
 }
 
@@ -498,7 +498,7 @@ class ChatAccessoryModel: NSObject {
             self.view?.updateTheme()
         }
         get {
-            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: (theme.colors.accent, nil), enabledText: theme.colors.text, disabledText: theme.colors.grayText, quoteIcon: theme.icons.message_quote_accent, pattern: nil, app: theme)
+            return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, colors: .init(main: theme.colors.accent), enabledText: theme.colors.text, disabledText: theme.colors.grayText, quoteIcon: theme.icons.message_quote_accent, pattern: nil, app: theme)
         }
     }
     

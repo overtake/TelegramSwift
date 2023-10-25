@@ -1111,7 +1111,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
             })
         case let .color(_, peer, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelColor, icon: theme.icons.profile_channel_color, type: .imageContext(generatePeerNameColorImage(peer.peer), ""), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelColor, icon: theme.icons.profile_channel_color, type: .imageContext(generatePeerNameColorImage(colors: arguments.context.peerNameColors, peer: peer.peer), ""), viewType: viewType, action: {
                 arguments.openNameColor(peer: peer.peer)
             })
 

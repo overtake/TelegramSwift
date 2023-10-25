@@ -16,11 +16,14 @@ import TGUIKit
 import InAppSettings
 
 
-func generatePeerNameColorImage(_ peer: Peer?) -> CGImage {
+func generatePeerNameColorImage(colors: PeerNameColors, peer: Peer?) -> CGImage {
     let attr = NSMutableAttributedString()
     let color = peer?.nameColor ?? .blue
     
-    _ = attr.append(string: (peer?.compactDisplayTitle ?? "").prefixWithDots(15), color: color.color, font: .avatar(.short))
+    
+    let main = colors.get(color).main
+    
+    _ = attr.append(string: (peer?.compactDisplayTitle ?? "").prefixWithDots(15), color: colors.get(color).main, font: .avatar(.short))
     let textNode = TextNode.layoutText(attr, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, 20), nil, false, .center)
     
     var size = textNode.0.size
@@ -30,7 +33,7 @@ func generatePeerNameColorImage(_ peer: Peer?) -> CGImage {
         let rect = NSMakeRect(0, 0, size.width, size.height)
         ctx.clear(rect)
         ctx.round(rect.size, size.height / 2)
-        ctx.setFillColor(color.color.withAlphaComponent(0.1).cgColor)
+        ctx.setFillColor(main.withAlphaComponent(0.1).cgColor)
         ctx.fill(rect)
         textNode.1.draw(rect.focus(textNode.0.size), in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
     })!
@@ -213,8 +216,14 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
 
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().appearanceSettingsColorThemeHeader), data: .init(viewType: .textTopItem)))
     index += 1
+    
+    struct Tuple: Equatable {
+        let peer: PeerEquatable?
+        let appearance: Appearance
+    }
+    let tuple = Tuple(peer: .init(state.myPeer), appearance: appearance)
 
-    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_preview, equatable: InputDataEquatable(appearance), comparable: nil, item: { initialSize, stableId in
+    entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_theme_preview, equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
         return ThemePreviewRowItem(initialSize, stableId: stableId, context: arguments.context, theme: appearance.presentation, viewType: .firstItem)
     }))
 
@@ -370,7 +379,7 @@ private func appAppearanceEntries(appearance: Appearance, state: State, settings
         index += 1
     }
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_name_color, data: InputDataGeneralData(name: strings().appearanceYourNameColor, color: appearance.presentation.colors.text, type: .imageContext(generatePeerNameColorImage(state.myPeer), ""), viewType: .lastItem, action: arguments.userNameColor)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_name_color, data: InputDataGeneralData(name: strings().appearanceYourNameColor, color: appearance.presentation.colors.text, type: .imageContext(generatePeerNameColorImage(colors: arguments.context.peerNameColors, peer: state.myPeer), ""), viewType: .lastItem, action: arguments.userNameColor)))
     index += 1
     
     

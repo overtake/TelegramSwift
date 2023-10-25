@@ -14,7 +14,7 @@ import Postbox
 import SwiftSignalKit
 import DateUtils
 import InAppSettings
-
+import ColorPalette
 
 struct ChatFloatingPhoto {
     var point: NSPoint
@@ -1964,17 +1964,16 @@ class ChatRowItem: TableRowItem {
                 if let peer = titlePeer {
                     var nameColor:NSColor = presentation.chat.linkColor(isIncoming, object.renderType == .bubble)
                     
+                    let color: PeerNameColors.Colors
+                    if let _nameColor = peer.nameColor {
+                        nameColor = context.peerNameColors.get(_nameColor).main
+                    }
                     if coreMessageMainPeer(message) is TelegramChannel || coreMessageMainPeer(message) is TelegramGroup {
-                        if let peer = coreMessageMainPeer(message) as? TelegramChannel, case .broadcast(_) = peer.info {
-                            nameColor = peer.nameColor?.color ?? nameColor
-                        } else if context.peerId != peer.id {
+                        if context.peerId != peer.id {
                             if object.renderType == .bubble, message.isAnonymousMessage, !isIncoming {
-                                nameColor = peer.nameColor?.color ?? theme.colors.accentIconBubble_outgoing
+                                nameColor = theme.colors.accentIconBubble_outgoing
                             } else if object.renderType == .bubble, message.author?.id != context.peerId, !isIncoming {
-                                nameColor = peer.nameColor?.color ?? theme.colors.accentIconBubble_outgoing
-                            } else {
-                                let value = abs(Int(peer.id.id._internalGetInt64Value()) % 7)
-                                nameColor = peer.nameColor?.color ?? theme.chat.peerName(value)
+                                nameColor = theme.colors.accentIconBubble_outgoing
                             }
                         }
                     }
@@ -1984,8 +1983,7 @@ class ChatRowItem: TableRowItem {
                     }
                     
                     if message.adAttribute != nil, let author = message.author {
-                        let value = abs(Int(author.id.id._internalGetInt64Value()) % 7)
-                        nameColor = peer.nameColor?.color ?? theme.chat.peerName(value)
+                        nameColor = context.peerNameColors.get(author.nameColor ?? .blue).main
                     }
                     
                     
@@ -2119,7 +2117,7 @@ class ChatRowItem: TableRowItem {
                 let formatterEdited = DateSelectorUtil.chatFullDateFormatter
                 fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date)))))"
             }
-            let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? theme.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  theme.colors.grayForeground : theme.colors.background, title: theme.chat.replyTitle(self), enabledText: theme.chat.replyText(self), disabledText: theme.chat.replyDisabledText(self), quoteIcon: theme.chat.replyQuote(self), pattern: theme.chat.replyPattern(self), app: theme)
+            let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? theme.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  theme.colors.grayForeground : theme.colors.background, colors: theme.chat.replyTitle(self), enabledText: theme.chat.replyText(self), disabledText: theme.chat.replyDisabledText(self), quoteIcon: theme.chat.replyQuote(self), pattern: theme.chat.replyPattern(self), app: theme)
 
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId] {

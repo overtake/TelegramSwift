@@ -16,6 +16,7 @@ import InAppSettings
 import TGModernGrowingTextView
 import Strings
 import InputView
+import ColorPalette
 
 /*
  static func == (lhs: ChatTextCustomEmojiAttribute, rhs: ChatTextCustomEmojiAttribute) -> Bool {
@@ -351,7 +352,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
-                }, quoteColor: theme.chat.quoteColor(message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
+                }, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble)).mutableCopy() as! NSMutableAttributedString
                 
              }
              
@@ -467,7 +468,7 @@ class ChatMessageItem: ChatRowItem {
                 media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: game.image, file: game.file, story: nil, attributes: [], instantPage: nil)))
             }
             
-            self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(message, account: context.account, bubbled: entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType)
+             self.wpPresentation = WPLayoutPresentation(text: theme.chat.textColor(isIncoming, entry.renderType == .bubble), activity: theme.chat.webPreviewActivity(context.peerNameColors, message: message, account: context.account, bubbled: entry.renderType == .bubble), link: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), ivIcon: theme.chat.instantPageIcon(isIncoming, entry.renderType == .bubble, presentation: theme), renderType: entry.renderType)
 
             
             if let webpage = media as? TelegramMediaWebpage {
@@ -737,7 +738,7 @@ class ChatMessageItem: ChatRowItem {
         return ChatMessageView.self
     }
     
-    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }, underlineLinks: Bool = false, quoteColor: (NSColor, NSColor?) = (theme.colors.link, nil)) -> NSAttributedString {
+    static func applyMessageEntities(with attributes:[MessageAttribute], for text:String, message: Message?, context: AccountContext, fontSize: CGFloat, openInfo:@escaping (PeerId, Bool, MessageId?, ChatInitialAction?)->Void, botCommand:@escaping (String)->Void = { _ in }, hashtag:@escaping (String)->Void = { _ in }, applyProxy:@escaping (ProxyServerSettings)->Void = { _ in }, textColor: NSColor = theme.colors.text, linkColor: NSColor = theme.colors.link, monospacedPre:NSColor = theme.colors.monospacedPre, monospacedCode: NSColor = theme.colors.monospacedCode, mediaDuration: Double? = nil, timecode: @escaping(Double?)->Void = { _ in }, openBank: @escaping(String)->Void = { _ in }, underlineLinks: Bool = false, blockColor: PeerNameColors.Colors = .init(main: theme.colors.accent)) -> NSAttributedString {
         var entities: [MessageTextEntity] = []
         for attribute in attributes {
             if let attribute = attribute as? TextEntitiesMessageAttribute {
@@ -836,6 +837,7 @@ class ChatMessageItem: ChatRowItem {
                 }), range: range)
                 string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
             case  .Pre:
+                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: blockColor, isCode: true, space: 4), range: range)
 //                string.addAttribute(.preformattedPre, value: 4.0, range: range)
                 fontAttributes.append((range, .monospace))
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
@@ -864,7 +866,7 @@ class ChatMessageItem: ChatRowItem {
                     openBank(bankCard)
                 }), range: range)
             case .BlockQuote:
-                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), color: quoteColor, space: 4), range: range)
+                string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: blockColor, space: 4), range: range)
             case let .CustomEmoji(_, fileId: fileId):
                 string.addAttribute(TextInputAttributes.customEmoji, value: TextInputTextCustomEmojiAttribute(fileId: fileId, file: nil, emoji: string.attributedSubstring(from: range).string), range: range)
             case let .Custom(type):

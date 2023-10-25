@@ -10,12 +10,12 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import ColorPalette
 
 
 struct WPLayoutPresentation {
     let text: NSColor
-    let activity: (NSColor, NSColor?)
+    let activity: PeerNameColors.Colors
     let link: NSColor
     let selectText: NSColor
     let ivIcon: CGImage
@@ -105,7 +105,7 @@ class WPLayout: Equatable {
             default:
                 siteName = websiteName
             }
-            _siteNameAttr = .initialize(string: siteName, color: presentation.activity.0, font: .medium(.text))
+            _siteNameAttr = .initialize(string: siteName, color: presentation.activity.main, font: .medium(.text))
         }
         
         

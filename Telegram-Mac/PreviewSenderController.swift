@@ -13,6 +13,7 @@ import TGModernGrowingTextView
 import SwiftSignalKit
 import Postbox
 import InputView
+import ColorPalette
 
 private enum SecretMediaTtl {
     case off
@@ -1038,8 +1039,15 @@ class PreviewSenderController: ModalViewController, Notifable {
         let initialSize = self.atomicSize
         let theme = self.presentation ?? theme
         
-        self.genericView.textView.inputTheme =  theme.inputTheme.withUpdatedQuote(chatInteraction.context.myPeer?.nameColor?.isDashed == true)
-
+        let myPeerColor = chatInteraction.context.myPeer?.nameColor
+        let colors: PeerNameColors.Colors
+        if let myPeerColor = myPeerColor {
+            colors = chatInteraction.context.peerNameColors.get(myPeerColor)
+        } else {
+            colors = .init(main: theme.colors.accent)
+        }
+        self.genericView.textView.inputTheme = theme.inputTheme.withUpdatedQuote(colors)
+        
         
         self.genericView.textView.interactions.inputDidUpdate = { [weak self] state in
             guard let `self` = self else {
