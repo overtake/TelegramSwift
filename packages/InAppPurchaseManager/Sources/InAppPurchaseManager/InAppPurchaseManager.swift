@@ -471,7 +471,7 @@ extension InAppPurchaseManager: SKPaymentTransactionObserver {
                         pendingInAppPurchaseState(engine: self.engine, productId: productIdentifier)
                     )
                     |> mapToSignal { product, state -> Signal<AppStoreTransactionPurpose, NoError> in
-                        if let state {
+                        if let state = state {
                             return .single(state.purpose.appStorePurpose(product: product))
                         } else {
                             return .complete()
