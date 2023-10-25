@@ -1242,7 +1242,7 @@ private final class QuoteBackgroundView: View {
         self.addSubview(self.iconView)
         
         self.layer?.cornerRadius = 4.0
-        self.clipsToBounds = true
+       // self.clipsToBounds = true
     }
     
     required init?(coder: NSCoder) {
