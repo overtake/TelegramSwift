@@ -297,18 +297,18 @@ class ReplyModel: ChatAccessoryModel {
             
             
             if let header = customHeader {
-                self.header = .init(.initialize(string: header, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
+                self.header = .init(.initialize(string: header, color: presentation.colors.main, font: .medium(.text)), maximumNumberOfLines: 1)
             } else {
                 let header = NSMutableAttributedString()
-                header.append(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title.0, font: .medium(.text))
+                header.append(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.colors.main, font: .medium(.text))
                 
                 if let parent = self.parent, parent.id.peerId != replyMessageId.peerId {
                     if let peer = message.peers[message.id.peerId] {
                         if peer.isChannel {
-                            header.insert(.embedded(name: "Icon_Reply_Channel", color: presentation.title.0, resize: false), at: 0)
+                            header.insert(.embedded(name: "Icon_Reply_Channel", color: presentation.colors.main, resize: false), at: 0)
                         } else if peer.isGroup || peer.isSupergroup {
-                            header.append(.embedded(name: "Icon_Reply_Group", color: presentation.title.0, resize: false))
-                            header.append(string: peer.compactDisplayTitle, color: presentation.title.0, font: .medium(.text))
+                            header.append(.embedded(name: "Icon_Reply_Group", color: presentation.colors.main, resize: false))
+                            header.append(string: peer.compactDisplayTitle, color: presentation.colors.main, font: .medium(.text))
                         }
                     }
                 }
@@ -524,7 +524,7 @@ class StoryReplyModel: ChatAccessoryModel {
         
         let title: String = peer.displayTitle
         let text: NSAttributedString = .initialize(string: isUnsupported ? strings().chatListStoryUnsupported : strings().chatListStory, color: presentation.disabledText, font: .normal(.text))
-        self.header = .init(.initialize(string: title, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.header = .init(.initialize(string: title, color: presentation.colors.main, font: .medium(.text)), maximumNumberOfLines: 1)
         self.message = .init(text, maximumNumberOfLines: 1, cutout: cutout)
         
         measureSize(width, sizeToFit: sizeToFit)
@@ -592,11 +592,11 @@ class ExpiredStoryReplyModel: ChatAccessoryModel {
 
         let file = LocalAnimatedSticker.expired_story.monochromeFile
         
-        text.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: "🤡"))), range: NSMakeRange(0, 2))
+        text.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: file.fileId.id, file: file, emoji: clown))), range: NSMakeRange(0, 2))
 
 
         
-        self.header = .init(.initialize(string: title, color: presentation.title.0, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.header = .init(.initialize(string: title, color: presentation.colors.main, font: .medium(.text)), maximumNumberOfLines: 1)
         self.message = .init(text, maximumNumberOfLines: 1)
         
         measureSize(width, sizeToFit: sizeToFit)

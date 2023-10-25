@@ -44,21 +44,19 @@ func generalPrepaidGiveawayIcon(_ bgColor: NSColor, count: NSAttributedString) -
     })!
 }
 
-func chatReplyLineDashTemplateImage(_ color: (NSColor, NSColor?), flipped: Bool) -> CGImage? {
+func chatReplyLineDashTemplateImage(_ colors: PeerNameColors.Colors, flipped: Bool) -> CGImage? {
     let radius: CGFloat = 3.0
     var offset: CGFloat = 5.0
-    
-    let updated: (NSColor, NSColor?) = color
-    
+        
 
  
     let generator:(NSSize, CGContext) -> Void = { size, context in
         context.clear(size.bounds)
                         
-        context.setFillColor(updated.0.cgColor)
+        context.setFillColor(colors.main.cgColor)
         context.fill(size.bounds)
         
-        if let color = updated.1 {
+        if let color = colors.secondary {
             
             let path = CGMutablePath()
             path.move(to: CGPoint(x: size.width, y: offset))
@@ -66,7 +64,6 @@ func chatReplyLineDashTemplateImage(_ color: (NSColor, NSColor?), flipped: Bool)
             path.addLine(to: CGPoint(x: 0.0, y: offset + radius * 4.0))
             path.addLine(to: CGPoint(x: 0.0, y: offset + radius))
 
-            
             context.addPath(path)
             context.closePath()
 
@@ -1944,7 +1941,7 @@ class TelegramPresentationTheme : PresentationTheme {
         if !Thread.isMainThread && generated {
             self._backgroundMode = generateBackgroundMode(wallpaper.wallpaper, palette: colors, maxSize: backgroundSize)
         }
-        super.init(colors: colors, search: search, inputTheme: .init(quote: .init(foreground: (colors.accent, nil), icon: NSImage(named: "Icon_Quote")!), indicatorColor: colors.accent, backgroundColor: colors.background, selectingColor: colors.selectText, textColor: colors.text, accentColor: colors.accent, grayTextColor: colors.grayText, fontSize: fontSize))
+        super.init(colors: colors, search: search, inputTheme: .init(quote: .init(foreground: .init(main: colors.accent), icon: NSImage(named: "Icon_Quote")!), indicatorColor: colors.accent, backgroundColor: colors.background, selectingColor: colors.selectText, textColor: colors.text, accentColor: colors.accent, grayTextColor: colors.grayText, fontSize: fontSize))
     }
     
     var dark: Bool {

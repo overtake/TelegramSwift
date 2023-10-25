@@ -83,7 +83,7 @@ enum PhotoCacheKeyEntry : Hashable {
             hasher.combine(isForum)
             if let nameColor = nameColor {
                 hasher.combine("nameColor")
-                hasher.combine(nameColor.index)
+                hasher.combine(nameColor.rawValue)
             }
         case let .emptyAvatar(peerId, letters, color, size, scale, isForum):
             hasher.combine("emptyAvatar")

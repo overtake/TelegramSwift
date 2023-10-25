@@ -13,145 +13,102 @@ import FastBlur
 import SwiftSignalKit
 import TGUIKit
 import FastBlur
+import ColorPalette
 
-
-
-final class PeerNameColorCache {
-    
-    struct Key : Hashable {
-        let color: NSColor
-        let dash: NSColor?
-        let flipped: Bool
-    }
-    
-    
-    static let value: PeerNameColorCache = PeerNameColorCache()
-    private var colors: [Key : NSColor] = [:]
-    private init() {
-        for color in PeerNameColor.allCases {
-            cache(color.dashColors, flipped: false)
-            cache(color.dashColors, flipped: true)
-        }
-    }
-    
-    @discardableResult private func cache(_ color: (NSColor, NSColor?), flipped: Bool = false) -> NSColor {
-        if let _ = color.1 {
-            let image = chatReplyLineDashTemplateImage(color, flipped: flipped)!
-            let pattern = NSColor(patternImage: NSImage(cgImage: image, size: image.backingSize))
-            colors[Key(color: color.0, dash: color.1, flipped: flipped)] = pattern
-            return pattern
+extension PeerNameColors {
+    public func get(_ color: PeerNameColor) -> Colors {
+        if let colors = self.colors[color.rawValue] {
+            return colors
         } else {
-            colors[.init(color: color.0, dash: nil, flipped: flipped)] = color.0
-            return color.0
+            return PeerNameColors.defaultSingleColors[5]!
         }
     }
     
-    func get(_ color:(NSColor, NSColor?), flipped: Bool = false) -> NSColor {
-        let found = self.colors[.init(color: color.0, dash: color.1, flipped: flipped)]
-        if let found = found {
-            return found
+    public static func with(appConfiguration: AppConfiguration) -> PeerNameColors {
+        if let data = appConfiguration.data {
+            var colors = PeerNameColors.defaultSingleColors
+            var darkColors: [Int32: Colors] = [:]
+            
+            if let peerColors = data["peer_colors"] as? [String: [String]] {
+                for (key, values) in peerColors {
+                    if let index = Int32(key) {
+                        let colorsArray = values.compactMap { NSColor(hexString: "#\($0)") }
+                        if let colorValues = Colors(colors: colorsArray) {
+                            colors[index] = colorValues
+                        }
+                    }
+                }
+            }
+            
+            if let darkPeerColors = data["dark_peer_colors"] as? [String: [String]] {
+                for (key, values) in darkPeerColors {
+                    if let index = Int32(key) {
+                        let colorsArray = values.compactMap { NSColor(hexString: "#\($0)") }
+                        if let colorValues = Colors(colors: colorsArray) {
+                            darkColors[index] = colorValues
+                        }
+                    }
+                }
+            }
+            
+            var displayOrder: [Int32] = []
+            if let order = data["peer_colors_available"] as? [Double] {
+                displayOrder = order.map { Int32($0) }
+            }
+            if displayOrder.isEmpty {
+                displayOrder = PeerNameColors.defaultValue.displayOrder
+            }
+            
+            return PeerNameColors(
+                colors: colors,
+                darkColors: darkColors,
+                displayOrder: displayOrder
+            )
         } else {
-            return cache(color, flipped: flipped)
+            return .defaultValue
         }
     }
-    
 }
 
 
 
+
+
 public extension PeerNameColor {
-    var color: NSColor {
-        return self.dashColors.0
-    }
     
-    var index: Int {
-        switch self {
-        case .red, .redDash:
-            return 0
-        case .orange,.orangeDash:
-            return 1
-        case .violet,.violetDash:
-            return 2
-        case .green, .greenDash:
-            return 3
-        case .cyan, .cyanDash:
-            return 4
-        case .blue, .blueDash:
-            return 5
-        case .pink, .pinkDash:
-            return 6
-        }
-    }
-    
-    
-    var dashColors: (NSColor, NSColor?) {
-        switch self {
-        case .red:
-            return (NSColor(rgb: 0xCC5049), nil)
-        case .orange:
-            return (NSColor(rgb: 0xD67722), nil)
-        case .violet:
-            return (NSColor(rgb: 0x955CDB), nil)
-        case .green:
-            return (NSColor(rgb: 0x40A920), nil)
-        case .cyan:
-            return (NSColor(rgb: 0x309EBA), nil)
-        case .blue:
-            return (NSColor(rgb: 0x368AD1), nil)
-        case .pink:
-            return (NSColor(rgb: 0xC7508B), nil)
-        case .redDash:
-            return (NSColor(rgb: 0xE15052), NSColor(rgb: 0xF9AE63))
-        case .orangeDash:
-            return (NSColor(rgb: 0xE0802B), NSColor(rgb: 0xFAC534))
-        case .violetDash:
-            return (NSColor(rgb: 0xA05FF3), NSColor(rgb: 0xF48FFF))
-        case .greenDash:
-            return (NSColor(rgb: 0x27A910), NSColor(rgb: 0xA7DC57))
-        case .cyanDash:
-            return (NSColor(rgb: 0x27ACCE), NSColor(rgb: 0x82E8D6))
-        case .blueDash:
-            return (NSColor(rgb: 0x3391D4), NSColor(rgb: 0x7DD3F0))
-        case .pinkDash:
-            return (NSColor(rgb: 0xdd4371), NSColor(rgb: 0xffbe9f))
-        }
-    }
-    
-    var isDashed: Bool {
-        return self.dashColors.1 != nil
-    }
     
     var quoteIcon: CGImage {
-        switch self {
-        case .red:
-            return theme.icons.message_quote_red
-        case .orange:
-            return theme.icons.message_quote_orange
-        case .violet:
-            return theme.icons.message_quote_violet
-        case .green:
-            return theme.icons.message_quote_green
-        case .cyan:
-            return theme.icons.message_quote_cyan
-        case .blue:
-            return theme.icons.message_quote_blue
-        case .pink:
-            return theme.icons.message_quote_pink
-        case .redDash:
-            return theme.icons.message_quote_red
-        case .orangeDash:
-            return theme.icons.message_quote_orange
-        case .violetDash:
-            return theme.icons.message_quote_violet
-        case .greenDash:
-            return theme.icons.message_quote_green
-        case .cyanDash:
-            return theme.icons.message_quote_cyan
-        case .blueDash:
-            return theme.icons.message_quote_blue
-        case .pinkDash:
-            return theme.icons.message_quote_pink
-        }
+        return theme.icons.message_quote_pink
+//        switch self {
+//        case .red:
+//            return theme.icons.message_quote_red
+//        case .orange:
+//            return theme.icons.message_quote_orange
+//        case .violet:
+//            return theme.icons.message_quote_violet
+//        case .green:
+//            return theme.icons.message_quote_green
+//        case .cyan:
+//            return theme.icons.message_quote_cyan
+//        case .blue:
+//            return theme.icons.message_quote_blue
+//        case .pink:
+//            return theme.icons.message_quote_pink
+//        case .redDash:
+//            return theme.icons.message_quote_red
+//        case .orangeDash:
+//            return theme.icons.message_quote_orange
+//        case .violetDash:
+//            return theme.icons.message_quote_violet
+//        case .greenDash:
+//            return theme.icons.message_quote_green
+//        case .cyanDash:
+//            return theme.icons.message_quote_cyan
+//        case .blueDash:
+//            return theme.icons.message_quote_blue
+//        case .pinkDash:
+//            return theme.icons.message_quote_pink
+//        }
     }
 }
 
@@ -296,7 +253,9 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
             }
         }
         
-        let index = peer.nameColor?.index ?? Int(abs(peer.id.id._internalGetInt64Value() % 7))
+        //peer.nameColor?.index ??
+        
+        let index = Int(abs(peer.id.id._internalGetInt64Value() % 7))
         let color = theme.colors.peerColors(index)
 
         
@@ -476,7 +435,8 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
     return Signal { subscriber in
         let letters = peer.displayLetters
         
-        let index = peer.nameColor?.index ?? Int(abs(peer.id.id._internalGetInt64Value() % 7))
+        //peer.nameColor?.index ??
+        let index = Int(abs(peer.id.id._internalGetInt64Value() % 7))
         let color = theme.colors.peerColors(index)
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in

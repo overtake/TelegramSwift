@@ -1138,7 +1138,7 @@ private final class QuoteBackgroundView: View {
             super.init(frame: frameRect)
         }
         
-        var color:(NSColor, NSColor?) = (NSColor.accent, nil) {
+        var colors:PeerNameColors.Colors = .init(main: NSColor.accent) {
             didSet {
                 needsDisplay = true
             }
@@ -1158,9 +1158,9 @@ private final class QuoteBackgroundView: View {
             let lineWidth: CGFloat = 3.0
             
             let blockFrame = self.bounds
-            let tintColor = color.0
-            let secondaryTintColor = color.1
-            
+            let tintColor = self.colors.main
+            let secondaryTintColor = self.colors.secondary
+            let tertiaryTintColor = self.colors.tertiary
             
             
             ctx.setFillColor(tintColor.withAlphaComponent(0.1).cgColor)
@@ -1168,7 +1168,8 @@ private final class QuoteBackgroundView: View {
             ctx.fillPath()
             
             ctx.setFillColor(tintColor.cgColor)
-                        
+            
+            
             let lineFrame = CGRect(origin: CGPoint(x: blockFrame.minX, y: blockFrame.minY), size: CGSize(width: lineWidth, height: blockFrame.height))
             ctx.move(to: CGPoint(x: lineFrame.minX, y: lineFrame.minY + radius))
             ctx.addArc(tangent1End: CGPoint(x: lineFrame.minX, y: lineFrame.minY), tangent2End: CGPoint(x: lineFrame.minX + radius, y: lineFrame.minY), radius: radius)
@@ -1179,9 +1180,17 @@ private final class QuoteBackgroundView: View {
             
             if let secondaryTintColor = secondaryTintColor {
                 let isMonochrome = secondaryTintColor.alpha == 0.2
-                
+
                 do {
                     ctx.saveGState()
+                    
+                    let dashHeight: CGFloat = tertiaryTintColor != nil ? 6.0 : 9.0
+                    let dashOffset: CGFloat
+                    if let _ = tertiaryTintColor {
+                        dashOffset = isMonochrome ? -2.0 : 0.0
+                    } else {
+                        dashOffset = isMonochrome ? -4.0 : 5.0
+                    }
                 
                     if isMonochrome {
                         ctx.setFillColor(tintColor.withMultipliedAlpha(0.2).cgColor)
@@ -1193,23 +1202,37 @@ private final class QuoteBackgroundView: View {
                         ctx.setFillColor(secondaryTintColor.cgColor)
                     }
                     
-                    let dashOffset: CGFloat = isMonochrome ? -4.0 : 5.0
-                    ctx.translateBy(x: blockFrame.minX, y: blockFrame.minY + dashOffset)
-                    
-                    var offset = 0.0
-                    while offset < blockFrame.height {
-                        ctx.move(to: CGPoint(x: 0.0, y: 3.0))
-                        ctx.addLine(to: CGPoint(x: lineWidth, y: 0.0))
-                        ctx.addLine(to: CGPoint(x: lineWidth, y: 9.0))
-                        ctx.addLine(to: CGPoint(x: 0.0, y: 9.0 + 3.0))
-                        ctx.closePath()
-                        ctx.fillPath()
+                    func drawDashes() {
+                        ctx.translateBy(x: blockFrame.minX, y: blockFrame.minY + dashOffset)
                         
-                        ctx.translateBy(x: 0.0, y: 18.0)
-                        offset += 18.0
+                        var offset = 0.0
+                        while offset < blockFrame.height {
+                            ctx.move(to: CGPoint(x: 0.0, y: 3.0))
+                            ctx.addLine(to: CGPoint(x: lineWidth, y: 0.0))
+                            ctx.addLine(to: CGPoint(x: lineWidth, y: dashHeight))
+                            ctx.addLine(to: CGPoint(x: 0.0, y: dashHeight + 3.0))
+                            ctx.closePath()
+                            ctx.fillPath()
+                            
+                            ctx.translateBy(x: 0.0, y: 18.0)
+                            offset += 18.0
+                        }
                     }
                     
+                    drawDashes()
                     ctx.restoreGState()
+                    
+                    if let tertiaryTintColor {
+                        ctx.saveGState()
+                        ctx.translateBy(x: 0.0, y: dashHeight)
+                        if isMonochrome {
+                            ctx.setFillColor(tintColor.withAlphaComponent(0.4).cgColor)
+                        } else {
+                            ctx.setFillColor(tertiaryTintColor.cgColor)
+                        }
+                        drawDashes()
+                        ctx.restoreGState()
+                    }
                 }
             } else {
                 ctx.setFillColor(tintColor.cgColor)
@@ -1255,10 +1278,10 @@ private final class QuoteBackgroundView: View {
             
           //  self.backgroundColor = theme.background
             
-            backgroundView.color = theme.foreground
+            backgroundView.colors = theme.foreground
             
 //            self.lineLayer.backgroundColor = theme.foreground.cgColor
-            self.iconView.image = theme.icon.precomposed(theme.foreground.0)
+            self.iconView.image = theme.icon.precomposed(theme.foreground.main)
             self.iconView.sizeToFit()
         }
         

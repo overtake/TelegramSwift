@@ -519,9 +519,10 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
     }
     if hasRecent {
         let recentImage = NSImage(named: "Icon_EmojiTabRecent")!
-        let icon = recentImage.precomposed((state.color ?? theme.colors.grayIcon).withAlphaComponent(0.8))
+        let color = state.color ?? theme.colors.grayIcon
+        let icon = recentImage.precomposed(color.withAlphaComponent(0.8))
         let activeIcon = recentImage.precomposed((state.color ?? theme.colors.grayIcon.darker()))
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent_pack, equatable: nil, comparable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent_pack, equatable: .init(color), comparable: nil, item: { initialSize, stableId in
             return ETabRowItem(initialSize, stableId: stableId, icon: icon, iconSelected: activeIcon)
         }))
         index += 1

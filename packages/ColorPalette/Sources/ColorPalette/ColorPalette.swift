@@ -9,11 +9,97 @@
 import Cocoa
 import Colors
 
+
+public class PeerNameColors: Equatable {
+    public struct Colors: Equatable {
+        public let main: NSColor
+        public let secondary: NSColor?
+        public let tertiary: NSColor?
+        
+        public init(main: NSColor, secondary: NSColor?, tertiary: NSColor?) {
+            self.main = main
+            self.secondary = secondary
+            self.tertiary = tertiary
+        }
+        
+        public init(main: NSColor) {
+            self.main = main
+            self.secondary = nil
+            self.tertiary = nil
+        }
+        
+        public init?(colors: [NSColor]) {
+            guard let first = colors.first else {
+                return nil
+            }
+            self.main = first
+            if colors.count == 3 {
+                self.secondary = colors[1]
+                self.tertiary = colors[2]
+            } else if colors.count == 2, let second = colors.last {
+                self.secondary = second
+                self.tertiary = nil
+            } else {
+                self.secondary = nil
+                self.tertiary = nil
+            }
+        }
+    }
+    
+    public static var defaultSingleColors: [Int32: Colors] {
+        return [
+            0: Colors(main: NSColor(rgb: 0xcc5049)),
+            1: Colors(main: NSColor(rgb: 0xd67722)),
+            2: Colors(main: NSColor(rgb: 0x955cdb)),
+            3: Colors(main: NSColor(rgb: 0x40a920)),
+            4: Colors(main: NSColor(rgb: 0x309eba)),
+            5: Colors(main: NSColor(rgb: 0x368ad1)),
+            6: Colors(main: NSColor(rgb: 0xc7508b))
+        ]
+    }
+    
+    public static var defaultValue: PeerNameColors {
+        return PeerNameColors(
+            colors: defaultSingleColors,
+            darkColors: [:],
+            displayOrder: [5, 3, 1, 0, 2, 4, 6]
+        )
+    }
+    
+    public let colors: [Int32: Colors]
+    public let darkColors: [Int32: Colors]
+    public let displayOrder: [Int32]
+    
+   
+    
+    public init(colors: [Int32: Colors], darkColors: [Int32: Colors], displayOrder: [Int32]) {
+        self.colors = colors
+        self.darkColors = darkColors
+        self.displayOrder = displayOrder
+    }
+    
+  
+    
+    public static func == (lhs: PeerNameColors, rhs: PeerNameColors) -> Bool {
+        if lhs.colors != rhs.colors {
+            return false
+        }
+        if lhs.darkColors != rhs.darkColors {
+            return false
+        }
+        if lhs.displayOrder != rhs.displayOrder {
+            return false
+        }
+        return true
+    }
+}
+
+
 public final class InputViewTheme: Equatable {
     public final class Quote: Equatable {
-        public let foreground: (NSColor, NSColor?)
+        public let foreground: PeerNameColors.Colors
         public let icon: NSImage
-        public init(foreground: (NSColor, NSColor?),
+        public init(foreground: PeerNameColors.Colors,
             icon: NSImage
         ) {
             self.foreground = foreground
@@ -21,7 +107,7 @@ public final class InputViewTheme: Equatable {
         }
         
         public static func ==(lhs: Quote, rhs: Quote) -> Bool {
-            if !lhs.foreground.0.isEqual(rhs.foreground.0) {
+            if lhs.foreground != rhs.foreground {
                 return false
             }
             if lhs.icon != rhs.icon {
@@ -78,9 +164,8 @@ public final class InputViewTheme: Equatable {
         return true
     }
     
-    public func withUpdatedQuote(_ isDashed: Bool) -> InputViewTheme {
-        let updated = isDashed ? (quote.foreground.0, quote.foreground.0.withAlphaComponent(0.2)) : quote.foreground
-        return .init(quote: .init(foreground: updated, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
+    public func withUpdatedQuote(_ colors: PeerNameColors.Colors) -> InputViewTheme {
+        return .init(quote: .init(foreground: colors, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
     }
 }
 

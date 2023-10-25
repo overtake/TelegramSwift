@@ -13,6 +13,7 @@ import SwiftSignalKit
 import TelegramCore
 import InputView
 import Postbox
+import ColorPalette
 
 protocol ChatInputDelegate : AnyObject {
     func inputChanged(height:CGFloat, animated:Bool);
@@ -273,7 +274,14 @@ class ChatInputView: View, Notifable {
         accessory.update(with: chatInteraction.presentation, context: chatInteraction.context, animated: false)
         accessory.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
-        textView.inputTheme = theme.inputTheme.withUpdatedQuote(chatInteraction.context.myPeer?.nameColor?.isDashed == true)
+        let myPeerColor = chatInteraction.context.myPeer?.nameColor
+        let colors: PeerNameColors.Colors
+        if let myPeerColor = myPeerColor {
+            colors = chatInteraction.context.peerNameColors.get(myPeerColor)
+        } else {
+            colors = .init(main: theme.colors.accent)
+        }
+        textView.inputTheme = theme.inputTheme.withUpdatedQuote(colors)
     }
     
     func notify(with value: Any, oldValue:Any, animated:Bool) {

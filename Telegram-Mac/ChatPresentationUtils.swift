@@ -360,18 +360,29 @@ final class TelegramChatColors {
     func activityColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
     }
-    func webPreviewActivity(_ message: Message, account: Account, bubbled: Bool) -> (NSColor, NSColor?) {
+    func webPreviewActivity(_ colors: PeerNameColors, message: Message, account: Account, bubbled: Bool) -> PeerNameColors.Colors {
         let isIncoming = message.isIncoming(account, bubbled)
-        var isDashed: Bool = false
+        
+        var hasSecondary: Bool = false
+        var hasTertiary: Bool = false
+
+        
         if let author = message.effectiveAuthor {
-            isDashed = author.nameColor?.isDashed == true
-            if let nameColor = author.nameColor, isIncoming {
-                return nameColor.dashColors
+            if let nameColor = author.nameColor {
+                let color = colors.get(nameColor)
+                if isIncoming {
+                    return colors.get(nameColor)
+                }
+                hasSecondary = color.secondary != nil
+                hasTertiary = color.tertiary != nil
             }
         }
         let color = bubbled ? isIncoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
         
-        return (color, isDashed ? color.withAlphaComponent(0.2) : nil)
+        let secondary = hasSecondary ? color.withAlphaComponent(0.2) : nil
+        let tertiary = hasTertiary ? color.withAlphaComponent(0.2) : nil
+
+        return .init(main: color, secondary: secondary, tertiary: tertiary)
     }
     func pollOptionBorder(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return (bubbled ? incoming ?  grayText(incoming, bubbled) : grayText(incoming, bubbled) : palette.grayText).withAlphaComponent(0.2)
@@ -523,30 +534,50 @@ final class TelegramChatColors {
         return array[index]
     }
     
-    func replyTitle(_ item: ChatRowItem) -> (NSColor, NSColor?) {
-        var isDashed: Bool = false
+    func replyTitle(_ item: ChatRowItem) -> PeerNameColors.Colors {
+        
+        var hasSecondary: Bool = false
+        var hasTertiary: Bool = false
+        
         if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
-            isDashed = author.nameColor?.isDashed == true
-            if let nameColor = author.nameColor, message.isIncoming(item.context.account, item.renderType == .bubble) {
-                return nameColor.dashColors
+            let isIncoming = item.isIncoming
+            if let nameColor = author.nameColor {
+                let color = item.context.peerNameColors.get(nameColor)
+                if isIncoming {
+                    return color
+                }
+                hasSecondary = color.secondary != nil
+                hasTertiary = color.tertiary != nil
             }
         }
         let color = item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTitleBubble_incoming : item.presentation.colors.chatReplyTitleBubble_outgoing) : item.presentation.colors.chatReplyTitle
         
-        return (color, isDashed ? color.withAlphaComponent(0.2) : nil)
+        let secondary = hasSecondary ? color.withAlphaComponent(0.2) : nil
+        let tertiary = hasTertiary ? color.withAlphaComponent(0.2) : nil
+
+        return .init(main: color, secondary: secondary, tertiary: tertiary)
+
     }
     
-    func quoteColor(_ message: Message, isIncoming: Bool, bubbled: Bool) -> (NSColor, NSColor?) {
-        var isDashed: Bool = false
+    func blockColor(_ colors: PeerNameColors, message: Message, isIncoming: Bool, bubbled: Bool) -> PeerNameColors.Colors {
+        var hasSecondary: Bool = false
+        var hasTertiary: Bool = false
         if let author = message.author {
-            isDashed = author.nameColor?.isDashed == true
-            if let nameColor = author.nameColor, isIncoming {
-                return nameColor.dashColors
+            if let nameColor = author.nameColor {
+                let color = colors.get(nameColor)
+                if isIncoming {
+                    return color
+                }
+                hasSecondary = color.secondary != nil
+                hasTertiary = color.tertiary != nil
             }
         }
         let color = bubbled ? (isIncoming ? self.palette.chatReplyTitleBubble_incoming : self.palette.chatReplyTitleBubble_outgoing) : self.palette.chatReplyTitle
         
-        return (color, isDashed ? color.withAlphaComponent(0.2) : nil)
+        let secondary = hasSecondary ? color.withAlphaComponent(0.2) : nil
+        let tertiary = hasTertiary ? color.withAlphaComponent(0.2) : nil
+
+        return .init(main: color, secondary: secondary, tertiary: tertiary)
     }
     
     
@@ -572,6 +603,6 @@ final class TelegramChatColors {
         return item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTextEnabledBubble_incoming : item.presentation.colors.chatReplyTextEnabledBubble_outgoing) : item.presentation.colors.chatReplyTextEnabled
     }
     func replyDisabledText(_ item: ChatRowItem) -> NSColor {
-        return replyTitle(item).0
+        return replyTitle(item).main
     }
 }

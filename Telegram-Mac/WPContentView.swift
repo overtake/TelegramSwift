@@ -23,6 +23,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         return nil
     }
 
+    private let dashLayer = DashLayer()
     
     var textView:TextView = TextView()
 
@@ -40,17 +41,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         return false
     }
     
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        
-        guard let content = content else {return}
-        
-        ctx.setFillColor(PeerNameColorCache.value.get(content.presentation.activity, flipped: true).cgColor)
-        let radius:CGFloat = 3.0
-        
-        ctx.fill(NSMakeRect(-radius, 0, radius * 2, layer.bounds.height))
-    }
-    
+
     override func layout() {
         super.layout()
         if let content = self.content {
@@ -62,6 +53,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
                 action.setFrameOrigin(0, content.contentRect.height - action.frame.height + content.imageInsets.top * 2)
             }
         }
+        dashLayer.frame = NSMakeRect(0, 0, 3, frame.height)
         needsDisplay = true
     }
     
@@ -78,6 +70,7 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
         textView.userInteractionEnabled = false
         
         super.addSubview(containerView)
+        self.layer?.addSublayer(dashLayer)
         addSubview(textView)
         
         
@@ -127,16 +120,16 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             }
 
             current.border = [.Top]
-            current.borderColor = layout.presentation.activity.0.withAlphaComponent(0.1)
-            current.set(color: layout.presentation.activity.0, for: .Normal)
+            current.borderColor = layout.presentation.activity.main.withAlphaComponent(0.1)
+            current.set(color: layout.presentation.activity.main, for: .Normal)
             current.set(font: .medium(.title), for: .Normal)
             current.set(background: .clear, for: .Normal)
             current.set(text: text, for: .Normal)
             _ = current.sizeToFit(NSZeroSize, NSMakeSize(layout.contentRect.width, 36), thatFit: false)
             
-            current.set(color: layout.presentation.activity.0, for: .Normal)
+            current.set(color: layout.presentation.activity.main, for: .Normal)
             if layout.hasInstantPage {
-                current.set(image: NSImage.init(named: "Icon_ChatIV")!.precomposed(layout.presentation.activity.0), for: .Normal)
+                current.set(image: NSImage.init(named: "Icon_ChatIV")!.precomposed(layout.presentation.activity.main), for: .Normal)
             } else {
                 current.removeImage(for: .Normal)
             }
@@ -145,8 +138,10 @@ class WPContentView: Control, MultipleSelectable, ModalPreviewRowViewProtocol {
             self.action = nil
         }
         let color = self.backgroundColor
-        self.backgroundColor = layout.presentation.activity.0.withAlphaComponent(0.1) //color
+        self.backgroundColor = layout.presentation.activity.main.withAlphaComponent(0.1) //color
         self.needsLayout = true
+        
+        self.dashLayer.colors = layout.presentation.activity
     }
     
     func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {

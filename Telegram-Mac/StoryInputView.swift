@@ -804,11 +804,19 @@ final class StoryInputView : Control, StoryInput {
         self.arguments = arguments
         self.groupId = groupId
         
-        let isDashed = arguments?.context.myPeer?.nameColor?.isDashed == true
         
         let color = NSColor(rgb: 0xffffff)
+        var colors: PeerNameColors.Colors = .init(main: color)
+        if let arguments = arguments, let nameColor = arguments.context.myPeer?.nameColor {
+            let peerColors = arguments.context.peerNameColors.get(nameColor)
+            if peerColors.secondary != nil && peerColors.tertiary != nil {
+                colors = .init(main: color, secondary: color.withAlphaComponent(0.2), tertiary: color.withAlphaComponent(0.2))
+            } else if peerColors.secondary != nil {
+                colors = .init(main: color, secondary: color.withAlphaComponent(0.2), tertiary: nil)
+            }
+        }
         textView.context = arguments?.context
-        textView.inputTheme = .init(quote: .init(foreground: (color, isDashed ? color.withAlphaComponent(0.2) : nil), icon: NSImage(named: "Icon_Quote")!), indicatorColor: darkAppearance.inputTheme.indicatorColor, backgroundColor: darkAppearance.inputTheme.backgroundColor, selectingColor: darkAppearance.inputTheme.selectingColor, textColor: darkAppearance.inputTheme.textColor, accentColor: darkAppearance.inputTheme.accentColor, grayTextColor: darkAppearance.inputTheme.grayTextColor, fontSize: darkAppearance.inputTheme.fontSize)
+        textView.inputTheme = .init(quote: .init(foreground: colors, icon: NSImage(named: "Icon_Quote")!), indicatorColor: darkAppearance.inputTheme.indicatorColor, backgroundColor: darkAppearance.inputTheme.backgroundColor, selectingColor: darkAppearance.inputTheme.selectingColor, textColor: darkAppearance.inputTheme.textColor, accentColor: darkAppearance.inputTheme.accentColor, grayTextColor: darkAppearance.inputTheme.grayTextColor, fontSize: darkAppearance.inputTheme.fontSize)
         self.updateInputState()
         
         let input = arguments?.interaction.presentation.findInput(groupId)

@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import InAppSettings
+import ColorPalette
 
 private final class EmojiSelectRowItem : GeneralRowItem {
     let getView: ()->NSView
@@ -214,9 +215,6 @@ private final class PreviewRowView : GeneralContainableRowView {
     
     override func layout() {
         super.layout()
-        guard let item = item as? PreviewRowItem else {
-            return
-        }
         self.backgroundView.frame = self.containerView.bounds
         self.borderView.frame = NSMakeRect(0, self.containerView.frame.height - .borderSize, self.containerView.frame.width, .borderSize)
         itemsView.frame = backgroundView.bounds
@@ -229,18 +227,18 @@ private final class PreviewRowView : GeneralContainableRowView {
 
 
 
-private func generateRingImage(nameColor: PeerNameColor) -> CGImage? {
+private func generateRingImage(nameColor: PeerNameColors.Colors) -> CGImage {
     return generateImage(CGSize(width: 35, height: 35), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
         
-        context.setStrokeColor(nameColor.color.cgColor)
+        context.setStrokeColor(nameColor.main.cgColor)
         context.setLineWidth(2.0)
         context.strokeEllipse(in: bounds.insetBy(dx: 1.0, dy: 1.0))
-    })
+    })!
 }
 
-private func generateFillImage(nameColor: PeerNameColor) -> CGImage? {
+private func generateFillImage(nameColor: PeerNameColors.Colors) -> CGImage {
     return generateImage(CGSize(width: 35, height: 35), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
@@ -249,8 +247,7 @@ private func generateFillImage(nameColor: PeerNameColor) -> CGImage? {
         context.addEllipse(in: circleBounds)
         context.clip()
         
-        let (firstColor, secondColor) = nameColor.dashColors
-        if let secondColor = secondColor {
+        if let secondColor = nameColor.secondary {
             context.setFillColor(secondColor.cgColor)
             context.fill(circleBounds)
             
@@ -258,14 +255,27 @@ private func generateFillImage(nameColor: PeerNameColor) -> CGImage? {
             context.addLine(to: CGPoint(x: size.width, y: 0.0))
             context.addLine(to: CGPoint(x: 0.0, y: size.height))
             context.closePath()
-            context.setFillColor(firstColor.cgColor)
+            context.setFillColor(nameColor.main.cgColor)
             context.fillPath()
+            
+            if let thirdColor = nameColor.tertiary {
+                context.setFillColor(thirdColor.cgColor)
+                context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
+                context.rotate(by: .pi / 4.0)
+                
+                let path = CGMutablePath()
+                path.addRoundedRect(in: CGRect(origin: CGPoint(x: -9.0, y: -9.0), size: CGSize(width: 18.0, height: 18.0)), cornerWidth: 4, cornerHeight: 4)
+                context.addPath(path)
+                context.fillPath()
+            }
         } else {
-            context.setFillColor(firstColor.cgColor)
+            context.setFillColor(nameColor.main.cgColor)
             context.fill(circleBounds)
         }
-    })
+    })!
 }
+
+
 
 
 private enum PeerNameColorEntryId: Hashable {
@@ -303,10 +313,10 @@ private enum PeerNameColorEntry: Comparable, Identifiable {
         }
     }
     
-    func item(initialSize: NSSize, action: @escaping (PeerNameColor) -> Void) -> TableRowItem {
+    func item(initialSize: NSSize, context: AccountContext, action: @escaping (PeerNameColor) -> Void) -> TableRowItem {
         switch self {
             case let .color(_, color, selected):
-            return PeerNameColorIconItem(initialSize: initialSize, stableId: self.stableId,color: color, selected: selected, action: action)
+            return PeerNameColorIconItem(initialSize: initialSize, stableId: self.stableId, context: context, color: color, selected: selected, action: action)
         }
     }
 }
@@ -317,11 +327,12 @@ private class PeerNameColorIconItem: TableRowItem {
     let color: PeerNameColor
     let selected: Bool
     let action: (PeerNameColor) -> Void
-    
-    public init(initialSize: NSSize, stableId: AnyHashable, color: PeerNameColor, selected: Bool, action: @escaping (PeerNameColor) -> Void) {
+    let context: AccountContext
+    public init(initialSize: NSSize, stableId: AnyHashable, context: AccountContext, color: PeerNameColor, selected: Bool, action: @escaping (PeerNameColor) -> Void) {
         self.color = color
         self.selected = selected
         self.action = action
+        self.context = context
         super.init(initialSize, stableId: stableId)
     }
     
@@ -351,7 +362,7 @@ private final class PeerNameColorIconView : HorizontalRowView {
         
         fillView.frame = bounds
         ringView.frame = bounds
-                              
+
         
         control.frame = bounds
         
@@ -377,11 +388,10 @@ private final class PeerNameColorIconView : HorizontalRowView {
             return
         }
         
-        self.fillView.contents = generateFillImage(nameColor: item.color)
-        self.ringView.contents = generateRingImage(nameColor: item.color)
-
+        let colors = item.context.peerNameColors.get(item.color)
         
-//        self.fillView.opacity = item.selected ? 0 : 1
+        self.fillView.contents = generateFillImage(nameColor: colors)
+        self.ringView.contents = generateRingImage(nameColor: colors)
 
         if wasSelected != item.selected {
             if item.selected {
@@ -406,8 +416,10 @@ private final class PeerNamesRowItem : GeneralRowItem {
     fileprivate let colors: [PeerNameColor]
     fileprivate let selected: PeerNameColor
     fileprivate let selectAction:(PeerNameColor)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, colors: [PeerNameColor], selected: PeerNameColor, viewType: GeneralViewType, action: @escaping(PeerNameColor)->Void) {
+    fileprivate let context: AccountContext
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, colors: [PeerNameColor], selected: PeerNameColor, viewType: GeneralViewType, action: @escaping(PeerNameColor)->Void) {
         self.colors = colors
+        self.context = context
         self.selected = selected
         self.selectAction = action
         super.init(initialSize, stableId: stableId, viewType: viewType)
@@ -466,11 +478,11 @@ private final class PeerNamesRowView : GeneralContainableRowView {
         
         
         for (idx, entry, _) in indicesAndItems {
-            _ = tableView.insert(item: entry.item(initialSize: bounds.size, action: item.selectAction), at: idx, animation: animation)
+            _ = tableView.insert(item: entry.item(initialSize: bounds.size, context: item.context, action: item.selectAction), at: idx, animation: animation)
         }
         for (idx, entry, _) in updateIndices {
             let item = item
-            tableView.replace(item: entry.item(initialSize: bounds.size, action: item.selectAction), at: idx, animated: animated)
+            tableView.replace(item: entry.item(initialSize: bounds.size, context: item.context, action: item.selectAction), at: idx, animated: animated)
         }
         
 
@@ -494,20 +506,7 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    var colors: [PeerNameColor] = [.blue,
-        .red,
-        .orange,
-        .violet,
-        .green,
-        .cyan,
-        .pink,
-        .redDash,
-        .orangeDash,
-        .violetDash,
-        .greenDash,
-        .cyanDash,
-        .blueDash,
-        .pinkDash]
+
     
     var selected: PeerNameColor = .blue
     var backgroundEmojiId: Int64? = nil
@@ -533,9 +532,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         return PreviewRowItem(initialSize, stableId: stableId, peer: arguments.source.peer, nameColor: state.selected, backgroundEmojiId: state.backgroundEmojiId, context: arguments.context, theme: theme, viewType: .firstItem)
     }))
+    
+    var colors: [PeerNameColor] = []
+    for index in arguments.context.peerNameColors.displayOrder {
+        colors.append(PeerNameColor(rawValue: index))
+    }
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_colors, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return PeerNamesRowItem(initialSize, stableId: stableId, colors: state.colors, selected: state.selected, viewType: .lastItem, action: { color in
+        return PeerNamesRowItem(initialSize, stableId: stableId, context: arguments.context, colors: colors, selected: state.selected, viewType: .lastItem, action: { color in
             arguments.toggleColor(color)
         })
     }))
@@ -633,7 +637,10 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
         .init(source: .custom($0), type: .normal)
     }
     
-    let emojis = EmojiesController(context, mode: .backgroundIcon, selectedItems: selectedBg != nil ? [selectedBg!] : [], color: source.nameColor?.color)
+    let nameColor = source.nameColor ?? .blue
+    let colors = context.peerNameColors.get(nameColor)
+    
+    let emojis = EmojiesController(context, mode: .backgroundIcon, selectedItems: selectedBg != nil ? [selectedBg!] : [], color: colors.main)
     emojis._frameRect = NSMakeRect(0, 0, context.bindings.rootNavigation().frame.width - 40, 250)
     emojis.loadViewIfNeeded()
     
@@ -672,7 +679,8 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
             current.selected = value
             return current
         }
-        emojis?.color = value.color
+        let colors = context.peerNameColors.get(value)
+        emojis?.color = colors.main
     }, getView: {
         return emojis.genericView
     })

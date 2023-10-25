@@ -134,22 +134,25 @@ public extension NSAttributedString.Key {
 
 private final class TextViewBlockQuote {
     var frame: CGRect
-    var tintColor: (NSColor, NSColor?)
-    
-    init(frame: CGRect, tintColor: (NSColor, NSColor?)) {
+    var colors: PeerNameColors.Colors
+    var isCode: Bool
+    init(frame: CGRect, colors: PeerNameColors.Colors, isCode: Bool) {
         self.frame = frame
-        self.tintColor = tintColor
+        self.colors = colors
+        self.isCode = isCode
     }
 }
 
 
 public final class TextViewBlockQuoteData: NSObject {
     public let id: Int
-    public let color: (NSColor, NSColor?)
+    public let colors: PeerNameColors.Colors
     public let space: CGFloat
-    public init(id: Int, color: (NSColor, NSColor?), space: CGFloat = 4) {
+    public let isCode: Bool
+    public init(id: Int, colors: PeerNameColors.Colors, isCode: Bool = false, space: CGFloat = 4) {
         self.id = id
-        self.color = color
+        self.colors = colors
+        self.isCode = isCode
         self.space = space
         super.init()
     }
@@ -158,11 +161,13 @@ public final class TextViewBlockQuoteData: NSObject {
         guard let other = object as? TextViewBlockQuoteData else {
             return false
         }
-        
         if self.id != other.id {
             return false
         }
-        if !self.color.0.isEqual(other.color.0) {
+        if self.colors != other.colors {
+            return false
+        }
+        if self.isCode != other.isCode {
             return false
         }
         if self.space != other.space {
@@ -916,7 +921,7 @@ public final class TextViewLayout : Equatable {
                         
                         let preformattedSpace = CGFloat(blockQuote.space) * 2
                         let frame = NSMakeRect(0, lineFrame.minY - lineFrame.height, lineWidth + preformattedSpace + 20, lineFrame.height + preformattedSpace)
-                        blockQuotes.append(.init(frame: frame, tintColor: blockQuote.color))
+                        blockQuotes.append(.init(frame: frame, colors: blockQuote.colors, isCode: blockQuote.isCode))
                     }
 
                     attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
@@ -2023,9 +2028,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 let lineWidth: CGFloat = 3.0
                 
                 let blockFrame = blockQuote.frame
-                let tintColor = blockQuote.tintColor.0
-                let secondaryTintColor = blockQuote.tintColor.1
-                
+                let tintColor = blockQuote.colors.main
+                let secondaryTintColor = blockQuote.colors.secondary
+                let tertiaryTintColor = blockQuote.colors.tertiary
                 
                 
                 ctx.setFillColor(tintColor.withAlphaComponent(0.1).cgColor)
@@ -2034,18 +2039,19 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 
                 ctx.setFillColor(tintColor.cgColor)
                 
-                let iconSize = quoteIcon.backingSize
-
+                if !blockQuote.isCode {
+                    let iconSize = quoteIcon.backingSize
+                    let quoteRect = CGRect(origin: CGPoint(x: blockFrame.maxX - 4.0 - iconSize.width, y: blockFrame.minY + 4.0), size: iconSize)
+                    ctx.saveGState()
+                    ctx.translateBy(x: quoteRect.midX, y: quoteRect.midY)
+                    ctx.scaleBy(x: 1.0, y: -1.0)
+                    ctx.translateBy(x: -quoteRect.midX, y: -quoteRect.midY)
+                    ctx.clip(to: quoteRect, mask: quoteIcon)
+                    ctx.fill(quoteRect)
+                    ctx.restoreGState()
+                    ctx.resetClip()
+                }
                 
-                let quoteRect = CGRect(origin: CGPoint(x: blockFrame.maxX - 4.0 - iconSize.width, y: blockFrame.minY + 4.0), size: iconSize)
-                ctx.saveGState()
-                ctx.translateBy(x: quoteRect.midX, y: quoteRect.midY)
-                ctx.scaleBy(x: 1.0, y: -1.0)
-                ctx.translateBy(x: -quoteRect.midX, y: -quoteRect.midY)
-                ctx.clip(to: quoteRect, mask: quoteIcon)
-                ctx.fill(quoteRect)
-                ctx.restoreGState()
-                ctx.resetClip()
                 
                 let lineFrame = CGRect(origin: CGPoint(x: blockFrame.minX, y: blockFrame.minY), size: CGSize(width: lineWidth, height: blockFrame.height))
                 ctx.move(to: CGPoint(x: lineFrame.minX, y: lineFrame.minY + radius))
@@ -2057,9 +2063,17 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 
                 if let secondaryTintColor = secondaryTintColor {
                     let isMonochrome = secondaryTintColor.alpha == 0.2
-                    
+
                     do {
                         ctx.saveGState()
+                        
+                        let dashHeight: CGFloat = tertiaryTintColor != nil ? 6.0 : 9.0
+                        let dashOffset: CGFloat
+                        if let _ = tertiaryTintColor {
+                            dashOffset = isMonochrome ? -2.0 : 0.0
+                        } else {
+                            dashOffset = isMonochrome ? -4.0 : 5.0
+                        }
                     
                         if isMonochrome {
                             ctx.setFillColor(tintColor.withMultipliedAlpha(0.2).cgColor)
@@ -2071,23 +2085,37 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             ctx.setFillColor(secondaryTintColor.cgColor)
                         }
                         
-                        let dashOffset: CGFloat = isMonochrome ? -4.0 : 5.0
-                        ctx.translateBy(x: blockFrame.minX, y: blockFrame.minY + dashOffset)
-                        
-                        var offset = 0.0
-                        while offset < blockFrame.height {
-                            ctx.move(to: CGPoint(x: 0.0, y: 3.0))
-                            ctx.addLine(to: CGPoint(x: lineWidth, y: 0.0))
-                            ctx.addLine(to: CGPoint(x: lineWidth, y: 9.0))
-                            ctx.addLine(to: CGPoint(x: 0.0, y: 9.0 + 3.0))
-                            ctx.closePath()
-                            ctx.fillPath()
+                        func drawDashes() {
+                            ctx.translateBy(x: blockFrame.minX, y: blockFrame.minY + dashOffset)
                             
-                            ctx.translateBy(x: 0.0, y: 18.0)
-                            offset += 18.0
+                            var offset = 0.0
+                            while offset < blockFrame.height {
+                                ctx.move(to: CGPoint(x: 0.0, y: 3.0))
+                                ctx.addLine(to: CGPoint(x: lineWidth, y: 0.0))
+                                ctx.addLine(to: CGPoint(x: lineWidth, y: dashHeight))
+                                ctx.addLine(to: CGPoint(x: 0.0, y: dashHeight + 3.0))
+                                ctx.closePath()
+                                ctx.fillPath()
+                                
+                                ctx.translateBy(x: 0.0, y: 18.0)
+                                offset += 18.0
+                            }
                         }
                         
+                        drawDashes()
                         ctx.restoreGState()
+                        
+                        if let tertiaryTintColor {
+                            ctx.saveGState()
+                            ctx.translateBy(x: 0.0, y: dashHeight)
+                            if isMonochrome {
+                                ctx.setFillColor(tintColor.withAlphaComponent(0.4).cgColor)
+                            } else {
+                                ctx.setFillColor(tertiaryTintColor.cgColor)
+                            }
+                            drawDashes()
+                            ctx.restoreGState()
+                        }
                     }
                 } else {
                     ctx.setFillColor(tintColor.cgColor)
@@ -2095,7 +2123,6 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 }
                 
                 ctx.resetClip()
-
                 
             }
             

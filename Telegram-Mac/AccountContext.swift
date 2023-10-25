@@ -21,6 +21,8 @@ import ApiCredentials
 
 let clown: String = "🤡"
 
+
+
 extension AppConfiguration {
     func getGeneralValue(_ key: String, orElse defaultValue: Int32) -> Int32 {
         if let value = self.data?[key] as? Double {
@@ -326,6 +328,11 @@ final class AccountContext {
     var appConfiguration: AppConfiguration {
         return _appConfiguration.with { $0 }
     }
+    
+    var peerNameColors: PeerNameColors {
+        return _appConfiguration.with { .with(appConfiguration: $0) }
+    }
+    
     
     private var _myPeer: Peer?
     
