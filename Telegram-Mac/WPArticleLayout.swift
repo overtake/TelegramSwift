@@ -291,8 +291,16 @@ class WPArticleLayout: WPLayout {
             }
             
             if let imageSize = imageSize {
+                let imgSize: NSSize
+                if isTheme {
+                    imgSize = contrainedImageSize
+                } else if action_text != nil {
+                    imgSize = imageSize.aspectFitted(contrainedImageSize)
+                } else {
+                    imgSize = imageSize.aspectFilled(NSMakeSize(maxw, maxw))
+                }
                 
-                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: isTheme ? contrainedImageSize : imageSize.aspectFilled(NSMakeSize(maxw, maxw)), boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground, emptyColor: emptyColor)
+                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: imgSize, boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground, emptyColor: emptyColor)
                 
                 if imageArguments != self.imageArguments {
                     self.imageArguments = imageArguments

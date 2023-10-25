@@ -67,9 +67,27 @@ private final class BoosterRowItem : GeneralRowItem {
     fileprivate let multiply: CGImage
     fileprivate let boost: ChannelBoostersContext.State.Boost
     fileprivate let context: AccountContext
+    fileprivate let empty: EmptyAvatartType?
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, boost: ChannelBoostersContext.State.Boost, viewType: GeneralViewType, action: @escaping()->Void) {
         self.context = context
         self.boost = boost
+        
+        let durationMonths = Int32(round(Float(boost.expires - boost.date) / (86400.0 * 30.0)))
+        
+        if boost.peer == nil {
+            let color: (top: NSColor, bottom: NSColor)
+            if durationMonths > 11 {
+                color = theme.colors.peerColors(0)
+            } else if durationMonths > 5 {
+                color = theme.colors.peerColors(5)
+            } else {
+                color = theme.colors.peerColors(3)
+            }
+            self.empty = .icon(colors: color, icon: theme.icons.chat_filter_non_contacts_avatar, iconSize: NSMakeSize(36, 36), cornerRadius: nil)
+        } else {
+            self.empty = nil
+        }
+
         
         let nameString: String
         var expiresString: String = strings().statsBoostsExpiresOn(stringForFullDate(timestamp: boost.expires))
@@ -83,7 +101,6 @@ private final class BoosterRowItem : GeneralRowItem {
             } else {
                 nameString = "Unknown"
             }
-            let durationMonths = Int32(round(Float(boost.expires - boost.date) / (86400.0 * 30.0)))
             let durationString = strings().channelBoostBoosterDuration(Int(durationMonths))
 
             expiresString = "\(durationString) • \(stringForFullDate(timestamp: boost.expires))"
@@ -164,7 +181,11 @@ private final class BoosterRowItemView : GeneralContainableRowView {
         }
         self.nameView.update(item.name)
         self.statusView.update(item.status)
-        self.avatar.setPeer(account: item.context.account, peer: item.boost.peer?._asPeer())
+        if let empty = item.empty {
+            self.avatar.setSignal(generateEmptyPhoto(NSMakeSize(36, 36), type: empty) |> map { ($0, false) })
+        } else {
+            self.avatar.setPeer(account: item.context.account, peer: item.boost.peer?._asPeer())
+        }
 
         self.reasonView.image = item.reason
         self.reasonView.sizeToFit()
