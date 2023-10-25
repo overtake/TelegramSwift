@@ -259,7 +259,7 @@ private func parsePurchaseAttributes(_ data: Data) -> Receipt.Purchase? {
             break
         }
     }
-    guard let productId, let transactionId, let expirationDate else {
+    guard let productId = productId, let transactionId = transactionId, let expirationDate = expirationDate else {
         return nil
     }
     return Receipt.Purchase(productId: productId, transactionId: transactionId, expirationDate: expirationDate)
