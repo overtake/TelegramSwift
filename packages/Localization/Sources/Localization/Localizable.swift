@@ -1413,6 +1413,10 @@ public final class L10n {
   public static var channelEventLogEmptySearch: String  { return L10n.tr("Localizable", "Channel.EventLog.EmptySearch") }
   /// **No events here yet**\n\nThere were no service actions taken by the channel's members and admins for the last 48 hours.
   public static var channelEventLogEmptyText: String  { return L10n.tr("Localizable", "Channel.EventLog.EmptyText") }
+  /// %1$@ set background emoji to %2$@
+  public static func channelEventLogMessageChangedBackgroundEmojiSet(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageChangedBackgroundEmojiSet", p1, p2)
+  }
   /// %@ linked this group to %@
   public static func channelEventLogMessageChangedLinkedChannel(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageChangedLinkedChannel", p1, p2)
@@ -1420,6 +1424,10 @@ public final class L10n {
   /// %@ linked %@ as the discussion group
   public static func channelEventLogMessageChangedLinkedGroup(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.MessageChangedLinkedGroup", p1, p2)
+  }
+  /// %1$@ set name color to %2$@
+  public static func channelEventLogMessageChangedNameColorSet(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.MessageChangedNameColorSet", p1, p2)
   }
   /// %@ unlinked this group from %@
   public static func channelEventLogMessageChangedUnlinkedChannel(_ p1: String, _ p2: String) -> String {
