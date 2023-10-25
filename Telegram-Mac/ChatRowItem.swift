@@ -1969,23 +1969,23 @@ class ChatRowItem: TableRowItem {
                             nameColor = peer.nameColor?.color ?? nameColor
                         } else if context.peerId != peer.id {
                             if object.renderType == .bubble, message.isAnonymousMessage, !isIncoming {
-                                nameColor = peer.nameColor?.color ?? presentation.colors.accentIconBubble_outgoing
+                                nameColor = peer.nameColor?.color ?? theme.colors.accentIconBubble_outgoing
                             } else if object.renderType == .bubble, message.author?.id != context.peerId, !isIncoming {
-                                nameColor = peer.nameColor?.color ?? presentation.colors.accentIconBubble_outgoing
+                                nameColor = peer.nameColor?.color ?? theme.colors.accentIconBubble_outgoing
                             } else {
                                 let value = abs(Int(peer.id.id._internalGetInt64Value()) % 7)
-                                nameColor = peer.nameColor?.color ?? presentation.chat.peerName(value)
+                                nameColor = peer.nameColor?.color ?? theme.chat.peerName(value)
                             }
                         }
                     }
                     
                     if message.forwardInfo?.psaType != nil, object.renderType == .list {
-                        nameColor = presentation.colors.greenUI
+                        nameColor = theme.colors.greenUI
                     }
                     
                     if message.adAttribute != nil, let author = message.author {
                         let value = abs(Int(author.id.id._internalGetInt64Value()) % 7)
-                        nameColor = peer.nameColor?.color ?? presentation.chat.peerName(value)
+                        nameColor = peer.nameColor?.color ?? theme.chat.peerName(value)
                     }
                     
                     
@@ -2004,8 +2004,8 @@ class ChatRowItem: TableRowItem {
                             if attr.length > 0 {
                                 _ = attr.append(string: " ")
                             }
-                            _ = attr.append(string: "\(strings().chatMessageVia) ", color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
-                            let range = attr.append(string: "@" + address, color: presentation.chat.linkColor(isIncoming, hasBubble && isBubbled), font:.medium(.text))
+                            _ = attr.append(string: "\(strings().chatMessageVia) ", color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble), font:.medium(.text))
+                            let range = attr.append(string: "@" + address, color: theme.chat.linkColor(isIncoming, hasBubble && isBubbled), font:.medium(.text))
                             attr.addAttribute(NSAttributedString.Key.link, value: inAppLink.callback("@" + address, { (parameter) in
                                 chatInteraction.updateInput(with: parameter + " ")
                             }), range: range)
@@ -2014,11 +2014,11 @@ class ChatRowItem: TableRowItem {
                     if canFillAuthorName {
                         var badge: NSAttributedString? = nil
                         if let rank = rank {
-                            badge = .initialize(string: " " + rank, color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
+                            badge = .initialize(string: " " + rank, color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
                             
                         }
                         else if ChatRowItem.authorIsChannel(message: message, account: context.account) {
-                            badge = .initialize(string: " " + strings().chatChannelBadge, color: !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
+                            badge = .initialize(string: " " + strings().chatChannelBadge, color: !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.short))
                         }
                         if let badge = badge {
                             adminBadge = TextViewLayout(badge, maximumNumberOfLines: 1, truncationType: .end, alignment: .left)
@@ -2040,12 +2040,12 @@ class ChatRowItem: TableRowItem {
                 time -= context.timeDifference
                 
                 let dateFormatter = DateSelectorUtil.chatDateFormatter
-                let attr: NSAttributedString = .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                let attr: NSAttributedString = .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
                 self.date?.measure(width: .greatestFiniteMagnitude)
             } else if let adAttr = message.adAttribute {
                 let text = adAttr.messageType == .recommended ? strings().chatMessageRecommended : strings().chatMessageSponsored
-                let attr: NSAttributedString = .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                let attr: NSAttributedString = .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
                 self.date?.measure(width: .greatestFiniteMagnitude)
             }
@@ -2083,7 +2083,7 @@ class ChatRowItem: TableRowItem {
                 for attribute in message.attributes {
                     if let attribute = attribute as? ReplyThreadMessageAttribute, attribute.count > 0 {
                         if let peer = chatInteraction.peer, peer.isSupergroup, !chatInteraction.mode.isThreadMode {
-                            let attr: NSAttributedString = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                            let attr: NSAttributedString = .initialize(string: Int(attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                             self.replyCount = TextViewLayout(attr, maximumNumberOfLines: 1)
                         }
                         break
@@ -2093,7 +2093,7 @@ class ChatRowItem: TableRowItem {
             
             if editedAttribute != nil || message.id.namespace == Namespaces.Message.Cloud {
                 if isEditMarkVisible || isUnsent, message.id.peerId != context.peerId {
-                    let attr: NSAttributedString = .initialize(string: strings().chatMessageEdited, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    let attr: NSAttributedString = .initialize(string: strings().chatMessageEdited, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                     editedLabel = TextViewLayout(attr, maximumNumberOfLines: 1)
                     editedLabel?.measure(width: .greatestFiniteMagnitude)
                 }
@@ -2111,7 +2111,7 @@ class ChatRowItem: TableRowItem {
                 } else {
                    text = strings().chatMessageImported(formatter.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))))
                 }
-                let attr: NSAttributedString = .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                let attr: NSAttributedString = .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 editedLabel = TextViewLayout(attr, maximumNumberOfLines: 1)
                 editedLabel?.measure(width: .greatestFiniteMagnitude)
                 fullDate = strings().chatMessageImportedText + "\n\n" + fullDate
@@ -2119,7 +2119,7 @@ class ChatRowItem: TableRowItem {
                 let formatterEdited = DateSelectorUtil.chatFullDateFormatter
                 fullDate = "\(fullDate) (\(formatterEdited.string(from: Date(timeIntervalSince1970: TimeInterval(forwardInfo.date)))))"
             }
-            let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), quoteIcon: presentation.chat.replyQuote(self), pattern: presentation.chat.replyPattern(self), app: presentation)
+            let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? theme.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  theme.colors.grayForeground : theme.colors.background, title: theme.chat.replyTitle(self), enabledText: theme.chat.replyText(self), disabledText: theme.chat.replyDisabledText(self), quoteIcon: theme.chat.replyQuote(self), pattern: theme.chat.replyPattern(self), app: theme)
 
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId] {
@@ -2153,7 +2153,7 @@ class ChatRowItem: TableRowItem {
                     self.replyModel = ReplyModel(message: message, replyMessageId: message.id, context: context, replyMessage: replyMessage ?? message, quote: attribute.quote, presentation: replyPresentation, customHeader: attribute.authorName)
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
-                    let attr: NSAttributedString = .initialize(string: max(1, attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+                    let attr: NSAttributedString = .initialize(string: max(1, attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? theme.colors.grayText : theme.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                     
                     self.channelViews = TextViewLayout(attr, maximumNumberOfLines: 1)
                     self.channelViews?.measure(width: .greatestFiniteMagnitude)
