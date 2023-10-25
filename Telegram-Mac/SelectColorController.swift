@@ -250,7 +250,7 @@ private func generateFillImage(nameColor: PeerNameColor) -> CGImage? {
         context.clip()
         
         let (firstColor, secondColor) = nameColor.dashColors
-        if let secondColor {
+        if let secondColor = secondColor {
             context.setFillColor(secondColor.cgColor)
             context.fill(circleBounds)
             
