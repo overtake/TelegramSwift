@@ -389,8 +389,8 @@ private struct State : Equatable {
     
     var recentReactionsItems: [RecentReactionItem] = []
     var topReactionsItems: [RecentReactionItem] = []
-
-    
+    var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
+ 
     var recent: RecentUsedEmoji = .defaultSettings
     var reactionSettings: ReactionSettings = .default
     
@@ -454,6 +454,9 @@ private struct State : Equatable {
         if lhs.selectedEmojiCategory != rhs.selectedEmojiCategory {
             return false
         }
+        if lhs.featuredBackgroundIconEmojiItems != rhs.featuredBackgroundIconEmojiItems {
+            return false
+        }
         if lhs.color != rhs.color {
             return false
         }
@@ -512,15 +515,17 @@ private func packEntries(_ state: State, arguments: Arguments, presentation: Tel
     case .forumTopic:
         hasRecent = true
     case .backgroundIcon:
-        hasRecent = false
+        hasRecent = true
     }
     if hasRecent {
+        let recentImage = NSImage(named: "Icon_EmojiTabRecent")!
+        let icon = recentImage.precomposed((state.color ?? theme.colors.grayIcon).withAlphaComponent(0.8))
+        let activeIcon = recentImage.precomposed((state.color ?? theme.colors.grayIcon.darker()))
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent_pack, equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return ETabRowItem(initialSize, stableId: stableId, icon: theme.icons.emojiRecentTab, iconSelected: theme.icons.emojiRecentTabActive)
+            return ETabRowItem(initialSize, stableId: stableId, icon: icon, iconSelected: activeIcon)
         }))
         index += 1
     }
-    
    
 
     if arguments.mode == .emoji || arguments.mode == .stories {
@@ -634,7 +639,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
             })
             
-            let statuses = state.iconStatusEmoji + state.recentStatusItems.map { $0.media } + state.featuredStatusItems.map { $0.media }
+            let statuses = state.iconStatusEmoji + state.recentStatusItems.map { $0.media } + state.featuredStatusItems.map { $0.media } + state.featuredBackgroundIconEmojiItems.map { $0.media }
+            
+            
             var contains:Set<MediaId> = Set()
             let normalized:[StickerPackItem] = statuses.filter { item in
                 let text = item.customEmojiText ?? item.stickerText ?? ""
@@ -814,21 +821,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }
             
             
-            if key == .Recent, arguments.mode == .status {
+            if key == .Recent, arguments.mode == .status || arguments.mode == .backgroundIcon {
                 
-                let string: String
-                if let expiryDate = state.peer?.peer.emojiStatus?.expirationDate, expiryDate > arguments.context.timestamp {
-                    string = strings().customStatusExpires(timeIntervalString(Int(expiryDate - arguments.context.timestamp)))
-                } else {
-                    string = strings().customStatusExpiresPromo
+                if arguments.mode == .status {
+                    let string: String
+                    if let expiryDate = state.peer?.peer.emojiStatus?.expirationDate, expiryDate > arguments.context.timestamp {
+                        string = strings().customStatusExpires(timeIntervalString(Int(expiryDate - arguments.context.timestamp)))
+                    } else {
+                        string = strings().customStatusExpiresPromo
+                    }
+                    
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_status_status"), equatable: .init(string), comparable: nil, item: { initialSize, stableId in
+                        return EmojiStatusStatusRowItem(initialSize, stableId: stableId, status: string.uppercased(), viewType: .textTopItem)
+                    }))
+                    index += 1
                 }
-                
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_status_status"), equatable: .init(string), comparable: nil, item: { initialSize, stableId in
-                    return EmojiStatusStatusRowItem(initialSize, stableId: stableId, status: string.uppercased(), viewType: .textTopItem)
-                }))
-                index += 1
-                
-                let def = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_Premium_StickerPack", ext: ""), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+               
+                let iconName: String = arguments.mode == .status ? "Icon_Premium_StickerPack" : "Icon_NoPeerIcon"
+                let color = state.color ?? theme.colors.accent
+                let def = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: iconName, ext: "", color: color), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 
                 normalized.insert(.init(index: .init(index: 0, id: 0), file: def, indexKeys: []), at: 0)
                 
@@ -2310,7 +2321,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let peer = getPeerView(peerId: context.peerId, postbox: context.account.postbox)
         
-        let featured: Signal<[FeaturedStickerPackItem], NoError> = mode == .backgroundIcon ? .single([]) : context.account.viewTracker.featuredEmojiPacks()
+        let featured: Signal<[FeaturedStickerPackItem], NoError> = context.account.viewTracker.featuredEmojiPacks()
         
         actionsDisposable.add(combineLatest(queue: prepareQueue, emojies, featured, peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic, searchCategories).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic, searchCategories in
             
@@ -2338,7 +2349,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             var featuredStatusItems:[RecentMediaItem] = []
             var recentReactionsItems:[RecentReactionItem] = []
             var topReactionsItems:[RecentReactionItem] = []
-
+            var featuredBackgroundIconEmojiItems: [RecentMediaItem] = []
             if let recentStatusEmoji = recentStatusEmoji {
                 for item in recentStatusEmoji.items {
                     guard let item = item.contents.get(RecentMediaItem.self) else {
@@ -2355,6 +2366,16 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                     featuredStatusItems.append(item)
                 }
             }
+            if let featuredBackgroundIconEmoji = featuredBackgroundIconEmoji {
+                for item in featuredBackgroundIconEmoji.items {
+                    guard let item = item.contents.get(RecentMediaItem.self) else {
+                        continue
+                    }
+                    featuredBackgroundIconEmojiItems.append(item)
+                }
+            }
+            
+            
             if let recentReactionsView = recentReactionsView {
                 for item in recentReactionsView.items {
                     guard let item = item.contents.get(RecentReactionItem.self) else {
@@ -2398,7 +2419,6 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                             }
                         }
                         if !files.isEmpty {
-                            
                             sections.append(.init(info: info, items: files, dict: dict, installed: true))
                         }
                     }
@@ -2408,8 +2428,23 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                     if !contains {
                         let dict = item.topItems.toDictionary(with: {
                             $0.file.fileId
+                        }).filter { _, value in
+                            if mode == .backgroundIcon {
+                                return value.file.isCustomTemplateEmoji
+                            } else {
+                                return false
+                            }
+                        }
+                        let items = item.topItems.filter({ value in
+                            if mode == .backgroundIcon {
+                                return value.file.isCustomTemplateEmoji
+                            } else {
+                                return false
+                            }
                         })
-                        sections.append(.init(info: item.info, items: item.topItems, dict: dict, installed: false))
+                        if !items.isEmpty {
+                            sections.append(.init(info: item.info, items: items, dict: dict, installed: false))
+                        }
                     }
                 }
                 if let peer = peer {
@@ -2425,6 +2460,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.recent = recentEmoji
                 current.topReactionsItems = topReactionsItems
                 current.recentReactionsItems = recentReactionsItems
+                current.featuredBackgroundIconEmojiItems = featuredBackgroundIconEmojiItems
                 current.reactionSettings = reactionSettings
                 current.iconStatusEmoji = iconStatusEmoji
                 current.searchCategories = searchCategories

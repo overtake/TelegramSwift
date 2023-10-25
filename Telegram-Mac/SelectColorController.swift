@@ -642,13 +642,23 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
     let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
 
     interactions.sendAnimatedEmoji = { [weak emojis] sticker, _, _, fromRect in
-        
-        emojis?.setSelectedItem(.init(source: .custom(sticker.file.fileId.id), type: .normal))
-        updateState { current in
-            var current = current
-            current.backgroundEmojiId = sticker.file.fileId.id
-            return current
+        if sticker.file.mimeType.hasPrefix("bundle") {
+            emojis?.setSelectedItem(nil)
+            updateState { current in
+                var current = current
+                current.backgroundEmojiId = nil
+                return current
+            }
+        } else {
+            emojis?.setSelectedItem(.init(source: .custom(sticker.file.fileId.id), type: .normal))
+            updateState { current in
+                var current = current
+                current.backgroundEmojiId = sticker.file.fileId.id
+                return current
+            }
         }
+
+        
     }
     
     emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(peerId), context: context))

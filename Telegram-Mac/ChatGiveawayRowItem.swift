@@ -91,7 +91,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
         let countriesText: String
         if !media.countries.isEmpty {
             let locale = appAppearance.locale
-            let countryNames = media.countries.map { id in
+            let countryNames: [String] = media.countries.map { id -> String in
                 if let countryName = locale.localizedString(forRegionCode: id) {
                     return "\(flagEmoji(countryCode: id))\(countryName)"
                 } else {

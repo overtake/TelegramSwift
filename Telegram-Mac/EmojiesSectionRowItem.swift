@@ -791,7 +791,9 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     self.addSubview(current)
                     isNew = true
                 }
-                current.set(background: unlockText.2 ? theme.colors.accent : theme.colors.accent.withAlphaComponent(0.6), for: .Normal)
+                let primaryColor = item.color ?? theme.colors.accent
+                
+                current.set(background: unlockText.2 ? primaryColor : primaryColor.withAlphaComponent(0.6), for: .Normal)
                 current.set(font: .medium(12), for: .Normal)
                 current.set(color: theme.colors.underSelectedColor, for: .Normal)
                 current.set(text: unlockText.0, for: .Normal)
