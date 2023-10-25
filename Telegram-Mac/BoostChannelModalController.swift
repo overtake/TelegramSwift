@@ -926,15 +926,10 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
         
         if let _ = nextLevelBoosts {
             if let availableBoost = availableBoosts.first {
-                let _ = context.engine.peers.applyChannelBoost(peerId: peerId, slots: [availableBoost.slot]).startStandalone()
-                updateState { current in
-                    var current = current
-                    current.status = current.status.increment()
-                    return current
-                }
                 availableBoosts.removeFirst()
-                updateDisposable.set(nil)
-                delay(2.0, closure: {
+                
+                let _ = context.engine.peers.applyChannelBoost(peerId: peerId, slots: [availableBoost.slot]).startStandalone(completed: {
+                    updateDisposable.set(nil)
                     updateDisposable.set(context.engine.peers.getChannelBoostStatus(peerId: peerId).startStandalone(next: { status in
                         updateState { current in
                             var current = current
@@ -945,6 +940,12 @@ func BoostChannelModalController(context: AccountContext, peer: Peer, boosts: Ch
                         }
                     }))
                 })
+//                updateState { current in
+//                    var current = current
+//                    current.status = current.status.increment()
+//                    return current
+//                }
+                
                 
                 PlayConfetti(for: context.window)
             } else if !occupiedBoosts.isEmpty, let _ = myStatus {

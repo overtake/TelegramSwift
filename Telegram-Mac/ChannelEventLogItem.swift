@@ -783,6 +783,14 @@ class ServiceEventLogItem: TableRowItem {
                     text = strings().channelEventLogMessageToggleNoForwardsOff(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .changeNameColor(_, updatedValue):
+                let text: String
+                text = strings().channelEventLogMessageChangedNameColorSet(peer.displayTitle, "\(updatedValue)")
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .changeBackgroundEmojiId(_, updatedValue):
+                let text: String
+                text = strings().channelEventLogMessageChangedBackgroundEmojiSet(peer.displayTitle, "\(updatedValue)")
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:
                 break
             }

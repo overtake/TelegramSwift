@@ -407,7 +407,7 @@ fileprivate class PreviewSenderView : Control {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
-        transition.updateFrame(view: actionsContainerView, frame: CGRect(origin: CGPointMake(size.width - actionsContainerView.frame.width, size.height - actionsContainerView.frame.height), size: actionsContainerView.frame.size))
+        transition.updateFrame(view: actionsContainerView, frame: CGRect(origin: NSMakePoint(size.width - actionsContainerView.frame.width, size.height - actionsContainerView.frame.height), size: actionsContainerView.frame.size))
         
         transition.updateFrame(view: headerView, frame: CGRect(origin: .zero, size: NSMakeSize(size.width, 50)))
         
