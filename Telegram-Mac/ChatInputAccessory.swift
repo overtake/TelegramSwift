@@ -38,6 +38,7 @@ class ChatInputAccessory: View {
         self.addSubview(iconView)
         self.addSubview(container)
         self.addSubview(dismiss)
+        
         dismissForward = { [weak self] in
             self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
         }
@@ -254,9 +255,6 @@ class ChatInputAccessory: View {
                 self?.dismissReply()
             }, for: .Click)
             
-            container.set(handler: { [weak self] _ in
-                self?.chatInteraction.focusMessageId(nil, replyMessageId.messageId, .CenterEmpty)
-            }, for: .Click)
             
             container.contextMenu = {
                 let menu = ContextMenu()

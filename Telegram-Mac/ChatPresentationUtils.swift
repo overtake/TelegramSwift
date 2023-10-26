@@ -562,7 +562,13 @@ final class TelegramChatColors {
     func blockColor(_ colors: PeerNameColors, message: Message, isIncoming: Bool, bubbled: Bool) -> PeerNameColors.Colors {
         var hasSecondary: Bool = false
         var hasTertiary: Bool = false
-        if let author = message.author {
+        var author: Peer?
+        if let forwardInfo = message.forwardInfo {
+            author = forwardInfo.author
+        } else {
+            author = message.effectiveAuthor
+        }
+        if let author = author {
             if let nameColor = author.nameColor {
                 let color = colors.get(nameColor)
                 if isIncoming {
@@ -592,7 +598,10 @@ final class TelegramChatColors {
         if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
             if item.isIncoming {
                 if let nameColor = author.nameColor {
-                    return nameColor.quoteIcon
+                    let color = item.context.peerNameColors.get(nameColor).main
+                    return item.presentation.resourceCache.image(Int32(color.rgb), {
+                        NSImage(named: "Icon_Quote")!.precomposed(color)
+                    })
                 }
             }
         }

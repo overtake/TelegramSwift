@@ -322,7 +322,7 @@ class ReplyModel: ChatAccessoryModel {
             attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
             
             
-            self.message = .init(attr, maximumNumberOfLines: quote != nil && self.modelType == .modern ? 0 : 1, cutout: self.cutout)
+            self.message = .init(attr, maximumNumberOfLines: quote != nil && self.modelType == .modern ? 4 : 1, cutout: self.cutout)
         } else {
             self.header = nil
             self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.enabledText, font: .normal(.text)), maximumNumberOfLines: 1, cutout: self.cutout)

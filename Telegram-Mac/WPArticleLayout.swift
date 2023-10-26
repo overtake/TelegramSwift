@@ -249,7 +249,7 @@ class WPArticleLayout: WPLayout {
                     contrainedImageSize = imageSize.fitted(NSMakeSize(maxw, maxw))
                 } else {
                     if action_text != nil {
-                        contrainedImageSize = NSMakeSize(min(250, maxw), min(250, maxw))
+                        contrainedImageSize = NSMakeSize(min(300, maxw), min(300, maxw))
                     } else {
                         contrainedImageSize = imageSize.aspectFitted(NSMakeSize(maxw, maxw))
                     }
