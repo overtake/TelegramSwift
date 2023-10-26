@@ -597,17 +597,6 @@ public final class TextViewLayout : Equatable {
         
         self.insets = .zero
         
-//        var found = false
-//        attributedString.enumerateAttribute(NSAttributedString.Key("Attribute__Blockquote"), in: NSRange(location: 0, length: attributedString.length), using: { value, effectiveRange, _ in
-//            if let _ = value as? TextViewBlockQuoteData {
-//                found = true
-//            }
-//        })
-//        
-//        if found {
-//            return calculateLayoutV2(isBigEmoji: isBigEmoji, lineSpacing: lineSpacing, saveRTL: saveRTL)
-//        }
-
         
         let font: CTFont
         if attributedString.length != 0 {
@@ -732,7 +721,7 @@ public final class TextViewLayout : Equatable {
                 
                 breakInset = CGFloat(blockQuote.space * 2)
                 lineCutoutOffset += CGFloat(breakInset)
-                lineAdditionalWidth += blockQuote.space * 2 + 20
+                lineAdditionalWidth += blockQuote.space * 2 + (blockQuote.isCode ? 6 : 20)
                 
                 if !isWasPreformatted {
                     layoutSize.height += CGFloat(blockQuote.space)

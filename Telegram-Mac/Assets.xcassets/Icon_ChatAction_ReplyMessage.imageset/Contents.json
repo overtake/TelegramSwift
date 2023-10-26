@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_reply.png",
+      "filename" : "reply_settings.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_reply@2x.png",
+      "filename" : "reply_settings@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

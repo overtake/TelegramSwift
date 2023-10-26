@@ -73,46 +73,6 @@ extension PeerNameColors {
 
 
 
-
-public extension PeerNameColor {
-    
-    
-    var quoteIcon: CGImage {
-        return theme.icons.message_quote_pink
-//        switch self {
-//        case .red:
-//            return theme.icons.message_quote_red
-//        case .orange:
-//            return theme.icons.message_quote_orange
-//        case .violet:
-//            return theme.icons.message_quote_violet
-//        case .green:
-//            return theme.icons.message_quote_green
-//        case .cyan:
-//            return theme.icons.message_quote_cyan
-//        case .blue:
-//            return theme.icons.message_quote_blue
-//        case .pink:
-//            return theme.icons.message_quote_pink
-//        case .redDash:
-//            return theme.icons.message_quote_red
-//        case .orangeDash:
-//            return theme.icons.message_quote_orange
-//        case .violetDash:
-//            return theme.icons.message_quote_violet
-//        case .greenDash:
-//            return theme.icons.message_quote_green
-//        case .cyanDash:
-//            return theme.icons.message_quote_cyan
-//        case .blueDash:
-//            return theme.icons.message_quote_blue
-//        case .pinkDash:
-//            return theme.icons.message_quote_pink
-//        }
-    }
-}
-
-
 let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
 enum PeerPhoto {

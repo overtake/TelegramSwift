@@ -438,8 +438,6 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         
         let yCode:CGFloat = codeText.currentEditor() != nil ? 1 : 0
         let yNumber:CGFloat = numberText.currentEditor() != nil ? 1 : 0
-
-        NSLog("\(yCode), \(yNumber)")
         
         codeText.setFrameOrigin(10, frame.height - floor(frame.height / 2 - codeText.frame.height/2) + yCode)
         numberText.setFrameOrigin(10 + codeText.frame.width + 10, frame.height - floor(frame.height / 2 - numberText.frame.height/2) + yNumber)
