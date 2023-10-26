@@ -459,6 +459,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     
     
     
+    
     public weak var customDelegate: ChatInputTextViewDelegate?
     
     fileprivate var ignoreNextDrawing: Bool = false
@@ -992,6 +993,19 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     }
     
     public override func draw(_ dirtyRect: NSRect) {
+        
+        guard let ctx = NSGraphicsContext.current?.cgContext else {
+            return
+        }
+        
+        ctx.setAllowsFontSubpixelPositioning(true)
+        ctx.setShouldSubpixelPositionFonts(true)
+        
+        ctx.setAllowsAntialiasing(true)
+        ctx.setShouldAntialias(true)
+        
+        ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
+        ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
         
         super.draw(dirtyRect)
         onRedraw?()

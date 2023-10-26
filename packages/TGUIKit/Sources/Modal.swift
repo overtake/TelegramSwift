@@ -748,6 +748,8 @@ public class Modal: NSObject {
     public func resize(with size:NSSize, animated:Bool = true) {
         var focus:NSRect
         
+        let size = NSMakeSize(max(size.width, 2), max(size.height, 2))
+        
         var headerOffset: CGFloat = 0
         if let headerView = headerView {
             headerOffset += headerView.frame.height
@@ -761,6 +763,7 @@ public class Modal: NSObject {
         } else {
             focus = background.focus(NSMakeSize(size.width, size.height + headerOffset))
         }
+        
         
         if focus != container.frame {
            // CATransaction.begin()

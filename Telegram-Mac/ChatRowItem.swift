@@ -3363,6 +3363,9 @@ class ChatRowItem: TableRowItem {
             if item.textLayout.lastLineIsRtl {
                 return nil
             }
+            if item.textLayout.lastLineIsBlock {
+                return LastLineData(width: item.textLayout.layoutSize.width, single: false)
+            }
             if let _ = item.webpageLayout, !item.webpageAboveContent {
                 return nil
             }

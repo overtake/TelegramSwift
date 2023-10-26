@@ -550,6 +550,18 @@ public final class TextViewLayout : Equatable {
     public var lastLineIsRtl: Bool {
         return lines.last?.isRTL ?? false
     }
+    
+    public var lastLineIsBlock: Bool {
+        return blockQuotes.contains(where: { blockQuote in
+            if let line = lines.last {
+                if blockQuote.frame.intersects(line.frame) {
+                    return true
+                }
+            }
+            return false
+        })
+    }
+    
     public var isWholeRTL: Bool {
         return lines.allSatisfy({ $0.isRTL })
     }
@@ -1867,21 +1879,28 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
 
         if let layout = textLayout, drawingLayer == layer {
             
-//            ctx.setFillColor(NSColor.blue.cgColor)
-//            ctx.fill(layer.bounds)
-//            ctx.setAllowsFontSubpixelPositioning(true)
-//            ctx.setShouldSubpixelPositionFonts(true)
+            ctx.setAllowsFontSubpixelPositioning(true)
+            ctx.setShouldSubpixelPositionFonts(true)
+            if !System.supportsTransparentFontDrawing {
+                ctx.setAllowsAntialiasing(true)
+                
+                ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
+                ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
+                
+                if backingScaleFactor == 1.0 && !disableBackgroundDrawing {
+                    ctx.setFillColor(backgroundColor.cgColor)
+                    for line in layout.lines {
+                        ctx.fill(NSMakeRect(0, line.frame.minY - line.frame.height - 2, line.frame.width, line.frame.height + 6))
+                    }
+                }
+            } else {
+                ctx.setAllowsAntialiasing(true)
+                ctx.setShouldAntialias(true)
+                ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
+                ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
+            }
+                      
 
-            ctx.setAllowsAntialiasing(true)
-                    
-            ctx.setAllowsFontSmoothing(true)
-            ctx.setShouldSmoothFonts(true)
-            
-            ctx.setAllowsFontSubpixelPositioning(backingScaleFactor == 1.0)
-            ctx.setShouldSubpixelPositionFonts(backingScaleFactor == 1.0)
-            
-            ctx.setAllowsFontSubpixelQuantization(true)
-            ctx.setShouldSubpixelQuantizeFonts(true)
                     
             
             if clearExceptRevealed {

@@ -2332,7 +2332,7 @@ final class StoryModalController : ModalViewController, Notifable {
         
         let sendText: (ChatTextInputState, PeerId, Int32, StoryViewController.TooptipView.Source)->Void = { [weak self] input, peerId, id, source in
             beforeCompletion()
-            _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil).start(completed: {
+            _ = Sender.enqueue(input: input, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), sendAsPeerId: nil).start(completed: {
                 afterCompletion()
                 self?.interactions.updateInput(with: "", resetFocus: true)
                 self?.genericView.showTooltip(source)
@@ -2735,7 +2735,7 @@ final class StoryModalController : ModalViewController, Notifable {
             }
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
-                _ = Sender.enqueue(media: file, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
+                _ = Sender.enqueue(media: file, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
                     afterCompletion()
                     self?.genericView.showTooltip(.media([file]))
                 })
@@ -2779,7 +2779,7 @@ final class StoryModalController : ModalViewController, Notifable {
             }
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
-                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler).start(completed: {
+                _ = Sender.enqueue(media: medias, caption: caption, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler).start(completed: {
                     afterCompletion()
                     self?.genericView.showTooltip(.media(medias))
                 })
@@ -2789,7 +2789,7 @@ final class StoryModalController : ModalViewController, Notifable {
         chatInteraction.sendMedia = { [weak self] container in
             if let peerId = interactions.presentation.entryId, let id = interactions.presentation.storyId {
                 beforeCompletion()
-                _ = Sender.enqueue(media: container, context: context, peerId: peerId, replyId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
+                _ = Sender.enqueue(media: container, context: context, peerId: peerId, replyId: nil, threadId: nil, replyStoryId: .init(peerId: peerId, id: id)).start(completed: {
                     afterCompletion()
                     self?.genericView.showTooltip(.media([]))
                 })

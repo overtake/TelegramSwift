@@ -23,6 +23,13 @@ import Accelerate
 import TGModernGrowingTextView
 import InputView
 
+func optionalMessageThreadId(_ messageId: MessageId?) -> Int64? {
+    if let messageId = messageId {
+        return makeMessageThreadId(messageId)
+    } else {
+        return nil
+    }
+}
 
 
 extension RenderedChannelParticipant {
