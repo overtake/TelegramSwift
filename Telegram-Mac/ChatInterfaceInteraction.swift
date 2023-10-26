@@ -773,6 +773,7 @@ final class ChatInteraction : InterfaceObserver  {
             
             let context = self.context
             let peerId = self.peerId
+            let threadId = self.chatLocation.threadId
             
             return ReplyMarkupInteractions(context: context, proccess: { [weak self] (button, progress) in
                 if let strongSelf = self {
@@ -781,7 +782,7 @@ final class ChatInteraction : InterfaceObserver  {
                         execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
                     case .text:
                         let replyId = strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId
-                        _ = (enqueueMessages(account: strongSelf.context.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
+                        _ = (enqueueMessages(account: strongSelf.context.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], inlineStickers: [:], mediaReference: nil, threadId: threadId, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
                             strongSelf?.scrollToLatest(true)
                         })
                     case .requestPhone:
