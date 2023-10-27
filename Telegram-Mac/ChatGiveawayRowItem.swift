@@ -64,7 +64,6 @@ final class ChatGiveawayRowItem : ChatRowItem {
         
         let media = object.message!.media.first! as! TelegramMediaGiveaway
         self.media = media
-        //TODOLANG
         let header_attr = NSMutableAttributedString()
         _ = header_attr.append(string: strings().chatGiveawayMessagePrizeTitle, color: wpPresentation.text, font: .medium(.text))
         _ = header_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
@@ -219,7 +218,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 } else {
                     let randomSubscribers = strings().chatGiveawayInfoRandomSubscribersCountable(Int(giveaway.quantity))
                     if giveaway.channelPeerIds.count > 1 {
-                        ending = strings().chatGiveawayInfoOngoingMany(untilDate, randomSubscribers, peerName, strings().chatGiveawayInfoOtherChannels(giveaway.channelPeerIds.count - 1))
+                        ending = strings().chatGiveawayInfoOngoingMany(untilDate, randomSubscribers, peerName, strings().chatGiveawayInfoOtherChannelsCountable(giveaway.channelPeerIds.count - 1))
                     } else {
                         ending = strings().chatGiveawayInfoOngoing(untilDate, randomSubscribers, peerName)
                     }
