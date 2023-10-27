@@ -591,9 +591,12 @@ class ChatControllerView : View, ChatInputDelegate {
             transition.updateFrame(view: backgroundView, frame: NSMakeRect(0, -frame.minY, size.width, size.height))
         }
         
-        let visibleRows = tableView.visibleRows(frame.height)
         
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            let visibleRows = self.tableView.visibleRows(frame.height)
             for i in visibleRows.lowerBound ..< visibleRows.upperBound {
                 let item = self.tableView.item(at: i)
                 if let view = item.view as? ChatRowView {

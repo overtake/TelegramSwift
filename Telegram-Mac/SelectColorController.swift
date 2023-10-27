@@ -792,6 +792,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
                     } else {
                         _ = context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: stateValue.with { $0.selected }, backgroundEmojiId: stateValue.with { $0.backgroundEmojiId }).start()
                         close?()
+                        showModalText(for: context.window, text: strings().selectColorSuccessChannel)
                     }
                 }
             })
@@ -799,6 +800,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
             if context.isPremium {
                 _ = context.engine.accountData.updateNameColorAndEmoji(nameColor: stateValue.with { $0.selected }, backgroundEmojiId: stateValue.with { $0.backgroundEmojiId }).start()
                 close?()
+                showModalText(for: context.window, text: strings().selectColorSuccessUser)
             } else {
                 showModalText(for: context.window, text: strings().selectColorPremium, callback: { _ in
                     showModal(with: PremiumBoardingController(context: context), for: context.window)

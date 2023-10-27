@@ -904,7 +904,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 })
             }
             
-            if bot.flags.contains(.showInSettingsDisclaimer) { //
+            if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //
                 var options: [ModalAlertData.Option] = []
                 options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
                 
@@ -918,11 +918,11 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 
                 let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
                 showModalAlert(for: context.window, data: data, completion: { result in
-                    open()
                     installAttachMenuBot(context: context, peer: bot.peer._asPeer(), completion: { value in
                         if value, installBot {
                             showModalText(for: context.window, text: strings().webAppAttachSuccess(bot.peer._asPeer().displayTitle))
                         }
+                        open()
                     })
                 })
             } else {

@@ -32,17 +32,17 @@ import AppCenter
 import AppCenterCrashes
 #endif
 
-final class CodeSyntex {
+final class CodeSyntax {
     private let syntaxer: Syntaxer
     private init() {
         let pathFile = Bundle.main.path(forResource: "grammars", ofType: "dat")!
         let data = try! Data(contentsOf: URL(fileURLWithPath: pathFile))
         self.syntaxer = Syntaxer(data)!
     }
-    private static let standart: CodeSyntex = .init()
+    private static let standart: CodeSyntax = .init()
     
     fileprivate static func initialize() {
-        _ = CodeSyntex.standart
+        _ = CodeSyntax.standart
     }
     
     static func syntax(code: String, language: String, theme: SyntaxterTheme) -> NSAttributedString {
@@ -218,7 +218,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private(set) var appEncryption: AppEncryptionParameters!
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        CodeSyntex.initialize()
+        CodeSyntax.initialize()
        // UserDefaults.standard.set(true, forKey: "NSTableViewCanEstimateRowHeights")
      //   UserDefaults.standard.removeObject(forKey: "NSTableViewCanEstimateRowHeights")
     }

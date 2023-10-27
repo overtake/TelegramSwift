@@ -309,6 +309,8 @@ class ReplyModel: ChatAccessoryModel {
                         } else if peer.isGroup || peer.isSupergroup {
                             header.append(.embedded(name: "Icon_Reply_Group", color: presentation.colors.main, resize: false))
                             header.append(string: peer.compactDisplayTitle, color: presentation.colors.main, font: .medium(.text))
+                        } else if peer.isUser {
+                            header.insert(.embedded(name: "Icon_Reply_User", color: presentation.colors.main, resize: false), at: 0)
                         }
                     }
                 }

@@ -2739,11 +2739,11 @@ public final class L10n {
   public static func chatGiveawayInfoActivatedLinksCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_countable", p1)
   }
-  /// %d winner already used their gift link.
+  /// %d winners already used their gift link.
   public static func chatGiveawayInfoActivatedLinksFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_few", p1)
   }
-  /// %d winner already used their gift link.
+  /// %d winners already used their gift link.
   public static func chatGiveawayInfoActivatedLinksMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_many", p1)
   }
@@ -2751,15 +2751,15 @@ public final class L10n {
   public static func chatGiveawayInfoActivatedLinksOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_one", p1)
   }
-  /// %d winner already used their gift link.
+  /// %d winners already used their gift link.
   public static func chatGiveawayInfoActivatedLinksOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_other", p1)
   }
-  /// %d winner already used their gift link.
+  /// %d winners already used their gift link.
   public static func chatGiveawayInfoActivatedLinksTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_two", p1)
   }
-  /// %d winner already used their gift link.
+  /// %d winners already used their gift link.
   public static func chatGiveawayInfoActivatedLinksZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_zero", p1)
   }
@@ -2789,15 +2789,15 @@ public final class L10n {
   }
   /// Giveaway Ended
   public static var chatGiveawayInfoEndedTitle: String  { return L10n.tr("Localizable", "Chat.Giveaway.Info.EndedTitle") }
-  /// %d month
+  /// %d
   public static func chatGiveawayInfoMonthsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_countable", p1)
   }
-  /// **%d** month
+  /// **%d** months
   public static func chatGiveawayInfoMonthsFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_few", p1)
   }
-  /// **%d** month
+  /// **%d** months
   public static func chatGiveawayInfoMonthsMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_many", p1)
   }
@@ -2805,15 +2805,15 @@ public final class L10n {
   public static func chatGiveawayInfoMonthsOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_one", p1)
   }
-  /// **%d** month
+  /// **%d** months
   public static func chatGiveawayInfoMonthsOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_other", p1)
   }
-  /// **%d** month
+  /// **%d** months
   public static func chatGiveawayInfoMonthsTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_two", p1)
   }
-  /// **%d** month
+  /// **%d** months
   public static func chatGiveawayInfoMonthsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_zero", p1)
   }
@@ -2859,11 +2859,11 @@ public final class L10n {
   public static func chatGiveawayInfoOtherChannelsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_countable", p1)
   }
-  /// **%d** other listed channel
+  /// **%d** other listed channels
   public static func chatGiveawayInfoOtherChannelsFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_few", p1)
   }
-  /// **%d** other listed channel
+  /// **%d** other listed channels
   public static func chatGiveawayInfoOtherChannelsMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_many", p1)
   }
@@ -2871,15 +2871,15 @@ public final class L10n {
   public static func chatGiveawayInfoOtherChannelsOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_one", p1)
   }
-  /// **%d** other listed channel
+  /// **%d** other listed channels
   public static func chatGiveawayInfoOtherChannelsOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_other", p1)
   }
-  /// **%d** other listed channel
+  /// **%d** other listed channels
   public static func chatGiveawayInfoOtherChannelsTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_two", p1)
   }
-  /// **%d** other listed channel
+  /// **%d** other listed channels
   public static func chatGiveawayInfoOtherChannelsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_zero", p1)
   }
@@ -2895,11 +2895,11 @@ public final class L10n {
   public static func chatGiveawayInfoRandomSubscribersCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_countable", p1)
   }
-  /// **%d** random subscriber
+  /// **%d** random subscribers
   public static func chatGiveawayInfoRandomSubscribersFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_few", p1)
   }
-  /// **%d** random subscriber
+  /// **%d** random subscribers
   public static func chatGiveawayInfoRandomSubscribersMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_many", p1)
   }
@@ -2907,15 +2907,15 @@ public final class L10n {
   public static func chatGiveawayInfoRandomSubscribersOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_one", p1)
   }
-  /// **%d** random subscriber
+  /// **%d** random subscribers
   public static func chatGiveawayInfoRandomSubscribersOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_other", p1)
   }
-  /// **%d** random subscriber
+  /// **%d** random subscribers
   public static func chatGiveawayInfoRandomSubscribersTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_two", p1)
   }
-  /// **%d** random subscriber
+  /// **%d** random subscribers
   public static func chatGiveawayInfoRandomSubscribersZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_zero", p1)
   }
@@ -2923,11 +2923,11 @@ public final class L10n {
   public static func chatGiveawayInfoRandomUsersCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_countable", p1)
   }
-  /// **%d** random user
+  /// **%d** random users
   public static func chatGiveawayInfoRandomUsersFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_few", p1)
   }
-  /// **%d** random user
+  /// **%d** random users
   public static func chatGiveawayInfoRandomUsersMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_many", p1)
   }
@@ -2935,15 +2935,15 @@ public final class L10n {
   public static func chatGiveawayInfoRandomUsersOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_one", p1)
   }
-  /// **%d** random user
+  /// **%d** random users
   public static func chatGiveawayInfoRandomUsersOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_other", p1)
   }
-  /// **%d** random user
+  /// **%d** random users
   public static func chatGiveawayInfoRandomUsersTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_two", p1)
   }
-  /// **%d** random user
+  /// **%d** random users
   public static func chatGiveawayInfoRandomUsersZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_zero", p1)
   }
@@ -2953,11 +2953,11 @@ public final class L10n {
   public static func chatGiveawayInfoSubscriptionsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_countable", p1)
   }
-  /// **%d Telegram Premium** subscription
+  /// **%d Telegram Premium** subscriptions
   public static func chatGiveawayInfoSubscriptionsFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_few", p1)
   }
-  /// **%d Telegram Premium** subscription
+  /// **%d Telegram Premium** subscriptions
   public static func chatGiveawayInfoSubscriptionsMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_many", p1)
   }
@@ -2965,15 +2965,15 @@ public final class L10n {
   public static func chatGiveawayInfoSubscriptionsOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_one", p1)
   }
-  /// **%d Telegram Premium** subscription
+  /// **%d Telegram Premium** subscriptions
   public static func chatGiveawayInfoSubscriptionsOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_other", p1)
   }
-  /// **%d Telegram Premium** subscription
+  /// **%d Telegram Premium** subscriptions
   public static func chatGiveawayInfoSubscriptionsTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_two", p1)
   }
-  /// **%d Telegram Premium** subscription
+  /// **%d Telegram Premium** subscriptions
   public static func chatGiveawayInfoSubscriptionsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_zero", p1)
   }
@@ -11583,6 +11583,10 @@ public final class L10n {
   public static var selectColorMessage2PreviewText: String  { return L10n.tr("Localizable", "SelectColor.Message2.Preview.Text") }
   /// Link Preview.
   public static var selectColorMessage2PreviewTitle: String  { return L10n.tr("Localizable", "SelectColor.Message2.Preview.Title") }
+  /// Your channel name color has been updated!
+  public static var selectColorSuccessChannel: String  { return L10n.tr("Localizable", "SelectColor.Success.Channel") }
+  /// Your name color has been updated!
+  public static var selectColorSuccessUser: String  { return L10n.tr("Localizable", "SelectColor.Success.User") }
   /// Channel Color
   public static var selectColorTitleChannel: String  { return L10n.tr("Localizable", "SelectColor.Title.Channel") }
   /// Your Name Color

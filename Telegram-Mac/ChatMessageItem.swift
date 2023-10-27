@@ -847,8 +847,8 @@ class ChatMessageItem: ChatRowItem {
                 
                 if let language = language {
                     let code = string.attributedSubstring(from: range).string
-                    let syntaxed = CodeSyntex.syntax(code: code, language: language, theme: .init(dark: isDark, textColor: textColor, textFont: .code(fontSize), italicFont: .italicMonospace(fontSize), mediumFont: .semiboldMonospace(fontSize)))
-                    CodeSyntex.apply(syntaxed, to: string, offset: range.location)
+                    let syntaxed = CodeSyntax.syntax(code: code, language: language, theme: .init(dark: isDark, textColor: textColor, textFont: .code(fontSize), italicFont: .italicMonospace(fontSize), mediumFont: .semiboldMonospace(fontSize)))
+                    CodeSyntax.apply(syntaxed, to: string, offset: range.location)
                 }
                 
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), { link in

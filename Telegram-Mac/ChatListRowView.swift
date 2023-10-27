@@ -1464,7 +1464,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.dateTextView = nil
              }
              
-             if let peer = item.peer, peer.id != item.context.peerId {
+             if let peer = item.peer, peer.id != item.context.peerId, !item.isTopic {
                  let highlighted = self.highlighed
                  let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: highlighted, cached: self.statusControl, animated: animated)
                  if let control = control {
