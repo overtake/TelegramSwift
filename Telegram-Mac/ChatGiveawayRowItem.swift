@@ -66,27 +66,24 @@ final class ChatGiveawayRowItem : ChatRowItem {
         self.media = media
         //TODOLANG
         let header_attr = NSMutableAttributedString()
-        _ = header_attr.append(string: "**Giveaway Prizes**", color: wpPresentation.text, font: .normal(.text))
+        _ = header_attr.append(string: strings().chatGiveawayMessagePrizeTitle, color: wpPresentation.text, font: .medium(.text))
         _ = header_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
-        _ = header_attr.append(string: "**\(media.quantity)** Telegram Premium", color: wpPresentation.text, font: .normal(.text))
+        _ = header_attr.append(string: strings().chatGiveawayMessageSubscriptionsCountable(Int(media.quantity)), color: wpPresentation.text, font: .normal(.text))
         _ = header_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
-        _ = header_attr.append(string: "Subscriptions for \(media.months) months.", color: wpPresentation.text, font: .normal(.text))
+        _ = header_attr.append(string: strings().chatGiveawayMessageMonthsCountable(Int(media.months)), color: wpPresentation.text, font: .normal(.text))
         header_attr.detectBoldColorInString(with: .medium(.text))
         self.headerText = .init(header_attr, alignment: .center, alwaysStaticItems: true)
         
         let participants_attr = NSMutableAttributedString()
-        _ = participants_attr.append(string: "**Participants**", color: wpPresentation.text, font: .normal(.text))
-        _ = participants_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
-        _ = participants_attr.append(string: "All subscribers of this channel:", color: wpPresentation.text, font: .normal(.text))
+        _ = participants_attr.append(string: strings().chatGiveawayMessageParticipants, color: wpPresentation.text, font: .normal(.text))
         participants_attr.detectBoldColorInString(with: .medium(.text))
         self.participantsText = .init(participants_attr, alignment: .center, alwaysStaticItems: true)
         
         
         let winners_attr = NSMutableAttributedString()
-        _ = winners_attr.append(string: "**Winners Selection Date**", color: wpPresentation.text, font: .normal(.text))
+        _ = winners_attr.append(string: strings().chatGiveawayMessageDateTitle, color: wpPresentation.text, font: .medium(.text))
         _ = winners_attr.append(string: "\n", color: wpPresentation.text, font: .normal(.text))
         _ = winners_attr.append(string: "\(stringForFullDate(timestamp: media.untilDate))", color: wpPresentation.text, font: .normal(.text))
-        winners_attr.detectBoldColorInString(with: .medium(.text))
         self.winnerText = .init(winners_attr, alignment: .center, alwaysStaticItems: true)
         
         let countriesText: String
@@ -106,13 +103,14 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 for i in 0 ..< countryNames.count {
                     countries.append(countryNames[i])
                     if i == countryNames.count - 2 {
-                        countries.append(" and ")
+                        countries.append(strings().chatGiveawayMessageCountriesLastDelimiter)
                     } else if i < countryNames.count - 2 {
-                        countries.append(", ")
+                        countries.append(strings().chatGiveawayMessageCountriesDelimiter)
                     }
+
                 }
             }
-            countriesText = "from \(countries)"
+            countriesText = strings().chatGiveawayMessageCountriesFrom(countries)
         } else {
             countriesText = ""
         }
@@ -201,58 +199,60 @@ final class ChatGiveawayRowItem : ChatRowItem {
             case let .ongoing(start, status):
                 let startDate = stringForFullDate(timestamp: start)
                 
-                title = "About This Giveaway"
-                
+                title = strings().chatGiveawayInfoTitle
                 let intro: String
                 if case .almostOver = status {
-                    intro = "The giveaway was sponsored by the admins of **\(peerName)**, who acquired **\(giveaway.quantity) Telegram Premium** subscriptions for **\(giveaway.months)** months for its followers."
+                    intro = strings().chatGiveawayInfoEndedIntro(peerName, strings().chatGiveawayInfoSubscriptionsCountable(Int(giveaway.quantity)), strings().chatGiveawayInfoMonthsCountable(Int(giveaway.months)))
                 } else {
-                    intro = "The giveaway is sponsored by the admins of **\(peerName)**, who acquired **\(giveaway.quantity) Telegram Premium** subscriptions for **\(giveaway.months)** months for its followers."
+                    intro = strings().chatGiveawayInfoOngoingIntro(peerName, strings().chatGiveawayInfoSubscriptionsCountable(Int(giveaway.quantity)), strings().chatGiveawayInfoMonthsCountable(Int(giveaway.months)))
                 }
+
                 
                 let ending: String
                 if giveaway.flags.contains(.onlyNewSubscribers) {
+                    let randomUsers = strings().chatGiveawayInfoRandomUsersCountable(Int(giveaway.quantity))
                     if giveaway.channelPeerIds.count > 1 {
-                        ending = "On **\(untilDate)**, Telegram will automatically select **\(giveaway.quantity)** random users that joined **\(peerName)** and **\(giveaway.channelPeerIds.count - 1)** other listed channels after **\(startDate)**."
+                        ending = strings().chatGiveawayInfoOngoingNewMany(untilDate, randomUsers, peerName, strings().chatGiveawayInfoOtherChannelsCountable(giveaway.channelPeerIds.count - 1), startDate)
                     } else {
-                        ending = "On **\(untilDate)**, Telegram will automatically select **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
+                        ending = strings().chatGiveawayInfoOngoingNew(untilDate, randomUsers, peerName, startDate)
                     }
                 } else {
+                    let randomSubscribers = strings().chatGiveawayInfoRandomSubscribersCountable(Int(giveaway.quantity))
                     if giveaway.channelPeerIds.count > 1 {
-                        ending = "On **\(untilDate)**, Telegram will automatically select **\(giveaway.quantity)** random subscribers of **\(peerName)** and **\(giveaway.channelPeerIds.count - 1)** other listed channels."
+                        ending = strings().chatGiveawayInfoOngoingMany(untilDate, randomSubscribers, peerName, strings().chatGiveawayInfoOtherChannels(giveaway.channelPeerIds.count - 1))
                     } else {
-                        ending = "On **\(untilDate)**, Telegram will automatically select **\(giveaway.quantity)** random subscribers of **\(peerName)**."
+                        ending = strings().chatGiveawayInfoOngoing(untilDate, randomSubscribers, peerName)
                     }
                 }
+
                 
                 var participation: String
                 switch status {
                 case .notQualified:
                     if giveaway.channelPeerIds.count > 1 {
-                        participation = "To take part in this giveaway please join the channel **\(peerName)** (**\(giveaway.channelPeerIds.count - 1)** other listed channels) before **\(untilDate)**."
+                        participation = strings().chatGiveawayInfoNotQualifiedMany(peerName, strings().chatGiveawayInfoOtherChannelsCountable(giveaway.channelPeerIds.count - 1), untilDate)
                     } else {
-                        participation = "To take part in this giveaway please join the channel **\(peerName)** before **\(untilDate)**."
+                        participation = strings().chatGiveawayInfoNotQualified(peerName, untilDate)
                     }
                 case let .notAllowed(reason):
                     switch reason {
                     case let .joinedTooEarly(joinedOn):
                         let joinDate = stringForFullDate(timestamp: joinedOn)
-                        participation = "You are not eligible to participate in this giveaway, because you joined this channel on **\(joinDate)**, which is before the contest started."
+                        participation = strings().chatGiveawayInfoNotAllowedJoinedEarly(joinDate)
                     case let .channelAdmin(adminId):
                         let _ = adminId
-                        participation = "You are not eligible to participate in this giveaway, because you are an admin of participating channel (**\(peerName)**)."
-                    case let .disallowedCountry(countryCode):
-                        let _ = countryCode
-                        participation = "You are not eligible to participate in this giveaway, because your country is not included in the terms of the giveaway."
+                        participation = strings().chatGiveawayInfoNotAllowedAdmin(peerName)
+                    case .disallowedCountry:
+                        participation = strings().chatGiveawayInfoNotAllowedCountry
                     }
                 case .participating:
                     if giveaway.channelPeerIds.count > 1 {
-                        participation = "You are participating in this giveaway, because you have joined the channel **\(peerName)** (**\(giveaway.channelPeerIds.count - 1)** other listed channels)."
+                        participation = strings().chatGiveawayInfoParticipatingMany(peerName, strings().chatGiveawayInfoOtherChannelsCountable(giveaway.channelPeerIds.count - 1))
                     } else {
-                        participation = "You are participating in this giveaway, because you have joined the channel **\(peerName)**."
+                        participation = strings().chatGiveawayInfoParticipating(peerName)
                     }
                 case .almostOver:
-                    participation = "The giveaway is over, preparing results."
+                    participation = strings().chatGiveawayInfoAlmostOver
                 }
                 
                 if !participation.isEmpty {
@@ -263,40 +263,43 @@ final class ChatGiveawayRowItem : ChatRowItem {
             case let .finished(status, start, finish, _, activatedCount):
                 let startDate = stringForFullDate(timestamp: start)
                 let finishDate = stringForFullDate(timestamp: finish)
-                title = "Giveaway Ended"
                 
-                let intro = "The giveaway was sponsored by the admins of **\(peerName)**, who acquired **\(giveaway.quantity) Telegram Premium** subscriptions for **\(giveaway.months)** months for its followers."
+                title = strings().chatGiveawayInfoEndedTitle
+                let intro = strings().chatGiveawayInfoEndedIntro(peerName, strings().chatGiveawayInfoSubscriptionsCountable(Int(giveaway.quantity)), strings().chatGiveawayInfoMonthsCountable(Int(giveaway.months)))
                 
                 var ending: String
                 if giveaway.flags.contains(.onlyNewSubscribers) {
+                    let randomUsers = strings().chatGiveawayInfoRandomUsersCountable(Int(giveaway.quantity))
                     if giveaway.channelPeerIds.count > 1 {
-                        ending = "On **\(finishDate)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** and other listed channels after **\(startDate)**."
+                        ending = strings().chatGiveawayInfoEndedNewMany(finishDate, randomUsers, peerName, startDate)
                     } else {
-                        ending = "On **\(finishDate)**, Telegram automatically selected **\(giveaway.quantity)** random users that joined **\(peerName)** after **\(startDate)**."
+                        ending = strings().chatGiveawayInfoEndedNew(finishDate, randomUsers, peerName, startDate)
                     }
                 } else {
+                    let randomSubscribers = strings().chatGiveawayInfoRandomSubscribersCountable(Int(giveaway.quantity))
                     if giveaway.channelPeerIds.count > 1 {
-                        ending = "On **\(finishDate)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)** and other listed channels."
+                        ending = strings().chatGiveawayInfoEndedMany(finishDate, randomSubscribers, peerName)
                     } else {
-                        ending = "On **\(finishDate)**, Telegram automatically selected **\(giveaway.quantity)** random subscribers of **\(peerName)**."
+                        ending = strings().chatGiveawayInfoEnded(finishDate, randomSubscribers, peerName)
                     }
+
                 }
                 
                 if activatedCount > 0 {
-                    ending += " \(activatedCount) of the winners already used their gift links."
+                    ending += " " + strings().chatGiveawayInfoActivatedLinksCountable(activatedCount)
                 }
                 
                 var result: String
                 switch status {
                 case .refunded:
                     result = ""
-                    warning = "The channel cancelled the prizes by reversing the payment for them."
+                    warning = strings().chatGiveawayInfoRefunded
                     ok = strings().modalOK
                 case .notWon:
-                    result = "\n\nYou didn't win a prize in this giveaway."
+                    result = "\n\n" + strings().chatGiveawayInfoDidntWin
                 case let .won(slug):
-                    result = "\n\nYou won a prize in this giveaway. 🏆"
-                    ok = "View My Prize"
+                    result = "\n\n" + strings().chatGiveawayInfoWon("🏆")
+                    ok = strings().chatGiveawayInfoViewPrize
                     cancel = strings().alertCancel
                     prizeSlug = slug
                 }

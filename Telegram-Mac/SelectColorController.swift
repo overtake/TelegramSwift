@@ -358,7 +358,7 @@ private final class PeerNameColorIconView : HorizontalRowView {
         self.container.layer?.addSublayer(ringView)
         self.container.layer?.addSublayer(fillView)
         addSubview(control)
-        let bounds = CGRect(origin: CGPoint(x: 15, y: 17.5), size: CGSize(width: 35, height: 35))
+        let bounds = CGRect(origin: CGPoint(x: 12.5, y: 17.5), size: CGSize(width: 35, height: 35))
         
         fillView.frame = bounds
         ringView.frame = bounds
@@ -667,9 +667,10 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
     
     
     var backgroundEmojiId: Int64? = nil
+    var color: PeerNameColor?
     var layer: InlineStickerItemLayer?
     actionsDisposable.add(statePromise.get().start(next: { state in
-        if state.backgroundEmojiId != backgroundEmojiId {
+        if state.backgroundEmojiId != backgroundEmojiId || state.selected != color {
             DispatchQueue.main.async {
                 if let emojiId = state.backgroundEmojiId {
                     layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: emojiId, file: nil, emoji: clown), size: NSMakeSize(25, 25), playPolicy: .framesCount(1), textColor: context.peerNameColors.get(state.selected).main)
@@ -694,6 +695,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
             }
         }
         backgroundEmojiId = state.backgroundEmojiId
+        color = state.selected
     }))
     
     let selectedBg: EmojiesSectionRowItem.SelectedItem? = source.backgroundIcon.flatMap {
