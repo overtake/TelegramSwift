@@ -255,6 +255,10 @@ class ChatInputAccessory: View {
                 self?.dismissReply()
             }, for: .Click)
             
+            container.set(handler: { [weak self] _ in
+                self?.chatInteraction.focusMessageId(nil, replyMessageId.messageId, .CenterEmpty)
+             }, for: .Click)
+
             
             container.contextMenu = {
                 let menu = ContextMenu()
