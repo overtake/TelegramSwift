@@ -2735,6 +2735,338 @@ public final class L10n {
   public static var chatFileQuickLookSvg: String  { return L10n.tr("Localizable", "Chat.File.QuickLook.Svg") }
   /// Only admins can send messages in this group.
   public static var chatGigagroupHelp: String  { return L10n.tr("Localizable", "Chat.Gigagroup.Help") }
+  /// %d
+  public static func chatGiveawayInfoActivatedLinksCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_countable", p1)
+  }
+  /// %d winner already used their gift link.
+  public static func chatGiveawayInfoActivatedLinksFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_few", p1)
+  }
+  /// %d winner already used their gift link.
+  public static func chatGiveawayInfoActivatedLinksMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_many", p1)
+  }
+  /// %d winner already used their gift link.
+  public static func chatGiveawayInfoActivatedLinksOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_one", p1)
+  }
+  /// %d winner already used their gift link.
+  public static func chatGiveawayInfoActivatedLinksOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_other", p1)
+  }
+  /// %d winner already used their gift link.
+  public static func chatGiveawayInfoActivatedLinksTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_two", p1)
+  }
+  /// %d winner already used their gift link.
+  public static func chatGiveawayInfoActivatedLinksZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.ActivatedLinks_zero", p1)
+  }
+  /// The giveaway is almost over.
+  public static var chatGiveawayInfoAlmostOver: String  { return L10n.tr("Localizable", "Chat.Giveaway.Info.AlmostOver") }
+  /// You didn't win a prize in this giveaway.
+  public static var chatGiveawayInfoDidntWin: String  { return L10n.tr("Localizable", "Chat.Giveaway.Info.DidntWin") }
+  /// On **%1$@**, Telegram automatically selected %2$@ of **%3$@**.
+  public static func chatGiveawayInfoEnded(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Ended", p1, p2, p3)
+  }
+  /// The giveaway was sponsored by the admins of **%1$@**, who acquired %2$@ for %3$@ for its followers.
+  public static func chatGiveawayInfoEndedIntro(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.EndedIntro", p1, p2, p3)
+  }
+  /// On **%1$@**, Telegram automatically selected %2$@ of **%3$@** and other listed channels.
+  public static func chatGiveawayInfoEndedMany(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.EndedMany", p1, p2, p3)
+  }
+  /// On **%1$@**, Telegram automatically selected %2$@ that joined **%3$@** after **%4$@**.
+  public static func chatGiveawayInfoEndedNew(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.EndedNew", p1, p2, p3, p4)
+  }
+  /// On **%1$@**, Telegram automatically selected %2$@ that joined **%3$@** and other listed channels after **%4$@**.
+  public static func chatGiveawayInfoEndedNewMany(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.EndedNewMany", p1, p2, p3, p4)
+  }
+  /// Giveaway Ended
+  public static var chatGiveawayInfoEndedTitle: String  { return L10n.tr("Localizable", "Chat.Giveaway.Info.EndedTitle") }
+  /// %d month
+  public static func chatGiveawayInfoMonthsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_countable", p1)
+  }
+  /// **%d** month
+  public static func chatGiveawayInfoMonthsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_few", p1)
+  }
+  /// **%d** month
+  public static func chatGiveawayInfoMonthsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_many", p1)
+  }
+  /// **%d** month
+  public static func chatGiveawayInfoMonthsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_one", p1)
+  }
+  /// **%d** month
+  public static func chatGiveawayInfoMonthsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_other", p1)
+  }
+  /// **%d** month
+  public static func chatGiveawayInfoMonthsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_two", p1)
+  }
+  /// **%d** month
+  public static func chatGiveawayInfoMonthsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Months_zero", p1)
+  }
+  /// You are not eligible to participate in this giveaway, because you are an admin of participating channel (**%@**).
+  public static func chatGiveawayInfoNotAllowedAdmin(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.NotAllowedAdmin", p1)
+  }
+  /// You are not eligible to participate in this giveaway, because your country is not included in the terms of the giveaway.
+  public static var chatGiveawayInfoNotAllowedCountry: String  { return L10n.tr("Localizable", "Chat.Giveaway.Info.NotAllowedCountry") }
+  /// You are not eligible to participate in this giveaway, because you joined this channel on **%@**, which is before the contest started.
+  public static func chatGiveawayInfoNotAllowedJoinedEarly(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.NotAllowedJoinedEarly", p1)
+  }
+  /// To take part in this giveaway please join the channel **%1$@** before **%2$@**.
+  public static func chatGiveawayInfoNotQualified(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.NotQualified", p1, p2)
+  }
+  /// To take part in this giveaway please join the channel **%1$@** (and %2$@) before **%3$@**.
+  public static func chatGiveawayInfoNotQualifiedMany(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.NotQualifiedMany", p1, p2, p3)
+  }
+  /// On **%1$@**, Telegram will automatically select %2$@ of **%3$@**.
+  public static func chatGiveawayInfoOngoing(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Ongoing", p1, p2, p3)
+  }
+  /// The giveaway is sponsored by the admins of **%1$@**, who acquired %2$@ for %3$@ for its followers.
+  public static func chatGiveawayInfoOngoingIntro(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OngoingIntro", p1, p2, p3)
+  }
+  /// On **%1$@**, Telegram will automatically select %2$@ of **%3$@** and %4$@.
+  public static func chatGiveawayInfoOngoingMany(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OngoingMany", p1, p2, p3, p4)
+  }
+  /// On **%1$@**, Telegram will automatically select %2$@ that joined **%3$@** after **%4$@**.
+  public static func chatGiveawayInfoOngoingNew(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OngoingNew", p1, p2, p3, p4)
+  }
+  /// On **%1$@**, Telegram will automatically select %2$@ that joined **%3$@** and %4$@ after **%5$@**.
+  public static func chatGiveawayInfoOngoingNewMany(_ p1: String, _ p2: String, _ p3: String, _ p4: String, _ p5: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OngoingNewMany", p1, p2, p3, p4, p5)
+  }
+  /// %d
+  public static func chatGiveawayInfoOtherChannelsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_countable", p1)
+  }
+  /// **%d** other listed channel
+  public static func chatGiveawayInfoOtherChannelsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_few", p1)
+  }
+  /// **%d** other listed channel
+  public static func chatGiveawayInfoOtherChannelsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_many", p1)
+  }
+  /// **%d** other listed channel
+  public static func chatGiveawayInfoOtherChannelsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_one", p1)
+  }
+  /// **%d** other listed channel
+  public static func chatGiveawayInfoOtherChannelsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_other", p1)
+  }
+  /// **%d** other listed channel
+  public static func chatGiveawayInfoOtherChannelsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_two", p1)
+  }
+  /// **%d** other listed channel
+  public static func chatGiveawayInfoOtherChannelsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.OtherChannels_zero", p1)
+  }
+  /// You are participating in this giveaway, because you have joined the channel **%1$@**.
+  public static func chatGiveawayInfoParticipating(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Participating", p1)
+  }
+  /// You are participating in this giveaway, because you have joined the channel **%1$@** (and %2$@).
+  public static func chatGiveawayInfoParticipatingMany(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.ParticipatingMany", p1, p2)
+  }
+  /// %d
+  public static func chatGiveawayInfoRandomSubscribersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_countable", p1)
+  }
+  /// **%d** random subscriber
+  public static func chatGiveawayInfoRandomSubscribersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_few", p1)
+  }
+  /// **%d** random subscriber
+  public static func chatGiveawayInfoRandomSubscribersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_many", p1)
+  }
+  /// **%d** random subscriber
+  public static func chatGiveawayInfoRandomSubscribersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_one", p1)
+  }
+  /// **%d** random subscriber
+  public static func chatGiveawayInfoRandomSubscribersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_other", p1)
+  }
+  /// **%d** random subscriber
+  public static func chatGiveawayInfoRandomSubscribersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_two", p1)
+  }
+  /// **%d** random subscriber
+  public static func chatGiveawayInfoRandomSubscribersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomSubscribers_zero", p1)
+  }
+  /// %d
+  public static func chatGiveawayInfoRandomUsersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_countable", p1)
+  }
+  /// **%d** random user
+  public static func chatGiveawayInfoRandomUsersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_few", p1)
+  }
+  /// **%d** random user
+  public static func chatGiveawayInfoRandomUsersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_many", p1)
+  }
+  /// **%d** random user
+  public static func chatGiveawayInfoRandomUsersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_one", p1)
+  }
+  /// **%d** random user
+  public static func chatGiveawayInfoRandomUsersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_other", p1)
+  }
+  /// **%d** random user
+  public static func chatGiveawayInfoRandomUsersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_two", p1)
+  }
+  /// **%d** random user
+  public static func chatGiveawayInfoRandomUsersZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.RandomUsers_zero", p1)
+  }
+  /// The channel cancelled the prizes by reversing the payment for them.
+  public static var chatGiveawayInfoRefunded: String  { return L10n.tr("Localizable", "Chat.Giveaway.Info.Refunded") }
+  /// %d
+  public static func chatGiveawayInfoSubscriptionsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_countable", p1)
+  }
+  /// **%d Telegram Premium** subscription
+  public static func chatGiveawayInfoSubscriptionsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_few", p1)
+  }
+  /// **%d Telegram Premium** subscription
+  public static func chatGiveawayInfoSubscriptionsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_many", p1)
+  }
+  /// **%d Telegram Premium** subscription
+  public static func chatGiveawayInfoSubscriptionsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_one", p1)
+  }
+  /// **%d Telegram Premium** subscription
+  public static func chatGiveawayInfoSubscriptionsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_other", p1)
+  }
+  /// **%d Telegram Premium** subscription
+  public static func chatGiveawayInfoSubscriptionsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_two", p1)
+  }
+  /// **%d Telegram Premium** subscription
+  public static func chatGiveawayInfoSubscriptionsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Subscriptions_zero", p1)
+  }
+  /// About This Giveaway
+  public static var chatGiveawayInfoTitle: String  { return L10n.tr("Localizable", "Chat.Giveaway.Info.Title") }
+  /// View My Prize
+  public static var chatGiveawayInfoViewPrize: String  { return L10n.tr("Localizable", "Chat.Giveaway.Info.ViewPrize") }
+  /// You won a prize in this giveaway. %@
+  public static func chatGiveawayInfoWon(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Info.Won", p1)
+  }
+  /// , 
+  public static var chatGiveawayMessageCountriesDelimiter: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.CountriesDelimiter") }
+  /// from %@
+  public static func chatGiveawayMessageCountriesFrom(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.CountriesFrom", p1)
+  }
+  ///  and 
+  public static var chatGiveawayMessageCountriesLastDelimiter: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.CountriesLastDelimiter") }
+  /// Winners Selection Date
+  public static var chatGiveawayMessageDateTitle: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.DateTitle") }
+  /// %d
+  public static func chatGiveawayMessageMonthsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Months_countable", p1)
+  }
+  /// **%d** months
+  public static func chatGiveawayMessageMonthsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Months_few", p1)
+  }
+  /// **%d** months
+  public static func chatGiveawayMessageMonthsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Months_many", p1)
+  }
+  /// **%d** month
+  public static func chatGiveawayMessageMonthsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Months_one", p1)
+  }
+  /// **%d** months
+  public static func chatGiveawayMessageMonthsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Months_other", p1)
+  }
+  /// **%d** months
+  public static func chatGiveawayMessageMonthsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Months_two", p1)
+  }
+  /// **%d** month
+  public static func chatGiveawayMessageMonthsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Months_zero", p1)
+  }
+  /// All subscribers of this channel:
+  public static var chatGiveawayMessageParticipants: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.Participants") }
+  /// All subscribers of the channels below:
+  public static var chatGiveawayMessageParticipantsMany: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.ParticipantsMany") }
+  /// All users who join this channel after this date:
+  public static var chatGiveawayMessageParticipantsNew: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.ParticipantsNew") }
+  /// All users who join the channels below after this date:
+  public static var chatGiveawayMessageParticipantsNewMany: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.ParticipantsNewMany") }
+  /// Participants
+  public static var chatGiveawayMessageParticipantsTitle: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.ParticipantsTitle") }
+  /// %1$@ for %2$@.
+  public static func chatGiveawayMessagePrizeText(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.PrizeText", p1, p2)
+  }
+  /// Giveaway Prizes
+  public static var chatGiveawayMessagePrizeTitle: String  { return L10n.tr("Localizable", "Chat.Giveaway.Message.PrizeTitle") }
+  /// %d
+  public static func chatGiveawayMessageSubscriptionsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_countable", p1)
+  }
+  /// **%d** Telegram Premium Subscriptions
+  public static func chatGiveawayMessageSubscriptionsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_few", p1)
+  }
+  /// **%d** Telegram Premium Subscriptions
+  public static func chatGiveawayMessageSubscriptionsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_many", p1)
+  }
+  /// **%d** Telegram Premium Subscription
+  public static func chatGiveawayMessageSubscriptionsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_one", p1)
+  }
+  /// **%d** Telegram Premium Subscriptions
+  public static func chatGiveawayMessageSubscriptionsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_other", p1)
+  }
+  /// **%d** Telegram Premium Subscriptions
+  public static func chatGiveawayMessageSubscriptionsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_two", p1)
+  }
+  /// **%d** Telegram Premium Subscriptions
+  public static func chatGiveawayMessageSubscriptionsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Giveaway.Message.Subscriptions_zero", p1)
+  }
   /// Sorry, this group is not accessible.
   public static var chatGroupUnaccessible: String  { return L10n.tr("Localizable", "Chat.Group.Unaccessible") }
   /// JOIN

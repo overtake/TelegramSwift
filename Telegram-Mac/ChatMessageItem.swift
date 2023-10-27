@@ -840,7 +840,6 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
             case let .Pre(language: language):
                 string.addAttribute(TextInputAttributes.quote, value: TextViewBlockQuoteData(id: Int(arc4random64()), colors: blockColor, isCode: true, space: 4), range: range)
-//                string.addAttribute(.preformattedPre, value: 4.0, range: range)
                 fontAttributes.append((range, .monospace))
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
                 string.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
