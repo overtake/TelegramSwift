@@ -285,7 +285,7 @@ final class ChatGiveawayRowItem : ChatRowItem {
                 }
                 
                 if activatedCount > 0 {
-                    ending += " " + strings().chatGiveawayInfoActivatedLinksCountable(activatedCount)
+                    ending += " " + strings().chatGiveawayInfoActivatedLinksCountable(Int(activatedCount))
                 }
                 
                 var result: String
