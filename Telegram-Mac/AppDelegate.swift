@@ -24,13 +24,40 @@ import ThemeSettings
 import ColorPalette
 import WebKit
 import System
+import CodeSyntax
+
 
 #if !APP_STORE
 import AppCenter
 import AppCenterCrashes
 #endif
 
-
+final class CodeSyntex {
+    private let syntaxer: Syntaxer
+    private init() {
+        let pathFile = Bundle.main.path(forResource: "grammars", ofType: "dat")!
+        let data = try! Data(contentsOf: URL(fileURLWithPath: pathFile))
+        self.syntaxer = Syntaxer(data)!
+    }
+    private static let standart: CodeSyntex = .init()
+    
+    fileprivate static func initialize() {
+        _ = CodeSyntex.standart
+    }
+    
+    static func syntax(code: String, language: String, theme: SyntaxterTheme) -> NSAttributedString {
+        return standart.syntaxer.syntax(code, language: language, theme: theme)
+    }
+    static func apply(_ code: NSAttributedString, to: NSMutableAttributedString, offset: Int) {
+        code.enumerateAttributes(in: code.range, using: { value, innerRange, _ in
+            if let font = value[.foregroundColor] as? NSColor {
+                to.addAttribute(.foregroundColor, value: font, range: NSMakeRange(offset + innerRange.location, innerRange.length))
+            } else if let font = value[.font] as? NSFont {
+                to.addAttribute(.font, value: font, range: NSMakeRange(offset + innerRange.location, innerRange.length))
+            }
+        })
+    }
+}
 
 let enableBetaFeatures = true
 
@@ -191,6 +218,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private(set) var appEncryption: AppEncryptionParameters!
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        CodeSyntex.initialize()
        // UserDefaults.standard.set(true, forKey: "NSTableViewCanEstimateRowHeights")
      //   UserDefaults.standard.removeObject(forKey: "NSTableViewCanEstimateRowHeights")
     }

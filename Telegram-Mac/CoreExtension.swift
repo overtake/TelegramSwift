@@ -29,6 +29,7 @@ func optionalMessageThreadId(_ messageId: MessageId?) -> Int64? {
     } else {
         return nil
     }
+    
 }
 
 

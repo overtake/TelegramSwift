@@ -29,6 +29,8 @@
 		270B7CC229F7CC66009C994C /* StoryFetchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC129F7CC66009C994C /* StoryFetchManager.swift */; };
 		270B7CC429FA925D009C994C /* StoryControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC329FA925D009C994C /* StoryControlsView.swift */; };
 		270B7CC629FA9E1E009C994C /* StoryListNavigationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */; };
+		270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */; };
+		270D04C72AEA916A00EFF1E1 /* grammars.dat in Resources */ = {isa = PBXBuildFile; fileRef = 270D04C62AEA916900EFF1E1 /* grammars.dat */; };
 		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
 		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
 		270F020726F0B0830099D2AA /* EmojiAnimationEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */; };
@@ -1523,6 +1525,9 @@
 		270B7CC129F7CC66009C994C /* StoryFetchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryFetchManager.swift; sourceTree = "<group>"; };
 		270B7CC329FA925D009C994C /* StoryControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryControlsView.swift; sourceTree = "<group>"; };
 		270B7CC529FA9E1E009C994C /* StoryListNavigationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryListNavigationView.swift; sourceTree = "<group>"; };
+		270D04492AEA742F00EFF1E1 /* libCodeSyntax.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libCodeSyntax.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CodeSyntax.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		270D04C62AEA916900EFF1E1 /* grammars.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = grammars.dat; sourceTree = "<group>"; };
 		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
 		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
 		270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiAnimationEffectView.swift; sourceTree = "<group>"; };
@@ -2966,6 +2971,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				270D04912AEA7C1500EFF1E1 /* CodeSyntax.framework in Frameworks */,
 				27034076282CF79E00D0156C /* SceneKit.framework in Frameworks */,
 				27D43DA1279176E0006968A6 /* libavutil.a in Frameworks */,
 				27ED5A6D2750CDE100BA55A7 /* FoundationUtils in Frameworks */,
@@ -5074,6 +5080,7 @@
 				C27A6F721ECF610C00C65577 /* currencies.json */,
 				C2CFCAB81EBB4A1600843F6A /* voip */,
 				C23BC3671E9AA03E00D79F92 /* emoji11.txt */,
+				270D04C62AEA916900EFF1E1 /* grammars.dat */,
 				D0FFCEBD215A7CB700995AFE /* emoji14.txt */,
 				C21074231E77F5DF006EE5EF /* dsa_pub_prod.pem */,
 				C232EA3C1E1C06EF00C4D38C /* dsa_pub.pem */,
@@ -6007,6 +6014,8 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				270D048B2AEA7A2C00EFF1E1 /* CodeSyntax.framework */,
+				270D04492AEA742F00EFF1E1 /* libCodeSyntax.a */,
 				2795578D2AB86A5C007EC996 /* libsharpyuv.a */,
 				279BD40B29B71FA200A8B640 /* Network.framework */,
 				27D913092833A1C9007CF40F /* StoreKit.framework */,
@@ -6582,6 +6591,7 @@
 				27CB176E27638F0000DD25E0 /* menu_check_selected.tgs in Resources */,
 				27CE155D297966D8001F8CE8 /* emoji_category_work.tgs in Resources */,
 				2763A165261DF5EF00C12762 /* voice_chat_cancel_reminder_to_mute.tgs in Resources */,
+				270D04C72AEA916A00EFF1E1 /* grammars.dat in Resources */,
 				A7C7215923FD473E00CE3F75 /* success_saved.tgs in Resources */,
 				27336743276247820027441E /* menu_copyright.tgs in Resources */,
 				C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */,

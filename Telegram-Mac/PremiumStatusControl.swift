@@ -64,39 +64,27 @@ final class PremiumStatusControl : Control {
                 image = isSelected ? theme.icons.fakeActive : theme.icons.fake
             } else if peer.isPremium {
                 if isBig {
-                    image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
+                    let color = color ?? theme.colors.accent
+                    if isSelected {
+                        let under = theme.colors.underSelectedColor
+                        image = theme.resourceCache.image(Int32(color.rgb + 1000), {
+                            generatePremium(false, color: under)
+                        })
+                    } else {
+                        image = theme.resourceCache.image(Int32(color.rgb + 1001), {
+                            generatePremium(false, color: color)
+                        })
+                    }
                 } else {
                     if let color = color, !isSelected {
-                        let images = [
-                            theme.icons.chat_premium_status_red,
-                            theme.icons.chat_premium_status_orange,
-                            theme.icons.chat_premium_status_violet,
-                            theme.icons.chat_premium_status_green,
-                            theme.icons.chat_premium_status_cyan,
-                            theme.icons.chat_premium_status_light_blue,
-                            theme.icons.chat_premium_status_blue
-                        ]
-                        let colors = [
-                            theme.colors.groupPeerNameRed,
-                            theme.colors.groupPeerNameOrange,
-                            theme.colors.groupPeerNameViolet,
-                            theme.colors.groupPeerNameGreen,
-                            theme.colors.groupPeerNameCyan,
-                            theme.colors.groupPeerNameLightBlue,
-                            theme.colors.groupPeerNameBlue
-                        ]
-                        if let index = colors.firstIndex(where: { $0 == color }) {
-                            image = images[index]
-                        } else {
-                            image = theme.icons.chat_premium_status_blue
-                        }
-                        
+                        image = theme.resourceCache.image(Int32(color.rgb + 1002), {
+                            return generatePremium(false, color: color, small: true)
+                        })
                     } else {
-                        if isBig {
-                            image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
-                        } else {
-                            image = isSelected ? theme.icons.premium_account_small_active : theme.icons.premium_account_small
-                        }
+                        let under = theme.colors.underSelectedColor
+                        image = theme.resourceCache.image(Int32(under.rgb + 1003), {
+                            return generatePremium(false, color: under, small: true)
+                        })
                     }
                 }
             } else {

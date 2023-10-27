@@ -396,6 +396,20 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
             self.placeholder = nil
         }
     }
+    
+    public func scrollToCursor() {
+        let lineRect = textView.highlightRect(forRange: NSRange(location: selectedRange.location + selectedRange.length, length: 0), whole: true)
+        
+        var maxY = self.contentView.documentRect.size.height
+        maxY = min(max(lineRect.origin.y, 0), maxY - self.frame.size.height)
+        
+        let point = NSPoint(x: lineRect.origin.x, y: maxY)
+        
+        if !self.documentVisibleRect.contains(point) {
+            self.contentView.scroll(to: point)
+        }
+    }
+    
 }
 
 

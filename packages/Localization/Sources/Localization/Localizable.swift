@@ -11231,6 +11231,18 @@ public final class L10n {
   public static var selectColorPremium: String  { return L10n.tr("Localizable", "SelectColor.Premium") }
   /// COLOR PREVIEW
   public static var selectColorPreview: String  { return L10n.tr("Localizable", "SelectColor.Preview") }
+  /// REMOVE ICON
+  public static var selectColorIconRemoveIcon: String  { return L10n.tr("Localizable", "SelectColor.Icon.RemoveIcon") }
+  /// Icon
+  public static var selectColorIconSelect: String  { return L10n.tr("Localizable", "SelectColor.Icon.Select") }
+  /// ADD ICON TO REPLIES
+  public static var selectColorIconTitle: String  { return L10n.tr("Localizable", "SelectColor.Icon.Title") }
+  /// Make replies to your messages stand out by adding\ncustom icons to them.
+  public static var selectColorIconInfoChannel: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.Channel") }
+  /// Make replies to your messages stand out by adding custom icons to them..
+  public static var selectColorIconInfoUser: String  { return L10n.tr("Localizable", "SelectColor.Icon.Info.User") }
+  /// Not Selected
+  public static var selectColorIconSelectOff: String  { return L10n.tr("Localizable", "SelectColor.Icon.Select.Off") }
   /// You can choose and individual color to tint your channel name, the links channel send, and replies to channel messages.
   public static var selectColorInfoChannel: String  { return L10n.tr("Localizable", "SelectColor.Info.Channel") }
   /// You can choose and individual color to tint your name, the links you send, and replies to your messages.

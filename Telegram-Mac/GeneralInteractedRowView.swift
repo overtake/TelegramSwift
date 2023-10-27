@@ -117,6 +117,8 @@ class GeneralInteractedRowView: GeneralRowView {
                     nextVisible = !items.isEmpty && !value.isEmpty
                 } else if case .imageContext = item.type {
                     nextVisible = true
+                } else if case .context = item.type {
+                    nextVisible = false
                 }
                 nextView.isHidden = !nextVisible
             default:

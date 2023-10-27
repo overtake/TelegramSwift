@@ -764,7 +764,9 @@ public class Modal: NSObject {
             focus = background.focus(NSMakeSize(size.width, size.height + headerOffset))
         }
         
-        
+        focus = focus.insetBy(dx: -1, dy: -1)
+
+
         if focus != container.frame {
            // CATransaction.begin()
             

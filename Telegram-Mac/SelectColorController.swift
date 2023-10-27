@@ -108,7 +108,7 @@ private class PreviewRowItem: GeneralRowItem {
             
             let media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: appName, title: strings().selectColorMessage2PreviewTitle, text: strings().selectColorMessage2PreviewText, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, isMediaLargeByDefault: nil, image: nil, file: nil, story: nil, attributes: [], instantPage: nil)))
 
-            let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: previewPeer.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp1, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: previewPeer, text: strings().selectColorMessage2, attributes: [ReplyMessageAttribute(messageId: firstMessage.id, threadMessageId: nil, quote: nil)], media: [media], peers:SimpleDictionary([previewPeer.id : previewPeer]) , associatedMessages: SimpleDictionary([firstMessage.id : firstMessage]), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
+            let secondMessage = Message(stableId: 1, stableVersion: 0, id: MessageId(peerId: previewPeer.id, namespace: 0, id: 1), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: timestamp1, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: previewPeer, text: strings().selectColorMessage2, attributes: [ReplyMessageAttribute(messageId: firstMessage.id, threadMessageId: nil, quote: nil, isQuote: false)], media: [media], peers:SimpleDictionary([previewPeer.id : previewPeer]) , associatedMessages: SimpleDictionary([firstMessage.id : firstMessage]), associatedMessageIds: [], associatedMedia: [:], associatedThreadInfo: nil, associatedStories: [:])
             
             let secondEntry: ChatHistoryEntry = .MessageEntry(secondMessage, MessageIndex(secondMessage), true, theme.bubbled ? .bubble : .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings))
             
@@ -497,11 +497,15 @@ private final class Arguments {
     let source: SelectColorSource
     let toggleColor:(PeerNameColor) -> Void
     let getView:()->NSView
-    init(context: AccountContext, source: SelectColorSource, toggleColor:@escaping(PeerNameColor) -> Void, getView:@escaping()->NSView) {
+    let showEmojiPanel:()->Void
+    let removeIcon:()->Void
+    init(context: AccountContext, source: SelectColorSource, toggleColor:@escaping(PeerNameColor) -> Void, getView:@escaping()->NSView, showEmojiPanel:@escaping()->Void, removeIcon:@escaping()->Void) {
         self.context = context
         self.source = source
         self.toggleColor = toggleColor
         self.getView = getView
+        self.showEmojiPanel = showEmojiPanel
+        self.removeIcon = removeIcon
     }
 }
 
@@ -511,12 +515,15 @@ private struct State : Equatable {
     var selected: PeerNameColor = .blue
     var backgroundEmojiId: Int64? = nil
     var saving: Bool = false
+    
+    var icon: CGImage?
 }
 
 private let _id_colors = InputDataIdentifier("_id_colors")
 private let _id_preview = InputDataIdentifier("_id_preview")
 private let _id_emojies = InputDataIdentifier("_id_emojies")
-
+private let _id_icon = InputDataIdentifier("_id_icon")
+private let _id_icon_remove = InputDataIdentifier("_id_icon_remove")
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -537,6 +544,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     for index in arguments.context.peerNameColors.displayOrder {
         colors.append(PeerNameColor(rawValue: index))
     }
+    
+   
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_colors, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
         return PeerNamesRowItem(initialSize, stableId: stableId, context: arguments.context, colors: colors, selected: state.selected, viewType: .lastItem, action: { color in
@@ -561,9 +570,41 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emojies, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
-        return EmojiSelectRowItem(initialSize, stableId: stableId, context: arguments.context, getView: arguments.getView, viewType: .singleItem)
-    }))
+    let hasIcon = state.backgroundEmojiId != nil
+    
+    
+    let removeData: InputDataGeneralTextRightData
+    
+    if hasIcon {
+        let removeAttr = NSMutableAttributedString()
+        removeAttr.append(string: strings().selectColorIconRemoveIcon, color: theme.colors.accent, font: .normal(.short))
+        removeData = .init(isLoading: false, text: removeAttr, action: arguments.removeIcon)
+    } else {
+        removeData = .init(isLoading: false, text: nil)
+    }
+   
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().selectColorIconTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, rightItem: removeData)))
+    index += 1
+    
+    let type: GeneralInteractedType
+    if let icon = state.icon {
+        type = .imageContext(icon, "")
+    } else {
+        type = .context(strings().selectColorIconSelectOff)
+    }
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_icon, data: .init(name: strings().selectColorIconSelect, color: theme.colors.text, icon: nil, type: type, viewType: .singleItem, enabled: true, action: {
+        arguments.showEmojiPanel()
+    })))
+    
+    let iconInfo: String
+    switch arguments.source {
+    case .account:
+        iconInfo = strings().selectColorIconInfoUser
+    case .channel:
+        iconInfo = strings().selectColorIconInfoChannel
+    }
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(iconInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -625,13 +666,35 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
     let peerId: PeerId = source.peerId
     
     
-//    actionsDisposable.add(context.account.postbox.loadedPeerWithId(peerId).start(next: { peer in
-//        updateState { current in
-//            var current = current
-//            current.selected = peer.nameColor ?? current.selected
-//            return current
-//        }
-//    }))
+    var backgroundEmojiId: Int64? = nil
+    var layer: InlineStickerItemLayer?
+    actionsDisposable.add(statePromise.get().start(next: { state in
+        if state.backgroundEmojiId != backgroundEmojiId {
+            DispatchQueue.main.async {
+                if let emojiId = state.backgroundEmojiId {
+                    layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: emojiId, file: nil, emoji: clown), size: NSMakeSize(25, 25), playPolicy: .framesCount(1), textColor: context.peerNameColors.get(state.selected).main)
+                    layer?.isPlayable = true
+                    
+                    layer?.contentDidUpdate = { image in
+                        updateState { current in
+                            var current = current
+                            current.icon = image
+                            return current
+                        }
+                    }
+
+                } else {
+                    layer = nil
+                    updateState { current in
+                        var current = current
+                        current.icon = nil
+                        return current
+                    }
+                }
+            }
+        }
+        backgroundEmojiId = state.backgroundEmojiId
+    }))
     
     let selectedBg: EmojiesSectionRowItem.SelectedItem? = source.backgroundIcon.flatMap {
         .init(source: .custom($0), type: .normal)
@@ -641,9 +704,9 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
     let colors = context.peerNameColors.get(nameColor)
     
     let emojis = EmojiesController(context, mode: .backgroundIcon, selectedItems: selectedBg != nil ? [selectedBg!] : [], color: colors.main)
-    emojis._frameRect = NSMakeRect(0, 0, context.bindings.rootNavigation().frame.width - 40, 250)
-    emojis.loadViewIfNeeded()
+    emojis._frameRect = NSMakeRect(0, 0, 350, 300)
     
+    var getControl:(()->Control?)? = nil
     
     
     let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
@@ -664,8 +727,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
                 return current
             }
         }
-
-        
+        emojis?.closePopover()
     }
     
     emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(peerId), context: context))
@@ -683,9 +745,20 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
         emojis?.color = colors.main
     }, getView: {
         return emojis.genericView
+    }, showEmojiPanel: { [weak emojis] in
+        if let emojiControl = getControl?(), let emojis = emojis {
+            showPopover(for: emojiControl, with: emojis)
+        }
+    }, removeIcon: { [weak emojis] in
+        updateState { current in
+            var current = current
+            current.backgroundEmojiId = nil
+            return current
+        }
+        emojis?.setSelectedItem(nil)
     })
     
-    let signal = combineLatest(statePromise.get(), emojis.ready.get() |> filter { $0 }) |> deliverOnPrepareQueue |> map { state, _ in
+    let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
@@ -740,6 +813,12 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
             } else {
                 f(.enabled(strings().selectColorApply))
             }
+        }
+    }
+    controller.didLoaded = { controller, _ in
+        getControl = { [weak controller] in
+            let view = controller?.tableView.item(stableId: InputDataEntryId.general(_id_icon))?.view as? GeneralInteractedRowView
+            return view?.textView
         }
     }
    

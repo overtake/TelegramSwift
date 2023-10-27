@@ -1480,8 +1480,6 @@ final class AnimatedEmojiesView : Control {
         let dest = max(0, min(tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y), 46))
 
         let searchDest = inSearch ? 0 : dest
-                
-        
         transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, tabs.frame.maxY, size.width, 46 - min(searchDest, 46)))
 
         
@@ -1596,7 +1594,7 @@ final class AnimatedEmojiesView : Control {
 //        searchContainer.isHidden = mode == .reactions
 //        tableView.scrollerInsets = mode == .reactions ? .init() : .init(left: 0, right: 0, top: 46, bottom: 50)
 
-        searchContainer.isHidden = mode == .reactions
+//        searchContainer.isHidden = mode == .reactions
         tableView.scrollerInsets = .init(left: 0, right: 0, top: 46, bottom: 50)
         
         updateSelectionState(animated: packs.animated)

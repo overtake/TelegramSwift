@@ -553,7 +553,17 @@ class ChatInputView: View, Notifable {
         
         self.textView.interactions.inputIsEnabled = self.isEnabled()
         self.textView.set(input)
-        textView.placeholder = textPlaceholder
+        self.textView.placeholder = textPlaceholder
+        
+        if prevState.effectiveInput.inputText.isEmpty {
+            self.textView.scrollToCursor()
+        }
+
+        if state.effectiveInput != prevState.effectiveInput {
+            if state.effectiveInput.inputText.count != prevState.effectiveInput.inputText.count {
+                self.textView.scrollToCursor()
+            }
+        }
         
     }
     private var updateFirstTime: Bool = true
@@ -827,6 +837,12 @@ class ChatInputView: View, Notifable {
         
         let interaction = self.chatInteraction
         
+        defer {
+            DispatchQueue.main.async { [weak self] in
+                self?.textView.scrollToCursor()
+            }
+        }
+        
         if let window = kitWindow, self.chatState == .normal || self.chatState == .editing {
             
             if let string = pasteboard.string(forType: .string) {
@@ -875,9 +891,6 @@ class ChatInputView: View, Notifable {
             return !result
         }
         
-        DispatchQueue.main.async { [weak self] in
-            self?.textView.scrollToCursor()
-        }
         return self.chatState != .normal
     }
     

@@ -16,3 +16,9 @@ url=git@github.com:overtake/rlottie.git
 [submodule "submodules/tg_owt"]
 	path = submodules/tg_owt
 	url = git@github.com:desktop-app/tg_owt.git
+[submodule "submodules/libprisma"]
+	path = submodules/libprisma
+	url = git@github.com:TelegramMessenger/libprisma.git
+[submodule "submodules/regex"]
+	path = submodules/regex
+	url = git@github.com:boostorg/regex.git

@@ -426,9 +426,11 @@ class ChatControllerView : View, ChatInputDelegate {
 
                 view.layer?.removeAnimation(forKey: "opacity")
                 view._change(pos: value.point, animated: animated && view.superview == superview, duration: 0.2, timingFunction: .easeOut)
-                                
-                if view.superview != superview {
-                    superview.addSubview(view)
+                             
+                let isNew = view.superview != superview
+                superview.addSubview(view)
+
+                if isNew {
                     let moveAsNew = currentAnimationRows.first(where: {
                         $0.index == value.items.first?.index
                     })
@@ -591,12 +593,15 @@ class ChatControllerView : View, ChatInputDelegate {
         
         let visibleRows = tableView.visibleRows(frame.height)
         
-        for i in visibleRows.lowerBound ..< visibleRows.upperBound {
-            let item = tableView.item(at: i)
-            if let view = item.view as? ChatRowView {
-                view.updateBackground(animated: transition.isAnimated, item: view.item)
+        DispatchQueue.main.async {
+            for i in visibleRows.lowerBound ..< visibleRows.upperBound {
+                let item = self.tableView.item(at: i)
+                if let view = item.view as? ChatRowView {
+                    view.updateBackground(animated: transition.isAnimated, item: view.item)
+                }
             }
         }
+        
 
         if let themeSelectorView = self.themeSelectorView {
             transition.updateFrame(view: themeSelectorView, frame: NSMakeRect(0, frame.height - themeSelectorView.frame.height, frame.width, themeSelectorView.frame.height))
@@ -876,10 +881,10 @@ class ChatControllerView : View, ChatInputDelegate {
     
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        let chatTheme = self.chatTheme ?? theme as! TelegramPresentationTheme
 
-        super.updateLocalizationAndTheme(theme: chatTheme)
+        super.updateLocalizationAndTheme(theme: theme)
         
+        let chatTheme = self.chatTheme ?? theme as! TelegramPresentationTheme
         
         if chatTheme.shouldBlurService, !isLite(.blur) {
             progressView?.blurBackground = chatTheme.blurServiceColor
@@ -6130,6 +6135,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         genericView.tableView.merge(with: transition, appearAnimated: appearAnimated)
         collectFloatingPhotos(animated: animated && transition.state.isNone, currentAnimationRows: currentAnimationRows)
 
+        
+        
         self.genericView.tableView.notifyScrollHandlers()
         
         genericView.chatTheme = processedView.theme

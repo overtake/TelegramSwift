@@ -7,6 +7,7 @@ import TelegramCore
 import Localization
 import InAppSettings
 import IOKit
+import CodeSyntax
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -515,11 +516,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self?.switchAccount(9, true)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.control])
-                
+              
+        
         
         #if DEBUG
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            context.bindings.rootNavigation().push(ExperimentalTextController(context))
+            
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

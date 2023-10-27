@@ -1128,7 +1128,7 @@ private final class PollView : Control {
                 guard let item = item else {
                     return
                 }
-                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, message: item.message, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil)
+                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, message: item.message, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil, isDark: theme.colors.isDark)
                 
                 tooltip(for: control, text: solution.text, attributedText: text, interactions: globalLinkExecutor, timeout: 10.0)
             }, for: .Click)

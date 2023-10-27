@@ -2646,4 +2646,11 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         filterDisposable.dispose()
     }
     
+    override var modalTheme: ModalViewController.Theme {
+        return .init(presentation: presentation ?? theme)
+    }
+    override var containerBackground: NSColor {
+        let theme = presentation ?? theme
+        return theme.colors.background
+    }
 }

@@ -244,7 +244,7 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
     }
     
     func scrollToCursor() {
-        
+        self.view.scrollToCursor()
     }
     
     func string() -> String {

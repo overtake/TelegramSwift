@@ -405,7 +405,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
+        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo, isDark: theme.colors.isDark)
         return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy)
     }))
     index += 1
@@ -438,7 +438,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     if !state.isPremium {
-        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 11.5, openInfo: arguments.openInfo, textColor: arguments.presentation.colors.listGrayText)
+        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 11.5, openInfo: arguments.openInfo, textColor: arguments.presentation.colors.listGrayText, isDark: theme.colors.isDark)
 
         entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(status), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
         index += 1

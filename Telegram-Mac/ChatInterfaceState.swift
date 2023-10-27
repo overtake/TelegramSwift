@@ -39,7 +39,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case spoiler(Range<Int>)
     case underline(Range<Int>)
     case italic(Range<Int>)
-    case pre(Range<Int>)
+    case pre(Range<Int>, String?)
     case code(Range<Int>)
     case uid(Range<Int>, Int64)
     case url(Range<Int>, String)
@@ -59,7 +59,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case 1:
             self = .italic(range)
         case 2:
-            self = .pre(range)
+            self = .pre(range, try container.decodeIfPresent(String.self, forKey: "language"))
         case 3:
             self = .uid(range, try container.decode(Int64.self, forKey: "uid"))
         case 4:
@@ -126,8 +126,9 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             try container.encode(Int32(0), forKey: "_rawValue")
         case .italic:
             try container.encode(Int32(1), forKey: "_rawValue")
-        case .pre:
+        case let .pre(_, language):
             try container.encode(Int32(2), forKey: "_rawValue")
+            try container.encodeIfPresent(language, forKey: "language")
         case .code:
             try container.encode(Int32(4), forKey: "_rawValue")
         case .strikethrough:
@@ -164,7 +165,7 @@ extension ChatTextInputAttribute {
 
     var range:Range<Int> {
         switch self {
-        case let .bold(range), let .italic(range), let .pre(range), let .code(range), let .strikethrough(range), let .spoiler(range), let .underline(range):
+        case let .bold(range), let .italic(range), let .pre(range, _), let .code(range), let .strikethrough(range), let .spoiler(range), let .underline(range):
             return range
         case let .uid(range, _):
             return range
@@ -183,8 +184,8 @@ extension ChatTextInputAttribute {
             return .bold(range)
         case .italic:
             return .italic(range)
-        case .pre:
-            return .pre(range)
+        case let .pre(_, language):
+            return .pre(range, language)
         case .code:
             return .code(range)
         case .strikethrough:
@@ -216,8 +217,8 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute, associatedMe
             inputAttributes.append(.italic(entity.range))
         case .Code:
             inputAttributes.append(.code(entity.range))
-        case .Pre:
-            inputAttributes.append(.pre(entity.range))
+        case let .Pre(language):
+            inputAttributes.append(.pre(entity.range, language))
         case let .TextMention(peerId: peerId):
             inputAttributes.append(.uid(entity.range, peerId.id._internalGetInt64Value()))
         case let .TextUrl(url):
@@ -250,7 +251,7 @@ func chatTextAttributes(from attributedText: NSAttributedString) -> [ChatTextInp
             } else if key == TextInputAttributes.italic {
                 parsedAttributes.append(.italic(range))
             } else if key == TextInputAttributes.code {
-                parsedAttributes.append(.code(range))
+                parsedAttributes.append(.pre(range, value as? String))
             } else if key == TextInputAttributes.monospace {
                 parsedAttributes.append(.code(range))
             } else if key == TextInputAttributes.textMention, let value = value as? ChatTextInputTextMentionAttribute {
@@ -440,8 +441,10 @@ final class ChatTextInputState: Codable, Equatable {
                 result.addAttribute(TextInputAttributes.bold, value: true as NSNumber, range: range)
             case .italic:
                 result.addAttribute(TextInputAttributes.italic, value: true as NSNumber, range: range)
-            case .code, .pre:
+            case .code:
                 result.addAttribute(TextInputAttributes.monospace, value: true as NSNumber, range: range)
+            case let .pre(_, language):
+                result.addAttribute(TextInputAttributes.code, value: language ?? "", range: range)
             case let .uid(_, id):
                 result.addAttribute(TextInputAttributes.textMention, value: ChatTextInputTextMentionAttribute(peerId: PeerId(id)), range: range)
             case let .url(_, url):
@@ -487,8 +490,8 @@ final class ChatTextInputState: Codable, Equatable {
                 entities.append(.init(range: range, type: .Underline))
             case let .italic(range):
                 entities.append(.init(range: range, type: .Italic))
-            case let .pre(range):
-                entities.append(.init(range: range, type: .Pre))
+            case let .pre(range, language):
+                entities.append(.init(range: range, type: .Pre(language: language)))
             case let .code(range):
                 entities.append(.init(range: range, type: .Code))
             case let .uid(range, uid):
