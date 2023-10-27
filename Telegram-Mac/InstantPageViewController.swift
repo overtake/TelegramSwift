@@ -322,14 +322,14 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
                 if let anchorRange = externalUrl.range(of: "#") {
                     anchor = String(externalUrl[anchorRange.upperBound...])
                 }
-                loadWebpageDisposable.set((webpagePreviewWithProgress(account: context.account, url: externalUrl, webpageId: webpageId) |> deliverOnMainQueue).start(next: { [weak self] result in
+                loadWebpageDisposable.set((webpagePreviewWithProgress(account: context.account, urls: [externalUrl], webpageId: webpageId) |> deliverOnMainQueue).start(next: { [weak self] result in
                     guard let `self` = self else {return}
                     
                     switch result {
                     case let .result(webpage):
-                        if let webpage = webpage, case .Loaded = webpage.content {
+                        if let webpage = webpage {
                             self.loadProgress.set(1.0)
-                            showInstantPage(InstantPageViewController(self.context, webPage: webpage, message: nil, anchor: anchor))
+                            showInstantPage(InstantPageViewController(self.context, webPage: webpage.webpage, message: nil, anchor: anchor))
                         }
                         break
                     case let .progress(progress):

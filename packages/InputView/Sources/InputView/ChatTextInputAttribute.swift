@@ -948,8 +948,12 @@ public func convertMarkdownToAttributes(_ text: NSAttributedString) -> NSAttribu
                     var language: String = ""
                     let newLineRange = substring.nsstring.range(of: "\n")
                     if newLineRange.location != 0 && newLineRange.location != NSNotFound {
-                        language = substring.nsstring.substring(with: NSMakeRange(0, newLineRange.location))
-                        substring = String(substring.suffix(substring.length - newLineRange.location))
+                        let lang = substring.nsstring.substring(with: NSMakeRange(0, newLineRange.location))
+                        let test = lang.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                        if test.length == lang.length {
+                            language = lang
+                            substring = String(substring.suffix(substring.length - newLineRange.location))
+                        }
                     }
                     
                     result.append(NSAttributedString(string: substring, attributes: [TextInputAttributes.code: language]))

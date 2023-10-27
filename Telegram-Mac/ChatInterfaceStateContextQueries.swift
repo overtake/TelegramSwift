@@ -22,7 +22,7 @@ extension WebpagePreviewResult {
         case .progress:
             return nil
         case let .result(webpage):
-            return webpage
+            return webpage?.webpage
         }
     }
 }
@@ -610,7 +610,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                     let invoke:(inAppLink)->Void = { link in
                         switch link {
                         case let .external(detectedUrl, _), let .joinchat(detectedUrl, _, _, _), let .wallpaper(detectedUrl, _, _), let .theme(detectedUrl, _, _), let .instantView(detectedUrl, _, _):
-                            subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> filter { $0 != .progress } |> map { value in
+                            subscriber.putNext((detectedUrl, webpagePreview(account: context.account, urls: [detectedUrl]) |> filter { $0 != .progress } |> map { value in
                                 return { _ in return value.result }
                             }))
                         case let .followResolvedName(_, username, _, _, _, _):
@@ -618,7 +618,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                                 subscriber.putNext((nil, .single({ _ in return nil })))
                                 subscriber.putCompletion()
                             } else {
-                                subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> filter { $0 != .progress } |> map { value in
+                                subscriber.putNext((detectedUrl, webpagePreview(account: context.account, urls: [detectedUrl]) |> filter { $0 != .progress } |> map { value in
                                     return { _ in return value.result }
                                 }))
                             }

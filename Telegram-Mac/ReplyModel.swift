@@ -69,7 +69,11 @@ class ReplyModel: ChatAccessoryModel {
     
     override var quoteIcon: CGImage? {
         if quote != nil {
-            return presentation.quoteIcon
+            if self.parent?.replyAttribute?.isQuote == false {
+                return super.quoteIcon
+            } else {
+                return presentation.quoteIcon
+            }
         }
         return super.quoteIcon
     }
