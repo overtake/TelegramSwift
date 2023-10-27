@@ -521,7 +521,7 @@ final class StoryListView : Control, Notifable {
                 } else if let view = self {
                     arguments?.openPeerInfo(peerId, view)
                 }
-            }, hashtag: arguments?.hashtag ?? { _ in }, textColor: darkAppearance.colors.text, linkColor: darkAppearance.colors.text, monospacedPre: darkAppearance.colors.text, monospacedCode: darkAppearance.colors.text, underlineLinks: true).mutableCopy() as! NSMutableAttributedString
+            }, hashtag: arguments?.hashtag ?? { _ in }, textColor: darkAppearance.colors.text, linkColor: darkAppearance.colors.text, monospacedPre: darkAppearance.colors.text, monospacedCode: darkAppearance.colors.text, underlineLinks: true, isDark: theme.colors.isDark).mutableCopy() as! NSMutableAttributedString
             
             
 

@@ -494,6 +494,7 @@ class ChatRowItem: TableRowItem {
         if !isBubbled, forwardHeader == nil {
            // top -= topInset
         } else if isBubbled {
+            top -= 1
           //  top -= topInset
         }
         
@@ -2563,14 +2564,10 @@ class ChatRowItem: TableRowItem {
                     replyModel.measureSize(fill_size, sizeToFit: false)
                 }
             } else {
-                if !hasBubble {
-                    replyModel.measureSize(min(width - _contentSize.width - contentOffset.x - 80, 300), sizeToFit: true)
+                if _contentSize.width == 0 {
+                    replyModel.measureSize(200, sizeToFit: true)
                 } else {
-                    if _contentSize.width == 0 {
-                        replyModel.measureSize(200, sizeToFit: true)
-                    } else {
-                        replyModel.measureSize(_contentSize.width - bubbleContentInset * 2, sizeToFit: false)
-                    }
+                    replyModel.measureSize(_contentSize.width - bubbleContentInset * 2, sizeToFit: false)
                 }
             }
         }

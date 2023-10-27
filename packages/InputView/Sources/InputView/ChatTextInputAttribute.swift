@@ -192,6 +192,9 @@ public func textAttributedStringForStateText(_ stateText: NSAttributedString, fo
             } else if key == TextInputAttributes.italic {
                 result.addAttribute(key, value: value, range: range)
                 fontAttributes.insert(.italic)
+            } else if key == TextInputAttributes.code {
+                result.addAttribute(key, value: value, range: range)
+                fontAttributes.insert(.monospace)
             } else if key == TextInputAttributes.monospace {
                 result.addAttribute(key, value: value, range: range)
                 fontAttributes.insert(.monospace)
@@ -940,8 +943,16 @@ public func convertMarkdownToAttributes(_ text: NSAttributedString) -> NSAttribu
                     
                     stringOffset -= match.range(at: 2).length + match.range(at: 4).length
                     
-                    let substring = string.substring(with: match.range(at: 1)) + text + string.substring(with: match.range(at: 5))
-                    result.append(NSAttributedString(string: substring, attributes: [TextInputAttributes.code: true as NSNumber]))
+                    var substring = string.substring(with: match.range(at: 1)) + text + string.substring(with: match.range(at: 5))
+                    
+                    var language: String = ""
+                    let newLineRange = substring.nsstring.range(of: "\n")
+                    if newLineRange.location != 0 && newLineRange.location != NSNotFound {
+                        language = substring.nsstring.substring(with: NSMakeRange(0, newLineRange.location))
+                        substring = String(substring.suffix(substring.length - newLineRange.location))
+                    }
+                    
+                    result.append(NSAttributedString(string: substring, attributes: [TextInputAttributes.code: language]))
                     offsetRanges.append((NSMakeRange(matchIndex + match.range(at: 1).length, text.count), 6))
                 }
             }

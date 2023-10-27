@@ -19,6 +19,7 @@ import ColorPalette
 import ThemeSettings
 #if !SHARE
 import InputView
+import CodeSyntax
 #endif
 
 let premiumGradient = [NSColor(rgb: 0x6B93FF), NSColor(rgb: 0x976FFF), NSColor(rgb: 0xE46ACE)]
@@ -1625,7 +1626,7 @@ private func builtinBackgound(_ palette: ColorPalette) -> NSImage {
 class TelegramPresentationTheme : PresentationTheme {
     let chatList:TelegramChatListTheme
     #if !SHARE
-        let chat: TelegramChatColors
+    let chat: TelegramChatColors
     #endif
     let cloudTheme: TelegramTheme?
     let tabBar:TelegramTabBarTheme

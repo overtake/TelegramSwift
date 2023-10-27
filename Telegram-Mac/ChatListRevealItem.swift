@@ -127,7 +127,7 @@ final class ChatListRevealView : TableStickView {
         super.init(frame: frameRect)
         addSubview(containerView)
         containerView.addSubview(segmentView)
-        border = [.Right]
+       // border = [.Right]
         
         segmentView.scrollView.applyExternalScroll = { [weak self] event in
             if let item = self?.item as? ChatListRevealItem {

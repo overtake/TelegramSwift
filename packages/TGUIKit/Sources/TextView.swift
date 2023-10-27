@@ -20,6 +20,8 @@ private func combineIntersectingRectangles(_ rectangles: [TextViewBlockQuote]) -
     var result: [TextViewBlockQuote] = []
     var big: TextViewBlockQuote = rectangles[0]
     
+    var max_w: CGFloat = big.frame.width
+    
     for i in 1 ..< rectangles.count {
         let current: TextViewBlockQuote = rectangles[i]
         if current.frame.intersects(big.frame) {
@@ -31,8 +33,13 @@ private func combineIntersectingRectangles(_ rectangles: [TextViewBlockQuote]) -
             result.append(big)
             big = rectangles[i]
         }
+        max_w = max(max_w, current.frame.width)
     }
 
+    for value in result {
+        value.frame = CGRect(origin: value.frame.origin, size: NSMakeSize(max_w, value.frame.height))
+    }
+    
     return result
 }
 
@@ -721,7 +728,7 @@ public final class TextViewLayout : Equatable {
                 
                 breakInset = CGFloat(blockQuote.space * 2)
                 lineCutoutOffset += CGFloat(breakInset)
-                lineAdditionalWidth += blockQuote.space * 2 + (blockQuote.isCode ? 6 : 20)
+                lineAdditionalWidth += blockQuote.space * 2 + 20
                 
                 if !isWasPreformatted {
                     layoutSize.height += CGFloat(blockQuote.space)
@@ -1265,13 +1272,13 @@ public final class TextViewLayout : Equatable {
         }
     }
     
+
     public func selectedRange(startPoint:NSPoint, currentPoint:NSPoint, byWord: Bool = false) -> NSRange {
 
         
         var selectedRange:NSRange = NSMakeRange(NSNotFound, 0)
         
         if (currentPoint.x != -1 && currentPoint.y != -1 && !lines.isEmpty && startPoint.x != -1 && startPoint.y != -1) {
-            
             
             
             let startSelectLineIndex = findIndex(location: startPoint)
@@ -1286,21 +1293,14 @@ public final class TextViewLayout : Equatable {
                 
                 let penOffset = CGFloat( CTLineGetPenOffsetForFlush(lines[i].line, lines[i].penFlush, Double(layoutSize.width)))
                 
-                let lineRange = lines[i].range
+                let lineRange = CTLineGetStringRange(line)
                 
-                let sp = startPoint.offsetBy(dx: -penOffset, dy: 0).offsetBy(dx: -lines[i].frame.minX, dy: 0)
-                let cp = currentPoint.offsetBy(dx: -penOffset, dy: 0).offsetBy(dx: -lines[i].frame.minX, dy: 0)
+                let sp = startPoint.offsetBy(dx: -penOffset, dy: 0)
+                let cp = currentPoint.offsetBy(dx: -penOffset, dy: 0)
                 
                 var startIndex: CFIndex = CTLineGetStringIndexForPosition(line, sp)
                 var endIndex: CFIndex = CTLineGetStringIndexForPosition(line, cp)
                 
-                
-                let ctRange = CTLineGetStringRange(line)
-
-                startIndex = (startIndex - ctRange.location) + lines[i].range.location
-                endIndex = (endIndex - ctRange.location) + lines[i].range.location
-
-
                 if dif > 0 {
                     if i != currentSelectLineIndex {
                         endIndex = (lineRange.length + lineRange.location)
@@ -1339,7 +1339,7 @@ public final class TextViewLayout : Equatable {
         }
         return selectedRange
     }
-    
+
     
     public func findIndex(location:NSPoint) -> Int {
         
@@ -1931,8 +1931,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             for range in ranges {
                 if range.0.range.location != NSNotFound && (range.1 && isSelectable || !range.1) {
                     
-                    
-                    
+                    var lessRange = range.0.range
+                                        
                     let lines:[TextViewLine] = layout.lines
                     
                     let beginIndex:Int = 0
@@ -1942,18 +1942,12 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     let isReversed = endIndex < beginIndex
                     
                     var i:Int = beginIndex
+
                     
                     while isReversed ? i >= endIndex : i <= endIndex {
                         
-                        var lessRange = range.0.range
-
                         let line = lines[i].line
-                        
-                        
-                        lessRange.location -= lines[i].range.location
-                        lessRange.location += lines[i].lineRange.location
-                        
-
+                 
                         let penOffset = CGFloat( CTLineGetPenOffsetForFlush(lines[i].line, lines[i].penFlush, Double(frame.width)))
                         
                         var rect:NSRect = lines[i].frame
@@ -1963,10 +1957,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         var endLineIndex:CFIndex = 0
                         
                         
-                        if let intersection = lineRange.intersection(lessRange){
+                        if let _ = lineRange.intersection(lessRange){
                             
-
-
                             beginLineIndex = lessRange.location
                             let max = lineRange.length + lineRange.location
                             let maxSelect = max - beginLineIndex
@@ -1977,6 +1969,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             lessRange.location+=selectLength
                             
                             endLineIndex = min(beginLineIndex + selectLength, lineRange.max)
+
                             
                             var ascent:CGFloat = 0
                             var descent:CGFloat = 0
@@ -2007,8 +2000,19 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                            
                             rect.size.width = width
                             
-                            rect.origin.x = rect.minX + penOffset + startOffset
+                            rect.origin.x = penOffset + startOffset
+                            
                             rect.origin.y = rect.minY - rect.height + rect.height * 0.12
+                            let insideBlock = layout.blockQuotes.first(where: { block in
+                                if block.frame.contains(rect.origin) {
+                                    return true
+                                } else {
+                                    return false
+                                }
+                            })
+                            if let _ = insideBlock {
+                                rect.origin.x += 4 * 2
+                            }
                             rect.size.height += ceil(descent - leading)
                             let color:NSColor = window?.isKeyWindow == true || !range.1 ? range.0.color : NSColor.lightGray
                             

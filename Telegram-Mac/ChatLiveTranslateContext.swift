@@ -430,7 +430,16 @@ final class ChatLiveTranslateContext {
     }
 }
 
-
+extension MessageTextEntityType {
+    var isCode: Bool {
+        switch self {
+        case .Code, .Pre:
+            return true
+        default:
+            return false
+        }
+    }
+}
 
 func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Signal<ChatTranslationState?, NoError> {
     let baseLang = appAppearance.languageCode
@@ -474,7 +483,7 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
                             }
                             if message.text.count > 10 {
                                 var text = String(message.text.prefix(256))
-                                if var entities = message.textEntitiesAttribute?.entities.filter({ $0.type == .Pre || $0.type == .Code }) {
+                                if var entities = message.textEntitiesAttribute?.entities.filter({ $0.type.isCode }) {
                                     entities = entities.sorted(by: { $0.range.lowerBound > $1.range.lowerBound })
                                     var ranges: [Range<String.Index>] = []
                                     for entity in entities {

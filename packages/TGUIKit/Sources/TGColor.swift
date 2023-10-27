@@ -15,6 +15,10 @@ public class DashLayer : SimpleLayer {
         super.init()
     }
     
+    public override init(layer: Any) {
+        super.init(layer: layer)
+    }
+    
     public var colors: PeerNameColors.Colors? {
         didSet {
             setNeedsDisplay()
