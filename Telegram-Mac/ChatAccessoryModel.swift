@@ -596,7 +596,12 @@ class ChatAccessoryModel: NSObject {
         self.sizeToFit = sizeToFit
         
         header?.measure(width: width - leftInset - rightInset - (quoteIcon != nil ? 12 : 0))
-        message?.measure(width: width - leftInset - rightInset - 30)
+        
+        var addition: CGFloat = cutout?.topLeft?.width ?? 0
+        if addition != 0 {
+            addition -= 6
+        }
+        message?.measure(width: width - leftInset - rightInset - addition)
         
         if let header = header, let message = message {
             var model_w = max(header.layoutSize.width + mediaInset, message.layoutSize.width) + leftInset + rightInset
