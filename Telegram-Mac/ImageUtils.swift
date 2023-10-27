@@ -214,8 +214,8 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
         }
         
         //peer.nameColor?.index ??
-        
-        let index = Int(abs(peer.id.id._internalGetInt64Value() % 7))
+        let number = peer.nameColor.flatMap { Int64($0.rawValue) } ?? peer.id.id._internalGetInt64Value()
+        let index = Int(abs(number % 7))
         let color = theme.colors.peerColors(index)
 
         
@@ -396,7 +396,9 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
         let letters = peer.displayLetters
         
         //peer.nameColor?.index ??
-        let index = Int(abs(peer.id.id._internalGetInt64Value() % 7))
+        let number = peer.nameColor.flatMap { Int64($0.rawValue) } ?? peer.id.id._internalGetInt64Value()
+        let index = Int(abs(number % 7))
+        
         let color = theme.colors.peerColors(index)
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in

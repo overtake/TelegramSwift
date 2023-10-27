@@ -2288,7 +2288,7 @@ public struct ParsedWalletUrl {
 
 
 func resolveInstantViewUrl(account: Account, url: String) -> Signal<inAppLink, NoError> {
-    return webpagePreview(account: account, url: url) |> filter { $0 != .progress } |> map { $0.result }
+    return webpagePreview(account: account, urls: [url]) |> filter { $0 != .progress } |> map { $0.result }
         |> mapToSignal { webpage -> Signal<inAppLink, NoError> in
             if let webpage = webpage {
                 

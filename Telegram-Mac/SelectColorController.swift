@@ -264,7 +264,7 @@ private func generateFillImage(nameColor: PeerNameColors.Colors) -> CGImage {
                 context.rotate(by: .pi / 4.0)
                 
                 let path = CGMutablePath()
-                path.addRoundedRect(in: CGRect(origin: CGPoint(x: -9.0, y: -9.0), size: CGSize(width: 18.0, height: 18.0)), cornerWidth: 4, cornerHeight: 4)
+                path.addRoundedRect(in: CGRect(origin: CGPoint(x: -8, y: -8), size: CGSize(width: 16, height: 16)), cornerWidth: 4, cornerHeight: 4)
                 context.addPath(path)
                 context.fillPath()
             }
@@ -780,6 +780,8 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
         actionsDisposable.dispose()
     }
 
+    let channel_color_level_min = context.appConfiguration.getGeneralValue("channel_color_level_min", orElse: 1)
+    
     controller.validateData = { _ in
         if case let .channel(peer) = source {
             
@@ -787,7 +789,7 @@ func SelectColorController(context: AccountContext, source: SelectColorSource) -
             
             _ = signal.start(next: { stats, myStatus in
                 if let stats = stats {
-                    if stats.level == 0 {
+                    if stats.level < channel_color_level_min {
                         showModal(with: BoostChannelModalController(context: context, peer: peer, boosts: stats, myStatus: myStatus, infoOnly: true), for: context.window)
                     } else {
                         _ = context.engine.peers.updatePeerNameColorAndEmoji(peerId: peerId, nameColor: stateValue.with { $0.selected }, backgroundEmojiId: stateValue.with { $0.backgroundEmojiId }).start()
