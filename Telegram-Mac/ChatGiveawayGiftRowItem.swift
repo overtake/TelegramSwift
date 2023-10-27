@@ -68,7 +68,6 @@ final class ChatGiveawayGiftRowItem : ChatRowItem {
             channelId = nil
         }
         
-        //TODOLANG
         let header_attr = NSMutableAttributedString()
         
         let title: String
@@ -218,7 +217,6 @@ private final class ChatGiveawayGiftRowItemView: TableRowView {
         
         action.set(font: .medium(.text), for: .Normal)
         action.set(color: item.wpPresentation.activity.main, for: .Normal)
-        //TODOLANG
         action.set(text: strings().chatMessageOpenGiftLink, for: .Normal)
         action.layer?.borderWidth = System.pixel
         action.scaleOnClick = true

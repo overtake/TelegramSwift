@@ -715,9 +715,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
         // entries
         
-       
-        //TODOLANG
-        
+               
         let boosts_available = arguments.context.appConfiguration.getBoolValue("giveaway_gifts_purchase_available", orElse: false)
 
         if boosts_available {
