@@ -598,9 +598,6 @@ class ChatAccessoryModel: NSObject {
         header?.measure(width: width - leftInset - rightInset - (quoteIcon != nil ? 12 : 0))
         
         var addition: CGFloat = cutout?.topLeft?.width ?? 0
-        if addition != 0 {
-            addition -= 6
-        }
         message?.measure(width: width - leftInset - rightInset - addition)
         
         if let header = header, let message = message {
