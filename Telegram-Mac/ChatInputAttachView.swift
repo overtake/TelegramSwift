@@ -161,7 +161,9 @@ class ChatInputAttachView: ImageButton, Notifable {
                                     let invoke:()->Void = { [weak self] in
                                         showModal(with: WebpageModalController(context: context, url: "", title: attach.peer._asPeer().displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: attach.peer._asPeer(), replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
                                     }
-                                    invoke()
+                                    installAttachMenuBot(context: context, peer: attach.peer._asPeer(), completion: { _ in
+                                        invoke()
+                                    })
                                 }, itemImage: value))
                             }
                         }
