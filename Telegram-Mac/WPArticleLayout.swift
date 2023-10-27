@@ -203,7 +203,7 @@ class WPArticleLayout: WPLayout {
         if oldWidth != width {
             super.measure(width: width)
             
-            let maxw = width - insets.left - insets.right
+            let maxw = min(width - insets.left - insets.right, 300)
             
             var contentSize:NSSize = NSMakeSize(maxw, 0)
             
