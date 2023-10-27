@@ -2674,7 +2674,10 @@ class ChatRowItem: TableRowItem {
 
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)
         
-       
+        if isBubbled, let replyMarkup = replyMarkupModel {
+            rect.size.height -= (replyMarkup.size.height + defaultContentInnerInset)
+        }
+
         
         if let reactions = self.reactionsLayout {
             if reactions.presentation.isOutOfBounds, reactions.mode == .full {
