@@ -598,17 +598,17 @@ class ChatAccessoryModel: NSObject {
         header?.measure(width: width - leftInset - rightInset - (quoteIcon != nil ? 12 : 0))
         
         var addition: CGFloat = 0
-        if !isSideAccessory {
-            addition = cutout?.topLeft?.width ?? 0
+        if cutout != nil, !isSideAccessory {
+            addition = mediaInset
         }
-        if addition != 0 {
-            addition -= 6
-        }
+//        if addition != 0 {
+//            addition -= 6
+//        }
         message?.measure(width: width - leftInset - rightInset - addition)
         
         
         if let header = header, let message = message {
-            var model_w = max(header.layoutSize.width + mediaInset, message.layoutSize.width + mediaInset) + leftInset + rightInset
+            var model_w = max(header.layoutSize.width, message.layoutSize.width) + leftInset + rightInset
             if quoteIcon != nil {
                 model_w += 12
             }
