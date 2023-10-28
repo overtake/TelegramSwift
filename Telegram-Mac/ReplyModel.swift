@@ -160,7 +160,7 @@ class ReplyModel: ChatAccessoryModel {
                     view.addSubview(view.imageView!)
                 }
                 
-                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), self.mediaTopInset)
+                view.imageView?.setFrameOrigin(super.leftInset, self.mediaTopInset)
                 
                 
                 let mediaUpdated = true
@@ -470,7 +470,7 @@ class StoryReplyModel: ChatAccessoryModel {
                     view.addSubview(view.imageView!)
                 }
                 
-                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), floorToScreenPixels(System.backingScale, self.topOffset + (max(34, self.size.height) - self.topOffset - boundingSize.height)/2))
+                view.imageView?.setFrameOrigin(super.leftInset, floorToScreenPixels(System.backingScale, self.topOffset + (max(34, self.size.height) - self.topOffset - boundingSize.height)/2))
                 
                 
                 let mediaUpdated = true

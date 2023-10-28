@@ -117,7 +117,7 @@ class EditMessageModel: ChatAccessoryModel {
                 if view.imageView?.superview == nil {
                     view.addSubview(view.imageView!)
                 }
-                view.imageView?.setFrameOrigin(super.leftInset + (self.isSideAccessory ? 10 : 0), mediaTopInset)
+                view.imageView?.setFrameOrigin(super.leftInset, mediaTopInset)
                 
                 
                 let mediaUpdated = true

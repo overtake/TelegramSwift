@@ -2687,10 +2687,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 break
             }
             
-            if let subject = subject, self.chatInteraction.peer?.canSendMessage() == false {
-                self.chatInteraction.replyToAnother(subject, false)
-                return
+            if let peer = self.chatInteraction.presentation.mainPeer {
+                let threadInfo = self.chatInteraction.presentation.threadInfo
+                if let subject = subject, !peer.canSendMessage(self.mode.isThreadMode, threadData: threadInfo) {
+                    self.chatInteraction.replyToAnother(subject, false)
+                    return
+                }
             }
+            
             
             self.chatInteraction.focusInputField()
             let signal:Signal<Message?, NoError> = subject == nil ? .single(nil) : self.chatInteraction.context.account.postbox.messageAtId(subject!.messageId)
