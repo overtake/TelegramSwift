@@ -76,13 +76,18 @@ final class PremiumStatusControl : Control {
                         })
                     }
                 } else {
-                    if let color = color, !isSelected {
+                    if isSelected {
+                        let under = theme.colors.underSelectedColor
+                        image = theme.resourceCache.image(Int32(under.rgb + 1003), {
+                            return generatePremium(false, color: under, small: true)
+                        })
+                    } else if let color = color {
                         image = theme.resourceCache.image(Int32(color.rgb + 1002), {
                             return generatePremium(false, color: color, small: true)
                         })
                     } else {
-                        let under = theme.colors.underSelectedColor
-                        image = theme.resourceCache.image(Int32(under.rgb + 1003), {
+                        let under = theme.colors.accent
+                        image = theme.resourceCache.image(Int32(under.rgb + 1004), {
                             return generatePremium(false, color: under, small: true)
                         })
                     }

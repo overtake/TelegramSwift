@@ -2567,7 +2567,7 @@ class ChatRowItem: TableRowItem {
                 if _contentSize.width == 0 {
                     replyModel.measureSize(200, sizeToFit: true)
                 } else {
-                    replyModel.measureSize(_contentSize.width - bubbleContentInset * 2, sizeToFit: false)
+                    replyModel.measureSize(_contentSize.width - bubbleContentInset * 2, sizeToFit: true)
                 }
             }
         }
