@@ -418,7 +418,7 @@ fileprivate class PreviewSenderView : Control {
         
         let tableRect = NSMakeRect(0, headerView.frame.maxY - 6, frame.width, min(height, listHeight))
         transition.updateFrame(view: tableView, frame: tableRect)
-        transition.updateFrame(view: draggingView, frame: draggingView.frame)
+        transition.updateFrame(view: draggingView, frame: size.bounds)
         
         transition.updateFrame(view: closeButton, frame: closeButton.centerFrameY(x: headerView.frame.width - closeButton.frame.width - 10))
         
