@@ -340,6 +340,10 @@ class ChatRowItem: TableRowItem {
             height += reactions.size.height
         }
         
+        if isBubbled, let _ = replyMarkupModel {
+            height += 4
+        }
+        
         return max(rightSize.height + 8, height)
     }
     
@@ -2676,6 +2680,10 @@ class ChatRowItem: TableRowItem {
         
         if isBubbled, let replyMarkup = replyMarkupModel {
             rect.size.height -= (replyMarkup.size.height + defaultContentInnerInset)
+            
+            if self is ChatMessageItem {
+                rect.size.height += 2
+            }
         }
 
         

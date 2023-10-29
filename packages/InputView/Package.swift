@@ -17,6 +17,7 @@ let package = Package(
         // .package(url: /* package url */, from: "1.0.0"),
         .package(name: "TGUIKit", path: "../TGUIKit"),
         .package(name: "ColorPalette", path: "../ColorPalette"),
+        .package(name: "Localization", path: "../Localization"),
         .package(name: "Postbox", path: "../../submodules/telegram-ios/submodules/Postbox"),
         .package(name: "SSignalKit", path: "../../submodules/telegram-ios/submodules/SSignalKit"),
         .package(name: "TelegramCore", path: "../../submodules/telegram-ios/submodules/TelegramCore")
@@ -28,6 +29,7 @@ let package = Package(
             name: "InputView",
             dependencies: [
                 .product(name: "TGUIKit", package: "TGUIKit", condition: nil),
+                .product(name: "Localization", package: "Localization", condition: nil),
                 .product(name: "ColorPalette", package: "ColorPalette", condition: nil),
                 .product(name: "Postbox", package: "Postbox", condition: nil),
                 .product(name: "SwiftSignalKit", package: "SSignalKit", condition: nil),

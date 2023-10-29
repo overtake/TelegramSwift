@@ -2,6 +2,7 @@ import Foundation
 import AppKit
 import TGUIKit
 import ColorPalette
+import Localization
 
 private enum InputViewSubviewDestination {
     case below
@@ -907,7 +908,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                     let sep = NSMenuItem.separator()
                     menu?.addItem(sep)
 
-                    let item = NSMenuItem(title: NSLocalizedString("Text.View.Transformations", comment: ""), action: nil, keyEquivalent: "")
+                    let item = NSMenuItem(title: _NSLocalizedString("Text.View.Transformations"), action: nil, keyEquivalent: "")
                     item.submenu = NSMenu()
                     self.transformItems.enumerated().forEach { (transformIdx, obj) in
                         item.submenu?.insertItem(obj, at: transformIdx)
@@ -927,31 +928,32 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
     
 
     var transformItems: [NSMenuItem] {
-        let bold = NSMenuItem(title: NSLocalizedString("TextView.Transform.Bold", comment: ""), action: #selector(makeBold(_:)), keyEquivalent: "b")
+        let bold = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Bold"), action: #selector(makeBold(_:)), keyEquivalent: "b")
         bold.keyEquivalentModifierMask = .command
 
-        let italic = NSMenuItem(title: NSLocalizedString("TextView.Transform.Italic", comment: ""), action: #selector(makeItalic(_:)), keyEquivalent: "i")
+        let italic = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Italic"), action: #selector(makeItalic(_:)), keyEquivalent: "i")
         italic.keyEquivalentModifierMask = .command
 
-        let code = NSMenuItem(title: NSLocalizedString("TextView.Transform.Code", comment: ""), action: #selector(makeCode(_:)), keyEquivalent: "k")
+        let code = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Code"), action: #selector(makeCode(_:)), keyEquivalent: "k")
         code.keyEquivalentModifierMask = [.shift, .command]
 
-        let url = NSMenuItem(title: NSLocalizedString("TextView.Transform.URL1", comment: ""), action: #selector(makeUrl(_:)), keyEquivalent: "u")
+        let url = NSMenuItem(title: _NSLocalizedString("TextView.Transform.URL1"), action: #selector(makeUrl(_:)), keyEquivalent: "u")
         url.keyEquivalentModifierMask = .command
 
-        let strikethrough = NSMenuItem(title: NSLocalizedString("TextView.Transform.Strikethrough", comment: ""), action: #selector(makeStrikethrough(_:)), keyEquivalent: "x")
+        let strikethrough = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Strikethrough"), action: #selector(makeStrikethrough(_:)), keyEquivalent: "x")
         strikethrough.keyEquivalentModifierMask = [.shift, .command]
 
-        let underline = NSMenuItem(title: NSLocalizedString("TextView.Transform.Underline", comment: ""), action: #selector(makeUnderline(_:)), keyEquivalent: "u")
+        let underline = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Underline"), action: #selector(makeUnderline(_:)), keyEquivalent: "u")
         underline.keyEquivalentModifierMask = [.shift, .command]
 
-        let spoiler = NSMenuItem(title: NSLocalizedString("TextView.Transform.Spoiler", comment: ""), action: #selector(makeSpoiler(_:)), keyEquivalent: "p")
+        
+        let spoiler = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Spoiler"), action: #selector(makeSpoiler(_:)), keyEquivalent: "p")
         spoiler.keyEquivalentModifierMask = [.shift, .command]
 
-        let quote = NSMenuItem(title: NSLocalizedString("TextView.Transform.Quote", comment: ""), action: #selector(makeQuote(_:)), keyEquivalent: "i")
+        let quote = NSMenuItem(title: _NSLocalizedString("TextView.Transform.Quote"), action: #selector(makeQuote(_:)), keyEquivalent: "i")
         quote.keyEquivalentModifierMask = [.shift, .command]
 
-        let removeAll = NSMenuItem(title: NSLocalizedString("TextView.Transform.RemoveAll", comment: ""), action: #selector(removeAll(_:)), keyEquivalent: "")
+        let removeAll = NSMenuItem(title: _NSLocalizedString("TextView.Transform.RemoveAll"), action: #selector(removeAll(_:)), keyEquivalent: "")
         
         return [removeAll, NSMenuItem.separator(), strikethrough, underline, spoiler, code, italic, bold, url, quote]
     }
