@@ -380,7 +380,7 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
                 containerView.addSubview(current, positioned: .below, relativeTo: containerView.subviews.first)
                 isNew = true
             }
-            let layout = TextViewLayout(placeholderString)
+            let layout = TextViewLayout(placeholderString, maximumNumberOfLines: 1)
             layout.measure(width: frame.width)
             current.update(layout)
             current.centerY(x: 0)
