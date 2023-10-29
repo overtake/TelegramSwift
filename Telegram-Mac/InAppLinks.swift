@@ -326,6 +326,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     
     switch inapp {
     case let .external(link, needConfirm):
+        
+        if link.isEmpty {
+            return
+        }
         var url:String = link.trimmed
 
         var reversedUrl = String(url.reversed())

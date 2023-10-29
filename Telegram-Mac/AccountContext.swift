@@ -16,7 +16,9 @@ import InAppSettings
 import ThemeSettings
 import Reactions
 import FetchManager
+#if !SHARE
 import InAppPurchaseManager
+#endif
 import ApiCredentials
 
 let clown: String = "🤡"
