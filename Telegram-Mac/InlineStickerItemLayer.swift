@@ -478,6 +478,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.contentsGravity = .center
         self.masksToBounds = false
         self.isOpaque = true
+        self.contentsScale = System.backingScale
     }
     
     override var masksToBounds: Bool {
@@ -707,7 +708,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
             
             if file.mimeType == "bundle/jpeg", let resource = file.resource as? LocalBundleResource {
-                let image = NSImage(named: resource.name)?.precomposed(resource.color ?? theme.colors.accentIcon)
+                let image = NSImage(named: resource.name)?.precomposed(resource.color ?? theme.colors.accentIcon, scale: System.backingScale)
                 self.contents = image
                 if resource.resize {
                     self.contentsGravity = .resizeAspect
