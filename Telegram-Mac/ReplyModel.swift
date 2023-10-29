@@ -276,7 +276,7 @@ class ReplyModel: ChatAccessoryModel {
                 title = strings().chatHeaderPinnedMessage
             }
             
-            
+            var resetEntities: Bool = true
             
             let text: NSAttributedString
             if let translate = self.translate, let translateText = message.translationAttribute(toLang: translate.toLang)?.text  {
@@ -287,10 +287,14 @@ class ReplyModel: ChatAccessoryModel {
                         let message = Message(media, stableId: 0, messageId: replyMessageId)
                         text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
                     } else {
-                        let textAttr = NSMutableAttributedString()
-                        textAttr.append(string: quote.text, color: theme.colors.text, font: .normal(.text))
+                        let textAttr: NSMutableAttributedString
+                    
+                        
+                        textAttr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: quote.entities)], for: quote.text, message: nil, context: context, fontSize: 13, openInfo: { _,_, _, _ in }, textColor: presentation.enabledText, linkColor: presentation.enabledText, monospacedPre: presentation.enabledText, monospacedCode: presentation.enabledText, isDark: presentation.app.dark).mutableCopy() as! NSMutableAttributedString
+                        
                         InlineStickerItem.apply(to: textAttr, associatedMedia: [:], entities:  quote.entities, isPremium: context.isPremium, ignoreSpoiler: true)
                         text = textAttr
+                        resetEntities = false
                     }
                     
                 } else {
@@ -324,8 +328,10 @@ class ReplyModel: ChatAccessoryModel {
             }
             let attr = NSMutableAttributedString()
             attr.append(text)
-            attr.addAttribute(.foregroundColor, value: presentation.enabledText, range: attr.range)
-            attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
+            if resetEntities {
+                attr.addAttribute(.foregroundColor, value: presentation.enabledText, range: attr.range)
+                attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
+            }
             
             
             self.message = .init(attr, maximumNumberOfLines: quote != nil && self.modelType == .modern ? 4 : 1, cutout: self.cutout)

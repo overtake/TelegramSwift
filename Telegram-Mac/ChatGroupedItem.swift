@@ -386,11 +386,12 @@ class ChatGroupedItem: ChatRowItem {
         var offset = super.contentOffset
         
         if hasBubble, isBubbleFullFilled, !hasUpsideSomething {
-            offset.y -= (defaultContentInnerInset + 1)
+            offset.y -= (defaultContentInnerInset )
         } else if hasBubble, !isBubbleFullFilled, hasUpsideSomething {
             offset.y += defaultContentInnerInset
+        } else if hasBubble, isBubbleFullFilled, hasUpsideSomething {
+            offset.y += topInset
         }
-        
         return offset
     }
     
@@ -403,13 +404,12 @@ class ChatGroupedItem: ChatRowItem {
     
     override var _defaultHeight: CGFloat {
         if hasBubble && isBubbleFullFilled && captionLayouts.isEmpty {
-            return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2 - 1
-        } else if hasBubble && !isBubbleFullFilled {
-            return super._defaultHeight
+            return contentOffset.y + defaultContentInnerInset - mediaBubbleCornerInset * 2 - 2
         }
         
         return super._defaultHeight
     }
+    
     
     override var realContentSize: NSSize {
         var size = super.realContentSize
