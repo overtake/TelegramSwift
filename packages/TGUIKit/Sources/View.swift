@@ -90,10 +90,132 @@ public class CustomViewHandlers {
 public var viewEnableTouchBar: Bool = true
 
 
+open class LayerBackedView : NSView, AppearanceViewProtocol {
+    
+    
+    var isEventLess: Bool {
+        return true
+    }
+    
+    public var _transformation: CATransform3D? = nil {
+        didSet {
+            self.updateValues()
+        }
+    }
+    
+    open override var isFlipped: Bool {
+        return true
+    }
+    
+    public var _anchorPoint: NSPoint? = nil {
+        didSet {
+            self.updateValues()
+        }
+    }
+    
+    public var _sublayerTransform: CATransform3D? = nil {
+        didSet {
+            self.updateValues()
+        }
+    }
+    
+    private func updateValues() {
+        if let _anchorPoint = _anchorPoint {
+            self.setAnchorPoint(anchorPoint: _anchorPoint)
+        } else {
+            self.setAnchorPoint(anchorPoint: NSMakePoint(0, 0))
+        }
+        if let _transformation = _transformation {
+            self.layer?.transform = _transformation
+        } else {
+            self.layer?.transform = CATransform3DIdentity
+        }
+        if let _sublayerTransform = _sublayerTransform {
+            self.layer?.sublayerTransform = _sublayerTransform
+        } else {
+            self.layer?.sublayerTransform = CATransform3DIdentity
+        }
+    }
+        
+   
+    open override func updateLayer() {
+        super.updateLayer()
+        updateValues()
+    }
+    
+    
+    
+    public init() {
+        super.init(frame: NSZeroRect)
+        assertOnMainThread()
+        self.wantsLayer = true
+    }
+    
+    override required public init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        assertOnMainThread()
+        self.wantsLayer = true
+    }
+    
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    open override var wantsDefaultClipping: Bool {
+        return false
+    }
+    
+    open func updateLocalizationAndTheme(theme: PresentationTheme) {
+        for subview in subviews {
+            if let subview = subview as? AppearanceViewProtocol {
+                subview.updateLocalizationAndTheme(theme: theme)
+            }
+        }
+    }
+}
+
 
 open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
+    
+    public var _transformation: CATransform3D? = nil {
+        didSet {
+            self.updateLayer()
+        }
+    }
+    
+    public var _anchorPoint: NSPoint? = nil {
+        didSet {
+            self.updateLayer()
+        }
+    }
+    
+    public var _sublayerTransform: CATransform3D? = nil {
+        didSet {
+            self.updateLayer()
+        }
+    }
         
+    open override var wantsUpdateLayer: Bool {
+        return self._anchorPoint != nil || self._transformation != nil || self._sublayerTransform != nil
+    }
+    
+    
+    open override func updateLayer() {
+        super.updateLayer()
+        
+        if let _anchorPoint = _anchorPoint {
+            self.setAnchorPoint(anchorPoint: _anchorPoint)
+        }
+        if let _transformation = _transformation {
+            self.layer?.transform = _transformation
+        }
+        if let _sublayerTransform = _sublayerTransform {
+            self.layer?.sublayerTransform = _sublayerTransform
+        }
+    }
+    
     public var isDynamicColorUpdateLocked: Bool = false
     
     public var noWayToRemoveFromSuperview: Bool = false
@@ -195,14 +317,6 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         if let displayDelegate = displayDelegate {
             displayDelegate.draw(layer, in: ctx)
         } else {
-          //  layer.backgroundColor = backgroundColor.cgColor
-           // layer.backgroundColor = self.backgroundColor.cgColor
-            
-          //  ctx.setShadow(offset: NSMakeSize(5.0, 5.0), blur: 0.0, color: .shadow.cgColor)
-            
-           // ctx.setFillColor(self.backgroundColor.cgColor)
-           // ctx.fill(layer.bounds)
-            
             if let border = border {
                 if let borderColor = borderColor {
                     ctx.setFillColor(borderColor.cgColor)
@@ -263,6 +377,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         if #available(macOS 10.15, *) {
             self.layer?.cornerCurve = .continuous
         }
+        self.layer?.masksToBounds = true
        // self.translatesAutoresizingMaskIntoConstraints = false
     }
     
@@ -271,6 +386,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         assertOnMainThread()
         acceptsTouchEvents = true
         self.wantsLayer = true
+        self.layer?.masksToBounds = true
         self.autoresizesSubviews = false
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
@@ -290,14 +406,14 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         return false
     }
     
-    open override var translatesAutoresizingMaskIntoConstraints: Bool {
-        get {
-            return true
-        }
-        set {
-
-        }
-    }
+//    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+//        get {
+//            return true
+//        }
+//        set {
+//
+//        }
+//    }
     
     open override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
@@ -316,6 +432,11 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
                 }
             }
             if let view = view as? ImageView {
+                if view.isEventLess || view === self {
+                    return nil
+                }
+            }
+            if let view = view as? LayerBackedView {
                 if view.isEventLess || view === self {
                     return nil
                 }
@@ -367,9 +488,8 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     }
     
     open override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
+        super.setFrameSize(NSMakeSize(max(0, newSize.width), max(0, newSize.height)))
         _customHandler?.size?(newSize)
-
         guard #available(OSX 10.12, *) else {
             self.needsLayout = true
             return

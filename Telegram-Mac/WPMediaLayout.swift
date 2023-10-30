@@ -18,15 +18,22 @@ import InAppSettings
 class WPMediaLayout: WPLayout {
 
     var mediaSize:NSSize = NSZeroSize
-    private(set) var media:TelegramMediaFile
+    private(set) var media: Media
     let parameters:ChatMediaLayoutParameters?
     init(with content: TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings, autoplayMedia: AutoplayMediaPreferences, theme: TelegramPresentationTheme, mayCopyText: Bool) {
-        self.media = content.file!
-        if let representations = content.image?.representations {
-            self.media = self.media.withUpdatedPreviewRepresentations(representations)
+        self.media = (content.file ?? content.image)!
+        if let representations = content.image?.representations, let file = self.media as? TelegramMediaFile {
+            self.media = file.withUpdatedPreviewRepresentations(representations)
         }
-        self.parameters = ChatMediaLayoutParameters.layout(for: content.file!, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(for: parent, account: context.account, renderType: presentation.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(parent), isIncoming: parent.isIncoming(context.account, presentation.renderType == .bubble), autoplayMedia: autoplayMedia)
+        if let media = media as? TelegramMediaFile {
+            self.parameters = ChatMediaGalleryParameters.layout(for: media, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(theme: theme), automaticDownload: downloadSettings.isDownloable(parent), isIncoming: parent.isIncoming(context.account, presentation.renderType == .bubble), autoplayMedia: autoplayMedia, isChatRelated: true, isCopyProtected: mayCopyText, isRevealed: false)
+
+        } else {
+            self.parameters = ChatMediaGalleryParameters(isWebpage: true, media: self.media, automaticDownload: downloadSettings.isDownloable(parent))
+        }
         
+                                
+                                                  
         self.parameters?.cancelOperation = { [unowned context] message, media in
             if let media = media as? TelegramMediaFile {
                 messageMediaFileCancelInteractiveFetch(context: context, messageId: message.id, file: media)
@@ -42,7 +49,7 @@ class WPMediaLayout: WPLayout {
     override func measure(width: CGFloat) {
         super.measure(width: width)
         
-        var contentSize = ChatLayoutUtils.contentSize(for: media, with: width - insets.left, hasText: textLayout != nil && theme.bubbled)
+        var contentSize = ChatLayoutUtils.contentSize(for: media, with: width, hasText: textLayout != nil && theme.bubbled)
         
         
         self.mediaSize = contentSize
@@ -61,7 +68,7 @@ class WPMediaLayout: WPLayout {
             parameters.name = TextNode.layoutText(maybeNode: parameters.nameNode, NSAttributedString.initialize(string: parameters.fileName , color: theme.colors.text, font: .medium(.text)), nil, 1, .middle, NSMakeSize(width - (parameters.hasThumb ? 80 : 50), 20), nil,false, .left)
         }
         
-        parameters?.makeLabelsForWidth(contentSize.width - 50)
+        parameters?.makeLabelsForWidth(contentSize.width)
         
 
         

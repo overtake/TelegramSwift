@@ -152,7 +152,7 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
     guard let window = view.window as? Window else { return }
     
     if view.visibleRect.height != view.frame.height {
-        return
+      //  return
     }
     
     let tooltip: TooltipView
@@ -197,11 +197,11 @@ public func tooltip(for view: NSView, text: String, attributedText: NSAttributed
             }
             point.y += offset.y
             let pos = NSMakePoint(min(max(floorToScreenPixels(System.backingScale, point.x - (tooltip.frame.width - view.frame.width) / 2), 10), window.frame.width - tooltip.frame.width - 10), point.y)
-            if view.visibleRect.height != view.frame.height {
-                removeTooltip(true)
-            } else {
+//            if view.visibleRect.height != view.frame.height {
+//                removeTooltip(true)
+//            } else {
                 tooltip.change(pos: pos, animated: isExists || animated)
-            }
+//            }
         }
         
     }

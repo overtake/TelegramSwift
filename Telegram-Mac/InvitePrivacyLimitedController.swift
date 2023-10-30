@@ -32,7 +32,7 @@ private final class InviteViaLinkHeaderItem : GeneralRowItem {
         }
         
         
-        self.textLayout = .init(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        self.textLayout = .init(.initialize(string: text, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
         
@@ -140,8 +140,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+//    entries.append(.sectionId(sectionId, type: .customModern(10)))
+//    sectionId += 1
     
     
     
@@ -152,7 +152,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     // entries
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     struct Tuple : Equatable {
@@ -177,12 +177,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             interactionType = .plain
         }
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-            return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
+            return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, viewType: item.viewType)
         }))
         index += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     
@@ -257,7 +257,7 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
                     let combine = peers.filter {
                         selected.presentation.selected.contains($0.peer.id)
                     }.map {
-                        return enqueueMessages(account: context.account, peerId: $0.peer.id, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
+                        return enqueueMessages(account: context.account, peerId: $0.peer.id, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, threadId: nil, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
                     }
                     _ = combineLatest(combine).start()
                     
@@ -275,7 +275,7 @@ func InvitePrivacyLimitedController(context: AccountContext, peerId: PeerId, pee
     
     let modalInteractions = ModalInteractions(acceptTitle: strings().inviteFailedOK, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
 
     arguments.select.singleUpdater = { [weak modalInteractions] updated in
         modalInteractions?.updateDone { title in

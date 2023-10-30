@@ -228,7 +228,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         inputContainer.background = .clear
         inputContainer.backgroundColor = .clear
-        input.textColor = searchTheme?.textColor ?? presentation.search.textColor
+        input.textColor = searchTheme?.textColor ?? theme.search.textColor
         input.backgroundColor = .clear
         
         search.autohighlight = false
@@ -307,7 +307,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         input.isVerticallyResizable = false
 
         
-        //input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text), coreText: false)
+        //input.placeholderAttributedString = NSAttributedString.initialize(string: localizedString("SearchField.Search"), color: .grayText, font: .normal(.text))
         
         input.font = .normal(.text)
         input.textColor = .text

@@ -159,7 +159,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ ! -d \"$PROJECT_DIR/build\" ]; then\n  sh $PROJECT_DIR/libwebp/build.sh .\nfi\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nif [ ! -d \"$PROJECT_DIR/build\" ]; then\n  sh $PROJECT_DIR/libwebp/build-cmake.sh .\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -262,7 +262,7 @@
 					"$(PROJECT_DIR)/build/libwebp/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.google.libwebp;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -352,7 +352,7 @@
 					"$(PROJECT_DIR)/build/libwebp/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.google.libwebp;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";

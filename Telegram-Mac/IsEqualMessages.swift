@@ -19,61 +19,6 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
     if lhsMessage.stableVersion != rhsMessage.stableVersion {
         return false
     }
-    
-    return true
-    
-    if MessageIndex(id: lhsMessage.id, timestamp: lhsMessage.timestamp) != MessageIndex(id: rhsMessage.id, timestamp: rhsMessage.timestamp) || lhsMessage.stableVersion != rhsMessage.stableVersion {
-        return false
-    }
-    if lhsMessage.flags != rhsMessage.flags {
-        return false
-    }
-    
-    if lhsMessage.media.count != rhsMessage.media.count {
-        return false
-    }
-    for i in 0 ..< lhsMessage.media.count {
-        if !lhsMessage.media[i].isEqual(to: rhsMessage.media[i]) {
-            return false
-        }
-    }
-    
-    if lhsMessage.attributes.count != rhsMessage.attributes.count {
-        return false
-    }
-    
-    for (_, lhsAttr) in lhsMessage.attributes.enumerated() {
-        if let lhsAttr = lhsAttr as? ReplyThreadMessageAttribute {
-            let rhsAttr = rhsMessage.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
-            if let rhsAttr = rhsAttr {
-                if lhsAttr.count != rhsAttr.count {
-                    return false
-                }
-                if lhsAttr.latestUsers != rhsAttr.latestUsers {
-                    return false
-                }
-                if lhsAttr.maxMessageId != rhsAttr.maxMessageId {
-                    return false
-                }
-                if lhsAttr.maxReadMessageId != rhsAttr.maxReadMessageId {
-                    return false
-                }
-            } else {
-                return false
-            }
-        }
-        if let lhsAttr = lhsAttr as? ViewCountMessageAttribute {
-            let rhsAttr = rhsMessage.attributes.compactMap { $0 as? ViewCountMessageAttribute }.first
-            if let rhsAttr = rhsAttr {
-                if lhsAttr.count != rhsAttr.count {
-                    return false
-                }
-            } else {
-                return false
-            }
-        }
-    }
-    
     if lhsMessage.associatedMessages.count != rhsMessage.associatedMessages.count {
         return false
     } else {
@@ -83,6 +28,31 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
                     return false
                 }
             } else {
+                return false
+            }
+        }
+    }
+    if lhsMessage.associatedStories.count != rhsMessage.associatedStories.count {
+        return false
+    } else {
+        for (storyId, lhsAssociatedStory) in lhsMessage.associatedStories {
+            if let rhsAssociatedStory = rhsMessage.associatedStories[storyId] {
+                let lhsStory = lhsAssociatedStory.get(Stories.StoredItem.self)
+                let rhsStory = rhsAssociatedStory.get(Stories.StoredItem.self)
+                if lhsStory != rhsStory {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+    }
+    
+    if lhsMessage.media.count != rhsMessage.media.count {
+        return false
+    } else {
+        for i in 0 ..< lhsMessage.media.count {
+            if !lhsMessage.media[i].isEqual(to: rhsMessage.media[i]) {
                 return false
             }
         }
@@ -101,6 +71,8 @@ func isEqualMessages(_ lhsMessage: Message, _ rhsMessage: Message) -> Bool {
             }
         }
     }
+    
+
     
     return true
 }

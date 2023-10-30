@@ -26,6 +26,10 @@ open class TableStickView: TableRowView {
         
     }
     
+    open override var backdorColor: NSColor {
+        return .clear
+    }
+    
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
         super.setFrameOrigin(newOrigin)

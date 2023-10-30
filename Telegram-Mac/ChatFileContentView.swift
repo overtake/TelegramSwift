@@ -82,7 +82,7 @@ class ChatFileContentView: ChatMediaContentView {
                 parameters?.showMedia(parent)
             } else {
                 if media.mimeType.contains("svg") || (media.fileName ?? "").hasSuffix(".svg") {
-                    confirm(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in
+                    verifyAlert_button(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in
                         QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
                     })
                 } else {
@@ -435,18 +435,15 @@ class ChatFileContentView: ChatMediaContentView {
     
     override func layout() {
         super.layout()
-        if let parameters = parameters as? ChatFileLayoutParameters {
-            let center = floorToScreenPixels(backingScaleFactor, (parameters.hasThumb ? 70 : 40) / 2)
-            actionText.setFrameOrigin(leftInset, parameters.hasThumb ? center + 2 : 20)
-            
-            if parameters.hasThumb {
-                if let thumbProgress = thumbProgress {
-                    let f = thumbView.focus(thumbProgress.frame.size)
-                    thumbProgress.setFrameOrigin(f.origin)
-                }
-            } else {
-                progressView?.setFrameOrigin(NSZeroPoint)
+        let center = floorToScreenPixels(backingScaleFactor, frame.height / 2)
+        actionText.setFrameOrigin(leftInset, isHasThumb ? center + 2 : 20)
+        if isHasThumb {
+            if let thumbProgress = thumbProgress {
+                let f = thumbView.focus(thumbProgress.frame.size)
+                thumbProgress.setFrameOrigin(f.origin)
             }
+        } else {
+            progressView?.setFrameOrigin(NSZeroPoint)
         }
         
     }

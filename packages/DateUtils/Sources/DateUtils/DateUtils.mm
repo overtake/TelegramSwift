@@ -55,6 +55,19 @@ static NSString *value_dialogTimeFormat() {
     return [[NSLocalized(@"Date.DialogDateFormat", @"") stringByReplacingOccurrencesOfString:@"{month}" withString:@"%@"] stringByReplacingOccurrencesOfString:@"{day}" withString:@"%d"];
 };
 
+static NSString *value_agoMinutes() {
+    return [NSLocalized(@"Time.agoMinutes", nil) stringByReplacingOccurrencesOfString:@"{date}" withString:@"%d"];
+};
+static NSString *value_agoMinute() {
+    return [NSLocalized(@"Time.agoMinute", nil) stringByReplacingOccurrencesOfString:@"{date}" withString:@"%d"];
+};
+static NSString *value_agoHours() {
+    return [NSLocalized(@"Time.agoHours", nil) stringByReplacingOccurrencesOfString:@"{date}" withString:@"%d"];
+};
+static NSString *value_agoHour() {
+    return [NSLocalized(@"Time.agoHour", nil) stringByReplacingOccurrencesOfString:@"{date}" withString:@"%d"];
+};
+
 static NSString *value_today() {
     return NSLocalized(@"Time.today", @"");
 };
@@ -556,11 +569,12 @@ static inline NSString *dialogTimeFormat()
             }
             else if (minutesDiff < 60)
             {
-                return [[NSString alloc] initWithFormat:minutesDiff == 1 ? NSLocalized(@"Time.agoMinute",nil) : NSLocalized(@"Time.agoMinutes", nil), minutesDiff];
+                NSString *string = minutesDiff == 1 ? value_agoMinute() : value_agoMinutes();
+                return [[NSString alloc] initWithFormat: string, minutesDiff];
             }
             else
             {
-                return [[NSString alloc] initWithFormat:hoursDiff == 1 ? NSLocalized(@"Time.agoHour",nil) : NSLocalized(@"Time.agoHours",nil), hoursDiff];
+                return [[NSString alloc] initWithFormat:hoursDiff == 1 ? value_agoHour() : value_agoHours(), hoursDiff];
             }
         }
         else if (dayDiff == 0 || dayDiff == -1)

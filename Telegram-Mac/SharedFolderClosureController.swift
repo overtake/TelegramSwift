@@ -25,7 +25,6 @@ private final class JoinCloudFolderHeaderItem : GeneralRowItem {
         } else {
             self.badgeNode = nil
         }
-        //TODOLANG
         self.nameLayout = .init(.initialize(string: name, color: theme.colors.accent, font: .medium(.title)))
         self.leftLayout = .init(.initialize(string: strings().sharedFolderTitleAllChats, color: theme.colors.listGrayText, font: .normal(.text)))
         self.rightLayout = .init(.initialize(string: strings().sharedFolderTitlePersonal, color: theme.colors.listGrayText, font: .normal(.text)))
@@ -230,8 +229,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
   
     //header
     
@@ -380,7 +377,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 interactionType = .plain
             }
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType)
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, viewType: item.viewType)
             }))
             index += 1
         }
@@ -408,7 +405,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 interactionType = .plain
             }
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, viewType: item.viewType, disabledAction: {
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, enabled: item.enabled, status: item.status, inset: NSEdgeInsets(left: 20, right: 20), interactionType: interactionType, viewType: item.viewType, disabledAction: {
                     arguments.alreadyError(item.peer.peer)
                 })
             }))
@@ -730,7 +727,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
         copyToClipboard(link)
     }, deleteLink: { link in
         if let filterId = content.localFilterId {
-            confirm(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, okTitle: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().chatListFilterInviteLinkDeleteConfirm, ok: strings().chatListFilterInviteLinkDelete, successHandler: { _ in
                 
                 var index: Int? = nil
                 updateState { current in
@@ -776,7 +773,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
     default:
         modalInteractions = ModalInteractions(acceptTitle: "", accept: { [weak controller] in
             _ = controller?.returnKeyAction()
-        }, drawBorder: true, height: 50, singleButton: true)
+        }, singleButton: true)
     }
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
@@ -844,7 +841,7 @@ func SharedFolderClosureController(context: AccountContext, content: JoinCloudFo
                 }
                 
                 if filter.data?.hasSharedLinks == true {
-                    confirm(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
+                    verifyAlert_button(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
                         invoke()
                     })
                 } else {
@@ -963,11 +960,11 @@ func deleteSharedFolder(context: AccountContext, filter: ChatListFilter) -> Void
         }
         if defaultPeers.isEmpty {
             if filter.data?.hasSharedLinks == true {
-                confirm(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().sharedFolderConfirmDelete, information: strings().sharedFolderConfirmDeleteText, successHandler: { _ in
                     invoke()
                 })
             } else {
-                confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, ok: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
                     invoke()
                 })
             }

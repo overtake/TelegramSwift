@@ -15,6 +15,11 @@ import TGUIKit
 
 private let threadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
+private class CaptureProtectedContentLayer: AVSampleBufferDisplayLayer {
+    override func action(forKey event: String) -> CAAction? {
+        return nullAction
+    }
+}
 
 
 open class TransformImageView: NSView {
@@ -42,20 +47,82 @@ open class TransformImageView: NSView {
     open override var isFlipped: Bool {
         return true
     }
+    private var _image: CGImage? = nil
+    private var sampleBuffer: CMSampleBuffer? {
+        didSet {
+            if sampleBuffer != nil {
+                var bp = 0
+                bp += 1
+            }
+        }
+    }
     
     var image: CGImage? {
         set {
             layer?.contents = newValue
-            imageUpdated?(newValue)
+            if _image != newValue {
+                imageUpdated?(newValue)
+                _image = newValue
+                if let sampleBuffer = self.sampleBuffer {
+                    self.captureProtectedContentLayer?.enqueue(sampleBuffer)
+                }
+                let preventsCapture = self.preventsCapture
+                self.preventsCapture = preventsCapture
+            }
         }
         get {
-            if let any = layer?.contents {
-                return any as! CGImage
-            } else {
-                return nil
+            return _image
+        }
+    }
+    
+    
+    open override var bounds: CGRect {
+        didSet {
+            if let captureProtectedContentLayer = self.captureProtectedContentLayer {
+                captureProtectedContentLayer.frame = super.bounds
             }
         }
     }
+
+    open override var frame: CGRect {
+        didSet {
+            if let captureProtectedContentLayer = self.captureProtectedContentLayer {
+                captureProtectedContentLayer.frame = super.bounds
+            }
+        }
+    }
+
+    
+    private var captureProtectedContentLayer: CaptureProtectedContentLayer?
+    private var protectedOverlay: SimpleLayer?
+
+    
+    public var preventsCapture: Bool = false {
+        didSet {
+            if self.preventsCapture {
+                if self.captureProtectedContentLayer == nil, let cmSampleBuffer = self.sampleBuffer {
+                    let captureProtectedContentLayer = CaptureProtectedContentLayer()
+                    captureProtectedContentLayer.enqueue(cmSampleBuffer)
+                    self.layer?.contents = nil
+
+                    captureProtectedContentLayer.frame = self.bounds
+                    
+                    if #available(macOS 10.15, *) {
+                        captureProtectedContentLayer.preventsCapture = true
+                    }
+                    
+                    self.layer?.addSublayer(captureProtectedContentLayer)
+                    
+                    self.captureProtectedContentLayer = captureProtectedContentLayer
+                }
+            } else if let captureProtectedContentLayer = self.captureProtectedContentLayer {
+                self.captureProtectedContentLayer = nil
+                captureProtectedContentLayer.removeFromSuperlayer()
+                self.layer?.contents = self.image
+            }
+        }
+    }
+
     
     required public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -78,14 +145,14 @@ open class TransformImageView: NSView {
         disposable.set(nil)
     }
     
-    public func setSignal(signal: Signal<TransformImageResult, NoError>, clearInstantly: Bool = true, animate: Bool = false) {
+    public func setSignal(signal: Signal<TransformImageResult?, NoError>, clearInstantly: Bool = true, animate: Bool = false) {
         self.disposable.set((signal |> deliverOnMainQueue).start(next: { [weak self] result in
             
             let hasImage = self?.image != nil
-            
+            self?.sampleBuffer = result?.sampleBuffer
             if clearInstantly {
-                self?.image = result.image
-            } else if let image = result.image {
+                self?.image = result?.image
+            } else if let image = result?.image {
                 self?.image = image
             }
             if !hasImage && animate {
@@ -93,7 +160,7 @@ open class TransformImageView: NSView {
             } else if animate {
                 self?.layer?.animateContents()
             }
-            self?.isFullyLoaded = result.highQuality
+            self?.isFullyLoaded = result?.highQuality ?? false
         }))
     }
     
@@ -102,7 +169,7 @@ open class TransformImageView: NSView {
     }
     
     
-    public func setSignal(_ signal: Signal<ImageDataTransformation, NoError>, clearInstantly: Bool = false, animate:Bool = false, synchronousLoad: Bool = false, cacheImage:@escaping(TransformImageResult) -> Void = { _ in } ) {
+    public func setSignal(_ signal: Signal<ImageDataTransformation, NoError>, clearInstantly: Bool = false, animate:Bool = false, synchronousLoad: Bool = false, cacheImage:@escaping(TransformImageResult) -> Void = { _ in }, isProtected: Bool = false) {
         if clearInstantly {
             self.image = nil
         }
@@ -122,7 +189,7 @@ open class TransformImageView: NSView {
         let result = combine |> map { data, arguments -> TransformImageResult in
             let context = data.execute(arguments, data.data)
             let image = context?.generateImage()
-            return TransformImageResult(image, context?.isHighQuality ?? false)
+            return TransformImageResult(image, context?.isHighQuality ?? false, isProtected ? image?.cmSampleBuffer : nil)
         } |> deliverOnMainQueue
         
         self.disposable.set(result.start(next: { [weak self] result in
@@ -130,6 +197,7 @@ open class TransformImageView: NSView {
                 if strongSelf.image == nil && strongSelf.animatesAlphaOnFirstTransition {
                     strongSelf.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
+                self?.sampleBuffer = result.sampleBuffer
                 self?.image = result.image
                 if !strongSelf.first && animate {
                     self?.layer?.animateContents()

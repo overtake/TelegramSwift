@@ -158,7 +158,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     fileprivate let canMakeTransformations: Bool
     fileprivate let pasteFilter:((String)->(Bool, String))?
     private let maxBlockWidth: CGFloat?
-    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, currentAttributedText: NSAttributedString? = nil, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), maxBlockWidth: CGFloat? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32, customTheme: GeneralRowItem.Theme? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, mode: InputDataInputMode, error: InputDataValueError?, viewType: GeneralViewType = .legacy, currentText: String, currentAttributedText: NSAttributedString? = nil, placeholder: InputDataInputPlaceholder?, inputPlaceholder: String, defaultText: String? = nil, rightItem: InputDataRightItem? = nil, canMakeTransformations: Bool = false, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), maxBlockWidth: CGFloat? = nil, filter:@escaping(String)->String, updated:@escaping(String)->Void, pasteFilter:((String)->(Bool, String))? = nil, limit: Int32, customTheme: GeneralRowItem.Theme? = nil) {
         self.filter = filter
         self.limit = limit
         self.updated = updated
@@ -178,7 +178,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         self.inputPlaceholder = holder
         placeholderLayout = placeholder?.placeholder != nil ? TextViewLayout(.initialize(string: placeholder!.placeholder!, color: customTheme?.grayTextColor ?? theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1) : nil
     
-        _currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text), coreText: false)
+        _currentText = currentAttributedText ?? NSAttributedString.initialize(string: currentText, color: theme.colors.text, font: .normal(.text))
         self.mode = mode
     
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets, error: error, customTheme: customTheme)
@@ -231,7 +231,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let currentAttributed: NSMutableAttributedString = NSMutableAttributedString()
-        _ = currentAttributed.append(string: (defaultText ?? ""), font: .normal(.text), coreText: false)
+        _ = currentAttributed.append(string: (defaultText ?? ""), font: .normal(.text))
         currentAttributed.append(currentText)
                 
         if mode == .secure {
@@ -693,7 +693,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         }
         return theme.colors.redUI
     }
-    var borderColor: NSColor {
+    override var borderColor: NSColor {
         if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
             return customTheme.borderColor
         }

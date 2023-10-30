@@ -29,8 +29,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
   
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("sticker"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         return AnimatedStickerHeaderItem(initialSize, stableId: stableId, context: arguments.context, sticker: .police, text: .initialize(string: strings().reportAdditionText, color: theme.colors.text, font: .normal(.text)))
@@ -94,7 +92,7 @@ func ReportDetailsController(context: AccountContext, reason: ReportReasonValue,
     
     let modalInteractions = ModalInteractions(acceptTitle: strings().reportAdditionTextButton, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
     

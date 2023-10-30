@@ -48,7 +48,7 @@ private struct DstData : Codable {
 }
 
 
-private let version = 66
+private let version = 67
 
 final class TRLotData {
     

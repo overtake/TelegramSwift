@@ -20,6 +20,7 @@ import ObjcUtils
 import TGModernGrowingTextView
 import ThemeSettings
 import InAppSettings
+import InputView
 
 extension Message {
     
@@ -2286,11 +2287,8 @@ public extension NSAttributedString {
                     string = link
                 }
                 if let string = string {
-                    let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
-                    modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
+                    modified.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute.init(url: string), range: range)
                 }
-            } else if let _ = attr[.init(rawValue: TGAnimatedEmojiAttributeName)] {
-               
             } else if let font = attr[.font] as? NSFont {
                 let newFont: NSFont
                 if font.fontDescriptor.symbolicTraits.contains(.bold) && font.fontDescriptor.symbolicTraits.contains(.italic) {
@@ -2485,6 +2483,14 @@ extension CGImage {
         guard CGImageDestinationFinalize(destination) else { return nil }
         return mutableData as Data
     }
+    
+    var jpegData: Data? {
+        guard let mutableData = CFDataCreateMutable(nil, 0),
+            let destination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) else { return nil }
+        CGImageDestinationAddImage(destination, self, nil)
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return mutableData as Data
+    }
 }
 
 func localizedPsa(_ key: String, type: String, args: [CVarArg] = []) -> String {
@@ -2656,7 +2662,7 @@ struct DateSelectorUtil {
     static let mediaFileDate: DateFormatter = {
         let formatter = DateFormatter()
         formatter.timeZone = NSTimeZone.local
-        formatter.dateFormat = "MMM d, yyyy, h a"
+        formatter.dateFormat = "MMM d, yyyy"
         return formatter
     }()
     

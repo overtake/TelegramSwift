@@ -291,7 +291,7 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
             
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().recentSessionsTTLText, type: .contextSelector(autoremoveLocalized(Int(ttl * 24 * 60 * 60)), items), viewType: viewType)
         case .section(sectionId: _):
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         }
@@ -458,7 +458,7 @@ class RecentSessionsController : TableViewController {
                 }
             }))
         }, terminateOthers: {
-            confirm(for: context.window, information: strings().recentSessionsConfirmTerminateOthers, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().recentSessionsConfirmTerminateOthers, successHandler: { _ in
                 _ = showModalProgress(signal: context.activeSessionsContext.removeOther(), for: context.window).start(error: { error in
                     
                 })

@@ -219,6 +219,8 @@ final class ThemeGridControllerItemNode: GridItemNode {
     func setup(account: Account, wallpaper: Wallpaper, telegramWallpaper: TelegramWallpaper?, interaction: ThemeGridControllerInteraction, isSelected: Bool) {
         self.interaction = interaction
         
+        self.backgroundColor = theme.colors.background
+        
         if self.currentState == nil || self.currentState!.0 !== account || wallpaper != self.currentState!.1 {
             self.currentState = (account, wallpaper, telegramWallpaper)
             self.needsLayout = true

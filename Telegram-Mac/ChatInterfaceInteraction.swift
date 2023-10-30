@@ -93,7 +93,7 @@ final class ChatInteraction : InterfaceObserver  {
         case video
     }
     
-    var setupReplyMessage: (MessageId?) -> Void = {_ in}
+    var setupReplyMessage: (Message?, EngineMessageReplySubject?) -> Void = { _, _ in}
     var beginMessageSelection: (MessageId?) -> Void = {_ in}
     var deleteMessages: ([MessageId]) -> Void = {_ in }
     var forwardMessages: ([Message]) -> Void = {_ in}
@@ -111,7 +111,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
     var requestMessageActionCallback:(MessageId, Bool, (requiresPassword: Bool, data: MemoryBuffer)?) -> Void = {_,_,_  in}
-    var inlineAudioPlayer:(APController) -> Void = {_ in} 
+    var inlineAudioPlayer:(APController) -> Void = {_ in}
     var movePeerToInput:(Peer) -> Void = {_ in}
     var sendInlineResult:(ChatContextResultCollection,ChatContextResult) -> Void = {_,_  in}
     var scrollToLatest:(Bool)->Void = {_ in}
@@ -161,6 +161,7 @@ final class ChatInteraction : InterfaceObserver  {
     var openBank: (String)->Void = { _ in }
     var afterSentTransition:()->Void = {}
     var getGradientOffsetRect:()->NSRect = {  return .zero }
+    var markAdAction:(Data)->Void = { _ in }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
     var openFocusedMedia:(Int32?)->Void = { _ in return }
@@ -191,6 +192,8 @@ final class ChatInteraction : InterfaceObserver  {
     var revealMedia:(MessageId)->Void = { _ in }
     var toggleTranslate:()->Void = { }
     var hideTranslation:()->Void = { }
+    var openStories: (_ f:@escaping(PeerId, MessageId?, Int32?)-> NSView?, ((Signal<Never, NoError>)->Void)?)->Void = { _, _ in }
+    var openChatPeerStories: (MessageId, PeerId, ((Signal<Never, NoError>)->Void)?)->Void = { _, _, _ in }
     var doNotTranslate:(String)->Void = { _ in }
     var translateTo:(String)->Void = { _ in }
     var enableTranslatePaywall:()->Void = { }
@@ -198,6 +201,14 @@ final class ChatInteraction : InterfaceObserver  {
     var dismissPendingRequests:([PeerId])->Void = { _ in }
     var setupChatThemes:()->Void = { }
     var closeChatThemes:()->Void = { }
+    var appendAttributedText:(NSAttributedString)->Void = { _ in }
+    
+    var toggleUnderMouseMessage:()->Void = { }
+    
+    var openStory:(MessageId, StoryId)->Void = { _, _ in }
+    
+    var replyToAnother:(EngineMessageReplySubject, Bool)->Void = { _, _ in }
+    
     func chatLocationInput(_ message: Message) -> ChatLocationInput {
         if mode.isThreadMode, mode.threadId == message.id {
             return context.chatLocationInput(for: .peer(message.id.peerId), contextHolder: contextHolder())
@@ -370,10 +381,10 @@ final class ChatInteraction : InterfaceObserver  {
             self.update({$0.updatedInterfaceState({$0.withUpdatedInputState(state)})})
         }
     }
-    func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
+    @discardableResult func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
 
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
-        let inputText = presentation.effectiveInput.attributedString.mutableCopy() as! NSMutableAttributedString
+        let inputText = presentation.effectiveInput.attributedString().mutableCopy() as! NSMutableAttributedString
         
         if self.presentation.state != .normal && presentation.state != .editing {
             return selectedRange.lowerBound ..< selectedRange.lowerBound
@@ -417,7 +428,7 @@ final class ChatInteraction : InterfaceObserver  {
                     return
                 default:
                     if oldState.inputState.inputText != editState.inputState.inputText, !editState.inputState.inputText.isEmpty {
-                        confirm(for: context.window, information: strings().chatEditCancelText, okTitle: strings().alertDiscard, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
+                        verifyAlert_button(for: context.window, information: strings().chatEditCancelText, ok: strings().alertDiscard, cancel: strings().alertNO, successHandler: { [weak self] _ in
                             self?.update({$0.withoutEditMessage().updatedUrlPreview(nil)})
                         })
                     } else {
@@ -481,9 +492,16 @@ final class ChatInteraction : InterfaceObserver  {
                     })
                 }
             case let .forward(messageIds, inputState, _):
-                update(animated: animated, {$0.updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(inputState ?? $0.inputState)})})
-                update({
-                    $0.withoutInitialAction()
+                update(animated: animated, {
+                    $0.updatedInterfaceState({
+                        $0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(inputState ?? $0.inputState)
+                    }).withoutInitialAction()
+                })
+            case let .reply(subject, _):
+                update(animated: animated, {
+                    $0.updatedInterfaceState({
+                        $0.withUpdatedReplyMessageId(subject)
+                    }).withoutInitialAction()
                 })
             case .ad:
                 break
@@ -500,7 +518,7 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withSelectionState().withoutInitialAction().withUpdatedRepotMode(reason)
                 })
-            case let .attachBot(botname, payload, choose):
+            case let .attachBot(botname, payload, _):
                 update({
                     $0.withoutInitialAction()
                 })
@@ -509,14 +527,14 @@ final class ChatInteraction : InterfaceObserver  {
                 
                 let installed: Signal<Peer?, NoError> = context.engine.messages.attachMenuBots() |> map { items in
                     for item in items {
-                        if item.peer.username?.lowercased() == botname.lowercased() {
-                            return item.peer
+                        if item.peer.addressName?.lowercased() == botname.lowercased() {
+                            return item.peer._asPeer()
                         }
                     }
                     return nil
                 } |> take(1) |> deliverOnMainQueue
                 
-                let replyId = presentation.interfaceState.replyMessageId
+                let replyId = presentation.interfaceState.replyMessageId?.messageId
                 let peerId = self.peerId
                 let threadId = presentation.chatLocation.threadId
                 
@@ -531,7 +549,45 @@ final class ChatInteraction : InterfaceObserver  {
                             } else {
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+                            
+                            let open:()->Void = {
+                                showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+                            }
+                            
+                            if attach.flags.contains(.showInSettingsDisclaimer) {
+                                var options: [ModalAlertData.Option] = []
+                                options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                                
+                                var description: ModalAlertData.Description? = nil
+                                let installBot = !attach.flags.contains(.notActivated) && attach.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !attach.flags.contains(.showInAttachMenu)
+                                if installBot {
+                                    description = .init(string: strings().webBotAccountDesclaimerDesc(attach.shortName), onlyWhenEnabled: false)
+                                }
+                                
+                
+                                let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
+                                showModalAlert(for: context.window, data: data, completion: { result in
+                                    if installBot {
+                                        installAttachMenuBot(context: context, peer: peer, completion: { value in
+                                            open()
+                                            if value {
+                                                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
+                                            }
+                                        })
+                                    } else {
+                                        open()
+                                    }
+                                })
+                            } else {
+                                let installBot = attach.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true
+                                if installBot {
+                                    installAttachMenuBot(context: context, peer: peer, completion: { _ in
+                                        open()
+                                    })
+                                } else {
+                                    open()
+                                }
+                            }
                             
                         }, error: { _ in
                             showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
@@ -544,7 +600,7 @@ final class ChatInteraction : InterfaceObserver  {
                             invoke()
                         } else {
                             if FastSettings.shouldConfirmWebApp(peer.id) {
-                                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { _ in
+                                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { _ in
                                     invoke()
                                     FastSettings.markWebAppAsConfirmed(peer.id)
                                 })
@@ -560,17 +616,7 @@ final class ChatInteraction : InterfaceObserver  {
                     } else {
                         _ = showModalProgress(signal: resolveUsername(username: botname, context: context), for: context.window).start(next: { peer in
                             if let peer = peer {
-                                if let botInfo = peer.botInfo {
-                                    if botInfo.flags.contains(.canBeAddedToAttachMenu) {
-                                        installAttachMenuBot(context: context, peer: peer, completion: { value in
-                                            if value {
-                                                openAttach(peer)
-                                            }
-                                        })
-                                    } else {
-                                        openAttach(peer)
-                                    }
-                                }
+                                openAttach(peer)
                             } else {
                                 alert(for: context.window, info: strings().webAppAttachDoenstExist("@\(botname)"))
                             }
@@ -581,7 +627,7 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withoutInitialAction()
                 })
-                showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: .simple(url: url, bot: botPeer.peer, buttonText: "", isInline: true), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                showModal(with: WebpageModalController(context: context, url: url, title: botApp.title, requestData: nil, chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
             case .makeWebview:
                 update(animated: animated, {
                     $0.withoutInitialAction()
@@ -637,7 +683,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     func openWebviewFromMenu(buttonText: String, url: String) {
         if let bot = peer {
-            let replyTo = self.presentation.interfaceState.replyMessageId
+            let replyTo = self.presentation.interfaceState.replyMessageId?.messageId
             let threadId = self.presentation.chatLocation.threadId
             let context = self.context
             let peerId = self.peerId
@@ -662,7 +708,7 @@ final class ChatInteraction : InterfaceObserver  {
                 
             }
             if FastSettings.shouldConfirmWebApp(bot.id) {
-                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(bot.displayTitle), successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(bot.displayTitle), successHandler: { _ in
                     invoke()
                     FastSettings.markWebAppAsConfirmed(bot.id)
                 })
@@ -682,7 +728,7 @@ final class ChatInteraction : InterfaceObserver  {
                 self?.openWebview(bot: peer, title: nil, buttonText: "", url: url, simple: true, inline: true)
             }
             if FastSettings.shouldConfirmWebApp(botId) {
-                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { result in
+                verifyAlert_button(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { result in
                     
                     FastSettings.markWebAppAsConfirmed(botId)
                     invoke()
@@ -695,15 +741,15 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
     func openWebview(bot:Peer, title: String?, buttonText: String, url: String, simple: Bool, inline: Bool) {
-        let replyTo = self.presentation.interfaceState.replyMessageId
+        let replyTo = self.presentation.interfaceState.replyMessageId?.messageId
         let threadId = self.presentation.chatLocation.threadId
         let botId = bot.id
         let context = self.context
         let peerId = self.peerId
         if simple {
-            let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, inline: false, themeParams: generateWebAppThemeParams(theme))
+            let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: url, source: inline ? .inline : .generic, themeParams: generateWebAppThemeParams(theme))
             _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, isInline: inline), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                showModal(with: WebpageModalController(context: context, url: url, title: title ?? bot.displayTitle, requestData: .simple(url: url, bot: bot, buttonText: buttonText, source: inline ? .inline : .generic, hasSettings: false), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
             })
         } else {
             _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak self] attach in
@@ -727,6 +773,7 @@ final class ChatInteraction : InterfaceObserver  {
             
             let context = self.context
             let peerId = self.peerId
+            let threadId = self.chatLocation.threadId
             
             return ReplyMarkupInteractions(context: context, proccess: { [weak self] (button, progress) in
                 if let strongSelf = self {
@@ -734,7 +781,8 @@ final class ChatInteraction : InterfaceObserver  {
                     case let .url(url):
                         execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
                     case .text:
-                        _ = (enqueueMessages(account: strongSelf.context.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
+                        let replyId = strongSelf.presentation.interfaceState.messageActionsState.processedSetupReplyMessageId
+                        _ = (enqueueMessages(account: strongSelf.context.account, peerId: strongSelf.peerId, messages: [EnqueueMessage.message(text: button.title, attributes: [], inlineStickers: [:], mediaReference: nil, threadId: threadId, replyToMessageId: replyId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]) |> deliverOnMainQueue).start(next: { [weak strongSelf] _ in
                             strongSelf?.scrollToLatest(true)
                         })
                     case .requestPhone:
@@ -784,18 +832,32 @@ final class ChatInteraction : InterfaceObserver  {
                             case .default:
                                 execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
                             case let .request(requestURL, peer, writeAllowed):
-                                showModal(with: InlineLoginController(context: context, url: requestURL, originalURL: url, writeAllowed: writeAllowed, botPeer: peer, authorize: { allowWriteAccess in
-                                    _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .message(id: keyboardMessage.id, buttonId: buttonId), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
-                                        switch result {
-                                        case .default:
-                                            execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy, confirm: true))
-                                        case let .accepted(url):
-                                            execute(inapp: inApp(for: url.nsstring, context: strongSelf.context, openInfo: strongSelf.openInfo, hashtag: strongSelf.modalSearch, command: strongSelf.sendPlainText, applyProxy: strongSelf.applyProxy))
-                                        default:
-                                            break
-                                        }
-                                    })
-                                }), for: context.window)
+                                var options: [ModalAlertData.Option] = []
+                                options.append(.init(string: strings().botInlineAuthOptionLogin(requestURL, context.myPeer?.displayTitle ?? ""), isSelected: true, mandatory: false, uncheckEverything: true))
+                                if writeAllowed {
+                                    options.append(.init(string: strings().botInlineAuthOptionAllowSendMessages(peer.displayTitle), isSelected: true, mandatory: false))
+                                }
+                                
+                                let data = ModalAlertData(title: strings().botInlineAuthHeader, info: strings().botInlineAuthTitle(requestURL), ok: strings().botInlineAuthOpen, options: options)
+                                                
+                                showModalAlert(for: context.window, data: data, completion: { result in
+                                    if result.selected.isEmpty {
+                                        execute(inapp: .external(link: url, false))
+                                    } else {
+                                        let allowWriteAccess = result.selected[1] == true
+                                        
+                                        _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .url(url), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
+                                            switch result {
+                                            case .default:
+                                                execute(inapp: .external(link: url, true))
+                                            case let .accepted(url):
+                                                execute(inapp: .external(link: url, false))
+                                            default:
+                                                break
+                                            }
+                                        })
+                                    }
+                                })
                             }
                         })
                     case let .setupPoll(isQuiz):
@@ -884,6 +946,9 @@ final class ChatInteraction : InterfaceObserver  {
         }
     }
     
+
+    
 }
+
 
 

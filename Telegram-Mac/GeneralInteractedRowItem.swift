@@ -81,7 +81,8 @@ class GeneralInteractedRowItem: GeneralRowItem {
     let disableBorder: Bool
     let rightIcon: CGImage?
     let switchAction:(()->Void)?
-    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, nameAttributed: NSAttributedString? = nil, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: (()-> Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, customTheme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, rightIcon: CGImage? = nil, switchAction:(()->Void)? = nil) {
+    let descClick:(()->Void)?
+    init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, nameAttributed: NSAttributedString? = nil, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: (()-> Void)? = nil, menuItems:(()->[ContextMenuItem])? = nil, customTheme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false, rightIcon: CGImage? = nil, switchAction:(()->Void)? = nil, descClick:(()->Void)? = nil) {
         
         
         self.name = name
@@ -110,6 +111,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
         self.autoswitch = autoswitch
         self.activeThumb = activeIcon != nil ? GeneralThumbAdditional(thumb: activeIcon!, textInset: nil) : self.thumb
         self.switchAppearance = customTheme?.switchAppearance ?? switchAppearance
+        self.descClick = descClick
         super.init(initialSize, height: 0, stableId:stableId, type:type, viewType: viewType, action:action, drawCustomSeparator:drawCustomSeparator, border:border, inset:inset, enabled: enabled, error: error, customTheme: customTheme)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -126,7 +128,7 @@ class GeneralInteractedRowItem: GeneralRowItem {
         case let .modern(_, insets):
             let height: CGFloat = super.height + insets.top + insets.bottom + nameLayout!.0.size.height
             if let descLayout = self.descLayout {
-                return height + descLayout.layoutSize.height + 2
+                return height + 4
             }
             return height
         }

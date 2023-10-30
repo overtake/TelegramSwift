@@ -51,7 +51,7 @@ public struct ControlStyle: Equatable {
  
     
     public func text(_ text:String, forState state:ControlState) -> NSAttributedString {
-        return NSAttributedString.initialize(string: text, color: state == .Normal ? foregroundColor : highlightColor, font: font, coreText: true)
+        return NSAttributedString.initialize(string: text, color: state == .Normal ? foregroundColor : highlightColor, font: font)
     }
     
 }

@@ -228,6 +228,7 @@ func initialize() -> [String] {
     array.append("groupStickerNotFound")
     array.append("settingsAskQuestion")
     array.append("settingsFaq")
+    array.append("settingsStories")
     array.append("settingsGeneral")
     array.append("settingsLanguage")
     array.append("settingsNotifications")
@@ -244,6 +245,7 @@ func initialize() -> [String] {
     array.append("settingsPremium")
     array.append("settingsAskQuestionActive")
     array.append("settingsFaqActive")
+    array.append("settingsStoriesActive")
     array.append("settingsGeneralActive")
     array.append("settingsLanguageActive")
     array.append("settingsNotificationsActive")
@@ -523,7 +525,8 @@ func initialize() -> [String] {
     array.append("profile_stats")
     array.append("profile_unblock")
     array.append("profile_translate")
-    
+    array.append("profile_join_channel")
+
     array.append("chat_quiz_explanation")
     array.append("chat_quiz_explanation_bubble_incoming")
     array.append("chat_quiz_explanation_bubble_outgoing")
@@ -642,6 +645,7 @@ func initialize() -> [String] {
     
     array.append("profile_requests")
     array.append("profile_reactions")
+    array.append("profile_channel_color")
 
     array.append("profile_removed")
     array.append("profile_links")
@@ -853,6 +857,44 @@ func initialize() -> [String] {
 
     array.append("folders_sidebar_edit")
     array.append("folders_sidebar_edit_active")
+    
+    array.append("story_unseen")
+    array.append("story_seen")
+    array.append("story_selected")
+
+    array.append("story_unseen_chat")
+    array.append("story_seen_chat")
+
+    
+    array.append("story_unseen_profile")
+    array.append("story_seen_profile")
+
+    
+    array.append("story_view_read")
+    array.append("story_view_reaction")
+    
+    array.append("story_chatlist_reply")
+    array.append("story_chatlist_reply_active")
+    
+    
+    array.append("message_story_expired")
+    array.append("message_story_expired_bubble_incoming")
+    array.append("message_story_expired_bubble_outgoing")
+    
+    
+    array.append("message_quote_accent")
+    array.append("message_quote_red")
+    array.append("message_quote_orange")
+    array.append("message_quote_violet")
+    array.append("message_quote_green")
+    array.append("message_quote_cyan")
+    array.append("message_quote_blue")
+    array.append("message_quote_pink")
+    
+    array.append("message_quote_bubble_incoming")
+    array.append("message_quote_bubble_outgoing")
+
+    
 
     return array
 }

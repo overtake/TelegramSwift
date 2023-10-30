@@ -9,6 +9,7 @@
 import Foundation
 import SwiftSignalKit
 import AppKit
+import ColorPalette
 
 public final class BackgroundGradientView : View {
     public var values:(top: NSColor?, bottom: NSColor?, rotation: Int32?)? {
@@ -154,7 +155,7 @@ open class BackgroundView: View {
     deinit {
     }
     
-    private let imageView: CALayer = CALayer()
+    private let imageView: SimpleLayer = SimpleLayer()
     private var backgroundView: NSView?
     
     public var useSharedAnimationPhase: Bool = true
@@ -217,8 +218,8 @@ open class BackgroundView: View {
     open var backgroundMode:TableBackgroundMode = .plain {
         didSet {
             if oldValue != backgroundMode {
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
+//                CATransaction.begin()
+//                CATransaction.setDisableActions(true)
                 tileControl.validLayout = nil
                 var backgroundView: NSView? = nil
                 switch backgroundMode {
@@ -322,11 +323,11 @@ open class BackgroundView: View {
                     self.backgroundView = nil
                 }
             }
-            CATransaction.commit()
+//            CATransaction.commit()
         }
     }
     
-    public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+    open func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(layer: imageView, frame: size.bounds)
         transition.updateFrame(view: container, frame: size.bounds)
         tileControl.update(frame: size.bounds, transition: transition)
@@ -471,7 +472,7 @@ open class ViewController : NSObject {
         public let keepLeft: CGFloat
         public let straightMove: Bool
         public let keepIn: Bool
-        
+        public let keepTop: ()->CGFloat
         public var isCustom: Bool {
             if keepLeft > 0 {
                 return true
@@ -482,19 +483,25 @@ open class ViewController : NSObject {
             if keepIn {
                 return true
             }
+            if keepTop() > 0 {
+                return true
+            }
             return false
         }
         
-        public init(keepLeft: CGFloat, straightMove: Bool, keepIn: Bool) {
+        public init(keepLeft: CGFloat, keepTop: @escaping()->CGFloat, straightMove: Bool, keepIn: Bool) {
             self.keepLeft = keepLeft
             self.straightMove = straightMove
             self.keepIn = keepIn
+            self.keepTop = keepTop
         }
         
         public static var `default`: StakeSettings {
-            return .init(keepLeft: 0, straightMove: false, keepIn: false)
+            return .init(keepLeft: 0, keepTop: { 0 }, straightMove: false, keepIn: false)
         }
     }
+    
+    
     
     fileprivate var _view:NSView?
     public var _frameRect:NSRect
@@ -838,7 +845,7 @@ open class ViewController : NSObject {
         if canBecomeResponder {
             self.window?.removeObserver(for: self)
         }
-        if haveNextResponder {
+        if hasNextResponder {
             self.window?.remove(object: self, for: .Tab)
         }
         NotificationCenter.default.removeObserver(self, name: NSWindow.didBecomeKeyNotification, object: window)
@@ -857,7 +864,7 @@ open class ViewController : NSObject {
                 self.window?.touchBar = self.window?.makeTouchBar()
           //  }
         }
-        if haveNextResponder {
+        if hasNextResponder {
             self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
                 guard let `self` = self else {return .rejected}
                 
@@ -980,7 +987,7 @@ open class ViewController : NSObject {
         return nil
     }
     
-    open var haveNextResponder: Bool {
+    open var hasNextResponder: Bool {
         return false
     }
     
@@ -1149,18 +1156,39 @@ open class ModalViewController : ViewController, ModalControllerHelper {
         let border: NSColor
         let accent: NSColor
         let grayForeground: NSColor
-        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = presentation.colors.background, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground) {
+        let activeBackground: NSColor
+        let activeBorder: NSColor
+        let listBackground: NSColor
+        public init(text: NSColor = presentation.colors.text, grayText: NSColor = presentation.colors.grayText, background: NSColor = .clear, border: NSColor = presentation.colors.border, accent: NSColor = presentation.colors.accent, grayForeground: NSColor = presentation.colors.grayForeground, activeBackground: NSColor = presentation.colors.background, activeBorder: NSColor = presentation.colors.border, listBackground: NSColor = presentation.colors.listBackground) {
             self.text = text
             self.grayText = grayText
             self.background = background
             self.border = border
             self.accent = accent
             self.grayForeground = grayForeground
+            self.activeBackground = activeBackground
+            self.activeBorder = activeBorder
+            self.listBackground = listBackground
+        }
+        public init(presentation: PresentationTheme) {
+            self.text = presentation.colors.text
+            self.grayText = presentation.colors.grayText
+            self.background = presentation.colors.background
+            self.border = presentation.colors.border
+            self.accent = presentation.colors.accent
+            self.grayForeground = presentation.colors.grayForeground
+            self.activeBackground = presentation.colors.background
+            self.activeBorder = presentation.colors.border
+            self.listBackground = presentation.colors.listBackground
         }
     }
     
     open var modalTheme:Theme {
         return Theme()
+    }
+    
+    open var hasBorder: Bool {
+        return true
     }
     
     open var closable:Bool {
@@ -1205,6 +1233,9 @@ open class ModalViewController : ViewController, ModalControllerHelper {
     }
     
     open var isVisualEffectBackground: Bool {
+        return false
+    }
+    open var isVisualEffectContainer: Bool {
         return false
     }
     
@@ -1329,7 +1360,7 @@ open class ModalController : ModalViewController {
     }
 
     
-    open override var haveNextResponder: Bool {
+    open override var hasNextResponder: Bool {
         return true
     }
     
@@ -1362,12 +1393,12 @@ open class TableModalViewController : ModalViewController {
     }
     
     override open func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 120, genericView.listHeight)), animated: false)
+        self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 200, genericView.listHeight)), animated: false)
     }
     
     public func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 120, genericView.listHeight)), animated: animated)
+            self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(contentSize.height - 200, genericView.listHeight)), animated: animated)
         }
     }
     

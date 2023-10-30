@@ -79,6 +79,12 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     fileprivate var sendWithoutSound: (()->Void)? = nil
     fileprivate var scheduleMessage: (()->Void)? = nil
     fileprivate var scheduleWhenOnline: (()->Void)? = nil
+    
+    fileprivate var presentation: TelegramPresentationTheme? {
+        didSet {
+            updateLocalizationAndTheme(theme: presentation ?? theme)
+        }
+    }
 
     private let topSeparator = View()
     fileprivate var hasShareMenu: Bool = true {
@@ -89,26 +95,25 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     }
     
     
-    required init(frame frameRect: NSRect, shareObject: ShareObject) {
+    required init(frame frameRect: NSRect, shareObject: ShareObject, presentation: TelegramPresentationTheme? = nil) {
         tokenizedView = TokenizedView(frame: NSMakeRect(0, 0, 300, 30), localizationFunc: { key in
             return translate(key: key, [])
-        }, placeholderKey: shareObject.searchPlaceholderKey)
+        }, placeholderKey: shareObject.searchPlaceholderKey, customTheme: {
+            return .init(presentation?.colors ?? theme.colors)
+        })
+        self.presentation = presentation
         super.init(frame: frameRect)
         
-        backgroundColor = theme.colors.background
-        textContainerView.backgroundColor = theme.colors.background
-        actionsContainerView.backgroundColor = theme.colors.background
-        textView.setBackgroundColor(theme.colors.background)
-        
+
         addSubview(tokenizedView)
         addSubview(basicSearchView)
         addSubview(tableView)
         addSubview(topSeparator)
         tokenizedView.delegate = self
-        bottomSeparator.backgroundColor = theme.colors.border
-        topSeparator.backgroundColor = theme.colors.border
         
-        self.backgroundColor = theme.colors.background
+        tableView.getBackgroundColor = {
+            return presentation?.colors.background ?? theme.colors.background
+        }
         
         dismiss.disableActions()
         share.disableActions()
@@ -133,7 +138,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             
             
             if !items.isEmpty {
-                let menu = ContextMenu()
+                let menu = ContextMenu(presentation: .current(presentation?.colors ?? theme.colors))
                 for item in items {
                     menu.addItem(item)
                 }
@@ -142,12 +147,9 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             return nil
         }
         
-        sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
         sendButton.autohighlight = false
-        _ = sendButton.sizeToFit()
+
         
-        emojiButton.set(image: theme.icons.chatEntertainment, for: .Normal)
-        _ = emojiButton.sizeToFit()
         
         actionsContainerView.addSubview(sendButton)
         actionsContainerView.addSubview(emojiButton)
@@ -158,15 +160,12 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         emojiButton.centerY(x: 0)
         sendButton.centerY(x: emojiButton.frame.maxX + 20)
         
-        backgroundColor = theme.colors.background
-        textView.background = theme.colors.background
+    
+
         textView.textFont = .normal(.text)
-        textView.textColor = theme.colors.text
-        textView.linkColor = theme.colors.link
         textView.max_height = 120
         
         textView.setFrameSize(NSMakeSize(0, 34))
-        textView.setPlaceholderAttributedString(.initialize(string:  strings().previewSenderCommentPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
 
         
         textContainerView.addSubview(textView)
@@ -175,7 +174,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         addSubview(actionsContainerView)
         addSubview(bottomSeparator)
         
-        updateLocalizationAndTheme(theme: theme)
+        updateLocalizationAndTheme(theme: presentation ?? theme)
 
     }
     
@@ -184,6 +183,30 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         let theme = theme as! TelegramPresentationTheme
         share.set(image: theme.icons.modalShare, for: .Normal)
         _ = share.sizeToFit()
+        
+        backgroundColor = theme.colors.background
+        textContainerView.backgroundColor = theme.colors.background
+        actionsContainerView.backgroundColor = theme.colors.background
+        textView.setBackgroundColor(theme.colors.background)
+        bottomSeparator.backgroundColor = theme.colors.border
+        topSeparator.backgroundColor = theme.colors.border
+        
+        self.backgroundColor = theme.colors.background
+
+        
+        textView.setPlaceholderAttributedString(.initialize(string:  strings().previewSenderCommentPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
+        
+        
+        sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
+        _ = sendButton.sizeToFit()
+        
+        emojiButton.set(image: theme.icons.chatEntertainment, for: .Normal)
+        _ = emojiButton.sizeToFit()
+        
+        backgroundColor = theme.colors.background
+        textView.background = theme.colors.background
+        textView.textColor = theme.colors.text
+        textView.linkColor = theme.colors.link
 
         if inForumMode {
             dismiss.set(image: theme.icons.chatNavigationBack, for: .Normal)
@@ -260,10 +283,12 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     
     private class ForumTopicArguments {
         let context: AccountContext
+        let presentation: TelegramPresentationTheme
         let select:(Int64)->Void
-        init(context: AccountContext, select:@escaping(Int64)->Void) {
+        init(context: AccountContext, presentation: TelegramPresentationTheme, select:@escaping(Int64)->Void) {
             self.context = context
             self.select = select
+            self.presentation = presentation
         }
     }
     
@@ -292,13 +317,13 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
                 if let threadId = threadId {
                     arguments.select(threadId)
                 }
-            })
+            }, presentation: arguments.presentation)
         }
     }
     
     func appearForumTopics(_ items: [EngineChatList.Item], peerId: PeerId, interactions: SelectPeerInteraction, delegate: TableViewDelegate?, context: AccountContext, animated: Bool) {
         
-        let arguments = ForumTopicArguments(context: context, select: { threadId in
+        let arguments = ForumTopicArguments(context: context, presentation: presentation ?? theme, select: { threadId in
             interactions.action(peerId, threadId)
         })
         
@@ -312,6 +337,10 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             tableView.frame = self.tableView.frame
             addSubview(tableView)
             self.forumTopicsView = tableView
+            
+            tableView.getBackgroundColor = { [weak self] in
+                return self?.presentation?.colors.background ?? theme.colors.background
+            }
         }
         
         tableView.delegate = delegate
@@ -344,7 +373,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             self.tableView.layer?.animatePosition(from: tableView.frame.origin, to: NSMakePoint(-oneOfThrid, tableView.frame.minY), duration: 0.35, timingFunction: .spring)
         }
         
-        updateLocalizationAndTheme(theme: theme)
+        updateLocalizationAndTheme(theme: presentation ?? theme)
         needsLayout = true
     }
     
@@ -364,7 +393,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         self.forumTopicsView = nil
         self.forumTopicItems = []
         self.tableView.cancelSelection()
-        self.updateLocalizationAndTheme(theme: theme)
+//        self.updateLocalizationAndTheme(theme: theme)
         self.needsLayout = true
     }
         
@@ -460,7 +489,7 @@ final class ShareAdditionItems {
 class ShareObject {
     
     let additionTopItems:ShareAdditionItems?
-    
+    var presentation: TelegramPresentationTheme?
     let context: AccountContext
     let emptyPerformOnClose: Bool
     let excludePeerIds: Set<PeerId>
@@ -529,8 +558,15 @@ class ShareObject {
         
     }
     
+    var successText: String {
+        return "Success!"
+    }
+    
     var hasLink: Bool {
         return false
+    }
+    var hasFolders: Bool {
+        return true
     }
     
     func shareLink() {
@@ -545,7 +581,8 @@ class ShareObject {
     }
     func statusStyle(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> ControlStyle {
         let color = presence?.status.string.isEmpty == false ? presence?.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor : nil
-        return ControlStyle(font: .normal(.text), foregroundColor: peer.id == context.peerId ? theme.colors.grayText : color ?? theme.colors.grayText, highlightColor:.white)
+        let theme = presentation ?? theme
+        return ControlStyle(font: .normal(.text), foregroundColor: peer.id == context.peerId ? theme.colors.grayText : color ?? theme.colors.grayText)
     }
 }
 
@@ -556,6 +593,10 @@ class SharefilterCallbackObject : ShareObject {
         self.callback = callback
         self.limits = limits
         super.init(context)
+    }
+    
+    override var hasFolders: Bool {
+        return false
     }
     
     override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
@@ -638,7 +679,7 @@ class ShareLinkObject : ShareObject {
             
             let attributes:[MessageAttribute] = attributes(peerId)
         
-            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, inlineStickers: [:], mediaReference: nil, replyToMessageId: threadId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
         }
         return .complete()
     }
@@ -667,7 +708,7 @@ class ShareUrlObject : ShareObject {
             
             let media = TelegramMediaFile(fileId: MediaId.init(namespace: 0, id: 0), partialReference: nil, resource: LocalFileReferenceMediaResource.init(localFilePath: url, randomId: arc4random64()), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "text/plain", size: nil, attributes: [.FileName(fileName: url.nsstring.lastPathComponent)])
                         
-            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: threadId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+            _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
         }
         return .complete()
     }
@@ -690,9 +731,9 @@ class ShareContactObject : ShareObject {
         for peerId in peerIds {
             if let comment = comment, !comment.inputText.isEmpty {
                 let attributes:[MessageAttribute] = attributes(peerId)
-                _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, replyToMessageId: threadId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
+                _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
             }
-            _ = Sender.shareContact(context: context, peerId: peerId, media: media, replyId: threadId).start()
+            _ = Sender.shareContact(context: context, peerId: peerId, media: media, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, threadId: optionalMessageThreadId(threadId)).start()
         }
         return .complete()
     }
@@ -720,6 +761,10 @@ class ShareCallbackPeerTypesObject : ShareObject {
         self.callback = callback
         self.peerTypes = peerTypes
         super.init(context, limit: 1)
+    }
+    
+    override var hasFolders: Bool {
+        return false
     }
     
     override var multipleSelection: Bool {
@@ -826,6 +871,7 @@ class ShareMessageObject : ShareObject {
         }
         let date = self.scheduleDate
         let withoutSound = self.withoutSound
+        let threadIds = self.threadIds
         for peerId in peerIds {
             let viewSignal: Signal<(Peer, PeerId?), NoError> = combineLatest(context.account.postbox.loadedPeerWithId(peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox))
             |> take(1)
@@ -836,8 +882,11 @@ class ShareMessageObject : ShareObject {
                     return (peer, nil)
                 }
             }
+            
+            let threadId = threadIds[peerId] ?? threadId
+            
             signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
-                let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
+                let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                 var caption: Signal<[MessageId?], NoError>?
                 if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                     let parsingUrlType: ParsingType
@@ -853,7 +902,7 @@ class ShareMessageObject : ShareObject {
                         attributes.append(SendAsMessageAttribute(peerId: sendAs))
                     }
                     
-                    caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, replyToMessageId: threadId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
+                    caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
                 }
                 if let caption = caption {
                     return caption |> then(forward)
@@ -870,6 +919,207 @@ class ShareMessageObject : ShareObject {
     override func possibilityPerformTo(_ peer:Peer) -> Bool {
         return message.possibilityForwardTo(peer)
     }
+}
+
+
+
+class ShareStoryObject : ShareObject {
+    private let media:Media
+    private let _hasLink: Bool
+    private let storyId: StoryId
+    init(_ context: AccountContext, media: Media, hasLink: Bool, storyId: StoryId) {
+        self.media = media
+        self._hasLink = hasLink
+        self.storyId = storyId
+        super.init(context)
+    }
+    
+    override var hasLink: Bool {
+        return _hasLink
+    }
+    
+    override func shareLink() {
+        if _hasLink {
+            let signal = context.engine.messages.exportStoryLink(peerId: storyId.peerId, id: storyId.id) |> deliverOnMainQueue
+            _ = signal.start(next: { link in
+                if let link = link {
+                    copyToClipboard(link)
+                }
+            })
+        }
+    }
+
+    deinit {
+    }
+
+    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        
+        let context = self.context
+        var signals: [Signal<[MessageId?], NoError>] = []
+        let attrs:(PeerId)->[MessageAttribute] = { [weak self] peerId in
+            return self?.attributes(peerId) ?? []
+        }
+        let date = self.scheduleDate
+        let withoutSound = self.withoutSound
+        let threadIds = self.threadIds
+        let media = self.media
+        for peerId in peerIds {
+            let viewSignal: Signal<(Peer, PeerId?), NoError> = combineLatest(context.account.postbox.loadedPeerWithId(peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox))
+            |> take(1)
+            |> map { peer, cachedData in
+                if let cachedData = cachedData as? CachedChannelData {
+                    return (peer, cachedData.sendAsPeerId)
+                } else {
+                    return (peer, nil)
+                }
+            }
+            
+            let threadId = threadIds[peerId] ?? threadId
+            
+            signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
+                
+                let forward: Signal<[MessageId?], NoError> = Sender.enqueue(media: media, context: context, peerId: peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, threadId: optionalMessageThreadId(threadId), silent: withoutSound, atDate: date)
+                var caption: Signal<[MessageId?], NoError>?
+                if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
+                    let parsingUrlType: ParsingType
+                    if peerId.namespace != Namespaces.Peer.SecretChat {
+                        parsingUrlType = [.Hashtags]
+                    } else {
+                        parsingUrlType = [.Links, .Hashtags]
+                    }
+                                    
+                    var attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
+                    attributes += attrs(peerId)
+                    if let sendAs = sendAs {
+                        attributes.append(SendAsMessageAttribute(peerId: sendAs))
+                    }
+                    if withoutSound {
+                        attributes.append(NotificationInfoMessageAttribute(flags: [.muted]))
+                    }
+                    if let date = date {
+                        attributes.append(OutgoingScheduleInfoMessageAttribute(scheduleTime: Int32(date.timeIntervalSince1970)))
+                    }
+                    caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
+                }
+                if let caption = caption {
+                    return caption |> then(forward)
+                } else {
+                    return forward
+                }
+            })
+        }
+        return combineLatest(signals)
+        |> castError(String.self)
+        |> ignoreValues
+    }
+    
+    override func possibilityPerformTo(_ peer:Peer) -> Bool {
+        if peer.isSecretChat {
+            return false
+        } else if !peer.canSendMessage(false) {
+            return false
+        } else if let peer = peer as? TelegramChannel {
+            if peer.hasBannedRights(.banSendMedia) {
+                return false
+            }
+        }
+        return true
+    }
+}
+
+final class ReplyForwardMessageObject : ShareObject {
+    private let subject: EngineMessageReplySubject
+    private let message: Message
+    init(_ context: AccountContext, message: Message, subject: EngineMessageReplySubject) {
+        self.subject = subject
+        self.message = message
+        super.init(context)
+    }
+    override var multipleSelection: Bool {
+        return false
+    }
+    
+    override func statusString(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> String? {
+        return peer.id == context.peerId ? nil : presence?.status.string
+    }
+
+    
+    override func possibilityPerformTo(_ peer: Peer) -> Bool {
+        let canSend = peer.canSendMessage(media: message.media.first)
+        return !excludePeerIds.contains(peer.id) && canSend
+    }
+    
+    override func perform(to peerIds: [PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        
+        if let peerId = peerIds.first {
+            let context = self.context
+            let subject = self.subject
+            let messageId = subject.messageId
+            let peers = context.account.postbox.transaction { transaction -> Peer? in
+                return transaction.getPeer(peerId)
+            }
+            
+            let messages: Signal<[Message], NoError> = context.account.postbox.transaction { transaction in
+                var list:[Message] = []
+                if let message = transaction.getMessage(messageId) {
+                    list.append(message)
+                }
+                return list
+            }
+            
+            return combineLatest(messages, peers)
+                |> deliverOnMainQueue
+                |> castError(String.self)
+                |> mapToSignal {  messages, peer in
+                    
+                    let messageIds = messages.map { $0.id }
+                    
+                    let navigation = self.context.bindings.rootNavigation()
+                    if let peer = peer {
+                        
+                        if let controller = navigation.controller as? ChatController, controller.chatInteraction.chatLocation == .peer(peerId) {
+                            controller.chatInteraction.update({ current in
+                                current.withoutSelectionState().updatedInterfaceState {
+                                    $0.withUpdatedReplyMessageId(subject)
+                                }
+                            })
+                        } else {
+                            let initialAction: ChatInitialAction = .reply(subject, behavior: .automatic)
+                            
+                            if let threadId = threadId {
+                                return ForumUI.openTopic(makeMessageThreadId(threadId), peerId: peerId, context: context, animated: true, addition: true, initialAction: initialAction) |> filter {$0}
+                                |> take(1)
+                                |> ignoreValues
+                                |> castError(String.self)
+                            }
+                            
+                            (navigation.controller as? ChatController)?.chatInteraction.update({ $0.withoutSelectionState() })
+                            
+                            var existed: Bool = false
+                            navigation.enumerateControllers { controller, _ in
+                                if let controller = controller as? ChatController, controller.chatInteraction.peerId == peerId {
+                                    existed = true
+                                }
+                                return existed
+                            }
+                            let newone: ChatController
+                            
+                            if existed {
+                                newone = ChatController(context: context, chatLocation: .peer(peerId), initialAction: initialAction)
+                            } else {
+                                newone = ChatAdditionController(context: context, chatLocation: .peer(peerId), initialAction: initialAction)
+                            }
+                            navigation.push(newone)
+                            return newone.ready.get() |> filter {$0} |> take(1) |> ignoreValues |> castError(String.self)
+                        }
+                    }
+                    return .complete()
+                }
+        }
+        return .complete()
+    }
+    
+    
 }
 
 final class ForwardMessagesObject : ShareObject {
@@ -958,9 +1208,9 @@ final class ForwardMessagesObject : ShareObject {
                                     parsingUrlType = [.Links, .Hashtags]
                                 }
                                 let attributes:[MessageAttribute] = [TextEntitiesMessageAttribute(entities: comment.messageTextEntities(parsingUrlType))]
-                                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, replyToMessageId: threadId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start()
+                                _ = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start()
                             }
-                            _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId, replyId: threadId).start()
+                            _ = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: context.account.peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }).start()
                             if let controller = context.bindings.rootNavigation().controller as? ChatController {
                                 controller.chatInteraction.update({$0.withoutSelectionState()})
                             }
@@ -1041,10 +1291,10 @@ final class ForwardMessagesObject : ShareObject {
                         return (peer, nil)
                     }
                 }
-                let threadId = threadIds[peerId]
+                let threadId = threadIds[peerId] ?? threadId
                 
                 signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
-                    let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
+                    let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId.flatMap { .init(messageId: $0, quote: nil) }, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                     var caption: Signal<[MessageId?], NoError>?
                     if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                         let parsingUrlType: ParsingType
@@ -1060,7 +1310,7 @@ final class ForwardMessagesObject : ShareObject {
                             attributes.append(SendAsMessageAttribute(peerId: sendAs))
                         }
                         
-                        caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, replyToMessageId: threadId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
+                        caption = Sender.enqueue(message: EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, threadId: optionalMessageThreadId(threadId), replyToMessageId: threadId.flatMap { .init(messageId: $0, quote: nil) }, replyToStoryId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
                     }
                     if let caption = caption {
                         return caption |> then(forward)
@@ -1185,7 +1435,8 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         
         switch entry {
         case let .plain(peer, _, presence, autoDeletion, drawSeparator, multiple):
-            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
+            let theme = share.presentation ?? theme
+            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
                 if peer.isForum && share.selectTopics {
                     selectInteraction.openForum(peer.id)
                 } else {
@@ -1199,17 +1450,20 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
                         }
                     }, itemImage: MenuAnimation.menu_select_messages.value)
                 ])
-            }, highlightVerified: true)
+            }, highlightVerified: true, customTheme: .initialize(theme))
         case let .secretChat(peer, peerId, _, _, drawSeparator, multiple):
-            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: strings().composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
+            let theme = share.presentation ?? theme
+            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText), status: strings().composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
                 selectInteraction.action(peerId, nil)
-            })
+            }, customTheme: .initialize(theme))
         case let .separator(text, _):
-            return SeparatorRowItem(initialSize, entry.stableId, string: text)
+            let theme = share.presentation ?? theme
+            return SeparatorRowItem(initialSize, entry.stableId, string: text, customTheme: .initialize(theme))
         case .emptySearch:
-            return SearchEmptyRowItem(initialSize, stableId: entry.stableId)
+            let theme = share.presentation ?? theme
+            return SearchEmptyRowItem(initialSize, stableId: entry.stableId, icon: theme.icons.emptySearch, customTheme: .initialize(theme))
         case let .folders(filters, current):
-            return ChatListRevealItem(initialSize, context: context, tabs: filters, selected: current, counters: ChatListFilterBadges(total: 0, filters: []), action: selectInteraction.updateFolder)
+            return ChatListRevealItem(initialSize, context: context, tabs: filters, selected: current, counters: ChatListFilterBadges(total: 0, filters: []), action: selectInteraction.updateFolder, presentation: share.presentation ?? theme)
         }
         
         
@@ -1369,7 +1623,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
             textView.animates = false
-            textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+            textView.setAttributedString(state.effectiveInput.attributedString(), animated:animated)
             textView.animates = true
         }
         let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
@@ -1396,7 +1650,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     
     override func initializer() -> NSView {
         let vz = viewClass() as! ShareModalView.Type
-        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), shareObject: share);
+        return vz.init(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), shareObject: share, presentation: self.presentation);
     }
 
     
@@ -1590,8 +1844,14 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
     }
     
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: self.presentation ?? theme)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.presentation = presentation
         
         
         let initialSize = self.atomicSize.modify({$0})
@@ -1633,7 +1893,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         genericView.textView.delegate = self
         genericView.hasShareMenu = self.share.hasLink
-        
+        let presentation = self.presentation
         
         
         genericView.dismiss.set(handler: { [weak self] _ in
@@ -1677,7 +1937,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         }
         
         genericView.share.contextMenu = { [weak self] in
-            let menu = ContextMenu()
+            let menu = ContextMenu(presentation: .current(presentation?.colors ?? theme.colors))
             menu.addItem(ContextMenuItem(strings().modalCopyLink, handler: {
                 if share.hasLink {
                     share.shareLink()
@@ -1766,22 +2026,28 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             filter.set(data)
         }
         
-        var first: Bool = true
-        let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue
-        filterDisposable.set(filterView.start(next: { filters in
-            updateFilter( { current in
-                var current = current
-                current = current.withUpdatedTabs(filters.list)
-                if !first, let updated = filters.list.first(where: { $0.id == current.filter.id }) {
-                    current = current.withUpdatedFilter(updated)
-                } else {
-                    current = current.withUpdatedFilter(nil)
-                }
-                return current
-            } )
-            first = false
-        }))
         
+        if share.hasFolders {
+            var first: Bool = true
+            let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue
+            filterDisposable.set(filterView.start(next: { filters in
+                updateFilter( { current in
+                    var current = current
+                    current = current.withUpdatedTabs(filters.list)
+                    if !first, let updated = filters.list.first(where: { $0.id == current.filter.id }) {
+                        current = current.withUpdatedFilter(updated)
+                    } else {
+                        current = current.withUpdatedFilter(nil)
+                    }
+                    return current
+                } )
+                first = false
+            }))
+            
+        } else {
+            filter.set(.init())
+        }
+       
         genericView.tableView.set(stickClass: ChatListRevealItem.self, handler: { _ in
             
         })
@@ -1879,7 +2145,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var presences:[PeerId: PeerStatusStringResult] = [:]
                         for value in values.views {
                             if let view = value.value as? PeerView {
-                                presences[view.peerId] = stringStatus(for: view, context: context)
+                                presences[view.peerId] = stringStatus(for: view, context: context, theme: .init(presentation?.colors ?? theme.colors))
                             }
                         }
                         return (chatList.0, chatList.1, presences, selfPeer)
@@ -1969,7 +2235,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var presences:[PeerId: PeerStatusStringResult] = [:]
                         for value in values.views {
                             if let view = value.value as? PeerView {
-                                presences[view.peerId] = stringStatus(for: view, context: context)
+                                presences[view.peerId] = stringStatus(for: view, context: context, theme: .init(presentation?.colors ?? theme.colors))
                             }
                         }
                         
@@ -2159,6 +2425,9 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     _ = share.perform(to: Array(ids), threadId: nil, comment: self.contextChatInteraction.presentation.interfaceState.inputState).start()
                     self.emoji.popover?.hide()
                     self.close()
+                    if !ids.isEmpty {
+                        self.showSuccess()
+                    }
                 } else {
                     self.genericView.tokenizedView.markAsFailed(failed.map {
                         $0.peerId.toInt64()
@@ -2218,10 +2487,13 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     }
 
     private let emoji: EmojiesController
+    private let presentation: TelegramPresentationTheme?
     
-    init(_ share:ShareObject) {
+    init(_ share:ShareObject, presentation: TelegramPresentationTheme? = nil) {
         self.share = share
-        emoji = EmojiesController(share.context)
+        self.presentation = presentation
+        self.share.presentation = presentation
+        emoji = EmojiesController(share.context, presentation: presentation)
         self.contextChatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: share.context)
         inputContextHelper = InputContextHelper(chatInteraction: contextChatInteraction)
         super.init(frame: NSMakeRect(0, 0, 360, 400))
@@ -2336,7 +2608,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         if !share.hasCaptionView, share.hasInteraction {
             return ModalInteractions(acceptTitle: share.interactionOk, accept: { [weak self] in
                 _ = self?.invoke()
-            }, drawBorder: true, height: 50, singleButton: true)
+            }, drawBorder: true, height: 50)
         } else {
             return nil
         }
@@ -2354,10 +2626,15 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         super.viewDidDisappear(animated)
     }
     
+    func showSuccess() {
+        showModalText(for: share.context.window, text: share.successText)
+    }
+    
     override func close(animationType: ModalAnimationCloseBehaviour = .common) {
         if self.share.emptyPerformOnClose {
             _ = self.share.perform(to: [], threadId: nil).start()
         }
+        
         super.close(animationType: animationType)
     }
     
@@ -2369,4 +2646,11 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         filterDisposable.dispose()
     }
     
+    override var modalTheme: ModalViewController.Theme {
+        return .init(presentation: presentation ?? theme)
+    }
+    override var containerBackground: NSColor {
+        let theme = presentation ?? theme
+        return theme.colors.background
+    }
 }

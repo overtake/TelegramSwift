@@ -446,7 +446,7 @@ struct SlowMode : Equatable {
     }
 }
 
-struct ChatPresentationInterfaceState: Equatable {
+class ChatPresentationInterfaceState: Equatable {
     
     struct BotMenu : Equatable {
         var commands: [BotCommand]

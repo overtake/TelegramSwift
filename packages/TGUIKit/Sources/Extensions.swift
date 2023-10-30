@@ -125,9 +125,9 @@ public extension NSAttributedString {
         return NSMakeRange(loc, length)
     }
     
-    static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSAttributedString {
+    static func initialize(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSAttributedString {
         let attr:NSMutableAttributedString = NSMutableAttributedString()
-        _ = attr.append(string: string, color: color, font: font, coreText: true)
+        _ = attr.append(string: string, color: color, font: font)
         
         return attr.copy() as! NSAttributedString
     }
@@ -327,7 +327,55 @@ public struct ParsingType: OptionSet {
 
 public extension NSMutableAttributedString {
     
-    @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSRange {
+    func mergeIntersectingAttributes(keepBest: Bool = true) {
+        let mergedAttributedString = self
+        let fullRange = NSRange(location: 0, length: self.length)
+
+        for attributeName in self.attributes(at: 0, effectiveRange: nil).keys {
+            var intersectionRanges = [NSRange]()
+
+            var location = 0
+            while location < fullRange.length {
+                var effectiveRange = NSRange()
+                let attributeValue = self.attribute(attributeName, at: location, effectiveRange: &effectiveRange)
+                if effectiveRange.length > 0 {
+                    intersectionRanges.append(effectiveRange)
+                }
+                location = NSMaxRange(effectiveRange)
+            }
+
+            if intersectionRanges.count > 1 {
+                if keepBest {
+                    // Find the best attribute value (e.g., the one with the largest range)
+                    var bestRange = NSRange()
+                    var bestValue: Any?
+
+                    for range in intersectionRanges {
+                        if range.length > bestRange.length {
+                            bestRange = range
+                            bestValue = self.attribute(attributeName, at: range.location, effectiveRange: nil)
+                        }
+                    }
+
+                    // Remove all intersecting ranges except the best one
+                    for range in intersectionRanges {
+                        if range != bestRange {
+                            mergedAttributedString.removeAttribute(attributeName, range: range)
+                        }
+                    }
+                } else {
+                    // Keep only the first attribute and remove the rest
+                    let firstRange = intersectionRanges.first!
+                    for i in 1..<intersectionRanges.count {
+                        let intersectionRange = intersectionRanges[i]
+                        mergedAttributedString.removeAttribute(attributeName, range: intersectionRange)
+                    }
+                }
+            }
+        }
+    }
+    
+    @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil) -> NSRange {
         
         if(string == nil) {
             return NSMakeRange(0, 0)
@@ -348,9 +396,6 @@ public extension NSMutableAttributedString {
         }
         
         if let f = font {
-//            if coreText {
-//                 self.setCTFont(font: f, range: range)
-//            }
             self.setFont(font: f, range: range)
         }
         
@@ -374,9 +419,6 @@ public extension NSMutableAttributedString {
         self.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: range)
     }
     
-    func setCTFont(font:NSFont, range:NSRange) -> Void {
-        self.addAttribute(NSAttributedString.Key(kCTFontAttributeName as String), value: CTFontCreateWithFontDescriptor(font.fontDescriptor, 0, nil), range: range)
-    }
     
     func setSelected(color:NSColor,range:NSRange) -> Void {
         self.addAttribute(.selectedColor, value: color, range: range)
@@ -391,6 +433,20 @@ public extension NSMutableAttributedString {
 
 
 public extension CALayer {
+    
+    var layerTintColor: CGColor? {
+        get {
+            if let value = self.value(forKey: "contentsMultiplyColor"), CFGetTypeID(value as CFTypeRef) == CGColor.typeID {
+                let result = value as! CGColor
+                return result
+            } else {
+                return nil
+            }
+        } set(value) {
+            self.setValue(value, forKey: "contentsMultiplyColor")
+        }
+    }
+
     
     func disableActions() -> Void {
         
@@ -432,9 +488,15 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
     }
-    func animateCornerRadius() ->Void {
-        let animation = CABasicAnimation(keyPath: "cornerRadius")
-        animation.duration = 0.2
+    func animateCornerRadius(duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut) ->Void {
+        let animation: CABasicAnimation
+        if timingFunction == .spring {
+            animation = makeSpringAnimation("cornerRadius")
+        } else {
+            animation = CABasicAnimation(keyPath: "cornerRadius")
+            animation.timingFunction = .init(name: timingFunction)
+        }
+        animation.duration = duration
         self.add(animation, forKey: "cornerRadius")
     }
     
@@ -458,6 +520,15 @@ public extension NSView {
         image.addRepresentation(bitmapRep)
         bitmapRep.size = bounds.size
         return NSImage(data: dataWithPDF(inside: bounds))!
+    }
+    
+    func setCenterScale(_ scale: CGFloat) {
+        let rect = self.bounds
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+        fr = CATransform3DScale(fr, scale, scale, 1)
+        fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+        self.layer?.transform = fr
     }
     
     var subviewsSize: NSSize {
@@ -504,6 +575,8 @@ public extension NSView {
                     }
                 } else if let view = view as? ImageView, view.isEventLess {
                     return NSPointInRect(location, self.bounds)
+                } else if let view = view as? LayerBackedView, view.isEventLess {
+                    return NSPointInRect(location, self.bounds)
                 }
                 if view == self {
                     return NSPointInRect(location, self.bounds)
@@ -542,6 +615,9 @@ public extension NSView {
         } else {
             return System.backingScale
         }
+    }
+    var bsc: CGFloat {
+        return backingScaleFactor
     }
     
     func removeAllSubviews() -> Void {
@@ -1500,6 +1576,9 @@ public extension NSRange {
     var max:Int {
         return self.location + self.length
     }
+    var isEmpty: Bool {
+        return self.length == 0
+    }
     func indexIn(_ index: Int) -> Bool {
         return NSLocationInRange(index, self)
     }
@@ -1514,20 +1593,26 @@ public extension NSRange {
 }
 
 public extension NSBezierPath {
-    var cgPath: CGPath {
-        let path = CGMutablePath()
-        var points = [CGPoint](repeating: .zero, count: 3)
-        for i in 0 ..< self.elementCount {
-            let type = self.element(at: i, associatedPoints: &points)
-            switch type {
-            case .moveTo: path.move(to: points[0])
-            case .lineTo: path.addLine(to: points[0])
-            case .curveTo: path.addCurve(to: points[2], control1: points[0], control2: points[1])
-            case .closePath: path.closeSubpath()
-            }
-        }
-        return path
-    }
+//    var cgPath: CGPath {
+//        let path = CGMutablePath()
+//        var points = [CGPoint](repeating: .zero, count: 3)
+//        for i in 0 ..< self.elementCount {
+//            let type = self.element(at: i, associatedPoints: &points)
+//            switch type {
+//            case .moveTo: path.move(to: points[0])
+//            case .lineTo: path.addLine(to: points[0])
+//            case .curveTo: path.addCurve(to: points[2], control1: points[0], control2: points[1])
+//            case .closePath: path.closeSubpath()
+//            case .cubicCurveTo:
+//                path.addQuadCurve(to: <#T##CGPoint#>, control: <#T##CGPoint#>)
+//            case .quadraticCurveTo:
+//                <#code#>
+//            @unknown default:
+//                <#code#>
+//            }
+//        }
+//        return path
+//    }
 
 }
 
@@ -1589,11 +1674,7 @@ public extension NSRect {
                 let point = points[0]
                 rect.origin.x = (height - point.x)
                 rect.origin.y = (width - point.y - self.width)
-            case .lineTo:
-                break
-            case .curveTo:
-                break
-            case .closePath:
+            default:
                 break
             }
         }
@@ -1968,6 +2049,29 @@ public extension NSView {
         return visibleRect
     }
     
+    func setAnchorPoint(anchorPoint: CGPoint) {
+        guard let layer = self.layer else {
+            return
+        }
+        
+        var newPoint = CGPoint(x: bounds.size.width * anchorPoint.x, y: bounds.size.height * anchorPoint.y)
+        var oldPoint = CGPoint(x: bounds.size.width * layer.anchorPoint.x, y: bounds.size.height * layer.anchorPoint.y)
+
+        newPoint = newPoint.applying(layer.affineTransform())
+        oldPoint = oldPoint.applying(layer.affineTransform())
+
+        var position = layer.position
+
+        position.x -= oldPoint.x
+        position.x += newPoint.x
+
+        position.y -= oldPoint.y
+        position.y += newPoint.y
+        
+        layer.position = position
+        layer.anchorPoint = anchorPoint
+    }
+    
 }
 
 public extension NSWindow {
@@ -2148,14 +2252,19 @@ extension CGPoint {
     }
 }
 
-extension CGSize {
-    public var cgPoint: CGPoint {
+public extension CGSize {
+    var cgPoint: CGPoint {
         return CGPoint(x: width, y: height)
     }
     
-    public init(point: CGPoint) {
+    init(point: CGPoint) {
         self.init(width: point.x, height: point.y)
     }
+    
+    func centered(around position: CGPoint) -> CGRect {
+        return CGRect(origin: CGPoint(x: position.x - self.width / 2.0, y: position.y - self.height / 2.0), size: self)
+    }
+
 }
 
 public func + (left: CGPoint, right: CGPoint) -> CGPoint {
@@ -2295,5 +2404,13 @@ extension CGAffineTransform {
         transform.tx *= transformedSize.width;
         transform.ty *= transformedSize.height;
         return transform
+    }
+}
+
+
+public extension CGFloat {
+    func rounded(toPlaces places:Int) -> CGFloat {
+        let divisor = pow(10.0, CGFloat(places))
+        return (self * divisor).rounded() / divisor
     }
 }

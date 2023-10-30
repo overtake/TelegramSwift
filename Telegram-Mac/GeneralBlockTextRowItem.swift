@@ -19,17 +19,27 @@ struct GeneralBlockTextHeader {
 }
 
 class GeneralBlockTextRowItem: GeneralRowItem {
+    struct RightAction {
+        var image: CGImage
+        var action: ()->Void
+    }
     fileprivate let textLayout: TextViewLayout
     fileprivate let header: GeneralBlockTextHeader?
     fileprivate let headerLayout: TextViewLayout?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30)) {
+    fileprivate let rightAction: RightAction?
+    fileprivate let centerViewAlignment: Bool
+    fileprivate let _hasBorder: Bool?
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20), centerViewAlignment: Bool = false, rightAction: RightAction? = nil, hasBorder: Bool? = nil, singleLine: Bool = false) {
         
         let attr = NSMutableAttributedString()
         _ = attr.append(string: text, color: color, font: font)
         attr.detectBoldColorInString(with: .medium(font.pointSize))
         
-        self.textLayout = TextViewLayout(attr, alwaysStaticItems: false)
+        self.textLayout = TextViewLayout(attr, maximumNumberOfLines: singleLine ? 1 : 0, alwaysStaticItems: false)
         self.header = header
+        self._hasBorder = hasBorder
+        self.centerViewAlignment = centerViewAlignment
+        self.rightAction = rightAction
         if let header = header {
             self.headerLayout = TextViewLayout(.initialize(string: header.text, color: color, font: .medium(.title)), maximumNumberOfLines: 3)
         } else {
@@ -38,11 +48,24 @@ class GeneralBlockTextRowItem: GeneralRowItem {
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets)
     }
     
+    override var hasBorder: Bool {
+        if let _hasBorder = _hasBorder {
+            return _hasBorder
+        } else {
+            return super.hasBorder
+        }
+    }
+    
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        self.textLayout.measure(width: self.blockWidth - self.viewType.innerInset.left - self.viewType.innerInset.right)
-        self.headerLayout?.measure(width: self.blockWidth - self.viewType.innerInset.left - self.viewType.innerInset.right)
+        var action_w: CGFloat = 0
+        if let _ = self.rightAction {
+            action_w = 35
+        }
+        
+        self.textLayout.measure(width: self.blockWidth - self.viewType.innerInset.left - self.viewType.innerInset.right - action_w)
+        self.headerLayout?.measure(width: self.blockWidth - self.viewType.innerInset.left - self.viewType.innerInset.right - action_w)
         return true
     }
     
@@ -68,6 +91,7 @@ private final class GeneralBlockTextRowView : TableRowView {
     private var headerView: TextView?
     private var headerImageView : ImageView?
     private let separator: View = View()
+    private var rightAction: ImageButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(containerView)
@@ -106,11 +130,19 @@ private final class GeneralBlockTextRowView : TableRowView {
             headerView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left + inset, item.viewType.innerInset.top))
             textView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, headerView.frame.maxY + 4))
         } else {
-            textView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top))
+            if !item.centerViewAlignment {
+                textView.setFrameOrigin(NSMakePoint(item.viewType.innerInset.left, item.viewType.innerInset.top))
+            } else {
+                textView.center()
+            }
         }
         
         
         separator.frame = NSMakeRect(item.viewType.innerInset.left, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right, .borderSize)
+        
+        if let current = self.rightAction {
+            current.centerY(x: containerView.frame.width - current.frame.width - 10)
+        }
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -142,8 +174,29 @@ private final class GeneralBlockTextRowView : TableRowView {
             self.headerView = nil
         }
         
+        if let action = item.rightAction {
+            let current: ImageButton
+            if let view = self.rightAction {
+                current = view
+            } else {
+                current = ImageButton()
+                current.scaleOnClick = true
+                containerView.addSubview(current)
+                self.rightAction = current
+            }
+            current.set(image: action.image, for: .Normal)
+            current.sizeToFit()
+            current.removeAllHandlers()
+            current.set(handler: { _ in
+                action.action()
+            }, for: .Click)
+        } else if let view = self.rightAction {
+            performSubviewRemoval(view, animated: animated)
+            self.rightAction = nil
+        }
+        
         textView.update(item.textLayout)
-        self.separator.isHidden = !item.viewType.hasBorder
+        self.separator.isHidden = !item.hasBorder
         needsLayout = true
     }
     

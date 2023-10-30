@@ -114,7 +114,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     let chatMode = chatInteraction.presentation.chatMode
 
-                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId ?? chatMode.threadId
+                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId?.messageId ?? chatMode.threadId
                     
                     let threadId = chatInteraction.presentation.chatLocation.threadId
                     
@@ -135,13 +135,13 @@ class ChatInputAttachView: ImageButton, Notifable {
                             let thumbFile: TelegramMediaFile
                             var value: (NSColor, ContextMenuItem)-> AppMenuItemImageDrawable
                             if let file = attach.icons[.macOSAnimated] {
-                                value = MenuRemoteAnimation(context, file: file, bot: attach.peer, thumb: MenuAnimation.menu_webapp_placeholder).value
+                                value = MenuRemoteAnimation(context, file: file, bot: attach.peer._asPeer(), thumb: MenuAnimation.menu_webapp_placeholder).value
                                 thumbFile = file
                             } else {
                                 value = MenuAnimation.menu_folder_bot.value
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            let canAddAttach: Bool
+                            var canAddAttach: Bool
                             if peer.isUser {
                                 canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.user)
                             } else if peer.isBot {
@@ -154,12 +154,16 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 canAddAttach = false
                             }
                             
+                            canAddAttach = canAddAttach && attach.flags.contains(.showInAttachMenu)
+                            
                             if canAddAttach {
                                 items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
                                     let invoke:()->Void = { [weak self] in
-                                        showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
+                                        showModal(with: WebpageModalController(context: context, url: "", title: attach.peer._asPeer().displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: attach.peer._asPeer(), replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
                                     }
-                                    invoke()
+                                    installAttachMenuBot(context: context, peer: attach.peer._asPeer(), completion: { _ in
+                                        invoke()
+                                    })
                                 }, itemImage: value))
                             }
                         }

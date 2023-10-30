@@ -64,7 +64,7 @@ func template(context: AccountContext) -> InputDataController {
 /*
  let modalInteractions = ModalInteractions(acceptTitle: "PAY", accept: { [weak controller] in
      _ = controller?.returnKeyAction()
- }, drawBorder: true, height: 50, singleButton: true)
+ }, singleButton: true)
  
  let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
  

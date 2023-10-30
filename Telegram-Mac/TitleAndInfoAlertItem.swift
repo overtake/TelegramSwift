@@ -12,7 +12,7 @@ import TGUIKit
 final class TitleAndInfoAlertItem : GeneralRowItem {
     fileprivate let header: TextViewLayout
     fileprivate let text: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, title: String, info: String, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30)) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, title: String, info: String, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 20, right: 20)) {
         let hAttr: NSAttributedString = .initialize(string: title, color: theme.colors.text, font: .medium(.text))
         let tAttr: NSAttributedString = .initialize(string: info, color: theme.colors.text, font: .normal(.text))
         header = .init(hAttr)

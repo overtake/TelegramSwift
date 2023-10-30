@@ -47,7 +47,7 @@ func cachedFaqInstantPage(context: AccountContext) -> Signal<inAppLink, NoError>
                         if instantPage.isComplete {
                             let _ = updateCachedInstantPage(postbox: context.account.postbox, url: cachedUrl, webPage: webPage).start()
                         } else {
-                            let _ = (actualizedWebpage(postbox: context.account.postbox, network: context.account.network, webpage: webPage)
+                            let _ = (actualizedWebpage(account: context.account, webpage: webPage)
                                 |> mapToSignal { webPage -> Signal<Void, NoError> in
                                     if case let .Loaded(content) = webPage.content, let instantPage = content.instantPage, instantPage.isComplete {
                                         return updateCachedInstantPage(postbox: context.account.postbox, url: cachedUrl, webPage: webPage)

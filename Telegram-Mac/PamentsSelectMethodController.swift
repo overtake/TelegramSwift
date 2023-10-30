@@ -40,7 +40,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var sectionId:Int32 = 0
     var index: Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
    
@@ -61,7 +61,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     if !state.methods.isEmpty {
-        entries.append(.sectionId(sectionId, type: .normal))
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     }
     
@@ -72,7 +72,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     // entries
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -114,7 +114,7 @@ func PamentsSelectMethodController(context: AccountContext, cards:[BotPaymentSav
 
     let modalInteractions = ModalInteractions(acceptTitle: strings().modalCancel, accept: {
         close?()
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
 
 
     let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)

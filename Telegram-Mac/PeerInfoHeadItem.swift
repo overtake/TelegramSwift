@@ -28,6 +28,9 @@ fileprivate final class ActionButton : Control {
         textView.isEventLess = true
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        self.controlOpacityEventIgnored = true
+        
         set(handler: { control in
             control.change(opacity: 0.8, animated: true)
         }, for: .Highlight)
@@ -112,8 +115,8 @@ extension TelegramPeerPhoto : Equatable {
     }
 }
 
-fileprivate let actionItemWidth: CGFloat = 135
-fileprivate let actionItemInsetWidth: CGFloat = 19
+fileprivate let actionItemWidth: CGFloat = 145
+fileprivate let actionItemInsetWidth: CGFloat = 20
 
 private struct SubActionItem {
     let text: String
@@ -168,11 +171,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
     
     
  
-    if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments {
+    if let peer = item.peer as? TelegramUser, let arguments = item.arguments as? UserInfoArguments, peer.id != item.context.peerId {
         if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat) {
             items.append(ActionItem(text: strings().peerInfoActionMessage, image: theme.icons.profile_message, animation: .menu_show_message, action: arguments.sendMessage))
         }
-        if peer.canCall && peer.id != item.context.peerId, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
+        if peer.canCall, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
             if let cachedData = item.peerView.cachedData as? CachedUserData, cachedData.voiceCallsAvailable {
                 items.append(ActionItem(text: strings().peerInfoActionCall, image: theme.icons.profile_call, animation: .menu_call, action: {
                     arguments.call(false)
@@ -202,10 +205,13 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 }))
             }
         }
-        let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
-        items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: .menu_mute, action: {
-            arguments.toggleNotifications(value)
-        }))
+        if peer.id != item.context.peerId {
+            let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
+            items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: .menu_mute, action: {
+                arguments.toggleNotifications(value)
+            }))
+        }
+        
         if !peer.isBot {
             if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
                 items.append(ActionItem(text: strings().peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, animation: .menu_lock, action: arguments.startSecretChat))
@@ -292,6 +298,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
                     arguments.stats(cachedData.statsDatacenterId)
                 }))
+            } else if peer.isChannel, peer.isAdmin {
+                items.append(ActionItem(text: strings().peerInfoActionStatistics, image: theme.icons.profile_stats, animation: .menu_statistics, action: {
+                    arguments.stats(0)
+                }))
             }
         }
         if access.canReport {
@@ -317,6 +327,14 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         
         
     } else if let peer = item.peer as? TelegramChannel, peer.isChannel, let arguments = item.arguments as? ChannelInfoArguments {
+        
+        
+        if peer.participationStatus == .left {
+            items.append(ActionItem(text: strings().peerInfoActionJoinChannel, image: theme.icons.profile_join_channel, animation: .menu_channel, action: {
+                arguments.join_channel()
+            }))
+        }
+        
         if let value = item.peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) {
             items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: value ? .menu_unmuted : .menu_mute, action: {
                 arguments.toggleNotifications(value)
@@ -420,14 +438,17 @@ class PeerInfoHeadItem: GeneralRowItem {
         var height: CGFloat = 0
         
         if !editing {
-            height = photoDimension + insets.top + insets.bottom + nameLayout.layoutSize.height + statusLayout.layoutSize.height + insets.bottom
+            height = photoDimension + insets.bottom + nameLayout.layoutSize.height + statusLayout.layoutSize.height + insets.bottom
             
             if !items.isEmpty {
                 let maxActionSize: NSSize = items.max(by: { $0.size.height < $1.size.height })!.size
                 height += maxActionSize.height + insets.top
             }
+            if self.threadId != nil {
+                height += 40
+            }
         } else {
-            height = photoDimension + insets.top + insets.bottom
+            height = photoDimension + insets.bottom
         }
         return height
     }
@@ -468,13 +489,15 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate let arguments: PeerInfoArguments
     fileprivate let threadData: MessageHistoryThreadData?
     fileprivate let threadId: Int64?
+    fileprivate let stories: PeerExpiringStoryListContext.State?
+    fileprivate let avatarStoryComponent: AvatarStoryIndicatorComponent?
     let canEditPhoto: Bool
     
     
     let peerPhotosDisposable = MetaDisposable()
     
     var photos: [TelegramPeerPhoto] = []
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, stories: PeerExpiringStoryListContext.State? = nil, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
         self.threadData = threadData
@@ -483,6 +506,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.editing = editing
         self.threadId = threadId
         self.arguments = arguments
+        self.stories = stories
         self.isVerified = peer?.isVerified ?? false
         self.isPremium = peer?.isPremium ?? false
         self.isScam = peer?.isScam ?? false
@@ -491,6 +515,12 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.updatingPhotoState = updatingPhotoState
         self.updatePhoto = updatePhoto
         
+        if let storyState = stories, !storyState.items.isEmpty {
+            let compoment = AvatarStoryIndicatorComponent(state: storyState, presentation: theme)
+            self.avatarStoryComponent = compoment
+        } else {
+            self.avatarStoryComponent = nil
+        }
         
         let canEditPhoto: Bool
         if let peer = peer as? TelegramUser {
@@ -590,6 +620,36 @@ class PeerInfoHeadItem: GeneralRowItem {
     }
     var isTopic: Bool {
         return self.isForum && threadData != nil
+    }
+    
+    func openPeerStory() {
+        if let peerId = self.peer?.id {
+            let table = self.table
+            self.arguments.openStory(.init(peerId: peerId, id: nil, messageId: nil, takeControl: { [weak table] peerId, _, _ in
+                var view: NSView?
+                table?.enumerateItems(with: { item in
+                    if let item = item as? PeerInfoHeadItem, item.peer?.id == peerId {
+                        view = item.takeControl()
+                    }
+                    return view == nil
+                })
+                return view
+            }, setProgress: { [weak self] signal in
+                self?.setOpenProgress(signal)
+            }))
+        }
+    }
+    
+    private func takeControl() -> NSView? {
+        if let view = self.view as? PeerInfoHeadView {
+            return view.takeControl()
+        }
+        return nil
+    }
+    private func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        if let view = self.view as? PeerInfoHeadView {
+            view.setOpenProgress(signal)
+        }
     }
     
     deinit {
@@ -799,7 +859,7 @@ private final class NameContainer : View {
         }
         
         if let stateText = item.stateText, let control = statusControl, let peerId = item.peer?.id {
-            control.userInteractionEnabled = true
+            control.userInteractionEnabled = item.peer?.isScam == false && item.peer?.isFake == false
             control.scaleOnClick = true
             control.set(handler: { control in
                 if item.peer?.emojiStatus != nil {
@@ -844,7 +904,8 @@ private final class NameContainer : View {
 
 
 private final class PeerInfoHeadView : GeneralContainableRowView {
-    private let photoView: AvatarControl = AvatarControl(font: .avatar(30))
+    private let photoContainer = Control(frame: NSMakeRect(0, 0, 120, 120))
+    private let photoView: AvatarStoryControl = AvatarStoryControl(font: .avatar(30), size: NSMakeSize(120, 120))
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
 
@@ -872,21 +933,49 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        photoView.setFrameSize(NSMakeSize(120, 120))
+
         
-        
-        addSubview(photoView)
+        photoContainer.addSubview(photoView)
+        addSubview(photoContainer)
         addSubview(nameView)
         addSubview(statusView)
         addSubview(actionsView)
         
-        photoView.set(handler: { [weak self] _ in
-            if let item = self?.item as? PeerInfoHeadItem, let peer = item.peer, let _ = peer.largeProfileImage {
-                showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
+        
+        photoView.userInteractionEnabled = false
+        
+        photoContainer.set(handler: { [weak self] _ in
+            if let item = self?.item as? PeerInfoHeadItem {
+                if let stories = item.stories, !stories.items.isEmpty {
+                    item.openPeerStory()
+                } else {
+                    if let peer = item.peer, let _ = peer.largeProfileImage {
+                        showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
+                    }
+                }
             }
         }, for: .Click)
         
+        photoContainer.contextMenu = { [weak self] in
+            if let item = self?.item as? PeerInfoHeadItem, let stories = item.stories, !stories.items.isEmpty {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().peerInfoContextOpenPhoto, handler: { [weak item] in
+                    if let item = item {
+                        if let peer = item.peer, let _ = peer.largeProfileImage {
+                            showPhotosGallery(context: item.context, peerId: peer.id, firstStableId: item.stableId, item.table, nil)
+                        }
+                    }
+                }, itemImage: MenuAnimation.menu_shared_media.value))
+                return menu
+            }
+            return nil
+        }
+        
+        
          registerForDraggedTypes([.tiff, .string, .kUrl, .kFileUrl])
     }
+    
     
     
     override public func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
@@ -1006,16 +1095,18 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             return
         }
         
-        photoView.centerX(y: item.viewType.innerInset.top)
-        nameView.centerX(y: photoView.frame.maxY + item.viewType.innerInset.top)
+        photoContainer.centerX(y: 0)
+        
+        photoView.center()
+        photoEditableView?.center()
+        
+
+        nameView.centerX(y: photoContainer.frame.maxY + item.viewType.innerInset.top)
         statusView.centerX(y: nameView.frame.maxY + 4)
         actionsView.centerX(y: containerView.frame.height - actionsView.frame.height)
-        photoEditableView?.centerX(y: item.viewType.innerInset.top)
-        
-        photoVideoView?.frame = photoView.frame
         
         if let photo = self.topicPhotoView {
-            photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, containerView.frame.width - item.photoDimension) / 2, item.viewType.innerInset.top, item.photoDimension, item.photoDimension)
+            photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, photoContainer.frame.width - item.photoDimension) / 2, floorToScreenPixels(backingScaleFactor, photoContainer.frame.height - item.photoDimension) / 2, item.photoDimension, item.photoDimension)
 
         }
 
@@ -1023,6 +1114,16 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func _actionItemWidth(_ items: [ActionItem]) -> CGFloat {
+        guard let item = self.item as? PeerInfoHeadItem else {
+            return 0
+        }
+        
+        let width = (item.blockWidth - (actionItemInsetWidth * CGFloat(items.count - 1)))
+        
+        return max(actionItemWidth, min(170, width / CGFloat(items.count)))
     }
     
     private func layoutActionItems(_ items: [ActionItem], animated: Bool) {
@@ -1040,6 +1141,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             
             let inset: CGFloat = 0
             
+            let actionItemWidth = _actionItemWidth(items)
+            
             actionsView.change(size: NSMakeSize(actionItemWidth * CGFloat(items.count) + CGFloat(items.count - 1) * actionItemInsetWidth, maxActionSize.height), animated: animated)
             
             var x: CGFloat = inset
@@ -1047,9 +1150,9 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             for (i, item) in items.enumerated() {
                 let view = actionsView.subviews[i] as! ActionButton
                 view.updateAndLayout(item: item, theme: theme)
-                view.setFrameSize(NSMakeSize(item.size.width, maxActionSize.height))
+                view.setFrameSize(NSMakeSize(actionItemWidth, maxActionSize.height))
                 view.change(pos: NSMakePoint(x, 0), animated: false)
-                x += maxActionSize.width + actionItemInsetWidth
+                x += actionItemWidth + actionItemInsetWidth
             }
             
         } else {
@@ -1067,7 +1170,6 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             return
         }
         
-        photoView.setFrameSize(NSMakeSize(item.photoDimension, item.photoDimension))
         photoView.setPeer(account: item.context.account, peer: item.peer)
 
         updatePhoto(item, animated: animated)
@@ -1090,9 +1192,9 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                         self.photoView.layer?.cornerCurve = .circular
                     } 
                     if let photoEditableView = self.photoEditableView {
-                        self.addSubview(self.photoVideoView!, positioned: .below, relativeTo: photoEditableView)
+                        photoContainer.addSubview(self.photoVideoView!, positioned: .below, relativeTo: photoEditableView)
                     } else {
-                        self.addSubview(self.photoVideoView!)
+                        photoContainer.addSubview(self.photoVideoView!)
 
                     }
                     self.photoVideoView!.isEventLess = true
@@ -1169,7 +1271,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         layoutActionItems(item.items, animated: animated)
         
         
-        photoView.userInteractionEnabled = !item.editing
+        photoContainer.userInteractionEnabled = !item.editing
         
         let containerRect: NSRect
         switch item.viewType {
@@ -1183,7 +1285,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         if item.canEditPhoto || self.activeDragging || item.updatingPhotoState != nil {
             if photoEditableView == nil {
                 photoEditableView = .init(frame: NSMakeRect(0, 0, item.photoDimension, item.photoDimension))
-                addSubview(photoEditableView!)
+                photoContainer.addSubview(photoEditableView!)
                 if animated {
                     photoEditableView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
@@ -1210,6 +1312,21 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         containerView.setCorners(item.viewType.corners, animated: animated)
         borderView._change(opacity: item.viewType.hasBorder ? 1.0 : 0.0, animated: animated)
         
+        
+        photoContainer.scaleOnClick = true
+        
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        if let avatarStoryComponent = item.avatarStoryComponent {
+            photoView.update(component: avatarStoryComponent, availableSize: NSMakeSize(item.photoDimension - 6, item.photoDimension - 6), transition: transition)
+            self.photoVideoView?._change(size: NSMakeSize(item.photoDimension - 6, item.photoDimension - 6), animated: animated)
+            self.photoVideoView?._change(pos: NSMakePoint(3, 3), animated: animated)
+        } else  {
+            photoView.update(component: nil, availableSize: NSMakeSize(item.photoDimension, item.photoDimension), transition: transition)
+            self.photoVideoView?._change(size: NSMakeSize(item.photoDimension, item.photoDimension), animated: animated)
+            self.photoVideoView?._change(pos: NSMakePoint(0, 0), animated: animated)
+        }
+
+        
         needsLayout = true
         updateListeners()
     }
@@ -1217,7 +1334,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
-        return photoView
+        return photoView.avatar
     }
     
     override func copy() -> Any {
@@ -1239,7 +1356,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 topicView = Control(frame: size.bounds)
                 topicView.scaleOnClick = true
                 self.topicPhotoView = topicView
-                self.containerView.addSubview(topicView)
+                photoContainer.addSubview(topicView)
                 
                 topicView.set(handler: { [weak self] _ in
                     if let file = self?.inlineTopicPhotoLayer?.file {
@@ -1304,5 +1421,11 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             checkValue(value)
         }
     }
-        
+    
+    func takeControl() -> NSView? {
+        return self.photoView
+    }
+    func setOpenProgress(_ signal:Signal<Never, NoError>) {
+        SetOpenStoryDisposable(self.photoView.pushLoadingStatus(signal: signal))
+    }
 }

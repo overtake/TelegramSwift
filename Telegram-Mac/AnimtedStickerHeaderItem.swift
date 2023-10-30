@@ -24,7 +24,7 @@ class AnimatedStickerHeaderItem: GeneralRowItem {
         self.bgColor = bgColor
         self.modify = modify
         self.textLayout = TextViewLayout(text, alignment: .center, alwaysStaticItems: true)
-        super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 30.0, right: 30.0, top: 0, bottom: 10))
+        super.init(initialSize, stableId: stableId, inset: NSEdgeInsets(left: 20, right: 20, top: 0, bottom: 10))
         
         self.textLayout.interactions = globalLinkExecutor
     }

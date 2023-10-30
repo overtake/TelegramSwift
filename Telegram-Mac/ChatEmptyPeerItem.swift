@@ -39,7 +39,7 @@ class ChatEmptyPeerItem: TableRowItem {
     }
     private var _shouldBlurService: Bool? = nil
     var shouldBlurService: Bool {
-        return _shouldBlurService ?? theme.shouldBlurService
+        return _shouldBlurService ?? presentation.shouldBlurService
     }
     
     private let peerViewDisposable = MetaDisposable()
@@ -111,7 +111,6 @@ class ChatEmptyPeerItem: TableRowItem {
             case .replies:
                 _ = attr.append(string: strings().chatEmptyReplies, color: textColor, font: .medium(.text))
             case .topic:
-                //TODOLANG
                 _ = attr.append(string: strings().chatEmptyTopic, color: textColor, font: .medium(.text))
             }
         case .pinned:
@@ -302,6 +301,8 @@ class ChatEmptyPeerView : TableRowView {
             } else {
                 bgView.setFrameSize(NSMakeSize(textView.frame.width + 20, textView.frame.height + 20))
             }
+            
+            bgView.addSubview(self.textView)
             
             bgView.center()
             

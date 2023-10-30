@@ -21,15 +21,17 @@ final class PremiumBoardingRowItem : GeneralRowItem {
     fileprivate let callback: (PremiumValue)->Void
 
     fileprivate let premValueIndex: Int
+    fileprivate let presentation: TelegramPresentationTheme
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, index: Int, value: PremiumValue, limits: PremiumLimitConfig, isLast: Bool, callback: @escaping(PremiumValue)->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, presentation: TelegramPresentationTheme, index: Int, value: PremiumValue, limits: PremiumLimitConfig, isLast: Bool, callback: @escaping(PremiumValue)->Void) {
         self.value = value
         self.limits = limits
+        self.presentation = presentation
         self.premValueIndex = index
         self.isLastItem = isLast
         self.callback = callback
-        self.titleLayout = .init(.initialize(string: value.title(limits), color: theme.colors.text, font: .medium(.title)))
-        self.infoLayout = .init(.initialize(string: value.info(limits), color: theme.colors.grayText, font: .normal(.text)))
+        self.titleLayout = .init(.initialize(string: value.title(limits), color: presentation.colors.text, font: .medium(.title)))
+        self.infoLayout = .init(.initialize(string: value.info(limits), color: presentation.colors.grayText, font: .normal(.text)))
 
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 20, right: 20))
         _ = self.makeSize(initialSize.width)
@@ -88,6 +90,19 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
         
     }
     
+    override var borderColor: NSColor {
+        guard let item = item as? PremiumBoardingRowItem else {
+            return super.backdorColor
+        }
+        return item.presentation.colors.border
+    }
+    
+    override var backdorColor: NSColor {
+        guard let item = item as? PremiumBoardingRowItem else {
+            return super.backdorColor
+        }
+        return item.presentation.colors.background
+    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -113,10 +128,10 @@ private final class PremiumBoardingRowView: GeneralContainableRowView {
             return
         }
         
-        imageView.image = item.value.icon(item.premValueIndex)
+        imageView.image = item.value.icon(item.premValueIndex, presentation: item.presentation)
         imageView.sizeToFit()
         
-        nextView.image = theme.icons.premium_boarding_feature_next
+        nextView.image = item.presentation.icons.premium_boarding_feature_next
         nextView.sizeToFit()
         
         titleView.update(item.titleLayout)

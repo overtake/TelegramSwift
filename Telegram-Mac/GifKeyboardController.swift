@@ -122,7 +122,7 @@ private func _id_tab(_ stableId: AnyHashable) -> InputDataIdentifier {
 }
 
 
-private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
+private func packEntries(_ state: State, arguments: Arguments, presentation: TelegramPresentationTheme) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var index: Int32 = 0
@@ -155,7 +155,7 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_tab(tuple.tab.stableId), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return GifKeyboardTabRowItem(initialSize, stableId: stableId, selected: tuple.selected, context: arguments.context, source: source, select: {
                 arguments.selectTab(tab)
-            })
+            }, theme: presentation)
         }))
     }
     
@@ -230,17 +230,22 @@ final class GifKeyboardView : View {
     fileprivate var restrictedView:RestrictionWrappedView?
     private let borderView = View()
     private let tabs = View()
-    private let selectionView: View = View(frame: NSMakeRect(0, 0, 36, 36))
     
     let searchView = SearchView(frame: .zero)
     private let searchContainer = View()
     private let searchBorder = View()
 
     
+    var presentation: TelegramPresentationTheme?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
         self.packsView.getBackgroundColor = {
+            .clear
+        }
+        
+        self.tableView.getBackgroundColor = {
             .clear
         }
         addSubview(self.tableView)
@@ -249,7 +254,6 @@ final class GifKeyboardView : View {
         searchContainer.addSubview(searchBorder)
         addSubview(searchContainer)
         
-        tabs.addSubview(selectionView)
         tabs.addSubview(self.packsView)
         addSubview(self.borderView)
         addSubview(tabs)
@@ -321,11 +325,13 @@ final class GifKeyboardView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        self.backgroundColor = theme.colors.background
         borderView.backgroundColor = theme.colors.border
         tabs.backgroundColor = theme.colors.background
         searchContainer.backgroundColor = theme.colors.background
         searchBorder.backgroundColor = theme.colors.border
         self.searchView.updateLocalizationAndTheme(theme: theme)
+        self.searchView.searchTheme = theme.search
     }
     
     required init?(coder: NSCoder) {
@@ -370,8 +376,10 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
             self.searchValue.set(searchState)
         }
     }
+    private var presentation: TelegramPresentationTheme?
     
-    override init(_ context: AccountContext) {
+    init(_ context: AccountContext, presentation: TelegramPresentationTheme? = nil) {
+        self.presentation = presentation
         super.init(context)
         bar = .init(height: 0)
     }
@@ -409,9 +417,15 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
         }
     }
     
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: presentation ?? theme)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        genericView.presentation = presentation
         
         let emojies = GIFKeyboardConfiguration.with(appConfiguration: context.appConfiguration)
                 
@@ -592,12 +606,17 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
         self.updateState = { f in
             updateState(f)
         }
+        let presentation = self.presentation
+        
+        let takePresentation:()->TelegramPresentationTheme = {
+            return presentation ?? theme
+        }
         
         let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = statePromise.get()
         |> deliverOnPrepareQueue
         |> map { state in
             let sections = InputDataSignalValue(entries: entries(state, arguments: arguments, mediaArguments: mediaArguments))
-            let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments))
+            let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments, presentation: takePresentation()))
             return (sections: sections, packs: packs, state: state)
         }
         

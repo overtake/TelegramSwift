@@ -15,6 +15,45 @@ import Postbox
 
 class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
+    class ActionButton: TitleButton {
+        
+        var urlView: ImageView?
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func set(isExternalUrl: Bool, color: NSColor) {
+            if isExternalUrl {
+                let current: ImageView
+                if let view = self.urlView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    addSubview(current)
+                    self.urlView = current
+                }
+                current.image = NSImage.init(named: "Icon_InlineBotUrl")?.precomposed(color)
+                current.sizeToFit()
+            } else if let view = self.urlView {
+                view.removeFromSuperview()
+                self.urlView = nil
+            }
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            if let view = urlView {
+                view.setFrameOrigin(NSMakePoint(frame.width - view.frame.width - 5, 5))
+            }
+        }
+    }
+    
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let webpageContent = webpageContent {
@@ -39,7 +78,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     private var text:TextView?
 
     private(set) var webpageContent:WPContentView?
-    private var actionButton: TitleButton?
+    private var actionButton: ActionButton?
     
     private var shimmerEffect: ShimmerView?
     private var shimmerMask: SimpleLayer?
@@ -65,12 +104,33 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         guard let item = self.item as? ChatMessageItem else {
             return .zero
         }
-        let maxY = text?.frame.maxY ?? 0
+        let maxY: CGFloat
+
+        if item.webpageAboveContent {
+            maxY = 1
+        } else {
+            maxY = textFrame(item).maxY + item.defaultContentInnerInset
+        }
         if let webpageLayout = item.webpageLayout {
-            var size = webpageLayout.size
-            return CGRect(origin: NSMakePoint(0, maxY + item.defaultContentInnerInset), size: size)
+            let size = webpageLayout.size
+            return CGRect(origin: NSMakePoint(0, maxY), size: size)
         }
         return .zero
+    }
+    
+    func textFrame(_ item: ChatMessageItem) -> NSRect {
+        guard let item = self.item as? ChatMessageItem else {
+            return .zero
+        }
+        let maxY: CGFloat
+
+        if item.webpageAboveContent, item.webpageLayout != nil {
+            maxY = webpageFrame(item).maxY + item.defaultContentInnerInset - 2
+        } else {
+            maxY = 0
+        }
+        return CGRect(origin: NSMakePoint(0, maxY), size: item.textLayout.layoutSize)
+
     }
     
     override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
@@ -81,11 +141,14 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         if let webpageContent = webpageContent {
             transition.updateFrame(view: webpageContent, frame: webpageFrame(item))
         }
+        
+        if let text = self.text {
+            transition.updateFrame(view: text, frame: textFrame(item))
+        }
+        
         if let actionButton = actionButton {
             var add = item.additionalLineForDateInBubbleState ?? 0
             if !item.isBubbled {
-                add = 0
-            } else if webpageContent != nil {
                 add = 0
             }
             let contentRect = self.contentFrame(item)
@@ -137,7 +200,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
                 if let view = self.text {
                     performSubviewRemoval(view, animated: animated)
                 }
-                let current: TextView = TextView()
+                let current: TextView = TextView(frame: textFrame(item))
                 current.update(item.textLayout)
                 self.text = current
                 addSubview(current)
@@ -152,41 +215,48 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
             
             if let webpageLayout = item.webpageLayout {
                 let updated = webpageContent == nil || !webpageContent!.isKind(of: webpageLayout.viewClass())
-                
-                if updated {
-                    webpageContent?.removeFromSuperview()
+                let current: WPContentView
+                if !updated, let view = self.webpageContent {
+                    current = view
+                } else {
+                    if let view = self.webpageContent {
+                        performSubviewRemoval(view, animated: animated)
+                    }
                     let vz = webpageLayout.viewClass() as! WPContentView.Type
-                    webpageContent = vz.init()
-                    webpageContent!.frame = webpageFrame(item)
-                    addSubview(webpageContent!)
+                    current = vz.init()
+                    current.frame = webpageFrame(item)
+                    self.webpageContent = current
+                    addSubview(current)
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
                 }
-                webpageContent?.update(with: webpageLayout)
-            } else {
-                if let view = webpageContent {
-                    performSubviewRemoval(view, animated: animated)
-                    webpageContent = nil
-                }
+                
+                current.update(with: webpageLayout, animated: animated)
+            } else if let view = webpageContent {
+                performSubviewRemoval(view, animated: animated)
+                webpageContent = nil
             }
             if let text = item.actionButtonText {
                 var isNew = false
                 if actionButton == nil {
-                    actionButton = TitleButton()
+                    actionButton = ActionButton(frame: .zero)
                     actionButton?.layer?.cornerRadius = .cornerRadius
-                    actionButton?.layer?.borderWidth = 1
                     actionButton?.disableActions()
                     actionButton?.set(font: .normal(.text), for: .Normal)
                     self.rowView.addSubview(actionButton!)
                     isNew = true
                 }
+                actionButton?.set(isExternalUrl: item.hasExternalLink, color: item.wpPresentation.activity.main)
                 actionButton?.scaleOnClick = true
                 actionButton?.removeAllHandlers()
                 actionButton?.set(handler: { [weak item] _ in
                     item?.invokeAction()
                 }, for: .Click)
                 actionButton?.set(text: text, for: .Normal)
-                actionButton?.layer?.borderColor = item.wpPresentation.activity.cgColor
-                actionButton?.set(color: item.wpPresentation.activity, for: .Normal)
-                _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.actionButtonWidth, 30), thatFit: true)
+                actionButton?.set(color: item.wpPresentation.activity.main, for: .Normal)
+                actionButton?.set(background: item.wpPresentation.activity.main.withAlphaComponent(0.1), for: .Normal)
+                _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.actionButtonWidth, 36), thatFit: true)
                 if animated, isNew {
                     actionButton?.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2, timingFunction: .easeOut)
                     actionButton?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -290,6 +360,17 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         } else {
             return main
         }
+    }
+    
+    override func storyControl(_ storyId: StoryId) -> NSView? {
+        if let item = item as? ChatRowItem {
+            if item.message?.storyAttribute?.storyId == storyId {
+                return super.storyControl(storyId)
+            } else {
+                return self.webpageContent?.mediaContentView ?? super.storyControl(storyId)
+            }
+        }
+        return nil
     }
     
     required init?(coder: NSCoder) {

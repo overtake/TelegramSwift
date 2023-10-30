@@ -243,7 +243,7 @@ final class ChatLiveTranslateContext {
                 translationState?.paywall = false
             }
             
-            if let state = translationState, state.paywall {
+            if let state = translationState, state.paywall && peer?.isPremium == false {
                 isHidden = false
             }
             
@@ -258,7 +258,7 @@ final class ChatLiveTranslateContext {
         shouldDisposable.set(should.start(next: { [weak self] state, appearance, isPremium in
             self?.updateState { current in
                 var current = current
-                let to = state?.toLang ?? appearance.language.baseLanguageCode
+                let to = state?.toLang ?? appearance.languageCode
                 let toUpdated = current.to != to
                 if let state = state, state.fromLang != to, state.fromLang != "" {
                     current.from = state.fromLang
@@ -272,7 +272,7 @@ final class ChatLiveTranslateContext {
                 } else {
                     current.translate = false
                 }
-                current.paywall = state?.paywall ?? false
+                current.paywall = isPremium ? false : (state?.paywall ?? false)
                 if !current.canTranslate || !current.translate || toUpdated {
                     current.result = [:]
                 }
@@ -430,10 +430,19 @@ final class ChatLiveTranslateContext {
     }
 }
 
-
+extension MessageTextEntityType {
+    var isCode: Bool {
+        switch self {
+        case .Code, .Pre:
+            return true
+        default:
+            return false
+        }
+    }
+}
 
 func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Signal<ChatTranslationState?, NoError> {
-    let baseLang = appAppearance.language.baseLanguageCode
+    let baseLang = appAppearance.languageCode
     return baseAppSettings(accountManager: context.sharedContext.accountManager)
     |> mapToSignal { settings in
         if !settings.translateChats {
@@ -474,7 +483,7 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
                             }
                             if message.text.count > 10 {
                                 var text = String(message.text.prefix(256))
-                                if var entities = message.textEntitiesAttribute?.entities.filter({ $0.type == .Pre || $0.type == .Code }) {
+                                if var entities = message.textEntitiesAttribute?.entities.filter({ $0.type.isCode }) {
                                     entities = entities.sorted(by: { $0.range.lowerBound > $1.range.lowerBound })
                                     var ranges: [Range<String.Index>] = []
                                     for entity in entities {

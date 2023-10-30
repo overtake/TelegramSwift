@@ -45,11 +45,10 @@ final class PeerRequestJoinRowItem: GeneralRowItem {
         
         if data.added || data.dismissed {
             let text: String
-            //TODOLANG
             if data.added {
-                text = "Approved"
+                text = strings().requestJoinListStatusApproved
             } else {
-                text = "Dismissed"
+                text = strings().requestJoinListStatusDismissed
             }
             self.statusLayout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .medium(.text)))
         } else {

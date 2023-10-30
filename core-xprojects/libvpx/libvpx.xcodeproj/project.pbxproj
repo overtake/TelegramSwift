@@ -266,7 +266,7 @@
 					"$(PROJECT_DIR)/build/arm64/_dist/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = libvpx;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -362,7 +362,7 @@
 					"$(PROJECT_DIR)/build/arm64/_dist/lib",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = libvpx;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";

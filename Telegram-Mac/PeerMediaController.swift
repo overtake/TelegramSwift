@@ -87,7 +87,7 @@
     case leftToRight
     case rightToLeft
  }
- private let sectionOffset: CGFloat = 30
+ private let sectionOffset: CGFloat = 20
  
  final class PeerMediaContainerView : View {
     
@@ -146,6 +146,8 @@
         } else if let view = self.view.mainView as? InputDataView {
             return view.tableView
         } else if let view = self.view.mainView as? PeerMediaGifsView {
+            return view.tableView
+        } else if let view = self.view.mainView as? StoryMediaView {
             return view.tableView
         }
         return nil
@@ -207,6 +209,8 @@
         if let tableView = self.mainView as? TableView {
             return tableView
         } else if let view = self.mainView as? InputDataView {
+            return view.tableView
+        } else if let view = self.mainView as? StoryMediaView {
             return view.tableView
         }
         return nil
@@ -364,7 +368,7 @@
  }
  
  private extension PeerMediaCollectionMode {
-    var title: String {
+     func title(_ peer: Peer?) -> String {
         if self == .members {
             return strings().peerMediaMembers
         }
@@ -388,6 +392,13 @@
         }
         if self == .gifs {
             return strings().peerMediaGifs
+        }
+        if self == .stories {
+            if peer is TelegramChannel {
+                return strings().peerMediaPosts
+            } else {
+                return strings().peerMediaStories
+            }
         }
         return ""
     }
@@ -470,12 +481,13 @@
     
     private let mediaGrid:PeerMediaPhotosController
     private let gifs: PeerMediaPhotosController
+    private let stories: StoryMediaController
     private let listControllers:[PeerMediaListController]
     private let members: ViewController
     private let commonGroups: ViewController
     
     
-    private let tagsList:[PeerMediaCollectionMode] = [.members, .photoOrVideo, .file, .webpage, .music, .voice, .gifs, .commonGroups]
+     private let tagsList:[PeerMediaCollectionMode] = [.members, .stories, .photoOrVideo, .file, .webpage, .music, .voice, .gifs, .commonGroups]
     
     
     private var currentTagListIndex: Int {
@@ -496,6 +508,8 @@
     private let toggleDisposable = MetaDisposable()
     private let externalDisposable = MetaDisposable()
     private var currentController: ViewController?
+     
+    private let storyListContext: PeerStoryListContext
      
     private let threadInfo: ThreadInfo?
         
@@ -527,7 +541,7 @@
         self.isProfileIntended = isProfileIntended
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
         self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .photoOrVideo)
-        
+        self.storyListContext = .init(account: context.account, peerId: peerId, isArchived: false)
         var updateTitle:((ExternalSearchMessages)->Void)? = nil
         
         if let external = externalSearchData {
@@ -548,7 +562,9 @@
         
         self.members = PeerMediaGroupPeersController(context: context, peerId: peerId, editing: editing.get())
         self.commonGroups = GroupsInCommonViewController(context: context, peerId: peerId)
-         self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .gif)
+        self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .gif)
+         self.stories = StoryMediaController(context: context, peerId: peerId, listContext: storyListContext)
+         
         super.init(context)
         
         updateTitle = { [weak self] result in
@@ -572,7 +588,7 @@
         
         
         window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            guard let `self` = self, self.mode != .commonGroups, self.externalSearchData == nil else {
+            guard let `self` = self, self.mode != .commonGroups, self.mode != .stories, self.externalSearchData == nil else {
                 return .rejected
             }
             if self.mode == .members {
@@ -601,9 +617,10 @@
         guard let navigationController = self.navigationController, isProfileIntended else {
             return
         }
-        
-        navigationController.swapNavigationBar(leftView: nil, centerView: self.centerBarView, rightView: nil, animation: .crossfade)
-        navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: self.rightBarView, animation: .none)
+        if navigationController.controller is PeerInfoController {
+            navigationController.swapNavigationBar(leftView: nil, centerView: self.centerBarView, rightView: nil, animation: .crossfade)
+            navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: self.rightBarView, animation: .none)
+        }
 
     }
      
@@ -790,6 +807,7 @@
         let threadInfo = self.threadInfo
         
         let membersTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
+        let storiesTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let commonGroupsTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         
         membersTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
@@ -825,6 +843,17 @@
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
         }
         
+        if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.CloudChannel {
+            storiesTab = storyListContext.state |> map { state -> (exist: Bool, loaded: Bool) in
+                return (exist: state.totalCount > 0, loaded: true)
+            } |> map { data -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
+                return (tag: .stories, exists: data.exist, hasLoaded: data.loaded)
+            }
+        } else {
+            storiesTab = .single((tag: .stories, exists: false, hasLoaded: true))
+        }
+        
+        
         let location: ChatLocationInput
         if let threadInfo = threadInfo {
             location = context.chatLocationInput(for: .thread(threadInfo.message), contextHolder: threadInfo.contextHolder)
@@ -841,10 +870,11 @@
             
         }
         
-        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab) |> map { members, general, commonGroups -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
+        let mergedTabs = combineLatest(membersTab, combineLatest(tabItems), commonGroupsTab, storiesTab) |> map { members, general, commonGroups, stories -> [(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool)] in
             var general = general
             general.insert(members, at: 0)
             general.append(commonGroups)
+            general.insert(stories, at: 0)
             return general
         }
         
@@ -910,6 +940,13 @@
                         self.gifs.loadViewIfNeeded(self.genericView.view.bounds)
                     }
                     return self.gifs.ready.get() |> map { ready in
+                        return data
+                    }
+                case .stories:
+                    if !self.stories.isLoaded() {
+                        self.stories.loadViewIfNeeded(self.genericView.view.bounds)
+                    }
+                    return self.stories.ready.get() |> map { ready in
                         return data
                     }
                 default:
@@ -1078,7 +1115,7 @@
                             } else {
                                 let thrid:String? = (canDeleteForEveryone ? peer.isUser ? strings().chatMessageDeleteForMeAndPerson(peer.compactDisplayTitle) : strings().chatConfirmDeleteMessagesForEveryone : nil)
                                 
-                                modernConfirm(for: context.window, account: context.account, peerId: nil, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, okTitle: strings().confirmDelete, thridTitle: thrid, successHandler: { [weak strongSelf] result in
+                                verifyAlert(for: context.window, header: thrid == nil ? strings().chatConfirmActionUndonable : strings().chatConfirmDeleteMessages1Countable(messages.count), information: thrid == nil ? _mustDeleteForEveryoneMessage ? strings().chatConfirmDeleteForEveryoneCountable(messages.count) : strings().chatConfirmDeleteMessages1Countable(messages.count) : nil, ok: strings().confirmDelete, option: thrid, successHandler: { [weak strongSelf] result in
                                     
                                     guard let `strongSelf` = strongSelf else {
                                         return
@@ -1122,7 +1159,7 @@
                 let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
                 let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
                 for (i, tab)  in tabs.enumerated() {
-                    items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+                    items.append(ScrollableSegmentItem(title: tab.title(self.peer), index: i, uniqueId: tab.rawValue, selected: selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
                 }
                 self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !firstTabAppear)
                 if let selected = selected {
@@ -1181,7 +1218,7 @@
         searchValueDisposable.set(nil)
         
         
-        centerBar.updateSearchVisibility(mode != .commonGroups && externalSearchData == nil)
+        centerBar.updateSearchVisibility(mode != .commonGroups && mode != .stories && externalSearchData == nil)
         
         
         if let controller = controller as? PeerMediaSearchable {
@@ -1220,6 +1257,8 @@
             return self.commonGroups
         case .gifs:
             return self.gifs
+        case .stories:
+            return stories
         default:
             return self.listControllers[Int(mode.rawValue)]
         }

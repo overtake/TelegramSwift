@@ -70,7 +70,7 @@ enum StorageUsageCategory: Int32 {
     case stickers
     case avatars
     case misc
-                
+    case stories
     var color: NSColor {
         switch self {
         case .photos:
@@ -89,6 +89,8 @@ enum StorageUsageCategory: Int32 {
             return NSColor(rgb: 0xAF52DE)
         case .misc:
             return NSColor(rgb: 0xFF9500)
+        case .stories:
+            return NSColor(rgb: 0x3478F6)
         }
     }
     
@@ -110,6 +112,8 @@ enum StorageUsageCategory: Int32 {
             return strings().storageUsageCategoryAvatars
         case .misc:
             return strings().storageUsageCategoryMiscellaneous
+        case .stories:
+            return strings().storageUsageCategoryStories
         }
     }
     
@@ -131,6 +135,8 @@ enum StorageUsageCategory: Int32 {
             return .avatars
         case .misc:
             return .misc
+        case .stories:
+            return .stories
         }
     }
 }
@@ -152,6 +158,8 @@ extension StorageUsageStats.CategoryKey {
             return .avatars
         case .misc:
             return .misc
+        case .stories:
+            return .stories
         }
     }
 }
@@ -166,6 +174,8 @@ extension StorageUsageStats.CategoryKey {
             return value.peer.peer.isGroup || value.peer.peer.isSupergroup || value.peer.peer.isGigagroup
         case .privateChats:
             return value.peer.peer.isUser || value.peer.peer.isBot
+        case .stories:
+            return value.peer.peer.isUser
         }
     }
 }
@@ -529,10 +539,13 @@ private let _id_cleared = InputDataIdentifier("_id_pie_chart")
 private let _id_keep_media_private = InputDataIdentifier("_id_keep_media_private")
 private let _id_keep_media_group = InputDataIdentifier("_id_keep_media_group")
 private let _id_keep_media_channels = InputDataIdentifier("_id_keep_media_channels")
+private let _id_keep_media_stories = InputDataIdentifier("_id_keep_media_stories")
 private let _id_usage = InputDataIdentifier("_id_usage")
 private let _id_clear = InputDataIdentifier("_id_clear")
 private let _id_cache_size = InputDataIdentifier("_id_cache_size")
 private let _id_segments = InputDataIdentifier("_id_segments")
+
+
 private func _id_category(_ hash: Int) -> InputDataIdentifier {
     return InputDataIdentifier("_id_category_\(hash)")
 }
@@ -939,29 +952,42 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
         
         keepMedias.append(.init(category: .groups, exceptions: filterStorageCacheExceptions(state.accountSpecificCacheSettings, for: .groups), name: strings().storageUsageKeepMediaGroups, timeout: stringForKeepMediaTimeout(state.cacheSettings.categoryStorageTimeout[.groups] ?? .max), viewType: .innerItem, id: _id_keep_media_group))
         
-        keepMedias.append(.init(category: .channels, exceptions: filterStorageCacheExceptions(state.accountSpecificCacheSettings, for: .channels), name: strings().storageUsageKeepMediaChannels, timeout: stringForKeepMediaTimeout(state.cacheSettings.categoryStorageTimeout[.channels] ?? .max), viewType: .lastItem, id: _id_keep_media_channels))
+        keepMedias.append(.init(category: .channels, exceptions: filterStorageCacheExceptions(state.accountSpecificCacheSettings, for: .channels), name: strings().storageUsageKeepMediaChannels, timeout: stringForKeepMediaTimeout(state.cacheSettings.categoryStorageTimeout[.channels] ?? .max), viewType: .innerItem, id: _id_keep_media_channels))
 
+        keepMedias.append(.init(category: .stories, exceptions: filterStorageCacheExceptions(state.accountSpecificCacheSettings, for: .stories), name: strings().storageUsageKeepMediaStories, timeout: stringForKeepMediaTimeout(state.cacheSettings.categoryStorageTimeout[.stories] ?? .max), viewType: .lastItem, id: _id_keep_media_stories))
+
+        
+        
 
         for keepMedia in keepMedias {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: keepMedia.id, equatable: .init(keepMedia), comparable: nil, item: { initialSize, stableId in
-                var items = [ContextMenuItem(strings().timerDaysCountable(1), handler: {
+                
+                var items: [ContextMenuItem] = []
+                items.append(ContextMenuItem(strings().timerDaysCountable(1), handler: {
                     arguments.updateKeepMedia(keepMedia.category, 1 * 24 * 60 * 60)
-                }, itemImage: MenuAnimation.menu_autodelete_1d.value),
-                ContextMenuItem(strings().timerWeeksCountable(1), handler: {
-                      arguments.updateKeepMedia(keepMedia.category, 7 * 24 * 60 * 60)
-                }, itemImage: MenuAnimation.menu_autodelete_1w.value),
-                ContextMenuItem(strings().timerMonthsCountable(1), handler: {
-                    arguments.updateKeepMedia(keepMedia.category, 1 * 31 * 24 * 60 * 60)
-                }, itemImage: MenuAnimation.menu_autodelete_1m.value),
-                ContextMenuItem(strings().timerForever, handler: {
+                }, itemImage: MenuAnimation.menu_autodelete_1d.value))
+                
+                
+                items.append(ContextMenuItem(strings().timerWeeksCountable(1), handler: {
+                    arguments.updateKeepMedia(keepMedia.category, 7 * 24 * 60 * 60)
+                }, itemImage: MenuAnimation.menu_autodelete_1w.value))
+                
+                if keepMedia.category != .stories {
+                    items.append(ContextMenuItem(strings().timerMonthsCountable(1), handler: {
+                        arguments.updateKeepMedia(keepMedia.category, 1 * 31 * 24 * 60 * 60)
+                    }, itemImage: MenuAnimation.menu_autodelete_1m.value))
+                }
+                
+                items.append(ContextMenuItem(strings().timerForever, handler: {
                     arguments.updateKeepMedia(keepMedia.category, .max)
-                }, itemImage: MenuAnimation.menu_forever.value)]
+                }, itemImage: MenuAnimation.menu_forever.value))
                 
-                items.append(ContextSeparatorItem())
-                
-                items.append(ContextMenuItem(strings().storageUsageKeepMediaExceptionsCountable(keepMedia.exceptions.count), handler: {
-                    arguments.exceptions(keepMedia.category)
-                }, itemImage: keepMedia.exceptions.isEmpty ? MenuAnimation.menu_add.value : MenuAnimation.menu_report.value))
+                if keepMedia.category != .stories {
+                    items.append(ContextSeparatorItem())
+                    items.append(ContextMenuItem(strings().storageUsageKeepMediaExceptionsCountable(keepMedia.exceptions.count), handler: {
+                        arguments.exceptions(keepMedia.category)
+                    }, itemImage: keepMedia.exceptions.isEmpty ? MenuAnimation.menu_add.value : MenuAnimation.menu_report.value))
+                }
                 
                 let icon: CGImage
                 switch keepMedia.category {
@@ -971,6 +997,8 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
                     icon = generateSettingsIcon(NSImage(named: "Icon_Colored_Channel")!.precomposed(flipVertical: true))
                 case .privateChats:
                     icon = generateSettingsIcon(NSImage(named: "Icon_Colored_Private")!.precomposed(flipVertical: true))
+                case .stories:
+                    icon = theme.icons.settingsStories
                 }
                 let desc: String?
                 if keepMedia.exceptions.isEmpty {
@@ -1022,7 +1050,7 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
         
         for item in items {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 42, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(item.count), viewType: item.viewType, action: {
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 42, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 20, right: 20), generalType: .context(item.count), viewType: item.viewType, action: {
                     arguments.openPeerMedia(item.peer.peer.id)
                 })
             }))
@@ -1333,7 +1361,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             
             
             
-            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: cleared ? strings().storageUsageClearConfirmOKAll : strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: cleared ? strings().storageUsageClearConfirmOKAll : strings().storageUsageClearConfirmOKPart, successHandler: { _ in
                 _ = context.engine.resources.clearStorage(peerId: stateValue.with { $0.peerId }, categories: categories, includeMessages: [], excludeMessages: []).start(completed: updateStats)
                 
                 _ = updateState { current in
@@ -1442,7 +1470,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             
             let clearSize = stateValue.with { $0.selectedData.size }
             
-            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
                                 
                 let includeMessages = messages
                 var excludeMessages:[Message] = []
@@ -1478,7 +1506,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             })
             
         }, clearPeer: { peerId in
-            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: strings().storageUsageClearConfirmOKAll, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKAll, successHandler: { _ in
                 
                _ = context.engine.resources.clearStorage(peerIds: [peerId], includeMessages: [], excludeMessages: []).start(completed: updateStats)
                 
@@ -1497,7 +1525,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
             })
 
         }, clearMessage: { message in
-            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().storageUsageClearConfirmInfo, ok: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
                 
                 let msgs = context.engine.resources.clearStorage(messages: [message])
                 

@@ -767,13 +767,14 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 }
             } else {
                 let updated = controller.selectedIndex != index
+                currentController = controller.selectedViewController
                 if controller.selectedIndex != index {
                     controller.selectedIndex = index
+                    pageControllerDidEndLiveTransition(controller, force: updated)
                 } else if currentController == nil {
                     selectedIndex.set(index)
+                    pageControllerDidEndLiveTransition(controller, force: updated)
                 }
-                currentController = controller.selectedViewController
-                pageControllerDidEndLiveTransition(controller, force: updated)
             }
             
             if items.count > 1, hasInited {
@@ -817,7 +818,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     func pageControllerDidEndLiveTransition(_ pageController: NSPageController, force:Bool) {
         let previousView = currentController?.view as? MagnifyView
-        
+
         textScrollView.change(opacity: 0, animated: textScrollView.superview != nil, completion: { [weak textScrollView] completed in
             if completed {
                 textScrollView?.removeFromSuperview()

@@ -311,7 +311,7 @@ final class ChatListTopicNameAndTextLayout {
                     let file = ForumUI.makeIconFile(title: data.title, iconColor: data.iconColor, isGeneral: data.id == 1)
                     item = .init(source: .attribute(.init(fileId: Int64(data.iconColor), file: file, emoji: "")))
                 }
-                attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: item, range: range)
+                attr.addAttribute(TextInputAttributes.embedded, value: item, range: range)
             }
             
             _ = attr.append(string: "\n")
@@ -366,7 +366,7 @@ final class ChatListTopicNameAndTextLayout {
                         let file = ForumUI.makeIconFile(title: item.title, iconColor: item.iconColor, isGeneral: item.id == 1)
                         embedded = .init(source: .attribute(.init(fileId: Int64(item.iconColor), file: file, emoji: "")))
                     }
-                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: embedded, range: range)
+                    attr.addAttribute(TextInputAttributes.embedded, value: embedded, range: range)
                     
                     _ = attr.append(string: " ")
                 }
@@ -858,6 +858,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var dateTextView: TextView? = nil
     private var displayNameView: TextView? = nil
     
+    private var storyReplyImageView : ImageView?
+    
     
     private var forumTopicTextView: TextView? = nil
     private var forumTopicNameIcon: ForumTopicArrow?
@@ -880,9 +882,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var activeImage: ImageView?
     private var groupActivityView: GroupCallActivity?
     private var activitiesModel:ChatActivitiesModel?
-    private let photo: AvatarControl = AvatarControl(font: .avatar(22))
+    private var photoContainer = Control(frame: NSMakeRect(0, 0, 50, 50))
+    private let photo: AvatarStoryControl = AvatarStoryControl(font: .avatar(22), size: NSMakeSize(50, 50))
+
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
+    
     
     private var borderView: View?
 
@@ -907,7 +912,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var statusControl: PremiumStatusControl?
     
     private var avatarTimerBadge: AvatarBadgeView?
-
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [(message: Message, media: Media, size: CGSize)] = []
@@ -1199,8 +1203,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         addSubview(revealLeftView)
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         photo.userInteractionEnabled = false
-        photo.frame = NSMakeRect(10, 10, 50, 50)
-        containerView.addSubview(photo)
+        
+        photo.frame = NSMakeRect(0, 0, 50, 50)
+        photoContainer.frame = NSMakeRect(10, 10, 50, 50)
+        photoContainer.addSubview(photo)
+        containerView.addSubview(photoContainer)
+
+        
+        
         addSubview(containerView)
         
         containerView.frame = bounds
@@ -1215,8 +1225,22 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
         }
         
+        photoContainer.set(handler: { [weak self] _ in
+            if let item = self?.item as? ChatListRowItem {
+                item.openPeerStory()
+            }
+        }, for: .Click)
+        
         contentView.displayDelegate = self
         
+    }
+    
+    func takeStoryControl() -> NSView? {
+        return self.photo
+    }
+    
+    func setStoryProgress(_ signal:Signal<Never, NoError>)  {
+        SetOpenStoryDisposable(self.photo.pushLoadingStatus(signal: signal))
     }
     
     required init?(coder: NSCoder) {
@@ -1440,7 +1464,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.dateTextView = nil
              }
              
-             if let peer = item.peer, peer.id != item.context.peerId {
+             if let peer = item.peer, peer.id != item.context.peerId, !item.isTopic {
                  let highlighted = self.highlighed
                  let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: highlighted, cached: self.statusControl, animated: animated)
                  if let control = control {
@@ -1453,6 +1477,24 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              } else if let view = self.statusControl {
                  performSubviewRemoval(view, animated: animated)
                  self.statusControl = nil
+             }
+             
+             if item.isReplyToStory, !hiddenMessage {
+                 let current: ImageView
+                 if let view = self.storyReplyImageView {
+                     current = view
+                 } else {
+                     current = ImageView()
+                     current.isEventLess = true
+                     self.storyReplyImageView = current
+                     self.contentView.addSubview(current)
+                 }
+                 current.image = isSelect ? theme.icons.story_chatlist_reply_active : theme.icons.story_chatlist_reply
+                 current.sizeToFit()
+                 
+             } else if let view = self.storyReplyImageView {
+                 self.storyReplyImageView = nil
+                 performSubviewRemoval(view, animated: false)
              }
              
              if let messageText = item.ctxMessageText, !hiddenMessage {
@@ -1541,6 +1583,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              }
              
              
+            
+             
              if !item.photos.isEmpty {
                  
                  if let first = item.photos.first, let video = first.image.videoRepresentations.first {
@@ -1555,7 +1599,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          self.photoVideoView = MediaPlayerView(backgroundThread: true)
                          
                          
-                         containerView.addSubview(self.photoVideoView!, positioned: .above, relativeTo: self.photo)
+                         photoContainer.addSubview(self.photoVideoView!, positioned: .above, relativeTo: self.photo)
 
                          self.photoVideoView!.isEventLess = true
                          
@@ -1605,7 +1649,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.videoRepresentation = nil
              }
              
-             self.photoVideoView?.layer?.cornerRadius = item.isForum ? 10 : self.photo.frame.height / 2
+             self.photoVideoView?.layer?.cornerRadius = item.isForum ? 10 : self.photoContainer.frame.height / 2
 
              
             
@@ -1722,13 +1766,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             } else if case .ArchivedChats = item.photo {
                 if self.archivedPhoto == nil {
                     self.archivedPhoto = LAnimationButton(animation: "archiveAvatar", size: NSMakeSize(46, 46), offset: NSMakeSize(0, 0))
-                    containerView.addSubview(self.archivedPhoto!, positioned: .above, relativeTo: self.photo)
+                    photoContainer.addSubview(self.archivedPhoto!, positioned: .above, relativeTo: self.photo)
                 }
-                self.archivedPhoto?.frame = self.photo.frame
+                self.archivedPhoto?.frame = self.photo.photoRect
                 self.archivedPhoto?.userInteractionEnabled = false
                 self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground)
                 self.archivedPhoto?.background = item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground
-                self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
 
                 let animateArchive = item.animateArchive && animated
                 if animateArchive {
@@ -1737,6 +1780,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         self.expandView?.animateOnce()
                     }
                 }
+                self.archivedPhoto?.layer?.cornerRadius = photo.radius
                 photo.setState(account: item.context.account, state: .Empty)
             } else {
                 self.archivedPhoto?.removeFromSuperview()
@@ -1815,7 +1859,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  
                  let groupActivityView = self.groupActivityView!
                  
-                 groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
+                 groupActivityView.setFrameOrigin(photoContainer.frame.maxX - groupActivityView.frame.width + 3, photoContainer.frame.maxY - 18)
                  
                  let isActive = item.isSelected
                  
@@ -1834,14 +1878,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      var animate: Bool = false
                      if activeImage == nil {
                          activeImage = ImageView()
-                         self.containerView.addSubview(activeImage!, positioned: .above, relativeTo: photoVideoView ?? photo)
+                         self.containerView.addSubview(activeImage!, positioned: .above, relativeTo: photoContainer)
                          animate = true
                      }
                      guard let activeImage = self.activeImage else { return }
                      activeImage.image = item.isSelected && item.context.layout != .single ? theme.icons.hintPeerActiveSelected : theme.icons.hintPeerActive
                      activeImage.sizeToFit()
 
-                     activeImage.setFrameOrigin(photo.frame.maxX - activeImage.frame.width - 3, photo.frame.maxY - 12)
+                     activeImage.setFrameOrigin(photoContainer.frame.maxX - activeImage.frame.width - 3, photoContainer.frame.maxY - 12)
 
                      if animated && animate {
                          activeImage.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
@@ -1857,7 +1901,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              }
              
              
-             if let autoremoveTimeout = item.autoremoveTimeout, activeImage == nil, badgeShortView == nil {
+             if let autoremoveTimeout = item.autoremoveTimeout, activeImage == nil, badgeShortView == nil, groupActivityView == nil {
                  let current: AvatarBadgeView
                  let isNew: Bool
                  if let view = self.avatarTimerBadge {
@@ -1866,10 +1910,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  } else {
                      current = AvatarBadgeView(frame: CGRect())
                      self.avatarTimerBadge = current
-                     self.containerView.addSubview(current, positioned: .above, relativeTo: photoVideoView ?? photo)
+                     self.containerView.addSubview(current, positioned: .above, relativeTo: photoContainer)
                      isNew = true
                  }
-                 let avatarFrame = self.photo.frame
+                 let avatarFrame = self.photoContainer.frame
                  
                  let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
                  current.update(size: avatarBadgeSize, text: shortTimeIntervalString(value: autoremoveTimeout))
@@ -1972,7 +2016,43 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 self.inputActivities = nil
             }
              
+             
+             photoContainer.scaleOnClick = true
+             let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+
+             if let component = item.avatarStoryIndicator {
+                 
+                 
+                 self.photo.update(component: component, availableSize: NSMakeSize(44, 44), transition: transition)
+                 
+                 self.photoVideoView?._change(size: NSMakeSize(44, 44), animated: animated)
+                 self.archivedPhoto?._change(size: NSMakeSize(44, 44), animated: animated)
+
+                 self.photoVideoView?._change(pos: NSMakePoint(3, 3), animated: animated)
+                 self.archivedPhoto?._change(pos: NSMakePoint(3, 3), animated: animated)
+                 
+                 
+                 if let photoVideoView = photoVideoView {
+                     photoVideoView.layer?.cornerRadius = item.isForum ? 10 : photoVideoView.frame.height / 2
+                 }
+                 self.archivedPhoto?.layer?.cornerRadius = photo.radius
+
+             } else {
+                 self.photoVideoView?._change(size: NSMakeSize(50, 50), animated: animated)
+                 self.archivedPhoto?._change(size: NSMakeSize(50, 50), animated: animated)
+                 
+                 self.photoVideoView?._change(pos: NSMakePoint(0, 0), animated: animated)
+                 self.archivedPhoto?._change(pos: NSMakePoint(0, 0), animated: animated)
+                 
+                 if let photoVideoView = photoVideoView {
+                     photoVideoView.layer?.cornerRadius = item.isForum ? 10 : photoVideoView.frame.height / 2
+                 }
+                 self.archivedPhoto?.layer?.cornerRadius = photo.radius
+                 self.photo.update(component: nil, availableSize: NSMakeSize(44, 44), transition: transition)
+             }
          }
+        
+        
         
         if let _ = endRevealState {
             initRevealState()
@@ -2593,7 +2673,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         if let badgeView = badgeShortView {
             let point: NSPoint
             let y = self.containerView.frame.height - badgeView.frame.height - (item.margin + 1)
-            point = NSMakePoint(photo.frame.maxX - badgeView.frame.width, y)
+            point = NSMakePoint(photoContainer.frame.maxX - badgeView.frame.width, y)
             return point
         }
         return .zero
@@ -2639,7 +2719,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
        
         guard let item = item as? ChatListRowItem else { return }
                 
-        photoVideoView?.frame = photo.frame
+        photoContainer.userInteractionEnabled = item.avatarStoryIndicator != nil && item.context.layout != .minimisize && item.selectedForum == nil
 
         animatedView?.frame = bounds
         
@@ -2660,6 +2740,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
             } else {
                 additionalDelta = 0
+            }
+            
+            if item.isCollapsed {
+                var bp = 0
+                bp += 1
             }
             
             containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -item.height : 0, frame.width - .borderSize, item.height)
@@ -2704,7 +2789,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
             
             if let view = avatarTimerBadge {
-                let avatarFrame = self.photo.frame
+                let avatarFrame = self.photoContainer.frame
                 let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
                 let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
                 view.frame = avatarBadgeFrame
@@ -2721,6 +2806,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     let dateX = contentView.frame.width - dateTextView.frame.width - item.margin
                     dateTextView.setFrameOrigin(NSMakePoint(dateX, item.margin))
                 }
+                
                 
                 var addition:CGFloat = 0
                 if item.isSecret {
@@ -2744,7 +2830,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     statusControl.setFrameOrigin(NSMakePoint(addition + item.leftInset + displayNameView.frame.width + 2, displayNameView.frame.height - 8))
                 }
                 
-                var mediaPreviewOffset = NSMakePoint(item.leftInset, displayNameView.frame.height + item.margin + 2 + offset)
+                var inset: CGFloat = item.leftInset
+                if let view = self.storyReplyImageView {
+                    view.setFrameOrigin(NSMakePoint(inset, displayNameView.frame.height + item.margin + 2 + offset))
+                    inset += view.frame.width + 2
+                }
+                
+                var mediaPreviewOffset = NSMakePoint(inset, displayNameView.frame.height + item.margin + 2 + offset)
                 let contentImageSpacing: CGFloat = 2.0
                 
                 for (message, _, mediaSize) in self.currentMediaPreviewSpecs {

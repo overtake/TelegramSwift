@@ -21,6 +21,7 @@ final class PremiumStatusControl : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         userInteractionEnabled = false
+        layer?.masksToBounds = false
     }
     
     required init?(coder: NSCoder) {
@@ -63,39 +64,32 @@ final class PremiumStatusControl : Control {
                 image = isSelected ? theme.icons.fakeActive : theme.icons.fake
             } else if peer.isPremium {
                 if isBig {
-                    image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
-                } else {
-                    if let color = color, !isSelected {
-                        let images = [
-                            theme.icons.chat_premium_status_red,
-                            theme.icons.chat_premium_status_orange,
-                            theme.icons.chat_premium_status_violet,
-                            theme.icons.chat_premium_status_green,
-                            theme.icons.chat_premium_status_cyan,
-                            theme.icons.chat_premium_status_light_blue,
-                            theme.icons.chat_premium_status_blue
-                        ]
-                        let colors = [
-                            theme.colors.groupPeerNameRed,
-                            theme.colors.groupPeerNameOrange,
-                            theme.colors.groupPeerNameViolet,
-                            theme.colors.groupPeerNameGreen,
-                            theme.colors.groupPeerNameCyan,
-                            theme.colors.groupPeerNameLightBlue,
-                            theme.colors.groupPeerNameBlue
-                        ]
-                        if let index = colors.firstIndex(where: { $0 == color }) {
-                            image = images[index]
-                        } else {
-                            image = theme.icons.chat_premium_status_blue
-                        }
-                        
+                    let color = color ?? theme.colors.accent
+                    if isSelected {
+                        let under = theme.colors.underSelectedColor
+                        image = theme.resourceCache.image(Int32(color.rgb + 1000), {
+                            generatePremium(false, color: under)
+                        })
                     } else {
-                        if isBig {
-                            image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
-                        } else {
-                            image = isSelected ? theme.icons.premium_account_small_active : theme.icons.premium_account_small
-                        }
+                        image = theme.resourceCache.image(Int32(color.rgb + 1001), {
+                            generatePremium(false, color: color)
+                        })
+                    }
+                } else {
+                    if isSelected {
+                        let under = theme.colors.underSelectedColor
+                        image = theme.resourceCache.image(Int32(under.rgb + 1003), {
+                            return generatePremium(false, color: under, small: true)
+                        })
+                    } else if let color = color {
+                        image = theme.resourceCache.image(Int32(color.rgb + 1002), {
+                            return generatePremium(false, color: color, small: true)
+                        })
+                    } else {
+                        let under = theme.colors.accent
+                        image = theme.resourceCache.image(Int32(under.rgb + 1004), {
+                            return generatePremium(false, color: under, small: true)
+                        })
                     }
                 }
             } else {
@@ -103,7 +97,7 @@ final class PremiumStatusControl : Control {
             }
             if let image = image {
                 current.contents = image
-                var rect = focus(image.backingSize)
+                var rect = focus(self.frame.size)
                 rect.origin.x = 0
                 current.frame = rect
             } else {
@@ -268,7 +262,7 @@ final class PremiumStatusControl : Control {
             if peer.isScam || peer.isFake {
                 addition.width += 20
             }
-            return isBig ? NSMakeSize(25 + addition.width, 25 + addition.height) : NSMakeSize(16 + addition.width, 16 + addition.height)
+            return isBig ? NSMakeSize(20 + addition.width, 20 + addition.height) : NSMakeSize(16 + addition.width, 16 + addition.height)
         } else {
             return nil
         }

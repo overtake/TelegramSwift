@@ -81,7 +81,8 @@ enum LocalAnimatedSticker : String {
     
     case bot_menu_close
     case bot_close_menu
-    
+    case bot_menu_web_app
+
     case request_join_link
     case thumbsup
     case zoom
@@ -89,6 +90,8 @@ enum LocalAnimatedSticker : String {
     case email_recovery
     case qrcode_matrix
     case login_airplane
+    
+    case hand_animation
     
     case device_android
     case device_chrome
@@ -104,6 +107,9 @@ enum LocalAnimatedSticker : String {
     
     case change_sim
     case pirate_flag
+    case expired_story
+    
+    case stories_archive
     
     case share_folder
     
@@ -114,6 +120,11 @@ enum LocalAnimatedSticker : String {
     case premium_addone
     case premium_double
     case premium_unlock
+    
+    case premium_gift_12
+    case premium_gift_6
+    case premium_gift_3
+    
     
     case menu_add_to_folder
     case menu_archive
@@ -253,7 +264,17 @@ enum LocalAnimatedSticker : String {
     case menu_more
     case menu_atsign
     case menu_speed
-
+    case menu_success
+    case menu_save_to_profile
+    case menu_move_to_contacts
+    case menu_stories
+    case menu_download_circle_lock
+    case menu_download_circle
+    case menu_eye_locked
+    case menu_eye_slash
+    case menu_lighting
+    case menu_quote
+    
     case emoji_category_activities
     case emoji_category_angry
     case emoji_category_arrow_to_search
@@ -286,10 +307,14 @@ enum LocalAnimatedSticker : String {
     
     case custom_reaction
     
-    
     var file: TelegramMediaFile {
         let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
         return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs")])
+    }
+    
+    var monochromeFile: TelegramMediaFile {
+        let resource:LocalBundleResource = LocalBundleResource(name: self.rawValue, ext: "tgs")
+        return TelegramMediaFile(fileId: MediaId(namespace: 0, id: MediaId.Id(resource.name.hashValue)), partialReference: nil, resource: resource, previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.Sticker(displayText: "", packReference: nil, maskData: nil), .Animated, .FileName(fileName: "telegram-animoji.tgs"), .CustomEmoji(isPremium: false, isSingleColor: true, alt: "", packReference: nil)])
     }
     
     func menuIcon(_ color: NSColor) -> CGImage? {
@@ -383,6 +408,12 @@ enum LocalAnimatedSticker : String {
         case .police:
             playPolicy = .loop
             hidePlayer = false
+        case .premium_gift_3:
+            playPolicy = .onceEnd
+        case .premium_gift_6:
+            playPolicy = .onceEnd
+        case .premium_gift_12:
+            playPolicy = .onceEnd
         default:
             playPolicy = .loop
             hidePlayer = false

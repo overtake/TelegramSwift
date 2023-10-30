@@ -823,7 +823,7 @@ private final class PollOptionView : Control {
         if option.isSelected, let isCorrect = option.isCorrect {
             votedColor = isCorrect ? option.presentation.chat.greenUI(option.isIncoming, option.isBubbled) : option.presentation.chat.redUI(option.isIncoming, option.isBubbled)
         } else {
-            votedColor = option.presentation.chat.webPreviewActivity(option.isIncoming, option.isBubbled)
+            votedColor = option.presentation.chat.activityColor(option.isIncoming, option.isBubbled)
         }
         progressView.style = ControlStyle(foregroundColor: votedColor, backgroundColor: .clear)
 
@@ -932,7 +932,7 @@ private final class PollOptionView : Control {
                     }
                 }
 //                progressIndicator?.lineWidth = 1.0
-                progressIndicator?.progressColor = option.presentation.chat.webPreviewActivity(option.isIncoming, option.isBubbled)
+                progressIndicator?.progressColor = option.presentation.chat.activityColor(option.isIncoming, option.isBubbled)
                 progressIndicator?.setFrameOrigin(NSMakePoint(defaultInset, 0))
 
             } else {
@@ -1061,7 +1061,7 @@ private final class PollView : Control {
             }, for: .SingleClick)
             
             actionButton.set(font: .normal(.text), for: .Normal)
-            actionButton.set(color: item.presentation.chat.webPreviewActivity(item.isIncoming, item.isBubbled), for: .Normal)
+            actionButton.set(color: item.presentation.chat.activityColor(item.isIncoming, item.isBubbled), for: .Normal)
             actionButton.set(text: actionText, for: .Normal)
             _ = actionButton.sizeToFit(NSMakeSize(10, 4), thatFit: false)
             actionButton.centerX(y: y)
@@ -1128,7 +1128,7 @@ private final class PollView : Control {
                 guard let item = item else {
                     return
                 }
-                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, message: item.message, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil)
+                let text = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: solution.entities)], for: solution.text, message: item.message, context: item.context, fontSize: .text, openInfo: item.chatInteraction.openInfo, textColor: .white, linkColor: nightAccentPalette.link, monospacedPre: .redUI, monospacedCode: .greenUI, mediaDuration: nil, isDark: theme.colors.isDark)
                 
                 tooltip(for: control, text: solution.text, attributedText: text, interactions: globalLinkExecutor, timeout: 10.0)
             }, for: .Click)

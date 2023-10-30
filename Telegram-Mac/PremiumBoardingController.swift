@@ -51,8 +51,12 @@ enum PremiumLogEventsSource : Equatable {
     case premium_emoji
     case profile(PeerId)
     case gift(from: PeerId, to: PeerId, months: Int32)
+    case story_viewers
     case send_as
     case translations
+    case stories__stealth_mode
+    case stories__save_to_gallery
+    case channel_boost(PeerId)
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -81,8 +85,52 @@ enum PremiumLogEventsSource : Equatable {
             return "send_as"
         case .translations:
             return "translations"
+        case .stories__stealth_mode:
+            return "stories__stealth_mode"
+        case .story_viewers:
+            return "stories__viewers"
+        case .stories__save_to_gallery:
+            return "stories__save_to_gallery"
+        case let .channel_boost(peerId):
+            return "channel_boost__\(peerId.id._internalGetInt64Value())"
         }
     }
+    
+    var features: PremiumValue? {
+        switch self {
+        case .deeplink:
+            return nil
+        case .settings:
+            return nil
+        case .double_limits:
+            return .double_limits
+        case .more_upload:
+            return .more_upload
+        case .infinite_reactions:
+            return .infinite_reactions
+        case .premium_stickers:
+            return .premium_stickers
+        case .premium_emoji:
+            return .animated_emoji
+        case .profile:
+            return nil
+        case .gift:
+            return nil
+        case .send_as:
+            return nil
+        case .translations:
+            return .translations
+        case .stories__stealth_mode:
+            return .stories
+        case .story_viewers:
+            return .stories
+        case .stories__save_to_gallery:
+            return .stories
+        case .channel_boost:
+            return nil
+        }
+    }
+    
     var subsource: String? {
         switch self {
         case let .double_limits(sub):
@@ -138,13 +186,15 @@ enum PremiumLogEvents  {
 
 private final class Arguments {
     let context: AccountContext
+    let presentation: TelegramPresentationTheme
     let showTerms:()->Void
     let showPrivacy:()->Void
     let openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void
-    let openFeature:(PremiumValue)->Void
+    let openFeature:(PremiumValue, Bool)->Void
     let togglePeriod:(PremiumPeriod)->Void
-    init(context: AccountContext, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue)->Void, togglePeriod:@escaping(PremiumPeriod)->Void) {
+    init(context: AccountContext, presentation: TelegramPresentationTheme, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue, Bool)->Void, togglePeriod:@escaping(PremiumPeriod)->Void) {
         self.context = context
+        self.presentation = presentation
         self.showPrivacy = showPrivacy
         self.showTerms = showTerms
         self.openInfo = openInfo
@@ -167,8 +217,10 @@ enum PremiumValue : String {
     case profile_badge
     case animated_userpics
     case translations
+    case stories
     func gradient(_ index: Int) -> [NSColor] {
         let colors:[NSColor] = [ NSColor(rgb: 0xF27C30),
+                                 NSColor(rgb: 0xE36850),
                                  NSColor(rgb: 0xE36850),
                                  NSColor(rgb: 0xda5d63),
                                  NSColor(rgb: 0xD15078),
@@ -185,8 +237,8 @@ enum PremiumValue : String {
         return [colors[index]]
     }
     
-    func icon(_ index: Int) -> CGImage {
-        let image = self.image
+    func icon(_ index: Int, presentation: TelegramPresentationTheme) -> CGImage {
+        let image = self.image(presentation)
         let size = image.backingSize
         let img = generateImage(size, contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
@@ -209,9 +261,6 @@ enum PremiumValue : String {
                 
                 ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size.height), end: CGPoint(x: size.width, y: size.height), options: CGGradientDrawingOptions())
             }
-
-            
-            
         })!
         
         return generateImage(size, contextGenerator: { size, ctx in
@@ -224,34 +273,36 @@ enum PremiumValue : String {
         })!
     }
     
-    var image: CGImage {
+    func image(_ presentation: TelegramPresentationTheme) -> CGImage {
         switch self {
         case .double_limits:
-            return NSImage(named: "Icon_Premium_Boarding_X2")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_X2")!.precomposed(presentation.colors.accent)
         case .more_upload:
-            return NSImage(named: "Icon_Premium_Boarding_Files")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Files")!.precomposed(presentation.colors.accent)
         case .faster_download:
-            return NSImage(named: "Icon_Premium_Boarding_Speed")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Speed")!.precomposed(presentation.colors.accent)
         case .voice_to_text:
-            return NSImage(named: "Icon_Premium_Boarding_Voice")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Voice")!.precomposed(presentation.colors.accent)
         case .no_ads:
-            return NSImage(named: "Icon_Premium_Boarding_Ads")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Ads")!.precomposed(presentation.colors.accent)
         case .infinite_reactions:
-            return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(presentation.colors.accent)
         case .emoji_status:
-            return NSImage(named: "Premium_Boarding_Status")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Premium_Boarding_Status")!.precomposed(presentation.colors.accent)
         case .premium_stickers:
-            return NSImage(named: "Icon_Premium_Boarding_Stickers")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Stickers")!.precomposed(presentation.colors.accent)
         case .animated_emoji:
-            return NSImage(named: "Icon_Premium_Boarding_Emoji")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Emoji")!.precomposed(presentation.colors.accent)
         case .advanced_chat_management:
-            return NSImage(named: "Icon_Premium_Boarding_Chats")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Chats")!.precomposed(presentation.colors.accent)
         case .profile_badge:
-            return NSImage(named: "Icon_Premium_Boarding_Badge")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Badge")!.precomposed(presentation.colors.accent)
         case .animated_userpics:
-            return NSImage(named: "Icon_Premium_Boarding_Profile")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Profile")!.precomposed(presentation.colors.accent)
         case .translations:
-            return NSImage(named: "Icon_Premium_Boarding_Translations")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Icon_Premium_Boarding_Translations")!.precomposed(presentation.colors.accent)
+        case .stories:
+            return NSImage(named: "Icon_Premium_Stories")!.precomposed(presentation.colors.accent)
         }
     }
     
@@ -283,6 +334,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingAvatarTitle
         case .translations:
             return strings().premiumBoardingTranslateTitle
+        case .stories:
+            return strings().premiumBoardingStoriesTitle
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -313,6 +366,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingAvatarInfo
         case .translations:
             return strings().premiumBoardingTranslateInfo
+        case .stories:
+            return strings().premiumBoardingStoriesInfo
         }
     }
 }
@@ -320,7 +375,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations]
+    var values:[PremiumValue] = [.double_limits, .stories, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations]
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?
@@ -350,8 +405,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy)
+        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo, isDark: theme.colors.isDark)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy)
     }))
     index += 1
     
@@ -361,7 +416,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         let period = state.period ?? state.periods[0]
                 
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_periods"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, periods: state.periods, selectedPeriod: period, viewType: .singleItem, callback: { period in
+            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, presentation: arguments.presentation, periods: state.periods, selectedPeriod: period, viewType: .singleItem, callback: { period in
                 arguments.togglePeriod(period)
             })
         }))
@@ -374,27 +429,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(value), comparable: nil, item: { initialSize, stableId in
-            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, callback: arguments.openFeature)
+            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, presentation: arguments.presentation, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, callback: { value in
+                arguments.openFeature(value, true)
+            })
         }))
         index += 1
     }
     
-//    entries.append(.sectionId(sectionId, type: .customModern(15)))
-//    sectionId += 1
-   
-//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().premiumBoardingAboutTitle.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-//    index += 1
-//
-//
-//    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("about"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-//        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().premiumBoardingAboutText, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20))
-//    }))
-    
     
     if !state.isPremium {
-        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 11.5, openInfo: arguments.openInfo, textColor: theme.colors.listGrayText)
+        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 11.5, openInfo: arguments.openInfo, textColor: arguments.presentation.colors.listGrayText, isDark: theme.colors.isDark)
 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(status), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(status), data: .init(color: arguments.presentation.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
     }
     
@@ -482,7 +528,9 @@ private final class PremiumBoardingView : View {
         let dismiss = ImageButton()
         private let container = View()
         private let titleView = TextView()
-        required init(frame frameRect: NSRect) {
+        let presentation: TelegramPresentationTheme
+        init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
+            self.presentation = presentation
             super.init(frame: frameRect)
             addSubview(container)
             addSubview(dismiss)
@@ -490,17 +538,18 @@ private final class PremiumBoardingView : View {
             dismiss.scaleOnClick = true
             dismiss.autohighlight = false
             
-            dismiss.set(image: theme.icons.modalClose, for: .Normal)
+            dismiss.set(image: presentation.icons.modalClose, for: .Normal)
             dismiss.sizeToFit()
             
             titleView.userInteractionEnabled = false
             titleView.isSelectable = false
             titleView.isEventLess = true
             
-            container.backgroundColor = theme.colors.background
+            container.backgroundColor = presentation.colors.background
             container.border = [.Bottom]
+            container.borderColor = presentation.colors.border
 
-            let layout = TextViewLayout(.initialize(string: strings().premiumBoardingTitle, color: theme.colors.text, font: .medium(.header)))
+            let layout = TextViewLayout(.initialize(string: strings().premiumBoardingTitle, color: presentation.colors.text, font: .medium(.header)))
             layout.measure(width: 300)
             
             titleView.update(layout)
@@ -521,10 +570,14 @@ private final class PremiumBoardingView : View {
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
+        
+        override required init(frame frameRect: NSRect) {
+            fatalError("init(frame:) has not been implemented")
+        }
     }
 
     
-    private let headerView: HeaderView = HeaderView(frame: .zero)
+    private let headerView: HeaderView
     let tableView = TableView()
     private var bottomView: View?
     private let bottomBorder = View()
@@ -537,18 +590,21 @@ private final class PremiumBoardingView : View {
     var accept:(()->Void)?
     
     private var state: State?
+    let presentation: TelegramPresentationTheme
 
-    required init(frame frameRect: NSRect) {
+    init(frame frameRect: NSRect, presentation: TelegramPresentationTheme) {
+        self.presentation = presentation
+        self.headerView = HeaderView(frame: .zero, presentation: presentation)
         super.init(frame: frameRect)
         containerView.addSubview(tableView)
         containerView.addSubview(headerView)
         addSubview(containerView)
         
         tableView.getBackgroundColor = {
-            theme.colors.listBackground
+            presentation.colors.listBackground
         }
                 
-        bottomBorder.backgroundColor = theme.colors.border
+        bottomBorder.backgroundColor = presentation.colors.border
         
         
         tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
@@ -569,13 +625,13 @@ private final class PremiumBoardingView : View {
         
         if scroll.rect.minY >= tableView.listHeight {
             bottomBorder.change(opacity: 0, animated: animated)
-            bottomView?.backgroundColor = theme.colors.listBackground
+            bottomView?.backgroundColor = presentation.colors.listBackground
             if animated {
                 bottomView?.layer?.animateBackground()
             }
         } else {
             bottomBorder.change(opacity: 1, animated: animated)
-            bottomView?.backgroundColor = theme.colors.background
+            bottomView?.backgroundColor = presentation.colors.background
             if animated {
                 bottomView?.layer?.animateBackground()
             }
@@ -690,7 +746,7 @@ private final class PremiumBoardingView : View {
             gradient.startPoint = CGPoint(x: 0, y: 0)
             gradient.endPoint = CGPoint(x: 1, y: 0)
             
-            gradient.colors = premiumGradient.compactMap { $0?.cgColor }
+            gradient.colors = premiumGradient.compactMap { $0.cgColor }
             
             okButton.layer?.insertSublayer(gradient, at: 0)
             
@@ -724,7 +780,7 @@ private final class PremiumBoardingView : View {
     
     private func applyFade(from: Double, to: Double) {
         let fadeView = View()
-        fadeView.backgroundColor = theme.colors.blackTransparent
+        fadeView.backgroundColor = presentation.colors.blackTransparent
         fadeView.frame = bounds
         addSubview(fadeView, positioned: .above, relativeTo: containerView)
         
@@ -753,6 +809,10 @@ private final class PremiumBoardingView : View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
 }
 
 final class PremiumBoardingController : ModalViewController {
@@ -760,11 +820,13 @@ final class PremiumBoardingController : ModalViewController {
     private let context: AccountContext
     private let source: PremiumLogEventsSource
     private let openFeatures: Bool
-    init(context: AccountContext, source: PremiumLogEventsSource = .settings, openFeatures: Bool = false) {
+    private let presentation: TelegramPresentationTheme
+    init(context: AccountContext, source: PremiumLogEventsSource = .settings, openFeatures: Bool = false, presentation: TelegramPresentationTheme = theme) {
         self.context = context
         self.source = source
         self.openFeatures = openFeatures
-        super.init(frame: NSMakeRect(0, 0, 380, 300))
+        self.presentation = presentation
+        super.init(frame: NSMakeRect(0, 0, 380, 530))
     }
     
     override func measure(size: NSSize) {
@@ -775,6 +837,10 @@ final class PremiumBoardingController : ModalViewController {
         if let contentSize = self.modal?.window.contentView?.frame.size {
             self.modal?.resize(with: genericView.contentSize(maxSize: NSMakeSize(380, contentSize.height - 80)), animated: animated)
         }
+    }
+    
+    override func initializer() -> NSView {
+        return PremiumBoardingView(frame: NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height), presentation: presentation)
     }
     
     override var dynamicSize: Bool {
@@ -789,11 +855,11 @@ final class PremiumBoardingController : ModalViewController {
         return PremiumBoardingView.self
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         if self.openFeatures {
-            if let value = PremiumValue(rawValue: self.source.value) {
-                arguments?.openFeature(value)
+            if let value = self.source.features {
+                arguments?.openFeature(value, false)
             }
         }
     }
@@ -814,13 +880,13 @@ final class PremiumBoardingController : ModalViewController {
         
         PremiumLogEvents.promo_screen_show(source).send(context: context)
         
-        let close: ()->Void = {
-            closeAllModals()
+        let close: ()->Void = { [weak self] in
+            self?.close()
         }
 
         var canMakePayment: Bool = true
         #if APP_STORE || DEBUG
-        canMakePayment = inAppPurchaseManager.canMakePayments()
+        canMakePayment = inAppPurchaseManager.canMakePayments
         #endif
         
         let initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment)
@@ -831,7 +897,7 @@ final class PremiumBoardingController : ModalViewController {
             statePromise.set(stateValue.modify (f))
         }
         
-        let arguments = Arguments(context: context, showTerms: {
+        let arguments = Arguments(context: context, presentation: presentation, showTerms: {
             
         }, showPrivacy: {
             
@@ -847,15 +913,15 @@ final class PremiumBoardingController : ModalViewController {
             context.bindings.rootNavigation().push(controller)
             
             close()
-        }, openFeature: { [weak self] value in
+        }, openFeature: { [weak self] value, animated in
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.genericView.append(PremiumBoardingFeaturesController(context, value: value, stickers: stateValue.with { $0.stickers }, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
+            strongSelf.genericView.append(PremiumBoardingFeaturesController(context, presentation: strongSelf.presentation, value: value, stickers: stateValue.with { $0.stickers }, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
                 _ = strongSelf?.escapeKeyAction()
             }, makeAcceptView: { [weak strongSelf] in
                 return strongSelf?.genericView.makeAcceptView()
-            }), animated: true)
+            }), animated: animated)
         }, togglePeriod: { period in
             updateState { current in
                 var current = current
@@ -941,7 +1007,7 @@ final class PremiumBoardingController : ModalViewController {
         |> deliverOnMainQueue
         
         let products: Signal<[InAppPurchaseManager.Product], NoError>
-        #if APP_STORE || DEBUG
+        #if APP_STORE //|| DEBUG
         products = inAppPurchaseManager.availableProducts |> map {
             $0.filter { $0.isSubscription }
         }
@@ -1003,7 +1069,7 @@ final class PremiumBoardingController : ModalViewController {
         }))
 
         
-        let stateSignal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
+        let stateSignal = statePromise.get() |> filter { $0.period != nil } |> deliverOnPrepareQueue |> map { state in
             return (InputDataSignalValue(entries: entries(state, arguments: arguments)), state)
         }
         
@@ -1029,7 +1095,7 @@ final class PremiumBoardingController : ModalViewController {
         actionsDisposable.add(signal.start(next: { [weak self] transition in
             self?.genericView.tableView.merge(with: transition.0)
             self?.genericView.update(animated: transition.0.animated, arguments: arguments, state: transition.1)
-            self?.updateSize(transition.0.animated)
+            self?.updateSize(true)
             self?.readyOnce()
         }))
         
@@ -1081,31 +1147,23 @@ final class PremiumBoardingController : ModalViewController {
                 }
             })
             
-            
             let _ = (context.engine.payments.canPurchasePremium(purpose: .subscription)
             |> deliverOnMainQueue).start(next: { [weak lockModal] available in
                 if available {
-                    paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct, account: context.account)
+                    
+                    paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct, purpose: .subscription)
                     |> deliverOnMainQueue).start(next: { [weak lockModal] status in
         
                         lockModal?.close()
                         needToShow = false
-        
-                        if case let .purchased(transaction) = status {
-                            let activate = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: InAppPurchaseManager.getReceiptData() ?? Data(), purpose: .subscription), for: context.window)
-                            activationDisposable.set(activate.start(error: { _ in
-                                showModalText(for: context.window, text: strings().errorAnError)
-                                inAppPurchaseManager.finishAllTransactions()
-                            }, completed: {
-                                close()
-                                inAppPurchaseManager.finishAllTransactions()
-                                delay(0.2, closure: {
-                                    PlayConfetti(for: context.window)
-                                    showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
-                                    let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
-                                })
-                            }))
-                        }
+                        close()
+                        inAppPurchaseManager.finishAllTransactions()
+                        delay(0.2, closure: {
+                            PlayConfetti(for: context.window)
+                            showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
+                            let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
+                        })
+                        
                     }, error: { [weak lockModal] error in
                         let errorText: String
                         switch error {
@@ -1131,11 +1189,6 @@ final class PremiumBoardingController : ModalViewController {
                     needToShow = false
                 }
             })
-
-            
-            
-
-
         }
         
       
@@ -1166,15 +1219,23 @@ final class PremiumBoardingController : ModalViewController {
         }
     }
     
+    override var modalTheme: ModalViewController.Theme {
+        return .init(presentation: presentation)
+    }
+    
     func restore() {
-        if let receiptData = InAppPurchaseManager.getReceiptData() {
-            let context = self.context
-            _ = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: receiptData, purpose: .restore), for: context.window).start(error: { _ in
+        let context = self.context
+        
+        context.inAppPurchaseManager.restorePurchases(completion: { restore in
+            switch restore {
+            case let .succeed(value):
+                if value {
+                    showModalText(for: context.window, text: strings().premiumRestoreSuccess)
+                }
+            case .failed:
                 showModalText(for: context.window, text: strings().premiumRestoreErrorUnknown)
-            }, completed: {
-                showModalText(for: context.window, text: strings().premiumRestoreSuccess)
-            })
-        }
+            }
+        })
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {

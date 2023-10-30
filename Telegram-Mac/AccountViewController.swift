@@ -36,14 +36,11 @@ private final class AccountSearchBarView: View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    fileprivate let edit = TitleButton()
     
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(searchView)
-        addSubview(edit)
-        border = [.Bottom, .Right]
         updateLocalizationAndTheme(theme: theme)
     }
     
@@ -51,19 +48,13 @@ private final class AccountSearchBarView: View {
         super.updateLocalizationAndTheme(theme: theme)
         searchView.updateLocalizationAndTheme(theme: theme)
         borderColor = theme.colors.border
-        edit.set(font: .medium(.title), for: .Normal)
-        edit.set(text: strings().navigationEdit, for: .Normal)
-        edit.set(color: theme.colors.accent, for: .Normal)
-        edit.scaleOnClick = true
         needsLayout = true
     }
     
     override func layout() {
         super.layout()
-        searchView.setFrameSize(NSMakeSize(frame.width - 72, 30))
+        searchView.setFrameSize(NSMakeSize(frame.width - 20, 30))
         searchView.centerY(x: 10)
-        edit.sizeToFit(.zero, NSMakeSize(62, 40), thatFit: true)
-        edit.centerY(x: searchView.frame.maxX)
     }
     
 }
@@ -71,6 +62,7 @@ private final class AccountSearchBarView: View {
 
 fileprivate final class AccountInfoArguments {
     let context: AccountContext
+    var storyList: PeerStoryListContext
     let presentController:(ViewController, Bool) -> Void
     let openFaq:()->Void
     let ask:()->Void
@@ -80,8 +72,11 @@ fileprivate final class AccountInfoArguments {
     let setStatus:(Control, TelegramUser)->Void
     let runStatusPopover:()->Void
     let set2Fa:(TwoStepVeriticationAccessConfiguration?)->Void
-    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void) {
+    let openStory:(StoryInitialIndex?)->Void
+    let openWebBot:(AttachMenuBot)->Void
+    init(context: AccountContext, storyList: PeerStoryListContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void, set2Fa:@escaping(TwoStepVeriticationAccessConfiguration?)->Void, openStory:@escaping(StoryInitialIndex?)->Void, openWebBot:@escaping(AttachMenuBot)->Void) {
         self.context = context
+        self.storyList = storyList
         self.presentController = presentController
         self.openFaq = openFaq
         self.ask = ask
@@ -91,6 +86,8 @@ fileprivate final class AccountInfoArguments {
         self.setStatus = setStatus
         self.runStatusPopover = runStatusPopover
         self.set2Fa = set2Fa
+        self.openStory = openStory
+        self.openWebBot = openWebBot
     }
 }
 
@@ -119,14 +116,34 @@ private final class AnyUpdateStateEquatable  : Equatable {
     }
 }
 
+extension AttachMenuBot : Equatable {
+    public static func ==(lhs: AttachMenuBot, rhs: AttachMenuBot) -> Bool {
+        if lhs.flags != rhs.flags {
+            return false
+        }
+        if lhs.shortName != rhs.shortName {
+            return false
+        }
+        if lhs.peerTypes != rhs.peerTypes {
+            return false
+        }
+        if PeerEquatable(lhs.peer._asPeer()) != PeerEquatable(rhs.peer._asPeer()) {
+            return false
+        }
+        return true
+    }
+}
+
 private enum AccountInfoEntry : TableItemListNodeEntry {
-    case info(index:Int, viewType: GeneralViewType, PeerEquatable)
+    case info(index:Int, viewType: GeneralViewType, PeerEquatable, EngineStorySubscriptions.Item?)
     case setStatus(index:Int, viewType: GeneralViewType, PeerEquatable)
     case set2FaAlert(index:Int, viewType: GeneralViewType)
     case set2Fa(index:Int, settings: TwoStepVeriticationAccessConfiguration?, viewType: GeneralViewType)
     case accountRecord(index: Int, viewType: GeneralViewType, info: AccountWithInfo)
     case addAccount(index: Int, [AccountWithInfo], viewType: GeneralViewType)
     case proxy(index: Int, viewType: GeneralViewType, status: String?)
+    case stories(index: Int, viewType: GeneralViewType)
+    case attach(index: Int, AttachMenuBot, viewType: GeneralViewType)
     case general(index: Int, viewType: GeneralViewType)
     case stickers(index: Int, viewType: GeneralViewType)
     case notifications(index: Int, viewType: GeneralViewType, status: UNUserNotifications.AuthorizationStatus)
@@ -159,38 +176,42 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .account(info)
         case .addAccount:
             return .index(4)
-        case .general:
+        case .stories:
             return .index(5)
-        case .proxy:
+        case .general:
             return .index(6)
-        case .notifications:
+        case .proxy:
             return .index(7)
-        case .dataAndStorage:
+        case .notifications:
             return .index(8)
-        case .activeSessions:
+        case .dataAndStorage:
             return .index(9)
-        case .privacy:
+        case .activeSessions:
             return .index(10)
-        case .language:
+        case .privacy:
             return .index(11)
-        case .stickers:
+        case .language:
             return .index(12)
-        case .filters:
+        case .stickers:
             return .index(13)
-        case .update:
+        case .filters:
             return .index(14)
-        case .appearance:
+        case .update:
             return .index(15)
-        case .passport:
+        case .appearance:
             return .index(16)
-        case .premium:
+        case .passport:
             return .index(17)
-        case .faq:
+        case .premium:
             return .index(18)
-        case .ask:
+        case .faq:
             return .index(19)
-        case .about:
+        case .ask:
             return .index(20)
+        case .about:
+            return .index(21)
+        case let .attach(index, _, _):
+            return .index(22 + index)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -198,7 +219,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     
     var index:Int {
         switch self {
-        case let .info(index, _, _):
+        case let .info(index, _, _, _):
             return index
         case let .setStatus(index, _, _):
             return index
@@ -209,6 +230,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .accountRecord(index, _, _):
             return index
         case let .addAccount(index, _, _):
+            return index
+        case let  .stories(index, _):
+            return index
+        case let .attach(index, _, _):
             return index
         case let  .general(index, _):
             return index
@@ -253,13 +278,13 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     
     func item(_ arguments: AccountInfoArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .info(_, viewType, peer):
-            return AccountInfoItem(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 12, right: 12), context: arguments.context, peer: peer.peer as! TelegramUser, action: {
+        case let .info(_, viewType, peer, storyStats):
+            return AccountInfoItem(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 12, right: 12), context: arguments.context, peer: peer.peer as! TelegramUser, storyStats: storyStats, action: {
                 let first: Atomic<Bool> = Atomic(value: true)
                 EditAccountInfoController(context: arguments.context, f: { controller in
                     arguments.presentController(controller, first.swap(false))
                 })
-            }, setStatus: arguments.setStatus)
+            }, setStatus: arguments.setStatus, openStory: arguments.openStory)
         case let .setStatus(_, viewType, peer):
             let icon: CGImage = peer.peer.emojiStatus != nil ? theme.icons.account_change_status : theme.icons.account_set_status
             let text = peer.peer.emojiStatus != nil ? strings().accountSettingsChangeStatus : strings().accountSettingsUpdateStatus
@@ -286,7 +311,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 items.append(ContextSeparatorItem())
                 
                 items.append(ContextMenuItem(strings().accountSettingsDeleteAccount, handler: {
-                    confirm(for: arguments.context.window, information: strings().accountConfirmLogoutText, successHandler: { _ in
+                    verifyAlert_button(for: arguments.context.window, information: strings().accountConfirmLogoutText, successHandler: { _ in
                         _ = logoutFromAccount(id: info.account.id, accountManager: arguments.context.sharedContext.accountManager, alreadyLoggedOutRemotely: false).start()
                     })
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
@@ -300,6 +325,29 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .general(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .stories(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsMyStories, icon: theme.icons.settingsStories, activeIcon: theme.icons.settingsStoriesActive, type: .next, viewType: viewType, action: {
+                arguments.presentController(StoryMediaController(context: arguments.context, peerId: arguments.context.peerId, listContext: arguments.storyList, standalone: true), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .attach(_, bot, viewType):
+            var icon: CGImage?
+            
+            if let file = bot.icons[.macOSSettingsStatic] {
+                let iconPath = arguments.context.account.postbox.mediaBox.resourcePath(file.resource)
+                let linked = link(path: iconPath, ext: "png")!
+
+                if let image = NSImage(contentsOf: .init(fileURLWithPath: linked)) {
+                    icon = generateSettingsIcon(image.precomposed(flipVertical: true, scale: 1.0))
+                }
+            }
+            
+            if icon == nil {
+                icon = NSImage(named: "Icon_Settings_BotCap")!.precomposed(flipVertical: true, scale: 1.0)
+            }
+            
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: bot.shortName, icon: icon!, activeIcon: icon!, type: .next, viewType: viewType, action: {
+                arguments.openWebBot(bot)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .proxy(_, viewType, status):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsProxy, icon: theme.icons.settingsProxy, activeIcon: theme.icons.settingsProxyActive, type: .nextContext(status ?? ""), viewType: viewType, action: {
@@ -359,7 +407,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: arguments.openFaq, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .ask(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAskQuestion, icon: theme.icons.settingsAskQuestion, activeIcon: theme.icons.settingsAskQuestionActive, type: .next, viewType: viewType, action: {
-                confirm(for: arguments.context.window, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
+                verifyAlert_button(for: arguments.context.window, information: strings().accountConfirmAskQuestion, option: strings().accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
                         _ = showModalProgress(signal: arguments.context.engine.peers.supportPeerId(), for: arguments.context.window).start(next: {  peerId in
@@ -408,15 +456,15 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 }
 
 
-private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?) -> [AccountInfoEntry] {
+private func accountInfoEntries(peerView:PeerView, context: AccountContext, accounts: [AccountWithInfo], language: TelegramLocalization, privacySettings: AccountPrivacySettings?, webSessions: WebSessionsContextState, proxySettings: (ProxySettings, ConnectionStatus), passportVisible: Bool, appUpdateState: Any?, hasFilters: Bool, sessionsCount: Int, unAuthStatus: UNUserNotifications.AuthorizationStatus, has2fa: Bool, twoStepConfiguration: TwoStepVeriticationAccessConfiguration?, storyStats: EngineStorySubscriptions?, attachMenuBots: [AttachMenuBot]) -> [AccountInfoEntry] {
     var entries:[AccountInfoEntry] = []
     
     var index:Int = 0
         
     if let peer = peerViewMainPeer(peerView) as? TelegramUser {
-        entries.append(.whiteSpace(index: index, height: 20))
-        index += 1
-        entries.append(.info(index: index, viewType: .singleItem, PeerEquatable(peer)))
+//        entries.append(.whiteSpace(index: index, height: 20))
+//        index += 1
+        entries.append(.info(index: index, viewType: .singleItem, PeerEquatable(peer), storyStats?.accountItem))
         index += 1
         
 //        entries.append(.whiteSpace(index: index, height: 20))
@@ -489,9 +537,21 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     entries.append(.whiteSpace(index: index, height: 10))
     index += 1
     
-   
+        
+    for bot in attachMenuBots {
+        if bot.flags.contains(.showInSettings) {
+            entries.append(.attach(index: index, bot, viewType: .singleItem))
+            index += 1
+        }
+    }
+    
+    entries.append(.stories(index: index, viewType: .singleItem))
+    index += 1
     
     if !proxySettings.0.servers.isEmpty {
+        entries.append(.whiteSpace(index: index, height: 10))
+        index += 1
+        
         let status: String
         switch proxySettings.1 {
         case .online:
@@ -502,9 +562,10 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         entries.append(.proxy(index: index, viewType: .singleItem, status: status))
         index += 1
         
-        entries.append(.whiteSpace(index: index, height: 20))
-        index += 1
     }
+    
+    entries.append(.whiteSpace(index: index, height: 10))
+    index += 1
     
     entries.append(.general(index: index, viewType: .singleItem))
     index += 1
@@ -582,25 +643,49 @@ private func prepareEntries(left: [AppearanceWrapperEntry<AccountInfoEntry>], ri
 final class AccountControllerView : Control {
     fileprivate let searchView: AccountSearchBarView
     fileprivate let tableView: TableView
+    fileprivate let edit = TitleButton()
+    private let statusContainer: View
+    private let textView = TextView()
+    
     required init(frame frameRect: NSRect) {
-        searchView = AccountSearchBarView(frame: NSMakeRect(0, 0, frameRect.width, 50))
+        statusContainer = .init(frame: NSMakeRect(0, 0, frameRect.width, 40))
+        searchView = AccountSearchBarView(frame: NSMakeRect(0, 40, frameRect.width, 50))
         tableView = TableView(frame: NSMakeRect(0, 50, frameRect.width, frameRect.height - 50))
         super.init(frame: frameRect)
+        addSubview(statusContainer)
         addSubview(searchView)
         addSubview(tableView)
         border = [.Right]
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+
+        statusContainer.addSubview(edit)
+        statusContainer.addSubview(textView)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         borderColor = theme.colors.border
-        
+        edit.set(font: .medium(.title), for: .Normal)
+        edit.set(text: strings().navigationEdit, for: .Normal)
+        edit.set(color: theme.colors.accent, for: .Normal)
+        edit.scaleOnClick = true
         self.backgroundColor = theme.colors.background
+        
+        let layout = TextViewLayout(.initialize(string: strings().accountViewControllerTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+        layout.measure(width: .greatestFiniteMagnitude)
+        textView.update(layout)
     }
     
     override func layout() {
         super.layout()
-        searchView.frame = NSMakeRect(0, 0, frame.width, 50)
+        statusContainer.frame = NSMakeRect(0, 0, frame.width, 40)
+        edit.sizeToFit(NSMakeSize(10, 14))
+        edit.setFrameOrigin(NSMakePoint(statusContainer.frame.width - edit.frame.width - 10, statusContainer.frame.height - edit.frame.height))
+        textView.centerX(y: 14)
+
+        searchView.frame = NSMakeRect(0, statusContainer.frame.maxY, frame.width, 50)
         tableView.frame = NSMakeRect(0, searchView.frame.maxY, frame.width, frame.height - searchView.frame.maxY)
     }
     
@@ -719,7 +804,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             self?.searchState.set(state)
         })
         
-        genericView.searchView.edit.set(handler: { [weak self] _ in
+        genericView.edit.set(handler: { [weak self] _ in
             guard let `self` = self else {return}
             let first: Atomic<Bool> = Atomic(value: true)
             EditAccountInfoController(context: context, f: { [weak self] controller in
@@ -732,6 +817,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(privacySettings), context.webSessions.state, proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
             return context.account.network.connectionStatus |> map {(settings, $0)}
         }, passportPromise.get()))
+        
+        
         
         
         syncLocalizations.set(context.engine.localization.synchronizedLocalizationListState().start())
@@ -755,7 +842,8 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             }
         }
         
-        let arguments = AccountInfoArguments(context: context, presentController: { [weak self] controller, main in
+        
+        let arguments = AccountInfoArguments(context: context, storyList: PeerStoryListContext(account: context.account, peerId: context.peerId, isArchived: false), presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             guard let singleLayout = self?.context.layout else {return}
             if main {
@@ -788,7 +876,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         }, setStatus: { control, user in
             setStatus(control, user)
         }, runStatusPopover: { [weak self] in
-            guard let item = self?.tableView.item(at: 1) as? AccountInfoItem else {
+            guard let item = self?.tableView.item(at: 0) as? AccountInfoItem else {
                 return
             }
             if let control = item.statusControl {
@@ -806,6 +894,40 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                     navigation.push(controller)
                 }
             }))
+        }, openStory: { initialId in
+            StoryModalController.ShowStories(context: context, isHidden: false, initialId: initialId, singlePeer: true)
+        }, openWebBot: { bot in
+            let open:()->Void = {
+                let signal = context.engine.messages.requestSimpleWebView(botId: bot.peer.id, url: nil, source: .settings, themeParams: generateWebAppThemeParams(theme))
+                _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
+                    showModal(with: WebpageModalController(context: context, url: url, title: bot.shortName, requestData: .simple(url: url, bot: bot.peer._asPeer(), buttonText: "", source: .settings, hasSettings: bot.flags.contains(.hasSettings)), chatInteraction: nil, thumbFile: bot.icons[.macOSAnimated] ?? MenuAnimation.menu_folder_bot.file), for: context.window)
+                })
+            }
+            
+            if bot.flags.contains(.showInSettingsDisclaimer) || bot.flags.contains(.notActivated) { //
+                var options: [ModalAlertData.Option] = []
+                options.append(.init(string: strings().webBotAccountDisclaimerThird, isSelected: true, mandatory: true))
+                
+               
+                var description: ModalAlertData.Description? = nil
+                let installBot = !bot.flags.contains(.notActivated) && bot.peer._asPeer().botInfo?.flags.contains(.canBeAddedToAttachMenu) == true && !bot.flags.contains(.showInAttachMenu)
+                
+                if installBot {
+                    description = .init(string: strings().webBotAccountDesclaimerDesc(bot.shortName), onlyWhenEnabled: false)
+                }
+                
+                let data = ModalAlertData(title: strings().webBotAccountDisclaimerTitle, info: strings().webBotAccountDisclaimerText, description: description, ok: strings().webBotAccountDisclaimerOK, options: options)
+                showModalAlert(for: context.window, data: data, completion: { result in
+                    installAttachMenuBot(context: context, peer: bot.peer._asPeer(), completion: { value in
+                        if value, installBot {
+                            showModalText(for: context.window, text: strings().webAppAttachSuccess(bot.peer._asPeer().displayTitle))
+                        }
+                        open()
+                    })
+                })
+            } else {
+                open()
+            }
         })
         
         self.arguments = arguments
@@ -833,8 +955,10 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
 
         let twoStep: Signal<TwoStepVeriticationAccessConfiguration?, NoError> = .single(nil) |> then(context.engine.auth.twoStepVerificationConfiguration() |> map { .init(configuration: $0, password: nil) })
         
-        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration -> TableUpdateTransition in
-            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        let storyStats = context.engine.messages.storySubscriptions(isHidden: false)
+        
+        let apply = combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(context.account.peerId), context.sharedContext.activeAccountsWithInfo, appearanceSignal, settings.get(), appUpdateState, hasFilters.get(), sessionsCount, UNUserNotifications.recurrentAuthorizationStatus(context), twoStep, storyStats, context.engine.messages.attachMenuBots()) |> map { peerView, accounts, appearance, settings, appUpdateState, hasFilters, sessionsCount, unAuthStatus, twoStepConfiguration, storyStats, attachMenuBots -> TableUpdateTransition in
+            let entries = accountInfoEntries(peerView: peerView, context: context, accounts: accounts.accounts, language: appearance.language, privacySettings: settings.0, webSessions: settings.1, proxySettings: settings.2, passportVisible: settings.3.0, appUpdateState: appUpdateState, hasFilters: hasFilters, sessionsCount: sessionsCount, unAuthStatus: unAuthStatus, has2fa: settings.3.1, twoStepConfiguration: twoStepConfiguration, storyStats: storyStats, attachMenuBots: attachMenuBots).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             var size = atomicSize.modify {$0}
             size.width = max(size.width, 280)
             return prepareEntries(left: previous.swap(entries), right: entries, arguments: arguments, initialSize: size)
@@ -844,6 +968,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             self?.tableView.merge(with: transition)
             self?.readyOnce()
         }))
+       
     }
     
     
@@ -859,38 +984,42 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     override func navigationWillChangeController() {
         if let navigation = navigation as? ExMajorNavigationController {
             if navigation.controller is DataAndStorageViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(8))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
                     _ = tableView.select(item: item)
                 }
             } else if navigation.controller is PrivacyAndSecurityViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
                     _ = tableView.select(item: item)
                 }
             } else if navigation.controller is InstalledStickerPacksController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
                     _ = tableView.select(item: item)
                 }
                 
             } else if navigation.controller is GeneralSettingsViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(5))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
                     _ = tableView.select(item: item)
                 }
             }  else if navigation.controller is RecentSessionsController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                    _ = tableView.select(item: item)
+                }
+            } else if navigation.controller is StoryMediaController {
+                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(5))) {
                     _ = tableView.select(item: item)
                 }
             } else if navigation.controller is PassportController {
-                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(16))) {
+                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(17))) {
                     _ = tableView.select(item: item)
                 }
             } else if let controller = navigation.controller as? InputDataController {
                 switch true {
                 case controller.identifier == "proxy":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "language":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "account":
@@ -898,23 +1027,23 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "passport":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(16))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(17))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "app_update":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(14))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(15))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "filters":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(14))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "notification-settings":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(8))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "app_appearance":
-                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(15))) {
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(16))) {
                         _ = tableView.select(item: item)
                     }
                 default:
@@ -956,8 +1085,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         let context = self.context
-        
-        
+                
         let privacySettings = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)
 
         settings.set(combineLatest(Signal<AccountPrivacySettings?, NoError>.single(nil) |> then(privacySettings), context.webSessions.state, proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { settings in
@@ -1009,4 +1137,5 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     }
 
 }
+
 

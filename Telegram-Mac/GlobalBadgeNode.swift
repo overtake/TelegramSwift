@@ -265,7 +265,7 @@ private func generateStatusBarIcon(_ unreadCount: Int, color: NSColor) -> NSImag
     if string.count > 3 {
         string = ".." + string.nsstring.substring(from: string.length - 2)
     }
-    let attributedString = NSAttributedString.initialize(string: string, color: .white, font: .medium(8), coreText: true)
+    let attributedString = NSAttributedString.initialize(string: string, color: .white, font: .medium(8))
     
     let textLayout = TextNode.layoutText(maybeNode: nil,  attributedString, nil, 1, .start, NSMakeSize(18, CGFloat.greatestFiniteMagnitude), nil, false, .center)
     

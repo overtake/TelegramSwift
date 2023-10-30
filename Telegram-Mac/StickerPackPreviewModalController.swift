@@ -304,19 +304,25 @@ private class StickersModalView : View {
             let size = frame.size
 
 
-            let makeItem:(State.Collection)->TableRowItem = { collection in
+            let makeItems:(State.Collection)->[TableRowItem] = { collection in
                 switch source {
                 case .emoji:
-                    return EmojiesSectionRowItem(size, stableId: collections.count == 1 ? 0 : arc4random64(), context: arguments.context, revealed: true, installed: isInstalled(collection), info: collection.info, items: collection.items, mode: .preview, callback: { item, _, _, _ in
-                        arguments.setEmoji(item.file)
-                    }, installPack: { _, _ in
-                        arguments.addpack(source, collection, false)
-                    })
+                    
+                    let array = collection.items.chunks(32)
+                    var tableItems: [TableRowItem] = []
+                    for (i, items) in array.enumerated() {
+                        tableItems.append(EmojiesSectionRowItem(size, stableId: arc4random64(), context: arguments.context, revealed: true, installed: isInstalled(collection), info: i != 0 ? nil : collection.info, items: items, mode: .preview, callback: { item, _, _, _ in
+                            arguments.setEmoji(item.file)
+                        }, installPack: { _, _ in
+                            arguments.addpack(source, collection, false)
+                        }))
+                    }
+                     return tableItems
                 case .stickers:
                     let files = collection.items.map { item -> TelegramMediaFile in
                         return item.file
                     }
-                    return StickerPackPanelRowItem(size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(collection.info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController, isPreview: true)
+                    return [StickerPackPanelRowItem(size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(collection.info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController, isPreview: true)]
                 }
             }
             
@@ -326,9 +332,11 @@ private class StickersModalView : View {
             _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random64()))
             
             for collection in collections {
-                let item = makeItem(collection)
-                _ = item.makeSize(frame.width)
-                _ = tableView.addItem(item: item, animation: .none)
+                let items = makeItems(collection)
+                for item in items {
+                    _ = item.makeSize(frame.width)
+                    _ = tableView.addItem(item: item, animation: .none)
+                }
             }
             
             if !allInstalled {

@@ -281,6 +281,7 @@ public class TextNode: NSObject {
             ctx.setAllowsFontSmoothing(backingScaleFactor == 1.0)
             ctx.setShouldSmoothFonts(backingScaleFactor == 1.0)
         }
+
         
         
         //let contextPtr = NSGraphicsContext.current()?.graphicsPort

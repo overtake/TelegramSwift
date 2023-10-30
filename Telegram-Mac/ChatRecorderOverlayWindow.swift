@@ -210,7 +210,7 @@ class ChatRecorderOverlayWindowController : NSObject {
             self.chatInteraction.update({$0.withoutRecordingState()})
         }
         if state == .fixed {
-            confirm(for: parent, information: strings().chatRecordingCancel, okTitle: strings().alertDiscard, cancelTitle: strings().alertNO, successHandler: { _ in
+            verifyAlert_button(for: parent, information: strings().chatRecordingCancel, ok: strings().alertDiscard, cancel: strings().alertNO, successHandler: { _ in
                 proccess()
             })
         } else {
@@ -262,6 +262,9 @@ class ChatRecorderOverlayWindowController : NSObject {
         
         let proccessMouseUp:(NSEvent)->KeyHandlerResult = { [weak self] _ in
             guard let `self` = self else {return .rejected}
+            if findModal(InputDataModalController.self) != nil {
+                return .rejected
+            }
             return self.proccessMouseUp()
         }
         parent.set(mouseHandler: proccessMouseUp, with: self, for: .leftMouseDown, priority: .modal)

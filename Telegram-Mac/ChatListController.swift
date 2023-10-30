@@ -16,26 +16,38 @@ import FetchManager
 
 private final class Arguments {
     let context: AccountContext
-    let setupFilter: (ChatListFilter)->Void
     let openFilterSettings: (ChatListFilter)->Void
-    let tabsMenuItems: (ChatListFilter, Int?, Bool?)->[ContextMenuItem]
     let createTopic: ()->Void
     let switchOffForum: ()->Void
     let getHideProgress:()->CGFloat?
     let hideDeprecatedSystem:()->Void
     let applySharedFolderUpdates:(ChatFolderUpdates)->Void
     let hideSharedFolderUpdates:()->Void
-    init(context: AccountContext, setupFilter: @escaping(ChatListFilter)->Void, openFilterSettings: @escaping(ChatListFilter)->Void, tabsMenuItems: @escaping(ChatListFilter, Int?, Bool?)->[ContextMenuItem], createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void) {
+    let openStory:(StoryInitialIndex?, Bool, Bool)->Void
+    let getStoryInterfaceState:()->StoryListChatListRowItem.InterfaceState
+    let getNavigationHeight:()->CGFloat
+    let revealStoriesState:()->Void
+    let getState:()->PeerListState
+    let getDeltaProgress:()->CGFloat?
+    let acceptSession:(NewSessionReview)->Void
+    let revokeSession:(NewSessionReview)->Void
+    init(context: AccountContext, openFilterSettings: @escaping(ChatListFilter)->Void, createTopic: @escaping()->Void, switchOffForum: @escaping()->Void, getHideProgress:@escaping()->CGFloat?,  hideDeprecatedSystem:@escaping()->Void, applySharedFolderUpdates:@escaping(ChatFolderUpdates)->Void, hideSharedFolderUpdates: @escaping()->Void, openStory:@escaping(StoryInitialIndex?, Bool, Bool)->Void, getStoryInterfaceState:@escaping()->StoryListChatListRowItem.InterfaceState, getNavigationHeight: @escaping()->CGFloat, revealStoriesState:@escaping()->Void, getState:@escaping()->PeerListState, getDeltaProgress:@escaping()->CGFloat?, acceptSession:@escaping(NewSessionReview)->Void, revokeSession:@escaping(NewSessionReview)->Void) {
         self.context = context
-        self.setupFilter = setupFilter
         self.openFilterSettings = openFilterSettings
-        self.tabsMenuItems = tabsMenuItems
         self.createTopic = createTopic
         self.switchOffForum = switchOffForum
         self.getHideProgress = getHideProgress
         self.hideDeprecatedSystem = hideDeprecatedSystem
         self.applySharedFolderUpdates = applySharedFolderUpdates
         self.hideSharedFolderUpdates = hideSharedFolderUpdates
+        self.openStory = openStory
+        self.getStoryInterfaceState = getStoryInterfaceState
+        self.getNavigationHeight = getNavigationHeight
+        self.revealStoriesState = revealStoriesState
+        self.getState = getState
+        self.getDeltaProgress = getDeltaProgress
+        self.acceptSession = acceptSession
+        self.revokeSession = revokeSession
     }
 }
 
@@ -48,6 +60,8 @@ enum UIChatListEntryId : Hashable {
     case loading
     case systemDeprecated
     case sharedFolderUpdated
+    case space
+    case suspicious
 }
 
 
@@ -87,11 +101,13 @@ extension EngineChatList.Item {
 
 enum UIChatListEntry : Identifiable, Comparable {
     case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter, generalStatus: ItemHideStatus?, selectedForum: PeerId?, appearMode: PeerListState.AppearMode, hideContent: Bool)
-    case group(Int, EngineChatList.GroupItem, Bool, ItemHideStatus, PeerListState.AppearMode, Bool)
+    case group(Int, EngineChatList.GroupItem, Bool, ItemHideStatus, PeerListState.AppearMode, Bool, EngineStorySubscriptions?)
     case reveal([ChatListFilter], ChatListFilter, ChatListFilterBadges)
     case empty(ChatListFilter, PeerListMode, SplitViewState, PeerEquatable?)
     case systemDeprecated(ChatListFilter)
     case sharedFolderUpdated(ChatFolderUpdates)
+    case suspicious(NewSessionReview)
+    case space
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
@@ -101,8 +117,8 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
-        case let .group(index, item, animated, isHidden, appearMode, hideContent):
-            if case .group(index, item, animated, isHidden, appearMode, hideContent) = rhs {
+        case let .group(index, item, animated, isHidden, appearMode, hideContent, storyState):
+            if case .group(index, item, animated, isHidden, appearMode, hideContent, storyState) = rhs {
                 return true
             } else {
                 return false
@@ -125,8 +141,20 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return false
             }
+        case .space:
+            if case .space = rhs {
+                return true
+            } else {
+                return false
+            }
         case let .sharedFolderUpdated(updates):
             if case .sharedFolderUpdated(updates) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .suspicious(session):
+            if case .suspicious(session) = rhs {
                 return true
             } else {
                 return false
@@ -170,17 +198,21 @@ enum UIChatListEntry : Identifiable, Comparable {
                 return ChatListIndex(pinningIndex: index, messageIndex: .init(id: MessageId(peerId: entry.renderedPeer.peerId, namespace: namespace, id: id), timestamp: timestamp))
             }
         case .reveal:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
+        case .space:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())
-        case let .group(id, _, _, _, _, _):
-            var index = MessageIndex.absoluteUpperBound().globalPredecessor()
+        case let .group(id, _, _, _, _, _, _):
+            var index = MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor()
             for _ in 0 ..< id {
                 index = index.peerLocalPredecessor()
             }
             return ChatListIndex(pinningIndex: 0, messageIndex: index)
         case .empty:
-            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .systemDeprecated:
-            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor())
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
+        case .suspicious:
+            return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .sharedFolderUpdated:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound().globalPredecessor().globalPredecessor())
         case .loading:
@@ -200,7 +232,7 @@ enum UIChatListEntry : Identifiable, Comparable {
             } else {
                 return .chatId(entry.id, entry.renderedPeer.peerId, filterId.id)
             }
-        case let .group(_, group, _, _, _, _):
+        case let .group(_, group, _, _, _, _, _):
             return .groupId(group.id)
         case .reveal:
             return .reveal
@@ -212,6 +244,10 @@ enum UIChatListEntry : Identifiable, Comparable {
             return .sharedFolderUpdated
         case .loading:
             return .loading
+        case .suspicious:
+            return .suspicious
+        case .space:
+            return .space
         }
     }
     
@@ -243,18 +279,16 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 }
                 
                 
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout)
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, selectedForum: selectedForum, autoremoveTimeout: item.autoremoveTimeout, story: item.storyStats, openStory: arguments.openStory, isContact: item.isContact)
 
-            case let .group(_, item, animated, hideStatus, appearMode, hideContent):
+            case let .group(_, item, animated, hideStatus, appearMode, hideContent, storyState):
                 var messages:[Message] = []
                 if let message = item.topMessage {
                     messages.append(message._asMessage())
                 }
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, pinnedType: .none, groupId: item.id, groupItems: item.items, messages: messages, unreadCount: item.unreadCount, animateGroup: animated, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress)
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, pinnedType: .none, groupId: item.id, groupItems: item.items, messages: messages, unreadCount: item.unreadCount, animateGroup: animated, hideStatus: hideStatus, appearMode: appearMode, hideContent: hideContent, getHideProgress: arguments.getHideProgress, openStory: arguments.openStory, storyState: storyState)
             case let .reveal(tabs, selected, counters):
-                return ChatListRevealItem(initialSize, context: arguments.context, tabs: tabs, selected: selected, counters: counters, action: arguments.setupFilter, openSettings: {
-                    arguments.openFilterSettings(.allChats)
-                }, menuItems: arguments.tabsMenuItems)
+                return ChatListRevealItem(initialSize, context: arguments.context, tabs: tabs, selected: selected, counters: counters)
             case let .empty(filter, mode, state, peer):
                 return ChatListEmptyRowItem(initialSize, stableId: entry.stableId, filter: filter, mode: mode, peer: peer?.peer, layoutState: state, context: arguments.context, openFilterSettings: arguments.openFilterSettings, createTopic: arguments.createTopic, switchOffForum: arguments.switchOffForum)
             case .systemDeprecated:
@@ -263,8 +297,12 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 return ChatListFolderUpdatedRowItem(initialSize, stableId: entry.stableId, updates: updates, action: {
                     arguments.applySharedFolderUpdates(updates)
                 }, hide: arguments.hideSharedFolderUpdates)
+            case let .suspicious(session):
+                return SuspiciousAuthRowItem(initialSize, stableId: entry.stableId, context: arguments.context, session: session, accept: arguments.acceptSession, revoke: arguments.revokeSession)
             case let .loading(filter):
                 return ChatListLoadingRowItem(initialSize, stableId: entry.stableId, filter: filter, context: arguments.context)
+            case .space:
+                return ChatListSpaceItem(initialSize, stableId: entry.stableId, getState: arguments.getState, getDeltaProgress: arguments.getDeltaProgress, getInterfaceState: arguments.getStoryInterfaceState, getNavigationHeight: arguments.getNavigationHeight) //StoryListChatListRowItem(initialSize, stableId: entry.stableId, context: arguments.context, state: state, open: arguments.openStory, getInterfaceState: arguments.getStoryInterfaceState, reveal: arguments.revealStoriesState)
             }
         }
         
@@ -274,7 +312,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
         })
         
         let nState = scrollState ?? (animated ? .none(nil) : .saveVisible(.lower))
-        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated: animated, state: nState, animateVisibleOnly: false)
+        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated: animated, state: nState, grouping: !animated || scrollState != nil, animateVisibleOnly: false)
                 
         subscriber.putNext(transition)
         subscriber.putCompletion()
@@ -327,11 +365,13 @@ struct FilterData : Equatable {
     let tabs: [ChatListFilter]
     let sidebar: Bool
     let request: ChatListIndexRequest
-    init(filter: ChatListFilter, tabs: [ChatListFilter], sidebar: Bool, request: ChatListIndexRequest) {
+    let badges: ChatListFilterBadges
+    init(filter: ChatListFilter = .allChats, tabs: [ChatListFilter] = [], sidebar: Bool = false, request: ChatListIndexRequest = .Initial(50, nil), badges: ChatListFilterBadges = .init(total: 0, filters: [])) {
         self.filter = filter
         self.tabs = tabs
         self.sidebar = sidebar
         self.request = request
+        self.badges = badges
     }
     
     var isEmpty: Bool {
@@ -343,39 +383,34 @@ struct FilterData : Equatable {
     }
     func withUpdatedFilterId(_ filterId: Int32?) -> FilterData {
         let filter = self.tabs.first(where: { $0.id == filterId }) ?? .allChats
-        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, request: self.request)
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, request: self.request, badges: self.badges)
     }
     func withUpdatedFilter(_ filter: ChatListFilter?) -> FilterData {
         let filter = filter ?? self.tabs.first ?? .allChats
-        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, request: self.request)
+        return FilterData(filter: filter, tabs: self.tabs, sidebar: self.sidebar, request: self.request, badges: self.badges)
     }
     func withUpdatedTabs(_ tabs:  [ChatListFilter]) -> FilterData {
-        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar, request: self.request)
+        return FilterData(filter: self.filter, tabs: tabs, sidebar: self.sidebar, request: self.request, badges: self.badges)
     }
     func withUpdatedSidebar(_ sidebar: Bool) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: self.request)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: self.request, badges: self.badges)
     }
     func withUpdatedRequest(_ request: ChatListIndexRequest) -> FilterData {
-        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: request)
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: request, badges: self.badges)
+    }
+    func withUpdatedBadges(_ badges: ChatListFilterBadges) -> FilterData {
+        return FilterData(filter: self.filter, tabs: self.tabs, sidebar: sidebar, request: request, badges: badges)
     }
 }
 
 
 class ChatListController : PeersListController {
     
-    private let filter = ValuePromise<FilterData>(ignoreRepeated: true)
-    private let _filterValue = Atomic<FilterData>(value: FilterData(filter: .allChats, tabs: [], sidebar: false, request: .Initial(50, nil)))
-    private var filterValue: FilterData? {
-        return _filterValue.with { $0 }
-    }
-    
-    var filterSignal : Signal<FilterData, NoError> {
-        return self.filter.get()
-    }
-    
+    private let folderUpdatesDisposable = MetaDisposable()
+
     func updateFilter(_ f:(FilterData)->FilterData) {
         
-        let data = f(_filterValue.with { $0 })
+        let data = f(stateValue.with { $0.filterData })
         
         if !context.isPremium {
             if let index = data.tabs.firstIndex(of: data.filter) {
@@ -387,21 +422,25 @@ class ChatListController : PeersListController {
         }
         
         var changedFolder = false
-        filter.set(_filterValue.modify { previous in
-            var current = f(previous)
-            if previous.filter.id != current.filter.id {
+        
+        updateState { previous in
+            var previous = previous
+            var current = f(previous.filterData)
+            if previous.filterData.filter.id != current.filter.id {
                 current = current.withUpdatedRequest(.Initial(max(Int(context.window.frame.height / 70) + 3, 12), nil))
                 changedFolder = true
             }
-            return current
-        })
+            previous.filterData = current
+            return previous
+        }
+        
         if changedFolder {
             self.removeRevealStateIfNeeded(nil)
             self.genericView.tableView.scroll(to: .up(true))
             self.folderUpdatesDisposable.set(context.engine.peers.pollChatFolderUpdates(folderId: data.filter.id).start())
+            self.genericView.searchView.change(state: .None,  true)
         }
 
-        self.genericView.searchView.change(state: .None,  true)
         setCenterTitle(self.defaultBarTitle)
     }
     
@@ -413,7 +452,6 @@ class ChatListController : PeersListController {
     private let disposable = MetaDisposable()
     private let reorderDisposable = MetaDisposable()
     private let globalPeerDisposable = MetaDisposable()
-    private let folderUpdatesDisposable = MetaDisposable()
     private let animateGroupNextTransition:Atomic<EngineChatList.Group?> = Atomic(value: nil)
     
     private let downloadsSummary: DownloadsSummary
@@ -422,6 +460,9 @@ class ChatListController : PeersListController {
     
     private var didSuggestAutoarchive: Bool = false
     
+    private var preloadStorySubscriptionsDisposable: Disposable?
+    private var preloadStoryResourceDisposables: [MediaId: Disposable] = [:]
+
 
     
     private let filterDisposable = MetaDisposable()
@@ -432,10 +473,9 @@ class ChatListController : PeersListController {
         super.viewDidResized(size)
     }
     
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        
         
         let initialSize = self.atomicSize
         let context = self.context
@@ -448,31 +488,54 @@ class ChatListController : PeersListController {
         let animated: Atomic<Bool> = self.animated
         let animateGroupNextTransition = self.animateGroupNextTransition
         var scroll:TableScrollState? = nil
+        
+        
+        self.preloadStorySubscriptionsDisposable = (self.context.engine.messages.preloadStorySubscriptions(isHidden: self.mode.groupId == .archive)
+                   |> deliverOnMainQueue).start(next: { [weak self] resources in
+                       guard let `self` = self else {
+                           return
+                       }
+                       
+                       var validIds: [MediaId] = []
+                       for (_, info) in resources.sorted(by: { $0.value.priority < $1.value.priority }) {
+                           if let mediaId = info.media.id {
+                               validIds.append(mediaId)
+                               if self.preloadStoryResourceDisposables[mediaId] == nil {
+                                   self.preloadStoryResourceDisposables[mediaId] = preloadStoryMedia(context: self.context, peer: info.peer, storyId: info.storyId, media: info.media, reactions: info.reactions).start()
+                               }
+                           }
+                       }
+                       
+                       var removeIds: [MediaId] = []
+                       for (id, disposable) in self.preloadStoryResourceDisposables {
+                           if !validIds.contains(id) {
+                               removeIds.append(id)
+                               disposable.dispose()
+                           }
+                       }
+                       for id in removeIds {
+                           self.preloadStoryResourceDisposables.removeValue(forKey: id)
+                       }
+                   })
 
 
-        let arguments = Arguments(context: context, setupFilter: { [weak self] filter in
-            self?.updateFilter {
-                $0.withUpdatedFilter(filter)
-            }
-            self?.scrollup(force: true)
-        }, openFilterSettings: { filter in
+
+        let arguments = Arguments(context: context, openFilterSettings: { filter in
             if case .filter = filter {
                 context.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
             } else {
                 context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
             }
-        }, tabsMenuItems: { filter, unreadCount, allMuted in
-            return filterContextMenuItems(filter, unreadCount: unreadCount, includeAllMuted: allMuted, context: context)
         }, createTopic: {
             switch mode {
-            case let .forum(peerId, _):
+            case let .forum(peerId, _, _):
                 ForumUI.createTopic(peerId, context: context)
             default:
                 break
             }
         }, switchOffForum: {
             switch mode {
-            case let .forum(peerId, _):
+            case let .forum(peerId, _, _):
                 _ = context.engine.peers.setChannelForumMode(id: peerId, isForum: false).start()
             default:
                 break
@@ -484,15 +547,43 @@ class ChatListController : PeersListController {
                 $0.withUpdatedDeprecatedNotice(Int32(Date().timeIntervalSince1970 + 31 * 24 * 60 * 60))
             }).start()
         }, applySharedFolderUpdates: { [weak self] updates in
-            if let filter = self?.filterValue?.filter {
+            if let filter = self?.filterValue.filter {
                 showModal(with: SharedFolderClosureController(context: context, content: .joinChats(updates: updates, content: updates.chatFolderLinkContents, filter: filter)), for: context.window)
             }
         }, hideSharedFolderUpdates: { [weak self] in
-            if let filter = self?.filterValue?.filter {
+            if let filter = self?.filterValue.filter {
                 _ = context.engine.peers.hideChatFolderUpdates(folderId: filter.id).start()
             }
+        }, openStory: { initialId, singlePeer, isHidden in
+            StoryModalController.ShowStories(context: context, isHidden: isHidden, initialId: initialId, singlePeer: singlePeer)
+        }, getStoryInterfaceState: { [weak self] in
+            guard let `self` = self else {
+                return .empty
+            }
+            return self.getStoryInterfaceState()
+        }, getNavigationHeight: { [weak self] in
+            guard let `self` = self else {
+                return 0
+            }
+            return self.genericView.navigationHeight
+        }, revealStoriesState: { [weak self] in
+            self?.revealStoriesState()
+        }, getState: { [weak self] in
+            guard let state = self?.state else {
+                return .initialize(self?.isContacts ?? false)
+            }
+            return state
+        }, getDeltaProgress: { [weak self] in
+            return self?.getDeltaProgress()
+        }, acceptSession: { session in
+            showModalText(for: context.window, text: strings().newSessionReviewAcceptText, title: strings().newSessionReviewAcceptTitle, callback: { _ in
+                context.bindings.rootNavigation().push(RecentSessionsController(context))
+            })
+            _ = context.engine.privacy.confirmNewSessionReview(id: session.id).start()
+        }, revokeSession: { session in
+            _ = context.engine.privacy.terminateAnotherSession(id: session.id).start()
+            showModal(with: SuspiciousRevokeModal(context: context, session: session), for: context.window)
         })
-        
         
         let previousLocation: Atomic<ChatLocation?> = Atomic(value: nil)
         globalPeerDisposable.set(context.globalPeerHandler.get().start(next: { [weak self] location in
@@ -511,11 +602,7 @@ class ChatListController : PeersListController {
         }))
 
         
-        let signal = filter.get() 
-
-        let previousfilter = Atomic<FilterData?>(value: self.filterValue)
-
-        let chatHistoryView: Signal<(ChatListViewUpdate, FilterData, Bool, ChatFolderUpdates?), NoError> = signal |> mapToSignal { data in
+        let chatHistoryView: Signal<(ChatListViewUpdate, FilterData, Bool, ChatFolderUpdates?), NoError> = filterSignal |> mapToSignal { data in
             
             let signal = combineLatest(context.engine.peers.subscribedChatFolderUpdates(folderId: data.filter.id), chatListViewForLocation(chatListLocation: mode.location, location: data.request, filter: data.filter, account: context.account))
             return  signal |> map { updates, view in
@@ -523,10 +610,24 @@ class ChatListController : PeersListController {
             }
         }
         
+        //            self.storyList =
+
+        
+        let storyState: Signal<EngineStorySubscriptions?, NoError>
+        if self.mode.groupId == .root {
+            storyState = context.engine.messages.storySubscriptions(isHidden: true) |> map(Optional.init)
+        } else {
+            storyState = .single(nil)
+        }
+        
+        let suspiciousSession: Signal<[NewSessionReview], NoError> = newSessionReviews(postbox: context.account.postbox)
+
+        
+        
         let previousLayout: Atomic<SplitViewState> = Atomic(value: context.layout)
 
-        let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
-                    
+        let list:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, stateUpdater, appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager), storyState, suspiciousSession) |> mapToQueue { value, appearance, state, inAppSettings, filtersCounter, storyState, suspiciousSession -> Signal<TableUpdateTransition, NoError> in
+                                
             let filterData = value.1
             let folderUpdates = value.3
             let update = value.0
@@ -547,7 +648,7 @@ class ChatListController : PeersListController {
                 prepare.append((value, nil))
             }
             
-            let hiddenItems: PeerListHiddenItems = state?.hiddenItems ?? .default
+            let hiddenItems: PeerListHiddenItems = state.hiddenItems
             
             if !update.list.hasLater, case .allChats = filterData.filter {
                 let items = update.list.additionalItems.filter {
@@ -564,37 +665,43 @@ class ChatListController : PeersListController {
                 case let .forum(threadId):
                     space = .init(peerId: item.0.renderedPeer.peerId, category: .thread(threadId))
                     if threadId == 1, item.0.threadData?.isHidden == true {
-                        generalStatus = state?.hiddenItems.generalTopic ?? .hidden(true)
+                        generalStatus = state.hiddenItems.generalTopic ?? .hidden(true)
                     }
                 case let .chatList(peerId):
                     space = .init(peerId: peerId, category: .global)
                 }
-                return .chat(item.0, state?.activities.activities[space] ?? [], item.1, filter: filterData.filter, generalStatus: generalStatus, selectedForum: state?.selectedForum, appearMode: state?.controllerAppear ?? .normal, hideContent: state?.appear == .short)
+                return .chat(item.0, state.activities.activities[space] ?? [], item.1, filter: filterData.filter, generalStatus: generalStatus, selectedForum: state.selectedForum, appearMode: state.controllerAppear, hideContent: state.appear == .short)
             }
             
             if case .filter = filterData.filter, mapped.isEmpty {} else {
                 if !update.list.hasLater {
-                    for (i, group) in update.list.groupItems.reversed().enumerated() {
-                        
-                        let hideStatus: ItemHideStatus
-                        if state?.appear == .short || state?.splitState == .minimisize {
-                            switch hiddenItems.archive {
-                            case .hidden:
-                                hideStatus = hiddenItems.archive
-                            default:
-                                hideStatus = .normal
-                            }
-                        } else {
+                    let hideStatus: ItemHideStatus
+                    if state.appear == .short || state.splitState == .minimisize {
+                        switch hiddenItems.archive {
+                        case .hidden:
                             hideStatus = hiddenItems.archive
+                        default:
+                            hideStatus = .normal
                         }
-                        mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, hideStatus, state?.controllerAppear ?? .normal, state?.appear == .short))
+                    } else {
+                        hideStatus = hiddenItems.archive
+                    }
+                    for (i, group) in update.list.groupItems.reversed().enumerated() {
+                        mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, hideStatus, state.controllerAppear, state.appear == .short, storyState))
+                    }
+                    if state.mode == .plain, state.filterData.filter == .allChats {
+                        if update.list.groupItems.isEmpty, let storyState = storyState, !storyState.items.isEmpty {
+                            mapped.append(.group(0, .init(id: .archive, topMessage: nil, items: [], unreadCount: 0), animateGroupNextTransition.swap(nil) == .archive, hideStatus, state.controllerAppear, state.appear == .short, storyState))
+                        }
                     }
                 }
             }
             
+           
+            
             if mapped.isEmpty {
                 if !update.list.isLoading {
-                    mapped.append(.empty(filterData.filter, mode, state?.splitState ?? .none, .init(state?.forumPeer?.peer)))
+                    mapped.append(.empty(filterData.filter, mode, state.splitState, .init(state.forumPeer?.peer)))
                 } else {
                     mapped.append(.loading(filterData.filter))
                 }
@@ -603,23 +710,19 @@ class ChatListController : PeersListController {
                     mapped.append(.loading(filterData.filter))
                 }
             }
-            
-            
-            if !filterData.isEmpty && !filterData.sidebar, state?.appear == .normal {
-                mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
+            if let suspiciousSession = suspiciousSession.first, mode == .plain, state.splitState == .single {
+                mapped.append(.suspicious(suspiciousSession))
             }
-            if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain {
+            
+//            if !filterData.isEmpty && !filterData.sidebar, state.appear == .normal {
+//                mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
+//            }
+            if FastSettings.systemUnsupported(inAppSettings.deprecatedNotice), mode == .plain, state.splitState == .single {
                 mapped.append(.systemDeprecated(filterData.filter))
             }
             if let updates = folderUpdates {
                 mapped.append(.sharedFolderUpdated(updates))
             }
-            
-            let entries = mapped.sorted().compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
-                return AppearanceWrapperEntry(entry: entry, appearance: appearance)
-            }
-            
-            let prev = previousEntries.swap(entries)
             
             
             var animated = animated.swap(true)
@@ -636,8 +739,16 @@ class ChatListController : PeersListController {
                 animated = false
             }
             
-            return prepareEntries(from: prev, to: entries, adIndex: nil, arguments: arguments, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId)
+            mapped.append(.space)
+
+            
+            let entries = mapped.sorted().compactMap { entry -> AppearanceWrapperEntry<UIChatListEntry>? in
+                return AppearanceWrapperEntry(entry: entry, appearance: appearance)
+            }
+            
+            return prepareEntries(from: previousEntries.swap(entries), to: entries, adIndex: nil, arguments: arguments, initialSize: initialSize.with { $0 }, animated: animated, scrollState: scroll, groupId: groupId)
         }
+        
         
         
         let appliedTransition = list |> deliverOnMainQueue |> mapToQueue { [weak self] transition -> Signal<Void, NoError> in
@@ -672,6 +783,20 @@ class ChatListController : PeersListController {
                 return
             }
             self.removeRevealStateIfNeeded(nil)
+        }))
+        
+        
+        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: true, { [weak self] scroll in
+           
+            var refreshStoryPeerIds:[PeerId] = []
+            self?.genericView.tableView.enumerateVisibleItems(with: { item in
+                if let item = item as? ChatListRowItem, let peer = item.peer as? TelegramUser, !item.isContact {
+                    refreshStoryPeerIds.append(peer.id)
+                }
+                return true
+            })
+            context.account.viewTracker.refreshStoryStatsForPeerIds(peerIds: refreshStoryPeerIds)
+
         }))
         
         genericView.tableView.set(stickClass: ChatListRevealItem.self, handler: { _ in
@@ -713,14 +838,12 @@ class ChatListController : PeersListController {
             
         })
         
-        let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue
+        let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue |> distinctUntilChanged
+        let filterBadges = chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue |> distinctUntilChanged
+        
         switch mode {
-        case .folder, .forum:
-            self.updateFilter( {
-                $0.withUpdatedTabs([]).withUpdatedFilter(nil)
-            } )
         case let .filter(filterId):
-            filterDisposable.set(filterView.start(next: { [weak self] filters in
+            filterDisposable.set(combineLatest(filterView, filterBadges).start(next: { [weak self] filters, badges in
                 var shouldBack: Bool = false
                 self?.updateFilter { current in
                     var current = current
@@ -730,6 +853,7 @@ class ChatListController : PeersListController {
                         shouldBack = true
                         current = current.withUpdatedFilter(nil)
                     }
+                    current = current.withUpdatedBadges(badges)
                     current = current.withUpdatedTabs([])
                     return current
                 }
@@ -737,17 +861,20 @@ class ChatListController : PeersListController {
                     self?.navigationController?.back()
                 }
             }))
+        case .folder:
+            break
         default:
             var first: Bool = true
-            filterDisposable.set(combineLatest(filterView, context.layoutValue).start(next: { [weak self] filters, layout in
+            filterDisposable.set(combineLatest(filterView, filterBadges).start(next: { [weak self] filters, badges in
                 self?.updateFilter( { current in
                     var current = current
-                    current = current.withUpdatedTabs(filters.list).withUpdatedSidebar(filters.sidebar || layout == .minimisize)
+                    current = current.withUpdatedTabs(filters.list).withUpdatedSidebar(filters.sidebar)
                     if !first, let updated = filters.list.first(where: { $0.id == current.filter.id }) {
                         current = current.withUpdatedFilter(updated)
                     } else {
                         current = current.withUpdatedFilter(nil)
                     }
+                    current = current.withUpdatedBadges(badges)
                     return current
                 } )
                 first = false
@@ -819,14 +946,8 @@ class ChatListController : PeersListController {
         self.genericView.tableView.merge(with: transition)
         self.readyOnce()
         
-        let top: CGFloat
-        if let item = genericView.tableView.firstItem as? ChatListRevealItem {
-            top = item.height
-        } else {
-            top = 0
-        }
-        self.genericView.tableView.scrollerInsets = .init(top: top)
-        
+        self.afterTransaction(transition)
+                
         switch self.mode {
         case .folder:
             if self.genericView.tableView.isEmpty {
@@ -904,7 +1025,7 @@ class ChatListController : PeersListController {
     private func resortPinned(_ from: Int, _ to: Int) {
         let context = self.context
         switch mode {
-        case let .forum(peerId, _):
+        case let .forum(peerId, _, _):
             var items:[Int64] = []
 
             var offset: Int = 0
@@ -942,15 +1063,11 @@ class ChatListController : PeersListController {
 
             let location: TogglePeerChatPinnedLocation
             
-            if let filter = self.filterValue?.filter {
-                switch filter {
-                case .allChats:
-                    location = .group(groupId._asGroup())
-                case let .filter(id, _, _, _):
-                    location = .filter(id)
-                }
-            } else {
+            switch self.filterValue.filter {
+            case .allChats:
                 location = .group(groupId._asGroup())
+            case let .filter(id, _, _, _):
+                location = .filter(id)
             }
             
             self.genericView.tableView.enumerateItems { item -> Bool in
@@ -1043,11 +1160,13 @@ class ChatListController : PeersListController {
                 }
             } else {
                 if self.genericView.tableView.documentOffset.y == 0 {
-                    if self.filterValue?.filter == .allChats {
-                        self.context.bindings.mainController().showFastChatSettings()
-                    } else {
-                        self.updateFilter {
-                            $0.withUpdatedFilter(nil)
+                    if !self.revealStoriesState() {
+                        if self.filterValue.filter == .allChats {
+                            self.context.bindings.mainController().showFastChatSettings()
+                        } else {
+                            self.updateFilter {
+                                $0.withUpdatedFilter(nil)
+                            }
                         }
                     }
                 } else {
@@ -1111,7 +1230,7 @@ class ChatListController : PeersListController {
             
                 _ = dismissServerProvidedSuggestion(account: strongSelf.context.account, suggestion: .autoarchivePopular).start()
                 
-                confirm(for: context.window, header: strings().alertHideNewChatsHeader, information: strings().alertHideNewChatsText, okTitle: strings().alertHideNewChatsOK, cancelTitle: strings().alertHideNewChatsCancel, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().alertHideNewChatsHeader, information: strings().alertHideNewChatsText, ok: strings().alertHideNewChatsOK, cancel: strings().alertHideNewChatsCancel, successHandler: { _ in
                     execute(inapp: .settings(link: "tg://settings/privacy", context: context, section: .privacy))
                 })
                 
@@ -1142,34 +1261,38 @@ class ChatListController : PeersListController {
             guard let `self` = self, let window = self.window else {return .failed}
             let swipeState: SwipeState?
             
+            
+            let hitTestView = self.genericView.hitTest(self.genericView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+            if let view = hitTestView, view.isInSuperclassView(ChatListRevealView.self) {
+                return .failed
+            } else if let view = hitTestView, view.isInSuperclassView(StoryListView.self) {
+                if self.getStoryInterfaceState() == .revealed {
+                    return .failed
+                }
+            }
+
             var checkFolder: Bool = true
             let row = self.genericView.tableView.row(at: self.genericView.tableView.clipView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
             if row != -1 {
-                
-                let hitTestView = self.genericView.hitTest(self.genericView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
-                if let view = hitTestView, view.isInSuperclassView(ChatListRevealView.self) {
-                    return .failed
-                }
                 let item = self.genericView.tableView.item(at: row) as? ChatListRowItem
                 if let item = item {
                     let view = item.view as? ChatListRowView
                     if view?.endRevealState != nil {
                         checkFolder = false
                     }
-                    
                     if !item.hasRevealState {
                         return .failed
                     }
                 } else {
                     return .failed
                 }
-                
+
             }
 
             
             switch direction {
             case let .left(_state):
-                if !self.mode.isPlain && checkFolder {
+                if (!self.mode.isPlain || self.mode.groupId == .archive || self.mode.isForum) && checkFolder  {
                     swipeState = nil
                 } else {
                     swipeState = _state
@@ -1387,6 +1510,10 @@ class ChatListController : PeersListController {
         suggestAutoarchiveDisposable.dispose()
         downloadsDisposable.dispose()
         folderUpdatesDisposable.dispose()
+        preloadStorySubscriptionsDisposable?.dispose()
+        for (_, disposable) in preloadStoryResourceDisposables {
+            disposable.dispose()
+        }
     }
     
     
@@ -1402,18 +1529,22 @@ class ChatListController : PeersListController {
     override var defaultBarTitle: String {
         switch mode {
         case .filter:
-            return _filterValue.with { $0.filter.title }
+            return filterValue.filter.title
         default:
             return super.defaultBarTitle
         }
     }
 
     override func escapeKeyAction() -> KeyHandlerResult {
-        if !mode.isPlain, let navigation = navigationController {
+        if mode.groupId == .archive, let navigation = navigationController {
             navigation.back()
             return .invoked
         }
-        if let filter = self.filterValue, !filter.isFirst {
+        if case .forum = mode, let navigation = navigationController {
+            navigation.back()
+            return .invoked
+        }
+        if !self.filterValue.isFirst {
             updateFilter {
                 $0.withUpdatedFilter(nil)
             }
@@ -1427,7 +1558,6 @@ class ChatListController : PeersListController {
         
 
         self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
-        
         let searchOptions:AppSearchOptions
         searchOptions = [.messages, .chats]
         super.init(context, followGlobal: !modal, mode: mode, searchOptions: searchOptions)
@@ -1447,7 +1577,7 @@ class ChatListController : PeersListController {
             
             if let modalAction = modalAction as? FWDNavigationAction {
                 if item.peerId == context.peerId {
-                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId, replyId: nil).start()
+                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map { $0.id }, context: context, peerId: context.peerId, replyId: nil).start()
                     _ = showModalSuccess(for: item.context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                     navigationController?.removeModalAction()
                     return false
@@ -1475,6 +1605,9 @@ class ChatListController : PeersListController {
             return false
         }
         if item is ChatListSystemDeprecatedItem {
+            return false
+        }
+        if item is SuspiciousAuthRowItem {
             return false
         }
         return true
@@ -1516,6 +1649,20 @@ class ChatListController : PeersListController {
                 
             }
         }
+    }
+    override var supportSwipes: Bool {
+        guard let window = self.window else {
+            return false
+        }
+        let hitTestView = self.genericView.hitTest(self.genericView.convert(window.mouseLocationOutsideOfEventStream, from: nil))
+        if let view = hitTestView, view.isInSuperclassView(ChatListRevealView.self) {
+            return false
+        } else if let view = hitTestView, view.isInSuperclassView(StoryListChatListRowView.self) {
+            if self.getStoryInterfaceState() == .revealed || self.getStoryInterfaceState().progress != 0 {
+                return false
+            }
+        }
+        return true
     }
   
 }

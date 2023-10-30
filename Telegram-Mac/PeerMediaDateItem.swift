@@ -20,11 +20,11 @@ class PeerMediaDateItem: TableStickItem {
     let viewType: GeneralViewType
     let inset: NSEdgeInsets
 
-    init(_ initialSize: NSSize, index: MessageIndex, stableId: AnyHashable) {
+    init(_ initialSize: NSSize, index: MessageIndex, stableId: AnyHashable, inset: NSEdgeInsets = NSEdgeInsets(left: 0, right: 0)) {
         self.messageIndex = index
         self._stableId = stableId
         self.viewType = .modern(position: .single, insets: NSEdgeInsetsMake(3, 0, 3, 0))
-        self.inset = NSEdgeInsets(left: 0, right: 0)
+        self.inset = inset
         let timestamp = index.timestamp
         
         let nowTimestamp = Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
@@ -51,7 +51,7 @@ class PeerMediaDateItem: TableStickItem {
         self.messageIndex = MessageIndex.absoluteLowerBound()
         self.textLayout = TextViewLayout(.initialize(string: ""))
         self.viewType = .separator
-        self.inset = NSEdgeInsets(left: 30, right: 30)
+        self.inset = NSEdgeInsets(left: 20, right: 20)
         super.init(initialSize)
     }
 

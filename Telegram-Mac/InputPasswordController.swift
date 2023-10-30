@@ -47,7 +47,7 @@ private func inputPasswordEntries(state: InputPasswordState, desc:String) -> [In
     var sectionId:Int32 = 0
     var index:Int32 = 0
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(10)))
     sectionId += 1
     
     
@@ -57,7 +57,7 @@ private func inputPasswordEntries(state: InputPasswordState, desc:String) -> [In
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
     index += 1
     
-    entries.append(.sectionId(sectionId, type: .normal))
+    entries.append(.sectionId(sectionId, type: .customModern(20)))
     sectionId += 1
     
     return entries
@@ -126,11 +126,8 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
         
         controller?.validateInputValues()
         
-    }, drawBorder: true, height: 50, singleButton: true)
+    }, singleButton: true)
     
-    controller.getBackgroundColor = {
-        theme.colors.listBackground
-    }
     
     let modalController = InputDataModalController(controller, modalInteractions: interactions, size: NSMakeSize(300, 300))
     

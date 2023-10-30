@@ -120,7 +120,6 @@ public extension ContainedViewLayoutTransition {
                 })
             default:
                 
-                CATransaction.begin()
                 var ignoreSize: Bool = false
                 if let view = view as? TableView {
                     view.change(size: frame.size, animated: true, duration: duration, timingFunction: curve.timingFunction, completion: { completed in
@@ -148,7 +147,6 @@ public extension ContainedViewLayoutTransition {
                         completion?(completed)
                     }
                 })
-                CATransaction.commit()
             }
         }
     }
@@ -164,7 +162,6 @@ public extension ContainedViewLayoutTransition {
             }
         case let .animated(duration, _):
 
-            CATransaction.begin()
             
             func animateSize(_ layer: CALayer) -> Void {
                 var presentBounds:NSRect = layer.bounds
@@ -184,11 +181,14 @@ public extension ContainedViewLayoutTransition {
                 }
                 layer.animatePosition(from: presentRect.origin, to: frame.origin, duration: duration, timingFunction: timingFunction)
             }
-            animatePos(layer)
-            animateSize(layer)
+            if layer.frame.origin != frame.origin {
+                animatePos(layer)
+            }
+            if layer.frame.size != frame.size {
+                animateSize(layer)
+            }
             layer.frame = frame
             
-            CATransaction.commit()
         }
     }
     
@@ -230,12 +230,12 @@ public extension ContainedViewLayoutTransition {
     func updateAlpha(view: NSView, alpha: CGFloat, completion: ((Bool) -> Void)? = nil) {
         switch self {
         case .immediate:
-            view.alphaValue = alpha
+            view.layer?.opacity = Float(alpha)
             if let completion = completion {
                 completion(true)
             }
         case let .animated(duration, curve):
-            let previousAlpha = view.layer?.opacity ?? 1
+            let previousAlpha = view.layer?.presentation()?.opacity ?? view.layer?.opacity ?? 1
             view.layer?.opacity = Float(alpha)
             view.layer?.animateAlpha(from: CGFloat(previousAlpha), to: alpha, duration: duration, timingFunction: curve.timingFunction, completion: { result in
                 if let completion = completion {
@@ -245,6 +245,25 @@ public extension ContainedViewLayoutTransition {
         }
     }
     
+    func updateAlpha(layer: CALayer, alpha: CGFloat, completion: ((Bool) -> Void)? = nil) {
+        switch self {
+        case .immediate:
+            layer.opacity = Float(alpha)
+            if let completion = completion {
+                completion(true)
+            }
+        case let .animated(duration, curve):
+            let previousAlpha = layer.presentation()?.opacity ?? layer.opacity
+            layer.opacity = Float(alpha)
+            layer.animateAlpha(from: CGFloat(previousAlpha), to: alpha, duration: duration, timingFunction: curve.timingFunction, completion: { result in
+                if let completion = completion {
+                    completion(result)
+                }
+            })
+        }
+    }
+
+    
     func animatePositionWithKeyframes(layer: CALayer, keyframes: [CGPoint], removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
            switch self {
            case .immediate:
@@ -253,6 +272,31 @@ public extension ContainedViewLayoutTransition {
                layer.animateKeyframes(values: keyframes.map(NSValue.init(point:)), duration: duration, keyPath: "position", timingFunction: curve.timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
            }
        }
+    
+    
+    func setShapeLayerStrokeEnd(layer: CAShapeLayer, strokeEnd: CGFloat, completion: ((Bool) -> Void)? = nil) {
+        switch self {
+        case .immediate:
+            layer.strokeEnd = strokeEnd
+            completion?(true)
+        case let .animated(duration, curve):
+            let previousStrokeEnd = layer.strokeEnd
+            layer.strokeEnd = strokeEnd
+            
+            layer.animate(
+                from: previousStrokeEnd as NSNumber,
+                to: strokeEnd as NSNumber,
+                keyPath: "strokeEnd",
+                timingFunction: curve.timingFunction,
+                duration: duration,
+                delay: 0.0,
+                removeOnCompletion: true,
+                additive: false,
+                completion: completion
+            )
+        }
+    }
+
 
 }
 

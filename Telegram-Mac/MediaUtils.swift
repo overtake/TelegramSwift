@@ -783,7 +783,7 @@ func chatMessageWebFilePhoto(account: Account, photo: TelegramMediaWebFile, toRe
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
                 if arguments.boundingSize != arguments.imageSize {
-                    c.setFillColor(theme.colors.grayBackground.cgColor)
+                   // c.setFillColor(theme.colors.grayBackground.cgColor)
                     c.fill(arguments.drawingRect)
                 }
                 
@@ -1615,8 +1615,8 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 
 
-func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
-    if let largest = photo.representationForDisplayAtSize(PixelDimensions(NSMakeSize(1280, 1280))) {
+func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false, dimension: NSSize = NSMakeSize(1280, 1280)) -> Signal<MediaResourceStatus, NoError> {
+    if let largest = photo.representationForDisplayAtSize(PixelDimensions(dimension)) {
         if largest.resource is LocalFileReferenceMediaResource {
             return .single(.Local)
         } else {
@@ -2241,7 +2241,7 @@ func mediaGridMessagePhoto(account: Account, imageReference: ImageMediaReference
             
             context.withContext(isHighQuality: fullSizeImage != nil, { c in
                 c.setBlendMode(.copy)
-                c.setFillColor(theme.colors.grayBackground.cgColor)
+             //   c.setFillColor(theme.colors.grayBackground.cgColor)
                 if arguments.boundingSize != arguments.imageSize {
                     c.fill(arguments.drawingRect)
                 }

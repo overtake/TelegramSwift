@@ -144,9 +144,9 @@ final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentati
     var uniqueId: String {
         let version: Int = 17
         if let fitzModifier = self.fitzModifier {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)-m1\(self.isVideo)"
+            return "1animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)-m1\(self.isVideo)"
         } else {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-f\(frame)-m1\(self.isVideo)"
+            return "1animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-f\(frame)-m1\(self.isVideo)"
         }
     }
     let thumb: Bool

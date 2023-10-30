@@ -164,9 +164,13 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     }
     
     func songDidChanged(song: APSongItem, for controller: APController, animated: Bool) {
-       
+        updateSongState()
     }
     func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
+       updateSongState()
+    }
+    
+    private func updateSongState() {
         if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
             var singleEqual: Bool = false
             if let single = singleWrapper {
@@ -193,6 +197,10 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: true, isVideoMessage: true)
                 stateThumbView.isHidden = false
             }
+        } else if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
+            playingProgressView.state = .None
+            durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: true, isVideoMessage: true)
+            stateThumbView.isHidden = false
         }
     }
     
@@ -342,7 +350,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         
         if let media = media as? TelegramMediaFile {
             if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
-                durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: animated, isVideoMessage: true)
+                updateSongState()
                 fillTranscribedAudio(parameters.transcribeData, parameters: parameters, animated: animated)
             }
             
@@ -478,7 +486,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                         }
                     }, for: .Click)
                 }
-                control.update(state: controlState, color: data.backgroundColor, activityBackground: data.fontColor, blurBackground: parameters.presentation.isBubble ? theme.blurServiceColor : nil, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+                control.update(state: controlState, color: data.backgroundColor, activityBackground: data.fontColor, blurBackground: parameters.presentation.isBubble && parameters.presentation.presentation.hasWallpaper ? theme.blurServiceColor : nil, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
             }
             
             if removeTransribeControl, let view = transcribeControl {

@@ -80,15 +80,15 @@ protocol PeerInfoEntry {
 }
 
 
-func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, source: PeerInfoController.Source) -> [PeerInfoEntry] {
+func peerInfoEntries(view: PeerView, threadData: MessageHistoryThreadData?, arguments: PeerInfoArguments, inputActivities: [PeerId: PeerInputActivity], channelMembers: [RenderedChannelParticipant], mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, source: PeerInfoController.Source, stories: PeerExpiringStoryListContext.State?) -> [PeerInfoEntry] {
     if let threadData = threadData {
         return topicInfoEntries(view: view, threadData: threadData, arguments: arguments, mediaTabsData: mediaTabsData)
     } else if peerViewMainPeer(view) is TelegramUser {
-        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, source: source)
+        return userInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, source: source, stories: stories)
     } else if let channel = peerViewMainPeer(view) as? TelegramChannel {
         switch channel.info {
         case .broadcast:
-            return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions)
+            return channelInfoEntries(view: view, arguments: arguments, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, stories: stories)
         case .group:
             return groupInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions)
         }
