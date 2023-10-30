@@ -7022,11 +7022,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         
         self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            guard let strongSelf = self else {
+                return .rejected
+            }
             if hasModals() {
                 return .rejected
             }
-            if let strongSelf = self, strongSelf.context.window.firstResponder != strongSelf.genericView.inputView.textView.inputView {
-                _ = strongSelf.context.window.makeFirstResponder(strongSelf.genericView.inputView)
+            let inputView = strongSelf.genericView.inputView.textView.inputView
+            if strongSelf.context.window.firstResponder != inputView {
+                _ = strongSelf.context.window.makeFirstResponder(inputView)
                 return .invoked
             } else if (self?.navigationController as? MajorNavigationController)?.genericView.state == .single {
                 return .invoked
