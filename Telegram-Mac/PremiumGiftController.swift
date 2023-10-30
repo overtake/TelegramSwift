@@ -126,7 +126,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
    
     if let peer = state.peer {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(peer), comparable: nil, item: { initialSize, stableId in
-            return PremiumGiftHeaderItem(initialSize, stableId: stableId, context: arguments.context, peer: peer.peer)
+            return PremiumGiftHeaderItem(initialSize, stableId: stableId, context: arguments.context, source: .gift(peer.peer))
         }))
         index += 1
     }
@@ -461,7 +461,7 @@ final class PremiumGiftController : ModalViewController {
 
         var canMakePayment: Bool = true
         #if APP_STORE || DEBUG
-        canMakePayment = inAppPurchaseManager.canMakePayments()
+        canMakePayment = inAppPurchaseManager.canMakePayments
         #endif
 
         let initialState = State(peer: nil, options: options, option: options[0], premiumConfiguration: PremiumPromoConfiguration.defaultValue, canMakePayment: canMakePayment)
@@ -600,30 +600,22 @@ final class PremiumGiftController : ModalViewController {
 
             let duration = product.option.months
             
-            let _ = (context.engine.payments.canPurchasePremium(purpose: .gift(peerId: peerId, currency: currency, amount: amount))
+            let purpose: AppStoreTransactionPurpose = .gift(peerId: peerId, currency: currency, amount: amount)
+            
+            let _ = (context.engine.payments.canPurchasePremium(purpose: purpose)
             |> deliverOnMainQueue).start(next: { [weak lockModal] available in
                 if available {
-                    actionsDisposable.add((inAppPurchaseManager.buyProduct(storeProduct, account: context.account, targetPeerId: peerId)
+                    actionsDisposable.add((inAppPurchaseManager.buyProduct(storeProduct, purpose: purpose)
                     |> deliverOnMainQueue).start(next: { status in
-                        
                         lockModal?.close()
                         needToShow = false
-                        
-                        if case .purchased = status {
-                            let activate = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: InAppPurchaseManager.getReceiptData() ?? Data(), purpose: .gift(peerId: peerId, currency: currency, amount: amount)), for: context.window)
-                            activationDisposable.set(activate.start(error: { _ in
-                                showModalText(for: context.window, text: strings().errorAnError)
-                                inAppPurchaseManager.finishAllTransactions()
-                            }, completed: {
-                                close()
-                                inAppPurchaseManager.finishAllTransactions()
-                                delay(0.2, closure: {
-                                    PlayConfetti(for: context.window)
-                                    gotoProfile(nil)
-                                    let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
-                                })
-                            }))
-                        }
+                        close()
+                        inAppPurchaseManager.finishAllTransactions()
+                        delay(0.2, closure: {
+                            PlayConfetti(for: context.window)
+                            gotoProfile(nil)
+                            let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
+                        })
                     }, error: {  error in
                         let errorText: String
                         switch error {

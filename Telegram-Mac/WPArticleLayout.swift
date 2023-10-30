@@ -31,13 +31,29 @@ class WPArticleLayout: WPLayout {
     private(set) var parameters:[ChatMediaLayoutParameters] = []
 
     init(with content: TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, downloadSettings: AutomaticMediaDownloadSettings, autoplayMedia: AutoplayMediaPreferences, theme: TelegramPresentationTheme, mayCopyText: Bool) {
+        
+        var content = content
+        
+        if let story = content.story, let media = parent.associatedStories[story.storyId]?.get(Stories.StoredItem.self), groupLayout == nil {
+            switch media {
+            case let .item(story):
+                if let image = story.media as? TelegramMediaImage {
+                    content = content.withUpdatedImage(image)
+                } else if let file = story.media as? TelegramMediaFile {
+                    content = content.withUpdatedFile(file)
+                }
+            default:
+                break
+            }
+        }
+        
+        
         if let duration = content.duration {
             self.durationAttributed = .initialize(string: String.durationTransformed(elapsed: duration), color: .white, font: .normal(.text))
         } else {
             durationAttributed = nil
         }
         
-        var content = content
         if content.type == "telegram_theme" {
             for attr in content.attributes {
                 switch attr {
@@ -109,6 +125,7 @@ class WPArticleLayout: WPLayout {
                 imageSize = dimensions
             }
         }
+       
         
         if let file = content.file, groupLayout == nil {
             if let dimensions = file.dimensions?.size {
@@ -152,9 +169,21 @@ class WPArticleLayout: WPLayout {
     private let fullSizeSites:[String] = ["instagram","twitter"]
     
     var isFullImageSize: Bool {
+        
+        
+        if let attr = parent.webpagePreviewAttribute {
+            if let forceLargeMedia = attr.forceLargeMedia {
+                return forceLargeMedia
+            }
+        }
+        if let value = content.isMediaLargeByDefault {
+            return value
+        }
+        
         if content.type == "telegram_background" || content.type == "telegram_theme" {
             return true
         }
+       
         let website = content.websiteName?.lowercased()
         if let type = content.type, mediaTypes.contains(type) || (fullSizeSites.contains(website ?? "") || content.instantPage != nil) || content.text == nil  {
             if let imageSize = imageSize {
@@ -174,9 +203,9 @@ class WPArticleLayout: WPLayout {
         if oldWidth != width {
             super.measure(width: width)
             
-            let maxw = min(320, width - 50)
+            let maxw = min(width - insets.left - insets.right, 300)
             
-            var contentSize:NSSize = NSMakeSize(width - insets.left, 0)
+            var contentSize:NSSize = NSMakeSize(maxw, 0)
             
             if let groupLayout = groupLayout {
                 groupLayout.measure(NSMakeSize(max(contentSize.width, maxw), maxw))
@@ -185,8 +214,7 @@ class WPArticleLayout: WPLayout {
                 contentSize.width = max(groupLayout.dimensions.width, contentSize.width)
             }
             
-            var emptyColor: TransformImageEmptyColor? = nil// = NSColor(rgb: 0xd6e2ee, alpha: 0.5)
-            var isColor: Bool = false
+            var emptyColor: TransformImageEmptyColor? = nil
             if let wallpaper = wallpaper {
                 switch wallpaper {
                 case let .wallpaper(_, _, preview):
@@ -205,10 +233,8 @@ class WPArticleLayout: WPLayout {
                                 emptyColor = .color(NSColor(argb: color))
                             }
                         }
-                    case .color:
-                        isColor = true
-                    case .gradient:
-                        isColor = true
+                    default:
+                        break
                     }
                 default:
                     break
@@ -217,24 +243,23 @@ class WPArticleLayout: WPLayout {
             
             if let imageSize = imageSize, isFullImageSize {
                 
-                if isTheme {
+                if content.story != nil {
+                    contrainedImageSize = imageSize.aspectFitted(NSMakeSize(maxw, maxw))
+                } else if isTheme {
                     contrainedImageSize = imageSize.fitted(NSMakeSize(maxw, maxw))
                 } else {
-                    contrainedImageSize = imageSize.fitted(NSMakeSize(min(width - insets.left, maxw), maxw))
+                    contrainedImageSize = imageSize.aspectFitted(NSMakeSize(maxw, maxw))
+                    if action_text != nil, contrainedImageSize.width < 200 {
+                        contrainedImageSize = NSMakeSize(min(300, maxw), min(300, maxw))
+                    }
                 }
-              //  if presentation.renderType == .bubble {
-                if isColor {
-                    contrainedImageSize = imageSize.fitted(NSMakeSize(maxw, maxw))
-                } else if !isTheme  {
-                    contrainedImageSize.width = max(contrainedImageSize.width, maxw)
-                }
-              //  }
+
                 textLayout?.cutout = nil
                 smallThumb = false
                 contentSize.height += contrainedImageSize.height
                 contentSize.width = contrainedImageSize.width
                 if textLayout != nil {
-                    contentSize.height += 6
+                    contentSize.height += insets.top
                 }
             } else {
                 if let _ = imageSize, !isFullImageSize {
@@ -257,16 +282,24 @@ class WPArticleLayout: WPLayout {
                 contentSize.height += textLayout.layoutSize.height
                 
                 if textLayout.cutout != nil {
-                    contentSize.height = max(content.image != nil ? contrainedImageSize.height : 0,contentSize.height)
-                    contentSize.width = min(max(textLayout.layoutSize.width, (siteName?.0.size.width ?? 0) + contrainedImageSize.width), width - insets.left)
+                    contentSize.height = max(imageSize != nil ? contrainedImageSize.height + imageInsets.top + imageInsets.bottom : 0, contentSize.height)
+                    contentSize.width = min(max(textLayout.layoutSize.width, contrainedImageSize.width), maxw)
                 } else if imageSize == nil {
-                    contentSize.width = max(max(textLayout.layoutSize.width, groupLayout?.dimensions.width ?? 0), (siteName?.0.size.width ?? 0))
+                    contentSize.width = max(textLayout.layoutSize.width, groupLayout?.dimensions.width ?? 0)
                 }
             }
             
             if let imageSize = imageSize {
+                let imgSize: NSSize
+                if isTheme {
+                    imgSize = contrainedImageSize
+                } else if action_text != nil {
+                    imgSize = imageSize.aspectFitted(contrainedImageSize)
+                } else {
+                    imgSize = imageSize.aspectFilled(NSMakeSize(maxw, maxw))
+                }
                 
-                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: isTheme ? contrainedImageSize : imageSize.aspectFilled(NSMakeSize(maxw, maxw)), boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground, emptyColor: emptyColor)
+                let imageArguments = TransformImageArguments(corners: ImageCorners(radius: 4.0), imageSize: imgSize, boundingSize: contrainedImageSize, intrinsicInsets: NSEdgeInsets(), resizeMode: .blurBackground, emptyColor: emptyColor)
                 
                 if imageArguments != self.imageArguments {
                     self.imageArguments = imageArguments

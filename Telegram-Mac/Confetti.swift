@@ -370,13 +370,14 @@ final class CustomReactionEffectView: View {
     private var localTime: Float = 0.0
     
     var triggerOnFinish:()->Void = {}
-    private let backgroundView = LottiePlayerView(frame: NSMakeRect(0, 0, 80, 80))
+    private let backgroundView: LottiePlayerView
     
     private let disposable = MetaDisposable()
     private let context: AccountContext
     
     required init(frame: CGRect, context: AccountContext, fileId: Int64, file: TelegramMediaFile? = nil) {
         self.context = context
+        self.backgroundView = LottiePlayerView(frame: NSMakeRect(0, 0, floor(frame.width / 2), floor(frame.height / 2)))
         super.init(frame: frame)
         addSubview(backgroundView)
         
@@ -446,7 +447,7 @@ final class CustomReactionEffectView: View {
         
         disposable.set(combined.start(next: { [weak self] animation, file in
             if let statusFile = file.0 {
-                if let builtinAnimation = file.1 {
+                if let builtinAnimation = file.1, false {
                     builtinAnimation.triggerOn = (.last, { [weak self] in
                         self?.triggerOnFinish()
                     }, {})
@@ -475,7 +476,7 @@ final class CustomReactionEffectView: View {
         
         let count: Int = 7
         
-        let r: CGFloat = 25
+        let r: CGFloat = max(25, frame.width / 8)
         let mid = NSMakePoint(frame.width / 2, frame.height / 2)
         for i in 0 ..< count {
             

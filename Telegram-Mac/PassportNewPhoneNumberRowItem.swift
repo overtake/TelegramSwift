@@ -114,7 +114,7 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
         super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
         
-        numberText.placeholderAttributedString = NSAttributedString.initialize(string: strings().loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: NSFont.normal(.header), coreText: false)
+        numberText.placeholderAttributedString = NSAttributedString.initialize(string: strings().loginPhoneFieldPlaceholder, color: theme.colors.grayText, font: NSFont.normal(.header))
         codeText.textView?.insertionPointColor = theme.colors.indicatorColor
         numberText.textView?.insertionPointColor = theme.colors.indicatorColor
 
@@ -136,6 +136,8 @@ private class PassportPhoneContainerView : View, NSTextFieldDelegate {
             text = "PHONE BANNED"
         case .timeout:
             text = "timeout"
+        case .appOutdated:
+            text = "please update your app"
         }
         errorLabel.state.set(.error(text))
     }

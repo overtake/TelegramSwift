@@ -111,7 +111,7 @@ public class SectionControllerView : View {
                     controller?.viewDidAppear(animated)
                 }
             })
-            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, duration: duration, timingFunction: .spring, removeOnCompletion: false)
+            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, duration: duration, timingFunction: .spring, removeOnCompletion: true)
             CATransaction.commit()
         } else {
             container.removeAllSubviews()
@@ -183,7 +183,7 @@ public class SectionControllerItem {
 }
 
 
-public class SectionViewController: GenericViewController<SectionControllerView> {
+open class SectionViewController: GenericViewController<SectionControllerView> {
 
     private var sections:[SectionControllerItem] = []
     public var selectedSection:SectionControllerItem
@@ -211,13 +211,13 @@ public class SectionViewController: GenericViewController<SectionControllerView>
     public func select(_ index:Int, _ animated: Bool, notifyApper: Bool = true) {
         if selectedIndex != index || !animated {
             selectedSection = sections[index]
-            sections[index].controller._frameRect = NSMakeRect(0, 0, frame.width, frame.height - 50)
-            sections[index].controller.loadViewIfNeeded()
             let controller = sections[index].controller
+            controller._frameRect = NSMakeRect(0, 0, frame.width, frame.height + 50)
+            controller.loadViewIfNeeded()
             selectedIndex = index
             selectionUpdateHandler?(index)
             if notifyApper {
-                sections[index].controller.viewWillAppear(animated)
+                controller.viewWillAppear(animated)
             }
             disposable.set((sections[index].controller.ready.get() |> filter {$0} |> take(1)).start(next: { [weak self, weak controller] ready in
                 if let strongSelf = self, let controller = controller {
@@ -230,7 +230,6 @@ public class SectionViewController: GenericViewController<SectionControllerView>
         super.viewWillAppear(animated)
         selectedSection.controller._frameRect = NSMakeRect(0, 0, frame.width, frame.height - 50)
         selectedSection.controller.viewWillAppear(animated)
-        self.ready.set(sections[selectedIndex].controller.ready.get())
     }
     override public func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -368,7 +367,7 @@ public class SectionViewController: GenericViewController<SectionControllerView>
         selectedSection.controller.viewDidDisappear(animated)
     }
     
-    public override func viewDidLoad() {
+    open override func viewDidLoad() {
         super.viewDidLoad()
         
         let arguments = SectionControllerArguments { [weak self] index in
@@ -376,18 +375,20 @@ public class SectionViewController: GenericViewController<SectionControllerView>
         }
         genericView.layout(sections: sections, selected: selectedIndex, hasHeaderView: self.hasHeaderView, arguments: arguments)
         select(selectedIndex, false)
+        
+        self.ready.set(sections[selectedIndex].controller.ready.get())
     }
     
     private let hasHeaderView: Bool
     
-    public init(sections: [SectionControllerItem], selected: Int = 0, hasHeaderView: Bool = true) {
+    public init(sections: [SectionControllerItem], selected: Int = 0, hasHeaderView: Bool = true, hasBar: Bool = false) {
         assert(!sections.isEmpty)
         self.sections = sections
         self.selectedSection = sections[selected]
         self.selectedIndex = selected
         self.hasHeaderView = hasHeaderView
         super.init()
-        bar = .init(height: 0)
+        bar = .init(height: hasBar ? 50 : 0)
     }
     
 }

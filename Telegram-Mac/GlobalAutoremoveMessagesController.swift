@@ -29,6 +29,9 @@ private class AutoremoveCallbackObject : ShareObject {
         return true
     }
     
+    override var hasFolders: Bool {
+        return false
+    }
     
     override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
         return callback(peerIds) |> castError(String.self)
@@ -221,7 +224,7 @@ func GlobalAutoremoveMessagesController(context: AccountContext, privacy: Accoun
             }
         }
         if time > 0, value == 0 {
-            confirm(for: context.window, header: strings().globalTimerConfirmTitle, information: strings().globalTimerConfirmText(timeIntervalString(Int(time))), okTitle: strings().globalTimerConfirmOk, successHandler: { _ in
+            verifyAlert_button(for: context.window, header: strings().globalTimerConfirmTitle, information: strings().globalTimerConfirmText(timeIntervalString(Int(time))), ok: strings().globalTimerConfirmOk, successHandler: { _ in
                 update()
             })
         } else {

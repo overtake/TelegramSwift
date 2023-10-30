@@ -13,11 +13,70 @@ import FastBlur
 import SwiftSignalKit
 import TGUIKit
 import FastBlur
+import ColorPalette
+
+extension PeerNameColors {
+    public func get(_ color: PeerNameColor) -> Colors {
+        if let colors = self.colors[color.rawValue] {
+            return colors
+        } else {
+            return PeerNameColors.defaultSingleColors[5]!
+        }
+    }
+    
+    public static func with(appConfiguration: AppConfiguration) -> PeerNameColors {
+        if let data = appConfiguration.data {
+            var colors = PeerNameColors.defaultSingleColors
+            var darkColors: [Int32: Colors] = [:]
+            
+            if let peerColors = data["peer_colors"] as? [String: [String]] {
+                for (key, values) in peerColors {
+                    if let index = Int32(key) {
+                        let colorsArray = values.compactMap { NSColor(hexString: "#\($0)") }
+                        if let colorValues = Colors(colors: colorsArray) {
+                            colors[index] = colorValues
+                        }
+                    }
+                }
+            }
+            
+            if let darkPeerColors = data["dark_peer_colors"] as? [String: [String]] {
+                for (key, values) in darkPeerColors {
+                    if let index = Int32(key) {
+                        let colorsArray = values.compactMap { NSColor(hexString: "#\($0)") }
+                        if let colorValues = Colors(colors: colorsArray) {
+                            darkColors[index] = colorValues
+                        }
+                    }
+                }
+            }
+            
+            var displayOrder: [Int32] = []
+            if let order = data["peer_colors_available"] as? [Double] {
+                displayOrder = order.map { Int32($0) }
+            }
+            if displayOrder.isEmpty {
+                displayOrder = PeerNameColors.defaultValue.displayOrder
+            }
+            
+            return PeerNameColors(
+                colors: colors,
+                darkColors: darkColors,
+                displayOrder: displayOrder
+            )
+        } else {
+            return .defaultValue
+        }
+    }
+}
+
+
+
 
 let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
 enum PeerPhoto {
-    case peer(Peer, TelegramMediaImageRepresentation?, [String], Message?)
+    case peer(Peer, TelegramMediaImageRepresentation?, PeerNameColor?, [String], Message?)
     case topic(EngineMessageHistoryThread.Info, Bool)
 }
 
@@ -28,10 +87,10 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
     let isForum: Bool = peer.isForum && !disableForum
     
     if let representation = representation {
-        return cachedPeerPhoto(peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
+        return cachedPeerPhoto(peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             return autoreleasepool {
                 if let cached = cached {
-                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> map {
+                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                         return (cached, false)
                     }
                 } else {
@@ -128,7 +187,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             if tiny {
                                 return .single((image, animated))
                             }
-                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> map {
+                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, peerNameColor: nil, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                                 return (image, animated)
                             }
                         } else {
@@ -154,9 +213,11 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
             }
         }
         
-        
-        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt64Value() % 7)))
-        
+        //peer.nameColor?.index ??
+        let number = peer.nameColor.flatMap { Int64($0.rawValue) } ?? peer.id.id._internalGetInt64Value()
+        let index = Int(abs(number % 7))
+        let color = theme.colors.peerColors(index)
+
         
         let symbol = letters.reduce("", { (current, letter) -> String in
             return current + letter
@@ -184,7 +245,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
 func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(17), genCap: Bool = true, synchronousLoad: Bool = false, disableForum: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
-    case let .peer(peer, representation, displayLetters, message):
+    case let .peer(peer, representation, peerNameColor, displayLetters, message):
         return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad, disableForum: disableForum)
     case let .topic(info, isGeneral):
         #if !SHARE
@@ -334,7 +395,11 @@ func generateEmptyRoundAvatar(_ displayDimensions:NSSize, font: NSFont, account:
     return Signal { subscriber in
         let letters = peer.displayLetters
         
-        let color = theme.colors.peerColors(Int(abs(peer.id.id._internalGetInt64Value() % 7)))
+        //peer.nameColor?.index ??
+        let number = peer.nameColor.flatMap { Int64($0.rawValue) } ?? peer.id.id._internalGetInt64Value()
+        let index = Int(abs(number % 7))
+        
+        let color = theme.colors.peerColors(index)
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in
             ctx.clear(NSMakeRect(0, 0, size.width, size.height))

@@ -581,7 +581,14 @@ class LocationModalController: ModalViewController {
         
         
         
-        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare") |> map { $0?._asPeer().id })
+        let peerSignal: Signal<PeerId?, NoError> = .single(nil) |> then(context.engine.peers.resolvePeerByName(name: "foursquare") |> mapToSignal { result in
+            switch result {
+            case .progress:
+                return .never()
+            case let .result(peer):
+                return .single(peer?._asPeer().id)
+            }
+        })
         let requestSignal = combineLatest(peerSignal |> deliverOnPrepareQueue, delegate.location.get() |> take(1) |> deliverOnPrepareQueue, search.get() |> distinctUntilChanged |> deliverOnPrepareQueue)
             |> mapToSignal { botId, location, query -> Signal<(ChatContextResultCollection?, CLLocation?, Bool, Bool), NoError> in
                 if let botId = botId, let location = location {

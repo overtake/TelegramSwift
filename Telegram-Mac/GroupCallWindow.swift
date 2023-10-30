@@ -25,20 +25,45 @@ private func generatePeerControl(_ icon: CGImage, background: NSColor) -> CGImag
 }
 
 struct GroupCallTheme {
-    static let membersColor = nightAccentPalette.background //NSColor(hexString: "#333333")!
-    static let windowBackground = nightAccentPalette.listBackground //NSColor(hexString: "#212121")!
-    static let grayStatusColor = nightAccentPalette.grayText //NSColor(srgbRed: 133 / 255, green: 133 / 255, blue: 133 / 255, alpha: 1)
-    static let blueStatusColor = nightAccentPalette.accent //NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
-    static let greenStatusColor = nightAccentPalette.greenUI //NSColor(hexString: "#34C759")!
-    static let memberSeparatorColor = nightAccentPalette.border // NSColor(srgbRed: 58 / 255, green: 58 / 255, blue: 58 / 255, alpha: 1)
-    static let speakActiveColor = nightAccentPalette.greenUI //NSColor(hexString: "#34C759")!
-    static let speakInactiveColor = nightAccentPalette.accent // NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
-    static let speakLockedColor = nightAccentPalette.redUI //NSColor(hexString: "#FF5257")!
-    static let speakDisabledColor = nightAccentPalette.grayBackground //NSColor(hexString: "#333333")!
-    static let titleColor = NSColor.white
-    static let declineColor = nightAccentPalette.redUI.withAlphaComponent(0.3) //NSColor(hexString: "#FF3B30")
-    static let settingsColor = nightAccentPalette.grayBackground //NSColor(hexString: "#333333")!
-    
+    static var membersColor:NSColor {
+        darkAppearance.colors.background
+    }
+    static var windowBackground: NSColor {
+        darkAppearance.colors.listBackground
+    }
+    static var grayStatusColor: NSColor {
+        darkAppearance.colors.grayText
+    }
+    static var blueStatusColor: NSColor {
+        return darkAppearance.colors.accent
+    }
+    static var greenStatusColor: NSColor {
+        return darkAppearance.colors.greenUI
+    }
+    static var memberSeparatorColor: NSColor {
+        darkAppearance.colors.border
+    }
+    static var speakActiveColor: NSColor {
+        darkAppearance.colors.greenUI
+    }
+    static var speakInactiveColor: NSColor {
+        darkAppearance.colors.accent
+    }
+    static var speakLockedColor: NSColor {
+        darkAppearance.colors.redUI
+    }
+    static var speakDisabledColor: NSColor {
+        darkAppearance.colors.grayBackground
+    }
+    static var titleColor: NSColor {
+        return NSColor.white
+    }
+    static var declineColor: NSColor {
+        return darkAppearance.colors.redUI.withAlphaComponent(0.3)
+    }
+    static var settingsColor: NSColor {
+        return darkAppearance.colors.grayBackground
+    }
     
     static let purple = NSColor(rgb: 0x3252ef)
     static let pink = NSColor(rgb: 0xef436c)
@@ -51,108 +76,150 @@ struct GroupCallTheme {
         return grayStatusColor
     }
     
-    static let titleSpeakingAnimation = recordVoiceActivityAnimation(GroupCallTheme.greenStatusColor)
+    static var titleSpeakingAnimation: [CGImage] {
+        recordVoiceActivityAnimation(GroupCallTheme.greenStatusColor)
+    }
     
-    static let video_status_muted_red = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
-    static let video_status_muted_accent = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.greenStatusColor)
-    static let video_status_muted_gray = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
-
-    static let video_status_unmuted_green = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
-    static let video_status_unmuted_gray = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
-    static let video_status_unmuted_accent = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.accent)
-
+    static let videoBox_video: CGImage = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let videoBox_screencast: CGImage = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let closeTooltip: CGImage = NSImage(named: "Icon_VoiceChat_Tooltip_Close")!.precomposed(.white)
+    static let settingsIcon: CGImage = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
+    static let declineIcon: CGImage = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
+    static let inviteIcon: CGImage = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white)
     static let video_back = NSImage(named: "Icon_ChatNavigationBack")!.precomposed(NSColor.white)
-
     static let video_paused = NSImage(named: "Icon_VoiceChat_PausedVideo")!.precomposed(NSColor.white)
-    
-    static let videoBox_muted = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
-    static let videoBox_unmuted = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
-    static let videoBox_speaking = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor.withAlphaComponent(0.8))
-
-    static let videoBox_muted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
-    static let videoBox_unmuted_locked = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
-
-    
-    static let videoBox_video = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(NSColor.white.withAlphaComponent(0.8))
-    static let videoBox_screencast = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(NSColor.white.withAlphaComponent(0.8))
-
-    
-    static let closeTooltip = NSImage(named: "Icon_VoiceChat_Tooltip_Close")!.precomposed(.white)
-        
-    static let settingsIcon = NSImage(named: "Icon_GroupCall_Settings")!.precomposed(.white)
-    static let declineIcon = NSImage(named: "Icon_GroupCall_Decline")!.precomposed(.white)
-    static let inviteIcon = NSImage(named: "Icon_GroupCall_Invite")!.precomposed(.white)
-    static let invitedIcon = NSImage(named: "Icon_GroupCall_Invited")!.precomposed(GroupCallTheme.grayStatusColor)
-    
-    
-    
-
-    static let small_speaking = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor), background: .clear)
-    static let small_unmuted = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor), background: .clear)
-    static let small_muted = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.grayStatusColor), background: .clear)
-    static let small_muted_locked = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.speakLockedColor), background: .clear)
-    
-    static let small_speaking_active = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
-    static let small_unmuted_active = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
-    static let small_muted_active = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.grayStatusColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
-    static let small_muted_locked_active = generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.speakLockedColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
+    static let videoBox_muted: CGImage = NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let videoBox_unmuted: CGImage = NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let videoZoomOut: CGImage = NSImage(named: "Icon_GroupCall_Video_ZoomOut")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let videoZoomIn: CGImage = NSImage(named: "Icon_GroupCall_Video_ZoomIn")!.precomposed(NSColor.white.withAlphaComponent(0.8))
+    static let video_limit: CGImage = NSImage(named: "Icon_VoiceChat_VideoLimit")!.precomposed(.white)
+    static let video_on: CGImage = NSImage(named: "Icon_GroupCall_VideoOn")!.precomposed(.white)
+    static let video_off: CGImage = NSImage(named: "Icon_GroupCall_VideoOff")!.precomposed(.white)
+    static let pin_video: CGImage = NSImage(named: "Icon_VoiceChat_PinVideo")!.precomposed(.white)
+    static let unpin_video: CGImage = NSImage(named: "Icon_VoiceChat_UnpinVideo")!.precomposed(.white)
+    static let pin_window: CGImage = NSImage(named: "Icon_VoiceChat_PinWindow")!.precomposed(.white)
+    static let unhide_peers: CGImage = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(.white)
 
     
-    static let small_raised_hand = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.customTheme.accentColor), background: .clear)
-    static let small_raised_hand_active = generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.customTheme.accentColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
+    static var video_status_muted_red: CGImage {
+        return NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
+    }
+    static var video_status_muted_accent: CGImage {
+        return NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.greenStatusColor)
+    }
+    static var video_status_muted_gray: CGImage {
+        return NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+    }
 
+    static var video_status_unmuted_green: CGImage {
+        return NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
+    }
+    static var video_status_unmuted_gray: CGImage {
+        return NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
+    }
+    static var video_status_unmuted_accent: CGImage {
+        return NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.accent)
+    }
+    static var videoBox_muted_locked: CGImage {
+        NSImage(named: "Icon_GroupCall_VideoBox_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+    }
+    static var videoBox_unmuted_locked: CGImage {
+        NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
+    }
+    static var videoBox_speaking: CGImage {
+        NSImage(named: "Icon_GroupCall_VideoBox_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor.withAlphaComponent(0.8))
+    }
+    static var invitedIcon: CGImage {
+        NSImage(named: "Icon_GroupCall_Invited")!.precomposed(GroupCallTheme.grayStatusColor)
+    }
+    
+    static var small_speaking: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor), background: .clear)
+    }
+    static var small_unmuted: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor), background: .clear)
+    }
+    static var small_muted: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.grayStatusColor), background: .clear)
+    }
+    static var small_muted_locked: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.speakLockedColor), background: .clear)
+    }
+    
+    static var small_speaking_active: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
+    }
+    static var small_unmuted_active: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
+    }
+    static var small_muted_active: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.grayStatusColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
+    }
+    static var small_muted_locked_active: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_Small_Muted")!.precomposed(GroupCallTheme.speakLockedColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
+    }
 
     
-    
-    
-    static let status_video_gray = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.grayStatusColor)
-    static let status_video_accent = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.blueStatusColor)
-    static let status_video_green = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.greenStatusColor)
-    static let status_video_red = NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.speakLockedColor)
-    
-    
-    static let status_screencast_gray = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.grayStatusColor)
-    static let status_screencast_accent = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.blueStatusColor)
-    static let status_screencast_green = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.greenStatusColor)
-    static let status_screencast_red = NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.speakLockedColor)
-
-    
-
-    static let status_muted = NSImage(named: "Icon_GroupCall_Status_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
-    
-    static let status_muted_red = NSImage(named: "Icon_GroupCall_Status_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
-
-    
-    static let status_unmuted_accent = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.blueStatusColor)
-    static let status_unmuted_green = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
-    static let status_unmuted_gray = NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
-
-
-    static let video_limit = NSImage(named: "Icon_VoiceChat_VideoLimit")!.precomposed(.white)
-
-    
-    static let video_on = NSImage(named: "Icon_GroupCall_VideoOn")!.precomposed(.white)
-    static let video_off = NSImage(named: "Icon_GroupCall_VideoOff")!.precomposed(.white)
-    
-    static let invite_listener = NSImage(named: "Icon_VoiceChat_InviteListener")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
-    static let invite_speaker = NSImage(named: "Icon_VoiceChat_InviteSpeaker")!.precomposed(customTheme.accentColor, flipVertical: true)
-    static let invite_link = NSImage(named: "Icon_InviteViaLink")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
-
-    
-    static let videoZoomOut = NSImage(named: "Icon_GroupCall_Video_ZoomOut")!.precomposed(NSColor.white.withAlphaComponent(0.8))
-    static let videoZoomIn = NSImage(named: "Icon_GroupCall_Video_ZoomIn")!.precomposed(NSColor.white.withAlphaComponent(0.8))
-
-    
-    static let pin_video = NSImage(named: "Icon_VoiceChat_PinVideo")!.precomposed(.white)
-    static let unpin_video = NSImage(named: "Icon_VoiceChat_UnpinVideo")!.precomposed(.white)
-
-    
-    static let pin_window = NSImage(named: "Icon_VoiceChat_PinWindow")!.precomposed(.white)
-    static let unpin_window = NSImage(named: "Icon_VoiceChat_PinWindow")!.precomposed(GroupCallTheme.customTheme.accentColor)
-
-    
-    static let unhide_peers = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(.white)
-    static let hide_peers = NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(GroupCallTheme.customTheme.accentColor)
+    static var small_raised_hand: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.customTheme.accentColor), background: .clear)
+    }
+    static var small_raised_hand_active: CGImage {
+        generatePeerControl(NSImage(named: "Icon_GroupCall_RaiseHand_Small")!.precomposed(GroupCallTheme.customTheme.accentColor), background: GroupCallTheme.windowBackground.withAlphaComponent(0.3))
+    }
+    static var status_video_gray: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.grayStatusColor)
+    }
+    static var status_video_accent: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.blueStatusColor)
+    }
+    static var status_video_green: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.greenStatusColor)
+    }
+    static var status_video_red: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Video")!.precomposed(GroupCallTheme.speakLockedColor)
+    }
+    static var status_screencast_gray: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.grayStatusColor)
+    }
+    static var status_screencast_accent: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.blueStatusColor)
+    }
+    static var status_screencast_green: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.greenStatusColor)
+    }
+    static var status_screencast_red: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Screencast")!.precomposed(GroupCallTheme.speakLockedColor)
+    }
+    static var status_muted: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Muted")!.precomposed(GroupCallTheme.grayStatusColor)
+    }
+    static var status_muted_red: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Muted")!.precomposed(GroupCallTheme.speakLockedColor)
+    }
+    static var status_unmuted_accent: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.blueStatusColor)
+    }
+    static var status_unmuted_green: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.greenStatusColor)
+    }
+    static var status_unmuted_gray: CGImage {
+        NSImage(named: "Icon_GroupCall_Status_Unmuted")!.precomposed(GroupCallTheme.grayStatusColor)
+    }
+    static var invite_listener: CGImage {
+        NSImage(named: "Icon_VoiceChat_InviteListener")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
+    }
+    static var invite_speaker: CGImage {
+        NSImage(named: "Icon_VoiceChat_InviteSpeaker")!.precomposed(customTheme.accentColor, flipVertical: true)
+    }
+    static var invite_link: CGImage {
+        NSImage(named: "Icon_InviteViaLink")!.precomposed(GroupCallTheme.customTheme.accentColor, flipVertical: true)
+    }
+    static var unpin_window: CGImage {
+        NSImage(named: "Icon_VoiceChat_PinWindow")!.precomposed(GroupCallTheme.customTheme.accentColor)
+    }
+    static var hide_peers: CGImage {
+        NSImage(named: "Icon_VoiceChat_HidePeers")!.precomposed(GroupCallTheme.customTheme.accentColor)
+    }
 
     static let smallTableWidth: CGFloat = 160
     static let fullScreenThreshold: CGFloat = 500
@@ -166,25 +233,29 @@ struct GroupCallTheme {
         return NSMakeSize(380, 380)
     }
     
-    private static let switchAppearance = SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
+    private static var switchAppearance: SwitchViewAppearance {
+        return SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
+    }
     
-    static let customTheme: GeneralRowItem.Theme = GeneralRowItem.Theme(backgroundColor:                                            GroupCallTheme.membersColor,
-                                    grayBackground: GroupCallTheme.windowBackground,
-                                    grayForeground: GroupCallTheme.grayStatusColor,
-                                    highlightColor: GroupCallTheme.membersColor.withAlphaComponent(0.7),
-                                    borderColor: GroupCallTheme.memberSeparatorColor,
-                                    accentColor: GroupCallTheme.blueStatusColor,
-                                    secondaryColor: GroupCallTheme.grayStatusColor,
-                                    textColor: NSColor(rgb: 0xffffff),
-                                    grayTextColor: GroupCallTheme.grayStatusColor,
-                                    underSelectedColor: NSColor(rgb: 0xffffff),
-                                    accentSelectColor: GroupCallTheme.blueStatusColor.darker(),
-                                    redColor: GroupCallTheme.speakLockedColor,
-                                    indicatorColor: NSColor(rgb: 0xffffff),
-                                    appearance: darkPalette.appearance,
-                                    switchAppearance: switchAppearance,
-                                    unselectedImage: generateChatGroupToggleUnselected(foregroundColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.01)),
-                                    selectedImage: generateChatGroupToggleSelected(foregroundColor: GroupCallTheme.blueStatusColor, backgroundColor: NSColor(rgb: 0xffffff)))
+    static var customTheme: GeneralRowItem.Theme {
+        GeneralRowItem.Theme(backgroundColor:                                            GroupCallTheme.membersColor,
+                                        grayBackground: GroupCallTheme.windowBackground,
+                                        grayForeground: GroupCallTheme.grayStatusColor,
+                                        highlightColor: GroupCallTheme.membersColor.withAlphaComponent(0.7),
+                                        borderColor: GroupCallTheme.memberSeparatorColor,
+                                        accentColor: GroupCallTheme.blueStatusColor,
+                                        secondaryColor: GroupCallTheme.grayStatusColor,
+                                        textColor: NSColor(rgb: 0xffffff),
+                                        grayTextColor: GroupCallTheme.grayStatusColor,
+                                        underSelectedColor: NSColor(rgb: 0xffffff),
+                                        accentSelectColor: GroupCallTheme.blueStatusColor.darker(),
+                                        redColor: GroupCallTheme.speakLockedColor,
+                                        indicatorColor: NSColor(rgb: 0xffffff),
+                                        appearance: darkPalette.appearance,
+                                        switchAppearance: switchAppearance,
+                                        unselectedImage: generateChatGroupToggleUnselected(foregroundColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.01)),
+                                        selectedImage: generateChatGroupToggleSelected(foregroundColor: GroupCallTheme.blueStatusColor, backgroundColor: NSColor(rgb: 0xffffff)))
+    }
         
 
 }
@@ -313,7 +384,7 @@ final class GroupCallContext {
                 self?.invikeClose(last: last)
             }
         } else {
-            invikeClose(last: last)
+            invikeClose(last: last || call.sharedContext.getCrossAccountGroupCall() == nil)
         }
         
     }

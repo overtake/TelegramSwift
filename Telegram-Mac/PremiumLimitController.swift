@@ -263,7 +263,7 @@ final class PremiumGradientView : View {
         self.gradient.startPoint = CGPoint(x: 0, y: 1)
         self.gradient.endPoint = CGPoint(x: 1, y: 0)
         
-        gradient.colors = premiumGradient.compactMap { $0?.cgColor }
+        gradient.colors = premiumGradient.compactMap { $0.cgColor }
     }
     
     
@@ -447,7 +447,7 @@ final class PremiumLimitView: View {
                 } else {
                     ctx.clip(to: size.bounds, mask: clipImage)
                     
-                    let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+                    let colors = premiumGradient.compactMap { $0.cgColor } as NSArray
                     
                     let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
                     

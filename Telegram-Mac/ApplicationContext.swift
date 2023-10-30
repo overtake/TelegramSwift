@@ -7,6 +7,7 @@ import TelegramCore
 import Localization
 import InAppSettings
 import IOKit
+import CodeSyntax
 
 private final class AuthModalController : ModalController {
     override var background: NSColor {
@@ -515,18 +516,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             self?.switchAccount(9, true)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.control])
-                
+              
+        
         
         #if DEBUG
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            showInactiveChannels(context: context, source: .join)
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            
-            return .invoked
-        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
+//        window.set(handler: { [weak self] _ -> KeyHandlerResult in
+//            showModal(with: GiveawayModalController(context: context, peerId: context.peerId), for: context.window)
+//
+//            return .invoked
+//        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         #endif
         
         
@@ -671,9 +674,20 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private var previousLayout: SplitViewState?
     private let foldersReadyDisposable = MetaDisposable()
     private func updateLeftSidebar(with folders: ChatListFolders, layout: SplitViewState, animated: Bool) -> Void {
+        
+        if let window = self.window as? AppWindow {
+            if (folders.sidebar && !folders.isEmpty) || layout == .minimisize {
+                self.context.bindings.rootNavigation().navigationBarLeftPosition = 0
+                window.initialButtonPoint = .system
+            } else {
+                self.context.bindings.rootNavigation().navigationBarLeftPosition = layout == .single ? Window.controlsInset : 0
+                window.initialButtonPoint = .app
+            }
+        }
+
                 
-        let currentSidebar = !folders.isEmpty && (folders.sidebar || layout == .minimisize)
-        let previousSidebar = self.folders == nil ? nil : !self.folders!.isEmpty && (self.folders!.sidebar || self.previousLayout == SplitViewState.minimisize)
+        let currentSidebar = !folders.isEmpty && (folders.sidebar)
+        let previousSidebar = self.folders == nil ? nil : !self.folders!.isEmpty && (self.folders!.sidebar)
 
         let readySignal: Signal<Bool, NoError>
         

@@ -85,7 +85,7 @@ private enum Status : Equatable {
         default:
             if let superview = window.standardWindowButton(.closeButton)?.superview, !theme.dark {
                 let view = ObjcUtils.findElements(byClass: "NSTextField", in: superview).first as? NSTextField
-                return view?.textColor ?? theme.colors.grayText
+                return theme.colors.grayText
             }
             return theme.colors.grayText
         }

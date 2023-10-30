@@ -10,6 +10,47 @@ import Cocoa
 import SwiftSignalKit
 import KeyboardKey
 
+public class AppWindow : Window {
+    
+    public enum ButtonPoint {
+        case app
+        case system
+        
+        var point: NSPoint {
+            switch self {
+            case .app:
+                return NSMakePoint(20, 5)
+            case .system:
+                return NSMakePoint(9, 15)
+            }
+        }
+    }
+    
+    
+    
+    public var initialButtonPoint: ButtonPoint = .app {
+        didSet {
+            updateButtons()
+        }
+    }
+    private func updateButtons() {
+//        if !isFullScreen {
+//            var point: NSPoint = initialButtonPoint.point
+//            self.standardWindowButton(.closeButton)?.setFrameOrigin(point)
+//            point.x += 20
+//            self.standardWindowButton(.miniaturizeButton)?.setFrameOrigin(point)
+//            point.x += 20
+//            self.standardWindowButton(.zoomButton)?.setFrameOrigin(point)
+//        }
+    }
+    
+    public override func layoutIfNeeded() {
+        super.layoutIfNeeded()
+      //  toolbar?.isVisible = !isFullScreen
+        //updateButtons()
+    }
+}
+
 public class ObervableView: NSView {
     private var listeners:[WeakReference<NSObject>] = []
 
@@ -291,6 +332,10 @@ open class Window: NSWindow {
     private let visibleObserver: ValuePromise<Bool> = ValuePromise(true, ignoreRepeated: true)
 
     public var acceptFirstMouse: Bool = true
+    
+    public static var controlsInset: CGFloat {
+        return 70
+    }
 
     private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     public var keyWindowUpdater: Signal<Bool, NoError> {
@@ -318,7 +363,7 @@ open class Window: NSWindow {
     }
     
     public func set(responder:@escaping() -> NSResponder?, with object:NSObject?, priority:HandlerPriority, ignoreKeys: [KeyboardKey] = []) {
-        responsders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow]))
+        responsders.append(ResponderObserver(responder, object, priority, ignoreKeys + [.Escape, .LeftArrow, .RightArrow, .Tab, .UpArrow, .DownArrow, .Space]))
     }
     
     public func removeObserver(for object:NSObject) {
@@ -489,7 +534,7 @@ open class Window: NSWindow {
     public func applyResponderIfNeeded(_ event: NSEvent? = nil) ->Void {
         let sorted = responsders.sorted(by: >)
         
-        if let event = event, event.modifierFlags.contains(.option)
+        if let event = event, event.modifierFlags.contains(.option) || event.modifierFlags.contains(.command)
          || event.modifierFlags.contains(.control) {
             return
         }
@@ -743,6 +788,7 @@ open class Window: NSWindow {
         if event.type == .keyUp {
             self.keyUpHandler?(event)
         }
+        
         
         let eventType = event.type
         if sheets.isEmpty {

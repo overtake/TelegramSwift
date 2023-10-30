@@ -13,6 +13,19 @@ import TelegramCore
 import TGModernGrowingTextView
 import Postbox
 import InAppSettings
+import TGUIKit
+import InputView
+
+extension WebpagePreviewResult {
+    var result: TelegramMediaWebpage? {
+        switch self {
+        case .progress:
+            return nil
+        case let .result(webpage):
+            return webpage?.webpage
+        }
+    }
+}
 
 func contextQueryResultStateForChatInterfacePresentationState(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, context: AccountContext, currentQuery: ChatPresentationInputQuery?) -> (ChatPresentationInputQuery?, Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError>)? {
     let inputQuery = chatPresentationInterfaceState.inputContext
@@ -284,16 +297,14 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             }
         }
         let contextBot = context.engine.peers.resolvePeerByName(name: addressName)
-            |> mapToSignal { peer -> Signal<Peer?, NoError> in
-                if let peer = peer {
-                    return context.account.postbox.loadedPeerWithId(peer._asPeer().id)
-                        |> map { peer -> Peer? in
-                            return peer
-                        }
-                        |> take(1)
-                } else {
-                    return .single(nil)
+            |> mapToSignal { result -> Signal<Peer?, NoError> in
+                switch result {
+                case .progress:
+                    return .never()
+                case let .result(peer):
+                    return .single(peer?._asPeer())
                 }
+                
             }
             |> mapToSignal { peer -> Signal<(ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?, NoError> in
                 if let user = peer as? TelegramUser, let botInfo = user.botInfo, let _ = botInfo.inlinePlaceholder {
@@ -557,12 +568,13 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
             var detectedRange: NSRange = NSMakeRange(NSNotFound, 0)
             let text = chatPresentationInterfaceState.effectiveInput.inputText.prefix(4096)
             
-            var attr = chatPresentationInterfaceState.effectiveInput.attributedString
+            var attr = chatPresentationInterfaceState.effectiveInput.attributedString()
             attr = attr.attributedSubstring(from: NSMakeRange(0, min(attr.length, 4096)))
-            attr.enumerateAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
+            
+            attr.enumerateAttribute(TextInputAttributes.textUrl, in: attr.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { (value, range, stop) in
                 
-                if let tag = value as? TGInputTextTag, let url = tag.attachment as? String {
-                    detectedUrl = url
+                if let tag = value as? TextInputTextUrlAttribute {
+                    detectedUrl = tag.url
                     detectedRange = range
                 }
                 let s: ObjCBool = (detectedUrl != nil) ? true : false
@@ -598,16 +610,16 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                     let invoke:(inAppLink)->Void = { link in
                         switch link {
                         case let .external(detectedUrl, _), let .joinchat(detectedUrl, _, _, _), let .wallpaper(detectedUrl, _, _), let .theme(detectedUrl, _, _), let .instantView(detectedUrl, _, _):
-                            subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
-                                return { _ in return value }
-                                }))
+                            subscriber.putNext((detectedUrl, webpagePreview(account: context.account, urls: [detectedUrl]) |> filter { $0 != .progress } |> map { value in
+                                return { _ in return value.result }
+                            }))
                         case let .followResolvedName(_, username, _, _, _, _):
                             if username.hasPrefix("_private_") {
                                 subscriber.putNext((nil, .single({ _ in return nil })))
                                 subscriber.putCompletion()
                             } else {
-                                subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
-                                    return { _ in return value }
+                                subscriber.putNext((detectedUrl, webpagePreview(account: context.account, urls: [detectedUrl]) |> filter { $0 != .progress } |> map { value in
+                                    return { _ in return value.result }
                                 }))
                             }
                         default:
@@ -642,7 +654,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                             }
                             
                             if canLoad {
-                               confirm(for: context.window, header: strings().chatSecretChatPreviewHeader, information: strings().chatSecretChatPreviewText, okTitle: strings().chatSecretChatPreviewOK, cancelTitle: strings().chatSecretChatPreviewNO, successHandler: { result in
+                               verifyAlert_button(for: context.window, header: strings().chatSecretChatPreviewHeader, information: strings().chatSecretChatPreviewText, ok: strings().chatSecretChatPreviewOK, cancel: strings().chatSecretChatPreviewNO, successHandler: { result in
                                     FastSettings.setSecretChatWebPreviewAvailable(for: context.account.id.int64, value: true)
                                     invoke(link)
                                }, cancelHandler: {

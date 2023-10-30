@@ -269,6 +269,8 @@ public class LinearProgressControl: Control {
         if animated {
             let size = NSMakeSize(size.width - progressView.frame.width, size.height - progressView.frame.height)
             progressView.layer?.animateBounds(from: CGRect(origin: .zero, size: size), to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
+        } else {
+            progressView.layer?.removeAnimation(forKey: "bounds")
         }
         
         progressView.change(size: size, animated: animated, duration: duration, timingFunction: timingFunction)

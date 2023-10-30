@@ -70,9 +70,10 @@ class ChatNavigationScroller: ImageButton {
         self.count = count
         if count > 0 {
             badge = BadgeNode(.initialize(string: Int(count).prettyNumber, color: .white, font: .bold(.small)), theme.colors.accent)
-            badge!.view = badgeView
             badgeView.setFrameSize(badge!.size)
+            badge!.view = badgeView
             addSubview(badgeView)
+            badgeView.needsDisplay = true
         } else {
             badgeView.removeFromSuperview()
         }

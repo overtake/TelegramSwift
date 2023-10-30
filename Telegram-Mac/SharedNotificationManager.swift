@@ -429,7 +429,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             if let threadData = source.threadData {
                                 photos.append(peerAvatarImage(account: account, photo: .topic(threadData.info, message.threadId == 1), genCap: false) |> map { data in return (message.id, data.0)})
                             } else {
-                                photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
+                                photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
                             }
                         }
                     }
@@ -540,7 +540,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 case let .custom(fileId):
                                     let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
                                     let file = file ?? message.associatedMedia[mediaId] as? TelegramMediaFile
-                                    reactionText = file?.customEmojiText ?? file?.stickerText ?? ""
+                                    reactionText = (file?.customEmojiText ?? file?.stickerText ?? "").normalizedEmoji
                                 }
                                 
                                 let msg = pullText(from: message).string as String
@@ -551,7 +551,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     text = strings().notificationGroupReacted(peer.displayTitle, reactionText.fixed, msg)
                                 }
                             case .messages:
-                                text = chatListText(account: account, for: message, applyUserName: true).string
+                                text = chatListText(account: account, for: message, applyUserName: true, notifications: true).string
                                 if text.contains("\r") {
                                     let parts = text.components(separatedBy: "\r")
                                     text = parts[1]
@@ -585,6 +585,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             notification.identifier = "msg_\(message.id.string)"
                             
+                            
                             if #available(macOS 10.14, *) {
                                 switch inAppSettings.tone {
                                 case .none:
@@ -607,8 +608,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     notification.soundName = nil
                                     title += " 🔕"
                                 }
-                            default:
-                                break
+                            case .reaction:
+                                notification.soundName = nil
+                                title += " 🔕"
                             }
                            
                             if screenIsLocked {

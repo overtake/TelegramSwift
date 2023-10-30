@@ -22,7 +22,7 @@ class PreUploadManager {
         self.path = path
         self.id = id
         
-        context.engine.resources.preUpload(id: id, encrypt: false, tag: nil, source: resource.get(), onComplete: {
+        context.engine.resources.preUpload(id: id, encrypt: false, tag: nil, source: resource.get() |> map { EngineMediaResource.ResourceData($0) }, onComplete: {
             unlink(path)
         })
     }

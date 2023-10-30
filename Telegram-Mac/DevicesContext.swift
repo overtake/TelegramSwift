@@ -97,14 +97,14 @@ final class DevicesContext : NSObject {
     
     private final class UpdaterContext {
 //        var status: (camera: String?, input: String?, output: String?) = (camera: nil, input: nil, output: nil)
-        let subscribers = Bag<((camera: String?, input: String?, output: String?)) -> Void>()
+        let subscribers = Bag<((camera: String?, input: String?, output: String?, sampleUpdateIndex: Int?)) -> Void>()
     }
     
     private let updaterContext: UpdaterContext = UpdaterContext()
     
    
     
-    func updater() -> Signal<(camera: String?, input: String?, output: String?), NoError> {
+    func updater() -> Signal<(camera: String?, input: String?, output: String?, sampleUpdateIndex: Int?), NoError> {
         return Signal { subscriber in
             
             let disposable = MetaDisposable()
@@ -194,12 +194,12 @@ final class DevicesContext : NSObject {
         
         var sampleIndex:Int = -1
         
-        let updated = combineLatest(queue: devicesQueue, voiceCallSettings(accountManager), signal, sampleUpdater.get()) |> map { settings, devices, index -> (camera: String?, input: String?, output: String?) in
+        let updated = combineLatest(queue: devicesQueue, voiceCallSettings(accountManager), signal, sampleUpdater.get()) |> map { settings, devices, index -> (camera: String?, input: String?, output: String?, sampleUpdateIndex: Int?) in
             let inputUpdated = DevicesContext.updateMicroId(settings, devices: devices)
             let cameraUpdated = DevicesContext.updateCameraId(settings, devices: devices)
             let outputUpdated = DevicesContext.updateOutputId(settings, devices: devices)
             
-            var result:(camera: String?, input: String?, output: String?) = (camera: nil, input: nil, output: nil)
+            var result:(camera: String?, input: String?, output: String?, sampleUpdateIndex: Int?) = (camera: nil, input: nil, output: nil, sampleUpdateIndex: nil)
             
             if currentMicroId.swap(inputUpdated) != inputUpdated || sampleIndex != index {
                 result.input = inputUpdated
@@ -209,6 +209,9 @@ final class DevicesContext : NSObject {
             }
             if currentOutputId.swap(outputUpdated) != outputUpdated || sampleIndex != index {
                 result.output = outputUpdated
+            }
+            if sampleIndex != index {
+                result.sampleUpdateIndex = index
             }
             sampleIndex = index
             

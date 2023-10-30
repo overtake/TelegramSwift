@@ -24,13 +24,40 @@ import ThemeSettings
 import ColorPalette
 import WebKit
 import System
+import CodeSyntax
+
 
 #if !APP_STORE
 import AppCenter
 import AppCenterCrashes
 #endif
 
-
+final class CodeSyntax {
+    private let syntaxer: Syntaxer
+    private init() {
+        let pathFile = Bundle.main.path(forResource: "grammars", ofType: "dat")!
+        let data = try! Data(contentsOf: URL(fileURLWithPath: pathFile))
+        self.syntaxer = Syntaxer(data)!
+    }
+    private static let standart: CodeSyntax = .init()
+    
+    fileprivate static func initialize() {
+        _ = CodeSyntax.standart
+    }
+    
+    static func syntax(code: String, language: String, theme: SyntaxterTheme) -> NSAttributedString {
+        return standart.syntaxer.syntax(code, language: language, theme: theme)
+    }
+    static func apply(_ code: NSAttributedString, to: NSMutableAttributedString, offset: Int) {
+        code.enumerateAttributes(in: code.range, using: { value, innerRange, _ in
+            if let font = value[.foregroundColor] as? NSColor {
+                to.addAttribute(.foregroundColor, value: font, range: NSMakeRange(offset + innerRange.location, innerRange.length))
+            } else if let font = value[.font] as? NSFont {
+                to.addAttribute(.font, value: font, range: NSMakeRange(offset + innerRange.location, innerRange.length))
+            }
+        })
+    }
+}
 
 let enableBetaFeatures = true
 
@@ -191,6 +218,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private(set) var appEncryption: AppEncryptionParameters!
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        CodeSyntax.initialize()
        // UserDefaults.standard.set(true, forKey: "NSTableViewCanEstimateRowHeights")
      //   UserDefaults.standard.removeObject(forKey: "NSTableViewCanEstimateRowHeights")
     }
@@ -216,10 +244,27 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func updateGraphicContext() {
         ctxLayer?.display()
     }
+
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
       
+//        window.styleMask.insert(.fullSizeContentView)
+//        window.styleMask.insert(.unifiedTitleAndToolbar)
+        //window.styleMask.insert(.borderless)
+//        let customToolbar = NSToolbar(identifier: "main")
+//        customToolbar.showsBaselineSeparator = false
+////        window.titlebarAppearsTransparent = true
+////        window.titleVisibility = .hidden
+//        window.toolbar = customToolbar
+        
+        
+        
+//        titleBarAccessoryViewController.view = View()
+//        titleBarAccessoryViewController.view.background = .random
+//
+//        titleBarAccessoryViewController.view.frame = NSMakeRect(0, 0, 0, 100) // Width not used.
+//        window.addTitlebarAccessoryViewController(titleBarAccessoryViewController)
         
         appDelegate = self
         ApiEnvironment.migrate()
@@ -247,12 +292,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         window.contentView?.autoresizesSubviews = true
         
         
-        let ctxLayer = CtxInstallLayer()
-        self.ctxLayer = ctxLayer
-        window.contentView?.layer?.addSublayer(ctxLayer)
+//        let ctxLayer = CtxInstallLayer()
+//        self.ctxLayer = ctxLayer
+//        window.contentView?.layer?.addSublayer(ctxLayer)
         
-        ctxLayer.setNeedsDisplay()
-        ctxLayer.display()
+//        ctxLayer.setNeedsDisplay()
+//        ctxLayer.display()
                 
         let crashed = isCrashedLastTime(containerUrl.path)
         deinitCrashHandler(containerUrl.path)
@@ -359,6 +404,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
         let rootPath = containerUrl!
         let window = self.window!
+        
         System.updateScaleFactor(window.backingScaleFactor)
         window.minSize = NSMakeSize(380, 500)
         
@@ -1462,15 +1508,21 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     @IBAction func showQuickSwitcher(_ sender: Any) {
-        
-        if let context = contextValue?.context, authContextValue == nil {
+        if authContextValue == nil {
             _ = sharedContextOnce.start(next: { applicationContext in
                 if !applicationContext.notificationManager.isLocked {
-                    showModal(with: QuickSwitcherModalController(context), for: self.window)
+                    self.enumerateApplicationContexts { applicationContext in
+                        if applicationContext.context.window.isKeyWindow {
+                            if !hasModals(applicationContext.context.window) {
+                                showModal(with: QuickSwitcherModalController(applicationContext.context), for: applicationContext.context.window)
+                                applicationContext.context.window.makeKeyAndOrderFront(sender)
+                            }
+                        }
+                    }
                 }
             })
         }
-        window.makeKeyAndOrderFront(sender)
+        
     }
     
     func applyExternalLoginCode(_ code: String) {

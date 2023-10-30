@@ -13,25 +13,44 @@ import SwiftSignalKit
 import TGUIKit
 
 final class PremiumGiftHeaderItem : GeneralRowItem {
+    
+    enum Source {
+        case gift(Peer)
+        case giftLink
+    }
+    
     let textLayout: TextViewLayout
-    let titleLayout: TextViewLayout
+    let titleLayout: TextViewLayout?
 
     let photoSize = NSMakeSize(100, 100)
     
-    let peer: Peer
+    let source: Source
     let context: AccountContext
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, peer: Peer) {
+    
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, source: Source) {
         
-        self.peer = peer
+        self.source = source
         self.context = context
         
-        titleLayout = .init(.initialize(string: strings().premiumGiftTitle, color: theme.colors.text, font: .bold(18)), alignment: .center)
+        switch source {
+        case let .gift(peer):
+            titleLayout = .init(.initialize(string: strings().premiumGiftTitle, color: theme.colors.text, font: .bold(18)), alignment: .center)
+            
+            let text = NSMutableAttributedString()
+            _ = text.append(string: strings().premiumGiftText(peer.displayTitle), color: theme.colors.text, font: .normal(.text))
+            text.detectBoldColorInString(with: .medium(.text))
+            textLayout = .init(text, alignment: .center)
+        case .giftLink:
+            //TODO:LANG
+            let text = NSMutableAttributedString()
+            _ = text.append(string: "This link allows you to activate a **Telegram Premium** subscription.", color: theme.colors.text, font: .normal(.text))
+            text.detectBoldColorInString(with: .medium(.text))
+            textLayout = .init(text, alignment: .center)
+            self.titleLayout = nil
+        }
         
-        let text = NSMutableAttributedString()
-        _ = text.append(string: strings().premiumGiftText(peer.displayTitle), color: theme.colors.text, font: .normal(.text))
-        text.detectBoldColorInString(with: .medium(.text))
-        textLayout = .init(text, alignment: .center)
 
         super.init(initialSize, stableId: stableId)
         
@@ -41,14 +60,18 @@ final class PremiumGiftHeaderItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        titleLayout.measure(width: width - 40)
+        titleLayout?.measure(width: width - 40)
         textLayout.measure(width: width - 40)
         
         return true
     }
     
     override var height: CGFloat {
-        return photoSize.height + 20 + titleLayout.layoutSize.height + 10 + textLayout.layoutSize.height
+        if let titleLayout = titleLayout {
+            return photoSize.height + 20 + titleLayout.layoutSize.height + 10 + textLayout.layoutSize.height
+        } else {
+            return photoSize.height + 20 + textLayout.layoutSize.height
+        }
     }
     
     override func viewClass() -> AnyClass {
@@ -59,12 +82,13 @@ final class PremiumGiftHeaderItem : GeneralRowItem {
 
 private final class PremiumGiftHeaderView: TableRowView {
     
-    private let avatar = ChatAvatarView(frame: NSMakeSize(100, 100).bounds)
+    private let avatar = AvatarControl(font: .avatar(.header))
     private let textView = TextView()
     private let titleView = TextView()
 //    private let scene: PremiumGiftStarSceneView = PremiumGiftStarSceneView(frame: NSMakeRect(0, 0, 200, 200))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        avatar.setFrameSize(NSMakeSize(100, 100))
         addSubview(textView)
         addSubview(titleView)
         
@@ -102,8 +126,13 @@ private final class PremiumGiftHeaderView: TableRowView {
         
         titleView.update(item.titleLayout)
         textView.update(item.textLayout)
-
-        avatar.setPeer(context: item.context, peer: item.peer, force: true)
+        switch item.source {
+        case let .gift(peer):
+            avatar.setPeer(account: item.context.account, peer: peer)
+            avatar.isHidden = false
+        case .giftLink:
+            avatar.isHidden = true
+        }
         
         needsLayout = true
     }

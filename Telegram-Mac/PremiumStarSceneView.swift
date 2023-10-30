@@ -12,7 +12,7 @@ import SceneKit
 import SwiftSignalKit
 import GZIP
 
-private let sceneVersion: Int = 1
+private let sceneVersion: Int = 2
 
 
 
@@ -43,9 +43,10 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
 //        self.sceneView.isUserInteractionEnabled = false
         
         super.init(frame: frame)
-        
+        sceneView.wantsLayer = true
         self.addSubview(self.sceneView)
-        
+        self.layer?.masksToBounds = false
+        sceneView.layer?.masksToBounds = false
         self.setup()
         
         let panGestureRecoginzer = NSPanGestureRecognizer(target: self, action: #selector(self.handlePan(_:)))
@@ -181,6 +182,10 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
             return
         }
         
+//        self.sceneView.col = .bgra8Unorm_srgb
+        self.sceneView.backgroundColor = .clear
+        self.sceneView.preferredFramesPerSecond = 60
+        self.sceneView.isJitteringEnabled = true
 
         self.sceneView.scene = scene
         self.sceneView.delegate = self
@@ -246,6 +251,11 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
         group.repeatCount = .infinity
         
         node.geometry?.materials.first?.emission.addAnimation(group, forKey: "shimmer")
+        
+        if #available(macOS 14.0, *), let material = node.geometry?.materials.first {
+            material.metalness.intensity = 0.2
+        }
+
     }
     
     private func playAppearanceAnimation(velocity: CGFloat? = nil, smallAngle: Bool = false, mirror: Bool = false, explode: Bool = false) {

@@ -62,13 +62,15 @@ private final class EditInfoControllerArguments {
     let username:()->Void
     let changeNumber:()->Void
     let addAccount: ()->Void
-    init(context: AccountContext, uploadNewPhoto:@escaping(Control)->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void, addAccount: @escaping() -> Void) {
+    let userNameColor: ()->Void
+    init(context: AccountContext, uploadNewPhoto:@escaping(Control)->Void, logout:@escaping()->Void, username: @escaping()->Void, changeNumber:@escaping()->Void, addAccount: @escaping() -> Void, userNameColor: @escaping()->Void) {
         self.context = context
         self.logout = logout
         self.username = username
         self.changeNumber = changeNumber
         self.uploadNewPhoto = uploadNewPhoto
         self.addAccount = addAccount
+        self.userNameColor = userNameColor
     }
 }
 struct EditInfoState : Equatable {
@@ -165,6 +167,7 @@ private let _id_username = InputDataIdentifier("_id_username")
 private let _id_phone = InputDataIdentifier("_id_phone")
 private let _id_logout = InputDataIdentifier("_id_logout")
 private let _id_add_account = InputDataIdentifier("_id_add_account")
+private let _id_name_color = InputDataIdentifier("_id_name_color")
 
 private func editInfoEntries(state: EditInfoState, arguments: EditInfoControllerArguments, activeAccounts: [AccountWithInfo], updateState:@escaping ((EditInfoState)->EditInfoState)->Void) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
@@ -220,9 +223,13 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: strings().editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(username), viewType: .firstItem, action: nil)))
     index += 1
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: strings().editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), viewType: .lastItem, action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: strings().editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), viewType: .innerItem, action: nil)))
     index += 1
-
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_name_color, data: InputDataGeneralData(name: strings().appearanceYourNameColor, color: theme.colors.text, type: .imageContext(generatePeerNameColorImage(colors: arguments.context.peerNameColors, peer: state.peer), ""), viewType: .lastItem, action: arguments.userNameColor)))
+    index += 1
+    
+    
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
@@ -469,6 +476,8 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     }, addAccount: {
         let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
+    }, userNameColor: {
+        context.bindings.rootNavigation().push(SelectColorController(context: context, source: .account(stateValue.with { $0.peer! })))
     })
     
     let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: strings().editAccountTitle, validateData: { data -> InputDataValidation in

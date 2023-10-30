@@ -90,7 +90,7 @@ private enum FeaturedStickerPacksEntry: TableItemListNodeEntry {
                 
             })
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }

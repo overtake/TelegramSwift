@@ -14,6 +14,8 @@ import SwiftSignalKit
 import Postbox
 import TelegramIconsTheme
 
+
+
 final class ChatMediaPresentation : Equatable {
     
     let isIncoming: Bool
@@ -56,7 +58,21 @@ final class ChatMediaPresentation : Equatable {
                                      waveformBackground: theme.chat.waveformBackground(isIncoming, renderType == .bubble),
                                      waveformForeground: theme.chat.waveformForeground(isIncoming, renderType == .bubble))
     }
-    
+    static func make(theme: TelegramPresentationTheme) -> ChatMediaPresentation {
+        let isIncoming: Bool = false
+        
+        let grayText = theme.chat.grayText(isIncoming, false)
+
+        return ChatMediaPresentation(presentation: theme, isIncoming: isIncoming,
+                                     isBubble: false,
+                                     activityBackground: theme.chat.activityBackground(isIncoming, false),
+                                     activityForeground: theme.chat.activityForeground(isIncoming, false),
+                                     text: theme.chat.textColor(isIncoming, false),
+                                     grayText: grayText,
+                                     link: theme.chat.linkColor(isIncoming, false),
+                                     waveformBackground: theme.chat.waveformBackground(isIncoming, false),
+                                     waveformForeground: theme.chat.waveformForeground(isIncoming, false))
+    }
     static var empty: ChatMediaPresentation {
         return .init(presentation: theme, isIncoming: true, isBubble: true, activityBackground: .clear, activityForeground: .clear, text: .clear, grayText: .clear, link: .clear, waveformBackground: .clear, waveformForeground: .clear)
     }
@@ -341,9 +357,32 @@ final class TelegramChatColors {
     func activityForeground(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.fileActivityForegroundBubble_incoming : palette.fileActivityForegroundBubble_outgoing : palette.fileActivityForeground
     }
-    
-    func webPreviewActivity(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
+    func activityColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return bubbled ? incoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
+    }
+    func webPreviewActivity(_ colors: PeerNameColors, message: Message, account: Account, bubbled: Bool) -> PeerNameColors.Colors {
+        let isIncoming = message.isIncoming(account, bubbled)
+        
+        var hasSecondary: Bool = false
+        var hasTertiary: Bool = false
+
+        
+        if let author = message.effectiveAuthor {
+            if let nameColor = author.nameColor {
+                let color = colors.get(nameColor)
+                if isIncoming {
+                    return colors.get(nameColor)
+                }
+                hasSecondary = color.secondary != nil
+                hasTertiary = color.tertiary != nil
+            }
+        }
+        let color = bubbled ? isIncoming ? palette.webPreviewActivityBubble_incoming : palette.webPreviewActivityBubble_outgoing : palette.webPreviewActivity
+        
+        let secondary = hasSecondary ? color.withAlphaComponent(0.2) : nil
+        let tertiary = hasTertiary ? color.withAlphaComponent(0.2) : nil
+
+        return .init(main: color, secondary: secondary, tertiary: tertiary)
     }
     func pollOptionBorder(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
         return (bubbled ? incoming ?  grayText(incoming, bubbled) : grayText(incoming, bubbled) : palette.grayText).withAlphaComponent(0.2)
@@ -380,10 +419,10 @@ final class TelegramChatColors {
     }
     
     func monospacedPreColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? palette.monospacedPreBubble_incoming : palette.monospacedPreBubble_outgoing : palette.monospacedPre
+        return bubbled ? incoming ? palette.textBubble_incoming : palette.textBubble_outgoing : palette.monospacedPre
     }
     func monospacedCodeColor(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
-        return bubbled ? incoming ? palette.monospacedCodeBubble_incoming : palette.monospacedCodeBubble_outgoing : palette.monospacedCode
+        return bubbled ? incoming ? palette.textBubble_incoming : palette.textBubble_outgoing : palette.monospacedCode
     }
     
     func selectText(_ incoming: Bool, _ bubbled: Bool) -> NSColor {
@@ -493,13 +532,84 @@ final class TelegramChatColors {
         return array[index]
     }
     
-    func replyTitle(_ item: ChatRowItem) -> NSColor {
-        return item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTitleBubble_incoming : item.presentation.colors.chatReplyTitleBubble_outgoing) : item.presentation.colors.chatReplyTitle
+    func replyTitle(_ item: ChatRowItem) -> PeerNameColors.Colors {
+        
+        var hasSecondary: Bool = false
+        var hasTertiary: Bool = false
+        
+        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
+            let isIncoming = item.isIncoming
+            if let nameColor = author.nameColor {
+                let color = item.context.peerNameColors.get(nameColor)
+                if isIncoming {
+                    return color
+                }
+                hasSecondary = color.secondary != nil
+                hasTertiary = color.tertiary != nil
+            }
+        }
+        let color = item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTitleBubble_incoming : item.presentation.colors.chatReplyTitleBubble_outgoing) : item.presentation.colors.chatReplyTitle
+        
+        let secondary = hasSecondary ? color.withAlphaComponent(0.2) : nil
+        let tertiary = hasTertiary ? color.withAlphaComponent(0.2) : nil
+
+        return .init(main: color, secondary: secondary, tertiary: tertiary)
+
     }
+    
+    func blockColor(_ colors: PeerNameColors, message: Message, isIncoming: Bool, bubbled: Bool) -> PeerNameColors.Colors {
+        var hasSecondary: Bool = false
+        var hasTertiary: Bool = false
+        var author: Peer?
+        if let forwardInfo = message.forwardInfo {
+            author = forwardInfo.author
+        } else {
+            author = message.effectiveAuthor
+        }
+        if let author = author {
+            if let nameColor = author.nameColor {
+                let color = colors.get(nameColor)
+                if isIncoming {
+                    return color
+                }
+                hasSecondary = color.secondary != nil
+                hasTertiary = color.tertiary != nil
+            }
+        }
+        let color = bubbled ? (isIncoming ? self.palette.chatReplyTitleBubble_incoming : self.palette.chatReplyTitleBubble_outgoing) : self.palette.chatReplyTitle
+        
+        let secondary = hasSecondary ? color.withAlphaComponent(0.2) : nil
+        let tertiary = hasTertiary ? color.withAlphaComponent(0.2) : nil
+
+        return .init(main: color, secondary: secondary, tertiary: tertiary)
+    }
+    
+    
+    func replyPattern(_ item: ChatRowItem) -> Int64? {
+        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
+            return author.backgroundEmojiId
+        }
+        return nil
+    }
+    
+    func replyQuote(_ item: ChatRowItem) -> CGImage {
+        if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
+            if item.isIncoming {
+                if let nameColor = author.nameColor {
+                    let color = item.context.peerNameColors.get(nameColor).main
+                    return item.presentation.resourceCache.image(Int32(color.rgb), {
+                        NSImage(named: "Icon_Quote")!.precomposed(color)
+                    })
+                }
+            }
+        }
+        return item.hasBubble ? (item.isIncoming ? item.presentation.icons.message_quote_bubble_incoming : item.presentation.icons.message_quote_bubble_outgoing) : item.presentation.icons.message_quote_accent
+    }
+    
     func replyText(_ item: ChatRowItem) -> NSColor {
         return item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTextEnabledBubble_incoming : item.presentation.colors.chatReplyTextEnabledBubble_outgoing) : item.presentation.colors.chatReplyTextEnabled
     }
     func replyDisabledText(_ item: ChatRowItem) -> NSColor {
-        return item.hasBubble ? (item.isIncoming ? item.presentation.colors.chatReplyTextDisabledBubble_incoming : item.presentation.colors.chatReplyTextDisabledBubble_outgoing) : item.presentation.colors.chatReplyTextDisabled
+        return replyTitle(item).main
     }
 }

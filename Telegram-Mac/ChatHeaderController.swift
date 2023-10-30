@@ -473,7 +473,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
             }
             switch kind {
             case .proxy:
-                confirm(for: chatInteraction.context.window, header: strings().chatProxySponsoredAlertHeader, information: strings().chatProxySponsoredAlertText, cancelTitle: "", thridTitle: strings().chatProxySponsoredAlertSettings, successHandler: { [weak chatInteraction] result in
+                verifyAlert_button(for: chatInteraction.context.window, header: strings().chatProxySponsoredAlertHeader, information: strings().chatProxySponsoredAlertText, cancel: "", option: strings().chatProxySponsoredAlertSettings, successHandler: { [weak chatInteraction] result in
                     switch result {
                     case .thrid:
                         chatInteraction?.openProxySettings()
@@ -483,7 +483,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
                 })
             case .psa:
                 if let learnMore = kind.learnMore {
-                    confirm(for: chatInteraction.context.window, header: kind.title, information: kind.text, cancelTitle: "", thridTitle: learnMore, successHandler: { result in
+                    verifyAlert_button(for: chatInteraction.context.window, header: kind.title, information: kind.text, cancel: "", option: learnMore, successHandler: { result in
                         switch result {
                         case .thrid:
                             execute(inapp: .external(link: learnMore, false))
@@ -665,7 +665,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             let newContainer = ChatAccessoryView()
             newContainer.userInteractionEnabled = false
                         
-            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false, translate: translate)
+            let newNode = ReplyModel(message: nil, replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false, translate: translate)
             
             newNode.view = newContainer
             
@@ -918,7 +918,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
                 
                 let range = attr.string.nsstring.range(of: "🤡")
                 if range.location != NSNotFound {
-                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: TGTextAttachment(identifier: "\(arc4random())", fileId: status.fileId, file: nil, text: "", info: nil), range: range)
+                    attr.addAttribute(TextInputAttributes.embedded, value: InlineStickerItem(source: .attribute(.init(fileId: status.fileId, file: nil, emoji: ""))), range: range)
                 }
                 let layout = TextViewLayout(attr, alignment: .center)
                 layout.measure(width: frame.width - 80)
@@ -2507,10 +2507,8 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
         textView.center()
         self.avatarsContainer.centerY(x: 22)
         
-        var x = textView.frame.minX
-        if x < self.avatarsContainer.frame.maxX {
-            x = self.avatarsContainer.frame.maxX + 10
-        }
+        let minX = 30 + CGFloat(self.avatars.count) * 15
+        let x = max(textView.frame.minX, minX)
         textView.setFrameOrigin(NSMakePoint(x, textView.frame.minY))
 
     }
@@ -2690,7 +2688,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         })
         
         let codeIndex = codes.firstIndex(where: {
-            $0.code.contains(appAppearance.language.baseLanguageCode)
+            $0.code.contains(appAppearance.languageCode)
         })
         if let codeIndex = codeIndex {
             codes.move(at: codeIndex, to: 0)

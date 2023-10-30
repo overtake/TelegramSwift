@@ -33,7 +33,8 @@ CONFIGURE_ARGS="--disable-examples
                     --disable-docs
                     --enable-vp8
                     --enable-vp9
-                    --enable-webm-io"
+                    --enable-webm-io
+                    --size-limit=8192x8192"
                 
 DIST_DIR="_dist"
 FRAMEWORK_DIR="build/libvpx"

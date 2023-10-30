@@ -90,11 +90,19 @@ final class ChatReactionsLayout {
                 switch renderType {
                 case .bubble:
                     if isOutOfBounds {
-                        bgColor = theme.blurServiceColor
-                        textColor = theme.chatServiceItemTextColor
-                        borderColor = .clear
-                        selectedColor = theme.colors.accent
-                        textSelectedColor = theme.colors.underSelectedColor
+                        if !hasWallpaper {
+                            bgColor = theme.colors.grayIcon.withAlphaComponent(0.2)
+                            textColor = theme.colors.accent
+                            borderColor = .clear
+                            selectedColor = theme.colors.accent
+                            textSelectedColor = theme.colors.underSelectedColor
+                        } else {
+                            bgColor = theme.blurServiceColor
+                            textColor = theme.chatServiceItemTextColor
+                            borderColor = .clear
+                            selectedColor = theme.colors.accent
+                            textSelectedColor = theme.colors.underSelectedColor
+                        }
                     } else {
                         if isIncoming {
                             bgColor = theme.colors.accent.withAlphaComponent(0.1)
@@ -236,6 +244,7 @@ final class ChatReactionsLayout {
             lhs.source == rhs.source &&
             lhs.mode == rhs.mode &&
             lhs.rect == rhs.rect &&
+            lhs.message.id == rhs.message.id &&
             lhs.canViewList == rhs.canViewList &&
             lhs.message.effectiveReactions == rhs.message.effectiveReactions
         }
@@ -283,7 +292,11 @@ final class ChatReactionsLayout {
                         width += presentation.insetInner
                         if recentPeers.count == 1 {
                             width += presentation.reactionSize.width
-                            width -= 2
+                            if case .builtin = value.value {
+                                width -= 2
+                            } else {
+                                width += 1
+                            }
                         } else if !recentPeers.isEmpty {
                             width += 12 * CGFloat(recentPeers.count)
                             width += 4
@@ -380,7 +393,7 @@ final class ChatReactionsLayout {
                 }, peer: peer, context: context, reaction: source, readTimestamp: readTimestamp)
                 
                 let signal:Signal<(CGImage?, Bool), NoError>
-                signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+                signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
                 _ = signal.start(next: { [weak item] image, _ in
                     if let image = image {
                         item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))

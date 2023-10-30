@@ -96,7 +96,7 @@ final class ChatMessageBubbleBackdrop: NSView {
         if let backgroundContent = backgroundContent {
             transition.updateFrame(view: backgroundContent, frame: CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: containerSize))
         }
-        
+
         if rotated {
             backgroundContent?.rotate(byDegrees: 180)
         } else {

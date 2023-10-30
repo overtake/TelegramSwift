@@ -242,7 +242,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                 chatInteraction?.openInfo(peer.0.id, false, nil, nil)
             }, peer: peer.0, context: context, reaction: reaction, readTimestamp: peer.2)
             let signal:Signal<(CGImage?, Bool), NoError>
-            signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+            signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.nameColor, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
             _ = signal.start(next: { [weak item] image, _ in
                 if let image = image {
                     item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
@@ -352,7 +352,7 @@ private final class MessageReadMenuItemView : AppMenuRowView {
             
             if let peers = peers {
                 let signal:Signal<[(CGImage?, Bool)], NoError> = combineLatest(peers.map { peer in
-                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false)
+                    return peerAvatarImage(account: context.account, photo: .peer(peer, peer.smallProfileImage, peer.nameColor, peer.displayLetters, nil), displayDimensions: NSMakeSize(size.width * System.backingScale, size.height * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false)
                 })
                 
                 
@@ -613,10 +613,10 @@ final class MessageReadMenuItem : ContextMenuItem {
 }
 
 extension ContextMenuItem {
-    static func makeItemAvatar(_ item: ContextMenuItem, account: Account, peer: Peer, source: PeerPhoto) {
+    static func makeItemAvatar(_ item: ContextMenuItem, account: Account, peer: Peer, source: PeerPhoto, selfAsSaved: Bool = true) {
         let signal:Signal<(CGImage?, Bool), NoError>
         
-        if peer.id == account.peerId {
+        if peer.id == account.peerId, selfAsSaved {
             let icon = theme.icons.searchSaved
             signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
         } else {
@@ -774,7 +774,7 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
 }
 
 
-private func stringForRelativeTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
+func stringForRelativeTimestamp(relativeTimestamp: Int32, relativeTo timestamp: Int32) -> String {
     var t: time_t = time_t(relativeTimestamp)
     var timeinfo: tm = tm()
     localtime_r(&t, &timeinfo)

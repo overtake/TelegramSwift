@@ -102,25 +102,22 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     
     let openPremium:(()->Void)?
     let installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)?
-//
-//    override var identifier: String {
-//        let ids: String = _items.reduce("", { $0 + "\($1.file.fileId.id)" })
-//        return "emojies_\(ids)"
-//    }
-    
+
     enum Mode {
         case panel
         case preview
         case reactions
         case statuses
         case topic
+        case backgroundIcon
     }
     let mode: Mode
-    
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, selectedItems:[SelectedItem] = [], callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+    let color: NSColor?
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, selectedItems:[SelectedItem] = [], color: NSColor? = nil, callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
         self.itemSize = NSMakeSize(41, 34)
         self.info = info
         self.mode = mode
+        self.color = color
         self._items = items
         self.viewSet = viewSet
         self.installed = installed
@@ -132,6 +129,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.installPack = installPack
         self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0)
        
+        
         self.context = context
         self.callback = callback
         
@@ -145,7 +143,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         if let _ = info {
             switch mode {
-            case .panel, .reactions, .statuses, .topic:
+            case .panel, .reactions, .statuses, .topic, .backgroundIcon:
                 if isPremium && !context.isPremium {
                     if installed {
                         self.unlockText = (strings().emojiPackRestore, true, true)
@@ -267,7 +265,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 input = .init(inputText: bundle, selectionRange: 0..<bundle.length, attributes: [])
             } else {
                 let text = file.customEmojiText ?? file.stickerText ?? ""
-                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, arc4random64(), file, info?.id, nil)])
+                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, arc4random64(), file, info?.id)])
             }
             copyItem = ContextMenuItem(strings().contextCopy, handler: {
                 copyToClipboard(input)
@@ -282,6 +280,22 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                     _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
                     showModalText(for: context.window, text: strings().emojiContextSetStatusSuccess)
                 }, itemImage: MenuAnimation.menu_smile.value)
+            }
+        }
+        
+        if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
+            if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+                if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
+                    items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                    _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                            if let path = path {
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.writeObjects([NSURL(fileURLWithPath: path)])
+                            }
+                        })
+                    }, itemImage: MenuAnimation.menu_copy_media.value))
+                }
             }
         }
         
@@ -345,6 +359,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         }
         
         
+        
         if let setStatus = setStatus {
             items.append(setStatus)
         }
@@ -364,6 +379,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             }
         }
        
+      
         
         
 //        items.append(ContextMenuItem(strings().emojiContextRemove, handler: {
@@ -380,7 +396,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     func invokeLockAction() {
         if let info = info {
             switch mode {
-            case .panel, .reactions, .statuses, .topic:
+            case .panel, .reactions, .statuses, .topic, .backgroundIcon:
                 if isPremium && !context.isPremium {
                     self.openPremium?()
                 } else if !installed {
@@ -775,7 +791,9 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     self.addSubview(current)
                     isNew = true
                 }
-                current.set(background: unlockText.2 ? theme.colors.accent : theme.colors.accent.withAlphaComponent(0.6), for: .Normal)
+                let primaryColor = item.color ?? theme.colors.accent
+                
+                current.set(background: unlockText.2 ? primaryColor : primaryColor.withAlphaComponent(0.6), for: .Normal)
                 current.set(font: .medium(12), for: .Normal)
                 current.set(color: theme.colors.underSelectedColor, for: .Normal)
                 current.set(text: unlockText.0, for: .Normal)
@@ -806,8 +824,15 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         
         self.updateLayout(size: frame.size, transition: transition)
         
+        let color: NSColor
+        if let c = item.color {
+            color = c
+        } else {
+            let isPanel = item.mode == .panel || item.mode == .preview
+            color = isPanel ? theme.colors.text : theme.colors.accent
+        }
         
-        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.items, selected: item.selectedItems, animated: animated)
+        self.updateInlineStickers(context: item.context, color: color, contentView: contentView, items: item.items, selected: item.selectedItems, animated: animated)
 
         while !appearanceViews.isEmpty {
             appearanceViews.removeLast().value?.removeFromSuperview()
@@ -827,21 +852,25 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                         isKeyWindow = window.isKeyWindow
                     }
                 }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow && !isEmojiLite
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
     }
     
-    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [EmojiesSectionRowItem.Item], selected: [EmojiesSectionRowItem.SelectedItem], animated: Bool) {
+    private var previousColor: NSColor? = nil
+    
+    func updateInlineStickers(context: AccountContext, color: NSColor, contentView: NSView, items: [EmojiesSectionRowItem.Item], selected: [EmojiesSectionRowItem.SelectedItem], animated: Bool) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var validLockIds: [InlineStickerItemLayer.Key] = []
         var validSelectedIds: [InlineStickerItemLayer.Key] = []
         
         var index: Int = 0
+        
+        let animated = animated && previousColor == color
 
         for item in items {
             if let current = item.item {
-                let id = InlineStickerItemLayer.Key(id: current.file.fileId.id, index: index)
+                let id = InlineStickerItemLayer.Key(id: current.file.fileId.id, index: index, color: color)
                 validIds.append(id)
 
                 let rect = item.rect
@@ -866,7 +895,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     
                     switch selection {
                     case .normal:
-                        current.backgroundColor = theme.colors.accent.withAlphaComponent(0.2).cgColor
+                        current.backgroundColor = color.withAlphaComponent(0.2).cgColor
                     case .transparent:
                         current.backgroundColor = theme.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1).cgColor
                     }
@@ -887,10 +916,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     if let layer = self.inlineStickerItemViews[id] {
                         performSublayerRemoval(layer, animated: animated, scale: true)
                     }
-                    let mode = (self.item as? EmojiesSectionRowItem)?.mode
-                    let isPanel = mode == .panel || mode == .preview
                     
-                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size, textColor: isPanel ? theme.colors.text : theme.colors.accent)
+                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size, playPolicy: isEmojiLite ? .framesCount(1) : .loop, textColor: color)
                     self.inlineStickerItemViews[id] = view
                     view.superview = contentView
                     contentView.layer?.addSublayer(view)
@@ -905,7 +932,6 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 }
                 view.masksToBounds = true
                 view.cornerRadius = item.selection != nil ? 4 : 0
-//                view.backgroundColor = NSColor.random.cgColor
                 
                 if item.lock {
                     let current: InlineStickerLockLayer
@@ -930,14 +956,6 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                
                 
                 index += 1
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
-                    } else {
-                        isKeyWindow = window.isKeyWindow
-                    }
-                }
                 view.frame = rect
             }
         }
@@ -946,7 +964,14 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         for (key, itemLayer) in self.inlineStickerItemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
-                performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                if previousColor != color {
+                    delay(0.1, closure: {
+                        performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                    })
+                } else {
+                    performSublayerRemoval(itemLayer, animated: animated, scale: true)
+                }
+                
             }
         }
         for key in removeKeys {
@@ -974,18 +999,24 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         for key in removeSelectionKeys {
             self.selectedLayers.removeValue(forKey: key)
         }
+        self.previousColor = color
         self.updateAnimatableContent()
     }
     
     override var isEmojiLite: Bool {
         if let item = item as? EmojiesSectionRowItem {
-            if item.mode == .topic {
+            if item.mode == .topic || item.mode == .backgroundIcon {
                 return true
             }
             return item.context.isLite(.emoji)
         }
         
         return super.isEmojiLite
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
     
     required init?(coder: NSCoder) {

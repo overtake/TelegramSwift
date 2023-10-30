@@ -21,6 +21,7 @@ enum SelectivePrivacySettingsKind {
     case forwards
     case phoneNumber
     case voiceMessages
+    case bio
 }
 
 private enum SelectivePrivacySettingType {
@@ -245,7 +246,7 @@ private enum SelectivePrivacySettingsEntry: TableItemListNodeEntry {
         case let .phoneDiscoveryInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case .section:
-            return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId, viewType: .separator)
         }
     }
 }
@@ -317,6 +318,11 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
         settingInfoText = strings().privacySettingsControllerProfilePhotoCustomHelp
         disableForText = strings().privacySettingsControllerNeverShareWith
         enableForText = strings().privacySettingsControllerAlwaysShareWith
+    case .bio:
+        settingTitle = strings().privacySettingsControllerBioWhoCanSee
+        settingInfoText = strings().privacySettingsControllerBioCustomHelp
+        disableForText = strings().privacySettingsControllerNeverShareWith
+        enableForText = strings().privacySettingsControllerAlwaysShareWith
     case .forwards:
         settingTitle = strings().privacySettingsControllerForwardsWhoCanForward
         settingInfoText = strings().privacySettingsControllerForwardsCustomHelp
@@ -338,13 +344,9 @@ private func selectivePrivacySettingsControllerEntries(context: AccountContext, 
 
     entries.append(.everybody(sectionId, state.setting == .everybody, .firstItem))
     
-    switch kind {
-    case .presence, .voiceCalls, .forwards, .phoneNumber, .profilePhoto, .groupInvitations:
-        entries.append(.contacts(sectionId, state.setting == .contacts, .innerItem))
-        entries.append(.nobody(sectionId, state.setting == .nobody, .lastItem))
-    default:
-        entries.append(.contacts(sectionId, state.setting == .contacts, .lastItem))
-    }
+    entries.append(.contacts(sectionId, state.setting == .contacts, .innerItem))
+    entries.append(.nobody(sectionId, state.setting == .nobody, .lastItem))
+
     if let settingInfoText = settingInfoText {
         entries.append(.settingInfo(sectionId, settingInfoText, .textBottomItem))
     }
@@ -470,7 +472,7 @@ class SelectivePrivacySettingsController: TableViewController {
         var initialDisableFor: [PeerId: SelectivePrivacyPeer] = [:]
 
         switch current {
-        case let .disableEveryone(enableFor):
+        case let .disableEveryone(enableFor, enableForCloseFriends):
             initialEnableFor = enableFor
         case let .enableContacts(enableFor, disableFor):
             initialEnableFor = enableFor
@@ -484,7 +486,7 @@ class SelectivePrivacySettingsController: TableViewController {
 
         if let callCurrent = callSettings {
             switch callCurrent {
-            case let .disableEveryone(enableFor):
+            case let .disableEveryone(enableFor, enableForCloseFriends):
                 initialCallP2PEnableFor = enableFor
                 initialCallP2PDisableFor = [:]
             case let .enableContacts(enableFor, disableFor):
@@ -756,6 +758,8 @@ class SelectivePrivacySettingsController: TableViewController {
                 title = strings().privacySettingsControllerAlwaysShareWith
             case .voiceMessages:
                 title = strings().privacySettingsControllerAlwaysAllow
+            case .bio:
+                title = strings().privacySettingsControllerAlwaysShare
 
             }
             var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
@@ -803,6 +807,8 @@ class SelectivePrivacySettingsController: TableViewController {
                 title = strings().privacySettingsControllerNeverAllow
             case .phoneNumber:
                 title = strings().privacySettingsControllerNeverShareWith
+            case .bio:
+                title = strings().privacySettingsControllerNeverShareWith
             }
             var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
             updateState { state in
@@ -847,7 +853,7 @@ class SelectivePrivacySettingsController: TableViewController {
             return makeUpdatePhotoItems()
             
         }, removePublicPhoto: {
-            confirm(for: context.window, information: strings().privacyResetPhotoConfirm, okTitle: strings().modalRemove, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().privacyResetPhotoConfirm, ok: strings().modalRemove, successHandler: { _ in
                 
                 let signal = context.engine.accountData.removeFallbackPhoto(reference: nil)
                 |> castError(UploadPeerPhotoError.self)
@@ -872,7 +878,7 @@ class SelectivePrivacySettingsController: TableViewController {
                 case .contacts:
                     settings = SelectivePrivacySettings.enableContacts(enableFor: current.enableFor, disableFor: current.disableFor)
                 case .nobody:
-                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor)
+                    settings = SelectivePrivacySettings.disableEveryone(enableFor: current.enableFor, enableForCloseFriends: false)
                 }
 
                 if let mode = current.callP2PMode {
@@ -882,7 +888,7 @@ class SelectivePrivacySettingsController: TableViewController {
                     case .contacts:
                         callSettings = SelectivePrivacySettings.enableContacts(enableFor: current.callP2PEnableFor, disableFor: current.callP2PDisableFor)
                     case .nobody:
-                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor)
+                        callSettings = SelectivePrivacySettings.disableEveryone(enableFor: current.callP2PEnableFor, enableForCloseFriends: false)
                     }
                 }
                 current.saving = true
@@ -906,6 +912,8 @@ class SelectivePrivacySettingsController: TableViewController {
                     type = .phoneNumber
                 case .voiceMessages:
                     type = .voiceMessages
+                case .bio:
+                    type = .bio
                 }
                 
                 var updatePhoneDiscoverySignal: Signal<Void, NoError> = Signal.complete()
@@ -948,6 +956,8 @@ class SelectivePrivacySettingsController: TableViewController {
                     title = strings().privacySettingsPhoneNumber
                 case .voiceMessages:
                     title = strings().privacySettingsVoiceMessages
+                case .bio:
+                    title = strings().privacySettingsBio
                 }
 
                 self?.setCenterTitle(title)

@@ -11,13 +11,13 @@ import TelegramCore
 
 import Postbox
 
-public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(fetchResource: { account, resource, range, tag in
+public let telegramAccountAuxiliaryMethods = AccountAuxiliaryMethods(fetchResource: { postbox, resource, range, tag in
     if let resource = resource as? LocalFileGifMediaResource {
         return fetchGifMediaResource(resource: resource)
     } else if let resource = resource as? LocalFileArchiveMediaResource {
-        return fetchArchiveMediaResource(account: account, resource: resource)
+        return fetchArchiveMediaResource(resource: resource)
     } else if let resource = resource as? ExternalMusicAlbumArtResource {
-        return fetchExternalMusicAlbumArtResource(account: account, resource: resource)
+        return fetchExternalMusicAlbumArtResource(resource: resource)
     } else if let resource = resource as? LocalFileVideoMediaResource {
         return fetchMovMediaResource(resource: resource)
     } else if let resource = resource as? LottieSoundMediaResource {

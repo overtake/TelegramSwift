@@ -46,12 +46,20 @@ open class TableRowItem: NSObject {
     
     open private(set) var height:CGFloat = 60;
     
+    open var backdorColor: NSColor {
+        return presentation.colors.background
+    }
+    open var borderColor: NSColor {
+        return presentation.colors.border
+    }
     
     public var size:NSSize  {
         return NSMakeSize(width, height)
     }
     
     public var oldWidth:CGFloat = 0
+    
+    private var _stableIdValue: AnyHashable = 0
     
     open var width:CGFloat  {
         if Thread.isMainThread, let table = table, table.frame.width > 0 {
@@ -63,7 +71,7 @@ open class TableRowItem: NSObject {
     }
     
     open var stableId:AnyHashable {
-        return 0
+        return _stableIdValue
     }
     
     open func copyAndUpdate(animated: Bool) {
@@ -84,6 +92,11 @@ open class TableRowItem: NSObject {
     
     public init(_ initialSize:NSSize) {
         self.initialSize = initialSize
+    }
+    
+    public init(_ initialSize:NSSize, stableId: AnyHashable) {
+        self.initialSize = initialSize
+        _stableIdValue = stableId
     }
     
     open func prepare(_ selected:Bool) {

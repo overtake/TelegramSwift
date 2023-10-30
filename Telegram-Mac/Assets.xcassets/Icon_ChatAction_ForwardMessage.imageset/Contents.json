@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_forward.png",
+      "filename" : "forward_settings.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_forward@2x.png",
+      "filename" : "forward_settings@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

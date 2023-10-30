@@ -224,7 +224,7 @@ private final class TimeOptionView: View {
         ctx.round(frame.size, 4)
         
         if window?.firstResponder == self {
-            ctx.setFillColor(presentation.colors.accentSelect.cgColor)
+            ctx.setFillColor(presentation.colors.accent.cgColor)
             ctx.fill(bounds)
             if let textNode = textNodeSelected {
                 textNode.1.draw(focus(textNode.0.size), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: .clear)

@@ -168,7 +168,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             
             let status = peer.addressName != nil ? "@\(peer.addressName!)" : (peer.isSupergroup || peer.isGroup ? strings().discussionControllerPrivateGroup : strings().discussionControllerPrivateChannel)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.id), equatable: InputDataEquatable(PeerEquatable(peer: peer)), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: i == 0 ? .innerItem : bestGeneralViewType(peers, for: i), action: {
+                return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, status: status, inset: NSEdgeInsetsMake(0, 20, 0, 20), viewType: i == 0 ? .innerItem : bestGeneralViewType(peers, for: i), action: {
                     arguments.setup(peer)
                 })
             }))
@@ -195,7 +195,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             
             let status = associatedPeer.addressName != nil ? "@\(associatedPeer.addressName!)" : (associatedPeer.isSupergroup ? strings().discussionControllerPrivateGroup : strings().discussionControllerPrivateChannel)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_info(associatedPeer.id), equatable: InputDataEquatable(PeerEquatable(peer: associatedPeer)), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: associatedPeer, account: arguments.context.account, context: arguments.context, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: .singleItem, action: {
+                return ShortPeerRowItem(initialSize, peer: associatedPeer, account: arguments.context.account, context: arguments.context, status: status, inset: NSEdgeInsetsMake(0, 20, 0, 20), viewType: .singleItem, action: {
                     arguments.openInfo(associatedPeer.id)
                 })
             }))
@@ -262,7 +262,7 @@ private func channelDiscussionEntries(state: DiscussionState, arguments: Discuss
             
             let status = associatedPeer.addressName != nil ? "@\(associatedPeer.addressName!)" : (associatedPeer.isSupergroup ? strings().discussionControllerPrivateGroup : strings().discussionControllerPrivateChannel)
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer_info(associatedPeer.id), equatable: InputDataEquatable(PeerEquatable(peer: associatedPeer)), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: associatedPeer, account: arguments.context.account, context: arguments.context, status: status, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: .singleItem, action: {
+                return ShortPeerRowItem(initialSize, peer: associatedPeer, account: arguments.context.account, context: arguments.context, status: status, inset: NSEdgeInsetsMake(0, 20, 0, 20), viewType: .singleItem, action: {
                     arguments.openInfo(associatedPeer.id)
                 })
             }))
@@ -388,7 +388,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
             } else if let error = discussError {
                 switch error {
                 case .groupHistoryIsCurrentlyPrivate:
-                    confirm(for: context.window, information: strings().discussionControllerErrorPreHistory, okTitle: strings().discussionControllerErrorOK, successHandler: { _ in
+                    verifyAlert_button(for: context.window, information: strings().discussionControllerErrorPreHistory, ok: strings().discussionControllerErrorOK, successHandler: { _ in
                         setup(channelId, groupId, updatePreHistory: true)
                     })
                 case .hasNotPermissions:
@@ -422,11 +422,11 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
         context.bindings.rootNavigation().push(ChatAdditionController(context: context, chatLocation: .peer(peerId)))
     }, unlinkGroup: { associated in
         if associated.isChannel {
-            confirm(for: context.window, information: strings().discussionControllerConfrimUnlinkChannel, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().discussionControllerConfrimUnlinkChannel, successHandler: { _ in
                 setup(associated.id, nil)
             })
         } else {
-            confirm(for: context.window, information: strings().discussionControllerConfrimUnlinkGroup, successHandler: { _ in
+            verifyAlert_button(for: context.window, information: strings().discussionControllerConfrimUnlinkGroup, successHandler: { _ in
                 setup(peer.id, nil)
             })
         }
@@ -463,7 +463,7 @@ func ChannelDiscussionSetupController(context: AccountContext, peer: Peer)-> Inp
     
     actionsDisposable.add(availableSignal.start(next: { peers in
         updateState {
-            $0.withUpdatedAvailablePeers(peers)
+            $0.withUpdatedAvailablePeers(peers.map { $0._asPeer() })
         }
     }, error: { error in
         

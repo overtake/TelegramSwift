@@ -579,6 +579,9 @@ final class AppMenuController : NSObject  {
                     panel = nil
                 })
             }
+            
+            self.onClose()
+            
             self.windows.removeAll()
             self.parent?.removeAllHandlers(for: self)
             self.strongHolder = nil
@@ -594,7 +597,6 @@ final class AppMenuController : NSObject  {
                 })
             }
             
-            self.onClose()
         }
         self.menu.isShown = false
         self.isClosed = true
@@ -866,37 +868,6 @@ final class AppMenuController : NSObject  {
                 self?.closeAll()
                 return .rejected
             }, with: self, for: .leftMouseUp, priority: .supreme)
-            
-//            let topBubble = Window(contentRect: .zero, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
-//            topBubble._canBecomeMain = false
-//            topBubble._canBecomeKey = false
-//            topBubble.level = .popUpMenu
-//            topBubble.backgroundColor = .clear
-//            topBubble.isOpaque = false
-//            topBubble.hasShadow = false
-//            
-//            let bubbleRect = NSMakeRect(rect.minX + 4, rect.maxY - window.frame.height - 6, 10, 10)
-//            
-//            let contentView = TopBubbleView(frame: bubbleRect.size.bounds.offsetBy(dx: 3, dy: 3), presentation: menu.presentation)
-//            topBubble.contentView?.wantsLayer = true
-//            topBubble.contentView?.background = .clear
-//            topBubble.contentView?.addSubview(contentView)
-//            
-//            topBubble.set(mouseHandler: { [weak self] event in
-//                self?.closeAll()
-//                return .rejected
-//            }, with: self, for: .leftMouseUp)
-//            
-//            self.topBubbleWindow = topBubble
-//            
-//            
-//            
-//            topBubble.setFrame(bubbleRect.insetBy(dx: -3, dy: -3), display: true)
-//            topBubble.makeKeyAndOrderFront(nil)
-//            
-//            topBubble.contentView?.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.2)
-//            topBubble.contentView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
-
             
         }
     }

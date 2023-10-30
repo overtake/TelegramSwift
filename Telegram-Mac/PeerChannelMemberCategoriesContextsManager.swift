@@ -232,7 +232,7 @@ final class PeerChannelMemberCategoriesContextsManager {
                     subscriber.putNext(value)
                 })
             })
-            return disposable ?? EmptyDisposable
+            return disposable
             }
             |> runOn(Queue.mainQueue())
     }

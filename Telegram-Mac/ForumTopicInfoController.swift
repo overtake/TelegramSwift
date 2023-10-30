@@ -132,7 +132,7 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
     }
 
     let emojis = EmojiesController(context, mode: .forumTopic, selectedItems: [])
-    emojis._frameRect = NSMakeRect(0, 0, context.bindings.rootNavigation().frame.width - 60, 250)
+    emojis._frameRect = NSMakeRect(0, 0, context.bindings.rootNavigation().frame.width - 40, 250)
     emojis.loadViewIfNeeded()
     
     

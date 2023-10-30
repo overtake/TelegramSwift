@@ -17,12 +17,25 @@ public enum TitleButtonImageDirection {
 public class TextLayerExt: CATextLayer {
     
     public override func draw(in ctx: CGContext) {
-        ctx.setAllowsFontSubpixelPositioning(true)
-        ctx.setShouldSubpixelPositionFonts(true)
+        
         ctx.setAllowsAntialiasing(true)
-        ctx.setShouldAntialias(true)
-        ctx.setAllowsFontSmoothing(System.backingScale == 1.0)
-        ctx.setShouldSmoothFonts(System.backingScale == 1.0)
+                
+        ctx.setAllowsFontSmoothing(true)
+        ctx.setShouldSmoothFonts(true)
+        
+        ctx.setAllowsFontSubpixelPositioning(System.backingScale == 1.0)
+        ctx.setShouldSubpixelPositionFonts(System.backingScale == 1.0)
+        
+        ctx.setAllowsFontSubpixelQuantization(true)
+        ctx.setShouldSubpixelQuantizeFonts(true)
+
+        
+//        ctx.setAllowsFontSubpixelPositioning(true)
+//        ctx.setShouldSubpixelPositionFonts(true)
+//        ctx.setAllowsAntialiasing(true)
+//        ctx.setShouldAntialias(true)
+//        ctx.setAllowsFontSmoothing(System.backingScale == 1.0)
+//        ctx.setShouldSmoothFonts(System.backingScale == 1.0)
         
         super.draw(in: ctx)
     }
@@ -121,8 +134,12 @@ open class TitleButton: ImageButton {
     }
     
     @discardableResult public override func sizeToFit(_ addition: NSSize = NSZeroSize, _ maxSize:NSSize = NSZeroSize, thatFit:Bool = false) -> Bool {
-        _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
         
+        if text.string as? String == "" {
+            return super.sizeToFit(addition, maxSize, thatFit: thatFit)
+        } else {
+            _ = super.sizeToFit(addition, maxSize, thatFit: thatFit)
+        }
         var font:NSFont?
         if let fontName = self.text.font as? String {
             font = NSFont(name: fontName, size: text.fontSize)
@@ -211,7 +228,7 @@ open class TitleButton: ImageButton {
          guard let font = font, let string = string else {
              return .zero
          }
-         let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
+         let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font)
         let layout = TextViewLayout(attributedString)
         layout.measure(width: .greatestFiniteMagnitude)
         var size:NSSize = layout.layoutSize

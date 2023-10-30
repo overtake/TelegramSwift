@@ -234,6 +234,9 @@ class ChannelInfoArguments : PeerInfoArguments {
     func openInviteLinks() {
         pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
     }
+    func openNameColor(peer: Peer) {
+        pushViewController(SelectColorController(context: context, source: .channel(peer)))
+    }
     
     func openRequests() {
         pushViewController(RequestJoinMemberListController(context: context, peerId: peerId, manager: requestManager, openInviteLinks: { [weak self] in
@@ -545,7 +548,11 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     
     func stats(_ datacenterId: Int32) {
-        self.pushViewController(ChannelStatsViewController(context, peerId: peerId, datacenterId: datacenterId))
+        if datacenterId == 0 {
+            self.pushViewController(ChannelBoostStatsController(context: context, peerId: peerId))
+        } else {
+            self.pushViewController(ChannelStatsSegmentController(context, datacenterId: datacenterId, peerId: peerId, isChannel: true))
+        }
     }
     func share() {
         let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> deliverOnMainQueue
@@ -592,6 +599,11 @@ class ChannelInfoArguments : PeerInfoArguments {
         }))
     }
     
+    func join_channel() {
+        joinChannel(context: context, peerId: peerId)
+        pushViewController(ChatController(context: context, chatLocation: .peer(peerId)))
+    }
+    
     func updateEditingDescriptionText(_ text:String) -> Void {
         updateState { state in
             if let editingState = state.editingState {
@@ -621,7 +633,7 @@ class ChannelInfoArguments : PeerInfoArguments {
 }
 
 enum ChannelInfoEntry: PeerInfoEntry {
-    case info(sectionId: ChannelInfoSection, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, viewType: GeneralViewType)
+    case info(sectionId: ChannelInfoSection, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, stories: PeerExpiringStoryListContext.State?, viewType: GeneralViewType)
     case scam(sectionId: ChannelInfoSection, title: String, text: String, viewType: GeneralViewType)
     case about(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case userName(sectionId: ChannelInfoSection, value: [String], viewType: GeneralViewType)
@@ -633,6 +645,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case inviteLinks(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
+    case color(section: ChannelInfoSection, peer: PeerEquatable, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -647,7 +660,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     
     func withUpdatedViewType(_ viewType: GeneralViewType) -> ChannelInfoEntry {
         switch self {
-        case let .info(sectionId, peerView, editable, updatingPhotoState, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, updatingPhotoState: updatingPhotoState, viewType: viewType)
+        case let .info(sectionId, peerView, editable, updatingPhotoState, stories, _): return .info(sectionId: sectionId, peerView: peerView, editable: editable, updatingPhotoState: updatingPhotoState, stories: stories, viewType: viewType)
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
         case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
@@ -660,6 +673,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .requests(section, count, _): return .requests(section: section, count: count, viewType: viewType)
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
         case let .reactions(section, text, allowedReactions, availableReactions, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, viewType: viewType)
+        case let .color(section, peer, _): return .color(section: section, peer: peer, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
         case let .aboutInput(sectionId, description, _): return .aboutInput(sectionId: sectionId, description: description, viewType: viewType)
         case let .aboutDesc(sectionId, _): return .aboutDesc(sectionId: sectionId, viewType: viewType)
@@ -681,9 +695,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return false
         }
         switch self {
-        case let .info(sectionId, lhsPeerView, editable, updatingPhotoState, viewType):
+        case let .info(sectionId, lhsPeerView, editable, updatingPhotoState, stories, viewType):
             switch entry {
-            case .info(sectionId, let rhsPeerView, editable, updatingPhotoState, viewType):
+            case .info(sectionId, let rhsPeerView, editable, updatingPhotoState, stories, viewType):
                 
                 let lhsPeer = peerViewMainPeer(lhsPeerView)
                 let lhsCachedData = lhsPeerView.cachedData
@@ -806,6 +820,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .color(sectionId, peer, viewType):
+            if case .color(sectionId, peer, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .discussionDesc(sectionId, viewType):
             if case .discussionDesc(sectionId, viewType) = entry {
                 return true
@@ -884,26 +904,28 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 12
         case .requests:
             return 13
-        case .reactions:
+        case .color:
             return 14
-        case .discussion:
+        case .reactions:
             return 15
-        case .discussionDesc:
+        case .discussion:
             return 16
-        case .aboutInput:
+        case .discussionDesc:
             return 17
-        case .aboutDesc:
+        case .aboutInput:
             return 18
-        case .signMessages:
+        case .aboutDesc:
             return 19
-        case .signDesc:
+        case .signMessages:
             return 20
-        case .report:
+        case .signDesc:
             return 21
-        case .leave:
+        case .report:
             return 22
-        case .media:
+        case .leave:
             return 23
+        case .media:
+            return 24
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -911,7 +933,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     
     fileprivate var sectionId: Int {
         switch self {
-        case let .info(sectionId, _, _, _, _):
+        case let .info(sectionId, _, _, _, _, _):
             return sectionId.rawValue
         case let .setTitle(sectionId, _, _):
             return sectionId.rawValue
@@ -936,6 +958,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .discussion(sectionId, _, _, _):
             return sectionId.rawValue
         case let .reactions(sectionId, _, _, _, _):
+            return sectionId.rawValue
+        case let .color(sectionId, _, _):
             return sectionId.rawValue
         case let .discussionDesc(sectionId, _):
             return sectionId.rawValue
@@ -960,7 +984,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     
     private var sortIndex: Int {
         switch self {
-        case let .info(sectionId, _, _, _, _):
+        case let .info(sectionId, _, _, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .setTitle(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -985,6 +1009,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .discussion(sectionId, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .reactions(sectionId, _, _, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .color(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .discussionDesc(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -1017,8 +1043,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
     func item(initialSize:NSSize, arguments:PeerInfoArguments) -> TableRowItem {
         let arguments = arguments as! ChannelInfoArguments
         switch self {
-        case let .info(_, peerView, editable, updatingPhotoState, viewType):
-            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
+        case let .info(_, peerView, editable, updatingPhotoState, stories, viewType):
+            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, stories: stories, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
         case let .scam(_, title, text, viewType):
             return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
@@ -1084,6 +1110,11 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_reactions, type: .nextContext(text), viewType: viewType, action: {
                 arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
             })
+        case let .color(_, peer, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelColor, icon: theme.icons.profile_channel_color, type: .imageContext(generatePeerNameColorImage(colors: arguments.context.peerNameColors, peer: peer.peer), ""), viewType: viewType, action: {
+                arguments.openNameColor(peer: peer.peer)
+            })
+
         case let .setTitle(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .aboutInput(_, text, viewType):
@@ -1101,7 +1132,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section(_):
-            return GeneralRowItem(initialSize, height:30, stableId: stableId.hashValue, viewType: .separator)
+            return GeneralRowItem(initialSize, height: 20, stableId: stableId.hashValue, viewType: .separator)
         }
     }
 }
@@ -1118,7 +1149,7 @@ enum ChannelInfoSection : Int {
     case media = 9
 }
 
-func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?) -> [PeerInfoEntry] {
+func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?, stories: PeerExpiringStoryListContext.State?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! ChannelInfoArguments
     var state:ChannelInfoState {
@@ -1139,7 +1170,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
         entries.append(contentsOf: block)
     }
     
-    infoBlock.append(.info(sectionId: .header, peerView: view, editable: state.editingState != nil, updatingPhotoState: state.updatingPhotoState, viewType: .singleItem))
+    infoBlock.append(.info(sectionId: .header, peerView: view, editable: state.editingState != nil, updatingPhotoState: state.updatingPhotoState, stories: stories, viewType: .singleItem))
 
     
     if let channel = peerViewMainPeer(view) as? TelegramChannel {
@@ -1193,6 +1224,8 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                     } else {
                         text = strings().peerInfoReactionsAll
                     }
+                    
+                    block.append(.color(section: .type, peer: PeerEquatable(peer: channel), viewType: .singleItem))
                     
                     block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
                     

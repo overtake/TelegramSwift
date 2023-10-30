@@ -74,7 +74,7 @@ func filterContextMenuItems(_ filter: ChatListFilter, unreadCount: Int?, include
             if filter.data?.isShared == true {
                 deleteSharedFolder(context: context, filter: filter)
             } else {
-                confirm(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, okTitle: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
+                verifyAlert_button(for: context.window, header: strings().chatListFilterConfirmRemoveHeader, information: strings().chatListFilterConfirmRemoveText, ok: strings().chatListFilterConfirmRemoveOK, successHandler: { _ in
                     _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                         var filters = filters
                         filters.removeAll(where: { $0.id == filter.id })
@@ -202,7 +202,7 @@ private enum LeftSibarBarEntry : Comparable, Identifiable {
         case let .folder(_, selected, filter, unreadCount, hasUnmutedUnread):
             return LeftSidebarFolderItem(initialSize, context: arguments.context, folder: filter, selected: selected, unreadCount: unreadCount, hasUnmutedUnread: hasUnmutedUnread, callback: arguments.callback, menuItems: arguments.menuItems)
         case .topOffset:
-            return GeneralRowItem(initialSize, height: 16, stableId: stableId, backgroundColor: .clear)
+            return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
         }
     }
 }
@@ -320,7 +320,7 @@ func navigateToChatListFilter(_ filter: Int32, context: AccountContext) {
     let leftController = context.bindings.mainController()
     leftController.showChatList()
     
-    leftController.navigation.close(animated: context.layout != .single || rootNavigation.stackCount == 1)
+    leftController.navigation.close(animated: true)
     
     if context.layout == .single {
         rootNavigation.close(animated: true)

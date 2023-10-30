@@ -10,6 +10,166 @@ import Cocoa
 import Colors
 
 
+public class PeerNameColors: Equatable {
+    public struct Colors: Equatable {
+        public let main: NSColor
+        public let secondary: NSColor?
+        public let tertiary: NSColor?
+        
+        public init(main: NSColor, secondary: NSColor?, tertiary: NSColor?) {
+            self.main = main
+            self.secondary = secondary
+            self.tertiary = tertiary
+        }
+        
+        public init(main: NSColor) {
+            self.main = main
+            self.secondary = nil
+            self.tertiary = nil
+        }
+        
+        public init?(colors: [NSColor]) {
+            guard let first = colors.first else {
+                return nil
+            }
+            self.main = first
+            if colors.count == 3 {
+                self.secondary = colors[1]
+                self.tertiary = colors[2]
+            } else if colors.count == 2, let second = colors.last {
+                self.secondary = second
+                self.tertiary = nil
+            } else {
+                self.secondary = nil
+                self.tertiary = nil
+            }
+        }
+    }
+    
+    public static var defaultSingleColors: [Int32: Colors] {
+        return [
+            0: Colors(main: NSColor(rgb: 0xcc5049)),
+            1: Colors(main: NSColor(rgb: 0xd67722)),
+            2: Colors(main: NSColor(rgb: 0x955cdb)),
+            3: Colors(main: NSColor(rgb: 0x40a920)),
+            4: Colors(main: NSColor(rgb: 0x309eba)),
+            5: Colors(main: NSColor(rgb: 0x368ad1)),
+            6: Colors(main: NSColor(rgb: 0xc7508b))
+        ]
+    }
+    
+    public static var defaultValue: PeerNameColors {
+        return PeerNameColors(
+            colors: defaultSingleColors,
+            darkColors: [:],
+            displayOrder: [5, 3, 1, 0, 2, 4, 6]
+        )
+    }
+    
+    public let colors: [Int32: Colors]
+    public let darkColors: [Int32: Colors]
+    public let displayOrder: [Int32]
+    
+   
+    
+    public init(colors: [Int32: Colors], darkColors: [Int32: Colors], displayOrder: [Int32]) {
+        self.colors = colors
+        self.darkColors = darkColors
+        self.displayOrder = displayOrder
+    }
+    
+  
+    
+    public static func == (lhs: PeerNameColors, rhs: PeerNameColors) -> Bool {
+        if lhs.colors != rhs.colors {
+            return false
+        }
+        if lhs.darkColors != rhs.darkColors {
+            return false
+        }
+        if lhs.displayOrder != rhs.displayOrder {
+            return false
+        }
+        return true
+    }
+}
+
+
+public final class InputViewTheme: Equatable {
+    public final class Quote: Equatable {
+        public let foreground: PeerNameColors.Colors
+        public let icon: NSImage
+        public init(foreground: PeerNameColors.Colors,
+            icon: NSImage
+        ) {
+            self.foreground = foreground
+            self.icon = icon
+        }
+        
+        public static func ==(lhs: Quote, rhs: Quote) -> Bool {
+            if lhs.foreground != rhs.foreground {
+                return false
+            }
+            if lhs.icon != rhs.icon {
+                return false
+            }
+            return true
+        }
+    }
+    
+    public let quote: Quote
+    public let indicatorColor: NSColor
+    public let backgroundColor: NSColor
+    public let selectingColor: NSColor
+    public let textColor: NSColor
+    public let accentColor: NSColor
+    public let fontSize: CGFloat
+    public let grayTextColor: NSColor
+    public init(quote: Quote, indicatorColor: NSColor, backgroundColor: NSColor, selectingColor: NSColor, textColor: NSColor, accentColor: NSColor, grayTextColor: NSColor, fontSize: CGFloat) {
+        self.quote = quote
+        self.indicatorColor = indicatorColor
+        self.backgroundColor = backgroundColor
+        self.selectingColor = selectingColor
+        self.textColor = textColor
+        self.accentColor = accentColor
+        self.fontSize = fontSize
+        self.grayTextColor = grayTextColor
+    }
+    
+    public static func ==(lhs: InputViewTheme, rhs: InputViewTheme) -> Bool {
+        if lhs.quote != rhs.quote {
+            return false
+        }
+        if lhs.indicatorColor != rhs.indicatorColor {
+            return false
+        }
+        if lhs.backgroundColor != rhs.backgroundColor {
+            return false
+        }
+        if lhs.selectingColor != rhs.selectingColor {
+            return false
+        }
+        if lhs.textColor != rhs.textColor {
+            return false
+        }
+        if lhs.fontSize != rhs.fontSize {
+            return false
+        }
+        if lhs.grayTextColor != rhs.grayTextColor {
+            return false
+        }
+        if lhs.accentColor != rhs.accentColor {
+            return false
+        }
+        return true
+    }
+    
+    public func withUpdatedQuote(_ colors: PeerNameColors.Colors) -> InputViewTheme {
+        return .init(quote: .init(foreground: colors, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
+    }
+}
+
+
 public struct SearchTheme {
     public let backgroundColor: NSColor
     public let searchImage:CGImage
@@ -25,6 +185,7 @@ public struct SearchTheme {
         self.textColor = textColor
         self.placeholderColor = placeholderColor
     }
+    
 }
 
 public enum PaletteWallpaper : Equatable {

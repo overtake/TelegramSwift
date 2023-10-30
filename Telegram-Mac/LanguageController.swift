@@ -271,7 +271,7 @@ func LanguageController(_ context: AccountContext) -> InputDataController {
             }))
         }
     }, delete: { info in
-        confirm(for: context.window, information: strings().languageRemovePack, successHandler: { _ in
+        verifyAlert_button(for: context.window, information: strings().languageRemovePack, successHandler: { _ in
             _ = context.engine.localization.removeSavedLocalization(languageCode: info.languageCode).start()
         })
     }, toggleTranslateChannels: {

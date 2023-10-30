@@ -117,6 +117,8 @@ class GeneralInteractedRowView: GeneralRowView {
                     nextVisible = !items.isEmpty && !value.isEmpty
                 } else if case .imageContext = item.type {
                     nextVisible = true
+                } else if case .context = item.type {
+                    nextVisible = false
                 }
                 nextView.isHidden = !nextVisible
             default:
@@ -142,7 +144,9 @@ class GeneralInteractedRowView: GeneralRowView {
             
             if case let .selectable(value) = item.type {
                 nextView.isHidden = !value
-                nextView.image = #imageLiteral(resourceName: "Icon_Check").precomposed(item.customTheme?.accentColor ?? theme.colors.accent)
+                
+                nextView.image = generateCheckSelected(foregroundColor: item.customTheme?.accentColor ?? theme.colors.accent, backgroundColor: item.customTheme?.underSelectedColor ?? theme.colors.underSelectedColor)
+                
                 nextView.sizeToFit()
             }
             if case let .imageContext(image, _) = item.type {
@@ -239,7 +243,7 @@ class GeneralInteractedRowView: GeneralRowView {
         return theme.colors.grayHighlight
     }
     
-    var borderColor: NSColor {
+    override var borderColor: NSColor {
         guard let item = item as? GeneralInteractedRowItem else {
             return theme.colors.border
         }
@@ -326,11 +330,17 @@ class GeneralInteractedRowView: GeneralRowView {
                 let t = item.isSelected ? item.activeThumb : item.thumb
                 if let thumb = t {
                     var f = focus(thumb.thumb.backingSize)
-                    if item.descLayout != nil {
-                        f.origin.y = insets.top
+                    
+                    let icon = thumb.thumb
+                    var x: CGFloat = insets.left + (thumb.thumbInset ?? 0)
+                    if case .selectableLeft = item.type {
+                        x += 35
+                    } else {
+                        if item.descLayout != nil {
+                           // f.origin.y = insets.top
+                        }
                     }
-                    let icon = thumb.thumb 
-                    ctx.draw(icon, in: NSMakeRect(insets.left + (thumb.thumbInset ?? 0), f.minY, f.width, f.height))
+                    ctx.draw(icon, in: NSMakeRect(x, f.minY, f.width, f.height))
                 }
                 
                 if position.border, !isSelect && !self.isResorting  {
@@ -341,7 +351,11 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let nameLayout = (item.isSelected ? item.nameLayoutSelected : item.nameLayout) {
                     var textRect = focus(NSMakeSize(nameLayout.0.size.width,nameLayout.0.size.height))
                     textRect.origin.x = insets.left + textXAdditional
-                    textRect.origin.y = insets.top - 1
+                    if item.descLayout == nil {
+                        textRect.origin.y = insets.top - 1
+                    } else {
+                        textRect.origin.y = 5
+                    }
                     
                     nameLayout.1.draw(textRect, in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                 }
@@ -359,6 +373,7 @@ class GeneralInteractedRowView: GeneralRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        containerView.layerContentsRedrawPolicy = .duringViewResize
         
         nextView.sizeToFit()
         containerView.addSubview(nextView)
@@ -521,7 +536,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
                 
                 if let descriptionView = self.descriptionView {
-                    descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - innerInsets.bottom)
+                    descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - 5)
                 }
                 var nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6
                 
@@ -564,8 +579,6 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
             }
         }
-        
-        
     }
     
 }

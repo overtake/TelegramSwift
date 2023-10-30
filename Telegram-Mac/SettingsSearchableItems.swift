@@ -433,6 +433,8 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
                     current = info.phoneNumber
                 case .voiceMessages:
                     current = info.voiceMessages
+                case .bio:
+                    current = info.bio
                 }
                 
                 present(.push, SelectivePrivacySettingsController(context, kind: kind, current: current, callSettings: kind == .voiceCalls ? info.voiceCallsP2P : nil, phoneDiscoveryEnabled: nil, updated: { updated, updatedCallSettings, _ in }))
@@ -730,7 +732,7 @@ func settingsSearchableItems(context: AccountContext, archivedStickerPacks: Sign
             
 
             let support = SettingsSearchableItem(id: .support(0), title: strings().accountSettingsAskQuestion, alternate: synonyms(strings().settingsSearchSynonymsSupport), icon: .support, breadcrumbs: [], present: { context, _, present in
-                confirm(for: context.window, information: strings().accountConfirmAskQuestion, thridTitle: strings().accountConfirmGoToFaq, successHandler: {  result in
+                verifyAlert_button(for: context.window, information: strings().accountConfirmAskQuestion, option: strings().accountConfirmGoToFaq, successHandler: {  result in
                     switch result {
                     case .basic:
                         _ = showModalProgress(signal: context.engine.peers.supportPeerId(), for: context.window).start(next: {  peerId in

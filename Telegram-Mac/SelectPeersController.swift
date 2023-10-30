@@ -503,6 +503,10 @@ class SelectPeersBehavior {
     
     
     func filterPeer(_ peer: Peer) -> Bool {
+        
+        if excludePeerIds.contains(peer.id) {
+            return false
+        }
         if peer.isGroup || peer.isSupergroup || peer.isGigagroup {
             if settings.contains(.groups) {
                 return !settings.contains(.checkInvite) || peer.canInviteUsers
@@ -517,7 +521,7 @@ class SelectPeersBehavior {
         }
         if peer.isChannel {
             if settings.contains(.channels) {
-                return true
+                return !settings.contains(.checkInvite) || peer.canInviteUsers
             }
         }
         if peer.isBot {
@@ -848,8 +852,8 @@ class SelectChatsBehavior: SelectPeersBehavior {
                     
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
-                            if let peer = renderedPeer.chatMainPeer {
+                        case let .MessageEntry(data):
+                            if let peer = data.renderedPeer.chatMainPeer {
                                 entries.append(peer)
                             }
                         default:
@@ -1357,6 +1361,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     fileprivate let onComplete:Promise<[PeerId]> = Promise()
     private let completeDisposable = MetaDisposable()
     private let tokenDisposable = MetaDisposable()
+    private let selectedPeerIds: Set<PeerId>
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? SelectPeerPresentation, let oldValue = oldValue as? SelectPeerPresentation {
             if behavior.limit > 1 {
@@ -1437,6 +1442,27 @@ private class SelectPeersModalController : ModalViewController, Notifable {
         let account = context.account
         genericView.customTheme = behavior.customTheme
         
+        let selectedPeerIds = self.selectedPeerIds
+        
+        let peers: Signal<[Peer], NoError> = context.account.postbox.transaction { transaction in
+            var peers:[Peer] = []
+            for peerId in selectedPeerIds {
+                if let peer = transaction.getPeer(peerId) {
+                    peers.append(peer)
+                }
+            }
+            return peers
+        } |> deliverOnMainQueue
+        
+        _ = peers.start(next: { peers in
+            interactions.update { current in
+                var current = current
+                for peer in peers {
+                    current = current.withToggledSelected(peer.id, peer: peer)
+                }
+                return current
+            }
+        })
          
         interactions.close = { [weak self] in
             self?.close()
@@ -1462,7 +1488,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
             singleAction = { [weak self] peer in
                 
                 _ = (account.postbox.transaction { transaction -> Void in
-                    updatePeers(transaction: transaction, peers: [peer], update: { _, updated -> Peer? in
+                    updatePeersCustom(transaction: transaction, peers: [peer], update: { _, updated -> Peer? in
                         return updated
                     })
                 }).start()
@@ -1487,13 +1513,13 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     
     private let linkInvation: ((Int)->Void)?
     
-    init(context: AccountContext, title:String, settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, confirmation:@escaping([PeerId])->Signal<Bool,NoError>, behavior: SelectPeersBehavior? = nil, linkInvation:((Int)->Void)? = nil) {
+    init(context: AccountContext, title:String, settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT32_MAX, confirmation:@escaping([PeerId])->Signal<Bool,NoError>, behavior: SelectPeersBehavior? = nil, linkInvation:((Int)->Void)? = nil, selectedPeerIds: Set<PeerId> = Set()) {
         self.context = context
         self.defaultTitle = title
         self.confirmation = confirmation
         self.linkInvation = linkInvation
         self.behavior = behavior ?? SelectContactsBehavior(settings: settings, excludePeerIds: excludePeerIds, limit: limit)
-        
+        self.selectedPeerIds = selectedPeerIds
         super.init(frame: NSMakeRect(0, 0, 360, 380))
         bar = .init(height: 0)
         completeDisposable.set((onComplete.get() |> take(1) |> deliverOnMainQueue).start(completed: { [weak self] in
@@ -1503,7 +1529,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
     
     func confirmSelected(_ peerIds:[PeerId], _ peers:[Peer]) {
         let signal = context.account.postbox.transaction { transaction -> Void in
-            updatePeers(transaction: transaction, peers: peers, update: { (_, updated) -> Peer? in
+            updatePeersCustom(transaction: transaction, peers: peers, update: { (_, updated) -> Peer? in
                 return updated
             })
         } |> deliverOnMainQueue |> mapToSignal { [weak self] () -> Signal<[PeerId], NoError> in
@@ -1544,7 +1570,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
                 if let interactions = self?.interactions {
                    self?.confirmSelected(Array(interactions.presentation.selected), Array(interactions.presentation.peers.values))
                 }
-            }, drawBorder: true, height: 50, singleButton: true, customTheme: { [weak self] in
+            }, drawBorder: true, height: 50, singleButton: false, customTheme: { [weak self] in
                 return self?.modalTheme ?? .init()
             })
             
@@ -1563,9 +1589,9 @@ private class SelectPeersModalController : ModalViewController, Notifable {
 }
 
 
-func selectModalPeers(window: Window, context: AccountContext, title:String , settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT_MAX, behavior: SelectPeersBehavior? = nil, confirmation:@escaping ([PeerId]) -> Signal<Bool,NoError> = {_ in return .single(true) }, linkInvation:((Int)->Void)? = nil) -> Signal<[PeerId], NoError> {
+func selectModalPeers(window: Window, context: AccountContext, title:String , settings:SelectPeerSettings = [.contacts, .remote], excludePeerIds:[PeerId] = [], limit: Int32 = INT_MAX, behavior: SelectPeersBehavior? = nil, confirmation:@escaping ([PeerId]) -> Signal<Bool,NoError> = {_ in return .single(true) }, linkInvation:((Int)->Void)? = nil, selectedPeerIds: Set<PeerId> = Set()) -> Signal<[PeerId], NoError> {
     
-    let modal = SelectPeersModalController(context: context, title: title, settings: settings, excludePeerIds: excludePeerIds, limit: limit, confirmation: confirmation, behavior: behavior, linkInvation: linkInvation)
+    let modal = SelectPeersModalController(context: context, title: title, settings: settings, excludePeerIds: excludePeerIds, limit: limit, confirmation: confirmation, behavior: behavior, linkInvation: linkInvation, selectedPeerIds: selectedPeerIds)
     
     showModal(with: modal, for: window)
     

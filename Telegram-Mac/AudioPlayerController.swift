@@ -23,8 +23,8 @@ class APSingleWrapper {
     let mimeType: String
     let performer:String?
     let id:AnyHashable
-    let duration: Int32?
-    init(resource:TelegramMediaResource, mimeType: String = "mp3", name:String?, performer:String?, duration: Int32?, id: AnyHashable) {
+    let duration: Double?
+    init(resource:TelegramMediaResource, mimeType: String = "mp3", name:String?, performer:String?, duration: Double?, id: AnyHashable) {
         self.resource = resource
         self.name = name
         self.mimeType = mimeType
@@ -284,7 +284,7 @@ class APSongItem : APItem {
         }
     }
 
-    var duration: Int32? {
+    var duration: Double? {
         switch entry {
         case let .song(message):
             return (message.anyMedia as? TelegramMediaFile)?.duration

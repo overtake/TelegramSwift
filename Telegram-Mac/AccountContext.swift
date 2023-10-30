@@ -16,8 +16,41 @@ import InAppSettings
 import ThemeSettings
 import Reactions
 import FetchManager
+#if !SHARE
 import InAppPurchaseManager
+#endif
 import ApiCredentials
+
+let clown: String = "🤡"
+
+
+
+extension AppConfiguration {
+    func getGeneralValue(_ key: String, orElse defaultValue: Int32) -> Int32 {
+        if let value = self.data?[key] as? Double {
+            return Int32(value)
+        } else {
+            return defaultValue
+        }
+    }
+    func getBoolValue(_ key: String, orElse defaultValue: Bool) -> Bool {
+        if let value = self.data?[key] as? Bool {
+            return value
+        } else {
+            return defaultValue
+        }
+    }
+}
+
+private let globalStoryDisposable = MetaDisposable()
+
+func SetOpenStoryDisposable(_ disposable: Disposable?) {
+    globalStoryDisposable.set(disposable)
+}
+func CancelOpenStory() {
+    globalStoryDisposable.set(nil)
+}
+
 
 
 
@@ -182,8 +215,10 @@ final class AccountContext {
     
     var audioPlayer:APController?
     
+    
     let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
     let blockedPeersContext: BlockedPeersContext
+    let storiesBlockedPeersContext: BlockedPeersContext
     let cacheCleaner: AccountClearCache
     let activeSessionsContext: ActiveSessionsContext
     let webSessions: WebSessionsContext
@@ -283,7 +318,7 @@ final class AccountContext {
     private let reindexCacheDisposable = MetaDisposable()
     private let shouldReindexCacheDisposable = MetaDisposable()
     private let checkSidebarShouldEnable = MetaDisposable()
-
+    private let actionsDisposable = DisposableSet()
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
     
     var limitConfiguration: LimitsConfiguration {
@@ -295,6 +330,11 @@ final class AccountContext {
     var appConfiguration: AppConfiguration {
         return _appConfiguration.with { $0 }
     }
+    
+    var peerNameColors: PeerNameColors {
+        return _appConfiguration.with { .with(appConfiguration: $0) }
+    }
+    
     
     private var _myPeer: Peer?
     
@@ -364,12 +404,13 @@ final class AccountContext {
         self.engine = TelegramEngine(account: account)
         self.isSupport = isSupport
         #if !SHARE
-        self.inAppPurchaseManager = .init(premiumProductId: ApiEnvironment.premiumProductId)
+        self.inAppPurchaseManager = .init(engine: engine)
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.inlinePacksContext = .init(postbox: account.postbox, engine: self.engine)
         self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl(postbox: account.postbox, accountManager: sharedContext.accountManager))
-        self.blockedPeersContext = BlockedPeersContext(account: account)
+        self.blockedPeersContext = BlockedPeersContext(account: account, subject: .blocked)
+        self.storiesBlockedPeersContext = BlockedPeersContext(account: account, subject: .stories)
         self.cacheCleaner = AccountClearCache(account: account)
         self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()
         self.activeSessionsContext = engine.privacy.activeSessions()
@@ -707,6 +748,23 @@ final class AccountContext {
             _ = self?._globalLocationId.swap(value)
         }))
         
+        #if !SHARE
+        actionsDisposable.add(engine.messages.attachMenuBots().start(next: { [weak self] value in
+            guard let `self` = self else {
+                return
+            }
+            for value in value {
+                if let file = value.icons[.macOSSettingsStatic] {
+                    if let peerReference = PeerReference(value.peer._asPeer()) {
+                        _ = freeMediaFileInteractiveFetched(context: self, fileReference: FileMediaReference.attachBot(peer: peerReference, media: file)).start()
+                    }
+                }
+            }
+        }))
+        #endif
+       
+        
+        
     }
     
     @objc private func updateKeyWindow() {
@@ -807,6 +865,7 @@ final class AccountContext {
         reindexCacheDisposable.dispose()
         shouldReindexCacheDisposable.dispose()
         checkSidebarShouldEnable.dispose()
+        actionsDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
@@ -962,10 +1021,10 @@ final class AccountContext {
         let confirmationImpl:([PeerId])->Signal<Bool, NoError> = { peerIds in
             if let first = peerIds.first, peerIds.count == 1 {
                 return account.postbox.loadedPeerWithId(first) |> deliverOnMainQueue |> mapToSignal { peer in
-                    return confirmSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle))
+                    return verifyAlertSignal(for: window, information: strings().composeConfirmStartSecretChat(peer.displayTitle)) |> map { $0 == .basic }
                 }
             }
-            return confirmSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count))
+            return verifyAlertSignal(for: window, information: strings().peerInfoConfirmAddMembers1Countable(peerIds.count)) |> map { $0 == .basic }
         }
         let select = selectModalPeers(window: window, context: self, title: strings().composeSelectSecretChat, limit: 1, confirmation: confirmationImpl)
         
@@ -1070,7 +1129,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
 
             let dataDisposable = resourceData.start(next: { data in
                 
-                if let palette = importPalette(data.path) {                    
+                if let palette = importPalette(data.path) {
                     var wallpaper: Signal<TelegramWallpaper?, GetWallpaperError>? = nil
                     var newSettings: WallpaperSettings = WallpaperSettings()
                     #if !SHARE

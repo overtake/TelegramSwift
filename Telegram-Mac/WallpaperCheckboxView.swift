@@ -241,6 +241,7 @@ final class WallpaperCheckboxView : Control {
         didSet {
             if colors == nil, !colorsValue.isEmpty {
                 colors = ColorsListView(frame: NSMakeRect(10, 0, 16, 16))
+                colors?.centerY(x: 10)
                 addSubview(colors!)
             } else if colorsValue.isEmpty {
                 colors?.removeFromSuperview()
@@ -249,6 +250,7 @@ final class WallpaperCheckboxView : Control {
             colors?.colors = colorsValue
             checkbox.isHidden = colors != nil
             checkbox.set(isSelected: !colorsValue.isEmpty, animated: true)
+            needsLayout = true
         }
     }
     

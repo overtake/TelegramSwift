@@ -20,10 +20,11 @@ final class RequestJoinChatRowItem : GeneralRowItem {
     
     fileprivate let photo: TelegramMediaImageRepresentation?
     fileprivate let peer: Peer
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, photo: TelegramMediaImageRepresentation?, title: String, about: String?, participantsCount: Int, isChannelOrMegagroup: Bool, viewType: GeneralViewType) {
+    fileprivate let flags: ExternalJoiningChatState.Invite.Flags
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, photo: TelegramMediaImageRepresentation?, title: String, about: String?, participantsCount: Int, flags: ExternalJoiningChatState.Invite.Flags, isChannelOrMegagroup: Bool, viewType: GeneralViewType) {
         self.context = context
         self.photo = photo
-        
+        self.flags = flags
         self.titleLayout = TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.header)), maximumNumberOfLines: 1, truncationType: .middle)
         
         
@@ -37,7 +38,7 @@ final class RequestJoinChatRowItem : GeneralRowItem {
             countText = strings().peerStatusMemberCountable(participantsCount).replacingOccurrences(of: "\(participantsCount)", with: participantsCount.formattedWithSeparator)
         }
         
-        self.statusLayout = TextViewLayout(.initialize(string: countText, color: theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        self.statusLayout = TextViewLayout(.initialize(string: countText, color: theme.colors.listGrayText, font: .normal(.text)), alignment: .center)
 
         if let about = about {
             self.aboutLayout = TextViewLayout(.initialize(string: about, color: theme.colors.text, font: .normal(.text)), alignment: .center)
@@ -52,18 +53,20 @@ final class RequestJoinChatRowItem : GeneralRowItem {
     override var height: CGFloat {
         let top = self.viewType.innerInset.top
         
-        var height = top + 80 + top + self.titleLayout.layoutSize.height + self.statusLayout.layoutSize.height + top
+        var height = 80 + self.titleLayout.layoutSize.height + self.statusLayout.layoutSize.height
         if let about = aboutLayout {
             height += top + about.layoutSize.height
         }
         
-        return height
+        return height + self.viewType.innerInset.top
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        self.titleLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
+        let hasStatus = flags.isVerified || flags.isFake || flags.isScam
+        
+        self.titleLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right - (hasStatus ? 30 : 0))
         self.statusLayout.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
         self.aboutLayout?.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
 
@@ -81,6 +84,7 @@ private final class RequestJoinChatRowView : GeneralContainableRowView {
     private let titleView = TextView()
     private let statusView = TextView()
     private let aboutView = TextView()
+    private var statusImage: ImageView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.avatar.setFrameSize(NSMakeSize(80, 80))
@@ -97,6 +101,10 @@ private final class RequestJoinChatRowView : GeneralContainableRowView {
         aboutView.isSelectable = false
     }
     
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
     override func layout() {
         super.layout()
         
@@ -104,10 +112,14 @@ private final class RequestJoinChatRowView : GeneralContainableRowView {
             return
         }
         let top = item.viewType.innerInset.top
-        avatar.centerX(y: top)
-        titleView.centerX(y: avatar.frame.maxY + top)
+        avatar.centerX(y: 0)
+        titleView.centerX(y: avatar.frame.maxY + top, addition: statusImage != nil ? -(statusImage!.frame.width / 2 + 5) : 0)
         statusView.centerX(y: titleView.frame.maxY)
         aboutView.centerX(y: statusView.frame.maxY + top)
+        
+        if let statusImage = self.statusImage {
+            statusImage.setFrameOrigin(NSMakePoint(titleView.frame.maxX + 5, titleView.frame.minY))
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -124,6 +136,26 @@ private final class RequestJoinChatRowView : GeneralContainableRowView {
         self.titleView.update(item.titleLayout)
         self.statusView.update(item.statusLayout)
         self.aboutView.update(item.aboutLayout)
+        
+        if item.flags.isVerified || item.flags.isScam || item.flags.isFake {
+            let current: ImageView
+            if let view = self.statusImage {
+                current = view
+            } else {
+                current = ImageView()
+                self.statusImage = current
+                addSubview(current)
+            }
+            if item.flags.isScam {
+                current.image = theme.icons.scam
+            } else if item.flags.isFake {
+                current.image = theme.icons.fake
+            } else if item.flags.isVerified {
+                current.image = theme.icons.verifyDialog
+            }
+            current.sizeToFit()
+        }
+        
         needsLayout = true
     }
 }

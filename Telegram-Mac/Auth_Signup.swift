@@ -178,8 +178,8 @@ private final class Auth_SignPhoneInput: View, NSTextFieldDelegate {
         firstText.textColor = theme.colors.text
         lastText.textColor = theme.colors.text
 
-        lastText.placeholderAttributedString = .initialize(string: "Last Name", color: theme.colors.grayText, font: .normal(.header), coreText: false)
-        firstText.placeholderAttributedString = .initialize(string: "First Name", color: theme.colors.grayText, font: .normal(.header), coreText: false)
+        lastText.placeholderAttributedString = .initialize(string: "Last Name", color: theme.colors.grayText, font: .normal(.header))
+        firstText.placeholderAttributedString = .initialize(string: "First Name", color: theme.colors.grayText, font: .normal(.header))
         
         needsLayout = true
     }
