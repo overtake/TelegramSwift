@@ -613,7 +613,7 @@ class ChatRowItem: TableRowItem {
             if apply {
                 top += max(34, replyModel.size.height) //+ ((!isBubbleFullFilled && isBubbled && self is ChatMediaItem) ? 0 : 8)
                 
-                top += defaultContentInnerInset
+                top += defaultContentInnerInset + 1
                  
 //                if (authorText != nil) && self is ChatMessageItem {
 //                    top += topInset

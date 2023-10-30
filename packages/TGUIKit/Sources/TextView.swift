@@ -31,7 +31,11 @@ private func combineIntersectingRectangles(_ rectangles: [TextViewBlockQuote]) -
             }
         } else {
             result.append(big)
-            big = rectangles[i]
+            if i == rectangles.count - 1 {
+                result.append(rectangles[i])
+            } else {
+                big = rectangles[i]
+            }
         }
         max_w = max(max_w, current.frame.width)
     }
