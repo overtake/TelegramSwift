@@ -77,22 +77,25 @@ public func chatTextInputAddFormattingAttribute(_ state: Updated_ChatTextInputSt
 public func chatTextInputClearFormattingAttributes(_ state: Updated_ChatTextInputState, targetKey: NSAttributedString.Key? = nil) -> Updated_ChatTextInputState {
     if !state.selectionRange.isEmpty {
         let nsRange = NSRange(location: state.selectionRange.lowerBound, length: state.selectionRange.count)
-        var attributesToRemove: [NSAttributedString.Key] = []
-        state.inputText.enumerateAttributes(in: nsRange, options: .longestEffectiveRangeNotRequired) { attributes, range, stop in
+        var attributesToRemove: [(NSAttributedString.Key, NSRange)] = []
+        
+        state.inputText.enumerateAttributes(in: NSMakeRange(0, state.inputText.length), options: []) { attributes, range, stop in
             for (key, _) in attributes {
-                if let targetKey = targetKey {
-                    if targetKey == key {
-                        attributesToRemove.append(key)
+                if range.intersection(nsRange) != nil {
+                    if let targetKey = targetKey {
+                        if targetKey == key {
+                            attributesToRemove.append((key, range))
+                        }
+                    } else {
+                        attributesToRemove.append((key, range))
                     }
-                } else {
-                    attributesToRemove.append(key)
                 }
             }
         }
         
         let result = NSMutableAttributedString(attributedString: state.inputText)
-        for attribute in attributesToRemove {
-            result.removeAttribute(attribute, range: nsRange)
+        for (attribute, range) in attributesToRemove {
+            result.removeAttribute(attribute, range: range)
         }
         return Updated_ChatTextInputState(inputText: result, selectionRange: state.selectionRange)
     } else {

@@ -417,7 +417,7 @@ private let textUrlEdgeCharacters: CharacterSet = {
 
 private let textUrlCharacters: CharacterSet = {
     var set: CharacterSet = textUrlEdgeCharacters
-    set.formUnion(.whitespacesAndNewlines)
+   // set.formUnion(.whitespacesAndNewlines)
     return set
 }()
 
@@ -433,6 +433,10 @@ private func refreshTextUrls(text: NSString, initialAttributedText: NSAttributed
     
     for i in 0 ..< textUrlRanges.count {
         let range = textUrlRanges[i].0
+        
+        if text.substring(with: range).trimmingCharacters(in: .whitespaces).isEmpty {
+            continue
+        }
         
         var validLower = range.lowerBound
         inner1: for i in range.lowerBound ..< range.upperBound {

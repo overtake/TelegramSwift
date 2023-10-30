@@ -1154,6 +1154,80 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
         }
         return super.resignFirstResponder()
     }
+    
+    private var settingsKey: String {
+        return "TGGrowingTextView"
+    }
+
+    public override var isContinuousSpellCheckingEnabled: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "\(settingsKey)ContinuousSpellCheckingEnabled")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)ContinuousSpellCheckingEnabled")
+            super.isContinuousSpellCheckingEnabled = newValue
+        }
+    }
+
+    public override var isGrammarCheckingEnabled: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "\(settingsKey)GrammarCheckingEnabled")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)GrammarCheckingEnabled")
+            super.isGrammarCheckingEnabled = newValue
+        }
+    }
+
+    public override var isAutomaticSpellingCorrectionEnabled: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticSpellingCorrectionEnabled")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticSpellingCorrectionEnabled")
+            super.isAutomaticSpellingCorrectionEnabled = newValue
+        }
+    }
+
+    public override var isAutomaticQuoteSubstitutionEnabled: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticQuoteSubstitutionEnabled")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticQuoteSubstitutionEnabled")
+            super.isAutomaticSpellingCorrectionEnabled = newValue
+        }
+    }
+
+    public override var isAutomaticLinkDetectionEnabled: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticLinkDetectionEnabled")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticLinkDetectionEnabled")
+            super.isAutomaticSpellingCorrectionEnabled = newValue
+        }
+    }
+
+    public override var isAutomaticDataDetectionEnabled: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticDataDetectionEnabled")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticDataDetectionEnabled")
+            super.isAutomaticSpellingCorrectionEnabled = newValue
+        }
+    }
+
+    public override var isAutomaticDashSubstitutionEnabled: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "\(settingsKey)AutomaticDashSubstitutionEnabled")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "\(settingsKey)AutomaticDashSubstitutionEnabled")
+            super.isAutomaticSpellingCorrectionEnabled = newValue
+        }
+    }
 }
 
 private let quoteIcon: CGImage = {
