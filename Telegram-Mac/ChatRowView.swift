@@ -675,7 +675,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         var point = NSMakePoint(contentFrame.minX, item.defaultContentTopOffset)
         if item.isBubbled {
-            point.y -= item.topInset
+            point.y -= (item.topInset - 1)
         } else {
             if item.forwardType != nil {
                 point.x -= item.leftContentInset
