@@ -223,7 +223,7 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
                     if let url = url {
                         current = chatTextInputAddLinkAttribute(current, selectionRange: textRange.min ..< textRange.max, url: url)
                     } else {
-                        current = chatTextInputClearFormattingAttributes(current, targetKey: .link)
+                        current = chatTextInputClearFormattingAttributes(current, targetKey: TextInputAttributes.textUrl)
                     }
                     return current
                 }
