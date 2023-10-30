@@ -244,9 +244,9 @@ class ReplyModel: ChatAccessoryModel {
            
             
             var title: String? = message.effectiveAuthor?.displayTitle
-//            if let info = message.forwardInfo {
-//                title = info.authorTitle
-//            }
+            if let info = message.forwardInfo, quote == nil {
+                title = info.authorTitle
+            }
             for attr in message.attributes {
                 if let _ = attr as? SourceReferenceMessageAttribute {
                     if let info = message.forwardInfo {
