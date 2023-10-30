@@ -13,7 +13,6 @@ import Postbox
 import SwiftSignalKit
 import TGUIKit
 import BuildConfig
-import InAppPurchaseManager
 import ApiCredentials
 
 
