@@ -340,9 +340,9 @@ class ChatRowItem: TableRowItem {
             height += reactions.size.height
         }
         
-        if isBubbled, let _ = replyMarkupModel {
-            height += 4
-        }
+//        if isBubbled, let _ = replyMarkupModel, replyModel != nil {
+//            height += 4
+//        }
         
         return max(rightSize.height + 8, height)
     }
@@ -611,13 +611,17 @@ class ChatRowItem: TableRowItem {
                 }
             }
             if apply {
-                top += max(34, replyModel.size.height) + ((!isBubbleFullFilled && isBubbled && self is ChatMediaItem) ? 0 : 8)
-                if (authorText != nil) && self is ChatMessageItem {
-                    top += topInset
-                    //top -= defaultContentInnerInset
-                } else if hasBubble && self is ChatMessageItem {
-                    top -= topInset
-                }
+                top += max(34, replyModel.size.height) //+ ((!isBubbleFullFilled && isBubbled && self is ChatMediaItem) ? 0 : 8)
+                
+                top += defaultContentInnerInset
+                 
+//                if (authorText != nil) && self is ChatMessageItem {
+//                    top += topInset
+//                    //top -= defaultContentInnerInset
+//                }
+//                else if hasBubble && self is ChatMessageItem {
+//                    top -= topInset
+//                }
             }
         }
         
@@ -2534,25 +2538,7 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-        
-        
-        
-        if isBubbled {
-            replyMarkupModel?.measureSize(bubbleFrame.width - additionBubbleInset)
-        } else {
-            if let item = self as? ChatMessageItem {
-                if item.webpageLayout != nil {
-                    replyMarkupModel?.measureSize(_contentSize.width)
-                } else if _contentSize.width < 200 {
-                    replyMarkupModel?.measureSize(max(_contentSize.width, min(blockWidth, 320)))
-                } else {
-                    replyMarkupModel?.measureSize(_contentSize.width)
-                }
-            } else {
-                 replyMarkupModel?.measureSize(_contentSize.width)
-            }
-        }
-        
+
         if !isBubbled {
             if let replyModel = replyModel {
                 replyModel.measureSize(widthForContent, sizeToFit: true)
@@ -2575,6 +2561,23 @@ class ChatRowItem: TableRowItem {
                 }
             }
         }
+        
+        if isBubbled {
+            replyMarkupModel?.measureSize(bubbleFrame.width - additionBubbleInset)
+        } else {
+            if let item = self as? ChatMessageItem {
+                if item.webpageLayout != nil {
+                    replyMarkupModel?.measureSize(_contentSize.width)
+                } else if _contentSize.width < 200 {
+                    replyMarkupModel?.measureSize(max(_contentSize.width, min(blockWidth, 320)))
+                } else {
+                    replyMarkupModel?.measureSize(_contentSize.width)
+                }
+            } else {
+                 replyMarkupModel?.measureSize(_contentSize.width)
+            }
+        }
+        
         
         return result
     }
@@ -2679,11 +2682,11 @@ class ChatRowItem: TableRowItem {
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)
         
         if isBubbled, let replyMarkup = replyMarkupModel {
-            rect.size.height -= (replyMarkup.size.height + defaultContentInnerInset)
+            rect.size.height -= (replyMarkup.size.height + defaultReplyMarkupInset)
             
-            if self is ChatMessageItem {
-                rect.size.height += 2
-            }
+//            if self is ChatMessageItem {
+//                rect.size.height += 2
+//            }
         }
 
         
