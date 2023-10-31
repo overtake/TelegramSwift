@@ -773,10 +773,21 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                 if let delegate = self.customDelegate {
                     spoiler.set(delegate)
                 }
+                
+                var wordRects:[NSRect] = []
+                
+                for i in glyphRange.min ..< glyphRange.max {
+                    let rect = self.highlightRect(forRange: NSMakeRange(i, 1), whole: false)
+                    wordRects.append(rect.insetBy(dx: 1, dy: 2).offsetBy(dx: 0, dy: -3))
+                }
+                
                 var boundingRect = self.customLayoutManager.boundingRect(forGlyphRange: glyphRange, in: self.customTextContainer)
+                
+                
                 boundingRect.origin.y += self.textContainerOrigin.y
                 spoiler.frame = boundingRect
-                spoiler.update(size: boundingRect.size, theme: theme)
+                
+                spoiler.update(size: boundingRect.size, theme: theme, wordRects: wordRects)
 
                 valid.append(index)
                 index += 1
@@ -1425,9 +1436,9 @@ private final class SpoilerView: Control {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    func update(size: CGSize, theme: InputViewTheme) {
+    func update(size: CGSize, theme: InputViewTheme, wordRects: [NSRect]) {
         dustView.frame = size.bounds
-        dustView.update(size: size, color: theme.textColor, textColor: .white, rects: [size.bounds], wordRects: [size.bounds.insetBy(dx: 2, dy: 2)])
+        dustView.update(size: size, color: theme.textColor, textColor: .white, rects: [size.bounds], wordRects: wordRects)
     }
     
     

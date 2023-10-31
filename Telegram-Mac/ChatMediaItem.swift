@@ -277,9 +277,9 @@ class ChatMediaItem: ChatRowItem {
         return super.defaultContentTopOffset
     }
     
-    override var topInset: CGFloat {
-        return 4
-    }
+//    override var topInset: CGFloat {
+//        return 4
+//    }
 
     var hasUpsideSomething: Bool {
         return authorText != nil || replyModel != nil || topicLinkLayout != nil || forwardNameLayout != nil

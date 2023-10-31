@@ -344,6 +344,12 @@ class ChatRowItem: TableRowItem {
 //            height += 4
 //        }
         
+        if contentSize.height == 0 {
+            if replyModel != nil {
+                height += defaultContentTopOffset
+            }
+        }
+        
         return max(rightSize.height + 8, height)
     }
     

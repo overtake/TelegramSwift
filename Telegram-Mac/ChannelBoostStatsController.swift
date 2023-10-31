@@ -490,13 +490,15 @@ private final class Arguments {
     let copyLink:(String)->Void
     let showMore:()->Void
     let giveaway:(PrepaidGiveaway?)->Void
-    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void, giveaway:@escaping(PrepaidGiveaway?)->Void) {
+    let openSlug:(String)->Void
+    init(context: AccountContext, openPeerInfo:@escaping(PeerId)->Void, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, showMore:@escaping()->Void, giveaway:@escaping(PrepaidGiveaway?)->Void, openSlug:@escaping(String)->Void) {
         self.context = context
         self.shareLink = shareLink
         self.copyLink = copyLink
         self.openPeerInfo = openPeerInfo
         self.showMore = showMore
         self.giveaway = giveaway
+        self.openSlug = openSlug
     }
 }
 
@@ -666,7 +668,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     let stableId = _id_boost(item.booster.id)
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: stableId, equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
                         return BoosterRowItem(initialSize, stableId: stableId, context: arguments.context, boost: item.booster, viewType: item.viewType, action: {
-                            if let peerId = item.booster.peer?.id {
+                            if let slug = item.booster.slug {
+                                arguments.openSlug(slug)
+                            } else if let peerId = item.booster.peer?.id {
                                 arguments.openPeerInfo(peerId)
                             }
                         })
@@ -783,6 +787,8 @@ func ChannelBoostStatsController(context: AccountContext, peerId: PeerId) -> Inp
         boostersContext?.loadMore()
     }, giveaway: { prepaid in
         showModal(with: GiveawayModalController(context: context, peerId: peerId, prepaid: prepaid), for: context.window)
+    }, openSlug: { slug in
+        execute(inapp: .gift(link: "", slug: slug, context: context))
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
