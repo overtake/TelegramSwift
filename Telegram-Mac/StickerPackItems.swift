@@ -236,7 +236,6 @@ class StickerSpecificPackView: HorizontalRowView {
     
     
     deinit {
-        
     }
     
     required init?(coder: NSCoder) {
@@ -255,7 +254,7 @@ class StickerSpecificPackView: HorizontalRowView {
 private final class StickerPackRowView : HorizontalRowView {
     
     private var inlineSticker: InlineStickerItemLayer?
-    
+    private let fetchDisposable = MetaDisposable()
     
     
     func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
@@ -301,6 +300,10 @@ private final class StickerPackRowView : HorizontalRowView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        fetchDisposable.dispose()
     }
     
     
@@ -380,6 +383,27 @@ private final class StickerPackRowView : HorizontalRowView {
                     current = nil
                 }
             }
+            
+            if let file = file {
+                let reference: FileMediaReference
+                let mediaResource: MediaResourceReference
+                if let stickerReference = file.stickerReference ?? file.emojiReference {
+                    if file.resource is CloudStickerPackThumbnailMediaResource {
+                        reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
+                        mediaResource = MediaResourceReference.stickerPackThumbnail(stickerPack: stickerReference, resource: file.resource)
+                    } else {
+                        reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
+                        mediaResource = reference.resourceReference(file.resource)
+                    }
+                } else {
+                    reference = FileMediaReference.standalone(media: file)
+                    mediaResource = reference.resourceReference(file.resource)
+                }
+                fetchDisposable.set(fetchedMediaResource(mediaBox: item.context.account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: mediaResource).start())
+            }
+            
+            
+
             current?.superview = self.container
             current?.frame = CGRect(origin: NSMakePoint(5, 5), size: NSMakeSize(26, 26))
             

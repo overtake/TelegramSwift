@@ -417,7 +417,7 @@ private let textUrlEdgeCharacters: CharacterSet = {
 
 private let textUrlCharacters: CharacterSet = {
     var set: CharacterSet = textUrlEdgeCharacters
-   // set.formUnion(.whitespacesAndNewlines)
+    set.formUnion(.whitespacesAndNewlines)
     return set
 }()
 

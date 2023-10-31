@@ -136,8 +136,8 @@ func compactStringForGroupPermission(right: TelegramChatBannedRightsFlags, chann
 func groupPermissionDependencies(_ right: TelegramChatBannedRightsFlags) -> TelegramChatBannedRightsFlags {
     if right.contains(.banEmbedLinks) {
         return [.banSendText]
-    } else if right.contains(.banSendMedia) || banSendMediaSubList().contains(where: { $0.0 == right }) {
-        return []
+    } else if right.contains(.banSendMedia) {
+        return TelegramChatBannedRightsFlags(banSendMediaSubList().map { $0.0 }) 
     } else if right.contains(.banSendGifs) {
         return []
     } else if right.contains(.banSendText) {
@@ -429,7 +429,7 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                         break
                     }
                     
-                    return ShortPeerRowItem(initialSize, peer: item.participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: item.enabled, status: text, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: item.viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: item.participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: item.enabled, status: text, inset: NSEdgeInsetsMake(0, 20, 0, 20), viewType: item.viewType, action: {
                         if item.canOpen {
                             arguments.openPeer(item.participant.participant)
                         } else {
