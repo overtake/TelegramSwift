@@ -608,7 +608,7 @@ class ChatAccessoryModel: NSObject {
         
         
         if let header = header, let message = message {
-            var model_w = max(header.layoutSize.width, message.layoutSize.width) + leftInset + rightInset
+            var model_w = max(header.layoutSize.width + mediaInset, message.layoutSize.width) + leftInset + rightInset
             if quoteIcon != nil {
                 model_w += 12
             }

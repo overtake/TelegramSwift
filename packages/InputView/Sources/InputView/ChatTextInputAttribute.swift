@@ -429,116 +429,116 @@ private func refreshTextUrls(text: NSString, initialAttributedText: NSAttributed
         }
     })
     textUrlRanges.sort(by: { $0.0.location < $1.0.location })
-    let initialTextUrlRanges = textUrlRanges
-    
-    for i in 0 ..< textUrlRanges.count {
-        let range = textUrlRanges[i].0
-        
-        if text.substring(with: range).trimmingCharacters(in: .whitespaces).isEmpty {
-            continue
-        }
-        
-        var validLower = range.lowerBound
-        inner1: for i in range.lowerBound ..< range.upperBound {
-            if let c = UnicodeScalar(text.character(at: i)) {
-                if textUrlCharacters.contains(c) {
-                    validLower = i
-                    break inner1
-                }
-            } else {
-                break inner1
-            }
-        }
-        var validUpper = range.upperBound
-        inner2: for i in (validLower ..< range.upperBound).reversed() {
-            if let c = UnicodeScalar(text.character(at: i)) {
-                if textUrlCharacters.contains(c) {
-                    validUpper = i + 1
-                    break inner2
-                }
-            } else {
-                break inner2
-            }
-        }
-        
-        let minLower = (i == 0) ? fullRange.lowerBound : textUrlRanges[i - 1].0.upperBound
-        inner3: for i in (minLower ..< validLower).reversed() {
-            if let c = UnicodeScalar(text.character(at: i)) {
-                if textUrlEdgeCharacters.contains(c) {
-                    validLower = i
-                } else {
-                    break inner3
-                }
-            } else {
-                break inner3
-            }
-        }
-        
-        let maxUpper = (i == textUrlRanges.count - 1) ? fullRange.upperBound : textUrlRanges[i + 1].0.lowerBound
-        inner3: for i in validUpper ..< maxUpper {
-            if let c = UnicodeScalar(text.character(at: i)) {
-                if textUrlEdgeCharacters.contains(c) {
-                    validUpper = i + 1
-                } else {
-                    break inner3
-                }
-            } else {
-                break inner3
-            }
-        }
-        
-        textUrlRanges[i] = (NSRange(location: validLower, length: validUpper - validLower), textUrlRanges[i].1)
-    }
-    
-    textUrlRanges = textUrlRanges.filter({ $0.0.length > 0 })
-    
-    while textUrlRanges.count > 1 {
-        var hadReductions = false
-        outer: for i in 0 ..< textUrlRanges.count - 1 {
-            if textUrlRanges[i].1 === textUrlRanges[i + 1].1 {
-                var combine = true
-                inner: for j in textUrlRanges[i].0.upperBound ..< textUrlRanges[i + 1].0.lowerBound {
-                    if let c = UnicodeScalar(text.character(at: j)) {
-                        if textUrlCharacters.contains(c) {
-                        } else {
-                            combine = false
-                            break inner
-                        }
-                    } else {
-                        combine = false
-                        break inner
-                    }
-                }
-                if combine {
-                    hadReductions = true
-                    textUrlRanges[i] = (NSRange(location: textUrlRanges[i].0.lowerBound, length: textUrlRanges[i + 1].0.upperBound - textUrlRanges[i].0.lowerBound), textUrlRanges[i].1)
-                    textUrlRanges.remove(at: i + 1)
-                    break outer
-                }
-            }
-        }
-        if !hadReductions {
-            break
-        }
-    }
-    
-    if textUrlRanges.count > 1 {
-        outer: for i in (1 ..< textUrlRanges.count).reversed() {
-            for j in 0 ..< i {
-                if textUrlRanges[j].1 === textUrlRanges[i].1 {
-                    textUrlRanges.remove(at: i)
-                    continue outer
-                }
-            }
-        }
-    }
-    
-    if !textUrlRangesEqual(textUrlRanges, initialTextUrlRanges) {
-        attributedText.removeAttribute(TextInputAttributes.textUrl, range: fullRange)
-        for (range, attribute) in textUrlRanges {
-            attributedText.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute(url: attribute.url), range: range)
-        }
-    }
+//    let initialTextUrlRanges = textUrlRanges
+//    
+//    for i in 0 ..< textUrlRanges.count {
+//        let range = textUrlRanges[i].0
+//        
+//        if text.substring(with: range).trimmingCharacters(in: .whitespaces).isEmpty {
+//            continue
+//        }
+//        
+//        var validLower = range.lowerBound
+//        inner1: for i in range.lowerBound ..< range.upperBound {
+//            if let c = UnicodeScalar(text.character(at: i)) {
+//                if textUrlCharacters.contains(c) {
+//                    validLower = i
+//                    break inner1
+//                }
+//            } else {
+//                break inner1
+//            }
+//        }
+//        var validUpper = range.upperBound
+//        inner2: for i in (validLower ..< range.upperBound).reversed() {
+//            if let c = UnicodeScalar(text.character(at: i)) {
+//                if textUrlCharacters.contains(c) {
+//                    validUpper = i + 1
+//                    break inner2
+//                }
+//            } else {
+//                break inner2
+//            }
+//        }
+//        
+//        let minLower = (i == 0) ? fullRange.lowerBound : textUrlRanges[i - 1].0.upperBound
+//        inner3: for i in (minLower ..< validLower).reversed() {
+//            if let c = UnicodeScalar(text.character(at: i)) {
+//                if textUrlEdgeCharacters.contains(c) {
+//                    validLower = i
+//                } else {
+//                    break inner3
+//                }
+//            } else {
+//                break inner3
+//            }
+//        }
+//        
+//        let maxUpper = (i == textUrlRanges.count - 1) ? fullRange.upperBound : textUrlRanges[i + 1].0.lowerBound
+//        inner3: for i in validUpper ..< maxUpper {
+//            if let c = UnicodeScalar(text.character(at: i)) {
+//                if textUrlEdgeCharacters.contains(c) {
+//                    validUpper = i + 1
+//                } else {
+//                    break inner3
+//                }
+//            } else {
+//                break inner3
+//            }
+//        }
+//        
+//        textUrlRanges[i] = (NSRange(location: validLower, length: validUpper - validLower), textUrlRanges[i].1)
+//    }
+//    
+//    textUrlRanges = textUrlRanges.filter({ $0.0.length > 0 })
+//    
+//    while textUrlRanges.count > 1 {
+//        var hadReductions = false
+//        outer: for i in 0 ..< textUrlRanges.count - 1 {
+//            if textUrlRanges[i].1 === textUrlRanges[i + 1].1 {
+//                var combine = true
+//                inner: for j in textUrlRanges[i].0.upperBound ..< textUrlRanges[i + 1].0.lowerBound {
+//                    if let c = UnicodeScalar(text.character(at: j)) {
+//                        if textUrlCharacters.contains(c) {
+//                        } else {
+//                            combine = false
+//                            break inner
+//                        }
+//                    } else {
+//                        combine = false
+//                        break inner
+//                    }
+//                }
+//                if combine {
+//                    hadReductions = true
+//                    textUrlRanges[i] = (NSRange(location: textUrlRanges[i].0.lowerBound, length: textUrlRanges[i + 1].0.upperBound - textUrlRanges[i].0.lowerBound), textUrlRanges[i].1)
+//                    textUrlRanges.remove(at: i + 1)
+//                    break outer
+//                }
+//            }
+//        }
+//        if !hadReductions {
+//            break
+//        }
+//    }
+//    
+//    if textUrlRanges.count > 1 {
+//        outer: for i in (1 ..< textUrlRanges.count).reversed() {
+//            for j in 0 ..< i {
+//                if textUrlRanges[j].1 === textUrlRanges[i].1 {
+//                    textUrlRanges.remove(at: i)
+//                    continue outer
+//                }
+//            }
+//        }
+//    }
+//    
+//    if !textUrlRangesEqual(textUrlRanges, initialTextUrlRanges) {
+//        attributedText.removeAttribute(TextInputAttributes.textUrl, range: fullRange)
+//        for (range, attribute) in textUrlRanges {
+//            attributedText.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute(url: attribute.url), range: range)
+//        }
+//    }
 }
 
 private func quoteRangesEqual(_ lhs: [(NSRange, TextInputTextQuoteAttribute)], _ rhs: [(NSRange, TextInputTextQuoteAttribute)]) -> Bool {
