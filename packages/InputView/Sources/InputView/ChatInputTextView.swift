@@ -778,7 +778,7 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                 
                 for i in glyphRange.min ..< glyphRange.max {
                     let rect = self.highlightRect(forRange: NSMakeRange(i, 1), whole: false)
-                    wordRects.append(rect.insetBy(dx: 1, dy: 2).offsetBy(dx: 0, dy: -3))
+                    wordRects.append(rect.insetBy(dx: 1, dy: 2).offsetBy(dx: 0, dy: -4))
                 }
                 
                 var boundingRect = self.customLayoutManager.boundingRect(forGlyphRange: glyphRange, in: self.customTextContainer)
@@ -1417,17 +1417,29 @@ private final class SpoilerView: Control {
     private var theme: InputViewTheme?
     private weak var delegate: ChatInputTextViewDelegate?
     private let dustView: InvisibleInkDustView = InvisibleInkDustView()
+    private var wordrects:[NSRect] = []
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(dustView)
         self.layer?.masksToBounds = false
         self.dustView.layer?.masksToBounds = false
-        
-        set(handler: { [weak self] _ in
-            self?.delegate?.inputViewRevealSpoilers()
-        }, for: .Click)
+        userInteractionEnabled = false
         
     }
+    
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        
+        let point = self.convert(event.locationInWindow, from: nil)
+
+        let contains = self.wordrects.contains(where: {
+            $0.contains(point)
+        })
+        if contains {
+            self.delegate?.inputViewRevealSpoilers()
+        }
+    }
+
     
     func set(_ delegate: ChatInputTextViewDelegate) {
         self.delegate = delegate
@@ -1438,6 +1450,7 @@ private final class SpoilerView: Control {
     }
     func update(size: CGSize, theme: InputViewTheme, wordRects: [NSRect]) {
         dustView.frame = size.bounds
+        self.wordrects = wordRects
         dustView.update(size: size, color: theme.textColor, textColor: .white, rects: [size.bounds], wordRects: wordRects)
     }
     
