@@ -456,9 +456,9 @@ class ChatGroupedItem: ChatRowItem {
         return result
     }
     
-    override var topInset:CGFloat {
-        return 4
-    }
+//    override var topInset:CGFloat {
+//        return 2
+//    }
 
     
     func contentNode(for index: Int) -> ChatMediaContentView.Type {

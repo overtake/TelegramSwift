@@ -595,7 +595,7 @@ class ChatAccessoryModel: NSObject {
     func measureSize(_ width:CGFloat = 0, sizeToFit: Bool = false) -> Void {
         self.sizeToFit = sizeToFit
         
-        header?.measure(width: width - leftInset - rightInset - (quoteIcon != nil ? 12 : 0))
+        header?.measure(width: width - leftInset - rightInset - (quoteIcon != nil ? 12 : 0) - mediaInset)
         
         var addition: CGFloat = 0
         if cutout != nil, !isSideAccessory {
