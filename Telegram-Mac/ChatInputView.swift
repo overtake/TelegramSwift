@@ -121,7 +121,7 @@ class ChatInputView: View, Notifable {
         textInteractions.processPaste = { [weak self] pasteboard in
             return self?.processPaste(pasteboard) ?? false
         }
-        textInteractions.processAttriburedCopy = { [weak self] attributedString in
+        textInteractions.processAttriburedCopy = { attributedString in
             return globalLinkExecutor.copyAttributedString(attributedString)
         }
     }

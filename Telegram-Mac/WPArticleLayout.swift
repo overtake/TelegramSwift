@@ -283,9 +283,9 @@ class WPArticleLayout: WPLayout {
                 
                 if textLayout.cutout != nil {
                     contentSize.height = max(imageSize != nil ? contrainedImageSize.height + imageInsets.top + imageInsets.bottom : 0, contentSize.height)
-                    contentSize.width = min(max(textLayout.layoutSize.width, contrainedImageSize.width), maxw)
+                    contentSize.width = min(max(max(textLayout.layoutSize.width, maxw), contrainedImageSize.width), maxw)
                 } else if imageSize == nil {
-                    contentSize.width = max(textLayout.layoutSize.width, groupLayout?.dimensions.width ?? 0)
+                    contentSize.width = max(max(textLayout.layoutSize.width, maxw), groupLayout?.dimensions.width ?? 0)
                 }
             }
             

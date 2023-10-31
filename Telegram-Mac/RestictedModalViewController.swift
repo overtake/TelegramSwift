@@ -513,11 +513,7 @@ class RestrictedModalViewController: TableModalViewController {
                             effectiveRightsFlags = effectiveRightsFlags.subtracting(groupPermissionDependencies(rights))
                         } else {
                             effectiveRightsFlags.insert(rights)
-                            for (right, _) in allGroupPermissionList(peer: peer) {
-                                if groupPermissionDependencies(right).contains(rights) {
-                                    effectiveRightsFlags.insert(right)
-                                }
-                            }
+                            effectiveRightsFlags = effectiveRightsFlags.union(groupPermissionDependencies(rights))
                         }
                         state.updatedFlags = effectiveRightsFlags
                         return state

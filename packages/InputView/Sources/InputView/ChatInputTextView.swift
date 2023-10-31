@@ -363,6 +363,8 @@ open class ChatInputTextView: ScrollView, NSTextViewDelegate {
         }
         
         self.textView.updateLayout(size: size)
+        
+        self.verticalScrollElasticity = self.contentView.documentRect.height <= self.frame.height ? .none : .allowed
     }
     
     private func updatePlaceholder(animated: Bool) {
