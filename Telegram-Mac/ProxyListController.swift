@@ -369,7 +369,7 @@ private func addProxyController(accountManager: AccountManager<TelegramAccountMa
                 let secret = data[_id_secret]?.stringValue?.data(using: .utf8) ?? Data()
                 return current.withUpdatedServer(ProxyServerSettings(host: data[_id_host]?.stringValue ?? "", port: port.isEmpty ? 0 : Int32(port)!, connection: .mtp(secret: secret)))
             case .socks5:
-                return current.withUpdatedServer(ProxyServerSettings(host: data[_id_host]?.stringValue ?? "", port: port.isEmpty ? 0 : Int32(port)!, connection: .socks5(username: data[_id_username]?.stringValue, password: data[_id_pass]?.stringValue)))
+                return current.withUpdatedServer(ProxyServerSettings(host: data[_id_host]?.stringValue ?? "", port: port.isEmpty ? 0 : (Int32(port) ?? 0), connection: .socks5(username: data[_id_username]?.stringValue, password: data[_id_pass]?.stringValue)))
             }
         }
         return .fail(.none)
