@@ -15,6 +15,11 @@ import TelegramCore
 import TGModernGrowingTextView
 import InputView
 
+private let markdownRegexFormat = "(^|\\s|\\n)(````?)([\\s\\S]+?)(````?)([\\s\\n\\.,:?!;]|$)|(^|\\s)(`|\\*\\*|__|~~|\\|\\|)([^\\n]+?)\\7([\\s\\.,:?!;]|$)|@(\\d+)\\s*\\((.+?)\\)"
+
+
+private let markdownRegex = try? NSRegularExpression(pattern: markdownRegexFormat, options: [.caseInsensitive, .anchorsMatchLines])
+
 
 
 struct ChatInterfaceSelectionState: Equatable {
@@ -470,9 +475,208 @@ final class ChatTextInputState: Codable, Equatable {
     }
 
     func subInputState(from range: NSRange, theme: TelegramPresentationTheme = theme) -> ChatTextInputState {
-        let subText = convertMarkdownToAttributes(attributedString().attributedSubstring(from: range)).trimmed
-        let attributes = chatTextAttributes(from: subText)
-        return ChatTextInputState(inputText: subText.string, selectionRange: subText.length ..< subText.length, attributes: attributes)
+//        let subText = convertMarkdownToAttributes(attributedString().attributedSubstring(from: range)).trimmed
+//        let attributes = chatTextAttributes(from: subText)
+        
+        
+        
+        var subText = attributedString().attributedSubstring(from: range).trimmed
+
+        let localAttributes = chatTextAttributes(from: subText)
+
+
+        var raw:String = subText.string
+        var appliedText = subText.string
+        var attributes:[ChatTextInputAttribute] = []
+
+        var offsetRanges:[NSRange] = []
+        if let regex = markdownRegex {
+
+            var skipIndexes:Set<Int> = Set()
+            if !localAttributes.isEmpty {
+                var index: Int = 0
+                let matches = regex.matches(in: subText.string, range: NSMakeRange(0, subText.string.length))
+                for match in matches {
+                    for attr in localAttributes {
+                        let range = match.range
+                        let attrRange = NSMakeRange(attr.range.lowerBound, attr.range.upperBound - attr.range.lowerBound)
+                        if attrRange.intersection(range) != nil {
+                            skipIndexes.insert(index)
+                        }
+                    }
+                    index += 1
+                }
+            }
+
+
+            var rawOffset:Int = 0
+            var newText:[String] = []
+            var index: Int = 0
+            while let match = regex.firstMatch(in: raw, range: NSMakeRange(0, raw.length)) {
+                
+               
+                
+                let matchIndex = rawOffset + match.range.location
+
+
+
+                newText.append(raw.nsstring.substring(with: NSMakeRange(0, match.range.location)))
+
+                var pre = match.range(at: 3)
+
+
+                if pre.location != NSNotFound {
+                    if !skipIndexes.contains(index) {
+                        var text = raw.nsstring.substring(with: pre)
+
+                        var language: String = ""
+                        let newLineRange = text.nsstring.range(of: "\n")
+                        if newLineRange.location != 0 && newLineRange.location != NSNotFound {
+                            let lang = text.nsstring.substring(with: NSMakeRange(0, newLineRange.location))
+                            let test = lang.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                            if test.length == lang.length {
+                                language = lang
+                                text = String(text.suffix(text.length - newLineRange.location))
+                            }
+                        }
+                        
+                        rawOffset -= match.range(at: 2).length + match.range(at: 4).length
+                        newText.append(raw.nsstring.substring(with: match.range(at: 1)) + text + raw.nsstring.substring(with: match.range(at: 5)))
+                        attributes.append(.pre(matchIndex + match.range(at: 1).length ..< matchIndex + match.range(at: 1).length + text.length, language))
+                        offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length, 3))
+                        offsetRanges.append(NSMakeRange(matchIndex + match.range(at: 1).length + text.length + 3, 3))
+                    } else {
+                        let text = raw.nsstring.substring(with: pre)
+                        let entity = raw.nsstring.substring(with: match.range(at: 2))
+                        newText.append(raw.nsstring.substring(with: match.range(at: 1)) + entity + text + entity + raw.nsstring.substring(with: match.range(at: 5)))
+                    }
+                }
+
+                pre = match.range(at: 8)
+                if pre.location != NSNotFound {
+                    let text = raw.nsstring.substring(with: pre)
+                    if !skipIndexes.contains(index) {
+
+                        let left = match.range(at: 6)
+
+                        let entity = raw.nsstring.substring(with: match.range(at: 7))
+                        newText.append(raw.nsstring.substring(with: left) + text + raw.nsstring.substring(with: match.range(at: 9)))
+
+
+                        switch entity {
+                        case "`":
+                            attributes.append(.code(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "**":
+                            attributes.append(.bold(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "~~":
+                            attributes.append(.strikethrough(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "__":
+                            attributes.append(.italic(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        case "||":
+                            attributes.append(.spoiler(matchIndex + left.length ..< matchIndex + left.length + text.length))
+                        default:
+                            break
+                        }
+
+                        offsetRanges.append(NSMakeRange(matchIndex + left.length, entity.length))
+                        offsetRanges.append(NSMakeRange(matchIndex + left.length + text.length, entity.length))
+
+                        rawOffset -= match.range(at: 7).length * 2
+                    } else {
+                        let entity = raw.nsstring.substring(with: match.range(at: 7))
+                        newText.append(raw.nsstring.substring(with: match.range(at: 6)) + entity + text + entity + raw.nsstring.substring(with: match.range(at: 9)))
+                    }
+                }
+                raw = raw.nsstring.substring(from: match.range.location + match.range(at: 0).length)
+                rawOffset += match.range.location + match.range(at: 0).length
+
+                index += 1
+            }
+
+            newText.append(raw)
+            appliedText = newText.joined()
+        }
+
+        for attr in localAttributes {
+            var newRange = NSMakeRange(attr.range.lowerBound, (attr.range.upperBound - attr.range.lowerBound))
+            for offsetRange in offsetRanges {
+                if offsetRange.location < newRange.location {
+                    newRange.location -= offsetRange.length
+                }
+//                if newRange.intersection(offsetRange) != nil {
+//                    newRange.length -= offsetRange.length
+//                }
+            }
+            
+            
+            //if newRange.lowerBound >= range.location && newRange.upperBound <= range.location + range.length {
+                switch attr {
+                case .bold:
+                    attributes.append(.bold(newRange.min ..< newRange.max))
+                case .italic:
+                    attributes.append(.italic(newRange.min ..< newRange.max))
+                case let .pre(_, language):
+                    attributes.append(.pre(newRange.min ..< newRange.max, language))
+                case .code:
+                    attributes.append(.code(newRange.min ..< newRange.max))
+                case .strikethrough:
+                    attributes.append(.strikethrough(newRange.min ..< newRange.max))
+                case .underline:
+                    attributes.append(.underline(newRange.min ..< newRange.max))
+                case .spoiler:
+                    attributes.append(.spoiler(newRange.min ..< newRange.max))
+                case let .uid(_, uid):
+                    attributes.append(.uid(newRange.min ..< newRange.max, uid))
+                case let .url(_, url):
+                    attributes.append(.url(newRange.min ..< newRange.max, url))
+                case .quote:
+                    attributes.append(.quote(newRange.min ..< newRange.max))
+                case let .animated(_, id, fileId, file, itemId):
+                    attributes.append(.animated(newRange.min ..< newRange.max, id, fileId, file, itemId))
+                }
+          //  }
+        }
+        
+        let charset = CharacterSet.whitespacesAndNewlines
+        
+        while !appliedText.isEmpty, let range = appliedText.rangeOfCharacter(from: charset), range.lowerBound == appliedText.startIndex {
+            
+            let oldLength = appliedText.length
+            appliedText.removeSubrange(range)
+            let newLength = appliedText.length
+
+            let symbolLength = oldLength - newLength
+            
+            for (i, attr) in attributes.enumerated() {
+                let updated: ChatTextInputAttribute
+                if attr.range.lowerBound == 0 {
+                    updated = attr.updateRange(0 ..< max(attr.range.upperBound - symbolLength, 0))
+                } else {
+                    updated = attr.updateRange(attr.range.lowerBound - symbolLength ..< max(attr.range.upperBound - symbolLength, attr.range.lowerBound - symbolLength))
+                }
+                attributes[i] = updated
+            }
+        }
+        
+        
+        
+        while !appliedText.isEmpty, let range = appliedText.rangeOfCharacter(from: charset, options: [], range: appliedText.index(before: appliedText.endIndex) ..< appliedText.endIndex), range.upperBound == appliedText.endIndex {
+            
+            let oldLength = appliedText.length
+            appliedText.removeSubrange(range)
+            let newLength = appliedText.length
+
+            let symbolLength = oldLength - newLength
+            
+            for (i, attr) in attributes.enumerated() {
+                let updated: ChatTextInputAttribute
+                updated = attr.updateRange(attr.range.lowerBound ..< max(attr.range.upperBound - symbolLength, attr.range.lowerBound))
+                attributes[i] = updated
+            }
+        }
+    
+        return ChatTextInputState(inputText: appliedText, selectionRange: 0 ..< 0, attributes: attributes)
+
     }
 
 
