@@ -103,7 +103,7 @@ public func chatTextInputClearFormattingAttributes(_ state: Updated_ChatTextInpu
     }
 }
 
-public func chatTextInputAddLinkAttribute(_ state: Updated_ChatTextInputState, selectionRange: Range<Int>, url: String) -> Updated_ChatTextInputState {
+public func chatTextInputAddLinkAttribute(_ state: Updated_ChatTextInputState, selectionRange: Range<Int>, url: String, text: String) -> Updated_ChatTextInputState {
     if !selectionRange.isEmpty {
         let nsRange = NSRange(location: selectionRange.lowerBound, length: selectionRange.count)
         var linkRange = nsRange
@@ -123,8 +123,10 @@ public func chatTextInputAddLinkAttribute(_ state: Updated_ChatTextInputState, s
         for (attribute, range) in attributesToRemove {
             result.removeAttribute(attribute, range: range)
         }
-        result.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute(url: url), range: nsRange)
-        return Updated_ChatTextInputState(inputText: result, selectionRange: selectionRange)
+        result.replaceCharacters(in:nsRange, with: text)
+        let updatedRange = NSMakeRange(nsRange.location, max(nsRange.length, text.length))
+        result.addAttribute(TextInputAttributes.textUrl, value: TextInputTextUrlAttribute(url: url), range: updatedRange)
+        return Updated_ChatTextInputState(inputText: result, selectionRange: updatedRange.lowerBound ..< updatedRange.upperBound)
     } else {
         return state
     }

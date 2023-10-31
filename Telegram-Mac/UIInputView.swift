@@ -218,10 +218,11 @@ final class UITextView : View, Notifable, ChatInputTextViewDelegate {
             }
             
             showModal(with: InputURLFormatterModalController(string: text.string, defaultUrl: link, completion: { [weak self] text, url in
+                
                 self?.interactions.update { current in
                     var current = current
                     if let url = url {
-                        current = chatTextInputAddLinkAttribute(current, selectionRange: textRange.min ..< textRange.max, url: url)
+                        current = chatTextInputAddLinkAttribute(current, selectionRange: textRange.min ..< textRange.max, url: url, text: text)
                     } else {
                         current = chatTextInputClearFormattingAttributes(current, targetKey: TextInputAttributes.textUrl)
                     }
