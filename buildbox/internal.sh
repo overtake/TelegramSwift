@@ -8,7 +8,7 @@ export PATH="$PATH:$HOME/.fastlane/bin"
 
 xcrun notarytool store-credentials "Telegram" --apple-id "appstore@telegram.org" --team-id 6N38VWS5BX --password tfmu-iwxg-xqth-iqvh
 
- xcrun notarytool submit '~/overtake/build-Stable/Telegram-10.2.254873.app.zip' --keychain-profile "Telegram" --wait
+ xcrun notarytool submit '/Users/overtake/build-Stable/Telegram-10.2.254873.app.zip' --keychain-profile "Telegram" --wait
 
 #xcrun notarytool store-credentials $notarytool_keychain_profile --apple-id "${app_store_id}" --team-id "${app_team_id}" --password "${app_store_password}"
 #
