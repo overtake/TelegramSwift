@@ -7,6 +7,8 @@ export PATH="$PATH:$HOME/.fastlane/bin"
 
 source "../deploy/keychain.sh" .
 
+security lock-keychain
+
 xcrun notarytool store-credentials "Telegram" --apple-id "appstore@telegram.org" --team-id 6N38VWS5BX --password tfmu-iwxg-xqth-iqvh
 
  xcrun notarytool submit '/Users/overtake/build-Stable/Telegram-10.2.254873.app.zip' --keychain-profile "Telegram" --wait
