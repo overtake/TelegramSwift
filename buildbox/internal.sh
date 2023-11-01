@@ -7,7 +7,8 @@ export PATH="$PATH:$HOME/.fastlane/bin"
 
 source "../deploy/keychain.sh" .
 
-security lock-keychain
+
+security unlock-keychain -p "88552" "System"
 
 xcrun notarytool store-credentials "Telegram" --apple-id "appstore@telegram.org" --team-id 6N38VWS5BX --password tfmu-iwxg-xqth-iqvh
 
