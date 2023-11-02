@@ -697,11 +697,6 @@ class ChatMessageItem: ChatRowItem {
     }
     
     override var bubbleFrame: NSRect {
-        
-        if let frame = _bubbleFrame {
-            return frame
-        }
-        
         var frame = super.bubbleFrame
         
         
@@ -714,9 +709,7 @@ class ChatMessageItem: ChatRowItem {
         if replyMarkupModel != nil, webpageLayout == nil, textLayout.layoutSize.width < 200 {
             frame.size.width = max(blockWidth, frame.width)
         }
-        
-        _bubbleFrame = frame
-        
+                
         return frame
     }
     

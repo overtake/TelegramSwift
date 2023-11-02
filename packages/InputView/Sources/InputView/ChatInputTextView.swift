@@ -774,20 +774,59 @@ public final class InputTextView: NSTextView, NSLayoutManagerDelegate, NSTextSto
                     spoiler.set(delegate)
                 }
                 
-                var wordRects:[NSRect] = []
-                
-                for i in glyphRange.min ..< glyphRange.max {
-                    let rect = self.highlightRect(forRange: NSMakeRange(i, 1), whole: false)
-                    wordRects.append(rect.insetBy(dx: 1, dy: 2).offsetBy(dx: 0, dy: -4))
+                var wordRects:[[CGRect]] = []
+                var line:[NSRect] = []
+                var y: CGFloat = 0
+                for i in range.min ..< range.max {
+                    let current = NSMakeRange(i, 1)
+                    let glyphRange = self.customLayoutManager.glyphRange(forCharacterRange: current, actualCharacterRange: nil)
+                    let rect = self.highlightRect(forRange: glyphRange, whole: false)
+                    if y == 0 {
+                        y = rect.minY
+                    }
+                    if y != rect.minY {
+                        wordRects.append(line)
+                        line.removeAll()
+                    }
+                    line.append(rect.insetBy(dx: 0, dy: 2))
+                    y = rect.minY
                 }
                 
-                var boundingRect = self.customLayoutManager.boundingRect(forGlyphRange: glyphRange, in: self.customTextContainer)
+                if !line.isEmpty {
+                    wordRects.append(line)
+                }
                 
+                var rects:[CGRect] = []
+                for i in 0 ..< wordRects.count {
+                    var current = wordRects[i]
+                    let initial = current[0]
+                    current.remove(at: 0)
+                    rects.append(current.reduce(initial, { current, value in
+                        var current = current
+                        current.size.width += value.size.width
+                        return current
+                    }))
+                }
+                
+              //  var boundingRect = self.customLayoutManager.boundingRect(forGlyphRange: glyphRange, in: self.customTextContainer)
+                
+                
+                var current = rects
+                let initial = rects[0]
+                current.remove(at: 0)
+                var boundingRect = current.reduce(initial, { current, value in
+                    var current = current
+                    current.size.width += value.size.width
+                    return current
+                })
                 
                 boundingRect.origin.y += self.textContainerOrigin.y
-                spoiler.frame = boundingRect
+                spoiler.frame = bounds
                 
-                spoiler.update(size: boundingRect.size, theme: theme, wordRects: wordRects)
+                
+                
+                
+                spoiler.update(size: self.bounds.size, theme: theme, wordRects: rects)
 
                 valid.append(index)
                 index += 1

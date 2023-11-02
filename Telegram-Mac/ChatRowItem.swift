@@ -480,6 +480,18 @@ class ChatRowItem: TableRowItem {
             if media is TelegramMediaDice {
                 return isBubbled
             }
+            
+            if let media = message.media.first as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
+                switch story {
+                case let .item(item):
+                    if !item.text.isEmpty {
+                        return false
+                    }
+                case .placeholder:
+                    break
+                }
+            }
+            
             if let media = media as? TelegramMediaMap {
                 if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
                     var time:TimeInterval = Date().timeIntervalSince1970
@@ -700,7 +712,7 @@ class ChatRowItem: TableRowItem {
     }
     
     override var isSelectable: Bool {
-        return chatInteraction.mode.threadId != effectiveCommentMessage?.id
+        return chatInteraction.mode.threadId != effectiveCommentMessage?.id && self.message?.adAttribute == nil
     }
     
     var disableInteractions: Bool {
@@ -1617,6 +1629,18 @@ class ChatRowItem: TableRowItem {
                 if media is TelegramMediaDice {
                     return renderType == .bubble
                 }
+                
+                if let media = message.media.first as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
+                    switch story {
+                    case let .item(item):
+                        if !item.text.isEmpty {
+                            return false
+                        }
+                    case .placeholder:
+                        break
+                    }
+                }
+                
                 if let media = media as? TelegramMediaMap {
                     if let liveBroadcastingTimeout = media.liveBroadcastingTimeout {
                         var time:TimeInterval = Date().timeIntervalSince1970
@@ -2378,9 +2402,7 @@ class ChatRowItem: TableRowItem {
                 
         let result = super.makeSize(width, oldWidth: oldWidth)
         isForceRightLine = false
-        
-        _bubbleFrame = nil
-        
+                
         commentsBubbleData?.makeSize()
         commentsBubbleDataOverlay?.makeSize()
         commentsData?.makeSize()
@@ -2665,15 +2687,9 @@ class ChatRowItem: TableRowItem {
         }
         return nil
     }
-
-    var _bubbleFrame: NSRect? = nil
     
     var bubbleFrame: NSRect {
-        
-//        if let frame = _bubbleFrame {
-//            return frame
-//        }
-                
+         
         let nameWidth:CGFloat
         if hasBubble {
             nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
@@ -2749,7 +2765,6 @@ class ChatRowItem: TableRowItem {
             rect.size.width = max(rect.size.width, commentsBubbleData.size(hasBubble, false).width)
         }
         
-       // _bubbleFrame = rect
         return rect
     }
     

@@ -467,7 +467,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                     chatInteraction.sendCommand(selectedItem.command)
                 }
             } else if let selectedItem = selectedItem as? ContextClueRowItem {
-                let sources:[ContextClueRowItem.Source] = selectedItem.animated.map { .animated($0) } + selectedItem.clues.map { .emoji($0) }
+                let sources:[ContextClueRowItem.Source] = selectedItem.sources
                 let clue = selectedItem.selectedIndex != nil ? sources[selectedItem.selectedIndex!] : nil
                 
                 if let clue = clue {
@@ -484,7 +484,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                             _ = chatInteraction.appendText(emoji, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
                         case let .animated(file):
                             let attr = NSMutableAttributedString()
-                            let text = (file.customEmojiText ?? file.stickerText ?? "😀").fixed
+                            let text = (file.customEmojiText ?? file.stickerText ?? clown).fixed
                             _ = attr.append(string: text)
                             attr.addAttribute(TextInputAttributes.customEmoji, value: TextInputTextCustomEmojiAttribute(fileId: file.fileId.id, file: file, emoji: text), range: attr.range)
                             _ = chatInteraction.appendText(attr, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)

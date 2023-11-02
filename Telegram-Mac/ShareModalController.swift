@@ -12,9 +12,10 @@ import SwiftSignalKit
 import TelegramCore
 import Localization
 import Postbox
-import TGModernGrowingTextView
 import KeyboardKey
 import InAppSettings
+import InputView
+
 
 fileprivate class ShareButton : Control {
     private var badge: BadgeNode?
@@ -69,7 +70,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     fileprivate let dismiss:ImageButton = ImageButton()
 
     
-    fileprivate let textView:TGModernGrowingTextView = TGModernGrowingTextView(frame: NSZeroRect)
+    fileprivate let textView:UITextView = UITextView(frame: NSMakeRect(0, 0, 100, 50))
     fileprivate let sendButton = ImageButton()
     fileprivate let emojiButton = ImageButton()
     fileprivate let actionsContainerView: Control = Control()
@@ -154,7 +155,6 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         actionsContainerView.addSubview(sendButton)
         actionsContainerView.addSubview(emojiButton)
         
-        
         actionsContainerView.setFrameSize(sendButton.frame.width + emojiButton.frame.width + 40, 50)
         
         emojiButton.centerY(x: 0)
@@ -162,20 +162,29 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         
     
 
-        textView.textFont = .normal(.text)
-        textView.max_height = 120
-        
-        textView.setFrameSize(NSMakeSize(0, 34))
-
+        textView.interactions.max_height = 180
+        textView.interactions.min_height = 50
         
         textContainerView.addSubview(textView)
 
         addSubview(textContainerView)
         addSubview(actionsContainerView)
         addSubview(bottomSeparator)
-        
         updateLocalizationAndTheme(theme: presentation ?? theme)
-
+    }
+    
+    var textWidth: CGFloat {
+        return frame.width - 10 - actionsContainerView.frame.width
+    }
+    
+    func textViewSize() -> (NSSize, CGFloat) {
+        let w = textWidth
+        let height = self.textView.height(for: w)
+        return (NSMakeSize(w, min(max(height, textView.min_height), textView.max_height)), height)
+    }
+    
+    var additionHeight: CGFloat {
+        return textViewSize().0.height + 16 + searchView.frame.height + 20
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -187,14 +196,16 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         backgroundColor = theme.colors.background
         textContainerView.backgroundColor = theme.colors.background
         actionsContainerView.backgroundColor = theme.colors.background
-        textView.setBackgroundColor(theme.colors.background)
+       // textView.setBackgroundColor(theme.colors.background)
         bottomSeparator.backgroundColor = theme.colors.border
         topSeparator.backgroundColor = theme.colors.border
         
         self.backgroundColor = theme.colors.background
 
-        
-        textView.setPlaceholderAttributedString(.initialize(string:  strings().previewSenderCommentPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
+        textView.placeholder = strings().previewSenderCommentPlaceholder
+        textView.inputTheme = theme.inputTheme
+                 
+    //    textView.setPlaceholderAttributedString(.initialize(string:  strings().previewSenderCommentPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
         
         
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
@@ -204,9 +215,9 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         _ = emojiButton.sizeToFit()
         
         backgroundColor = theme.colors.background
-        textView.background = theme.colors.background
-        textView.textColor = theme.colors.text
-        textView.linkColor = theme.colors.link
+       // textView.background = theme.colors.background
+//        textView.textColor = theme.colors.text
+//        textView.linkColor = theme.colors.link
 
         if inForumMode {
             dismiss.set(image: theme.icons.chatNavigationBack, for: .Normal)
@@ -406,52 +417,41 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
         }
     }
     
-    func textViewUpdateHeight(_ height: CGFloat, _ animated: Bool) {
-        CATransaction.begin()
-        textContainerView.change(size: NSMakeSize(frame.width, height + 16), animated: animated)
-        textContainerView.change(pos: NSMakePoint(0, frame.height - textContainerView.frame.height), animated: animated)
-        textView._change(pos: NSMakePoint(10, height == 34 ? 8 : 11), animated: animated)
-        tableView.change(size: NSMakeSize(frame.width, frame.height - searchView.frame.height - 20 - (!textContainerView.isHidden ? 50 : 0)), animated: animated)
 
-        actionsContainerView.change(pos: NSMakePoint(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height), animated: animated)
-        
-        bottomSeparator.change(pos: NSMakePoint(0, textContainerView.frame.minY), animated: animated)
-        CATransaction.commit()
-        
-        needsLayout = true
-    }
     
-    var additionHeight: CGFloat {
-        return textView.frame.height + 16 + searchView.frame.height + 20
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        transition.updateFrame(view: emojiButton, frame: emojiButton.centerFrameY(x: 0))
+        transition.updateFrame(view: actionsContainerView, frame: CGRect.init(origin: CGPoint(x: size.width - actionsContainerView.frame.width, y: size.height - actionsContainerView.frame.height), size: CGSize(width: (sendButton.isHidden ? 0 : (sendButton.frame.width + 20)) + emojiButton.frame.width + 20, height: 50)))
+        transition.updateFrame(view: sendButton, frame: sendButton.centerFrameY(x: emojiButton.frame.maxX + 20))
+        
+        
+        transition.updateFrame(view: searchView, frame: CGRect(origin: CGPoint(x: 10 + (!dismiss.isHidden ? 40 : 0), y: 10), size: CGSize(width: size.width - 10 - (!dismiss.isHidden ? 40 : 0) - (share.isHidden ? 10 : 50), height: searchView.frame.height)))
+        transition.updateFrame(view: share, frame: CGRect(origin: CGPoint(x: size.width - share.frame.width - 10, y: 10), size: share.frame.size))
+        transition.updateFrame(view: dismiss, frame: CGRect(origin: CGPoint(x: 10, y: 10), size: dismiss.frame.size))
+        
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, searchView.frame.maxY + 10, size.width, size.height - searchView.frame.height - 20 - (!textContainerView.isHidden ? 50 : 0)))
+        transition.updateFrame(view: topSeparator, frame: NSMakeRect(0, searchView.frame.maxY + 10, size.width, .borderSize))
+                
+        let (textSize, textHeight) = textViewSize()
+        
+        let textContainerRect = NSMakeRect(0, size.height - textSize.height, size.width, textSize.height)
+        transition.updateFrame(view: textContainerView, frame: textContainerRect)
+        
+        transition.updateFrame(view: textView, frame: CGRect(origin: CGPoint(x: 10, y: 0), size: textSize))
+        textView.updateLayout(size: textSize, textHeight: textHeight, transition: transition)
+        
+        transition.updateFrame(view: bottomSeparator, frame: NSMakeRect(0, size.height - textContainerView.frame.height, size.width, .borderSize))
+        
+        if let forumView = forumTopicsView {
+            transition.updateFrame(view: forumView, frame: tableView.frame)
+        }
     }
     
     
     fileprivate override func layout() {
         super.layout()
-        
-        emojiButton.centerY(x: 0)
-        actionsContainerView.setFrameSize((sendButton.isHidden ? 0 : (sendButton.frame.width + 20)) + emojiButton.frame.width + 20, 50)
-
-        sendButton.centerY(x: emojiButton.frame.maxX + 20)
-        
-        searchView.setFrameSize(frame.width - 10 - (!dismiss.isHidden ? 40 : 0) - (share.isHidden ? 10 : 50), searchView.frame.height)
-        share.setFrameOrigin(frame.width - share.frame.width - 10, 10)
-        dismiss.setFrameOrigin(10, 10)
-        searchView.setFrameOrigin(10 + (!dismiss.isHidden ? 40 : 0), 10)
-        tableView.frame = NSMakeRect(0, searchView.frame.maxY + 10, frame.width, frame.height - searchView.frame.height - 20 - (!textContainerView.isHidden ? 50 : 0))
-        topSeparator.frame = NSMakeRect(0, searchView.frame.maxY + 10, frame.width, .borderSize)
-        actionsContainerView.setFrameOrigin(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height)
-        
-        textContainerView.setFrameSize(frame.width, textView.frame.height + 16)
-        textContainerView.setFrameOrigin(0, frame.height - textContainerView.frame.height)
-
-        
-        textView.setFrameSize(NSMakeSize(textContainerView.frame.width - 10 - actionsContainerView.frame.width, textView.frame.height))
-        textView.setFrameOrigin(10, textView.frame.height == 34 ? 8 : 11)
-        bottomSeparator.frame = NSMakeRect(0, textContainerView.frame.minY, frame.width, .borderSize)
-        
-        forumTopicsView?.frame = tableView.frame
-
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     
@@ -1476,7 +1476,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
 
 
 
-class ShareModalController: ModalViewController, Notifable, TGModernGrowingDelegate, TableViewDelegate {
+class ShareModalController: ModalViewController, Notifable, TableViewDelegate {
    
     
     private let share:ShareObject
@@ -1619,18 +1619,18 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     
     private func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
         
-        let textView = genericView.textView
-        
-        if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
-            textView.animates = false
-            textView.setAttributedString(state.effectiveInput.attributedString(), animated:animated)
-            textView.animates = true
-        }
-        let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
-        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
-            textView.setSelectedRange(range)
-        }
-        textViewTextDidChangeSelectedRange(range)
+        genericView.textView.set(state.effectiveInput)
+
+//        if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
+//            textView.animates = false
+//            textView.setAttributedString(state.effectiveInput.attributedString(), animated:animated)
+//            textView.animates = true
+//        }
+//        let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
+//        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
+//            textView.setSelectedRange(range)
+//        }
+      //  textViewTextDidChangeSelectedRange(range)
     }
     
     func isEqual(to other: Notifable) -> Bool {
@@ -1761,43 +1761,26 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         
         self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.textView.boldWord()
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.bold))
             return .invoked
         }, with: self, for: .B, priority: self.responderPriority, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.makeUrl()
+            self?.genericView.textView.inputApplyTransform(.url)
             return .invoked
         }, with: self, for: .U, priority: self.responderPriority, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.textView.italicWord()
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.italic))
             return .invoked
         }, with: self, for: .I, priority: self.responderPriority, modifierFlags: [.command])
         
         self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.genericView.textView.codeWord()
+            self?.genericView.textView.inputApplyTransform(.attribute(TextInputAttributes.monospace))
             return .invoked
         }, with: self, for: .K, priority: self.responderPriority, modifierFlags: [.command, .shift])
     }
     
-    
-    private func makeUrl() {
-        let range = self.genericView.textView.selectedRange()
-        guard range.min != range.max, let window = window else {
-            return
-        }
-        var effectiveRange:NSRange = NSMakeRange(NSNotFound, 0)
-        let defaultTag: TGInputTextTag? = genericView.textView.attributedString().attribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), at: range.location, effectiveRange: &effectiveRange) as? TGInputTextTag
-        let defaultUrl = defaultTag?.attachment as? String
-        if effectiveRange.location == NSNotFound || defaultTag == nil {
-            effectiveRange = range
-        }
-        showModal(with: InputURLFormatterModalController(string: genericView.textView.string().nsstring.substring(with: effectiveRange), defaultUrl: defaultUrl, completion: { [weak self] text, url in
-            self?.genericView.textView.addLink(url, text: text, range: effectiveRange)
-        }), for: window)
-        
-    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -1848,8 +1831,33 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         super.updateLocalizationAndTheme(theme: self.presentation ?? theme)
     }
     
+    func processEnter(_ event: NSEvent) -> Bool {
+        if FastSettings.checkSendingAbility(for: event) {
+            return true
+        }
+        return false
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        self.genericView.textView.interactions.inputDidUpdate = { [weak self] state in
+            guard let `self` = self else {
+                return
+            }
+            self.set(state)
+            self.inputDidUpdateLayout(animated: true)
+        }
+        
+        self.genericView.textView.interactions.processEnter = { [weak self] event in
+            return self?.processEnter(event) ?? true
+        }
+        self.genericView.textView.interactions.processPaste = { pasteboard in
+            return false
+        }
+        self.genericView.textView.interactions.processAttriburedCopy = { attributedString in
+            return globalLinkExecutor.copyAttributedString(attributedString)
+        }
         
         genericView.presentation = presentation
         
@@ -1876,12 +1884,17 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         self.notify(with: self.selectInteractions.presentation, oldValue: self.selectInteractions.presentation, animated: false)
         self.contextChatInteraction.add(observer: self)
 
-        
-        genericView.tableView.delegate = self
+        self.genericView.textView.context = context
+        self.genericView.tableView.delegate = self
         
         let interactions = EntertainmentInteractions(.emoji, peerId: PeerId(0))
-        interactions.sendEmoji = { [weak self] emoji, _ in
-            self?.genericView.textView.appendText(emoji)
+        interactions.sendEmoji = { [weak self] emoji, fromRect in
+            _ = self?.contextChatInteraction.appendText(.initialize(string: emoji))
+            _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
+        }
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
+            let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
+            _ = self?.contextChatInteraction.appendText(.makeAnimated(sticker.file, text: text))
             _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
         }
         emoji.update(with: interactions, chatInteraction: self.contextChatInteraction)
@@ -1891,7 +1904,6 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         }, for: .Hover)
 
         
-        genericView.textView.delegate = self
         genericView.hasShareMenu = self.share.hasLink
         let presentation = self.presentation
         
@@ -2499,104 +2511,29 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         super.init(frame: NSMakeRect(0, 0, 360, 400))
         bar = .init(height: 0)
         
-        
-        contextChatInteraction.movePeerToInput = { [weak self] peer in
-            if let strongSelf = self {
-                let string = strongSelf.genericView.textView.string()
-                let range = strongSelf.genericView.textView.selectedRange()
-                let textInputState = ChatTextInputState(inputText: string, selectionRange: range.min ..< range.max, attributes: chatTextAttributes(from: strongSelf.genericView.textView.attributedString()))
-                strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(textInputState)})
-                if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
-                    let inputText = textInputState.inputText
-                    
-                    let name:String = peer.addressName ?? peer.compactDisplayTitle
-                    
-                    let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
-                    let replacementText = name + " "
-                    
-                    let atLength = peer.addressName != nil ? 0 : 1
-                    
-                    let range = strongSelf.contextChatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
-                    
-                    if peer.addressName == nil {
-                        let state = strongSelf.contextChatInteraction.presentation.effectiveInput
-                        var attributes = state.attributes
-                        attributes.append(.uid(range.lowerBound ..< range.upperBound - 1, peer.id.id._internalGetInt64Value()))
-                        let updatedState = ChatTextInputState(inputText: state.inputText, selectionRange: state.selectionRange, attributes: attributes)
-                        strongSelf.contextChatInteraction.update({$0.withUpdatedEffectiveInputState(updatedState)})
-                    }
-                }
-            }
-        }
-        
-        
-        bar = .init(height: 0)
     }
 
     func showEmoji(for control: Control) {
         showPopover(for: control, with: emoji)
     }
     
-    func textViewHeightChanged(_ height: CGFloat, animated: Bool) {
-        
+    override func didResizeView(_ size: NSSize, animated: Bool) {
+        self.genericView.updateLayout(size: size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+    }
+    
+    func inputDidUpdateLayout(animated: Bool) {
         updateSize(frame.width, animated: animated)
-        
-        genericView.textViewUpdateHeight(height, animated)
-        
     }
 
-    func textViewEnterPressed(_ event: NSEvent) -> Bool {
-        if FastSettings.checkSendingAbility(for: event) {
-            _ = returnKeyAction()
-            return true
-        }
-        return false
-    }
-    
-    func textViewTextDidChange(_ string: String) {
-        let range = self.genericView.textView.selectedRange()
+    private func set(_ state: Updated_ChatTextInputState) {
         self.selectInteractions.update {
-            $0.withUpdatedComment(.init(string: string, range: range))
+            $0.withUpdatedComment(.init(string: state.inputText.string, range: NSMakeRange(state.selectionRange.lowerBound, state.selectionRange.upperBound - state.selectionRange.lowerBound)))
         }
-        let attributed = genericView.textView.attributedString()
-        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-        contextChatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
-
+        self.contextChatInteraction.update({
+            $0.withUpdatedEffectiveInputState(state.textInputState())
+        })
     }
     
-    func textViewTextDidChangeSelectedRange(_ range: NSRange) {
-        let string = self.genericView.textView.string()
-        self.selectInteractions.update {
-            $0.withUpdatedComment(.init(string: string, range: range))
-        }
-        let attributed = genericView.textView.attributedString()
-        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.location ..< range.location + range.length, attributes: chatTextAttributes(from: attributed))
-        contextChatInteraction.update({$0.withUpdatedEffectiveInputState(state)})
-    }
-    
-    func textViewDidReachedLimit(_ textView: Any) {
-        genericView.textView.shake()
-    }
-    
-    func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
-        return false
-    }
-    
-    func textViewSize(_ textView: TGModernGrowingTextView!) -> NSSize {
-        return NSMakeSize(frame.width - 40, textView.frame.height)
-    }
-    
-    func textViewIsTypingEnabled() -> Bool {
-        return true
-    }
-    
-    func canTransformInputText() -> Bool {
-        return true
-    }
-    
-    func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return 1024
-    }
     
     private func updateSize(_ width: CGFloat, animated: Bool) {
         if let contentSize = self.window?.contentView?.frame.size {

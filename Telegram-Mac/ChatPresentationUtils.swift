@@ -538,10 +538,10 @@ final class TelegramChatColors {
         var hasTertiary: Bool = false
         
         if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
-            let isIncoming = item.isIncoming
+            let accept = item.isIncoming || item.renderType == .list
             if let nameColor = author.nameColor {
                 let color = item.context.peerNameColors.get(nameColor)
-                if isIncoming {
+                if accept {
                     return color
                 }
                 hasSecondary = color.secondary != nil
@@ -569,7 +569,7 @@ final class TelegramChatColors {
         if let author = author {
             if let nameColor = author.nameColor {
                 let color = colors.get(nameColor)
-                if isIncoming {
+                if isIncoming || !bubbled {
                     return color
                 }
                 hasSecondary = color.secondary != nil
@@ -594,7 +594,7 @@ final class TelegramChatColors {
     
     func replyQuote(_ item: ChatRowItem) -> CGImage {
         if let message = item.message, let replyAttr = message.replyAttribute, let replyMessage = message.associatedMessages[replyAttr.messageId], let author = replyMessage.effectiveAuthor {
-            if item.isIncoming {
+            if item.isIncoming || item.renderType == .list {
                 if let nameColor = author.nameColor {
                     let color = item.context.peerNameColors.get(nameColor).main
                     return item.presentation.resourceCache.image(Int32(color.rgb), {
