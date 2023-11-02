@@ -80,7 +80,10 @@ final class InputAnimatedEmojiAttach: View {
     
     override func layout() {
         super.layout()
-        self.media.frame = focus(media.frame.size)
+        guard let media = self.media else {
+            return
+        }
+        media.frame = focus(media.frame.size)
 
     }
     

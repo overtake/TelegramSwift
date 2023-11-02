@@ -2017,6 +2017,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             if let _ = insideBlock {
                                 rect.origin.x += 4 * 2
                             }
+                            if let _ = insideBlock, lines[i].isRTL {
+                                rect.origin.x -= 20 + 4 * 2
+                            }
+                            
+                            
                             rect.size.height += ceil(descent - leading)
                             let color:NSColor = window?.isKeyWindow == true || !range.1 ? range.0.color : NSColor.lightGray
                             
@@ -2180,7 +2185,23 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 if layout.isBigEmoji {
                     additionY -= 4
                 }
+                
+                let insideBlock = layout.blockQuotes.first(where: { block in
+                    if block.frame.contains(line.frame.origin) {
+                        return true
+                    } else {
+                        return false
+                    }
+                })
+                if let _ = insideBlock, line.isRTL {
+                    penOffset -= 20 + 4 * 2
+                }
                                 
+//                if line.isRTL {
+//                    if let _ = insideBlock {
+//                        rect.origin.x -= 4 * 2 * 2
+//                    }
+//                }
                 
                 let textPosition = CGPoint(x: penOffset + line.frame.minX, y: startPosition.y + line.frame.minY + additionY)
                 

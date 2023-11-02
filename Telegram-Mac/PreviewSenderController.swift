@@ -1091,10 +1091,12 @@ class PreviewSenderController: ModalViewController, Notifable {
         
         interactions.sendEmoji = { [weak self] emoji, fromRect in
             _ = self?.contextChatInteraction.appendText(.initialize(string: emoji))
+            _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
         }
         interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
-            let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
+            let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? clown).fixed
             _ = self?.contextChatInteraction.appendText(.makeAnimated(sticker.file, text: text))
+            _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
         }
         
         emoji.update(with: interactions, chatInteraction: contextChatInteraction)

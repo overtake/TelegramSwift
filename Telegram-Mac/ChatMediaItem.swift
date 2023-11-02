@@ -405,12 +405,28 @@ class ChatMediaItem: ChatRowItem {
         self.parameters = parameters
         
         self.updateParameters()
+        
+        var text: String
+        var entities: [MessageTextEntity]
+        if let media = message.media[0] as? TelegramMediaStory, let story = message.associatedStories[media.storyId]?.get(Stories.StoredItem.self) {
+            switch story {
+            case let .item(item):
+                text = item.text
+                entities = item.entities
+            case .placeholder:
+                text = ""
+                entities = []
+            }
+        } else {
+            text = message.text
+            entities = message.textEntities?.entities ?? []
+        }
                 
        
-        if !message.text.isEmpty, canAddCaption {
+        if !text.isEmpty, canAddCaption {
             
             var caption:NSMutableAttributedString = NSMutableAttributedString()
-            _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
+            _ = caption.append(string: text, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
             var types:ParsingType = [.Links, .Mentions, .Hashtags]
             
             if let peer = coreMessageMainPeer(message) as? TelegramUser {
@@ -427,10 +443,7 @@ class ChatMediaItem: ChatRowItem {
             } else {
                 types.insert(.Commands)
             }
-            
-           
-            var text: String = message.text
-            var attributes: [MessageAttribute] = message.attributes
+                       
             var isLoading: Bool = false
             if let translate = entry.additionalData.translate {
                 switch translate {
@@ -439,43 +452,35 @@ class ChatMediaItem: ChatRowItem {
                 case let .complete(toLang):
                     if let attribute = message.translationAttribute(toLang: toLang) {
                         text = attribute.text
-                        attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
+                        entities = attribute.entities
                     }
                 }
             }
             
-            var hasEntities: Bool = false
-            for attr in attributes {
-                if attr is TextEntitiesMessageAttribute {
-                    hasEntities = true
-                    break
-                }
-            }
+            var hasEntities: Bool = !entities.isEmpty
+            
+          
             var mediaDuration: Double? = nil
             if let file = message.anyMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
                 mediaDuration = Double(duration)
             }
             
             
-            caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
+            caption = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: entities)], for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
                 self?.parameters?.set_timeCodeInitializer(timecode)
                 self?.parameters?.showMedia(message)
             }, openBank: chatInteraction.openBank, blockColor: theme.chat.blockColor(context.peerNameColors, message: message, isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), bubbled: entry.renderType == .bubble), isDark: theme.colors.isDark).mutableCopy() as! NSMutableAttributedString
             
             var spoilers:[TextViewLayout.Spoiler] = []
-            for attr in attributes {
-                if let attr = attr as? TextEntitiesMessageAttribute {
-                    for entity in attr.entities {
-                        switch entity.type {
-                        case .Spoiler:
-                            let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                            if let range = caption.range.intersection(range) {
-                                caption.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
-                            }
-                        default:
-                            break
-                        }
+            for entity in entities {
+                switch entity.type {
+                case .Spoiler:
+                    let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
+                    if let range = caption.range.intersection(range) {
+                        caption.addAttribute(TextInputAttributes.spoiler, value: true as NSNumber, range: range)
                     }
+                default:
+                    break
                 }
             }
             
@@ -484,7 +489,7 @@ class ChatMediaItem: ChatRowItem {
             }
             if !(self is ChatVideoMessageItem) {
                 
-                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: attributes.compactMap{ $0 as? TextEntitiesMessageAttribute }.first?.entities ?? [], isPremium: context.isPremium)
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: entities, isPremium: context.isPremium)
                 
                 caption.enumerateAttribute(TextInputAttributes.spoiler, in: caption.range, options: .init(), using: { value, range, stop in
                     if let _ = value {

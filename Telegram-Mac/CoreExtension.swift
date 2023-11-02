@@ -997,6 +997,7 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
         return false
     }
     
+    
     if message.consumableContent != nil, let autoclear = message.autoclearTimeout, autoclear.timeout <= 60 {
         return false
     }

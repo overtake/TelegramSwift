@@ -798,13 +798,14 @@ func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(
             if !ext.isEmpty {
                 return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension).\(ext)"))
             } else {
-                return resourceType(mimeType: file.mimeType) |> mapToSignal { (ext) -> Signal<(String, String)?, NoError> in
-                    if let folder = FastSettings.downloadsFolder {
-                        let ext = ext == "*" || ext == nil ? "file" : ext!
-                        return .single((data.path, "\(folder)/\(fileName).\( ext )"))
-                    }
-                    return .single(nil)
-                }
+                return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension)"))
+//                return resourceType(mimeType: file.mimeType) |> mapToSignal { (ext) -> Signal<(String, String)?, NoError> in
+//                    if let folder = FastSettings.downloadsFolder {
+//                        let ext = ext == "*" || ext == nil ? "file" : ext!
+//                        return .single((data.path, "\(folder)/\(fileName).\( ext )"))
+//                    }
+//                    return .single(nil)
+//                }
             }
         } else {
             return .single(nil)
