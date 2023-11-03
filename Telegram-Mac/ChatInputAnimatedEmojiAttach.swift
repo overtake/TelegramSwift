@@ -61,13 +61,13 @@ final class InputAnimatedEmojiAttach: View {
         self.layer?.masksToBounds = false
         
     }
-    func set(_ attachment: TextInputTextCustomEmojiAttribute, size: NSSize, context: AccountContext, textColor: NSColor) -> Void {
+    func set(_ attachment: TextInputTextCustomEmojiAttribute, size: NSSize, context: AccountContext, textColor: NSColor, playPolicy: LottiePlayPolicy = .loop) -> Void {
         
         
         let fileId = attachment.fileId
         let file = attachment.file
             
-        self.media = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size, textColor: textColor)
+        self.media = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size, playPolicy: playPolicy, textColor: textColor)
         
         let mediaRect = self.focus(media.frame.size)
         

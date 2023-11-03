@@ -2537,6 +2537,13 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             return current
         }
     }
+    func setSelectedItems(_ selectedItems: [EmojiesSectionRowItem.SelectedItem]) {
+        updateState? { current in
+            var current = current
+            current.selectedItems = selectedItems
+            return current
+        }
+    }
     
     override func scrollup(force: Bool = false) {
         

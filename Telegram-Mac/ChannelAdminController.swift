@@ -1174,31 +1174,14 @@ class ChannelAdminController: TableModalViewController {
                                     updateRightsDisposable.set(context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: [adminId]).start(next: { peerIds in
                                         updateRights()
                                     }, error: { [weak self] error in
-                                        var errorText: String?
+                                        
                                         switch error {
-                                        case .tooMuchJoined:
-                                            errorText = strings().inviteChannelsTooMuch
-                                        case .restricted:
-                                            if let admin = values.adminView.peers[adminId] {
-                                                switch channel.info {
-                                                    case .broadcast:
-                                                    errorText = strings().privacyGroupsAndChannelsInviteToChannelError(admin.compactDisplayTitle, admin.compactDisplayTitle)
-                                                    case .group:
-                                                    errorText = strings().privacyGroupsAndChannelsInviteToGroupError(admin.compactDisplayTitle, admin.compactDisplayTitle)
-                                                }
-                                            }
-                                        case .notMutualContact:
-                                            if case .broadcast = channel.info {
-                                                errorText = strings().channelInfoAddUserLeftError
-                                            } else {
-                                                errorText = strings().groupInfoAddUserLeftError
-                                            }
+                                        case .notMutualContact, .limitExceeded, .tooMuchJoined, .generic, .kicked, .restricted:
+                                            showInvitePrivacyLimitedController(context: context, peerId: peerId, ids: [adminId])
                                         default:
                                             break
                                         }
-                                        if let errorText = errorText {
-                                            alert(for: context.window, info: errorText)
-                                        }
+                                       
                                         self?.close()
                                     }))
                                 }

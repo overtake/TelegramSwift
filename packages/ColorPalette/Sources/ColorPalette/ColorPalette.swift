@@ -167,6 +167,12 @@ public final class InputViewTheme: Equatable {
     public func withUpdatedQuote(_ colors: PeerNameColors.Colors) -> InputViewTheme {
         return .init(quote: .init(foreground: colors, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
     }
+    public func withUpdatedTextColor(_ color: NSColor) -> InputViewTheme {
+        return .init(quote: .init(foreground: self.quote.foreground, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: color, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: self.fontSize)
+    }
+    public func withUpdatedFontSize(_ fontSize: CGFloat) -> InputViewTheme {
+        return .init(quote: .init(foreground: self.quote.foreground, icon: self.quote.icon), indicatorColor: self.indicatorColor, backgroundColor: self.backgroundColor, selectingColor: self.selectingColor, textColor: self.textColor, accentColor: self.accentColor, grayTextColor: self.grayTextColor, fontSize: fontSize)
+    }
 }
 
 

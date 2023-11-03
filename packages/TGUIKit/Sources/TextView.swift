@@ -730,12 +730,12 @@ public final class TextViewLayout : Equatable {
             if attributedString.length > 0, let blockQuote = blockQuote(lastLineCharacterIndex) {
                 
                 
-                breakInset = CGFloat(blockQuote.space * 2)
-                lineCutoutOffset += CGFloat(breakInset)
+                breakInset = CGFloat(blockQuote.space * 2 + 20)
+                lineCutoutOffset += CGFloat(blockQuote.space * 2)
                 lineAdditionalWidth += blockQuote.space * 2 + 20
                 
                 if !isWasPreformatted {
-                    layoutSize.height += CGFloat(blockQuote.space)
+                    layoutSize.height += CGFloat(blockQuote.space) + fontLineSpacing
                 } else {
                     
                     if isWasPreformatted {
@@ -1169,6 +1169,7 @@ public final class TextViewLayout : Equatable {
             constrainedWidth = width
         }
         
+        
         toolTipRects.removeAll()
         
         calculateLayout(isBigEmoji: isBigEmoji, lineSpacing: lineSpacing, saveRTL: saveRTL)
@@ -1237,26 +1238,6 @@ public final class TextViewLayout : Equatable {
             
         })
         
-        attributedString.enumerateAttribute(NSAttributedString.Key.underlineStyle, in: attributedString.range, options: NSAttributedString.EnumerationOptions(rawValue: 0), using: { value, range, stop in
-            if let _ = value {
-                for line in lines {
-                    let lineRange = NSIntersectionRange(range, line.range)
-                    if lineRange.length != 0 {
-                        var leftOffset: CGFloat = 0.0
-                        if lineRange.location != line.range.location {
-                            leftOffset = floor(CTLineGetOffsetForStringIndex(line.line, lineRange.location, nil))
-                        }
-                        let rightOffset: CGFloat = ceil(CTLineGetOffsetForStringIndex(line.line, lineRange.location + lineRange.length, nil))
-                        
-                        
-                        let color: NSColor = attributedString.attribute(NSAttributedString.Key.foregroundColor, at: range.location, effectiveRange: nil) as? NSColor ?? presentation.colors.text
-                        let rect = NSMakeRect(line.frame.minX + leftOffset, line.frame.minY + 1, rightOffset - leftOffset, 0.5)
-                       // strokeRects.append((rect, color))
-                    }
-                }
-            }
-            
-        })
     }
     
     public func clearSelect() {

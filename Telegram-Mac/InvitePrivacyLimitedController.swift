@@ -146,7 +146,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        return InviteViaLinkHeaderItem(initialSize, peers: state.peers.map { $0.peer }, cantInvite: state.canInvite, stableId: stableId, viewType: .legacy)
+        return InviteViaLinkHeaderItem(initialSize, peers: state.peers.map { $0.peer }, cantInvite: !state.canInvite, stableId: stableId, viewType: .legacy)
     }))
     index += 1
   
